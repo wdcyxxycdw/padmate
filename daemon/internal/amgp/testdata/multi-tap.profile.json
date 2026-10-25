@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "name": "multi-tap",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "doubleTap": {
+          "type": "keys",
+          "keys": "D"
+        },
+        "timing": {
+          "multiTapMs": 500
+        }
+      },
+      "east": {
+        "doubleTap": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "timing": {
+          "holdMs": 500,
+          "multiTapMs": 500
+        }
+      },
+      "west": {
+        "tap": {
+          "type": "keys",
+          "keys": "S"
+        },
+        "doubleTap": {
+          "type": "keys",
+          "keys": "D"
+        },
+        "timing": {
+          "multiTapMs": 500
+        }
+      },
+      "north": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "doubleTap": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "tripleTap": {
+          "type": "keys",
+          "keys": "C"
+        },
+        "timing": {
+          "multiTapMs": 400
+        }
+      },
+      "leftshoulder": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "doubleTap": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "tripleTap": {
+          "type": "keys",
+          "keys": "C"
+        },
+        "quadTap": {
+          "type": "keys",
+          "keys": "D"
+        },
+        "timing": {
+          "multiTapMs": 400
+        }
+      },
+      "rightshoulder": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "doubleTap": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "tripleTap": {
+          "type": "keys",
+          "keys": "C"
+        },
+        "quadTap": {
+          "type": "keys",
+          "keys": "D"
+        },
+        "timing": {
+          "multiTapMs": 300
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "rightstick": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "timing": {
+          "multiTapMs": 300
+        }
+      },
+      "misc1": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      }
+    }
+  }
+}

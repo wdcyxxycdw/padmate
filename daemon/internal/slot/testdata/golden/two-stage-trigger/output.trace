@@ -1,0 +1,9 @@
+# B is the first stage (lt), E the second (lt.full). E goes down after B and
+# up before it, also when one reading crosses both (100 and 110). The
+# releases at 120 wait for the 20 ms minimum press.
++B@10
++E@30
+-E@50
+-B@70
++B@100 +E@100
+-E@120 -B@120

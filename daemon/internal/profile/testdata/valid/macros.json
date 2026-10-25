@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "宏",
+  "layers": {
+    "base": {
+      "a": {"label": "复制全部", "press": {"type": "macro", "file": "复制全部.ts"}},
+      "east": {"tap": {"type": "macro", "file": "笔刷 (2).js"}, "hold": {"type": "macro", "file": "复制全部.ts"}, "latch": true},
+      "west": {"release": {"type": "macro", "file": "😀.ts"}, "doubleTap": {"type": "macro", "file": "a.ts"}, "tripleTap": {"type": "macro", "file": "a.ts"}, "quadTap": {"type": "macro", "file": "a.ts"}}
+    }
+  },
+  "common": {
+    "leftstick": {"press": {"type": "macro", "file": "全部.ts"}}
+  }
+}

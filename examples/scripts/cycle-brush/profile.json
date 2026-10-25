@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "name": "M6 session 笔刷循环",
+  "timing": { "tapPressMs": 20, "tapGapMs": 20 },
+  "script": { "entry": "main.ts", "api": "0.21" },
+  "layers": {
+    "base": {
+      "south": {
+        "label": "下一个笔刷",
+        "tap": { "type": "script", "name": "cycleBrush", "args": { "dir": 1 } }
+      },
+      "north": {
+        "label": "上一个笔刷",
+        "tap": { "type": "script", "name": "cycleBrush", "args": { "dir": -1 } }
+      }
+    }
+  }
+}

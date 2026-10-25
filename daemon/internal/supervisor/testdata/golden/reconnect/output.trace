@@ -1,0 +1,6 @@
+# The removal lets go of Space. The same gamepad, back with a new id, is
+# mapped again by the same profile: nothing held from before.
++Space@100
+-Space@300
++LCtrl@1100 +Z@1100
+-Z@1120 -LCtrl@1120

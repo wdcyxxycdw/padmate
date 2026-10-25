@@ -1,0 +1,452 @@
+/* Profiles page (UI-17, UI-18, PRO-28, UI-42): profile cards with the icons
+   of their apps, the fixed default first, and the library dialogs. Colors
+   come from theme.css. */
+.page-column-profiles {
+  max-width: 1000px;
+  padding: 28px 24px 48px;
+  gap: 22px;
+}
+
+/* The administrator warning stays in view while the page scrolls; it covers
+   the content, so its background is opaque. */
+.profiles-float {
+  position: sticky;
+  top: 12px;
+  z-index: 4;
+  margin-bottom: -6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.profiles-float .notice {
+  align-items: center;
+  box-shadow: var(--shadow-pop);
+}
+.profiles-float .notice > .ui-icon {
+  margin-top: 0;
+}
+.profiles-float .notice.warning {
+  background:
+    linear-gradient(rgba(242, 179, 91, 0.1), rgba(242, 179, 91, 0.1)),
+    var(--surface);
+}
+
+.profiles-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.profiles-head .section-title {
+  margin: 0 0 0 4px;
+}
+.profiles-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profiles-head .btn-primary,
+.profiles-head .btn {
+  height: 30px;
+  padding: 0 14px 0 12px;
+  gap: 6px;
+}
+.profiles-empty {
+  padding: 22px 18px;
+  color: var(--text-4);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* One column in a narrow window, two when each card keeps 400px. */
+.profiles-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+  gap: 12px;
+}
+/* Cards in one row share a height. */
+.profiles-grid > li {
+  min-width: 0;
+  display: flex;
+}
+.profile-card {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 10px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.profile-card[data-active="true"] {
+  border-color: rgba(76, 194, 255, 0.3);
+}
+.profile-card[data-flash="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.profile-card-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 32px;
+}
+.profile-card-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profile-card-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.profile-card-title .tag {
+  flex: none;
+}
+.profile-card-edit {
+  height: 30px;
+  color: var(--text);
+}
+.profile-card-problem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--amber);
+  font-size: 12px;
+}
+.profile-card-apps {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding-right: 8px;
+}
+.profile-card-label {
+  padding-top: 15px;
+  color: var(--text-4);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.profile-card-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* Bound apps as large icons (UI-42): the icon opens a small menu; the name
+   is its tooltip. A binding that is off is greyed. */
+.app-icons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  /* One icon row high even without icons, so 用于 lines up with the
+     添加软件 button on a card that binds nothing yet. */
+  min-height: 48px;
+}
+.app-icon {
+  display: inline-flex;
+  transition: opacity 120ms ease;
+}
+.app-icon-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+}
+button.app-icon-button:hover,
+button.app-icon-button[aria-expanded="true"] {
+  border-color: var(--border);
+  background: var(--surface-3);
+}
+.app-icon-image {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+}
+/* The generic application icon of an app without an icon of its own. */
+.app-icon-generic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.app-icon[data-enabled="false"] .app-icon-image,
+.app-icon[data-enabled="false"] .app-icon-generic {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+/* Switching off: the bindings stay, but nothing follows them now. */
+.page-column-profiles[data-switching="off"] .app-icon {
+  opacity: 0.5;
+}
+.page-column-profiles[data-switching="off"] .app-icon:hover,
+.page-column-profiles[data-switching="off"] .app-icon:focus-within {
+  opacity: 1;
+}
+
+.app-add-anchor {
+  display: inline-flex;
+}
+.app-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 10px 0 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.app-add:hover:not(:disabled),
+.app-add[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.app-add-anchor .menu {
+  max-width: min(340px, calc(100vw - 120px));
+}
+.app-add-anchor .menu-item {
+  font-family: inherit;
+}
+
+/* The save pill also carries short messages ("已绑定 krita.exe"). */
+.page-autosave.profiles-pill {
+  max-width: calc(100% - 32px);
+}
+.page-autosave.profiles-pill[data-state="info"] .page-autosave-icon {
+  color: var(--accent);
+}
+
+/* Dialogs. */
+.profile-dialog {
+  width: min(440px, calc(100vw - 48px));
+}
+.profile-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.field-hint {
+  color: var(--text-4);
+  font-size: 12px;
+}
+.btn.btn-danger {
+  border-color: rgba(255, 138, 128, 0.35);
+  background: var(--red-bg);
+}
+.btn.btn-danger:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* 从已安装的软件中选择… (UI-46): a searchable list of apps with icons. */
+.app-choose-dialog {
+  width: min(480px, calc(100vw - 48px));
+}
+.app-choose-dialog .dialog-body {
+  gap: 12px;
+}
+.app-choose-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+  max-height: min(46vh, 380px);
+  margin: 0 -8px;
+  padding: 0 8px;
+  overflow-y: auto;
+}
+.app-choose-list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-choose-heading {
+  margin: 0 0 4px;
+  color: var(--text-4);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.app-choose-note {
+  margin: 0;
+  color: var(--text-4);
+  font-size: 12.5px;
+}
+.app-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+}
+.app-choice:hover,
+.app-choice:focus-visible {
+  background: var(--surface-3);
+}
+/* The background alone is 1.16:1 against the dialog: the ring shows the focus. */
+.app-choice:focus-visible {
+  outline-offset: -2px;
+}
+.app-choice-icon {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.app-choice-icon:has(img) {
+  border-color: transparent;
+  background: transparent;
+}
+.app-choice-icon img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.app-choice-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-choice-exe {
+  flex: none;
+  color: var(--text-4);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.app-choice-hint {
+  flex: none;
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--text-4);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/* The name of a profile card and, under it, the profile it is based on
+   (PRO-19). */
+.profile-card-names {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.profile-card-parent {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-4);
+  font-size: 11.5px;
+}
+
+/* The report of an AntiMicroX import (PRO-21). */
+.amgp-report-dialog {
+  width: min(640px, calc(100vw - 48px));
+}
+.report-group h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.report-group[data-severity="dropped"] h3 {
+  color: var(--red);
+}
+.report-group[data-severity="approximate"] h3 {
+  color: var(--amber);
+}
+.report-lines {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.report-lines li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.report-where {
+  flex: none;
+  color: var(--text-4);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.report-message {
+  min-width: 0;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .app-choice:hover {
+    outline: 1px solid ButtonText;
+    outline-offset: -1px;
+  }
+  .app-choice:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  .profile-card[data-active="true"] {
+    border-color: Highlight;
+  }
+  .profile-card[data-flash="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+}

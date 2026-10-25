@@ -1,0 +1,39 @@
+$ padmated --profile testdata/wheel-keys.json --fake-input testdata/wheel-keys.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/wheel-keys.json, "wheel-keys", 3 bindings
+fake input: testdata/wheel-keys.jsonl, 7 events of device 3 "left pad"
+
+      time  input               reason    action                      label   binding             owner
+     0.000  device 3 added
+   100.000  north down          dispatch  tap WheelUp                 "放大"  /layers/base/north  decl/1
+   100.000    send +WheelUp
+   150.000  north up            end                                   "放大"  /layers/base/north
+   200.000  east down           dispatch  hold Ctrl+WheelDown         "缩小"  /layers/base/east   decl/2
+   200.000    send +LCtrl +WheelDown
+   500.000  east up             release   hold Ctrl+WheelDown         "缩小"  /layers/base/east   decl/2
+   500.000    send -LCtrl
+   600.000  south down          dispatch  tap [WheelLeft,WheelRight]  "横滚"  /layers/base/south  decl/3
+   600.000    send +WheelLeft
+   640.000    send +WheelRight
+   650.000  south up            end                                   "横滚"  /layers/base/south
+   660.000  exit: release all
+exit 0
+
+$ padmated --profile testdata/wheel-keys.json --fake-input testdata/wheel-keys.jsonl --dry-run --decisions
+{"t":100,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"放大","action":"tap WheelUp","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+WheelUp"]}
+{"t":150,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"放大","reason":"end"}
+{"t":200,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"缩小","action":"hold Ctrl+WheelDown","owner":"decl/2","reason":"dispatch"}
+{"t":200,"send":["+LCtrl","+WheelDown"]}
+{"t":500,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"缩小","action":"hold Ctrl+WheelDown","owner":"decl/2","reason":"release"}
+{"t":500,"send":["-LCtrl"]}
+{"t":600,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"横滚","action":"tap [WheelLeft,WheelRight]","owner":"decl/3","reason":"dispatch"}
+{"t":600,"send":["+WheelLeft"]}
+{"t":640,"send":["+WheelRight"]}
+{"t":650,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"横滚","reason":"end"}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/wheel-keys.json, "wheel-keys", 3 bindings
+fake input: testdata/wheel-keys.jsonl, 7 events of device 3 "left pad"
+exit 0
+

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "name": "sticks",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "eightWay",
+      "deadzone": 0.1526,
+      "saturation": 0.9156,
+      "directionThreshold": 0,
+      "diagonalWidth": 60,
+      "directionDelayMs": 100,
+      "outerThreshold": 0.6
+    },
+    "rs": {
+      "mode": "fourWayDiagonal",
+      "deadzone": 0.2747,
+      "saturation": 0.9766,
+      "directionThreshold": 0,
+      "outerThreshold": 0
+    },
+    "lt": {
+      "press": 0.763,
+      "release": 0.713
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "ls.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "ls.right": {
+        "press": {
+          "type": "keys",
+          "keys": "Right"
+        }
+      },
+      "ls.downright": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "ls.down": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "ls.downleft": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "ls.left": {
+        "press": {
+          "type": "keys",
+          "keys": "Left"
+        }
+      },
+      "ls.upleft": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "ls.outer": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift"
+        }
+      },
+      "rs.up": {
+        "press": {
+          "type": "keys",
+          "keys": "U"
+        }
+      },
+      "rs.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "I"
+        }
+      },
+      "rs.downright": {
+        "press": {
+          "type": "keys",
+          "keys": "L"
+        }
+      },
+      "rs.downleft": {
+        "press": {
+          "type": "keys",
+          "keys": "K"
+        }
+      },
+      "rs.upleft": {
+        "press": {
+          "type": "keys",
+          "keys": "J"
+        }
+      },
+      "rs.outer": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl"
+        }
+      }
+    },
+    "Other": {
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "F1"
+        }
+      },
+      "ls.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "F2"
+        }
+      }
+    }
+  }
+}

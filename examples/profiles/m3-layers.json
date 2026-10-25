@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "name": "M3 layer acceptance",
+  "defaultLayer": "base",
+  "feedback": {
+    "shortMs": 70,
+    "longMs": 210,
+    "gapMs": 100,
+    "strength": 28672,
+    "pausedColor": "#FFAA00"
+  },
+  "common": {
+    "rightstick": {"label": "cycle mode", "press": {"type": "layer", "layers": ["base", "alt", "third"], "op": "cycle"}}
+  },
+  "layers": {
+    "base": {
+      "leftshoulder": {"label": "tap F13 / hold alt", "tap": {"type": "keys", "keys": "F13"}, "hold": {"type": "layer", "layer": "alt", "op": "hold"}},
+      "south": {"label": "base A", "press": {"type": "keys", "keys": "A"}},
+      "east": {"label": "toggle alt", "press": {"type": "layer", "layer": "alt", "op": "toggle"}}
+    },
+    "alt": {
+      "color": "#3366FF",
+      "south": {"label": "alt B", "press": {"type": "keys", "keys": "B"}},
+      "west": {"block": true}
+    },
+    "third": {
+      "color": "#FF6633",
+      "south": {"label": "third C", "press": {"type": "keys", "keys": "C"}}
+    }
+  }
+}

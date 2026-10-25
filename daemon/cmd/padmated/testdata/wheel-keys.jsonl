@@ -1,0 +1,10 @@
+# A wheel key is sent as its press only: +WheelUp is one notch up, and the
+# release after it sends nothing, so no line shows it. Ctrl around a notch
+# still goes up in the same send.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":150000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":200000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":500000000,"kind":"up","device":3,"control":"east"}
+{"timeNs":600000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":650000000,"kind":"up","device":3,"control":"south"}

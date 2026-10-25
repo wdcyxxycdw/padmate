@@ -1,0 +1,128 @@
+/* Design tokens and base elements shared by every surface (ADR-0045). */
+:root {
+  color-scheme: dark;
+  --bg: #0f1013;
+  --rail: #0b0c0e;
+  --line: #1c1f25;
+  --surface: #15171c;
+  --surface-2: #1b1e24;
+  --surface-3: #262a31;
+  --field: #0f1013;
+  --border: #2a2e36;
+  --border-strong: #343944;
+  /* The edge of a control (WCAG 1.4.11, 3:1 on every surface); --border stays
+     for decorative card edges. */
+  --control-border: #737987;
+  --text: #eceef2;
+  --text-2: #a6acb7;
+  --text-3: #999fab;
+  --text-4: #8c929e;
+  --accent: #4cc2ff;
+  --accent-ink: #04121c;
+  --accent-bg: #102230;
+  --accent-soft: rgba(76, 194, 255, 0.18);
+  --amber: #f2b35b;
+  --amber-bg: rgba(242, 179, 91, 0.1);
+  --red: #ff8a80;
+  --red-bg: rgba(255, 138, 128, 0.1);
+  --green: #5fd3a0;
+  --violet: #b49cff;
+  --violet-bg: rgba(180, 156, 255, 0.14);
+  --pink: #f09ad6;
+  --halo: #08090b;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  font-family:
+    "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC",
+    sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c3038;
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.mono {
+  font-family: var(--mono);
+}
+/* Reduced motion (UI-24): a person who asks the system for less motion gets
+   none from the window: a transition or an animation ends as it starts. The
+   rules that say so for one thing (the recording dot, the stage) still do. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: It has to beat every rule that sets a duration, whatever its specificity. */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: As above. */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: As above. */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: As above. */
+    scroll-behavior: auto !important;
+  }
+}

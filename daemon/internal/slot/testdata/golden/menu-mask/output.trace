@@ -1,0 +1,17 @@
++LAlt@0
++vk:0xE8@100 -vk:0xE8@100 -LAlt@100
++LAlt@200
++Z@250
+-Z@270
+-LAlt@400
++LAlt@500 +Tab@500
+-Tab@520 -LAlt@520
++LWin@600
++vk:0xE8@700 -vk:0xE8@700 -LWin@700
++LCtrl@800 +LAlt@800
++vk:0xE8@900 -vk:0xE8@900 -LAlt@900 -LCtrl@900
++LAlt@1000
++vk:0xE8@1020 -vk:0xE8@1020 -LAlt@1020
++RAlt@1100
++vk:0xE8@1150 -vk:0xE8@1150 -RAlt@1150
++LAlt@1200 +vk:0xE8@1200 -vk:0xE8@1200 -LAlt@1200

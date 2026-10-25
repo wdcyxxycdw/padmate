@@ -1,0 +1,47 @@
+$ padmated --profile testdata/mouse-move.json --fake-input testdata/mouse-move.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/mouse-move.json, "mouse-move", 3 bindings
+fake input: testdata/mouse-move.jsonl, 10 events of device 3 "left pad"
+
+      time  input               reason    action               label     binding                    owner
+     0.000  device 3 added
+     8.000    move +104,+0
+   112.000    move +40,+0
+   150.000  north down          dispatch  tap F13              "快捷键"  /layers/base/north         decl/1
+   150.000    send +F13
+   152.000    move +16,+0
+   160.000  north up            end                            "快捷键"  /layers/base/north
+   168.000    move +8,+0
+   170.000    send -F13
+   176.000    move +32,+0
+   200.000  leftshoulder down   dispatch  mouse precision 0.5  "精确"    /layers/base/leftshoulder  decl/2
+   208.000    move +25,+0
+   300.000  leftshoulder up     end                            "精确"    /layers/base/leftshoulder
+   400.000  south down          dispatch  mouse jump 0.5,0.5   "回中"    /layers/base/south         decl/3
+   400.000    jump 32768,32768
+   410.000  south up            end                            "回中"    /layers/base/south
+   410.000  exit: release all
+exit 0
+
+$ padmated --profile testdata/mouse-move.json --fake-input testdata/mouse-move.jsonl --dry-run --decisions
+{"t":8,"move":[104,0]}
+{"t":112,"move":[40,0]}
+{"t":150,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"快捷键","action":"tap F13","owner":"decl/1","reason":"dispatch"}
+{"t":150,"send":["+F13"]}
+{"t":152,"move":[16,0]}
+{"t":160,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"快捷键","reason":"end"}
+{"t":168,"move":[8,0]}
+{"t":170,"send":["-F13"]}
+{"t":176,"move":[32,0]}
+{"t":200,"control":"leftshoulder","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","label":"精确","action":"mouse precision 0.5","owner":"decl/2","reason":"dispatch"}
+{"t":208,"move":[25,0]}
+{"t":300,"control":"leftshoulder","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","label":"精确","reason":"end"}
+{"t":400,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"回中","action":"mouse jump 0.5,0.5","owner":"decl/3","reason":"dispatch"}
+{"t":400,"jump":[32768,32768]}
+{"t":410,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"回中","reason":"end"}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/mouse-move.json, "mouse-move", 3 bindings
+fake input: testdata/mouse-move.jsonl, 10 events of device 3 "left pad"
+exit 0
+

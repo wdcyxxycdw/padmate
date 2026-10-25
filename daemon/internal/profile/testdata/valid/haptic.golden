@@ -1,0 +1,8 @@
+name "触感", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap  haptic: tick
+	east          /layers/base/east          label ""  haptic: confirm
+	west          /layers/base/west          label ""  press: keys E hold  haptic: pulse3
+	north         /layers/base/north         label ""  press: keys Delete tap  haptic: error
+	rs.cw         /layers/base/rs.cw         label ""  press: keys ] tap  haptic: pulse1
+	rs.ccw        /layers/base/rs.ccw        label ""  press: keys [ tap

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "name": "sticks-inert",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "fourWay",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "dpad.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "PageUp"
+        }
+      },
+      "dpad.downleft": {
+        "press": {
+          "type": "keys",
+          "keys": "End"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      },
+      "ls.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "E"
+        }
+      },
+      "ls.right": {
+        "press": {
+          "type": "keys",
+          "keys": "D"
+        }
+      },
+      "rs.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "rs.upleft": {
+        "press": {
+          "type": "keys",
+          "keys": "Home"
+        }
+      }
+    }
+  }
+}

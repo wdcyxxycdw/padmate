@@ -1,0 +1,24 @@
+# joycon-combine without L's recentering ButtonUp of east at @500. It
+# models a ButtonUp dropped because Events was full: the Source drops
+# button events but never device events. So Space is still held when L is
+# removed, and the ReleaseAll at the removal releases it in the same
+# instant. Everything else is as in joycon-combine: id 2 is R, skipped
+# because it is already gone (without the fix, a DeviceAdded and a
+# DeviceRemoved of id 2 with an empty GUID); the pair takes the free slot;
+# R is switched off and L comes back with a new id and its old key.
+# The GUIDs are made up in the layout of SDL's HIDAPI GUIDs: Bluetooth,
+# CRC 0, Nintendo's 057e with product 2006, 2007 or 2008, and an arbitrary
+# last byte. The serials are made-up MACs. The pair's serial and path
+# are the ones SDL_hidapi_combined.c gives it; the lone Joy-Cons' paths
+# are left empty, since the key of a gamepad with a serial does not use
+# them.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":1}
+{"timeNs":500000000,"kind":"added","device":3,"info":{"id":3,"name":"Nintendo Switch Joy-Con (L/R)","type":"joyconpair","vendor":1406,"product":8200,"version":1,"guid":"050000007e0500000820000001006803","driver":"hidapi","path":"nintendo_joycons_combined","serial":"aa-bb-cc-dd-ee-01,aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":600000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":610000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":800000000,"kind":"removed","device":3}
+{"timeNs":810000000,"kind":"added","device":4,"info":{"id":4,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":900000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":910000000,"kind":"up","device":4,"control":"south"}

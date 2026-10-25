@@ -1,0 +1,12 @@
+6:48: error: "show" is not a valid value; use "hints" (/layers/base/south/press/op)
+	> "show"}},
+7:25: error: missing property "op" (/layers/base/east/press)
+	> {"type": "hud"}},
+8:57: error: unknown property "factor" (/layers/base/north/press/factor)
+	> "factor": 0.5}},
+9:56: error: unknown property "keys" (/layers/base/west/press/keys)
+	> "keys": "Z"}},
+10:54: error: unknown property "x" (/layers/base/lb/press/x)
+	> "x": 0.5, "y": 0.5}}
+10:64: error: unknown property "y" (/layers/base/lb/press/y)
+	> "y": 0.5}}

@@ -1,0 +1,5 @@
+# Suspended from the start, before any slot.
+@0 suspended lock
+@500 slot 0 gen=1 <- id 1 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 provisional
+@600 slot 0 gen=1 <- id 1 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 confirmed
+@1000 unsuspended

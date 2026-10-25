@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-move",
+  "analog": {
+    "ls": {"mode": "mouse", "mouseSpeed": 1000, "deadzone": 0, "saturation": 1},
+    "rs": {"mode": "mouse", "mouseSpeed": 2000, "deadzone": 0, "saturation": 1, "curve": "quadratic", "mouseSmoothingMs": 40}
+  },
+  "layers": {
+    "base": {
+      "leftshoulder": {"label": "精确", "press": {"type": "mouse", "op": "precision", "factor": 0.5}},
+      "south": {"label": "回中", "press": {"type": "mouse", "op": "jump", "x": 0.5, "y": 0.5}},
+      "ls.up": {"label": "无用", "press": {"type": "keys", "keys": "W", "mode": "hold"}}
+    }
+  }
+}

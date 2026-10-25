@@ -1,0 +1,6 @@
+# LCtrl stays down through the tap: only Z taps, and LCtrl goes up with
+# the shoulder.
++LCtrl@0
++Z@100
+-Z@120
+-LCtrl@300

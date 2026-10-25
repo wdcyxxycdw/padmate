@@ -1,0 +1,2 @@
+xml
+不是合法的 XML（第 3 行）：element <set> closed by </gamecontroller>

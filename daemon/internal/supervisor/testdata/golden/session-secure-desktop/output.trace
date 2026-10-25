@@ -1,0 +1,4 @@
+# The secure desktop lets go of Space at 500; nothing maps until both
+# it and the lock are gone.
++Space@100
+-Space@500

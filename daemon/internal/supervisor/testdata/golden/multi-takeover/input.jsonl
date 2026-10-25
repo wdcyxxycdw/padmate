@@ -1,0 +1,15 @@
+# Two slots, neither confirmed: Pad A has slot 0 and Pad B slot 1. Pad
+# C waits. A leaves: C stands in on slot 0, which is now the provisional
+# slot assigned last. Pad D waits too; its press of south takes over
+# slot 1, assigned longest ago, not slot 0 of lower index: B waits
+# again, first in line, and D's south taps Ctrl+Z. B's press of south
+# then takes over slot 0, the only provisional slot, and C waits again.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":20000000,"kind":"added","device":3,"info":{"id":3,"name":"Pad C","guid":"030000000c0000000c00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"removed","device":1}
+{"timeNs":150000000,"kind":"added","device":4,"info":{"id":4,"name":"Pad D","guid":"030000000d0000000d00000000000000","gamepad":true}}
+{"timeNs":200000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":210000000,"kind":"up","device":4,"control":"south"}
+{"timeNs":300000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":310000000,"kind":"up","device":2,"control":"south"}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "连发速率",
+  "layers": {
+    "base": {
+      "ls.up": {"press": {"type": "keys", "keys": "A", "repeat": {"rateHz": 10, "minRateHz": 11}}},
+      "south": {"press": {"type": "keys", "keys": "B", "repeat": {"minRateHz": 3}}},
+      "rs.cw": {"press": {"type": "keys", "keys": "C", "mode": "tap", "repeat": {"minRateHz": 3}}},
+      "rt": {"press": {"type": "keys", "keys": "D", "repeat": {"rateHz": 20, "minRateHz": 3}}}
+    }
+  }
+}

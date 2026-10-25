@@ -1,0 +1,16 @@
+{"t":0,"control":"ls.active","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/ls.active","label":"摇杆","action":"hold C","owner":"decl/1","reason":"dispatch"}
+{"t":0,"control":"ls.inner","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/ls.inner","label":"内圈","action":"hold A","owner":"decl/2","reason":"dispatch"}
+{"t":0,"control":"ls.up","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/ls.up","label":"上","action":"hold W","owner":"decl/3","reason":"dispatch"}
+{"t":100,"control":"ls.inner","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/ls.inner","label":"内圈","action":"hold A","owner":"decl/2","reason":"release"}
+{"t":100,"control":"ls.outer","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/ls.outer","label":"外圈","action":"hold B","owner":"decl/4","reason":"dispatch"}
+{"t":300,"control":"ls.outer","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/ls.outer","label":"外圈","action":"hold B","owner":"decl/4","reason":"release"}
+{"t":300,"control":"ls.inner","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/ls.inner","label":"内圈","action":"hold A","owner":"decl/5","reason":"dispatch"}
+{"t":400,"control":"ls.active","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/ls.active","label":"摇杆","action":"hold C","owner":"decl/1","reason":"release"}
+{"t":400,"control":"ls.inner","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/ls.inner","label":"内圈","action":"hold A","owner":"decl/5","reason":"release"}
+{"t":400,"control":"ls.up","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/ls.up","label":"上","action":"hold W","owner":"decl/3","reason":"release"}
+{"t":500,"control":"ls.active","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/ls.active","label":"摇杆","action":"hold C","owner":"decl/6","reason":"dispatch"}
+{"t":500,"control":"ls.outer","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/ls.outer","label":"外圈","action":"hold B","owner":"decl/7","reason":"dispatch"}
+{"t":500,"control":"ls.up","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/ls.up","label":"上","action":"hold W","owner":"decl/8","reason":"dispatch"}
+{"t":600,"control":"ls.active","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/ls.active","label":"摇杆","action":"hold C","owner":"decl/6","reason":"release"}
+{"t":600,"control":"ls.outer","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/ls.outer","label":"外圈","action":"hold B","owner":"decl/7","reason":"release"}
+{"t":600,"control":"ls.up","edge":"up","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/ls.up","label":"上","action":"hold W","owner":"decl/8","reason":"release"}

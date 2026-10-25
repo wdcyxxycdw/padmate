@@ -1,0 +1,17 @@
+# The idle 2.4G pad, "XInput Controller #1", connects first and
+# takes the free slot, provisionally: its stick jitter confirms nothing.
+# Pad B, the one in hand, connects after it and waits. B's first press,
+# of south, takes the slot over and taps Ctrl+Z; the idle pad waits,
+# first in line. When B leaves, the idle pad stands in; B comes back,
+# takes the slot back, provisionally, and its east holds Space.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"XInput Controller #1","guid":"030000000f0000000f00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":30000000,"kind":"axis","device":1,"control":"lefty","value":900}
+{"timeNs":50000000,"kind":"axis","device":2,"control":"leftx","value":12000}
+{"timeNs":100000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":110000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":300000000,"kind":"removed","device":2}
+{"timeNs":350000000,"kind":"axis","device":1,"control":"lefty","value":-700}
+{"timeNs":400000000,"kind":"added","device":3,"info":{"id":3,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":500000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":600000000,"kind":"up","device":3,"control":"east"}

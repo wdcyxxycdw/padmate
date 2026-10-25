@@ -1,0 +1,904 @@
+/* Key drawer (UI-39): one control, its gestures and their settings. */
+.drawer {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+/* Header: glyph, name, profile, key actions and close. */
+.drawer-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px 14px 16px;
+  border-bottom: 1px solid #22252c;
+}
+.drawer-glyph {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #22252c;
+  box-shadow: inset 0 0 0 1px #30343d;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.drawer-glyph[data-shape="square"] {
+  border-radius: 10px;
+}
+.drawer-glyph[data-size="medium"] {
+  font-size: 12.5px;
+}
+.drawer-glyph[data-size="small"] {
+  font-size: 10px;
+  letter-spacing: -0.02em;
+}
+.drawer-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.drawer-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 30px;
+}
+.drawer-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 600;
+}
+/* The heading takes focus when the drawer opens; ring it only for keyboard use. */
+.drawer-title:focus:not(:focus-visible) {
+  outline: none;
+}
+.drawer-title:focus-visible {
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+.icon-btn.bare.drawer-pencil {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-4);
+}
+.icon-btn.bare.drawer-pencil:hover:not(:disabled) {
+  color: var(--text);
+}
+.input.drawer-rename {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.drawer-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+/* A long profile name ends in an ellipsis; the 脚本 chip stays visible. */
+.drawer-subtitle-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag.drawer-script-chip {
+  flex: none;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 10.5px;
+}
+
+/* Scrolling body. */
+.drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.drawer-body > .notice {
+  flex: none;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.drawer-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.input.drawer-label-input {
+  height: 38px;
+  font-size: 13.5px;
+}
+.drawer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(95, 211, 160, 0.08);
+  color: var(--green);
+  font-size: 12px;
+}
+.drawer-empty {
+  padding: 2px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.drawer-muted {
+  color: var(--text-4);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.drawer-hint,
+.drawer-warning,
+.drawer-script-conflict {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.drawer-hint > .ui-icon,
+.drawer-warning > .ui-icon,
+.drawer-script-conflict > .ui-icon {
+  margin-top: 2px;
+}
+.drawer-warning,
+.drawer-script-conflict {
+  color: #d9ae6a;
+}
+.drawer-dialog-text {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Gesture list. */
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.drawer-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 26px;
+}
+.btn-ghost.drawer-add,
+.btn-ghost.drawer-link {
+  height: 26px;
+  padding: 0 8px;
+  gap: 5px;
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 12.5px;
+}
+.btn-ghost.drawer-add:hover:not(:disabled),
+.btn-ghost.drawer-link:hover:not(:disabled),
+.btn-ghost.drawer-add[aria-expanded="true"] {
+  background: rgba(76, 194, 255, 0.1);
+  color: #6dceff;
+}
+.btn-ghost.drawer-link {
+  align-self: flex-start;
+  margin-left: -8px;
+}
+.drawer-section .menu {
+  min-width: 250px;
+}
+.drawer-gesture {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #181a20;
+}
+.drawer-gesture[data-open="true"] {
+  border-color: var(--border-strong);
+}
+.drawer-gesture-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px 10px 14px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+.drawer-gesture-chevron {
+  color: var(--text-3);
+}
+.drawer-gesture-head:hover .drawer-gesture-chevron {
+  color: var(--text);
+}
+.drawer-gesture-name {
+  flex: none;
+  min-width: 34px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.drawer-gesture-summary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.drawer-gesture-summary .keycaps {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.drawer-summary-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #c9ced6;
+  font-size: 12.5px;
+}
+.drawer-summary-empty {
+  color: var(--text-4);
+  font-size: 12.5px;
+}
+.drawer-summary-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.drawer-summary-locked > .ui-icon {
+  flex: none;
+}
+/* The text ends in an ellipsis but keeps the dimmed locked colour. */
+.drawer-summary-locked .drawer-summary-text {
+  color: inherit;
+}
+/* A script (macro) a gesture runs; a warning colour when it is gone. */
+.drawer-summary-macro {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.drawer-summary-macro .drawer-summary-text {
+  color: inherit;
+}
+.drawer-summary-macro[data-missing] {
+  color: #d9ae6a;
+}
+.drawer-macro-icon {
+  flex: none;
+  color: var(--violet);
+}
+.drawer-macro-missing {
+  flex: none;
+}
+.tag.drawer-delay-tag {
+  flex: none;
+}
+.drawer-gesture-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid #262a31;
+}
+.btn-ghost.drawer-remove {
+  align-self: flex-start;
+  height: 28px;
+  margin-left: -8px;
+  padding: 0 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.btn-ghost.drawer-remove:hover:not(:disabled),
+.btn-ghost.drawer-remove:focus-visible {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* Action editors. */
+.drawer-action,
+.drawer-keys,
+.drawer-macro-fields,
+.drawer-profile-fields,
+.drawer-sequence {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.drawer-sequence {
+  gap: 8px;
+}
+.drawer-shortcut {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.drawer-capture {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  background: var(--field);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.drawer-shortcut[data-active="true"] .drawer-capture {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(76, 194, 255, 0.12);
+}
+/* Basis auto: a long chord keeps its width and the button wraps below it,
+   instead of the keycaps stacking one per line beside the button. */
+.drawer-capture-keys {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.drawer-capture-empty {
+  color: var(--text-4);
+  font-size: 12.5px;
+}
+.drawer-capture-wait {
+  color: var(--accent);
+  font-size: 12.5px;
+}
+.btn.drawer-capture-btn {
+  height: 36px;
+  padding: 0 12px;
+}
+.btn.drawer-mouse {
+  height: 36px;
+  padding: 0 12px;
+}
+.btn.drawer-mouse[aria-expanded="true"] {
+  border-color: #3a3f4a;
+  color: var(--text);
+}
+/* The mouse menu and the capture button stay together at the right end,
+   also when they wrap below a long chord. */
+.drawer-capture-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+/* Short items: narrower than the gesture menu, so that the menu of a
+   button at the drawer's right edge stays inside the drawer. */
+.drawer-section .drawer-capture-actions .menu,
+.drawer-section .drawer-step-row .menu {
+  min-width: 150px;
+}
+.drawer-rec-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6b6b;
+}
+[data-active="true"] .drawer-rec-dot {
+  animation: drawer-pulse 1s ease-in-out infinite;
+}
+@keyframes drawer-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-active="true"] .drawer-rec-dot {
+    animation: none;
+  }
+  .drawer-capture {
+    transition: none;
+  }
+}
+.drawer-manual-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 20px;
+}
+.drawer-sequence-preview {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field);
+}
+.drawer-step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drawer-step-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  padding: 2px 2px 2px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--field);
+}
+.drawer-step[data-active="true"] .drawer-step-row {
+  border-color: var(--accent);
+}
+.drawer-step-label {
+  flex: none;
+  margin-right: 8px;
+  color: var(--text-4);
+  font-size: 12px;
+}
+.drawer-step-keys {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.drawer-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+.drawer-option-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* A row whose control cannot shrink (a segmented control) moves the control
+   under its label instead of drawing it over the label. */
+.drawer-option[data-wrap="true"] {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.drawer-option[data-wrap="true"] > .drawer-option-text {
+  min-width: auto;
+}
+.drawer-option-label {
+  color: #c9ced6;
+  font-size: 12.5px;
+}
+.drawer-option-hint {
+  color: var(--text-4);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.drawer-number {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.drawer-number-label {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.drawer-number .input-number {
+  width: 100%;
+  height: 32px;
+  text-align: left;
+}
+/* A unit at the end of the field, inside its box. */
+.drawer-number-box {
+  position: relative;
+  display: block;
+}
+.drawer-number-box .input-number {
+  padding-right: 28px;
+}
+.drawer-number-unit {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* The script picker: no scripts yet, or one with an error. */
+.drawer-macro-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.drawer-macro-error {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.drawer-macro-error:focus-visible > span,
+.drawer-macro-error:hover:not(:disabled) > span {
+  text-decoration: underline;
+}
+
+/* Layer actions from the file: shown, not edited. */
+.drawer-locked-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.drawer-locked {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed #2e323b;
+  border-radius: 10px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.drawer-locked > .ui-icon {
+  margin-top: 2px;
+}
+.drawer-locked-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* A profile ID has no break points; wrap it inside the drawer. */
+.drawer-locked-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Script ownership. */
+.drawer-script {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(180, 156, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(180, 156, 255, 0.08);
+}
+.drawer-script[data-owned="false"] {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+.drawer-script-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.drawer-script-badge {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(180, 156, 255, 0.18);
+  color: var(--violet);
+  font-weight: 700;
+}
+.drawer-script-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+.drawer-script-title {
+  color: #e4dbff;
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.drawer-script[data-owned="false"] .drawer-script-title {
+  color: var(--text);
+}
+.drawer-script-desc {
+  color: #b9aed8;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.drawer-script[data-owned="false"] .drawer-script-desc {
+  color: var(--text-3);
+}
+.drawer-script-actions {
+  display: flex;
+  gap: 8px;
+  padding-left: 40px;
+}
+.btn-ghost.drawer-script-link {
+  height: 30px;
+  margin-left: -10px;
+  padding: 0 10px;
+  color: #b9aed8;
+}
+.drawer-script[data-owned="false"] .btn-ghost.drawer-script-link {
+  color: var(--text-2);
+}
+.btn-ghost.drawer-script-link:hover:not(:disabled) {
+  background: rgba(180, 156, 255, 0.12);
+  color: #e4dbff;
+}
+.drawer-script-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #181a20;
+}
+.drawer-script-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-top: 1px solid #1f2228;
+}
+.drawer-script-row:first-child {
+  border-top: 0;
+}
+.drawer-script-gesture {
+  flex: none;
+  min-width: 34px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.drawer-script-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #c9ced6;
+  font-size: 12.5px;
+}
+
+/* Validation results for this control. */
+.drawer-diagnostics {
+  flex: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drawer-diagnostic {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 138, 128, 0.3);
+  border-radius: 10px;
+  background: var(--red-bg);
+  color: #f0b3ae;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.drawer-diagnostic > .ui-icon {
+  margin-top: 2px;
+}
+.drawer-diagnostic[data-severity="warning"] {
+  border-color: rgba(242, 179, 91, 0.28);
+  background: rgba(242, 179, 91, 0.07);
+  color: #d9ae6a;
+}
+.drawer-diagnostic strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Trigger/d-pad settings and "高级" at the bottom of the body. */
+.drawer-advanced,
+.drawer-extra {
+  flex: none;
+  border-top: 1px solid #22252c;
+}
+.drawer-section + .drawer-advanced,
+.drawer-section + .drawer-extra {
+  margin-top: auto;
+}
+.drawer-advanced + .drawer-extra,
+.drawer-extra + .drawer-advanced {
+  margin-top: -16px;
+}
+.drawer-advanced .disclosure-body,
+.drawer-extra .disclosure-body {
+  padding: 4px 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .drawer-header {
+    gap: 10px;
+    padding: 14px 10px 12px 12px;
+  }
+  .drawer-body {
+    padding: 14px 12px;
+  }
+  .drawer-gesture-body {
+    padding: 12px;
+  }
+}
+
+/* The steps of a sequence that are not a shortcut (UI-31): a wait and a text,
+   the box a text is written in, and the line that reads the sequence. */
+.drawer-keys > .menu-anchor .menu {
+  min-width: 150px;
+}
+.drawer-step-body {
+  flex: 1;
+  min-width: 0;
+}
+.drawer-step-wait {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.drawer-step-wait .input-number {
+  width: 96px;
+  height: 28px;
+  padding-right: 28px;
+}
+.drawer-step-wait .drawer-number-unit {
+  right: auto;
+  left: 70px;
+}
+/* A text step is a box: its row of name and buttons, then the text under it
+   across the whole width. */
+.drawer-step[data-kind="text"] {
+  gap: 0;
+  padding-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+}
+.drawer-step[data-kind="text"] > .drawer-step-row {
+  border: 0;
+  background: transparent;
+}
+.drawer-step-text {
+  padding: 0 8px 0 10px;
+}
+.drawer-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.input.drawer-text-area {
+  display: block;
+  height: auto;
+  min-height: 56px;
+  padding: 8px 10px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.drawer-text-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 16px;
+}
+.drawer-text-error {
+  min-width: 0;
+}
+.drawer-text-count {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-4);
+  font-size: 12px;
+}
+.drawer-text-count[data-over] {
+  color: var(--red);
+}
+.drawer-preview-steps {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.drawer-preview-note {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* The action types are five on a press or a hold; in the narrow drawer they
+   go on a second row instead of running over its edge. */
+.drawer-action > .segmented {
+  flex-wrap: wrap;
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .drawer-shortcut[data-active="true"] .drawer-capture,
+  .drawer-step[data-active="true"] .drawer-step-row {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+  .drawer-rec-dot {
+    background: CanvasText;
+  }
+}

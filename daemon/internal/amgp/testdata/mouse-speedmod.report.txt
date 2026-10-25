@@ -1,0 +1,5 @@
+丢弃  set 1 / east / slot 1：鼠标速度改成 150%：padmate 的精确模式只能把鼠标变慢，范围 5% 至 100%
+近似  set 1 / west / slot 1：鼠标速度改成 2%，padmate 最慢是 5%
+丢弃  set 1 / north：同一个动作里已经有按键，鼠标速度的改变丢弃
+丢弃  set 1 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+丢弃  set 1 / rightshoulder / slot 1：鼠标速度的改变只在按住期间有效，这里的动作只发生一次

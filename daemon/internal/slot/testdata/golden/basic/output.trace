@@ -1,0 +1,24 @@
+# Taps last 20 ms, holds last as long as their control, and LT holds Alt
+# from 30% of its travel on the way in to 20% on the way out.
++B@0
+-B@20
++LCtrl@2000 +Z@2000
+-Z@2020 -LCtrl@2020
++LCtrl@2400 +Z@2400
+-Z@2420 -LCtrl@2420
++Space@3000
+-Space@3800
++LCtrl@4500
++Space@4600
+-Space@5200
+-LCtrl@5300
++LAlt@6016
++vk:0xE8@6416 -vk:0xE8@6416 -LAlt@6416
++E@7000
+-E@7020
++LShift@8000
+-LShift@8900
++LCtrl@9500
++Z@9600
+-Z@9620
+-LCtrl@9800

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "name": "M2 gesture acceptance",
+  "timing": {
+    "holdMs": 250,
+    "multiTapMs": 220,
+    "tapPressMs": 20,
+    "tapGapMs": 20
+  },
+  "layers": {
+    "base": {
+      "west": {
+        "label": "tap F13 / hold F14",
+        "tap": {"type": "keys", "keys": "F13"},
+        "hold": {"type": "keys", "keys": "F14"}
+      },
+      "south": {
+        "label": "double tap F15",
+        "tap": {"type": "keys", "keys": "Ctrl+Z"},
+        "doubleTap": {"type": "keys", "keys": "F15"}
+      },
+      "east": {
+        "label": "latch Shift",
+        "latch": true,
+        "press": {"type": "keys", "keys": "Shift"}
+      },
+      "north": {
+        "label": "repeat F16",
+        "press": {
+          "type": "keys",
+          "keys": "F16",
+          "mode": "hold",
+          "repeat": {"delayMs": 350, "rateHz": 12}
+        }
+      },
+      "leftshoulder": {
+        "label": "tap-repeat F17",
+        "press": {"type": "keys", "keys": "F17", "repeat": {"style": "tap", "delayMs": 0, "rateHz": 20}}
+      },
+      "rightshoulder": {
+        "label": "sequence Ctrl+K, S",
+        "press": {"type": "keys", "keys": ["Ctrl+K", "S"], "mode": "tap"}
+      }
+    }
+  }
+}

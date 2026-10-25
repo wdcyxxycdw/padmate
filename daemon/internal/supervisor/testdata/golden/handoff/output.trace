@@ -1,0 +1,4 @@
+# Nothing while Pad B waits; its east counts as pressed when it takes
+# the slot.
++Space@300
+-Space@500

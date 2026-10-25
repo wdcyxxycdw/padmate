@@ -1,0 +1,17 @@
+# Each extended button (IN-06) pressed for 50 ms, one after another.
++paddle1@0 -paddle1@50
++paddle2@100 -paddle2@150
++paddle3@200 -paddle3@250
++paddle4@300 -paddle4@350
++misc1@400 -misc1@450
++misc2@500 -misc2@550
++misc3@600 -misc3@650
++misc4@700 -misc4@750
++misc5@800 -misc5@850
++misc6@900 -misc6@950
++touchpad@1000 -touchpad@1050
+# guide as SDL reports a quick press: released no earlier than 250 ms
+# after it.
++guide@1100 -guide@1350
+# Two holds and a tap that overlap.
++paddle2@1500 +misc2@1510 +touchpad@1520 -touchpad@1530 -paddle2@1600 -misc2@1610

@@ -1,0 +1,11 @@
+近似  set 1 / ls.outer：修饰区按摇杆的外圈导入，从推动深度 0.60 起；padmate 的圈带滞回（离开时再低 0.05），和 AntiMicroX 的不完全一样
+近似  set 2 / ls：这一套的摇杆设置与 set 1 的不同：死区 3000（set 1 是 5000）、外圈 32000（set 1 是 30000）、模式“四向”（set 1 是“八向”）、对角宽度 20°（set 1 是 60°）、方向延迟 0 毫秒（set 1 是 100）；padmate 的摇杆设置是整个配置的，用 set 1 的
+近似  set 1 / rs.outer：修饰区按摇杆的外圈导入，从推动深度 0.00 起；padmate 的圈带滞回（离开时再低 0.05），和 AntiMicroX 的不完全一样
+丢弃  set 1 / ls：方形摇杆修正（80%）没有对应
+丢弃  set 1 / ls.upright / slot 2：同时按住的键里只能有一个不是修饰键：保留了 Up，丢弃了 Right
+丢弃  set 1 / ls.downright / slot 2：同时按住的键里只能有一个不是修饰键：保留了 Down，丢弃了 Right
+丢弃  set 1 / ls.downleft / slot 2：同时按住的键里只能有一个不是修饰键：保留了 Down，丢弃了 Left
+丢弃  set 1 / ls.upleft / slot 2：同时按住的键里只能有一个不是修饰键：保留了 Up，丢弃了 Left
+近似  set 1 / rs.up：摇杆在“只有对角”模式下，四个正方向不触发这个绑定
+信息  set 2：导入为层“Other”
+信息  这个配置除了 base 还有 1 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留

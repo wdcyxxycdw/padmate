@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "defaultLayer": "base",
+  "analog": {},
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "repeat": true}, "timing": {}}
+    }
+  }
+}

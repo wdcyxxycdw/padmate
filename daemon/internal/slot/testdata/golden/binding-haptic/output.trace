@@ -1,0 +1,22 @@
+# The keys of the bindings; haptics.trace has the haptics they play. Space
+# repeats while east is held (every 100 ms from 200 ms on, then the release
+# at 600 lets go), and west taps F13 after the double-tap window, F14 for the
+# double tap, and holds E.
++LCtrl@0 +Z@0
+-Z@20 -LCtrl@20
++Space@100
++Space@200
++Space@300
++Space@400
++Space@500
++Space@600 -Space@600
++F13@940
+-F13@960
++F14@1240
+-F14@1260
++E@2250
+-E@2400
++F15@2600
+-F15@2620
++F16@2700
+-F16@2720

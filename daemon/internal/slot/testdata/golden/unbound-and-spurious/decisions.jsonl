@@ -1,0 +1,10 @@
+{"t":0,"control":"west","edge":"down","cycle":1,"gesture":"press","reason":"unbound"}
+{"t":10,"control":"west","edge":"up","cycle":1,"gesture":"press","reason":"end"}
+{"t":20,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"待定","reason":"unbound"}
+{"t":30,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"待定","reason":"end"}
+{"t":40,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/3","reason":"dispatch"}
+{"t":45,"control":"south","edge":"down","cycle":3,"reason":"spurious"}
+{"t":50,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":55,"control":"south","edge":"up","cycle":0,"reason":"spurious"}
+{"t":80,"control":"rt","edge":"down","cycle":4,"gesture":"press","reason":"unbound"}
+{"t":90,"control":"rt","edge":"up","cycle":4,"gesture":"press","reason":"end"}

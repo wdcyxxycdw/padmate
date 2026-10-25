@@ -1,0 +1,15 @@
+# south dispatches when it goes down: one tick.
++south@0 -south@50
+# east holds Space and repeats it every 100 ms from 100 ms on; the confirm
+# plays once, at the press, not at each repeat.
++east@100 -east@600
+# west's tap waits out the double-tap window, then plays pulse2 once...
++west@700 -west@720
+# ...a double tap plays it once, for the second tap, not for the first...
++west@1200 -west@1210 +west@1230 -west@1240
+# ...and a hold plays it once, when the hold starts.
++west@2000 -west@2400
+# north runs on its release: the error plays then, not at the press.
++north@2500 -north@2600
+# rb has no haptic; dpad.up is blocked and plays none.
++rightshoulder@2700 -rightshoulder@2750 +dpad.up@2800 -dpad.up@2850

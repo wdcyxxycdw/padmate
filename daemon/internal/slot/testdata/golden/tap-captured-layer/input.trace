@@ -1,0 +1,2 @@
+# As tap-captured-modifier, but west's press action holds the layer nav.
++west@0 +south@10 -west@20 -south@30

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "macros",
+  "layers": {
+    "base": {
+      "south": { "label": "复制全部", "tap": { "type": "macro", "file": "复制全部.ts" } },
+      "east": { "press": { "type": "macro", "file": "按住 Shift.ts" } },
+      "north": { "hold": { "type": "macro", "file": "长按.js" } },
+      "west": { "press": { "type": "macro", "file": "不存在.ts" } },
+      "leftstick": { "press": { "type": "keys", "keys": "F13", "mode": "hold" } }
+    }
+  }
+}

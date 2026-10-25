@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "旋钮",
+  "analog": {
+    "rs": {"mode": "knob", "knobStepDeg": 5, "outerThreshold": 1.5},
+    "ls": {"mode": "dial"}
+  },
+  "layers": {"base": {"rs.cw": {"press": {"type": "keys", "keys": "]"}}}}
+}

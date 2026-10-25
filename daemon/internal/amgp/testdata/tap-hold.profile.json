@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "name": "tap-hold",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "K"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "east": {
+        "hold": {
+          "type": "keys",
+          "keys": "F12"
+        },
+        "timing": {
+          "holdMs": 500
+        }
+      },
+      "west": {
+        "tap": {
+          "type": "keys",
+          "keys": "T"
+        }
+      },
+      "north": {
+        "hold": {
+          "type": "keys",
+          "keys": "L"
+        },
+        "timing": {
+          "holdMs": 610
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift"
+        },
+        "tap": {
+          "type": "keys",
+          "keys": "X"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "LCtrl"
+        },
+        "timing": {
+          "holdMs": 300
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "release": {
+          "type": "keys",
+          "keys": "B"
+        }
+      },
+      "lt": {
+        "tap": {
+          "type": "keys",
+          "keys": "W"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "Q"
+        },
+        "timing": {
+          "holdMs": 250
+        }
+      },
+      "rt": {
+        "tap": {
+          "type": "keys",
+          "keys": "V"
+        }
+      },
+      "leftstick": {
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "rightstick": {
+        "hold": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "timing": {
+          "holdMs": 300
+        }
+      }
+    }
+  }
+}

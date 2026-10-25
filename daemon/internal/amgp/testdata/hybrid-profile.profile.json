@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "name": "hybrid-profile",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "mouse",
+      "deadzone": 0.1556,
+      "saturation": 0.9991,
+      "directionThreshold": 0,
+      "mouseSpeed": 1600,
+      "curve": "quadratic"
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseLeft"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "LWin"
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseRight"
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "Tab"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LAlt+Left"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LAlt+Right"
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "LAlt+F4"
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "Enter"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseMiddle"
+        }
+      },
+      "rightstick": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+LWin+O"
+        }
+      },
+      "guide": {
+        "release": {
+          "type": "layer",
+          "layer": "Controller mode",
+          "op": "switch"
+        }
+      },
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "dpad.down": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "dpad.left": {
+        "press": {
+          "type": "keys",
+          "keys": "Left"
+        }
+      },
+      "dpad.right": {
+        "press": {
+          "type": "keys",
+          "keys": "Right"
+        }
+      },
+      "rs.up": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelUp",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "rs.right": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelRight",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "rs.down": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelDown",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "rs.left": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelLeft",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      }
+    },
+    "Controller mode": {
+      "guide": {
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      }
+    }
+  }
+}

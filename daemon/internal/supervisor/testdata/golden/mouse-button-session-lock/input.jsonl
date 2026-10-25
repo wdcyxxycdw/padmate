@@ -1,0 +1,8 @@
+# The lock (DMN-09) lets go of a held mouse button: Pad A's east holds
+# MouseLeft when the workstation locks at 500. East, held across the lock and
+# its end at 1000, does nothing until it is pressed again at 1400.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1200000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":1400000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1600000000,"kind":"up","device":1,"control":"east"}

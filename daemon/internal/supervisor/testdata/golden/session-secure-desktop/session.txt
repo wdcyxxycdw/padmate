@@ -1,0 +1,9 @@
+@500 world desktop=other
+@500 desktop
+@800 world locked=true
+@800 lock
+# The unlock's queries find the secure desktop still up.
+@1200 world locked=false
+@1200 unlock
+@1500 world desktop=input
+@1500 desktop

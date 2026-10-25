@@ -1,0 +1,4 @@
+name "绘画", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	east          /layers/base/east          label ""

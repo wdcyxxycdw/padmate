@@ -1,0 +1,494 @@
+/* App shell: navigation rail, top bar, page frame (ADR-0045). */
+.app-shell {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.sidebar {
+  flex: none;
+  width: 64px;
+  height: 100%;
+  padding: 12px 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+  overflow-x: hidden;
+  /* A short window, at 200% zoom 277 CSS pixels, would cut the last page off. */
+  overflow-y: auto;
+}
+.brand {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--text);
+  color: var(--bg);
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nav-item {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.nav-item:hover {
+  background: #17191e;
+  color: #c9ced6;
+}
+.nav-item[aria-current="page"] {
+  background: #1e2127;
+  color: var(--text);
+}
+.nav-alert {
+  position: absolute;
+  top: 7px;
+  right: 11px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.rail-connection {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-4);
+  font-size: 10px;
+  text-align: center;
+  max-width: 60px;
+}
+.connection-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-4);
+}
+.rail-connection[data-phase="connected"] .connection-indicator {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(95, 211, 160, 0.15);
+}
+.rail-connection[data-phase="connecting"] .connection-indicator {
+  background: var(--amber);
+}
+.rail-connection[data-phase="disconnected"] .connection-indicator {
+  background: var(--red);
+}
+
+.main-content {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.topbar {
+  flex: none;
+  height: 60px;
+  padding: 0 16px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.topbar-start,
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* The right side keeps its width and the profile button gives way, with an
+   ellipsis: at 200% zoom in the smallest window the bar is 353 CSS pixels
+   wide, and the last button would be cut off (UI-24). */
+.topbar-end {
+  flex: none;
+}
+.topbar-start > .menu-anchor {
+  min-width: 0;
+}
+.page-title {
+  padding-left: 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+/* "‹ 设置 | 日志": the logs view sits inside Settings. */
+.page-back {
+  flex: none;
+  height: 32px;
+  padding: 0 10px 0 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.page-back:hover {
+  background: #17191e;
+  color: var(--text);
+}
+.page-back-icon {
+  transform: rotate(180deg);
+}
+.page-title.page-subtitle {
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+  line-height: 20px;
+}
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 360px;
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+}
+.profile-button:hover,
+.profile-button[aria-expanded="true"] {
+  background: #17191e;
+}
+.profile-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #1e2127;
+  color: #c9ced6;
+}
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.profile-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* The name shrinks with an ellipsis; the chevron (the menu cue) stays. */
+.profile-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.profile-name .ui-icon {
+  color: var(--text-3);
+}
+.profile-sub {
+  color: var(--text-4);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #23262d;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.status-pill[data-state="paused"] .status-dot,
+.status-pill[data-state="suspended"] .status-dot {
+  background: var(--amber);
+}
+.status-pill[data-state="capturing"] .status-dot {
+  background: var(--accent);
+}
+
+.page-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* Pages scroll inside their own .page-scroll; the frame never does. */
+  overflow: hidden;
+}
+.controller-stage {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.shell-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 16px 0;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(255, 138, 128, 0.3);
+  border-radius: var(--radius);
+  background: var(--red-bg);
+  color: #f0b3ae;
+  font-size: 12.5px;
+}
+.shell-notice > span {
+  flex: 1;
+}
+.shell-notice[role="status"] {
+  border-color: rgba(242, 179, 91, 0.28);
+  background: var(--amber-bg);
+  color: #d9ae6a;
+}
+.shell-toast {
+  position: absolute;
+  left: 50%;
+  top: 72px;
+  transform: translateX(-50%);
+  z-index: 30;
+  max-width: 360px;
+  padding: 10px 14px;
+  border: 1px solid #2e323b;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+/* Scroll container for the offline panel: .page-content never scrolls. */
+.connection-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.connection-panel {
+  margin: auto;
+  max-width: 460px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+/* The whole window when the mapping service did not start (UI-45). */
+.start-failure {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  background: var(--bg);
+}
+.start-failure-panel {
+  margin: auto;
+  width: min(560px, calc(100vw - 48px));
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.start-failure-panel .error {
+  color: var(--red);
+}
+.start-failure-panel h1 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.start-failure-summary {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.start-failure-path {
+  margin: 0;
+  color: var(--text-3);
+  font: 12px / 1.5 var(--mono);
+  word-break: break-all;
+  user-select: text;
+}
+.start-failure-more {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.start-failure-problem {
+  margin: 0;
+  color: var(--red);
+}
+.start-failure-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+/* The mapping page without an active profile: 新建配置 · 选择配置. */
+.page-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.offline-language {
+  width: 220px;
+  text-align: left;
+}
+.dialog-text {
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.dialog-list {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--text-2);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.confirm-dialog {
+  width: min(420px, calc(100vw - 48px));
+}
+.plain-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.number-with-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-4);
+  font-size: 12px;
+}
+.bindings-dialog {
+  width: min(640px, calc(100vw - 48px));
+}
+.bindings-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #23262d;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.bindings-list li + li {
+  border-top: 1px solid #1f2228;
+}
+.bindings-list button {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  display: grid;
+  grid-template-columns: 110px 120px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  background: transparent;
+  text-align: left;
+}
+.bindings-list button:hover {
+  background: var(--surface-2);
+}
+.bindings-control {
+  font-weight: 600;
+}
+/* The mark of a binding taken from the profile this one is based on (PRO-19). */
+.bindings-control .tag {
+  margin-left: 6px;
+  font-weight: 500;
+}
+.bindings-label {
+  color: var(--text-2);
+}
+.bindings-actions {
+  color: var(--text-3);
+  font-size: 12px;
+}
+/* View and Menu: listed, with nothing to open (ADR-0069). */
+.bindings-list .bindings-fixed {
+  min-height: 44px;
+  padding: 8px 14px;
+  display: grid;
+  grid-template-columns: 110px 120px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  cursor: default;
+}
+.bindings-fixed .bindings-control,
+.bindings-fixed .bindings-label {
+  color: var(--text-3);
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .nav-item[aria-current="page"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .nav-alert {
+    border: 1px solid ButtonText;
+    background: Mark;
+  }
+  .status-dot,
+  .status-pill[data-state="paused"] .status-dot,
+  .status-pill[data-state="suspended"] .status-dot,
+  .status-pill[data-state="capturing"] .status-dot,
+  .connection-indicator,
+  .rail-connection[data-phase="connected"] .connection-indicator,
+  .rail-connection[data-phase="connecting"] .connection-indicator,
+  .rail-connection[data-phase="disconnected"] .connection-indicator {
+    background: CanvasText;
+  }
+}

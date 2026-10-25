@@ -1,0 +1,4 @@
+@500 world locked=true
+@500 lock
+@500 world locked=false
+@500 unlock

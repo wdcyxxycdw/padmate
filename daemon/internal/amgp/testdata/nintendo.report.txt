@@ -1,0 +1,2 @@
+信息  这份配置是为“Nintendo Switch Pro Controller”做的
+信息  这份配置像是在任天堂手柄上做的：AntiMicroX 用的 SDL2 默认按键帽上印的字母排 A/B/X/Y，padmate 按位置排（south 是下面那个键），导入时没有交换，请核对 A 与 B、X 与 Y

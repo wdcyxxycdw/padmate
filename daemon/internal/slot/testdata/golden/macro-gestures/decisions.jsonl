@@ -1,0 +1,16 @@
+{"t":0,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","action":"macro F13.ts","owner":"decl/1","reason":"dispatch"}
+{"t":30,"control":"south","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","reason":"end"}
+{"t":200,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","reason":"unbound"}
+{"t":260,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","reason":"end"}
+{"t":260,"control":"east","edge":"down","cycle":2,"gesture":"release","level":"base","binding":"/layers/base/east","action":"macro F14.ts","owner":"decl/2","reason":"dispatch"}
+{"t":500,"control":"west","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"unbound"}
+{"t":540,"control":"west","edge":"down","cycle":3,"gesture":"tap","level":"base","binding":"/layers/base/west","action":"macro F15.ts","owner":"decl/3","reason":"dispatch"}
+{"t":1000,"control":"west","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"unbound"}
+{"t":1250,"control":"west","edge":"down","cycle":4,"gesture":"hold","level":"base","binding":"/layers/base/west","action":"macro F16.ts","owner":"decl/4","reason":"dispatch"}
+{"t":2000,"control":"north","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":2100,"control":"north","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":2130,"control":"north","edge":"down","cycle":5,"gesture":"doubleTap","level":"base","binding":"/layers/base/north","action":"macro F17.ts","owner":"decl/5","reason":"dispatch"}
+{"t":3000,"control":"leftshoulder","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/6","reason":"dispatch"}
+{"t":3050,"control":"south","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/south","action":"macro F13.ts","owner":"decl/7","reason":"dispatch"}
+{"t":3100,"control":"leftshoulder","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/6","reason":"release"}
+{"t":3120,"control":"south","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/south","reason":"end"}

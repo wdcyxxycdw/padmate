@@ -1,0 +1,23 @@
+# The combo latches (DMN-07): held on, it fires once. Pad A holds south
+# (Space) throughout. Back+start held for 1.9 s fires nothing; they are the
+# function keys and send nothing. Held again from 3100, the combo
+# fires at 5100 and pauses, which lets go of
+# Space; held for 6 s, it does not fire again. Start is pressed again
+# while back stays held, which re-arms the combo: it fires at 11500 and
+# resumes. South, held across both, maps nothing until it is pressed
+# again at 13000.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":200000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":300000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":2200000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":2200000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":3000000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":3100000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":9100000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":9500000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":12000000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":12000000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":12500000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":13000000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":13100000000,"kind":"up","device":1,"control":"south"}

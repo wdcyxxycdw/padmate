@@ -1,0 +1,4 @@
+# Nothing maps while locked at startup; east maps again only when
+# pressed after the unlock.
++Space@1400
+-Space@1600

@@ -1,0 +1,10 @@
+version: 1.0.0
+files:
+  - url: a.exe
+    sha512: AAAA
+    size: 1
+  - url: b.exe
+    sha512: BBBB
+    size: 2
+path: a.exe
+sha512: AAAA

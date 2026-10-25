@@ -1,0 +1,6 @@
+# The lock lets go of MouseLeft at 500; nothing maps until the unlock, and
+# east maps again only when pressed after it.
++MouseLeft@100
+-MouseLeft@500
++MouseLeft@1400
+-MouseLeft@1600

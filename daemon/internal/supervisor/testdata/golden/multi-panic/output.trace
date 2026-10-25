@@ -1,0 +1,6 @@
+# B's combo lets go of A's Space. A maps again only after B's combo
+# resumes.
++Space@100
+-Space@2300
++Space@6000
+-Space@6100

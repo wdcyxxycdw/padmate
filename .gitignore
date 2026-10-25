@@ -1,0 +1,40 @@
+# Go
+/bin/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.test
+*.out
+coverage.*
+go.work
+go.work.sum
+
+# Node / Electron
+node_modules/
+app/out/
+app/dist/
+app/release/
+app/test-results/
+app/playwright-report/
+*.tsbuildinfo
+npm-debug.log*
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local runtime data
+*.log
+/tmp/
+/.cache/
+/daemon/.tmp-tsc*/
+*.stackdump
+
+# Local settings and scratch worktrees of AI assistants
+.claude/

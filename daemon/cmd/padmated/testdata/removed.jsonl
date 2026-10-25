@@ -1,0 +1,13 @@
+# The device goes away with the pan and the eyedropper held and a tap of
+# Ctrl+Z not yet over: everything is released at once. SDL does not reuse
+# device ids, so the pad comes back as device 2, with the same guid.
+# --fake-input replays one device and skips device 2; live mode maps a
+# pad that comes back (IN-05).
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"pad","type":"standard","guid":"0500a1b25e040000130b000009057200","gamepad":true}}
+{"timeNs":10000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":20000000,"kind":"axis","device":1,"control":"lefttrigger","value":20000}
+{"timeNs":30000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":40000000,"kind":"removed","device":1}
+{"timeNs":1000000000,"kind":"added","device":2,"info":{"id":2,"name":"pad","type":"standard","guid":"0500a1b25e040000130b000009057200","gamepad":true}}
+{"timeNs":1020000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":1100000000,"kind":"up","device":2,"control":"south"}

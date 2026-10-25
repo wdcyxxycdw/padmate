@@ -1,0 +1,6 @@
+# The session locks at 500 and unlocks at 1000; the unlock's query
+# finds it unlocked.
+@500 world locked=true
+@500 lock
+@1000 world locked=false
+@1000 unlock

@@ -1,0 +1,246 @@
+/* Controller stage + key drawer layout, and the floating editor notice. */
+.controller-workspace {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* At 150% and 200% zoom the smallest window is a few hundred CSS pixels
+     wide: the stage keeps the size its labels were laid out for and the
+     page scrolls, instead of cutting the controller off (UI-24). */
+  overflow: auto;
+}
+.controller-workspace[data-editing="true"] {
+  grid-template-columns: minmax(440px, 1fr) clamp(330px, 34vw, 400px);
+}
+.controller-view {
+  position: relative;
+  min-width: 440px;
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+}
+.drawer-host {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 12px 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The bottom of the stage, where the hint is: the key preview line above
+   the editor notice. Clicks pass through to the controller. */
+.workspace-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 20;
+  width: min(560px, calc(100% - 32px));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  pointer-events: none;
+}
+.editor-notice-host {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.editor-notice-host > * {
+  pointer-events: auto;
+}
+/* UI-44: what the last press sends, while padmate is in front. */
+.key-preview {
+  align-self: center;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.key-preview[data-shown="true"] {
+  opacity: 1;
+  transition-duration: 0.1s;
+}
+.key-preview-icon {
+  margin-right: 4px;
+  vertical-align: -2px;
+  color: var(--violet);
+}
+.key-preview:empty {
+  padding: 0;
+  border-width: 0;
+}
+.key-preview-control {
+  display: inline-flex;
+  vertical-align: -4px;
+}
+/* A pad control as the pad shows it (UI-44): SVG shapes, letters from
+   data-label, colours from the theme. */
+.control-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.control-icon > svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.control-icon[data-label]::after {
+  content: attr(data-label);
+  grid-area: 1 / 1;
+  color: var(--face, var(--text));
+}
+.control-icon[data-face="green"] {
+  --face: var(--green);
+}
+.control-icon[data-face="red"] {
+  --face: var(--red);
+}
+.control-icon[data-face="blue"] {
+  --face: var(--accent);
+}
+.control-icon[data-face="yellow"] {
+  --face: var(--amber);
+}
+.control-icon[data-face="pink"] {
+  --face: var(--pink);
+}
+.control-icon-disc {
+  fill: var(--surface-3);
+  stroke: var(--face, var(--text-3));
+  stroke-width: 1.4;
+}
+.control-icon-shape {
+  fill: none;
+  stroke: var(--face, var(--text));
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.control-icon-part {
+  fill: var(--surface-3);
+  stroke: var(--text-3);
+  stroke-width: 1.2;
+}
+.control-icon-part[data-lit="true"],
+.control-icon-arrow {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.control-icon[data-pushed]::after {
+  font-size: 8px;
+}
+.control-icon[data-kind="badge"] {
+  width: auto;
+  min-width: 22px;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .key-preview,
+  .key-preview[data-shown="true"] {
+    transition: none;
+  }
+}
+.editor-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 8px 6px 14px;
+  border: 1px solid rgba(242, 179, 91, 0.35);
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.editor-notice[data-state="error"] {
+  border-color: rgba(255, 138, 128, 0.35);
+}
+.editor-notice-text {
+  flex: 1;
+  min-width: 0;
+  color: #c9ced6;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.editor-notice .ui-icon.warning,
+.editor-problems .ui-icon.warning {
+  color: var(--amber);
+}
+.editor-notice .ui-icon.error,
+.editor-problems .ui-icon.error {
+  color: var(--red);
+}
+.editor-problems-toggle {
+  color: var(--amber);
+}
+.editor-problems {
+  max-height: 240px;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid #2e323b;
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+}
+.editor-problems > button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+}
+.editor-problems > button:hover {
+  background: var(--surface-3);
+}
+.editor-problems .ui-icon {
+  margin-top: 2px;
+}
+.editor-problem-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.editor-problem-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* The switch between the usual keys and the sets of the function keys (UI-30). */
+.key-view-bar {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px 0;
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "宏",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "macro", "file": "F13.ts"}},
+      "east": {"release": {"type": "macro", "file": "F14.ts"}},
+      "west": {"tap": {"type": "macro", "file": "F15.ts"}, "hold": {"type": "macro", "file": "F16.ts"}},
+      "north": {"doubleTap": {"type": "macro", "file": "F17.ts"}},
+      "lb": {"press": {"type": "keys", "keys": "LCtrl"}}
+    }
+  }
+}

@@ -1,0 +1,11 @@
+# A mouse button is held like a key (ADR-0062), and a removed device lets go
+# of it: Pad A holds east (MouseLeft) and south (Shift+MouseRight) when it is
+# unplugged with no up for either. The removal lets go of both buttons and of
+# Shift. The pad comes back with a new id and its east works again.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":150000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":300000000,"kind":"removed","device":1}
+{"timeNs":1000000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":1100000000,"kind":"down","device":2,"control":"east"}
+{"timeNs":1300000000,"kind":"up","device":2,"control":"east"}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "Share": {"label": "保存", "press": {"type": "keys", "keys": "Ctrl+S"}},
+      "L1": {"press": {"type": "keys", "keys": "LCtrl"}},
+      "r1": {"press": {"type": "keys", "keys": "LShift"}},
+      "L": {"press": {"type": "keys", "keys": "Alt"}},
+      "R": {"label": "抓手", "press": {"type": "keys", "keys": "Space"}},
+      "ls": {"press": {"type": "keys", "keys": "Tab"}},
+      "ZL": {"label": "橡皮", "press": {"type": "keys", "keys": "E"}}
+    }
+  }
+}

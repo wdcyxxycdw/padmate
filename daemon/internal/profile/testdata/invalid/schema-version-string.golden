@@ -1,0 +1,2 @@
+2:20: error: schemaVersion must be the number 1, not a string (/schemaVersion)
+	> "1",

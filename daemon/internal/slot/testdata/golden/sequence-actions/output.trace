@@ -1,0 +1,30 @@
++LCtrl@0 +A@0
+-A@10 -LCtrl@10
++text:U+4F60@110 -text:U+4F60@110
++text:U+597D@125 -text:U+597D@125
++Enter@140
+-Enter@150 +LCtrl@150 +A@150
+-A@160 -LCtrl@160
++text:U+4F60@260 -text:U+4F60@260
++text:U+597D@275 -text:U+597D@275
++Enter@290
+-Enter@300
++text:U+0061@1020 -text:U+0061@1020
++text:U+0062@1035 -text:U+0062@1035
++Enter@1050
+-Enter@1060
++text:U+0063@1075 -text:U+0063@1075
++text:U+0064@1090 -text:U+0064@1090
++text:U+D83D@2040 -text:U+D83D@2040 +text:U+DE00@2040 -text:U+DE00@2040
++VolumeMute@2070
+-VolumeMute@2080
++F13@3000
+-F13@3010
++LCtrl@4000
++A@4050
+-A@4060
+-LCtrl@4100
++text:U+4F60@4160 -text:U+4F60@4160
++text:U+597D@4175 -text:U+597D@4175
++Enter@4190
+-Enter@4200

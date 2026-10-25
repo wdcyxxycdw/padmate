@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "反馈",
+  "feedback": {"pause": "no", "led": 1, "rumble": null, "lowBattery": "low"},
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "keys", "keys": "A"}}
+    }
+  }
+}

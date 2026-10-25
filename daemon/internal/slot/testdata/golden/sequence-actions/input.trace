@@ -1,0 +1,16 @@
+# Sequence and text actions (MAP-22, OUT-21, ADR-0070) on four gestures. The
+# press time is 10 ms and the gap 15 ms.
+# A press: Ctrl+A, a wait of 100 ms from the release, a text a character every
+# 15 ms, then Enter 15 ms after the last character.
++south@0 -south@30
+# A second trigger of the same binding runs after the first is over.
++south@50 -south@60
+# A text with a newline: the newline is an Enter tap.
++east@1000 -east@1020
+# A sequence at the release: a surrogate pair, a wait, a media key.
++west@2000 -west@2040
+# A hold, once, however long it is held; the wait of 1 ms is under the gap.
++north@3000 -north@3600
+# LCtrl, held across the run of a sequence, is the binding's: the sequence does
+# not release it, and its release does not end the sequence.
++lb@4000 +south@4050 -lb@4100 -south@4120

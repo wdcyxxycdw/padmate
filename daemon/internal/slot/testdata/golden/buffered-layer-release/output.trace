@@ -1,0 +1,5 @@
+# south's press, replayed at 40 while nav is still held, taps nav's C,
+# not base's A.
++E@28
++F15@40 +C@40
+-F15@60 -C@60 -E@60

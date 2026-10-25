@@ -1,0 +1,15 @@
+# A mouse button is held like a key (ADR-0062): +MouseLeft is the button
+# down and -MouseLeft the button up, in the same sends as the keys around
+# it. Repeated clicks are a tap repeat; typematic repeat is rejected for a
+# button. The side button on the trigger is still down when the trace ends,
+# so the exit lets go of it.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":150000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":200000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":500000000,"kind":"up","device":3,"control":"east"}
+{"timeNs":600000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":900000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":1000000000,"kind":"down","device":3,"control":"west"}
+{"timeNs":1050000000,"kind":"up","device":3,"control":"west"}
+{"timeNs":1100000000,"kind":"axis","device":3,"control":"lefttrigger","value":24000}

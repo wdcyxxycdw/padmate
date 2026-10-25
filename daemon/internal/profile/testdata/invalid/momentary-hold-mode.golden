@@ -1,0 +1,12 @@
+6:63: error: tap runs after the control is released: use mode "tap" (/layers/base/west/tap/mode)
+	> "hold"}, "doubleTap": {"type": "keys", "…
+7:109: error: doubleTap runs after the control is released: use mode "tap" (/layers/base/east/doubleTap/mode)
+	> "hold"}, "tripleTap": {"type": "keys", "…
+8:108: error: repeat needs a press or hold gesture (/layers/base/north/tap/repeat)
+	> {"rateHz": 10}}},
+9:68: error: release runs after the control is released: use mode "tap" (/layers/base/south/release/mode)
+	> "hold"}},
+10:75: error: quadTap runs after the control is released: use mode "tap" (/layers/base/leftshoulder/quadTap/mode)
+	> "hold", "repeat": {}}}
+10:93: error: repeat needs a press or hold gesture (/layers/base/leftshoulder/quadTap/repeat)
+	> {}}}

@@ -1,0 +1,4 @@
+3:11: error: name must not be empty (/name)
+	> "",
+6:64: error: 'oneOf' failed, none matched (/layers/base/south/press/keys)
+	> ""}}

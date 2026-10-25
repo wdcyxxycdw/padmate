@@ -1,0 +1,20 @@
+6:50: error: "slow" is not a valid value; use "precision" or "jump" (/layers/base/south/press/op)
+	> "slow"}},
+7:25: error: missing property "op" (/layers/base/east/press)
+	> {"type": "mouse"}},
+8:73: error: minimum: got 0.01, want 0.05 (/layers/base/north/press/factor)
+	> 0.01}},
+9:72: error: maximum: got 2, want 1 (/layers/base/west/press/factor)
+	> 2}},
+10:60: error: x belongs to a "jump" action; a "precision" action takes factor (/layers/base/lb/press/x)
+	> "x": 0.5}},
+11:23: error: missing property "y" (/layers/base/rb/press)
+	> {"type": "mouse", "op": "jump", "x": 0.5…
+12:60: error: maximum: got 1.5, want 1 (/layers/base/lt/press/x)
+	> 1.5, "y": -1}},
+12:70: error: minimum: got -1, want 0 (/layers/base/lt/press/y)
+	> -1}},
+13:75: error: factor belongs to a "precision" action; a "jump" action takes x and y (/layers/base/rt/press/factor)
+	> "factor": 0.3}},
+14:63: error: unknown property "keys" (/layers/base/start/press/keys)
+	> "keys": "Z"}}

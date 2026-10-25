@@ -1,0 +1,22 @@
+# The pause indication switched off (feedback.pause, UI-27). The layer cycle
+# at 100 ms pulses twice and shows the color of alt; the panic combo at 2600 ms
+# pauses the mapping, and shows no pulse and not the pause color: the color of
+# alt stays; the resume at 6100 ms is as quiet. The layer cycle at 7000 ms is
+# the pulse and the color of base, as ever. The feedback lines are
+# "feedback slot=0 mode=N [paused] [pulse] [color]", where the mode is what the
+# player lights show.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":150000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":500000000,"kind":"down","device":3,"control":"back"}
+{"timeNs":600000000,"kind":"down","device":3,"control":"start"}
+{"timeNs":3000000000,"kind":"up","device":3,"control":"back"}
+{"timeNs":3000000000,"kind":"up","device":3,"control":"start"}
+{"timeNs":3500000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":3550000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":4000000000,"kind":"down","device":3,"control":"back"}
+{"timeNs":4100000000,"kind":"down","device":3,"control":"start"}
+{"timeNs":6500000000,"kind":"up","device":3,"control":"back"}
+{"timeNs":6500000000,"kind":"up","device":3,"control":"start"}
+{"timeNs":7000000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":7050000000,"kind":"up","device":3,"control":"north"}

@@ -1,0 +1,2518 @@
+{
+  "klid": "00000409",
+  "hkl": "0x04090409",
+  "layoutFile": "KBDUS.DLL",
+  "layoutText": "US",
+  "generator": "padmate-probe dump-layout",
+  "version": "dev",
+  "windows": "10.0.26200",
+  "scancodes": [
+    {
+      "scan": "0x01",
+      "ext": false,
+      "vk": "0x1B",
+      "base": {
+        "text": "\u001b"
+      },
+      "shift": {
+        "text": "\u001b"
+      }
+    },
+    {
+      "scan": "0x02",
+      "ext": false,
+      "vk": "0x31",
+      "base": {
+        "text": "1"
+      },
+      "shift": {
+        "text": "!"
+      }
+    },
+    {
+      "scan": "0x03",
+      "ext": false,
+      "vk": "0x32",
+      "base": {
+        "text": "2"
+      },
+      "shift": {
+        "text": "@"
+      }
+    },
+    {
+      "scan": "0x04",
+      "ext": false,
+      "vk": "0x33",
+      "base": {
+        "text": "3"
+      },
+      "shift": {
+        "text": "#"
+      }
+    },
+    {
+      "scan": "0x05",
+      "ext": false,
+      "vk": "0x34",
+      "base": {
+        "text": "4"
+      },
+      "shift": {
+        "text": "$"
+      }
+    },
+    {
+      "scan": "0x06",
+      "ext": false,
+      "vk": "0x35",
+      "base": {
+        "text": "5"
+      },
+      "shift": {
+        "text": "%"
+      }
+    },
+    {
+      "scan": "0x07",
+      "ext": false,
+      "vk": "0x36",
+      "base": {
+        "text": "6"
+      },
+      "shift": {
+        "text": "^"
+      }
+    },
+    {
+      "scan": "0x08",
+      "ext": false,
+      "vk": "0x37",
+      "base": {
+        "text": "7"
+      },
+      "shift": {
+        "text": "&"
+      }
+    },
+    {
+      "scan": "0x09",
+      "ext": false,
+      "vk": "0x38",
+      "base": {
+        "text": "8"
+      },
+      "shift": {
+        "text": "*"
+      }
+    },
+    {
+      "scan": "0x0A",
+      "ext": false,
+      "vk": "0x39",
+      "base": {
+        "text": "9"
+      },
+      "shift": {
+        "text": "("
+      }
+    },
+    {
+      "scan": "0x0B",
+      "ext": false,
+      "vk": "0x30",
+      "base": {
+        "text": "0"
+      },
+      "shift": {
+        "text": ")"
+      }
+    },
+    {
+      "scan": "0x0C",
+      "ext": false,
+      "vk": "0xBD",
+      "base": {
+        "text": "-"
+      },
+      "shift": {
+        "text": "_"
+      }
+    },
+    {
+      "scan": "0x0D",
+      "ext": false,
+      "vk": "0xBB",
+      "base": {
+        "text": "="
+      },
+      "shift": {
+        "text": "+"
+      }
+    },
+    {
+      "scan": "0x0E",
+      "ext": false,
+      "vk": "0x08",
+      "base": {
+        "text": "\b"
+      },
+      "shift": {
+        "text": "\b"
+      }
+    },
+    {
+      "scan": "0x0F",
+      "ext": false,
+      "vk": "0x09",
+      "base": {
+        "text": "\t"
+      },
+      "shift": {
+        "text": "\t"
+      }
+    },
+    {
+      "scan": "0x10",
+      "ext": false,
+      "vk": "0x51",
+      "base": {
+        "text": "q"
+      },
+      "shift": {
+        "text": "Q"
+      }
+    },
+    {
+      "scan": "0x11",
+      "ext": false,
+      "vk": "0x57",
+      "base": {
+        "text": "w"
+      },
+      "shift": {
+        "text": "W"
+      }
+    },
+    {
+      "scan": "0x12",
+      "ext": false,
+      "vk": "0x45",
+      "base": {
+        "text": "e"
+      },
+      "shift": {
+        "text": "E"
+      }
+    },
+    {
+      "scan": "0x13",
+      "ext": false,
+      "vk": "0x52",
+      "base": {
+        "text": "r"
+      },
+      "shift": {
+        "text": "R"
+      }
+    },
+    {
+      "scan": "0x14",
+      "ext": false,
+      "vk": "0x54",
+      "base": {
+        "text": "t"
+      },
+      "shift": {
+        "text": "T"
+      }
+    },
+    {
+      "scan": "0x15",
+      "ext": false,
+      "vk": "0x59",
+      "base": {
+        "text": "y"
+      },
+      "shift": {
+        "text": "Y"
+      }
+    },
+    {
+      "scan": "0x16",
+      "ext": false,
+      "vk": "0x55",
+      "base": {
+        "text": "u"
+      },
+      "shift": {
+        "text": "U"
+      }
+    },
+    {
+      "scan": "0x17",
+      "ext": false,
+      "vk": "0x49",
+      "base": {
+        "text": "i"
+      },
+      "shift": {
+        "text": "I"
+      }
+    },
+    {
+      "scan": "0x18",
+      "ext": false,
+      "vk": "0x4F",
+      "base": {
+        "text": "o"
+      },
+      "shift": {
+        "text": "O"
+      }
+    },
+    {
+      "scan": "0x19",
+      "ext": false,
+      "vk": "0x50",
+      "base": {
+        "text": "p"
+      },
+      "shift": {
+        "text": "P"
+      }
+    },
+    {
+      "scan": "0x1A",
+      "ext": false,
+      "vk": "0xDB",
+      "base": {
+        "text": "["
+      },
+      "shift": {
+        "text": "{"
+      }
+    },
+    {
+      "scan": "0x1B",
+      "ext": false,
+      "vk": "0xDD",
+      "base": {
+        "text": "]"
+      },
+      "shift": {
+        "text": "}"
+      }
+    },
+    {
+      "scan": "0x1C",
+      "ext": false,
+      "vk": "0x0D",
+      "base": {
+        "text": "\r"
+      },
+      "shift": {
+        "text": "\r"
+      }
+    },
+    {
+      "scan": "0x1D",
+      "ext": false,
+      "vk": "0xA2"
+    },
+    {
+      "scan": "0x1E",
+      "ext": false,
+      "vk": "0x41",
+      "base": {
+        "text": "a"
+      },
+      "shift": {
+        "text": "A"
+      }
+    },
+    {
+      "scan": "0x1F",
+      "ext": false,
+      "vk": "0x53",
+      "base": {
+        "text": "s"
+      },
+      "shift": {
+        "text": "S"
+      }
+    },
+    {
+      "scan": "0x20",
+      "ext": false,
+      "vk": "0x44",
+      "base": {
+        "text": "d"
+      },
+      "shift": {
+        "text": "D"
+      }
+    },
+    {
+      "scan": "0x21",
+      "ext": false,
+      "vk": "0x46",
+      "base": {
+        "text": "f"
+      },
+      "shift": {
+        "text": "F"
+      }
+    },
+    {
+      "scan": "0x22",
+      "ext": false,
+      "vk": "0x47",
+      "base": {
+        "text": "g"
+      },
+      "shift": {
+        "text": "G"
+      }
+    },
+    {
+      "scan": "0x23",
+      "ext": false,
+      "vk": "0x48",
+      "base": {
+        "text": "h"
+      },
+      "shift": {
+        "text": "H"
+      }
+    },
+    {
+      "scan": "0x24",
+      "ext": false,
+      "vk": "0x4A",
+      "base": {
+        "text": "j"
+      },
+      "shift": {
+        "text": "J"
+      }
+    },
+    {
+      "scan": "0x25",
+      "ext": false,
+      "vk": "0x4B",
+      "base": {
+        "text": "k"
+      },
+      "shift": {
+        "text": "K"
+      }
+    },
+    {
+      "scan": "0x26",
+      "ext": false,
+      "vk": "0x4C",
+      "base": {
+        "text": "l"
+      },
+      "shift": {
+        "text": "L"
+      }
+    },
+    {
+      "scan": "0x27",
+      "ext": false,
+      "vk": "0xBA",
+      "base": {
+        "text": ";"
+      },
+      "shift": {
+        "text": ":"
+      }
+    },
+    {
+      "scan": "0x28",
+      "ext": false,
+      "vk": "0xDE",
+      "base": {
+        "text": "'"
+      },
+      "shift": {
+        "text": "\""
+      }
+    },
+    {
+      "scan": "0x29",
+      "ext": false,
+      "vk": "0xC0",
+      "base": {
+        "text": "`"
+      },
+      "shift": {
+        "text": "~"
+      }
+    },
+    {
+      "scan": "0x2A",
+      "ext": false,
+      "vk": "0xA0"
+    },
+    {
+      "scan": "0x2B",
+      "ext": false,
+      "vk": "0xDC",
+      "base": {
+        "text": "\\"
+      },
+      "shift": {
+        "text": "|"
+      }
+    },
+    {
+      "scan": "0x2C",
+      "ext": false,
+      "vk": "0x5A",
+      "base": {
+        "text": "z"
+      },
+      "shift": {
+        "text": "Z"
+      }
+    },
+    {
+      "scan": "0x2D",
+      "ext": false,
+      "vk": "0x58",
+      "base": {
+        "text": "x"
+      },
+      "shift": {
+        "text": "X"
+      }
+    },
+    {
+      "scan": "0x2E",
+      "ext": false,
+      "vk": "0x43",
+      "base": {
+        "text": "c"
+      },
+      "shift": {
+        "text": "C"
+      }
+    },
+    {
+      "scan": "0x2F",
+      "ext": false,
+      "vk": "0x56",
+      "base": {
+        "text": "v"
+      },
+      "shift": {
+        "text": "V"
+      }
+    },
+    {
+      "scan": "0x30",
+      "ext": false,
+      "vk": "0x42",
+      "base": {
+        "text": "b"
+      },
+      "shift": {
+        "text": "B"
+      }
+    },
+    {
+      "scan": "0x31",
+      "ext": false,
+      "vk": "0x4E",
+      "base": {
+        "text": "n"
+      },
+      "shift": {
+        "text": "N"
+      }
+    },
+    {
+      "scan": "0x32",
+      "ext": false,
+      "vk": "0x4D",
+      "base": {
+        "text": "m"
+      },
+      "shift": {
+        "text": "M"
+      }
+    },
+    {
+      "scan": "0x33",
+      "ext": false,
+      "vk": "0xBC",
+      "base": {
+        "text": ","
+      },
+      "shift": {
+        "text": "<"
+      }
+    },
+    {
+      "scan": "0x34",
+      "ext": false,
+      "vk": "0xBE",
+      "base": {
+        "text": "."
+      },
+      "shift": {
+        "text": ">"
+      }
+    },
+    {
+      "scan": "0x35",
+      "ext": false,
+      "vk": "0xBF",
+      "base": {
+        "text": "/"
+      },
+      "shift": {
+        "text": "?"
+      }
+    },
+    {
+      "scan": "0x36",
+      "ext": false,
+      "vk": "0xA1"
+    },
+    {
+      "scan": "0x37",
+      "ext": false,
+      "vk": "0x6A",
+      "base": {
+        "text": "*"
+      },
+      "shift": {
+        "text": "*"
+      }
+    },
+    {
+      "scan": "0x38",
+      "ext": false,
+      "vk": "0xA4"
+    },
+    {
+      "scan": "0x39",
+      "ext": false,
+      "vk": "0x20",
+      "base": {
+        "text": " "
+      },
+      "shift": {
+        "text": " "
+      }
+    },
+    {
+      "scan": "0x3A",
+      "ext": false,
+      "vk": "0x14"
+    },
+    {
+      "scan": "0x3B",
+      "ext": false,
+      "vk": "0x70"
+    },
+    {
+      "scan": "0x3C",
+      "ext": false,
+      "vk": "0x71"
+    },
+    {
+      "scan": "0x3D",
+      "ext": false,
+      "vk": "0x72"
+    },
+    {
+      "scan": "0x3E",
+      "ext": false,
+      "vk": "0x73"
+    },
+    {
+      "scan": "0x3F",
+      "ext": false,
+      "vk": "0x74"
+    },
+    {
+      "scan": "0x40",
+      "ext": false,
+      "vk": "0x75"
+    },
+    {
+      "scan": "0x41",
+      "ext": false,
+      "vk": "0x76"
+    },
+    {
+      "scan": "0x42",
+      "ext": false,
+      "vk": "0x77"
+    },
+    {
+      "scan": "0x43",
+      "ext": false,
+      "vk": "0x78"
+    },
+    {
+      "scan": "0x44",
+      "ext": false,
+      "vk": "0x79"
+    },
+    {
+      "scan": "0x45",
+      "ext": false,
+      "vk": "0x90"
+    },
+    {
+      "scan": "0x46",
+      "ext": false,
+      "vk": "0x91"
+    },
+    {
+      "scan": "0x47",
+      "ext": false,
+      "vk": "0x24"
+    },
+    {
+      "scan": "0x48",
+      "ext": false,
+      "vk": "0x26"
+    },
+    {
+      "scan": "0x49",
+      "ext": false,
+      "vk": "0x21"
+    },
+    {
+      "scan": "0x4A",
+      "ext": false,
+      "vk": "0x6D",
+      "base": {
+        "text": "-"
+      },
+      "shift": {
+        "text": "-"
+      }
+    },
+    {
+      "scan": "0x4B",
+      "ext": false,
+      "vk": "0x25"
+    },
+    {
+      "scan": "0x4C",
+      "ext": false,
+      "vk": "0x0C"
+    },
+    {
+      "scan": "0x4D",
+      "ext": false,
+      "vk": "0x27"
+    },
+    {
+      "scan": "0x4E",
+      "ext": false,
+      "vk": "0x6B",
+      "base": {
+        "text": "+"
+      },
+      "shift": {
+        "text": "+"
+      }
+    },
+    {
+      "scan": "0x4F",
+      "ext": false,
+      "vk": "0x23"
+    },
+    {
+      "scan": "0x50",
+      "ext": false,
+      "vk": "0x28"
+    },
+    {
+      "scan": "0x51",
+      "ext": false,
+      "vk": "0x22"
+    },
+    {
+      "scan": "0x52",
+      "ext": false,
+      "vk": "0x2D"
+    },
+    {
+      "scan": "0x53",
+      "ext": false,
+      "vk": "0x2E"
+    },
+    {
+      "scan": "0x54",
+      "ext": false,
+      "vk": "0x2C"
+    },
+    {
+      "scan": "0x56",
+      "ext": false,
+      "vk": "0xE2",
+      "base": {
+        "text": "\\"
+      },
+      "shift": {
+        "text": "|"
+      }
+    },
+    {
+      "scan": "0x57",
+      "ext": false,
+      "vk": "0x7A"
+    },
+    {
+      "scan": "0x58",
+      "ext": false,
+      "vk": "0x7B"
+    },
+    {
+      "scan": "0x59",
+      "ext": false,
+      "vk": "0x0C"
+    },
+    {
+      "scan": "0x5A",
+      "ext": false,
+      "vk": "0xEE"
+    },
+    {
+      "scan": "0x5B",
+      "ext": false,
+      "vk": "0xF1"
+    },
+    {
+      "scan": "0x5C",
+      "ext": false,
+      "vk": "0xEA"
+    },
+    {
+      "scan": "0x5D",
+      "ext": false,
+      "vk": "0xF9"
+    },
+    {
+      "scan": "0x5E",
+      "ext": false,
+      "vk": "0xF5"
+    },
+    {
+      "scan": "0x5F",
+      "ext": false,
+      "vk": "0xF3"
+    },
+    {
+      "scan": "0x62",
+      "ext": false,
+      "vk": "0xFB"
+    },
+    {
+      "scan": "0x63",
+      "ext": false,
+      "vk": "0x2F"
+    },
+    {
+      "scan": "0x64",
+      "ext": false,
+      "vk": "0x7C"
+    },
+    {
+      "scan": "0x65",
+      "ext": false,
+      "vk": "0x7D"
+    },
+    {
+      "scan": "0x66",
+      "ext": false,
+      "vk": "0x7E"
+    },
+    {
+      "scan": "0x67",
+      "ext": false,
+      "vk": "0x7F"
+    },
+    {
+      "scan": "0x68",
+      "ext": false,
+      "vk": "0x80"
+    },
+    {
+      "scan": "0x69",
+      "ext": false,
+      "vk": "0x81"
+    },
+    {
+      "scan": "0x6A",
+      "ext": false,
+      "vk": "0x82"
+    },
+    {
+      "scan": "0x6B",
+      "ext": false,
+      "vk": "0x83"
+    },
+    {
+      "scan": "0x6C",
+      "ext": false,
+      "vk": "0x84"
+    },
+    {
+      "scan": "0x6D",
+      "ext": false,
+      "vk": "0x85"
+    },
+    {
+      "scan": "0x6E",
+      "ext": false,
+      "vk": "0x86"
+    },
+    {
+      "scan": "0x6F",
+      "ext": false,
+      "vk": "0xED"
+    },
+    {
+      "scan": "0x71",
+      "ext": false,
+      "vk": "0xE9"
+    },
+    {
+      "scan": "0x73",
+      "ext": false,
+      "vk": "0xC1"
+    },
+    {
+      "scan": "0x76",
+      "ext": false,
+      "vk": "0x87"
+    },
+    {
+      "scan": "0x7B",
+      "ext": false,
+      "vk": "0xEB"
+    },
+    {
+      "scan": "0x7C",
+      "ext": false,
+      "vk": "0x09",
+      "base": {
+        "text": "\t"
+      },
+      "shift": {
+        "text": "\t"
+      }
+    },
+    {
+      "scan": "0x7E",
+      "ext": false,
+      "vk": "0xC2"
+    },
+    {
+      "scan": "0x10",
+      "ext": true,
+      "vk": "0xB1"
+    },
+    {
+      "scan": "0x19",
+      "ext": true,
+      "vk": "0xB0"
+    },
+    {
+      "scan": "0x1C",
+      "ext": true,
+      "vk": "0x0D",
+      "base": {
+        "text": "\r"
+      },
+      "shift": {
+        "text": "\r"
+      }
+    },
+    {
+      "scan": "0x1D",
+      "ext": true,
+      "vk": "0xA3"
+    },
+    {
+      "scan": "0x20",
+      "ext": true,
+      "vk": "0xAD"
+    },
+    {
+      "scan": "0x21",
+      "ext": true,
+      "vk": "0xB7"
+    },
+    {
+      "scan": "0x22",
+      "ext": true,
+      "vk": "0xB3"
+    },
+    {
+      "scan": "0x24",
+      "ext": true,
+      "vk": "0xB2"
+    },
+    {
+      "scan": "0x2E",
+      "ext": true,
+      "vk": "0xAE"
+    },
+    {
+      "scan": "0x30",
+      "ext": true,
+      "vk": "0xAF"
+    },
+    {
+      "scan": "0x32",
+      "ext": true,
+      "vk": "0xAC"
+    },
+    {
+      "scan": "0x35",
+      "ext": true,
+      "vk": "0x6F",
+      "base": {
+        "text": "/"
+      },
+      "shift": {
+        "text": "/"
+      }
+    },
+    {
+      "scan": "0x37",
+      "ext": true,
+      "vk": "0x2C"
+    },
+    {
+      "scan": "0x38",
+      "ext": true,
+      "vk": "0xA5"
+    },
+    {
+      "scan": "0x46",
+      "ext": true,
+      "vk": "0x03",
+      "base": {
+        "text": "\u0003"
+      },
+      "shift": {
+        "text": "\u0003"
+      }
+    },
+    {
+      "scan": "0x47",
+      "ext": true,
+      "vk": "0x24"
+    },
+    {
+      "scan": "0x48",
+      "ext": true,
+      "vk": "0x26"
+    },
+    {
+      "scan": "0x49",
+      "ext": true,
+      "vk": "0x21"
+    },
+    {
+      "scan": "0x4B",
+      "ext": true,
+      "vk": "0x25"
+    },
+    {
+      "scan": "0x4D",
+      "ext": true,
+      "vk": "0x27"
+    },
+    {
+      "scan": "0x4F",
+      "ext": true,
+      "vk": "0x23"
+    },
+    {
+      "scan": "0x50",
+      "ext": true,
+      "vk": "0x28"
+    },
+    {
+      "scan": "0x51",
+      "ext": true,
+      "vk": "0x22"
+    },
+    {
+      "scan": "0x52",
+      "ext": true,
+      "vk": "0x2D"
+    },
+    {
+      "scan": "0x53",
+      "ext": true,
+      "vk": "0x2E"
+    },
+    {
+      "scan": "0x5B",
+      "ext": true,
+      "vk": "0x5B"
+    },
+    {
+      "scan": "0x5C",
+      "ext": true,
+      "vk": "0x5C"
+    },
+    {
+      "scan": "0x5D",
+      "ext": true,
+      "vk": "0x5D"
+    },
+    {
+      "scan": "0x5F",
+      "ext": true,
+      "vk": "0x5F"
+    },
+    {
+      "scan": "0x65",
+      "ext": true,
+      "vk": "0xAA"
+    },
+    {
+      "scan": "0x66",
+      "ext": true,
+      "vk": "0xAB"
+    },
+    {
+      "scan": "0x67",
+      "ext": true,
+      "vk": "0xA8"
+    },
+    {
+      "scan": "0x68",
+      "ext": true,
+      "vk": "0xA9"
+    },
+    {
+      "scan": "0x69",
+      "ext": true,
+      "vk": "0xA7"
+    },
+    {
+      "scan": "0x6A",
+      "ext": true,
+      "vk": "0xA6"
+    },
+    {
+      "scan": "0x6B",
+      "ext": true,
+      "vk": "0xB6"
+    },
+    {
+      "scan": "0x6C",
+      "ext": true,
+      "vk": "0xB4"
+    },
+    {
+      "scan": "0x6D",
+      "ext": true,
+      "vk": "0xB5"
+    }
+  ],
+  "vkToScan": [
+    {
+      "vk": "0x03",
+      "scan": "0x46",
+      "ext": true
+    },
+    {
+      "vk": "0x08",
+      "scan": "0x0E",
+      "ext": false
+    },
+    {
+      "vk": "0x09",
+      "scan": "0x0F",
+      "ext": false
+    },
+    {
+      "vk": "0x0C",
+      "scan": "0x4C",
+      "ext": false
+    },
+    {
+      "vk": "0x0D",
+      "scan": "0x1C",
+      "ext": false
+    },
+    {
+      "vk": "0x10",
+      "scan": "0x2A",
+      "ext": false
+    },
+    {
+      "vk": "0x11",
+      "scan": "0x1D",
+      "ext": false
+    },
+    {
+      "vk": "0x12",
+      "scan": "0x38",
+      "ext": false
+    },
+    {
+      "vk": "0x13",
+      "scan": "0x1D",
+      "ext": false,
+      "e1": true
+    },
+    {
+      "vk": "0x14",
+      "scan": "0x3A",
+      "ext": false
+    },
+    {
+      "vk": "0x1B",
+      "scan": "0x01",
+      "ext": false
+    },
+    {
+      "vk": "0x20",
+      "scan": "0x39",
+      "ext": false
+    },
+    {
+      "vk": "0x21",
+      "scan": "0x49",
+      "ext": false
+    },
+    {
+      "vk": "0x22",
+      "scan": "0x51",
+      "ext": false
+    },
+    {
+      "vk": "0x23",
+      "scan": "0x4F",
+      "ext": false
+    },
+    {
+      "vk": "0x24",
+      "scan": "0x47",
+      "ext": false
+    },
+    {
+      "vk": "0x25",
+      "scan": "0x4B",
+      "ext": false
+    },
+    {
+      "vk": "0x26",
+      "scan": "0x48",
+      "ext": false
+    },
+    {
+      "vk": "0x27",
+      "scan": "0x4D",
+      "ext": false
+    },
+    {
+      "vk": "0x28",
+      "scan": "0x50",
+      "ext": false
+    },
+    {
+      "vk": "0x2C",
+      "scan": "0x54",
+      "ext": false
+    },
+    {
+      "vk": "0x2D",
+      "scan": "0x52",
+      "ext": false
+    },
+    {
+      "vk": "0x2E",
+      "scan": "0x53",
+      "ext": false
+    },
+    {
+      "vk": "0x2F",
+      "scan": "0x63",
+      "ext": false
+    },
+    {
+      "vk": "0x30",
+      "scan": "0x0B",
+      "ext": false
+    },
+    {
+      "vk": "0x31",
+      "scan": "0x02",
+      "ext": false
+    },
+    {
+      "vk": "0x32",
+      "scan": "0x03",
+      "ext": false
+    },
+    {
+      "vk": "0x33",
+      "scan": "0x04",
+      "ext": false
+    },
+    {
+      "vk": "0x34",
+      "scan": "0x05",
+      "ext": false
+    },
+    {
+      "vk": "0x35",
+      "scan": "0x06",
+      "ext": false
+    },
+    {
+      "vk": "0x36",
+      "scan": "0x07",
+      "ext": false
+    },
+    {
+      "vk": "0x37",
+      "scan": "0x08",
+      "ext": false
+    },
+    {
+      "vk": "0x38",
+      "scan": "0x09",
+      "ext": false
+    },
+    {
+      "vk": "0x39",
+      "scan": "0x0A",
+      "ext": false
+    },
+    {
+      "vk": "0x41",
+      "scan": "0x1E",
+      "ext": false
+    },
+    {
+      "vk": "0x42",
+      "scan": "0x30",
+      "ext": false
+    },
+    {
+      "vk": "0x43",
+      "scan": "0x2E",
+      "ext": false
+    },
+    {
+      "vk": "0x44",
+      "scan": "0x20",
+      "ext": false
+    },
+    {
+      "vk": "0x45",
+      "scan": "0x12",
+      "ext": false
+    },
+    {
+      "vk": "0x46",
+      "scan": "0x21",
+      "ext": false
+    },
+    {
+      "vk": "0x47",
+      "scan": "0x22",
+      "ext": false
+    },
+    {
+      "vk": "0x48",
+      "scan": "0x23",
+      "ext": false
+    },
+    {
+      "vk": "0x49",
+      "scan": "0x17",
+      "ext": false
+    },
+    {
+      "vk": "0x4A",
+      "scan": "0x24",
+      "ext": false
+    },
+    {
+      "vk": "0x4B",
+      "scan": "0x25",
+      "ext": false
+    },
+    {
+      "vk": "0x4C",
+      "scan": "0x26",
+      "ext": false
+    },
+    {
+      "vk": "0x4D",
+      "scan": "0x32",
+      "ext": false
+    },
+    {
+      "vk": "0x4E",
+      "scan": "0x31",
+      "ext": false
+    },
+    {
+      "vk": "0x4F",
+      "scan": "0x18",
+      "ext": false
+    },
+    {
+      "vk": "0x50",
+      "scan": "0x19",
+      "ext": false
+    },
+    {
+      "vk": "0x51",
+      "scan": "0x10",
+      "ext": false
+    },
+    {
+      "vk": "0x52",
+      "scan": "0x13",
+      "ext": false
+    },
+    {
+      "vk": "0x53",
+      "scan": "0x1F",
+      "ext": false
+    },
+    {
+      "vk": "0x54",
+      "scan": "0x14",
+      "ext": false
+    },
+    {
+      "vk": "0x55",
+      "scan": "0x16",
+      "ext": false
+    },
+    {
+      "vk": "0x56",
+      "scan": "0x2F",
+      "ext": false
+    },
+    {
+      "vk": "0x57",
+      "scan": "0x11",
+      "ext": false
+    },
+    {
+      "vk": "0x58",
+      "scan": "0x2D",
+      "ext": false
+    },
+    {
+      "vk": "0x59",
+      "scan": "0x15",
+      "ext": false
+    },
+    {
+      "vk": "0x5A",
+      "scan": "0x2C",
+      "ext": false
+    },
+    {
+      "vk": "0x5B",
+      "scan": "0x5B",
+      "ext": true
+    },
+    {
+      "vk": "0x5C",
+      "scan": "0x5C",
+      "ext": true
+    },
+    {
+      "vk": "0x5D",
+      "scan": "0x5D",
+      "ext": true
+    },
+    {
+      "vk": "0x5F",
+      "scan": "0x5F",
+      "ext": true
+    },
+    {
+      "vk": "0x60",
+      "scan": "0x52",
+      "ext": false
+    },
+    {
+      "vk": "0x61",
+      "scan": "0x4F",
+      "ext": false
+    },
+    {
+      "vk": "0x62",
+      "scan": "0x50",
+      "ext": false
+    },
+    {
+      "vk": "0x63",
+      "scan": "0x51",
+      "ext": false
+    },
+    {
+      "vk": "0x64",
+      "scan": "0x4B",
+      "ext": false
+    },
+    {
+      "vk": "0x65",
+      "scan": "0x4C",
+      "ext": false
+    },
+    {
+      "vk": "0x66",
+      "scan": "0x4D",
+      "ext": false
+    },
+    {
+      "vk": "0x67",
+      "scan": "0x47",
+      "ext": false
+    },
+    {
+      "vk": "0x68",
+      "scan": "0x48",
+      "ext": false
+    },
+    {
+      "vk": "0x69",
+      "scan": "0x49",
+      "ext": false
+    },
+    {
+      "vk": "0x6A",
+      "scan": "0x37",
+      "ext": false
+    },
+    {
+      "vk": "0x6B",
+      "scan": "0x4E",
+      "ext": false
+    },
+    {
+      "vk": "0x6D",
+      "scan": "0x4A",
+      "ext": false
+    },
+    {
+      "vk": "0x6E",
+      "scan": "0x53",
+      "ext": false
+    },
+    {
+      "vk": "0x6F",
+      "scan": "0x35",
+      "ext": true
+    },
+    {
+      "vk": "0x70",
+      "scan": "0x3B",
+      "ext": false
+    },
+    {
+      "vk": "0x71",
+      "scan": "0x3C",
+      "ext": false
+    },
+    {
+      "vk": "0x72",
+      "scan": "0x3D",
+      "ext": false
+    },
+    {
+      "vk": "0x73",
+      "scan": "0x3E",
+      "ext": false
+    },
+    {
+      "vk": "0x74",
+      "scan": "0x3F",
+      "ext": false
+    },
+    {
+      "vk": "0x75",
+      "scan": "0x40",
+      "ext": false
+    },
+    {
+      "vk": "0x76",
+      "scan": "0x41",
+      "ext": false
+    },
+    {
+      "vk": "0x77",
+      "scan": "0x42",
+      "ext": false
+    },
+    {
+      "vk": "0x78",
+      "scan": "0x43",
+      "ext": false
+    },
+    {
+      "vk": "0x79",
+      "scan": "0x44",
+      "ext": false
+    },
+    {
+      "vk": "0x7A",
+      "scan": "0x57",
+      "ext": false
+    },
+    {
+      "vk": "0x7B",
+      "scan": "0x58",
+      "ext": false
+    },
+    {
+      "vk": "0x7C",
+      "scan": "0x64",
+      "ext": false
+    },
+    {
+      "vk": "0x7D",
+      "scan": "0x65",
+      "ext": false
+    },
+    {
+      "vk": "0x7E",
+      "scan": "0x66",
+      "ext": false
+    },
+    {
+      "vk": "0x7F",
+      "scan": "0x67",
+      "ext": false
+    },
+    {
+      "vk": "0x80",
+      "scan": "0x68",
+      "ext": false
+    },
+    {
+      "vk": "0x81",
+      "scan": "0x69",
+      "ext": false
+    },
+    {
+      "vk": "0x82",
+      "scan": "0x6A",
+      "ext": false
+    },
+    {
+      "vk": "0x83",
+      "scan": "0x6B",
+      "ext": false
+    },
+    {
+      "vk": "0x84",
+      "scan": "0x6C",
+      "ext": false
+    },
+    {
+      "vk": "0x85",
+      "scan": "0x6D",
+      "ext": false
+    },
+    {
+      "vk": "0x86",
+      "scan": "0x6E",
+      "ext": false
+    },
+    {
+      "vk": "0x87",
+      "scan": "0x76",
+      "ext": false
+    },
+    {
+      "vk": "0x90",
+      "scan": "0x45",
+      "ext": false
+    },
+    {
+      "vk": "0x91",
+      "scan": "0x46",
+      "ext": false
+    },
+    {
+      "vk": "0xA0",
+      "scan": "0x2A",
+      "ext": false
+    },
+    {
+      "vk": "0xA1",
+      "scan": "0x36",
+      "ext": false
+    },
+    {
+      "vk": "0xA2",
+      "scan": "0x1D",
+      "ext": false
+    },
+    {
+      "vk": "0xA3",
+      "scan": "0x1D",
+      "ext": true
+    },
+    {
+      "vk": "0xA4",
+      "scan": "0x38",
+      "ext": false
+    },
+    {
+      "vk": "0xA5",
+      "scan": "0x38",
+      "ext": true
+    },
+    {
+      "vk": "0xA6",
+      "scan": "0x6A",
+      "ext": true
+    },
+    {
+      "vk": "0xA7",
+      "scan": "0x69",
+      "ext": true
+    },
+    {
+      "vk": "0xA8",
+      "scan": "0x67",
+      "ext": true
+    },
+    {
+      "vk": "0xA9",
+      "scan": "0x68",
+      "ext": true
+    },
+    {
+      "vk": "0xAA",
+      "scan": "0x65",
+      "ext": true
+    },
+    {
+      "vk": "0xAB",
+      "scan": "0x66",
+      "ext": true
+    },
+    {
+      "vk": "0xAC",
+      "scan": "0x32",
+      "ext": true
+    },
+    {
+      "vk": "0xAD",
+      "scan": "0x20",
+      "ext": true
+    },
+    {
+      "vk": "0xAE",
+      "scan": "0x2E",
+      "ext": true
+    },
+    {
+      "vk": "0xAF",
+      "scan": "0x30",
+      "ext": true
+    },
+    {
+      "vk": "0xB0",
+      "scan": "0x19",
+      "ext": true
+    },
+    {
+      "vk": "0xB1",
+      "scan": "0x10",
+      "ext": true
+    },
+    {
+      "vk": "0xB2",
+      "scan": "0x24",
+      "ext": true
+    },
+    {
+      "vk": "0xB3",
+      "scan": "0x22",
+      "ext": true
+    },
+    {
+      "vk": "0xB4",
+      "scan": "0x6C",
+      "ext": true
+    },
+    {
+      "vk": "0xB5",
+      "scan": "0x6D",
+      "ext": true
+    },
+    {
+      "vk": "0xB6",
+      "scan": "0x6B",
+      "ext": true
+    },
+    {
+      "vk": "0xB7",
+      "scan": "0x21",
+      "ext": true
+    },
+    {
+      "vk": "0xBA",
+      "scan": "0x27",
+      "ext": false
+    },
+    {
+      "vk": "0xBB",
+      "scan": "0x0D",
+      "ext": false
+    },
+    {
+      "vk": "0xBC",
+      "scan": "0x33",
+      "ext": false
+    },
+    {
+      "vk": "0xBD",
+      "scan": "0x0C",
+      "ext": false
+    },
+    {
+      "vk": "0xBE",
+      "scan": "0x34",
+      "ext": false
+    },
+    {
+      "vk": "0xBF",
+      "scan": "0x35",
+      "ext": false
+    },
+    {
+      "vk": "0xC0",
+      "scan": "0x29",
+      "ext": false
+    },
+    {
+      "vk": "0xC1",
+      "scan": "0x73",
+      "ext": false
+    },
+    {
+      "vk": "0xC2",
+      "scan": "0x7E",
+      "ext": false
+    },
+    {
+      "vk": "0xDB",
+      "scan": "0x1A",
+      "ext": false
+    },
+    {
+      "vk": "0xDC",
+      "scan": "0x2B",
+      "ext": false
+    },
+    {
+      "vk": "0xDD",
+      "scan": "0x1B",
+      "ext": false
+    },
+    {
+      "vk": "0xDE",
+      "scan": "0x28",
+      "ext": false
+    },
+    {
+      "vk": "0xE2",
+      "scan": "0x56",
+      "ext": false
+    },
+    {
+      "vk": "0xE9",
+      "scan": "0x71",
+      "ext": false
+    },
+    {
+      "vk": "0xEA",
+      "scan": "0x5C",
+      "ext": false
+    },
+    {
+      "vk": "0xEB",
+      "scan": "0x7B",
+      "ext": false
+    },
+    {
+      "vk": "0xED",
+      "scan": "0x6F",
+      "ext": false
+    },
+    {
+      "vk": "0xEE",
+      "scan": "0x5A",
+      "ext": false
+    },
+    {
+      "vk": "0xF1",
+      "scan": "0x5B",
+      "ext": false
+    },
+    {
+      "vk": "0xF3",
+      "scan": "0x5F",
+      "ext": false
+    },
+    {
+      "vk": "0xF5",
+      "scan": "0x5E",
+      "ext": false
+    },
+    {
+      "vk": "0xF9",
+      "scan": "0x5D",
+      "ext": false
+    },
+    {
+      "vk": "0xFB",
+      "scan": "0x62",
+      "ext": false
+    }
+  ],
+  "chars": [
+    {
+      "char": " ",
+      "code": "0x20",
+      "vk": "0x20",
+      "scan": "0x39"
+    },
+    {
+      "char": "!",
+      "code": "0x21",
+      "vk": "0x31",
+      "shift": true,
+      "scan": "0x02"
+    },
+    {
+      "char": "\"",
+      "code": "0x22",
+      "vk": "0xDE",
+      "shift": true,
+      "scan": "0x28"
+    },
+    {
+      "char": "#",
+      "code": "0x23",
+      "vk": "0x33",
+      "shift": true,
+      "scan": "0x04"
+    },
+    {
+      "char": "$",
+      "code": "0x24",
+      "vk": "0x34",
+      "shift": true,
+      "scan": "0x05"
+    },
+    {
+      "char": "%",
+      "code": "0x25",
+      "vk": "0x35",
+      "shift": true,
+      "scan": "0x06"
+    },
+    {
+      "char": "&",
+      "code": "0x26",
+      "vk": "0x37",
+      "shift": true,
+      "scan": "0x08"
+    },
+    {
+      "char": "'",
+      "code": "0x27",
+      "vk": "0xDE",
+      "scan": "0x28"
+    },
+    {
+      "char": "(",
+      "code": "0x28",
+      "vk": "0x39",
+      "shift": true,
+      "scan": "0x0A"
+    },
+    {
+      "char": ")",
+      "code": "0x29",
+      "vk": "0x30",
+      "shift": true,
+      "scan": "0x0B"
+    },
+    {
+      "char": "*",
+      "code": "0x2A",
+      "vk": "0x38",
+      "shift": true,
+      "scan": "0x09"
+    },
+    {
+      "char": "+",
+      "code": "0x2B",
+      "vk": "0xBB",
+      "shift": true,
+      "scan": "0x0D"
+    },
+    {
+      "char": ",",
+      "code": "0x2C",
+      "vk": "0xBC",
+      "scan": "0x33"
+    },
+    {
+      "char": "-",
+      "code": "0x2D",
+      "vk": "0xBD",
+      "scan": "0x0C"
+    },
+    {
+      "char": ".",
+      "code": "0x2E",
+      "vk": "0xBE",
+      "scan": "0x34"
+    },
+    {
+      "char": "/",
+      "code": "0x2F",
+      "vk": "0xBF",
+      "scan": "0x35"
+    },
+    {
+      "char": "0",
+      "code": "0x30",
+      "vk": "0x30",
+      "scan": "0x0B"
+    },
+    {
+      "char": "1",
+      "code": "0x31",
+      "vk": "0x31",
+      "scan": "0x02"
+    },
+    {
+      "char": "2",
+      "code": "0x32",
+      "vk": "0x32",
+      "scan": "0x03"
+    },
+    {
+      "char": "3",
+      "code": "0x33",
+      "vk": "0x33",
+      "scan": "0x04"
+    },
+    {
+      "char": "4",
+      "code": "0x34",
+      "vk": "0x34",
+      "scan": "0x05"
+    },
+    {
+      "char": "5",
+      "code": "0x35",
+      "vk": "0x35",
+      "scan": "0x06"
+    },
+    {
+      "char": "6",
+      "code": "0x36",
+      "vk": "0x36",
+      "scan": "0x07"
+    },
+    {
+      "char": "7",
+      "code": "0x37",
+      "vk": "0x37",
+      "scan": "0x08"
+    },
+    {
+      "char": "8",
+      "code": "0x38",
+      "vk": "0x38",
+      "scan": "0x09"
+    },
+    {
+      "char": "9",
+      "code": "0x39",
+      "vk": "0x39",
+      "scan": "0x0A"
+    },
+    {
+      "char": ":",
+      "code": "0x3A",
+      "vk": "0xBA",
+      "shift": true,
+      "scan": "0x27"
+    },
+    {
+      "char": ";",
+      "code": "0x3B",
+      "vk": "0xBA",
+      "scan": "0x27"
+    },
+    {
+      "char": "<",
+      "code": "0x3C",
+      "vk": "0xBC",
+      "shift": true,
+      "scan": "0x33"
+    },
+    {
+      "char": "=",
+      "code": "0x3D",
+      "vk": "0xBB",
+      "scan": "0x0D"
+    },
+    {
+      "char": ">",
+      "code": "0x3E",
+      "vk": "0xBE",
+      "shift": true,
+      "scan": "0x34"
+    },
+    {
+      "char": "?",
+      "code": "0x3F",
+      "vk": "0xBF",
+      "shift": true,
+      "scan": "0x35"
+    },
+    {
+      "char": "@",
+      "code": "0x40",
+      "vk": "0x32",
+      "shift": true,
+      "scan": "0x03"
+    },
+    {
+      "char": "A",
+      "code": "0x41",
+      "vk": "0x41",
+      "shift": true,
+      "scan": "0x1E"
+    },
+    {
+      "char": "B",
+      "code": "0x42",
+      "vk": "0x42",
+      "shift": true,
+      "scan": "0x30"
+    },
+    {
+      "char": "C",
+      "code": "0x43",
+      "vk": "0x43",
+      "shift": true,
+      "scan": "0x2E"
+    },
+    {
+      "char": "D",
+      "code": "0x44",
+      "vk": "0x44",
+      "shift": true,
+      "scan": "0x20"
+    },
+    {
+      "char": "E",
+      "code": "0x45",
+      "vk": "0x45",
+      "shift": true,
+      "scan": "0x12"
+    },
+    {
+      "char": "F",
+      "code": "0x46",
+      "vk": "0x46",
+      "shift": true,
+      "scan": "0x21"
+    },
+    {
+      "char": "G",
+      "code": "0x47",
+      "vk": "0x47",
+      "shift": true,
+      "scan": "0x22"
+    },
+    {
+      "char": "H",
+      "code": "0x48",
+      "vk": "0x48",
+      "shift": true,
+      "scan": "0x23"
+    },
+    {
+      "char": "I",
+      "code": "0x49",
+      "vk": "0x49",
+      "shift": true,
+      "scan": "0x17"
+    },
+    {
+      "char": "J",
+      "code": "0x4A",
+      "vk": "0x4A",
+      "shift": true,
+      "scan": "0x24"
+    },
+    {
+      "char": "K",
+      "code": "0x4B",
+      "vk": "0x4B",
+      "shift": true,
+      "scan": "0x25"
+    },
+    {
+      "char": "L",
+      "code": "0x4C",
+      "vk": "0x4C",
+      "shift": true,
+      "scan": "0x26"
+    },
+    {
+      "char": "M",
+      "code": "0x4D",
+      "vk": "0x4D",
+      "shift": true,
+      "scan": "0x32"
+    },
+    {
+      "char": "N",
+      "code": "0x4E",
+      "vk": "0x4E",
+      "shift": true,
+      "scan": "0x31"
+    },
+    {
+      "char": "O",
+      "code": "0x4F",
+      "vk": "0x4F",
+      "shift": true,
+      "scan": "0x18"
+    },
+    {
+      "char": "P",
+      "code": "0x50",
+      "vk": "0x50",
+      "shift": true,
+      "scan": "0x19"
+    },
+    {
+      "char": "Q",
+      "code": "0x51",
+      "vk": "0x51",
+      "shift": true,
+      "scan": "0x10"
+    },
+    {
+      "char": "R",
+      "code": "0x52",
+      "vk": "0x52",
+      "shift": true,
+      "scan": "0x13"
+    },
+    {
+      "char": "S",
+      "code": "0x53",
+      "vk": "0x53",
+      "shift": true,
+      "scan": "0x1F"
+    },
+    {
+      "char": "T",
+      "code": "0x54",
+      "vk": "0x54",
+      "shift": true,
+      "scan": "0x14"
+    },
+    {
+      "char": "U",
+      "code": "0x55",
+      "vk": "0x55",
+      "shift": true,
+      "scan": "0x16"
+    },
+    {
+      "char": "V",
+      "code": "0x56",
+      "vk": "0x56",
+      "shift": true,
+      "scan": "0x2F"
+    },
+    {
+      "char": "W",
+      "code": "0x57",
+      "vk": "0x57",
+      "shift": true,
+      "scan": "0x11"
+    },
+    {
+      "char": "X",
+      "code": "0x58",
+      "vk": "0x58",
+      "shift": true,
+      "scan": "0x2D"
+    },
+    {
+      "char": "Y",
+      "code": "0x59",
+      "vk": "0x59",
+      "shift": true,
+      "scan": "0x15"
+    },
+    {
+      "char": "Z",
+      "code": "0x5A",
+      "vk": "0x5A",
+      "shift": true,
+      "scan": "0x2C"
+    },
+    {
+      "char": "[",
+      "code": "0x5B",
+      "vk": "0xDB",
+      "scan": "0x1A"
+    },
+    {
+      "char": "\\",
+      "code": "0x5C",
+      "vk": "0xDC",
+      "scan": "0x2B"
+    },
+    {
+      "char": "]",
+      "code": "0x5D",
+      "vk": "0xDD",
+      "scan": "0x1B"
+    },
+    {
+      "char": "^",
+      "code": "0x5E",
+      "vk": "0x36",
+      "shift": true,
+      "scan": "0x07"
+    },
+    {
+      "char": "_",
+      "code": "0x5F",
+      "vk": "0xBD",
+      "shift": true,
+      "scan": "0x0C"
+    },
+    {
+      "char": "`",
+      "code": "0x60",
+      "vk": "0xC0",
+      "scan": "0x29"
+    },
+    {
+      "char": "a",
+      "code": "0x61",
+      "vk": "0x41",
+      "scan": "0x1E"
+    },
+    {
+      "char": "b",
+      "code": "0x62",
+      "vk": "0x42",
+      "scan": "0x30"
+    },
+    {
+      "char": "c",
+      "code": "0x63",
+      "vk": "0x43",
+      "scan": "0x2E"
+    },
+    {
+      "char": "d",
+      "code": "0x64",
+      "vk": "0x44",
+      "scan": "0x20"
+    },
+    {
+      "char": "e",
+      "code": "0x65",
+      "vk": "0x45",
+      "scan": "0x12"
+    },
+    {
+      "char": "f",
+      "code": "0x66",
+      "vk": "0x46",
+      "scan": "0x21"
+    },
+    {
+      "char": "g",
+      "code": "0x67",
+      "vk": "0x47",
+      "scan": "0x22"
+    },
+    {
+      "char": "h",
+      "code": "0x68",
+      "vk": "0x48",
+      "scan": "0x23"
+    },
+    {
+      "char": "i",
+      "code": "0x69",
+      "vk": "0x49",
+      "scan": "0x17"
+    },
+    {
+      "char": "j",
+      "code": "0x6A",
+      "vk": "0x4A",
+      "scan": "0x24"
+    },
+    {
+      "char": "k",
+      "code": "0x6B",
+      "vk": "0x4B",
+      "scan": "0x25"
+    },
+    {
+      "char": "l",
+      "code": "0x6C",
+      "vk": "0x4C",
+      "scan": "0x26"
+    },
+    {
+      "char": "m",
+      "code": "0x6D",
+      "vk": "0x4D",
+      "scan": "0x32"
+    },
+    {
+      "char": "n",
+      "code": "0x6E",
+      "vk": "0x4E",
+      "scan": "0x31"
+    },
+    {
+      "char": "o",
+      "code": "0x6F",
+      "vk": "0x4F",
+      "scan": "0x18"
+    },
+    {
+      "char": "p",
+      "code": "0x70",
+      "vk": "0x50",
+      "scan": "0x19"
+    },
+    {
+      "char": "q",
+      "code": "0x71",
+      "vk": "0x51",
+      "scan": "0x10"
+    },
+    {
+      "char": "r",
+      "code": "0x72",
+      "vk": "0x52",
+      "scan": "0x13"
+    },
+    {
+      "char": "s",
+      "code": "0x73",
+      "vk": "0x53",
+      "scan": "0x1F"
+    },
+    {
+      "char": "t",
+      "code": "0x74",
+      "vk": "0x54",
+      "scan": "0x14"
+    },
+    {
+      "char": "u",
+      "code": "0x75",
+      "vk": "0x55",
+      "scan": "0x16"
+    },
+    {
+      "char": "v",
+      "code": "0x76",
+      "vk": "0x56",
+      "scan": "0x2F"
+    },
+    {
+      "char": "w",
+      "code": "0x77",
+      "vk": "0x57",
+      "scan": "0x11"
+    },
+    {
+      "char": "x",
+      "code": "0x78",
+      "vk": "0x58",
+      "scan": "0x2D"
+    },
+    {
+      "char": "y",
+      "code": "0x79",
+      "vk": "0x59",
+      "scan": "0x15"
+    },
+    {
+      "char": "z",
+      "code": "0x7A",
+      "vk": "0x5A",
+      "scan": "0x2C"
+    },
+    {
+      "char": "{",
+      "code": "0x7B",
+      "vk": "0xDB",
+      "shift": true,
+      "scan": "0x1A"
+    },
+    {
+      "char": "|",
+      "code": "0x7C",
+      "vk": "0xDC",
+      "shift": true,
+      "scan": "0x2B"
+    },
+    {
+      "char": "}",
+      "code": "0x7D",
+      "vk": "0xDD",
+      "shift": true,
+      "scan": "0x1B"
+    },
+    {
+      "char": "~",
+      "code": "0x7E",
+      "vk": "0xC0",
+      "shift": true,
+      "scan": "0x29"
+    }
+  ]
+}

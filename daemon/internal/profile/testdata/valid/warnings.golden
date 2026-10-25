@@ -1,0 +1,9 @@
+name "绘画", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	east          /layers/base/east          label "抓手"
+	west          /layers/base/west          label ""
+7:15: warning: binding has no action (/layers/base/east)
+	> {"label": "抓手"},
+8:15: warning: binding has no action (/layers/base/west)
+	> {}

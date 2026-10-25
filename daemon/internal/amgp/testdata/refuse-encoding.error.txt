@@ -1,0 +1,2 @@
+encoding
+文件声明的编码不是 UTF-8；请用 AntiMicroX 另存，或转成 UTF-8

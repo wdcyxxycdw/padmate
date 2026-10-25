@@ -1,0 +1,36 @@
+# The panic combo (DMN-07) with examples/profiles/basic.json. Back and
+# start are the function keys (MAP-27): their edges are decisions with the
+# reason function and send nothing. Held together for 2 s they pause the
+# mapping at 2600 ms: the pan and the eyedropper held are released, and
+# presses map to nothing. The pan pressed at 5000 is held through the
+# resume at 6100 and does nothing until it is pressed again. A hold of
+# 1.9 s does nothing. The last hold fires at 14600, after the trace ends,
+# and releases the pan held then.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"panic pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":600000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":2000000000,"kind":"axis","device":1,"control":"lefttrigger","value":20000}
+{"timeNs":3000000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":3000000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":3100000000,"kind":"axis","device":1,"control":"lefttrigger","value":0}
+{"timeNs":3200000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":3500000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":3700000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":4000000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":4100000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":5000000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":6500000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":6500000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":7000000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":7500000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":7800000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":8000000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":8100000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":9000000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":9100000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":11000000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":11100000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":12000000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":12500000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":12600000000,"kind":"down","device":1,"control":"start"}

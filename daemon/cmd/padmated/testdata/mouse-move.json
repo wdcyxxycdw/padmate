@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-move",
+  "analog": {
+    "ls": {"mode": "mouse", "mouseSpeed": 1000, "deadzone": 0, "saturation": 1}
+  },
+  "layers": {
+    "base": {
+      "north": {"label": "快捷键", "press": {"type": "keys", "keys": "F13", "mode": "tap"}},
+      "leftshoulder": {"label": "精确", "press": {"type": "mouse", "op": "precision", "factor": 0.5}},
+      "south": {"label": "回中", "press": {"type": "mouse", "op": "jump", "x": 0.5, "y": 0.5}}
+    }
+  }
+}

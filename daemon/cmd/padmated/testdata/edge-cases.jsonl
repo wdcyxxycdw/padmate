@@ -1,0 +1,24 @@
+# Aliases, labels to escape and to measure, a key without a name, keys
+# sent by VK, a spurious press, a tap pressed again before it ends, the
+# trigger thresholds exactly, a binding without an action, an unbound
+# trigger and stick motion, and an unbound press held at the end.
+{"timeNs":1000000000,"kind":"added","device":4,"info":{"id":4,"name":"pad \"4\"","type":"ps5","gamepad":true}}
+{"timeNs":1010000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":1015000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":1020000000,"kind":"up","device":4,"control":"south"}
+{"timeNs":1030000000,"kind":"down","device":4,"control":"east"}
+{"timeNs":1035000000,"kind":"up","device":4,"control":"east"}
+{"timeNs":1040000000,"kind":"down","device":4,"control":"east"}
+{"timeNs":1100000000,"kind":"up","device":4,"control":"east"}
+{"timeNs":1200000000,"kind":"axis","device":4,"control":"righttrigger","value":9829}
+{"timeNs":1210000000,"kind":"axis","device":4,"control":"righttrigger","value":9830}
+{"timeNs":1220000000,"kind":"axis","device":4,"control":"righttrigger","value":6554}
+{"timeNs":1230000000,"kind":"axis","device":4,"control":"righttrigger","value":6553}
+{"timeNs":1300000000,"kind":"down","device":4,"control":"leftstick"}
+{"timeNs":1400000000,"kind":"up","device":4,"control":"leftstick"}
+{"timeNs":1500000000,"kind":"down","device":4,"control":"rightstick"}
+{"timeNs":1510000000,"kind":"up","device":4,"control":"rightstick"}
+{"timeNs":1600000000,"kind":"axis","device":4,"control":"lefttrigger","value":32767}
+{"timeNs":1610000000,"kind":"axis","device":4,"control":"lefttrigger","value":0}
+{"timeNs":1620000000,"kind":"axis","device":4,"control":"righty","value":-32768}
+{"timeNs":1700000000,"kind":"down","device":4,"control":"dpad.up"}

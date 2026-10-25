@@ -1,0 +1,5 @@
+name "绘画", schemaVersion 1
+layer alt
+	east          /layers/alt/east           label "抓手"  press: keys Space hold
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap

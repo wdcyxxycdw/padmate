@@ -1,0 +1,10 @@
+丢弃  摇杆校准（偏移与增益）没有导入；padmate 在设置页按手柄调死区和外圈
+丢弃  set 1 / south / slot 1：运行程序“C:\Program Files\Tool\tool.exe”：padmate 不运行程序
+丢弃  set 1 / east / slot 1：加载配置文件“other.amgp”：padmate 不按文件切换配置
+丢弃  set 1 / west / slot 1：鼠标移动：摇杆移动鼠标是整个配置的设置，只有 set 1 里摇杆的上下左右四个方向都是鼠标移动时才导入；按键上的鼠标移动没有对应
+丢弃  set 1 / north / slot 2：按推动距离分的动作区：按键没有推动距离，丢弃
+丢弃  set 1 / north / slot 4：按推动距离分的动作区：按键没有推动距离，丢弃
+丢弃  set 1 / leftshoulder / slot 2：运行程序“x.exe”：padmate 不运行程序
+丢弃  set 1 / ls：方形摇杆修正（50%）没有对应
+丢弃  set 1：传感器（加速度计、陀螺仪）的按键没有导入
+丢弃  set 1：游戏手柄的配置里不会有的“axis”元素，没有导入

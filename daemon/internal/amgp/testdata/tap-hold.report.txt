@@ -1,0 +1,6 @@
+近似  set 1 / north / slot 3：松开时间分段从 610 毫秒起：按长按导入，按住够久就触发，不等松开
+丢弃  set 1 / leftstick / slot 3：松开时间分段（从 30 毫秒起）只能对应一段，这一段丢弃
+丢弃  set 1 / rightstick / slot 3：多出来的长按动作区丢弃：每个按键只有一个长按
+近似  set 1 / leftshoulder / slot 2：长按成立时，按下区的键不会像 AntiMicroX 那样先松开，会一直按到松开
+近似  set 1 / rightshoulder / slot 2：松开前要先按住 100 毫秒才触发；导入后按多久都触发
+近似  set 1 / rt / slot 1：松开前要先按住 150 毫秒才触发；导入后按多久都触发

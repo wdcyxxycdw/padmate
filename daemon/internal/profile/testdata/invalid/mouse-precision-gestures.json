@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "精确模式的手势",
+  "layers": {
+    "base": {
+      "south": {"tap": {"type": "mouse", "op": "precision"}},
+      "east": {"release": {"type": "mouse", "op": "precision", "factor": 0.5}},
+      "north": {"doubleTap": {"type": "mouse", "op": "precision"}, "press": {"type": "mouse", "op": "precision"}},
+      "west": {"press": {"type": "mouse", "op": "precision", "factor": 0.2}, "hold": {"type": "mouse", "op": "precision"}},
+      "lb": {"tripleTap": {"type": "mouse", "op": "precision"}, "quadTap": {"type": "mouse", "op": "precision"}}
+    }
+  }
+}

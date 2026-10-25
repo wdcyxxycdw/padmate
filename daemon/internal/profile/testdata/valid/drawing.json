@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../../schema/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "b": {"label": "抓手", "press": {"type": "keys", "keys": "Space"}},
+      "x": {"label": "橡皮", "press": {"type": "keys", "keys": "e", "mode": "tap"}},
+      "north": {"label": "画笔", "press": {"type": "keys", "keys": "B", "mode": "tap"}},
+      "lb": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "rightshoulder": {"press": {"type": "keys", "keys": "shift"}},
+      "lt": {"label": "吸管", "press": {"type": "keys", "keys": "Alt"}},
+      "rt": {"label": "重做", "press": {"type": "keys", "keys": "ctrl + shift + z", "mode": "tap"}},
+      "dpad.up": {"label": "放大", "press": {"type": "keys", "keys": "Ctrl+Plus", "mode": "tap"}},
+      "dpad.down": {"label": "缩小", "press": {"type": "keys", "keys": "Ctrl+-", "mode": "tap"}},
+      "leftstick": {"press": {"type": "keys", "keys": "F13", "mode": "tap"}},
+      "paddle1": {"press": {"type": "keys", "keys": "sc:0x2C", "mode": "tap"}},
+      "touchpad": {"press": {"type": "keys", "keys": "KeyZ"}}
+    }
+  }
+}

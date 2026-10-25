@@ -1,0 +1,13 @@
+# The left stick is the pointer. Pushed right to the end at 1000 per second: eight pixels a tick.
+leftx=1@0 lefty=0@0
+leftx=0@50
+# Pushed up and right at 45 degrees, full travel: 707 pixels a second on each axis, up is negative.
+leftx=0.7071@100 lefty=-0.7071@100
+# The precision button halves the speed while it is held.
++leftshoulder@130 -leftshoulder@170
+leftx=0@200 lefty=0@200
+# The right stick, quadratic and smoothed (40 ms): half way is a quarter of 2000 px/s, reached gently, and the pointer glides on after the release.
+rightx=0@300 righty=0.5@300
+rightx=0@340 righty=0@340
+# A jump puts the pointer in the middle of the desktop.
++south@400 -south@410

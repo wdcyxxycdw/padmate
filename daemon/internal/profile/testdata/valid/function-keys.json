@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "name": "功能键",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "back": {"label": "粘贴", "press": {"type": "keys", "keys": "Ctrl+V", "mode": "tap"}},
+      "start": {"press": {"type": "layer", "layer": "no such layer", "op": "hold"}}
+    },
+    "paint": {
+      "select": {"press": {"type": "keys", "keys": "Q"}}
+    }
+  },
+  "common": {
+    "back": {"block": true}
+  },
+  "functionKeys": {
+    "back": {
+      "south": {"label": "重做", "press": {"type": "keys", "keys": "Ctrl+Shift+Z", "mode": "tap"}},
+      "lb": {"press": {"type": "layer", "layer": "paint", "op": "hold"}},
+      "west": {"tap": {"type": "keys", "keys": "F13", "mode": "tap"}, "hold": {"type": "keys", "keys": "F14"}},
+      "dpad.up": {"block": true}
+    },
+    "start": {
+      "ls.cw": {"press": {"type": "keys", "keys": "Ctrl+]", "mode": "tap"}},
+      "rt": {"label": "只有名字"}
+    }
+  }
+}

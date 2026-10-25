@@ -1,0 +1,22 @@
+# A window that ends with no action for its taps is one decision: unbound, the
+# gesture of the count, the binding of the press (ADR-0071). Nothing is sent.
+# A cycle that a press or release action answered has no such decision.
+{"t":0,"control":"west","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":250,"control":"west","edge":"down","cycle":1,"gesture":"tap","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":500,"control":"west","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":600,"control":"west","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":630,"control":"west","edge":"down","cycle":2,"gesture":"doubleTap","level":"base","binding":"/layers/base/west","label":"二连击","action":"tap F14","owner":"decl/2","reason":"dispatch"}
+{"t":1000,"control":"north","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":1100,"control":"north","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":1350,"control":"north","edge":"down","cycle":3,"gesture":"doubleTap","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":1600,"control":"north","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":1850,"control":"north","edge":"down","cycle":4,"gesture":"tap","level":"base","binding":"/layers/base/north","action":"tap F13","owner":"decl/4","reason":"dispatch"}
+{"t":2000,"control":"west","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":2100,"control":"west","edge":"down","cycle":5,"gesture":"tap","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":2100,"control":"south","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/south","action":"tap Ctrl+Z","owner":"decl/6","reason":"dispatch"}
+{"t":2130,"control":"south","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/south","reason":"end"}
+{"t":3000,"control":"east","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/east","reason":"unbound"}
+{"t":3300,"control":"east","edge":"down","cycle":7,"gesture":"tap","level":"base","binding":"/layers/base/east","action":"tap F18","owner":"decl/7","reason":"dispatch"}
+{"t":3300,"control":"west","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":3300,"control":"west","edge":"down","cycle":8,"gesture":"tap","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
+{"t":4000,"control":"leftshoulder","edge":"down","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"tap F13","owner":"decl/9","reason":"dispatch"}

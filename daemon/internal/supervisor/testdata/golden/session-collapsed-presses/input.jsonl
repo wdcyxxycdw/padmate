@@ -1,0 +1,15 @@
+# Presses during a collapsed lock (DMN-09): south taps at 100. At 500
+# the session locks, east goes down and south taps, and the session
+# unlocks, all before the router looks at the suspension: it routes the
+# presses with the mapping not held, but the lock closed the gate first,
+# so they press nothing, and the collapsed hold cancels their cycles. East
+# does nothing until it is pressed again at 900.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":150000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":500000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":700000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":900000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1100000000,"kind":"up","device":1,"control":"east"}

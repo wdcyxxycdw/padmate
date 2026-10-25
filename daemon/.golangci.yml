@@ -1,0 +1,205 @@
+version: "2"
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - depguard
+    - durationcheck
+    - errorlint
+    - forbidigo
+    - gocritic
+    - misspell
+    - nilerr
+    - nolintlint
+    - revive
+    - unconvert
+    - usestdlibvars
+
+  settings:
+    depguard:
+      rules:
+        # Invariant 2 (ARCHITECTURE §4): the engine and its inputs stay pure
+        # and cross-platform so they can be tested on Linux. clock is here
+        # because the engine imports it; it may still call time.Now.
+        pure:
+          list-mode: lax
+          files:
+            - "**/internal/amgp/**"
+            - "**/internal/clock/**"
+            - "**/internal/control/**"
+            - "**/internal/engine/**"
+            - "**/internal/haptic/**"
+            - "**/internal/keys/**"
+            - "**/internal/profile/**"
+            - "**/internal/sdlmapping/**"
+            - "**/internal/mapwizard/**"
+          deny:
+            - pkg: golang.org/x/sys/windows
+              desc: pure packages must build and test on Linux
+            - pkg: syscall
+              desc: pure packages must build and test on Linux
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/input
+              desc: pure packages must not depend on input backends
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/output
+              desc: pure packages must not depend on output; the Arbiter depends on them
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script
+              desc: pure packages must not depend on the script host
+            - pkg: github.com/dop251/goja
+              desc: pure packages must not depend on the script engine
+            - pkg: github.com/evanw/esbuild
+              desc: pure packages must not depend on the script compiler
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/latency
+              desc: pure packages take time only from clock.Clock (invariant 2)
+            - pkg: log$
+              desc: pure packages never log; errors flow out through Slot.Errors
+            - pkg: log/slog
+              desc: pure packages never log; errors flow out through Slot.Errors
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/winsession
+              desc: pure packages must not depend on the session thread; padmated passes its reasons to the supervisor
+        # winsession (DMN-09) only reports the session's state: padmated
+        # wires it to the supervisor and the output, so it depends on none
+        # of the mapping's packages.
+        winsession:
+          list-mode: lax
+          files:
+            - "**/internal/winsession/**"
+          deny:
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/input
+              desc: winsession reports reasons; padmated wires them to the mapping
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/output
+              desc: winsession reports reasons; padmated wires them to the output (Config.Barrier)
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/supervisor
+              desc: winsession reports reasons; padmated passes them to Supervisor.Suspend
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/slot
+              desc: winsession reports reasons; padmated wires them to the mapping
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/engine
+              desc: winsession reports reasons; padmated wires them to the mapping
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script
+              desc: winsession reports reasons; padmated wires them to the mapping
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/latency
+              desc: winsession does not measure latency
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/winhook
+              desc: winsession's thread has its own message loop; the hook thread is winhook's
+        # The SPK-03 spike is throwaway (spike/doc.go): only its command
+        # imports it.
+        spike:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/internal/script/spike/**"
+            - "!**/tools/spk03/**"
+          deny:
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script/spike
+              desc: the SPK-03 spike is throwaway; write M5 code from docs/SCRIPTING.md instead
+        # simtest is the test harness (ENG-19, ARCHITECTURE §14): only tests
+        # import it.
+        simtest:
+          list-mode: lax
+          files:
+            - $all
+            - "!$test"
+            - "!**/internal/simtest/**"
+          deny:
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/simtest
+              desc: simtest is a test harness; import it from _test.go files only
+        # injecttest constructs output.SendInput (invariant 6, ADR-0011):
+        # only tests import it, so that no command injects through it.
+        injecttest:
+          list-mode: lax
+          files:
+            - $all
+            - "!$test"
+            - "!**/internal/injecttest/**"
+          deny:
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/injecttest
+              desc: injecttest injects real keys; import it from _test.go files only
+        # winsessiontest sends session messages to the session window (DMN-09):
+        # only tests import it, so that no command fakes a lock or a sign-out.
+        winsessiontest:
+          list-mode: lax
+          files:
+            - $all
+            - "!$test"
+            - "!**/internal/winsessiontest/**"
+          deny:
+            - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/winsessiontest
+              desc: winsessiontest sends session messages; import it from _test.go files only
+
+    forbidigo:
+      analyze-types: true
+      forbid:
+        # Limited by the exclusion rules below to the pure packages (control,
+        # engine, haptic, keys, profile), invariant 2 in CLAUDE.md, and to
+        # watch, whose tests run it on a fake clock.
+        - pattern: ^time\.(Now|Since|Until|Sleep|After|AfterFunc|Tick|NewTimer|NewTicker)$
+          msg: amgp, control, engine, haptic, keys, profile and watch read time only from a clock or an argument; take time from clock.Clock (haptic takes the now argument)
+        # Invariant 6: the Sender that injects is constructed only where the
+        # exclusion rules below allow it. Inside package output its own name
+        # matches too, so the package is excluded.
+        - pattern: ^output\.SendInput$
+          pkg: ^github\.com/wdcyxxycdw/padmate/daemon/internal/output$
+          msg: only padmated's sender_windows.go, padmatectl's send_windows.go and injecttest construct output.SendInput (CLAUDE.md invariant 6)
+
+    misspell:
+      locale: US
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: use-any
+        - name: var-declaration
+        - name: var-naming
+
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - path-except: (^|/)internal/(amgp|control|engine|haptic|keys|profile|watch)/
+        linters:
+          - forbidigo
+        text: take time from clock\.Clock
+      - path: (^|/)cmd/padmated/sender_windows\.go$|(^|/)cmd/padmatectl/send_windows\.go$|(^|/)internal/(injecttest|output)/|_test\.go$
+        linters:
+          - forbidigo
+        text: construct output\.SendInput
+      # mkwinsyscall reads "//sys" directives, which must not have a space.
+      - path: syscall_windows.go$
+        linters:
+          - gocritic
+        text: commentFormatting
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/wdcyxxycdw/padmate

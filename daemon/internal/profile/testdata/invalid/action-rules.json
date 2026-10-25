@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "keys", "keys": ["Ctrl+K", "S"]}},
+      "east": {"press": {"type": "keys", "keys": "A", "mode": "tap", "repeat": {}}},
+      "west": {"hold": {"type": "keys", "keys": ["A", "B"], "mode": "tap", "repeat": {}}},
+      "north": {"tap": {"type": "layer", "layer": "paint", "op": "hold"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": ["A"], "mode": "hold"}},
+      "rightshoulder": {"hold": {"type": "keys", "keys": ["A", "B"], "mode": "hold", "repeat": {"delayMs": 0}}}
+    },
+    "paint": {}
+  },
+  "common": {
+    "dpad.up": {"release": {"type": "layer", "layer": "paint", "op": "hold"}}
+  }
+}

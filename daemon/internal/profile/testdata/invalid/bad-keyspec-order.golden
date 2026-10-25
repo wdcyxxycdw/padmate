@@ -1,0 +1,2 @@
+6:67: error: "Z" is not a modifier; only the last key of a chord can be a non-modifier (/layers/base/south/press/keys)
+	> Z+Ctrl"}}

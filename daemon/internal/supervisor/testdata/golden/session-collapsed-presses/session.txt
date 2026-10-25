@@ -1,0 +1,6 @@
+# The events of 500 come between the lock and the unlock.
+@500 world locked=true
+@500 lock
+@500 events
+@500 world locked=false
+@500 unlock

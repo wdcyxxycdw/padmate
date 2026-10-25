@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gamecontroller configversion="19" appversion="3.6.1">
+    <stickAxisAssociation index="1" xAxis="1" yAxis="2"/>
+    <stickAxisAssociation index="2" xAxis="3" yAxis="4"/>
+    <vdpadButtonAssociations index="1">
+        <vdpadButtonAssociation axis="0" button="12" direction="1"/>
+        <vdpadButtonAssociation axis="0" button="13" direction="4"/>
+        <vdpadButtonAssociation axis="0" button="14" direction="8"/>
+        <vdpadButtonAssociation axis="0" button="15" direction="2"/>
+    </vdpadButtonAssociations>
+    <profilename>Eight</profilename>
+    <sets>
+        <set index="1">
+            <button index="1">
+                <setselect>2</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000030</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="2">
+            <name>S2</name>
+            <button index="1">
+                <setselect>3</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000031</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="3">
+            <name>S3</name>
+            <button index="1">
+                <setselect>4</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000032</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="4">
+            <name>S4</name>
+            <button index="1">
+                <setselect>5</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000033</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="5">
+            <name>S5</name>
+            <button index="1">
+                <setselect>6</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000034</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="6">
+            <name>S6</name>
+            <button index="1">
+                <setselect>7</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000035</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="7">
+            <name>S7</name>
+            <button index="1">
+                <setselect>8</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000036</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="8">
+            <name>S8</name>
+            <button index="1">
+                <setselect>1</setselect>
+                <setselectcondition>one-way</setselectcondition>
+                <slots>
+                    <slot>
+                        <code>0x1000037</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+    </sets>
+</gamecontroller>

@@ -1,0 +1,2 @@
+6:41: error: missing property "keys" (/layers/base/south/press)
+	> {"type": "keys", "mode": "tap"}}

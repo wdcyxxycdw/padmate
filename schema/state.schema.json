@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "padmate runtime state",
+  "description": "Persisted profile and layer choices. Contains no held keys or timers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "State format version.",
+      "const": 0,
+      "x-go-type": "int"
+    },
+    "lastProfile": {
+      "description": "Last active library profile, or empty when disabled.",
+      "type": "string",
+      "x-go-type": "string"
+    },
+    "lastProfileSet": {
+      "description": "Distinguish an explicitly disabled mapping from a first run with no remembered profile.",
+      "type": "boolean",
+      "x-go-type": "bool"
+    },
+    "devices": {
+      "description": "Layer choices by canonical DeviceKey and profile ID.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/device"
+      },
+      "x-go-type": "map[string]DeviceMemory"
+    }
+  },
+  "$defs": {
+    "device": {
+      "title": "Device memory",
+      "description": "Profile-specific layer choices for one device.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profiles"
+      ],
+      "properties": {
+        "profiles": {
+          "description": "Layer memory by library profile ID.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/layers"
+          },
+          "x-go-type": "map[string]LayerMemory"
+        }
+      },
+      "x-go-name": "DeviceMemory"
+    },
+    "layers": {
+      "title": "Persistent layers",
+      "description": "Only base, toggled overlays and cycle positions survive a restart.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base"
+      ],
+      "properties": {
+        "base": {
+          "description": "Selected base layer.",
+          "type": "string",
+          "minLength": 1,
+          "x-go-type": "string"
+        },
+        "toggled": {
+          "description": "Toggled overlays in stack order; excludes held overlays.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "x-go-type": "[]string"
+        },
+        "cycles": {
+          "description": "Cycle positions by action pointer. The base layer is authoritative after edits.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "x-go-type": "map[string]int"
+        }
+      },
+      "x-go-name": "LayerMemory"
+    }
+  },
+  "x-go-name": "State"
+}

@@ -1,0 +1,6 @@
+# Sleep lets go of Space at 500; the reconnected pad maps nothing until
+# east is pressed after the wake.
++Space@100
+-Space@500
++Space@1900
+-Space@2100

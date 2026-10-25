@@ -1,0 +1,10 @@
+{"t":10,"control":"lt","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"第一段","action":"hold B","owner":"decl/1","reason":"dispatch"}
+{"t":30,"control":"lt.full","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt.full","label":"第二段","action":"hold E","owner":"decl/2","reason":"dispatch"}
+{"t":50,"control":"lt.full","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt.full","label":"第二段","action":"hold E","owner":"decl/2","reason":"release"}
+{"t":70,"control":"lt","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"第一段","action":"hold B","owner":"decl/1","reason":"release"}
+{"t":100,"control":"lt","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"第一段","action":"hold B","owner":"decl/3","reason":"dispatch"}
+{"t":100,"control":"lt.full","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/lt.full","label":"第二段","action":"hold E","owner":"decl/4","reason":"dispatch"}
+{"t":110,"control":"lt.full","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/lt.full","label":"第二段","action":"hold E","owner":"decl/4","reason":"release"}
+{"t":110,"control":"lt","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"第一段","action":"hold B","owner":"decl/3","reason":"release"}
+{"t":120,"control":"rt","edge":"down","cycle":5,"gesture":"press","reason":"unbound"}
+{"t":130,"control":"rt","edge":"up","cycle":5,"gesture":"press","reason":"end"}

@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Canonical config schema. Run task gen to update the embedded copy.",
+  "title": "padmate configuration",
+  "description": "Profile selection, device filtering and global mapping defaults. Strict JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "$schema": {
+      "description": "Schema location for editors.",
+      "type": "string",
+      "x-go-type": "*string",
+      "x-go-field": "Schema"
+    },
+    "schemaVersion": {
+      "description": "Configuration schema version; currently 0.",
+      "const": 0,
+      "x-go-type": "json.Number",
+      "x-go-field": "SchemaVersion"
+    },
+    "enabled": {
+      "description": "Enable automatic profile selection; defaults to true. Manual pause is independent.",
+      "type": "boolean",
+      "x-go-type": "*bool",
+      "x-go-field": "Enabled"
+    },
+    "onUnmatched": {
+      "description": "Ignored since ADR-0053: applications no rule binds use the fixed default profile. Accepted so that older files load; do not write it.",
+      "deprecated": true,
+      "enum": [
+        "keep",
+        "default",
+        "none"
+      ],
+      "x-go-skip": true,
+      "x-ts-never": true
+    },
+    "releaseOnSwitch": {
+      "description": "Release on foreground changes. Profile changes always release.",
+      "enum": [
+        "profileChange",
+        "always",
+        "never"
+      ],
+      "x-go-type": "string",
+      "x-go-field": "ReleaseOnSwitch"
+    },
+    "restoreLayerState": {
+      "description": "Restore persistent layers for each device and profile; defaults to true.",
+      "type": "boolean",
+      "x-go-type": "*bool",
+      "x-go-field": "RestoreLayerState"
+    },
+    "defaultProfile": {
+      "description": "Ignored since ADR-0053: the fixed default profile has the library ID \"default\". Accepted so that older files load; do not write it.",
+      "deprecated": true,
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "x-go-skip": true,
+      "x-ts-never": true
+    },
+    "ignore": {
+      "description": "Ignored since ADR-0053: every application either has a rule or uses the fixed default profile. Accepted so that older files load; do not write it.",
+      "deprecated": true,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "x-go-skip": true,
+      "x-ts-never": true
+    },
+    "rules": {
+      "description": "The first enabled rule that matches the foreground application and names a profile selects it; applications no rule binds use the fixed default profile \"default\".",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "x-go-type": "[]wireConfigRule",
+      "x-go-field": "Rules"
+    },
+    "devices": {
+      "description": "Device settings indexed by canonical DeviceKey.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/device"
+      },
+      "x-go-type": "map[string]DeviceSettings",
+      "x-go-field": "Devices"
+    },
+    "timing": {
+      "description": "Defaults beneath profile and binding timing overrides.",
+      "$ref": "#/$defs/timing",
+      "x-go-type": "*wireTiming",
+      "x-go-field": "Timing"
+    },
+    "output": {
+      "description": "Global keyboard output timing.",
+      "$ref": "#/$defs/output",
+      "x-go-type": "OutputSettings",
+      "x-go-field": "Output"
+    },
+    "feedback": {
+      "description": "The controller feedback switches (ADR-0067): they apply to every profile and every controller, and take effect at once.",
+      "$ref": "#/$defs/feedback",
+      "x-go-type": "*wireConfigFeedback",
+      "x-go-field": "Feedback"
+    },
+    "safety": {
+      "description": "Emergency button combinations by controller family.",
+      "$ref": "#/$defs/safety",
+      "x-go-type": "SafetySettings",
+      "x-go-field": "Safety"
+    }
+  },
+  "$defs": {
+    "rule": {
+      "title": "Automatic profile rule",
+      "description": "Case-insensitive exe name or absolute path match.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exe",
+        "profile"
+      ],
+      "properties": {
+        "exe": {
+          "description": "Executable name or absolute Windows path.",
+          "type": "string",
+          "minLength": 1,
+          "x-go-type": "string"
+        },
+        "profile": {
+          "description": "Library ID. null, which disabled mapping before ADR-0053, is accepted so that older files load; such a rule is ignored. Do not write null.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 64,
+          "x-go-type": "*string"
+        },
+        "enabled": {
+          "description": "Whether this rule participates; defaults to true.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        },
+        "device": {
+          "description": "Rules apply to every device. Device-specific rules are not planned yet (Backlog PRO-15).",
+          "const": "any",
+          "x-go-type": "string"
+        }
+      },
+      "x-go-name": "wireConfigRule"
+    },
+    "device": {
+      "title": "Device settings",
+      "description": "Settings of one controller: exclude it from mapping without hiding its input, calibrate its sticks, or give SDL a mapping for it.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ignored": {
+          "description": "Ignore this device for mapping.",
+          "type": "boolean",
+          "x-go-type": "bool"
+        },
+        "mapping": {
+          "description": "SDL gamepad mapping string for this controller (IN-18, ADR-0072): it makes SDL read a joystick it does not know as a gamepad, or reads a known gamepad differently. Form: the controller's GUID, the name field *, the bindings such as a:b0 and platform:Windows. SDL applies a mapping by GUID, so every device key with the same GUID carries the same string; the mapping wizard and devices.setMapping write them together.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "x-go-type": "string"
+        },
+        "calibration": {
+          "description": "Stick calibration of this controller. It overrides the deadzone and saturation of the profile in use; a member that is left out keeps the profile's value.",
+          "$ref": "#/$defs/calibration",
+          "x-go-type": "*Calibration",
+          "x-go-field": "Calibration"
+        }
+      },
+      "x-go-name": "DeviceSettings"
+    },
+    "calibration": {
+      "title": "Stick calibration",
+      "description": "Per-controller deadzone and outer edge of each stick (IN-14).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ls": {
+          "description": "Left stick.",
+          "$ref": "#/$defs/stickCalibration",
+          "x-go-type": "*StickCalibration",
+          "x-go-field": "LS"
+        },
+        "rs": {
+          "description": "Right stick.",
+          "$ref": "#/$defs/stickCalibration",
+          "x-go-type": "*StickCalibration",
+          "x-go-field": "RS"
+        }
+      },
+      "x-go-name": "Calibration"
+    },
+    "stickCalibration": {
+      "title": "Calibration of one stick",
+      "description": "Overrides analog.ls or analog.rs of the profile in use, for this controller only. When both members are given, saturation must be greater than deadzone.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deadzone": {
+          "description": "Radial deadzone as a fraction of travel, 0 to 1.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "x-go-type": "*float64"
+        },
+        "saturation": {
+          "description": "Outer edge as a fraction of travel, 0 to 1: the radius at which the stick counts as fully pushed. A smaller value reaches full depth sooner.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "x-go-type": "*float64"
+        }
+      },
+      "x-go-name": "StickCalibration"
+    },
+    "timing": {
+      "title": "Global gesture timing",
+      "description": "Gesture defaults in milliseconds.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "holdMs": {
+          "description": "Hold threshold.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000,
+          "x-go-type": "*int"
+        },
+        "multiTapMs": {
+          "description": "Maximum gap between taps.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000,
+          "x-go-type": "*int"
+        },
+        "tapPressMs": {
+          "description": "Minimum key press time.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000,
+          "x-go-type": "*int"
+        },
+        "tapGapMs": {
+          "description": "Minimum gap between key presses.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000,
+          "x-go-type": "*int"
+        }
+      },
+      "x-go-name": "wireTiming"
+    },
+    "output": {
+      "title": "Output settings",
+      "description": "Timing between keyboard events.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "eventGapMs": {
+          "description": "Minimum gap between consecutive keyboard events padmate injects; 0 sends a chord in one SendInput call.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 0,
+          "x-go-type": "int"
+        },
+        "sendToOwnWindow": {
+          "description": "Explicitly allow keyboard output to verified padmate UI windows; defaults to false. Changes take effect immediately.",
+          "type": "boolean",
+          "x-go-type": "bool"
+        }
+      },
+      "x-go-name": "OutputSettings"
+    },
+    "feedback": {
+      "title": "Feedback switches",
+      "description": "Each switch is on unless it is false; the UI writes false for a switch that is off and leaves the member out when it is on.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rumble": {
+          "description": "Whether rumble is enabled: the pulses of layer changes and pause, the haptics of bindings and knob ticks, the low-battery buzz, and rumble from scripts.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        },
+        "led": {
+          "description": "Whether the lights follow padmate: layer colors and the pause color on RGB LEDs, the mode on the player lights, the low-battery flash, and lights from scripts.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        },
+        "pause": {
+          "description": "Whether pausing and resuming the mapping is shown on the controller: the pulse, and the pause color. It works through rumble and led: with either off, that part is not shown either.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        },
+        "lowBattery": {
+          "description": "Whether a low battery of a controller is announced: the controller buzzes and blinks, and padmate shows a notice in the tray and on the overlay. It works through rumble and led for the controller's own part.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        }
+      },
+      "x-go-name": "wireConfigFeedback"
+    },
+    "safety": {
+      "title": "Emergency safety",
+      "description": "Per-family emergency combinations.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "panic": {
+          "description": "Overrides by device family. Omitted families use their built-in combination.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "standard": {
+              "description": "Standard controllers and paired Joy-Cons.",
+              "$ref": "#/$defs/combo"
+            },
+            "joyconLeft": {
+              "description": "Horizontal left Joy-Con.",
+              "$ref": "#/$defs/combo"
+            },
+            "joyconRight": {
+              "description": "Horizontal right Joy-Con.",
+              "$ref": "#/$defs/combo"
+            },
+            "joyconLeftVertical": {
+              "description": "Vertical left Joy-Con.",
+              "$ref": "#/$defs/combo"
+            },
+            "joyconRightVertical": {
+              "description": "Vertical right Joy-Con.",
+              "$ref": "#/$defs/combo"
+            }
+          },
+          "x-go-type": "map[string]PanicCombo"
+        }
+      },
+      "x-go-name": "SafetySettings"
+    },
+    "combo": {
+      "title": "Emergency combination",
+      "description": "Hold all listed physical buttons to toggle pause.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buttons",
+        "holdMs"
+      ],
+      "properties": {
+        "buttons": {
+          "description": "Canonical physical SDL button names; at least two, so that one button held a little long never pauses.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "x-go-type": "[]string"
+        },
+        "holdMs": {
+          "description": "Required continuous hold duration in milliseconds; at least 500.",
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 60000,
+          "x-go-type": "int"
+        }
+      },
+      "x-go-name": "PanicCombo"
+    }
+  },
+  "x-go-name": "wireConfig"
+}

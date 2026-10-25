@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "按键提示的手势",
+  "layers": {
+    "base": {
+      "south": {"tap": {"type": "hud", "op": "hints"}},
+      "east": {"release": {"type": "hud", "op": "hints"}},
+      "north": {"doubleTap": {"type": "hud", "op": "hints"}, "press": {"type": "hud", "op": "hints"}},
+      "west": {"press": {"type": "hud", "op": "hints"}, "hold": {"type": "hud", "op": "hints"}},
+      "lb": {"tripleTap": {"type": "hud", "op": "hints"}, "quadTap": {"type": "hud", "op": "hints"}}
+    }
+  }
+}

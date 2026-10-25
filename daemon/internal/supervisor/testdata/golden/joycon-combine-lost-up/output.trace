@@ -1,0 +1,8 @@
+# With the ButtonUp lost, the ReleaseAll at L's removal releases Space
+# at @500, the same instant as in joycon-combine.
++Space@100
+-Space@500
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620
++LCtrl@900 +Z@900
+-Z@920 -LCtrl@920

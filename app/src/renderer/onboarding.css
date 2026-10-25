@@ -1,0 +1,36 @@
+/* The first-run page (UI-38, ADR-0053): one short page that fits a 850×620
+   window without scrolling. */
+.onboarding-dialog {
+  width: min(480px, calc(100vw - 48px));
+}
+.onboarding-dialog .dialog-body {
+  gap: 12px;
+}
+.onboarding-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.onboarding-status p {
+  margin: 0;
+}
+.onboarding-pad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.onboarding-pad > .ui-icon {
+  flex: none;
+  color: var(--text-3);
+}
+.onboarding-pad[data-state="connected"] > .ui-icon {
+  color: var(--green);
+}
+.onboarding-next {
+  color: var(--text-2);
+  font-size: 12px;
+}

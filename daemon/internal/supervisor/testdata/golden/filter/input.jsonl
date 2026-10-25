@@ -1,0 +1,11 @@
+# device.txt selects "pad a". Pad B connects first but does not match:
+# it never takes the slot, not even when Pad A leaves it free.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":50000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":100000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":200000000,"kind":"down","device":2,"control":"east"}
+{"timeNs":300000000,"kind":"up","device":2,"control":"east"}
+{"timeNs":400000000,"kind":"removed","device":2}
+{"timeNs":500000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":550000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":600000000,"kind":"removed","device":1}

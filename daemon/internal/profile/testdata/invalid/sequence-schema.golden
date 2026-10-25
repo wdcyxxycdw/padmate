@@ -1,0 +1,48 @@
+6:26: error: missing property "steps" (/layers/base/south/press)
+	> {"type": "sequence"}},
+7:55: error: a sequence needs at least one step (/layers/base/east/press/steps)
+	> []}},
+8:56: error: expected an array, got a string (/layers/base/north/press/steps)
+	> "Ctrl+A"}},
+9:56: error: a step needs one of "keys", "wait" or "text" (/layers/base/west/press/steps/0)
+	> {}, {"keys": "A", "wait": 5}, {"kes": "A…
+9:60: error: a step has only one of "keys", "wait" and "text": write one step for each (/layers/base/west/press/steps/1)
+	> {"keys": "A", "wait": 5}, {"kes": "A"}, …
+9:87: error: unknown property "kes"; did you mean "keys"? (/layers/base/west/press/steps/2/kes)
+	> "kes": "A"}, "Ctrl+A", {"keys": ""}, {"t…
+9:100: error: expected an object, got a string (/layers/base/west/press/steps/3)
+	> "Ctrl+A", {"keys": ""}, {"text": ""}]}},
+9:119: error: keys must not be empty (/layers/base/west/press/steps/4/keys)
+	> ""}, {"text": ""}]}},
+9:133: error: text must not be empty (/layers/base/west/press/steps/5/text)
+	> ""}]}},
+10:63: error: a wait is 1 to 10000 milliseconds (/layers/base/lb/press/steps/0/wait)
+	> 0}, {"wait": 10001}, {"wait": 1.5}, {"wa…
+10:76: error: a wait is 1 to 10000 milliseconds (/layers/base/lb/press/steps/1/wait)
+	> 10001}, {"wait": 1.5}, {"wait": "100"}, …
+10:93: error: expected an integer, got a number (/layers/base/lb/press/steps/2/wait)
+	> 1.5}, {"wait": "100"}, {"keys": ["A"]}]}…
+10:108: error: expected an integer, got a string (/layers/base/lb/press/steps/3/wait)
+	> "100"}, {"keys": ["A"]}]}},
+10:125: error: expected a string, got an array (/layers/base/lb/press/steps/4/keys)
+	> ["A"]}]}},
+11:70: error: unknown property "mode" (/layers/base/rb/press/mode)
+	> "mode": "tap"}},
+12:44: error: unknown property "keys" (/layers/base/lt/press/keys)
+	> "keys": "A", "steps": [{"keys": "A"}]}},
+13:23: error: missing property "text" (/layers/base/rt/press)
+	> {"type": "text"}},
+14:51: error: text must not be empty (/layers/base/start/press/text)
+	> ""}},
+15:50: error: expected a string, got a number (/layers/base/back/press/text)
+	> 5}},
+16:56: error: unknown property "mode" (/layers/base/guide/press/mode)
+	> "mode": "tap"}},
+17:28: error: missing property "text" (/layers/base/dpad.up/press)
+	> {"type": "text", "steps": []}},
+17:45: error: unknown property "steps" (/layers/base/dpad.up/press/steps)
+	> "steps": []}},
+17:54: error: a sequence needs at least one step (/layers/base/dpad.up/press/steps)
+	> []}},
+18:60: error: a sequence has at most 64 steps, not 65 (/layers/base/dpad.down/press/steps)
+	> [{"wait": 1}, {"wait": 1}, {"wait": 1}, …

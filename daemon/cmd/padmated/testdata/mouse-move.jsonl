@@ -1,0 +1,15 @@
+# The left stick is the pointer. The dry run sums the moves of 100 ms into one
+# line, "move +dx,+dy", at the time of the first of them; any other line ends the
+# window first. The stick goes right at 1000 px/s from 0 to 250 ms; a key at 150
+# ms breaks the window, the precision button at 200 halves the speed, and the
+# jump at 400 puts the pointer in the middle.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":0,"kind":"axis","device":3,"control":"leftx","value":32767}
+{"timeNs":0,"kind":"axis","device":3,"control":"lefty","value":0}
+{"timeNs":150000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":160000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":200000000,"kind":"down","device":3,"control":"leftshoulder"}
+{"timeNs":250000000,"kind":"axis","device":3,"control":"leftx","value":0}
+{"timeNs":300000000,"kind":"up","device":3,"control":"leftshoulder"}
+{"timeNs":400000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":410000000,"kind":"up","device":3,"control":"south"}

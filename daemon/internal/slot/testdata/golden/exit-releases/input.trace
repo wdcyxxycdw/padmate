@@ -1,0 +1,3 @@
+# east, the shoulder and LT are still held when the trace ends.
++east@0 +leftshoulder@100 lefttrigger=0.8@150
++south@200 -south@250

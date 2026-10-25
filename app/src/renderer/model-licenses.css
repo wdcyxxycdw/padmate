@@ -1,0 +1,54 @@
+/* "关于与许可" dialog content; the frame is the shared .dialog (ui.css). */
+.dialog.page-licenses {
+  width: min(600px, calc(100vw - 48px));
+}
+.page-licenses-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.page-licenses-block + .page-licenses-block {
+  padding-top: 16px;
+  border-top: 1px solid #22252c;
+}
+.page-licenses-block h3 {
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.page-licenses-models {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #23262d;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.page-licenses-models li {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.page-licenses-models li + li {
+  border-top: 1px solid #1f2228;
+}
+.page-licenses-model {
+  color: var(--text);
+  font-weight: 500;
+}
+.page-licenses-uri {
+  color: #94b8d2;
+  font: 11.5px / 1.5 var(--mono);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.page-licenses-note {
+  color: var(--text-3);
+  font-size: 12px;
+}

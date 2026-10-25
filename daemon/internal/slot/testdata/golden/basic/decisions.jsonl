@@ -1,0 +1,22 @@
+{"t":0,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","action":"tap B","owner":"decl/1","reason":"dispatch"}
+{"t":80,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","reason":"end"}
+{"t":2000,"control":"south","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/2","reason":"dispatch"}
+{"t":2090,"control":"south","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":2400,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/3","reason":"dispatch"}
+{"t":2470,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":3000,"control":"east","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/4","reason":"dispatch"}
+{"t":3800,"control":"east","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/4","reason":"release"}
+{"t":4500,"control":"leftshoulder","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/5","reason":"dispatch"}
+{"t":4600,"control":"east","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/6","reason":"dispatch"}
+{"t":5200,"control":"east","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/6","reason":"release"}
+{"t":5300,"control":"leftshoulder","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/5","reason":"release"}
+{"t":6016,"control":"lt","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/7","reason":"dispatch"}
+{"t":6416,"control":"lt","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/7","reason":"release"}
+{"t":7000,"control":"west","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","action":"tap E","owner":"decl/8","reason":"dispatch"}
+{"t":7060,"control":"west","edge":"up","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","reason":"end"}
+{"t":8000,"control":"rightshoulder","edge":"down","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold LShift","owner":"decl/9","reason":"dispatch"}
+{"t":8900,"control":"rightshoulder","edge":"up","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold LShift","owner":"decl/9","reason":"release"}
+{"t":9500,"control":"leftshoulder","edge":"down","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/10","reason":"dispatch"}
+{"t":9600,"control":"south","edge":"down","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/11","reason":"dispatch"}
+{"t":9680,"control":"south","edge":"up","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":9800,"control":"leftshoulder","edge":"up","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/10","reason":"release"}

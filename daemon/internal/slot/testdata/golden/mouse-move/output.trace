@@ -1,0 +1,44 @@
+# The pointer moves (ADR-0062, section 5): move=dx,dy is a relative move of
+# the pointer, down and right positive, sent every 8 ms tick while a stick in
+# mode mouse is pushed; the whole pixels go out and the fractions carry on.
+# The left stick at 1000 px/s: 8 px a tick, 50 px in all for the 50 ms push
+# (the last 2 px at the tick after the release). Up and right at 45 degrees:
+# 5.66 px a tick on each axis, 2.83 while the precision button is held (130 to
+# 170 ms), up is negative. The right stick, quadratic and smoothed over 40 ms,
+# eases in to 500 px/s and glides on after the release, a pixel at a time. The
+# jump at 400 ms is the middle of the virtual desktop (0 to 65535). The pointer
+# is not a key, so the exit has nothing to let go of.
+move=+8,+0@8
+move=+8,+0@16
+move=+8,+0@24
+move=+8,+0@32
+move=+8,+0@40
+move=+8,+0@48
+move=+2,+0@56
+move=+5,-5@108
+move=+6,-6@116
+move=+5,-5@124
+move=+5,-5@132
+move=+3,-3@140
+move=+3,-3@148
+move=+3,-3@156
+move=+3,-3@164
+move=+3,-3@172
+move=+6,-6@180
+move=+6,-6@188
+move=+5,-5@196
+move=+3,-3@204
+move=+0,+1@316
+move=+0,+1@324
+move=+0,+2@332
+move=+0,+3@340
+move=+0,+2@348
+move=+0,+2@356
+move=+0,+2@364
+move=+0,+1@372
+move=+0,+1@380
+move=+0,+1@388
+jump=32768,32768@400
+move=+0,+1@404
+move=+0,+1@420
+move=+0,+1@444

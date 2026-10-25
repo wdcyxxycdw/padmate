@@ -1,0 +1,6 @@
+# Only L is mapped while it is connected; R's tap while it waits sends
+# nothing, and its tap after L is gone is mapped.
++Space@100
+-Space@400
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620

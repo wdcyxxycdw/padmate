@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-hold",
+  "layers": {
+    "base": {
+      "east": {"label": "拖动", "press": {"type": "keys", "keys": "MouseLeft", "mode": "hold"}},
+      "south": {"label": "右键", "press": {"type": "keys", "keys": "Shift+RButton", "mode": "hold"}}
+    }
+  }
+}

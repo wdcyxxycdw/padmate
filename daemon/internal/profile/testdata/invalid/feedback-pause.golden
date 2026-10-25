@@ -1,0 +1,8 @@
+4:25: error: expected a boolean, got a string (/feedback/pause)
+	> "no", "led": 1, "rumble": null, "lowBatt…
+4:38: error: expected a boolean, got a number (/feedback/led)
+	> 1, "rumble": null, "lowBattery": "low"},
+4:51: error: expected a boolean, got null (/feedback/rumble)
+	> null, "lowBattery": "low"},
+4:71: error: expected a boolean, got a string (/feedback/lowBattery)
+	> "low"},

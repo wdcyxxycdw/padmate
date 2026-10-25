@@ -1,0 +1,6 @@
+# The pause lets go of Space at 2600; nothing maps until south is pressed
+# again after the resume.
++Space@100
+-Space@2600
++Space@7500
+-Space@7800

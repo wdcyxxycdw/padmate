@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      // 撤销
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}}
+    }
+  }
+}

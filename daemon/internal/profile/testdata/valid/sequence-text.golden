@@ -1,0 +1,7 @@
+name "序列与文字", schemaVersion 1
+layer base
+	south         /layers/base/south         label "全选后输入"  press: sequence: Ctrl+A, wait 100, text "你好\n世界"
+	east          /layers/base/east          label "签名"  press: text "Best regards,\tKi…"
+	west          /layers/base/west          label ""
+	north         /layers/base/north         label ""
+	leftshoulder  /layers/base/lb            label ""  press: sequence: Z

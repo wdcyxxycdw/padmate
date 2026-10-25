@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "序列与文字",
+  "timing": {"tapPressMs": 10, "tapGapMs": 15},
+  "layers": {
+    "base": {
+      "south": {"label": "全选后输入", "press": {"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"wait": 100}, {"text": "你好"}, {"keys": "Enter"}]}},
+      "east": {"label": "签名", "tap": {"type": "text", "text": "ab\ncd"}},
+      "west": {"release": {"type": "sequence", "steps": [{"text": "😀"}, {"wait": 30}, {"keys": "VolumeMute"}]}},
+      "north": {"hold": {"type": "sequence", "steps": [{"keys": "F13"}, {"wait": 1}]}},
+      "lb": {"press": {"type": "keys", "keys": "LCtrl"}}
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "tap-captured-double-tap",
+  "layers": {
+    "base": {
+      "west": {
+        "tap": {"type": "keys", "keys": "F13"},
+        "doubleTap": {"type": "keys", "keys": "F14"},
+        "hold": {"type": "keys", "keys": "E"}
+      },
+      "east": {"press": {"type": "keys", "keys": "A", "mode": "hold"}}
+    }
+  }
+}

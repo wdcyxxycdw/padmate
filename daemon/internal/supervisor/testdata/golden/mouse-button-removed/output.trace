@@ -1,0 +1,7 @@
+# The removal lets go of both buttons and of Shift at once (the buttons
+# first, then the modifier); the pad that comes back presses east again.
++MouseLeft@100
++LShift@150 +MouseRight@150
+-MouseRight@300 -MouseLeft@300 -LShift@300
++MouseLeft@1100
+-MouseLeft@1300

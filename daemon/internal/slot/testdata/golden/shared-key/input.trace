@@ -1,0 +1,3 @@
+# Both shoulders hold LShift ("Shift" is the left one); their holds
+# overlap.
++rb@0 +lb@100 -rb@200 -lb@300

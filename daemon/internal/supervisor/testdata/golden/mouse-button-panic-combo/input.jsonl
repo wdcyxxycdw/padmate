@@ -1,0 +1,20 @@
+# The pause combo (DMN-06, DMN-07) lets go of a held mouse button: east holds
+# MouseLeft from 100, back and start (the function keys, which send nothing,
+# MAP-27) complete the combo at 600, and its 2 s hold fires at 2600. The
+# buttons held across the pause do nothing until they are pressed again after
+# the resume.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":600000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":3000000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":3000000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":3200000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":3500000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":3700000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":4000000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":4100000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":6500000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":6500000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":7500000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":7800000000,"kind":"up","device":1,"control":"east"}

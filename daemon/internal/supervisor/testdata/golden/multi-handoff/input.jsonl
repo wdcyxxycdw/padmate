@@ -1,0 +1,17 @@
+# Two slots: Pads A and B press north, unbound, so slots 0 and 1 are
+# their own. Pad C connects with no slot free and waits; its press of
+# south takes nothing over and does nothing. A leaves: C stands in on
+# slot 0 at once, provisionally, with A's home. C's press of east holds
+# Space and makes slot 0 its own; B's slot is untouched throughout.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":20000000,"kind":"down","device":1,"control":"north"}
+{"timeNs":30000000,"kind":"up","device":1,"control":"north"}
+{"timeNs":40000000,"kind":"down","device":2,"control":"north"}
+{"timeNs":50000000,"kind":"up","device":2,"control":"north"}
+{"timeNs":100000000,"kind":"added","device":3,"info":{"id":3,"name":"Pad C","guid":"030000000c0000000c00000000000000","gamepad":true}}
+{"timeNs":150000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":160000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":200000000,"kind":"removed","device":1}
+{"timeNs":300000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":400000000,"kind":"up","device":3,"control":"east"}

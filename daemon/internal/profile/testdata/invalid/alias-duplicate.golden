@@ -1,0 +1,4 @@
+7:16: warning: binding has no action (/layers/base/north)
+	> {"label": "画笔"},
+8:7: error: "south" is already bound as "a" at 6:7 ("a" is an alias of "south") (/layers/base/south)
+	> "south": {"label": "重做", "press": {"type…

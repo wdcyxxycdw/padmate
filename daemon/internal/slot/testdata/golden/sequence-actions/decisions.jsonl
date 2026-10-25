@@ -1,0 +1,16 @@
+{"t":0,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","action":"sequence: Ctrl+A, wait 100, text \"你好\", Enter","owner":"decl/1","reason":"dispatch"}
+{"t":30,"control":"south","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","reason":"end"}
+{"t":50,"control":"south","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","action":"sequence: Ctrl+A, wait 100, text \"你好\", Enter","owner":"decl/2","reason":"dispatch"}
+{"t":60,"control":"south","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","reason":"end"}
+{"t":1000,"control":"east","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/east","label":"签名","reason":"unbound"}
+{"t":1020,"control":"east","edge":"down","cycle":3,"gesture":"tap","level":"base","binding":"/layers/base/east","label":"签名","action":"text \"ab\\ncd\"","owner":"decl/3","reason":"dispatch"}
+{"t":2000,"control":"west","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"unbound"}
+{"t":2040,"control":"west","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"end"}
+{"t":2040,"control":"west","edge":"down","cycle":4,"gesture":"release","level":"base","binding":"/layers/base/west","action":"sequence: text \"😀\", wait 30, VolumeMute","owner":"decl/4","reason":"dispatch"}
+{"t":3000,"control":"north","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":3000,"control":"north","edge":"down","cycle":5,"gesture":"hold","level":"base","binding":"/layers/base/north","action":"sequence: F13, wait 1","owner":"decl/5","reason":"dispatch"}
+{"t":3600,"control":"north","edge":"up","cycle":5,"gesture":"hold","level":"base","binding":"/layers/base/north","reason":"end"}
+{"t":4000,"control":"leftshoulder","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/6","reason":"dispatch"}
+{"t":4050,"control":"south","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","action":"sequence: Ctrl+A, wait 100, text \"你好\", Enter","owner":"decl/7","reason":"dispatch"}
+{"t":4100,"control":"leftshoulder","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/6","reason":"release"}
+{"t":4120,"control":"south","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","reason":"end"}

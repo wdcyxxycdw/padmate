@@ -1,0 +1,6 @@
+# The pause at 2600 lets go of MouseLeft; nothing maps until east is
+# pressed again after the resume. Back and start map nothing.
++MouseLeft@100
+-MouseLeft@2600
++MouseLeft@7500
+-MouseLeft@7800

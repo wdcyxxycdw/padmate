@@ -1,0 +1,41 @@
+# ] is a clockwise tick and [ a counter-clockwise one, each a tap of 20 ms
+# with a 20 ms gap, so 40 ms apart at the fastest. The knob reads the angle
+# 4 ms after an input (KnobSettle), once the two axes of a report are both
+# in, so every tick is 4 ms after the turn that causes it. The first tick of
+# a turn goes at once. The turn of a whole circle from 1000 on queues 12
+# ticks, one revolution, which come out 40 ms apart until 1452. Letting go
+# of the stick (600) makes none.
++]@104
+-]@124
++]@204
+-]@224
++]@244
+-]@264
++[@354
+-[@374
++[@404
+-[@424
++]@1012
+-]@1032
++]@1052
+-]@1072
++]@1092
+-]@1112
++]@1132
+-]@1152
++]@1172
+-]@1192
++]@1212
+-]@1232
++]@1252
+-]@1272
++]@1292
+-]@1312
++]@1332
+-]@1352
++]@1372
+-]@1392
++]@1412
+-]@1432
++]@1452
+-]@1472

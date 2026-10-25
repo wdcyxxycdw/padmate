@@ -1,0 +1,32 @@
+# The wheel keys are momentary (ADR-0062): a press turns the wheel one notch,
+# and the release after it is one the Sender drops (SendInput injects nothing
+# for it, and the dry-run printer leaves it out). The Arbiter still sends it,
+# so every press has its release in this trace.
+# Knob ticks tap them: a clockwise tick taps WheelUp and a counter-clockwise
+# one WheelDown, each a tap of 20 ms with a 20 ms gap.
+# A hold of WheelDown (north, 1000 to 1300) turns the wheel once, not for as
+# long as the button is down. Two overlapping holds of it (north from 1500,
+# south from 1520) turn it twice, and the release comes with the last one's,
+# at 1700. Ctrl+WheelUp holds Ctrl around the notch, and the sequence of
+# WheelLeft and WheelRight taps each in turn.
++WheelUp@104
+-WheelUp@124
++WheelUp@204
+-WheelUp@224
++WheelUp@244
+-WheelUp@264
++WheelDown@354
+-WheelDown@374
++WheelDown@404
+-WheelDown@424
++WheelDown@1000
+-WheelDown@1300
++WheelDown@1500
++WheelDown@1520
+-WheelDown@1700
++LCtrl@2000 +WheelUp@2000
+-WheelUp@2300 -LCtrl@2300
++WheelLeft@2500
+-WheelLeft@2520
++WheelRight@2540
+-WheelRight@2560

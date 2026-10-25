@@ -1,0 +1,9 @@
+# Two slots, with west holding Shift (multipad.json). Pad A, on slot 0,
+# holds east, and Pad B, on slot 1, holds west. A is unplugged: its slot
+# lets go of Space alone, and B's Shift stays down until B releases west.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":200000000,"kind":"down","device":2,"control":"west"}
+{"timeNs":300000000,"kind":"removed","device":1}
+{"timeNs":400000000,"kind":"up","device":2,"control":"west"}

@@ -1,0 +1,74 @@
+$ padmated --profile testdata/edge-cases.json --fake-input testdata/edge-cases.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/edge-cases.json, "edge \"cases\"", 5 bindings
+fake input: testdata/edge-cases.jsonl, 20 events of device 4 "pad \"4\""
+
+      time  input               reason    action             label             binding                  owner
+     0.000  device 4 added
+    10.000  south down          dispatch  hold Ctrl+Shift+S  "save \"as\" 💾"  /layers/base/a           decl/1
+    10.000    send +LCtrl +LShift +S
+    15.000  south down          spurious
+    20.000  south up            release   hold Ctrl+Shift+S  "save \"as\" 💾"  /layers/base/a           decl/1
+    30.000    send -S -LShift -LCtrl
+    30.000  east down           dispatch  tap sc:0x2C        "ｶﾀｶﾅ"            /layers/base/b           decl/2
+    30.000    send +sc:0x2C
+    35.000  east up             end                          "ｶﾀｶﾅ"            /layers/base/b
+    40.000  east down           dispatch  tap sc:0x2C        "ｶﾀｶﾅ"            /layers/base/b           decl/3
+    50.000    send -sc:0x2C
+    70.000    send +sc:0x2C
+    90.000    send -sc:0x2C
+   100.000  east up             end                          "ｶﾀｶﾅ"            /layers/base/b
+   210.000  rt down (9830)      dispatch  hold Pause                           /layers/base/rt          decl/4
+   210.000    send +Pause
+   230.000  rt up (6553)        release   hold Pause                           /layers/base/rt          decl/4
+   230.000    send -Pause
+   300.000  leftstick down      dispatch  hold Num1                            /layers/base/leftstick   decl/5
+   300.000    send +Num1
+   400.000  leftstick up        release   hold Num1                            /layers/base/leftstick   decl/5
+   400.000    send -Num1
+   500.000  rightstick down     unbound                      "未绑定"          /layers/base/rightstick
+   510.000  rightstick up       end                          "未绑定"          /layers/base/rightstick
+   600.000  lt down (32767)     unbound
+   610.000  lt up (0)           end
+   700.000  dpad.up down        unbound
+   700.000  exit: release all
+   700.000  dpad.up             cancel
+--- stderr
+testdata/edge-cases.json:10:21: warning: binding has no action (/layers/base/rightstick)
+exit 0
+
+$ padmated --profile testdata/edge-cases.json --fake-input testdata/edge-cases.jsonl --dry-run --decisions
+{"t":10,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/a","label":"save \"as\" 💾","action":"hold Ctrl+Shift+S","owner":"decl/1","reason":"dispatch"}
+{"t":10,"send":["+LCtrl","+LShift","+S"]}
+{"t":15,"control":"south","edge":"down","cycle":1,"reason":"spurious"}
+{"t":20,"control":"south","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/a","label":"save \"as\" 💾","action":"hold Ctrl+Shift+S","owner":"decl/1","reason":"release"}
+{"t":30,"send":["-S","-LShift","-LCtrl"]}
+{"t":30,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/b","label":"ｶﾀｶﾅ","action":"tap sc:0x2C","owner":"decl/2","reason":"dispatch"}
+{"t":30,"send":["+sc:0x2C"]}
+{"t":35,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/b","label":"ｶﾀｶﾅ","reason":"end"}
+{"t":40,"control":"east","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/b","label":"ｶﾀｶﾅ","action":"tap sc:0x2C","owner":"decl/3","reason":"dispatch"}
+{"t":50,"send":["-sc:0x2C"]}
+{"t":70,"send":["+sc:0x2C"]}
+{"t":90,"send":["-sc:0x2C"]}
+{"t":100,"control":"east","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/b","label":"ｶﾀｶﾅ","reason":"end"}
+{"t":210,"control":"rt","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/rt","action":"hold Pause","owner":"decl/4","reason":"dispatch"}
+{"t":210,"send":["+Pause"]}
+{"t":230,"control":"rt","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/rt","action":"hold Pause","owner":"decl/4","reason":"release"}
+{"t":230,"send":["-Pause"]}
+{"t":300,"control":"leftstick","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/leftstick","action":"hold Num1","owner":"decl/5","reason":"dispatch"}
+{"t":300,"send":["+Num1"]}
+{"t":400,"control":"leftstick","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/leftstick","action":"hold Num1","owner":"decl/5","reason":"release"}
+{"t":400,"send":["-Num1"]}
+{"t":500,"control":"rightstick","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/rightstick","label":"未绑定","reason":"unbound"}
+{"t":510,"control":"rightstick","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/rightstick","label":"未绑定","reason":"end"}
+{"t":600,"control":"lt","edge":"down","cycle":7,"gesture":"press","reason":"unbound"}
+{"t":610,"control":"lt","edge":"up","cycle":7,"gesture":"press","reason":"end"}
+{"t":700,"control":"dpad.up","edge":"down","cycle":8,"gesture":"press","reason":"unbound"}
+{"t":700,"control":"dpad.up","cycle":8,"gesture":"press","reason":"cancel"}
+--- stderr
+testdata/edge-cases.json:10:21: warning: binding has no action (/layers/base/rightstick)
+padmated: dry run, nothing is injected
+profile:    testdata/edge-cases.json, "edge \"cases\"", 5 bindings
+fake input: testdata/edge-cases.jsonl, 20 events of device 4 "pad \"4\""
+exit 0
+

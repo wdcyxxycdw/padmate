@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "name": "triggers",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.01,
+      "release": 0
+    },
+    "rt": {
+      "press": 1,
+      "release": 0.95
+    }
+  },
+  "layers": {
+    "base": {
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "C"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# The lock lets go of Space at 500; nothing maps until the unlock, and
+# east maps again only when pressed after it.
++Space@100
+-Space@500
++Space@1400
+-Space@1600

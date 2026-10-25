@@ -1,0 +1,8 @@
+5:43: error: minimum: got 10, want 50 (/analog/ls/mouseSpeed)
+	> 10, "mouseSmoothingMs": 900},
+5:67: error: maximum: got 900, want 500 (/analog/ls/mouseSmoothingMs)
+	> 900},
+6:43: error: maximum: got 20,000, want 10,000 (/analog/rs/mouseSpeed)
+	> 20000, "mouseSmoothingMs": -1}
+6:70: error: minimum: got -1, want 0 (/analog/rs/mouseSmoothingMs)
+	> -1}

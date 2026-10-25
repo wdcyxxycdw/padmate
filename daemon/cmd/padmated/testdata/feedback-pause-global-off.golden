@@ -1,0 +1,52 @@
+$ padmated --profile testdata/feedback-pause.json --data-dir testdata/config-feedback-pause-off --fake-input testdata/feedback-pause.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/feedback-pause.json, "反馈", 1 binding
+fake input: testdata/feedback-pause.jsonl, 15 events of device 3 "left pad"
+
+      time  input               reason    action                  label   binding        owner
+     0.000  device 3 added
+     0.000    feedback slot=0 mode=1 color=#101010
+   100.000  north down          dispatch  layer cycle [base,alt]  "换层"  /common/north  decl/1
+   100.000    feedback slot=0 mode=2 pulse x2 70ms gap=100 color=#112233
+   150.000  north up            end                               "换层"  /common/north
+   500.000  back down           function
+   600.000  start down          function
+  2600.000  mapping paused: release all
+  2600.000    feedback slot=0 mode=2 paused color=#112233
+  3000.000  back up             function
+  3000.000  start up            function
+  3500.000  north down          paused                            "换层"  /common/north
+  3550.000  north up            canceled                          "换层"  /common/north
+  4000.000  back down           function
+  4100.000  start down          function
+  6100.000  mapping resumed
+  6100.000    feedback slot=0 mode=2 color=#112233
+  6500.000  back up             function
+  6500.000  start up            function
+  7000.000  north down          dispatch  layer cycle [base,alt]  "换层"  /common/north  decl/3
+  7000.000    feedback slot=0 mode=1 pulse x1 210ms gap=100 color=#101010
+  7050.000  north up            end                               "换层"  /common/north
+  7050.000  exit: release all
+exit 0
+
+$ padmated --profile testdata/feedback-pause.json --data-dir testdata/config-feedback-pause-off --fake-input testdata/feedback-pause.jsonl --dry-run --decisions
+{"t":100,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"common","binding":"/common/north","label":"换层","action":"layer cycle [base,alt]","owner":"decl/1","reason":"dispatch"}
+{"t":150,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"common","binding":"/common/north","label":"换层","reason":"end"}
+{"t":500,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":600,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":3000,"control":"back","edge":"up","cycle":0,"reason":"function"}
+{"t":3000,"control":"start","edge":"up","cycle":0,"reason":"function"}
+{"t":3500,"control":"north","edge":"down","cycle":2,"gesture":"press","level":"common","binding":"/common/north","label":"换层","reason":"paused"}
+{"t":3550,"control":"north","edge":"up","cycle":2,"gesture":"press","level":"common","binding":"/common/north","label":"换层","reason":"canceled"}
+{"t":4000,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":4100,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":6500,"control":"back","edge":"up","cycle":0,"reason":"function"}
+{"t":6500,"control":"start","edge":"up","cycle":0,"reason":"function"}
+{"t":7000,"control":"north","edge":"down","cycle":3,"gesture":"press","level":"common","binding":"/common/north","label":"换层","action":"layer cycle [base,alt]","owner":"decl/3","reason":"dispatch"}
+{"t":7050,"control":"north","edge":"up","cycle":3,"gesture":"press","level":"common","binding":"/common/north","label":"换层","reason":"end"}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/feedback-pause.json, "反馈", 1 binding
+fake input: testdata/feedback-pause.jsonl, 15 events of device 3 "left pad"
+exit 0
+

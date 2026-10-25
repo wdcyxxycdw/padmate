@@ -1,0 +1,12 @@
+# One haptic for each dispatch of a binding that has one (MAP-25, ADR-0065),
+# at the time of the dispatch: south's tick at its press; east's confirm at
+# its press, not at the repeats of Space; west's pulse2 when its tap is
+# committed (940), for the second tap of the double tap (1240) and when the
+# hold starts (2250); north's error at its release. rb has no haptic and
+# dpad.up is blocked.
+tick@0
+confirm@100
+pulse2@940
+pulse2@1240
+pulse2@2250
+error@2600

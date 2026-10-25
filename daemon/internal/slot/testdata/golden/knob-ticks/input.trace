@@ -1,0 +1,31 @@
+# The right stick is a knob: pushing it sets the reference angle (up), no tick.
+rightx=0@0 righty=-0.63@0
+# 20 degrees clockwise is less than a 30 degree step.
+rightx=0.2155@50 righty=-0.592@50
+# 40 degrees: one clockwise tick, ] (the reference moves to 30).
+rightx=0.405@100 righty=-0.4826@100
+# 100 degrees: two more steps, the first at once, the second 40 ms later (tap press + gap).
+rightx=0.6204@200 righty=0.1094@200
+# Back through 70 (20 degrees from the reference, no tick), 45 and 20 degrees: two [ ticks.
+rightx=0.592@300 righty=-0.2155@300
+rightx=0.4455@350 righty=-0.4455@350
+rightx=0.2155@400 righty=-0.592@400
+# The spring back to the center, along the same angle, makes no tick.
+rightx=0.1471@600 righty=-0.4041@600
+rightx=0.0513@620 righty=-0.141@620
+# A quick turn of a whole circle in 100 ms queues one revolution, 12 steps, and the ticks follow at 40 ms.
+rightx=0@1000 righty=-0.63@1000
+rightx=0.3614@1008 righty=-0.5161@1008
+rightx=0.571@1017 righty=-0.2662@1017
+rightx=0.6276@1025 righty=0.0549@1025
+rightx=0.5161@1033 righty=0.3614@1033
+rightx=0.2662@1042 righty=0.571@1042
+rightx=-0.0549@1050 righty=0.6276@1050
+rightx=-0.3614@1058 righty=0.5161@1058
+rightx=-0.571@1067 righty=0.2662@1067
+rightx=-0.6276@1075 righty=-0.0549@1075
+rightx=-0.5161@1083 righty=-0.3614@1083
+rightx=-0.2662@1092 righty=-0.571@1092
+rightx=0.0549@1100 righty=-0.6276@1100
+# The stick returns to the center.
+rightx=0.0131@1200 righty=-0.1494@1200

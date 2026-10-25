@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "wheel-keys",
+  "analog": {"rs": {"mode": "knob"}},
+  "layers": {
+    "base": {
+      "rs.cw": {"label": "放大", "press": {"type": "keys", "keys": "WheelUp", "mode": "tap"}},
+      "rs.ccw": {"label": "缩小", "press": {"type": "keys", "keys": "WheelDown", "mode": "tap"}},
+      "north": {"label": "下滚", "press": {"type": "keys", "keys": "WheelDown", "mode": "hold"}},
+      "south": {"label": "再下滚", "press": {"type": "keys", "keys": "WheelDown", "mode": "hold"}},
+      "east": {"label": "缩放", "press": {"type": "keys", "keys": "Ctrl+WheelUp", "mode": "hold"}},
+      "west": {"label": "左右", "press": {"type": "keys", "keys": ["WheelLeft", "WheelRight"], "mode": "tap"}}
+    }
+  }
+}

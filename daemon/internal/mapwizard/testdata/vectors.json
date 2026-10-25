@@ -1,0 +1,225 @@
+{
+  "comment": "Cases that the Go detector (mapwizard.Detector) and the UI's copy of it must agree on (ADR-0072). Event kinds: b button (v 1 down, 0 up), a axis (v position), h hat (v direction mask). In 'want', '' means waiting; 'done:X' gives the binding value of the element the prompt found; 'rejected:R' gives the reason.",
+  "axisSpec": [
+    {"name": "trigger rests at the bottom and goes to the top", "index": 4, "rest": -32768, "far": 32767, "want": "a4"},
+    {"name": "trigger rests at 0 and goes to the top", "index": 5, "rest": 0, "far": 32767, "want": "+a5"},
+    {"name": "trigger rests at 0 and goes to the bottom", "index": 5, "rest": 0, "far": -32768, "want": "-a5"},
+    {"name": "trigger rests at the top and goes to the bottom", "index": 2, "rest": 32767, "far": -32768, "want": "a2~"},
+    {"name": "trigger rests at the top and is pulled to the middle: the whole range, reversed, as a partial pull may be", "index": 2, "rest": 32767, "far": 0, "want": "a2~"},
+    {"name": "trigger rests at the bottom and is pulled to the middle: the whole range, as a partial pull may be", "index": 2, "rest": -32768, "far": 0, "want": "a2"},
+    {"name": "trigger rests at the bottom and is pulled a little past the zone edge", "index": 1, "rest": -32768, "far": -16700, "want": "a1"},
+    {"name": "trigger rests at the bottom and is pulled to 60 percent", "index": 1, "rest": -32768, "far": 10000, "want": "a1"},
+    {"name": "trigger rests at the top and is pulled a little past the zone edge", "index": 1, "rest": 32767, "far": 16500, "want": "a1~"},
+    {"name": "an axis that rests high and goes higher keeps its half", "index": 1, "rest": 20000, "far": 32767, "want": "+a1"},
+    {"name": "a stick pushed up from the middle", "index": 1, "rest": 0, "far": 32767, "want": "+a1"},
+    {"name": "a stick pushed down from the middle", "index": 1, "rest": 0, "far": -32768, "want": "-a1"},
+    {"name": "a small range inside the middle, up", "index": 3, "rest": -8000, "far": 9000, "want": "+a3"},
+    {"name": "a small range inside the middle, down", "index": 3, "rest": 9000, "far": -8000, "want": "-a3"},
+    {"name": "a zone edge: 16383 is still the middle", "index": 0, "rest": 0, "far": 16383, "want": "+a0"},
+    {"name": "a zone edge: 16384 is the top", "index": 0, "rest": -16384, "far": 16384, "want": "+a0"}
+  ],
+  "detect": [
+    {
+      "name": "a button counts when it is released",
+      "info": {"axes": 2, "buttons": 12, "hats": 1},
+      "prompt": [{"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}],
+      "want": ["", "done:b3"]
+    },
+    {
+      "name": "a release of a button that went down before the prompt is ignored",
+      "info": {"axes": 2, "buttons": 12, "hats": 1},
+      "prompt": [{"k": "b", "i": 3, "v": 0}],
+      "want": [""]
+    },
+    {
+      "name": "a hat counts when pushed to one direction",
+      "info": {"axes": 0, "buttons": 4, "hats": 1},
+      "prompt": [{"k": "h", "i": 0, "v": 4}],
+      "want": ["done:h0.4"]
+    },
+    {
+      "name": "a hat on a diagonal is rejected, and the next direction counts after the centre",
+      "info": {"axes": 0, "buttons": 4, "hats": 1},
+      "prompt": [{"k": "h", "i": 0, "v": 3}, {"k": "h", "i": 0, "v": 0}, {"k": "h", "i": 0, "v": 2}],
+      "want": ["rejected:diagonal", "", "done:h0.2"]
+    },
+    {
+      "name": "a hat that slides from a diagonal to one direction without the centre does not count",
+      "info": {"axes": 0, "buttons": 4, "hats": 1},
+      "prompt": [{"k": "h", "i": 0, "v": 6}, {"k": "h", "i": 0, "v": 4}],
+      "want": ["rejected:diagonal", ""]
+    },
+    {
+      "name": "a hat held when the prompt begins must come back to the centre first",
+      "info": {"axes": 0, "buttons": 4, "hats": 1},
+      "quiet": [{"k": "h", "i": 0, "v": 1}],
+      "prompt": [{"k": "h", "i": 0, "v": 1}, {"k": "h", "i": 0, "v": 0}, {"k": "h", "i": 0, "v": 8}],
+      "want": ["", "", "done:h0.8"]
+    },
+    {
+      "name": "a trigger that rests at -32768 is pulled and let go: aN",
+      "info": {"axes": 6, "buttons": 12, "hats": 0, "axisRest": [0, 0, 0, 0, -32768, -32768]},
+      "prompt": [{"k": "a", "i": 4, "v": 0}, {"k": "a", "i": 4, "v": 32767}, {"k": "a", "i": 4, "v": -32768}],
+      "want": ["", "", "done:a4"]
+    },
+    {
+      "name": "a trigger that rests at 0 is pulled and let go: +aN",
+      "info": {"axes": 6, "buttons": 12, "hats": 0},
+      "prompt": [{"k": "a", "i": 5, "v": 20000}, {"k": "a", "i": 5, "v": 32767}, {"k": "a", "i": 5, "v": 0}],
+      "want": ["", "", "done:+a5"]
+    },
+    {
+      "name": "a trigger that rests at 0 and moves down: -aN",
+      "info": {"axes": 6, "buttons": 12, "hats": 0},
+      "prompt": [{"k": "a", "i": 5, "v": -32768}, {"k": "a", "i": 5, "v": 0}],
+      "want": ["", "done:-a5"]
+    },
+    {
+      "name": "a trigger that rests at the top and is pulled to the bottom: aN~",
+      "info": {"axes": 3, "buttons": 12, "hats": 0, "axisRest": [0, 0, 32767]},
+      "prompt": [{"k": "a", "i": 2, "v": -32768}, {"k": "a", "i": 2, "v": 32767}],
+      "want": ["", "done:a2~"]
+    },
+    {
+      "name": "a trigger that rests at the top and is pulled to the middle: aN~",
+      "info": {"axes": 3, "buttons": 12, "hats": 0, "axisRest": [0, 0, 32767]},
+      "prompt": [{"k": "a", "i": 2, "v": 0}, {"k": "a", "i": 2, "v": 32767}],
+      "want": ["", "done:a2~"]
+    },
+    {
+      "name": "a trigger that rests at -32768 and is pulled only to 60 percent: aN",
+      "info": {"axes": 6, "buttons": 12, "hats": 0, "axisRest": [0, 0, 0, 0, -32768, -32768]},
+      "prompt": [{"k": "a", "i": 4, "v": 10000}, {"k": "a", "i": 4, "v": -32768}],
+      "want": ["", "done:a4"]
+    },
+    {
+      "name": "an axis that moves less than 16000 does not count",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "prompt": [{"k": "a", "i": 0, "v": 15999}, {"k": "a", "i": 0, "v": 0}],
+      "want": ["", ""]
+    },
+    {
+      "name": "an axis that goes out and stays out does not count",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "prompt": [{"k": "a", "i": 0, "v": 30000}, {"k": "a", "i": 0, "v": 25000}, {"k": "a", "i": 0, "v": 11000}],
+      "want": ["", "", ""]
+    },
+    {
+      "name": "an axis counts once it is back within 10000 of its rest",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "prompt": [{"k": "a", "i": 0, "v": 30000}, {"k": "a", "i": 0, "v": 10000}],
+      "want": ["", "done:+a0"]
+    },
+    {
+      "name": "an axis that moves on its own in the quiet period is left out",
+      "info": {"axes": 4, "buttons": 4, "hats": 0},
+      "quiet": [
+        {"k": "a", "i": 1, "v": 20000}, {"k": "a", "i": 1, "v": -20000},
+        {"k": "a", "i": 1, "v": 20000}, {"k": "a", "i": 1, "v": -20000},
+        {"k": "a", "i": 1, "v": 0}
+      ],
+      "prompt": [
+        {"k": "a", "i": 1, "v": -30000}, {"k": "a", "i": 1, "v": 0},
+        {"k": "a", "i": 3, "v": 32767}, {"k": "a", "i": 3, "v": 0}
+      ],
+      "want": ["", "", "", "done:+a3"]
+    },
+    {
+      "name": "an axis that a thumb moved in the quiet period works once it has been still for a second",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "quiet": [
+        {"k": "a", "i": 0, "v": 600}, {"k": "a", "i": 0, "v": 900}, {"k": "a", "i": 0, "v": 1200},
+        {"k": "a", "i": 0, "v": 800}, {"k": "a", "i": 0, "v": 500}, {"k": "a", "i": 0, "v": 300}
+      ],
+      "prompt": [{"k": "a", "i": 0, "v": -30000, "waitMs": 1000}, {"k": "a", "i": 0, "v": 0}],
+      "want": ["", "done:-a0"]
+    },
+    {
+      "name": "an axis that moved on its own is still out when it was still for less than a second",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "quiet": [
+        {"k": "a", "i": 0, "v": 600}, {"k": "a", "i": 0, "v": 900}, {"k": "a", "i": 0, "v": 1200},
+        {"k": "a", "i": 0, "v": 800}, {"k": "a", "i": 0, "v": 500}
+      ],
+      "prompt": [{"k": "a", "i": 0, "v": -30000, "waitMs": 999}, {"k": "a", "i": 0, "v": 0}],
+      "want": ["", ""]
+    },
+    {
+      "name": "an axis that goes on moving on its own stays out, however long the prompt takes",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "quiet": [
+        {"k": "a", "i": 0, "v": 600}, {"k": "a", "i": 0, "v": 900}, {"k": "a", "i": 0, "v": 1200},
+        {"k": "a", "i": 0, "v": 800}, {"k": "a", "i": 0, "v": 500}
+      ],
+      "prompt": [
+        {"k": "a", "i": 0, "v": 700, "waitMs": 600}, {"k": "a", "i": 0, "v": -800, "waitMs": 600},
+        {"k": "a", "i": 0, "v": -30000, "waitMs": 600}, {"k": "a", "i": 0, "v": 0, "waitMs": 600}
+      ],
+      "want": ["", "", "", ""]
+    },
+    {
+      "name": "a button that chattered in the quiet period works once it has been still for a second",
+      "info": {"axes": 0, "buttons": 8, "hats": 0},
+      "quiet": [
+        {"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}, {"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}
+      ],
+      "prompt": [{"k": "b", "i": 3, "v": 1, "waitMs": 1000}, {"k": "b", "i": 3, "v": 0}],
+      "want": ["", "done:b3"]
+    },
+    {
+      "name": "an axis that moves only within the jitter is not noisy",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "quiet": [
+        {"k": "a", "i": 0, "v": 300}, {"k": "a", "i": 0, "v": -300}, {"k": "a", "i": 0, "v": 300},
+        {"k": "a", "i": 0, "v": -300}, {"k": "a", "i": 0, "v": 300}, {"k": "a", "i": 0, "v": -300}
+      ],
+      "prompt": [{"k": "a", "i": 0, "v": -30000}, {"k": "a", "i": 0, "v": 0}],
+      "want": ["", "done:-a0"]
+    },
+    {
+      "name": "a button that chatters in the quiet period is left out",
+      "info": {"axes": 0, "buttons": 8, "hats": 0},
+      "quiet": [
+        {"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}, {"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}
+      ],
+      "prompt": [{"k": "b", "i": 3, "v": 1}, {"k": "b", "i": 3, "v": 0}, {"k": "b", "i": 5, "v": 1}, {"k": "b", "i": 5, "v": 0}],
+      "want": ["", "", "", "done:b5"]
+    },
+    {
+      "name": "an axis held out when the prompt begins counts after it came back and went out again",
+      "info": {"axes": 2, "buttons": 4, "hats": 0},
+      "quiet": [{"k": "a", "i": 0, "v": 30000}],
+      "prompt": [
+        {"k": "a", "i": 0, "v": 0}, {"k": "a", "i": 0, "v": -30000}, {"k": "a", "i": 0, "v": 0}
+      ],
+      "want": ["", "", "done:-a0"]
+    },
+    {
+      "name": "with two axes out, the prompt waits for both and takes the one that moved farther",
+      "info": {"axes": 4, "buttons": 4, "hats": 0},
+      "prompt": [
+        {"k": "a", "i": 1, "v": -20000}, {"k": "a", "i": 0, "v": -30000},
+        {"k": "a", "i": 1, "v": 0}, {"k": "a", "i": 0, "v": 0}
+      ],
+      "want": ["", "", "", "done:-a0"]
+    },
+    {
+      "name": "two triggers on one axis: the first is pulled up from the middle",
+      "info": {"axes": 3, "buttons": 4, "hats": 0},
+      "prompt": [{"k": "a", "i": 2, "v": 32767}, {"k": "a", "i": 2, "v": 0}],
+      "want": ["", "done:+a2"]
+    },
+    {
+      "name": "two triggers on one axis: the second is pulled down from the middle",
+      "info": {"axes": 3, "buttons": 4, "hats": 0},
+      "prompt": [{"k": "a", "i": 2, "v": -32768}, {"k": "a", "i": 2, "v": 0}],
+      "want": ["", "done:-a2"]
+    },
+    {
+      "name": "events of an element the joystick does not have are ignored",
+      "info": {"axes": 1, "buttons": 2, "hats": 0},
+      "prompt": [{"k": "a", "i": 9, "v": 30000}, {"k": "a", "i": 9, "v": 0}],
+      "want": ["", ""]
+    }
+  ]
+}

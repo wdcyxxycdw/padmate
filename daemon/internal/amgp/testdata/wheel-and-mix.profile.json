@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "name": "wheel-and-mix",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelDown",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 10
+          }
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelLeft",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 25
+          }
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+WheelUp",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+Tab"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+MouseLeft"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseMiddle"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelUp",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        },
+        "release": {
+          "type": "keys",
+          "keys": "WheelDown"
+        }
+      }
+    }
+  }
+}

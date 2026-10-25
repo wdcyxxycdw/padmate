@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": ["绘画"],
+  "layers": {
+    "base": {
+      "south": {"label": 5, "press": {"type": "keys", "keys": 90}},
+      "east": null
+    }
+  }
+}

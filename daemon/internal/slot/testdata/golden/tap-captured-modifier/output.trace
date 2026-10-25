@@ -1,0 +1,6 @@
+# The tap F13 is decided at west's release, ahead of south's press, which
+# it captured. LCtrl goes up only after south's press, replayed in order,
+# has tapped Z: the app gets Ctrl+Z, as the edges came.
++LCtrl@0
++F13@20 +Z@20 -LCtrl@20
+-F13@40 -Z@40

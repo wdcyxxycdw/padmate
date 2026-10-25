@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "Whole numbers",
+  "timing": { "holdMs": 1e2, "tapGapMs": 30 },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "sequence",
+          "steps": [{ "keys": "Ctrl+A" }, { "wait": 2.0 }]
+        },
+        "timing": { "multiTapMs": 99999999999999999999 }
+      },
+      "east": {
+        "press": { "type": "keys", "keys": "B", "repeat": { "rateHz": 10.0 } }
+      }
+    }
+  }
+}

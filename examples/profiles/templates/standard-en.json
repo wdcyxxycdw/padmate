@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "name": "Painting",
+  "analog": {
+    "ls": {
+      "mode": "fourWay"
+    }
+  },
+  "layers": {
+    "base": {
+      "lt": {
+        "label": "Pan",
+        "press": {
+          "type": "keys",
+          "keys": "Space",
+          "mode": "hold"
+        }
+      },
+      "leftshoulder": {
+        "label": "Ctrl",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl",
+          "mode": "hold"
+        }
+      },
+      "dpad.left": {
+        "label": "Undo",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl+Z",
+          "mode": "tap"
+        }
+      },
+      "dpad.right": {
+        "label": "Redo"
+      },
+      "dpad.up": {
+        "label": "Brush"
+      },
+      "dpad.down": {
+        "label": "Eraser"
+      },
+      "ls.left": {
+        "label": "Smaller brush"
+      },
+      "ls.right": {
+        "label": "Larger brush"
+      },
+      "ls.up": {
+        "label": "Zoom in"
+      },
+      "ls.down": {
+        "label": "Zoom out"
+      },
+      "rightshoulder": {
+        "label": "Shift",
+        "press": {
+          "type": "keys",
+          "keys": "Shift",
+          "mode": "hold"
+        }
+      },
+      "rt": {
+        "label": "Alt",
+        "press": {
+          "type": "keys",
+          "keys": "Alt",
+          "mode": "hold"
+        }
+      },
+      "south": {
+        "label": "Free transform",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl+T",
+          "mode": "tap"
+        }
+      },
+      "north": {
+        "label": "New layer"
+      },
+      "east": {
+        "label": "Flip canvas horizontally"
+      }
+    }
+  }
+}

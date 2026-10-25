@@ -1,0 +1,6 @@
+5:43: error: minimum: got 5, want 10 (/analog/rs/knobStepDeg)
+	> 5, "outerThreshold": 1.5},
+5:64: error: maximum: got 1.5, want 1 (/analog/rs/outerThreshold)
+	> 1.5},
+6:20: error: "dial" is not a valid value; use "standard", "eightWay", "fourWay", "fourWayDiagonal", "knob" or "mouse" (/analog/ls/mode)
+	> "dial"}

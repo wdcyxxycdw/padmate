@@ -1,0 +1,6 @@
+version="1.0.0"
+path="a.exe"
+sha512="AAAA"
+releaseDate=""
+files[0] url="a.exe" sha512="AAAA" size=1
+files[1] url="b.exe" sha512="BBBB" size=2

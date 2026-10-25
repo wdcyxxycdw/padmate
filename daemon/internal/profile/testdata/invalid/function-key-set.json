@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "功能键",
+  "layers": {"base": {"south": {"press": {"type": "keys", "keys": "A"}}}},
+  "functionKeys": {
+    "back": {
+      "start": {"press": {"type": "keys", "keys": "B"}},
+      "select": {},
+      "color": "#FF0000",
+      "view": {},
+      "southh": {},
+      "east": {"press": {"type": "layer", "layer": "nonesuch", "op": "hold"}}
+    },
+    "menu": {},
+    "start": []
+  }
+}

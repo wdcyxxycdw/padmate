@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "🎨 绘画",
+  "layers": {
+    "base": {
+      "north": {"label": "🖌️ 画笔", "press": {"type": "keys", "keys": "Ctrl+Shfit+B"}}
+    }
+  }
+}

@@ -1,0 +1,3 @@
+name "旧反馈开关", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap

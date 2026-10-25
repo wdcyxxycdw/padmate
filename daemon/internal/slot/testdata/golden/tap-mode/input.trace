@@ -1,0 +1,4 @@
+# A press released after the 20 ms tap has ended...
++south@0 -south@50
+# ...and one released before.
++south@100 -south@105

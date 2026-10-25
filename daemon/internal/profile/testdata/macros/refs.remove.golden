@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 0,
+  "name": "宏的引用",
+  "script": {"entry": "main.ts", "api": "0.21"},
+  "layers": {
+    "base": {
+      "east": {
+        "press": {"type": "keys", "keys": "Ctrl+Z"}
+      },
+      "north": {"tap": {"type": "macro", "file": "其他.ts"}},
+      "rightstick": {"press": {"type": "script", "name": "cycleBrush"}}
+    },
+    "ink": {
+      "color": "#00FF00",
+      "south": {"tap": {"type": "keys", "keys": "B"}},
+      "lb": {"press": {"type": "script", "name": "cycleBrush", "args": {"dir": 1}}}
+    }
+  },
+  "common": {
+    "guide": {"label": "不相关", "press": {"type": "keys", "keys": "F13"}}
+  }
+}

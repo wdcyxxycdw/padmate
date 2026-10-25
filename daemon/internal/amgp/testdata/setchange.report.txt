@@ -1,0 +1,10 @@
+近似  set 1 / east：长按里的换 set 在长按成立时就换，不等松开
+丢弃  set 1 / west：同一个动作里既发键又换 set：只保留换 set
+近似  set 1 / west：长按里的换 set 在长按成立时就换，不等松开
+丢弃  set 1 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+丢弃  set 1 / guide：这个按键的“松开”换成了切换 set，原来的动作丢弃
+丢弃  set 1 / leftstick / slot 3：同一个动作里有不止一个换 set，只用第一个
+信息  set 2：导入为层“Second”
+信息  set 3：导入为层“set3”
+信息  set 6：导入为层“set6”
+信息  这个配置除了 base 还有 3 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留

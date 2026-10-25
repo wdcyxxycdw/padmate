@@ -1,0 +1,6 @@
+1:1: error: fullPress must be greater than press (/analog/lt/fullPress)
+	> {
+1:1: error: fullRelease must not exceed fullPress (/analog/lt/fullRelease)
+	> {
+1:1: error: fullRelease must not exceed fullPress (/analog/rt/fullRelease)
+	> {

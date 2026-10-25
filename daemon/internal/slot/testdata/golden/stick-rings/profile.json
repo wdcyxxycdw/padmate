@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "stick-rings",
+  "layers": {
+    "base": {
+      "ls.active": {"label": "摇杆", "press": {"type": "keys", "keys": "C", "mode": "hold"}},
+      "ls.inner": {"label": "内圈", "press": {"type": "keys", "keys": "A", "mode": "hold"}},
+      "ls.outer": {"label": "外圈", "press": {"type": "keys", "keys": "B", "mode": "hold"}},
+      "ls.up": {"label": "上", "press": {"type": "keys", "keys": "W", "mode": "hold"}}
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# The removal lets go of Space. The downs SDL reports after added press
+# Space again and tap Ctrl+Z a second time; the ups later let go.
++Space@100
++LCtrl@150 +Z@150
+-Z@170 -LCtrl@170
+-Space@300
++Space@1065 +LCtrl@1065 +Z@1065
+-Z@1085 -LCtrl@1085
+-Space@1500

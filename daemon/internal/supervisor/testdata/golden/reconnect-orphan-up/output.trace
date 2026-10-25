@@ -1,0 +1,8 @@
+# The removal lets go of Space. The orphan ups at 1150 and 1200 send
+# nothing; the press at 1300 taps as usual.
++Space@100
++LCtrl@150 +Z@150
+-Z@170 -LCtrl@170
+-Space@300
++LCtrl@1300 +Z@1300
+-Z@1320 -LCtrl@1320

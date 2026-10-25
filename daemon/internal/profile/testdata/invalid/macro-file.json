@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "宏",
+  "script": {"entry": "./a/../Macros/x.ts", "api": "0.21"},
+  "layers": {
+    "base": {
+      "south": {"tap": {"type": "macro", "file": "v1.2.ts"}},
+      "east": {"press": {"type": "macro", "file": "CON.ts"}},
+      "west": {"hold": {"type": "macro", "file": "笔刷.TS"}},
+      "north": {"press": {"type": "macro", "file": "e\u0301.ts"}},
+      "dpad.up": {"press": {"type": "macro", "file": "missing but valid.ts"}}
+    }
+  }
+}

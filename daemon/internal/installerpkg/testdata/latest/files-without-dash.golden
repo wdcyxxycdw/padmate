@@ -1,0 +1,1 @@
+error: latest.yml line 3: expected a `- url: ...` entry, got "url: a.exe"

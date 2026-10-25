@@ -1,0 +1,4 @@
+{"t":0,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/a","label":"确认","action":"tap Enter","owner":"decl/1","reason":"dispatch"}
+{"t":100,"control":"south","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/a","label":"确认","reason":"end"}
+{"t":200,"control":"leftshoulder","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/2","reason":"dispatch"}
+{"t":300,"control":"leftshoulder","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lb","action":"hold LCtrl","owner":"decl/2","reason":"release"}

@@ -1,0 +1,41 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/removed.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/removed.jsonl, 5 events of device 1 "pad"
+
+      time  input               reason    action       label   binding                     owner
+     0.000  device 1 added
+    10.000  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/1
+    10.000    send +Space
+    20.000  lt down (20000)     dispatch  hold Alt     "吸管"  /layers/base/lt             decl/2
+    20.000    send +LAlt
+    30.000  south down          dispatch  tap Ctrl+Z   "撤销"  /layers/base/south          decl/3
+    30.000    send +LCtrl +Z
+    40.000  device 1 removed: release all
+    40.000  south               cancel                 "撤销"  /layers/base/south
+    40.000  east                cancel    hold Space   "抓手"  /layers/base/east
+    40.000  lt                  cancel    hold Alt     "吸管"  /layers/base/lt
+    40.000    send -Z -Space -LCtrl -LAlt
+    40.000  exit: release all
+--- stderr
+padmated: replaying device 1 only, the first with button or axis events; skipped 3 events of device 2 "pad"
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/removed.jsonl --dry-run --decisions
+{"t":10,"control":"east","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/1","reason":"dispatch"}
+{"t":10,"send":["+Space"]}
+{"t":20,"control":"lt","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/2","reason":"dispatch"}
+{"t":20,"send":["+LAlt"]}
+{"t":30,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/3","reason":"dispatch"}
+{"t":30,"send":["+LCtrl","+Z"]}
+{"t":40,"control":"south","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"cancel"}
+{"t":40,"control":"east","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":40,"control":"lt","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","reason":"cancel"}
+{"t":40,"send":["-Z","-Space","-LCtrl","-LAlt"]}
+--- stderr
+padmated: replaying device 1 only, the first with button or axis events; skipped 3 events of device 2 "pad"
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/removed.jsonl, 5 events of device 1 "pad"
+exit 0
+

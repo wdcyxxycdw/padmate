@@ -1,0 +1,4 @@
+# MouseLeft goes down once for both slots. A's removal at 300 does not
+# release it, B still holds it; it goes up with B's release at 400.
++MouseLeft@100
+-MouseLeft@400

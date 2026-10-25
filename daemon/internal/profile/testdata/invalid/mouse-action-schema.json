@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "鼠标动作",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "mouse", "op": "slow"}},
+      "east": {"press": {"type": "mouse"}},
+      "north": {"press": {"type": "mouse", "op": "precision", "factor": 0.01}},
+      "west": {"press": {"type": "mouse", "op": "precision", "factor": 2}},
+      "lb": {"press": {"type": "mouse", "op": "precision", "x": 0.5}},
+      "rb": {"press": {"type": "mouse", "op": "jump", "x": 0.5}},
+      "lt": {"press": {"type": "mouse", "op": "jump", "x": 1.5, "y": -1}},
+      "rt": {"press": {"type": "mouse", "op": "jump", "x": 0.5, "y": 0.5, "factor": 0.3}},
+      "start": {"press": {"type": "mouse", "op": "precision", "keys": "Z"}}
+    }
+  }
+}

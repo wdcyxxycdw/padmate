@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "ç»˜ç”»",
+  "layers": {
+    "base": {
+      "south": {"label": "³·Ïú", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"label": "×¥ÊÖ", "press": {"type": "keys", "keys": "Space"}}
+    }
+  }
+}

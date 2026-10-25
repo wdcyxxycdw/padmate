@@ -1,0 +1,7 @@
+# east's press replays at 20, before west's release opens the window, so
+# it does not commit the window: west's second tap makes a double tap,
+# F14, not two F13, as when west has no hold.
++A@20
++F14@40
+-A@50
+-F14@60

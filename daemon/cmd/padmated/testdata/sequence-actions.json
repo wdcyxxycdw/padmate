@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "sequence-actions",
+  "timing": {"tapPressMs": 10, "tapGapMs": 15},
+  "layers": {
+    "base": {
+      "south": {"label": "全选后输入", "press": {"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"wait": 100}, {"text": "你好"}, {"keys": "Enter"}]}},
+      "east": {"label": "签名", "tap": {"type": "text", "text": "ab\ncd"}},
+      "west": {"label": "静音", "release": {"type": "sequence", "steps": [{"text": "😀"}, {"wait": 30}, {"keys": "VolumeMute"}]}}
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# A's removal lets go of Space alone; Shift stays down until B's
+# release.
++Space@100
++LShift@200
+-Space@300
+-LShift@400

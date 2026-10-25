@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schema/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "旋钮、摇杆内外圈、两段扳机与速率连发",
+  "analog": {
+    "ls": {"mode": "standard", "curve": "quadratic"},
+    "rs": {"mode": "knob", "knobStepDeg": 30},
+    "lt": {"press": 0.30, "release": 0.20, "fullPress": 0.90, "fullRelease": 0.80},
+    "rt": {"curve": "quadratic"}
+  },
+  "layers": {
+    "base": {
+      "rs.cw": {"label": "画笔变大", "press": {"type": "keys", "keys": "]", "mode": "tap"}},
+      "rs.ccw": {"label": "画笔变小", "press": {"type": "keys", "keys": "[", "mode": "tap"}},
+      "ls.up": {"label": "放大画布（推得越远越快）", "press": {"type": "keys", "keys": "Ctrl+=", "mode": "tap", "repeat": {"rateHz": 20, "minRateHz": 3}}},
+      "ls.down": {"label": "缩小画布（推得越远越快）", "press": {"type": "keys", "keys": "Ctrl+-", "mode": "tap", "repeat": {"rateHz": 20, "minRateHz": 3}}},
+      "ls.left": {"label": "左移画布", "press": {"type": "keys", "keys": "Left", "mode": "hold"}},
+      "ls.right": {"label": "右移画布", "press": {"type": "keys", "keys": "Right", "mode": "hold"}},
+      "ls.outer": {"label": "重推加速", "press": {"type": "keys", "keys": "Shift", "mode": "hold"}},
+      "lt": {"label": "画笔", "press": {"type": "keys", "keys": "B", "mode": "tap"}},
+      "lt.full": {"label": "橡皮", "press": {"type": "keys", "keys": "E", "mode": "tap"}},
+      "rt": {"label": "撤销（压得越深越快）", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap", "repeat": {"delayMs": 400, "rateHz": 12, "minRateHz": 2}}}
+    }
+  }
+}

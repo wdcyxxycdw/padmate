@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "tap-captured-modifier",
+  "layers": {
+    "base": {
+      "west": {
+        "press": {"type": "keys", "keys": "LCtrl"},
+        "tap": {"type": "keys", "keys": "F13"},
+        "hold": {"type": "keys", "keys": "E"}
+      },
+      "south": {"press": {"type": "keys", "keys": "Z", "mode": "tap"}}
+    }
+  }
+}

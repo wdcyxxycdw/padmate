@@ -1,0 +1,8 @@
+# The exit path, ReleaseAll at 250 ms, lets go of every held key:
+# non-modifiers first, then modifiers in reverse press order.
++Space@0
++LCtrl@100
++LAlt@150
++Z@200
+-Z@220
+-Space@250 -LAlt@250 -LCtrl@250

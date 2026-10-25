@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "panic-joycon",
+  "layers": {
+    "base": {
+      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "rightshoulder": {"press": {"type": "keys", "keys": "LShift", "mode": "hold"}}
+    }
+  }
+}

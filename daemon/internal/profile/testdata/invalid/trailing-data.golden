@@ -1,0 +1,2 @@
+10:1: error: extra data after the end; the profile already ended with "}" at 9:1
+	> }

@@ -1,0 +1,6 @@
+# The pause lets go of Space. Nothing maps from the reconnected gamepad
+# until its combo resumes.
++Space@100
+-Space@2300
++Space@6000
+-Space@6100

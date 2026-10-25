@@ -1,0 +1,8 @@
+# Space goes down once for both slots, and up with the last release.
+# B's Ctrl+Z comes while A holds Space.
++Space@100
+-Space@400
++Space@500
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620
+-Space@700

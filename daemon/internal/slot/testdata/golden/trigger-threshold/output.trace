@@ -1,0 +1,6 @@
+# Alt is the left one. It is down from 30% on the way up to 20% on the
+# way down.
++LAlt@20
++vk:0xE8@40 -vk:0xE8@40 -LAlt@40
++LAlt@50
++vk:0xE8@70 -vk:0xE8@70 -LAlt@70

@@ -1,0 +1,4 @@
+# south's press, replayed after west's tap while nav is still held, taps
+# nav's C, not base's A.
++F13@20 +C@20
+-F13@40 -C@40

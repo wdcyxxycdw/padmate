@@ -1,0 +1,13 @@
+# The pointer moves 8 px every tick while the stick is pushed (10 to 50 ms): the
+# removal of the pad at 50 ms stops it, nothing is sent after the last tick.
+# The pad that comes back pushes the stick again at 1010 and lets go at 1050.
+move=+8,+0@18
+move=+8,+0@26
+move=+8,+0@34
+move=+8,+0@42
+move=+8,+0@50
+move=+8,+0@1018
+move=+8,+0@1026
+move=+8,+0@1034
+move=+8,+0@1042
+move=+8,+0@1050

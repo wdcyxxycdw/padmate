@@ -1,0 +1,3 @@
+# The query lets go of Space at 500, and nothing maps after it.
++Space@100
+-Space@500

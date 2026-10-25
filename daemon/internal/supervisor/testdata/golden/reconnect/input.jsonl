@@ -1,0 +1,9 @@
+# Pad A holds east and is unplugged. It comes back with a new id and the
+# same info, so the same key: it reconnects, takes the free slot, and its
+# south taps Ctrl+Z.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":300000000,"kind":"removed","device":1}
+{"timeNs":1000000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":1100000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":1150000000,"kind":"up","device":2,"control":"south"}

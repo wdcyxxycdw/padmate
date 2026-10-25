@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "name": "dpad-modes",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "dpad": {
+      "mode": "eightWay"
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "dpad.upleft": {
+        "press": {
+          "type": "keys",
+          "keys": "Home"
+        }
+      },
+      "dpad.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "PageUp"
+        }
+      },
+      "dpad.downleft": {
+        "press": {
+          "type": "keys",
+          "keys": "End"
+        }
+      },
+      "dpad.downright": {
+        "press": {
+          "type": "keys",
+          "keys": "PageDown"
+        }
+      }
+    },
+    "Diagonal": {
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "F2"
+        }
+      },
+      "dpad.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "F1"
+        }
+      }
+    }
+  }
+}

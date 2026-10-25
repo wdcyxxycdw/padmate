@@ -1,0 +1,13 @@
+近似  set 1 / east / slot 3：松开时间分段从 500 毫秒起：按长按导入，按住够久就触发，不等松开
+近似  set 1 / west / slot 3：松开前要先按住 60 毫秒才触发；导入后按多久都触发
+近似  set 1 / west：有双击时，单击的动作要等不到第二下才触发；AntiMicroX 里单击的动作先触发
+近似  set 1 / north：有双击时，单击的动作要等不到第二下才触发；AntiMicroX 里单击的动作先触发
+丢弃  set 1 / leftstick / slot 2：每按一次换下一段动作的循环（共 2 段）没有对应，只保留第一段；多击要打开“自动复位”，复位时间不超过 1000 毫秒
+近似  set 1 / rightstick / slot 1：多击里按下区的键在 AntiMicroX 里按到松开；导入后是点按，键不会一直按着
+丢弃  set 1 / rightstick / slot 3：多出来的长按动作区丢弃：每个按键只有一个长按
+近似  set 1 / leftshoulder / slot 1：多击里按下区的键在 AntiMicroX 里按到松开；导入后是点按，键不会一直按着
+近似  set 1 / leftshoulder：有双击时，单击的动作要等不到第二下才触发；AntiMicroX 里单击的动作先触发
+丢弃  set 1 / rightshoulder / slot 8：循环有 5 段，多击最多四击，第五段起丢弃
+近似  set 1 / rightshoulder / slot 1：多击里按下区的键在 AntiMicroX 里按到松开；导入后是点按，键不会一直按着
+近似  set 1 / rightshoulder：有双击时，单击的动作要等不到第二下才触发；AntiMicroX 里单击的动作先触发
+丢弃  set 1 / misc1 / slot 2：每按一次换下一段动作的循环（共 2 段）没有对应，只保留第一段；多击要打开“自动复位”，复位时间不超过 1000 毫秒

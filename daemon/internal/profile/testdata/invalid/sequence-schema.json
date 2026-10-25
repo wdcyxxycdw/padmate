@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "name": "序列的错误",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "sequence"}},
+      "east": {"press": {"type": "sequence", "steps": []}},
+      "north": {"press": {"type": "sequence", "steps": "Ctrl+A"}},
+      "west": {"press": {"type": "sequence", "steps": [{}, {"keys": "A", "wait": 5}, {"kes": "A"}, "Ctrl+A", {"keys": ""}, {"text": ""}]}},
+      "lb": {"press": {"type": "sequence", "steps": [{"wait": 0}, {"wait": 10001}, {"wait": 1.5}, {"wait": "100"}, {"keys": ["A"]}]}},
+      "rb": {"press": {"type": "sequence", "steps": [{"keys": "A"}], "mode": "tap"}},
+      "lt": {"press": {"type": "sequence", "keys": "A", "steps": [{"keys": "A"}]}},
+      "rt": {"press": {"type": "text"}},
+      "start": {"press": {"type": "text", "text": ""}},
+      "back": {"press": {"type": "text", "text": 5}},
+      "guide": {"press": {"type": "text", "text": "a", "mode": "tap"}},
+      "dpad.up": {"press": {"type": "text", "steps": []}},
+      "dpad.down": {"press": {"type": "sequence", "steps": [{"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}, {"wait": 1}]}}
+    }
+  }
+}

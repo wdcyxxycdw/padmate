@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "触感",
+  "analog": {"rs": {"mode": "knob", "knobTick": true}, "ls": {"mode": "standard", "knobTick": true}},
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "haptic": "tick", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"haptic": "confirm", "tap": {"type": "keys", "keys": "Ctrl+S"}, "hold": {"type": "keys", "keys": "Space"}},
+      "north": {"haptic": "error", "press": {"type": "keys", "keys": "Delete", "mode": "tap"}},
+      "west": {"haptic": "pulse3", "press": {"type": "keys", "keys": "E"}},
+      "rs.cw": {"haptic": "pulse1", "press": {"type": "keys", "keys": "]", "mode": "tap"}},
+      "rs.ccw": {"press": {"type": "keys", "keys": "[", "mode": "tap"}}
+    }
+  }
+}

@@ -1,0 +1,23 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.dll binary
+*.exe binary
+*.png binary
+*.ico binary
+# Profile fixtures whose exact bytes are under test: CRLF line ends,
+# invalid UTF-8 and UTF-16.
+daemon/internal/profile/testdata/valid/bom-crlf.json -text
+daemon/internal/profile/testdata/invalid/crlf.json -text
+daemon/internal/profile/testdata/invalid/invalid-utf8.json -text
+daemon/internal/profile/testdata/invalid/utf16.json -text
+# AntiMicroX fixtures whose exact bytes are under test: a UTF-8 byte order
+# mark, and the vendored real files (CRLF would change their content).
+daemon/internal/amgp/testdata/bom.amgp -text
+daemon/internal/amgp/testdata/hybrid-profile.amgp -text
+daemon/internal/amgp/testdata/endless-sky.amgp -text
+# Authenticode fixtures: a 1 KB PE file, unsigned and signed with a throwaway
+# self-signed certificate. The exact bytes are under test.
+daemon/internal/authenticode/testdata/signed.pe -text
+daemon/internal/authenticode/testdata/unsigned.pe -text

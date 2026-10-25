@@ -1,0 +1,10 @@
+# C is ls.active, A the inner ring, B the outer ring, W up. The inner ring
+# leaves before the outer one comes, and the other way round. On the way out
+# ls.active goes first, then the ring, then the direction. The flick at 500
+# goes straight to the outer ring: A never goes down.
++C@0 +A@0 +W@0
+-A@100 +B@100
+-B@300 +A@300
+-C@400 -A@400 -W@400
++C@500 +B@500 +W@500
+-C@600 -B@600 -W@600

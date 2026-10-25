@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "menu-mask",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "keys", "keys": "Alt", "mode": "hold"}},
+      "north": {"press": {"type": "keys", "keys": "Z", "mode": "tap"}},
+      "west": {"press": {"type": "keys", "keys": "Alt+Tab", "mode": "tap"}},
+      "east": {"press": {"type": "keys", "keys": "LWin", "mode": "hold"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "Ctrl+Alt", "mode": "hold"}},
+      "dpad.up": {"press": {"type": "keys", "keys": "Alt", "mode": "tap"}},
+      "rightshoulder": {"press": {"type": "keys", "keys": "RAlt", "mode": "hold"}}
+    }
+  }
+}

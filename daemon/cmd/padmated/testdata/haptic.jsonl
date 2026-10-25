@@ -1,0 +1,16 @@
+# The haptic of a binding (MAP-25) plays once for each dispatch, and the
+# printer shows it as "haptic slot=0 <preset>" under the decision that caused
+# it (not in the JSON lines of --decisions). north plays its confirm at the
+# press, east its tick at the press and not again when the button is let go,
+# south has none, and west plays pulse2 for its hold, and again for its tap.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":150000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":200000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":500000000,"kind":"up","device":3,"control":"east"}
+{"timeNs":600000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":650000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":1000000000,"kind":"down","device":3,"control":"west"}
+{"timeNs":1400000000,"kind":"up","device":3,"control":"west"}
+{"timeNs":1500000000,"kind":"down","device":3,"control":"west"}
+{"timeNs":1520000000,"kind":"up","device":3,"control":"west"}

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "name": "M6 TABMATE 式手势与层",
+  "timing": { "holdMs": 240, "multiTapMs": 220, "tapPressMs": 20, "tapGapMs": 20 },
+  "script": { "entry": "main.ts", "api": "0.21" },
+  "layers": { "base": {}, "alt": {} }
+}

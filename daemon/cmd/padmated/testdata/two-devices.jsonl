@@ -1,0 +1,13 @@
+# Device 9 is added first but sends no button or axis event, and device 5
+# comes later: padmated replays device 3 only, rebased to its first event.
+# The times of different devices need not be in order.
+{"timeNs":500000000,"kind":"added","device":9,"info":{"id":9,"name":"idle joystick","type":"unknown","gamepad":false}}
+{"timeNs":7000000000,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":7100000000,"kind":"down","device":3,"control":"north"}
+{"timeNs":400000000,"kind":"added","device":5,"info":{"id":5,"name":"right pad","type":"standard","gamepad":true}}
+{"timeNs":450000000,"kind":"down","device":5,"control":"south"}
+{"timeNs":7150000000,"kind":"up","device":3,"control":"north"}
+{"timeNs":460000000,"kind":"up","device":5,"control":"south"}
+{"timeNs":800000000,"kind":"removed","device":9}
+{"timeNs":7200000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":7300000000,"kind":"removed","device":3}

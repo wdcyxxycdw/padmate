@@ -1,0 +1,6 @@
+# The pause at 5100 lets go of Space; south maps again only when pressed
+# after the resume.
++Space@100
+-Space@5100
++Space@13000
+-Space@13100

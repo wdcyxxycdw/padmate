@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "multi-pad",
+  "layers": {
+    "base": {
+      "east": {"press": {"type": "keys", "keys": "Space", "mode": "hold"}},
+      "west": {"press": {"type": "keys", "keys": "Shift", "mode": "hold"}},
+      "south": {"press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}}
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Space is released at L's recentering edge, before the removal. The
+# pair and then L, back under its old key, each map south from their
+# first press.
++Space@100
+-Space@500
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620
++LCtrl@900 +Z@900
+-Z@920 -LCtrl@920

@@ -1,0 +1,4 @@
+# No device sends a button or axis event: padmated replays the first one.
+{"timeNs":2000000,"kind":"added","device":7,"info":{"id":7,"name":"first","type":"unknown","gamepad":false}}
+{"timeNs":1000000,"kind":"added","device":8,"info":{"id":8,"name":"second","type":"xboxone","gamepad":true}}
+{"timeNs":9000000,"kind":"removed","device":7}

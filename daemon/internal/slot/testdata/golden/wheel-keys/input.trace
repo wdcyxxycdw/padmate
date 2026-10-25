@@ -1,0 +1,19 @@
+# The right stick is a knob, as in knob-ticks: pushing it up sets the
+# reference angle, 40 degrees clockwise is one tick (WheelUp), 100 degrees
+# two more, and back through 70, 45 and 20 degrees two counter-clockwise
+# ticks (WheelDown).
+rightx=0@0 righty=-0.63@0
+rightx=0.405@100 righty=-0.4826@100
+rightx=0.6204@200 righty=0.1094@200
+rightx=0.592@300 righty=-0.2155@300
+rightx=0.4455@350 righty=-0.4455@350
+rightx=0.2155@400 righty=-0.592@400
+rightx=0.0513@620 righty=-0.141@620
+# A hold of north turns the wheel once, however long it lasts.
++north@1000 -north@1300
+# Two holds of the same wheel key turn it twice, one notch each.
++north@1500 +south@1520 -north@1600 -south@1700
+# Ctrl+WheelUp as a hold: Ctrl is down around the notch.
++east@2000 -east@2300
+# A key sequence of two wheel keys.
++west@2500 -west@2520

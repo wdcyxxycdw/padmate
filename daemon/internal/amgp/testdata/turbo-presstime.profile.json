@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "name": "turbo-presstime",
+  "defaultLayer": "base",
+  "timing": {
+    "tapPressMs": 150
+  },
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "A",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 10
+          }
+        },
+        "timing": {
+          "tapPressMs": 50,
+          "tapGapMs": 50
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "B",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 25
+          }
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+C",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 4
+          }
+        },
+        "timing": {
+          "tapPressMs": 125,
+          "tapGapMs": 125
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "D"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "E",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 10
+          }
+        },
+        "timing": {
+          "tapPressMs": 50,
+          "tapGapMs": 50
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "S",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 10
+          }
+        },
+        "timing": {
+          "tapPressMs": 50,
+          "tapGapMs": 50
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "sequence",
+          "steps": [
+            {
+              "keys": "A"
+            },
+            {
+              "wait": 10
+            },
+            {
+              "keys": "B"
+            }
+          ]
+        }
+      },
+      "rightstick": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseLeft",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 13
+          }
+        },
+        "timing": {
+          "tapPressMs": 40,
+          "tapGapMs": 40
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "WheelDown",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "misc1": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      }
+    }
+  }
+}

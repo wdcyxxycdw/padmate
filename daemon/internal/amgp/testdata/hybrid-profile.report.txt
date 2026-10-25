@@ -1,0 +1,7 @@
+信息  这份配置是为“Controller (Xbox One For Windows)”做的
+近似  set 1 / ls：鼠标加速曲线“precision”按最接近的二次曲线导入
+丢弃  set 1 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+丢弃  set 1 / start：Menu（Start） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+信息  set 2：导入为层“Controller mode”
+信息  这个配置除了 base 还有 1 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留
+信息  ls：在移动鼠标：这是整个配置的设置，换到其他 set 或层时指针仍然会动

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"label": "抓手", "press": {"type": "keys", "keys": "Space"}}
+    ]
+    }
+  }
+}

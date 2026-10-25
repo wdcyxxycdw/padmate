@@ -1,0 +1,6 @@
+# B's east is pressed while B stands in, and let go of when A takes the
+# slot back.
++Space@200
+-Space@400
++LCtrl@450 +Z@450
+-Z@470 -LCtrl@470

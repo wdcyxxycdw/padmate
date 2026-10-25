@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "knob-ticks",
+  "analog": {"rs": {"mode": "knob"}},
+  "layers": {
+    "base": {
+      "rs.cw": {"label": "笔刷变大", "press": {"type": "keys", "keys": "]", "mode": "tap"}},
+      "rs.ccw": {"label": "笔刷变小", "press": {"type": "keys", "keys": "[", "mode": "tap"}},
+      "rs.up": {"label": "无用", "press": {"type": "keys", "keys": "W", "mode": "hold"}}
+    }
+  }
+}

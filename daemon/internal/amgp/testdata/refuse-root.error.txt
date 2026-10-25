@@ -1,0 +1,2 @@
+root
+这不是 AntiMicroX 的配置文件（根元素是 "html"，应当是 gamecontroller）

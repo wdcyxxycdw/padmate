@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "function keys",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "back": {"label": "paste", "press": {"type": "keys", "keys": "Ctrl+V", "mode": "tap"}}
+    }
+  },
+  "functionKeys": {
+    "back": {
+      "south": {"label": "重做", "press": {"type": "keys", "keys": "Ctrl+Shift+Z", "mode": "tap"}},
+      "west": {"tap": {"type": "keys", "keys": "F13", "mode": "tap"}, "hold": {"type": "keys", "keys": "F14"}}
+    },
+    "start": {
+      "ls.cw": {"press": {"type": "keys", "keys": "Ctrl+]", "mode": "tap"}}
+    }
+  }
+}

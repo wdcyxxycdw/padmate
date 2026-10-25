@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "name": "sequences",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "sequence",
+          "steps": [
+            {
+              "keys": "A"
+            },
+            {
+              "wait": 100
+            },
+            {
+              "keys": "B"
+            }
+          ]
+        }
+      },
+      "east": {
+        "press": {
+          "type": "text",
+          "text": "hello\nworld"
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+MouseLeft"
+        }
+      },
+      "north": {
+        "press": {
+          "type": "sequence",
+          "steps": [
+            {
+              "keys": "A"
+            },
+            {
+              "wait": 10000
+            },
+            {
+              "wait": 10000
+            },
+            {
+              "keys": "B"
+            }
+          ]
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "A",
+          "mode": "tap"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "sequence",
+          "steps": [
+            {
+              "text": "Hi "
+            },
+            {
+              "keys": "Enter"
+            }
+          ]
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "text",
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "sequence",
+          "steps": [
+            {
+              "wait": 200
+            },
+            {
+              "keys": "C"
+            }
+          ]
+        }
+      },
+      "rightstick": {
+        "hold": {
+          "type": "sequence",
+          "steps": [
+            {
+              "keys": "A"
+            },
+            {
+              "wait": 50
+            },
+            {
+              "keys": "B"
+            },
+            {
+              "wait": 50
+            },
+            {
+              "text": "tap"
+            }
+          ]
+        },
+        "timing": {
+          "holdMs": 300
+        }
+      },
+      "paddle1": {
+        "press": {
+          "type": "keys",
+          "keys": "A",
+          "mode": "tap"
+        },
+        "timing": {
+          "tapPressMs": 40
+        }
+      }
+    }
+  }
+}

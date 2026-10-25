@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "name": "M4 analog acceptance",
+  "analog": {
+    "ls": {"mode": "standard", "deadzone": 0.15, "saturation": 0.95, "directionThreshold": 0.30, "hysteresisDeg": 8},
+    "rs": {"mode": "fourWay", "deadzone": 0.15, "saturation": 0.95, "directionThreshold": 0.30, "directionDelayMs": 10},
+    "dpad": {"mode": "eightWay", "fold": "keepFirst"},
+    "axisThreshold": 0.30
+  },
+  "layers": {
+    "base": {
+      "ls.up": {"label": "left stick up", "press": {"type": "keys", "keys": "Up"}},
+      "ls.down": {"label": "left stick down", "press": {"type": "keys", "keys": "Down"}},
+      "ls.left": {"label": "left stick left", "press": {"type": "keys", "keys": "Left"}},
+      "ls.right": {"label": "left stick right", "press": {"type": "keys", "keys": "Right"}},
+      "ls.active": {"label": "left stick active", "press": {"type": "keys", "keys": "F13", "mode": "tap"}},
+      "rs.left": {"label": "brush smaller", "press": {"type": "keys", "keys": "F16"}},
+      "rs.right": {"label": "brush larger", "press": {"type": "keys", "keys": "F17"}},
+      "dpad.upright": {"label": "dpad diagonal", "press": {"type": "keys", "keys": "F14", "mode": "tap"}},
+      "leftx+": {"label": "left x positive", "press": {"type": "keys", "keys": "F15", "mode": "tap"}}
+    }
+  }
+}

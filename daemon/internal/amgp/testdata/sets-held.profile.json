@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 1,
+  "name": "sets-held",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "dpad": {
+      "mode": "eightWay"
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "B"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "layer",
+          "layer": "Shift",
+          "op": "hold"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "layer",
+          "layer": "Third",
+          "op": "hold"
+        }
+      },
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      },
+      "dpad.upright": {
+        "press": {
+          "type": "keys",
+          "keys": "E"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "ls.down": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      }
+    },
+    "Shift": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+A"
+        }
+      },
+      "east": {
+        "block": true
+      },
+      "west": {
+        "block": true
+      },
+      "north": {
+        "block": true
+      },
+      "leftshoulder": {
+        "block": true
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "layer",
+          "layer": "Fourth",
+          "op": "hold"
+        }
+      },
+      "lt": {
+        "block": true
+      },
+      "rt": {
+        "block": true
+      },
+      "leftstick": {
+        "block": true
+      },
+      "rightstick": {
+        "block": true
+      },
+      "guide": {
+        "block": true
+      },
+      "touchpad": {
+        "block": true
+      },
+      "misc1": {
+        "block": true
+      },
+      "paddle1": {
+        "block": true
+      },
+      "paddle2": {
+        "block": true
+      },
+      "paddle3": {
+        "block": true
+      },
+      "paddle4": {
+        "block": true
+      },
+      "dpad.up": {
+        "block": true
+      },
+      "dpad.down": {
+        "block": true
+      },
+      "dpad.left": {
+        "block": true
+      },
+      "dpad.right": {
+        "block": true
+      },
+      "dpad.upleft": {
+        "block": true
+      },
+      "dpad.upright": {
+        "block": true
+      },
+      "dpad.downleft": {
+        "block": true
+      },
+      "dpad.downright": {
+        "block": true
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "PageUp"
+        }
+      },
+      "ls.right": {
+        "block": true
+      },
+      "ls.down": {
+        "block": true
+      },
+      "ls.left": {
+        "block": true
+      },
+      "rs.up": {
+        "block": true
+      },
+      "rs.right": {
+        "block": true
+      },
+      "rs.down": {
+        "block": true
+      },
+      "rs.left": {
+        "block": true
+      }
+    },
+    "Third": {
+      "south": {
+        "block": true
+      },
+      "east": {
+        "block": true
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "C"
+        }
+      },
+      "north": {
+        "block": true
+      },
+      "leftshoulder": {
+        "block": true
+      },
+      "rightshoulder": {
+        "block": true
+      },
+      "lt": {
+        "block": true
+      },
+      "rt": {
+        "block": true
+      },
+      "leftstick": {
+        "block": true
+      },
+      "rightstick": {
+        "block": true
+      },
+      "guide": {
+        "block": true
+      },
+      "touchpad": {
+        "block": true
+      },
+      "misc1": {
+        "block": true
+      },
+      "paddle1": {
+        "block": true
+      },
+      "paddle2": {
+        "block": true
+      },
+      "paddle3": {
+        "block": true
+      },
+      "paddle4": {
+        "block": true
+      },
+      "dpad.up": {
+        "block": true
+      },
+      "dpad.down": {
+        "block": true
+      },
+      "dpad.left": {
+        "block": true
+      },
+      "dpad.right": {
+        "block": true
+      },
+      "dpad.upleft": {
+        "block": true
+      },
+      "dpad.upright": {
+        "block": true
+      },
+      "dpad.downleft": {
+        "block": true
+      },
+      "dpad.downright": {
+        "block": true
+      },
+      "ls.up": {
+        "block": true
+      },
+      "ls.right": {
+        "block": true
+      },
+      "ls.down": {
+        "block": true
+      },
+      "ls.left": {
+        "block": true
+      },
+      "rs.up": {
+        "block": true
+      },
+      "rs.right": {
+        "block": true
+      },
+      "rs.down": {
+        "block": true
+      },
+      "rs.left": {
+        "block": true
+      }
+    },
+    "Fourth": {
+      "south": {
+        "block": true
+      },
+      "east": {
+        "block": true
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "D"
+        }
+      },
+      "north": {
+        "block": true
+      },
+      "leftshoulder": {
+        "block": true
+      },
+      "rightshoulder": {
+        "block": true
+      },
+      "lt": {
+        "block": true
+      },
+      "rt": {
+        "block": true
+      },
+      "leftstick": {
+        "block": true
+      },
+      "rightstick": {
+        "block": true
+      },
+      "guide": {
+        "block": true
+      },
+      "touchpad": {
+        "block": true
+      },
+      "misc1": {
+        "block": true
+      },
+      "paddle1": {
+        "block": true
+      },
+      "paddle2": {
+        "block": true
+      },
+      "paddle3": {
+        "block": true
+      },
+      "paddle4": {
+        "block": true
+      },
+      "dpad.up": {
+        "block": true
+      },
+      "dpad.down": {
+        "block": true
+      },
+      "dpad.left": {
+        "block": true
+      },
+      "dpad.right": {
+        "block": true
+      },
+      "dpad.upleft": {
+        "block": true
+      },
+      "dpad.upright": {
+        "block": true
+      },
+      "dpad.downleft": {
+        "block": true
+      },
+      "dpad.downright": {
+        "block": true
+      },
+      "ls.up": {
+        "block": true
+      },
+      "ls.right": {
+        "block": true
+      },
+      "ls.down": {
+        "block": true
+      },
+      "ls.left": {
+        "block": true
+      },
+      "rs.up": {
+        "block": true
+      },
+      "rs.right": {
+        "block": true
+      },
+      "rs.down": {
+        "block": true
+      },
+      "rs.left": {
+        "block": true
+      }
+    }
+  }
+}

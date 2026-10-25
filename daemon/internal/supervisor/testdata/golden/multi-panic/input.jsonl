@@ -1,0 +1,21 @@
+# Two slots (DMN-07): the combo of any gamepad pauses every slot. Pad A
+# has slot 0 and holds south (Space); Pad B has slot 1 and holds back+start,
+# the function keys, which send nothing. B's combo fires at 2300 and pauses, which
+# lets go of A's Space. While paused, A's tap of south maps nothing. B's
+# combo again resumes at 5600, and then A's south holds Space again.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":200000000,"kind":"down","device":2,"control":"back"}
+{"timeNs":300000000,"kind":"down","device":2,"control":"start"}
+{"timeNs":2500000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":2600000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":2700000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":3000000000,"kind":"up","device":2,"control":"back"}
+{"timeNs":3000000000,"kind":"up","device":2,"control":"start"}
+{"timeNs":3500000000,"kind":"down","device":2,"control":"back"}
+{"timeNs":3600000000,"kind":"down","device":2,"control":"start"}
+{"timeNs":5800000000,"kind":"up","device":2,"control":"back"}
+{"timeNs":5800000000,"kind":"up","device":2,"control":"start"}
+{"timeNs":6000000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":6100000000,"kind":"up","device":1,"control":"south"}

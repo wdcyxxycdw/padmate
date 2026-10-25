@@ -1,0 +1,17 @@
+# The left stick, just past the direction threshold: ls.up taps A, and after the 200 ms delay repeats at 4 Hz.
+leftx=0@0 lefty=-0.398@0
+# Half way (depth 0.5, quadratic): 8 Hz. The repeat that would have gone at 700 is moved to 125 ms after the one at 450, which is past: it goes at once.
+leftx=0@600 lefty=-0.67@600
+# Full travel: 20 Hz, 50 ms.
+leftx=0@1200 lefty=-0.95@1200
+# Back to the threshold: 4 Hz again, counted from the last repeat.
+leftx=0@1830 lefty=-0.398@1830
+# Let go: the repeat stops.
+leftx=0@2400 lefty=0@2400
+# The right trigger, just past its press threshold: B is held, and repeats after 200 ms at 3 Hz (ANA-15).
+righttrigger=0.3@3000
+# Half way (linear): 7.5 Hz.
+righttrigger=0.65@3600
+# Full: 12 Hz.
+righttrigger=1@4400
+righttrigger=0@5000

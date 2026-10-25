@@ -1,0 +1,16 @@
+{
+  "$schema": "../../schema/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"label": "抓手", "press": {"type": "keys", "keys": "Space", "mode": "hold"}},
+      "west": {"label": "橡皮", "press": {"type": "keys", "keys": "E", "mode": "tap"}},
+      "north": {"label": "画笔", "press": {"type": "keys", "keys": "B", "mode": "tap"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "rightshoulder": {"press": {"type": "keys", "keys": "LShift", "mode": "hold"}},
+      "lt": {"label": "吸管", "press": {"type": "keys", "keys": "Alt", "mode": "hold"}}
+    }
+  }
+}

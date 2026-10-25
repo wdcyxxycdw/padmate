@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-stick",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "mouse",
+      "deadzone": 0.1831,
+      "saturation": 0.9766,
+      "directionThreshold": 0,
+      "mouseSpeed": 800,
+      "curve": "cubic"
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseLeft"
+        }
+      },
+      "rs.right": {
+        "press": {
+          "type": "keys",
+          "keys": "D"
+        }
+      }
+    },
+    "Keys": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+# Pull LT slowly: the first stage presses at 30%, the second at 90%.
+lefttrigger=0.1@0 lefttrigger=0.35@10 lefttrigger=0.8@20 lefttrigger=0.92@30
+# The second stage stays down above 80% and releases there, the first stays until 20%.
+lefttrigger=0.85@40 lefttrigger=0.79@50 lefttrigger=0.5@60 lefttrigger=0.15@70
+# A full pull in one reading presses the first stage, then the second; the way back releases the second, then the first.
+lefttrigger=1@100 lefttrigger=0@110
+# The right trigger has no binding.
+righttrigger=1@120 righttrigger=0@130

@@ -1,0 +1,19 @@
+# A short painting session with examples/profiles/basic.json.
+# Pick the brush (north: B).
++north@0 -north@80
+# Undo twice (south: Ctrl+Z).
++south@2000 -south@2090
++south@2400 -south@2470
+# Pan: hold east (Space) while dragging the pen.
++east@3000 -east@3800
+# Zoom: hold LB (LCtrl), then east (Space), while dragging.
++lb@4500 +east@4600 -east@5200 -lb@5300
+# Eyedropper: pull LT (Alt) past 30%, pick a colour, let go.
+lefttrigger=0.15@6000 lefttrigger=0.45@6016 lefttrigger=0.9@6032
+lefttrigger=0.35@6400 lefttrigger=0.1@6416 lefttrigger=0@6432
+# Eraser (west: E).
++west@7000 -west@7060
+# Straight line: hold RB (LShift) while drawing.
++rb@8000 -rb@8900
+# Undo while holding LB: LCtrl is already down, so only Z taps.
++lb@9500 +south@9600 -south@9680 -lb@9800

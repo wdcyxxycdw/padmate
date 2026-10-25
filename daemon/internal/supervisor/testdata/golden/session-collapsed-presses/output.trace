@@ -1,0 +1,6 @@
+# Nothing that goes down at 500 maps: the lock closed the gate before
+# the presses, and the collapsed hold cancels them.
++LCtrl@100 +Z@100
+-Z@120 -LCtrl@120
++Space@900
+-Space@1100

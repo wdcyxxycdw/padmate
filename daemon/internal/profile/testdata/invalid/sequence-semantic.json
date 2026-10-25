@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "序列的语义错误",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"keys": "Z+Ctrl"}, {"wait": 5}, {"keys": "NoSuchKey"}]}},
+      "east": {"press": {"type": "sequence", "steps": [{"text": "ok"}, {"text": "bell\u0007"}, {"text": "a\rb"}, {"text": "tab\there\nfine"}]}},
+      "north": {"press": {"type": "text", "text": "carriage\rreturn"}},
+      "west": {"press": {"type": "text", "text": "bell\u0007"}},
+      "lb": {"press": {"type": "text", "text": "控制字符\u001b在这里"}},
+      "rb": {"press": {"type": "text", "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}},
+      "lt": {"press": {"type": "sequence", "steps": [{"keys": "Ctrl+Plus"}, {"keys": "Shift+1"}]}}
+    }
+  }
+}

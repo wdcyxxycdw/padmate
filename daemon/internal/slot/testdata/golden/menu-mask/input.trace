@@ -1,0 +1,16 @@
+# A lone Alt, held and released: masked.
++south@0 -south@100
+# Alt held while Z is tapped: not masked.
++south@200 +north@250 -north@300 -south@400
+# A tap of Alt+Tab: not masked.
++west@500 -west@540
+# A lone LWin: masked.
++east@600 -east@700
+# Ctrl+Alt, modifiers only: Alt is lone, masked.
++leftshoulder@800 -leftshoulder@900
+# A tap of Alt: masked at the end of the tap.
++dpad.up@1000 -dpad.up@1050
+# A lone RAlt: masked on every layout.
++rightshoulder@1100 -rightshoulder@1150
+# Alt held at the exit: the ReleaseAll masks it.
++south@1200

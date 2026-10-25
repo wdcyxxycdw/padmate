@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "功能键",
+  "layers": {"base": {}},
+  "functionKeys": {
+    "back": {
+      "east": {"press": {"type": "layer", "layer": "nonesuch", "op": "hold"}},
+      "north": {"block": true, "press": {"type": "keys", "keys": "A"}},
+      "a": {"press": {"type": "keys", "keys": "A"}},
+      "south": {"press": {"type": "keys", "keys": "B"}}
+    },
+    "start": {
+      "west": {"hold": {"type": "keys", "keys": "Shfit"}},
+      "lt": {"tap": {"type": "keys", "keys": "A", "mode": "hold"}}
+    }
+  }
+}

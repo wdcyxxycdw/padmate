@@ -1,0 +1,20 @@
+# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0022):
+# each is its own gamepad. Joy-Con (L) holds east. Joy-Con (R) wakes
+# while L has the slot: with one slot it waits, and its tap of south
+# maps nothing (multi-joycon gives it a second slot). L lets go of east,
+# so it holds nothing when it is switched off and SDL has no recentering
+# ButtonUp to send. R stands in at once, provisionally, and its south
+# taps Ctrl+Z.
+# The GUIDs are made up in the layout of SDL's HIDAPI GUIDs: Bluetooth,
+# CRC 0, Nintendo's 057e with product 2006 or 2007, and an arbitrary last
+# byte. The serials are made-up MACs; the paths are left empty, since the
+# key of a gamepad with a serial does not use them.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":200000000,"kind":"added","device":2,"info":{"id":2,"name":"Nintendo Switch Joy-Con (R)","type":"joyconright","vendor":1406,"product":8199,"version":1,"guid":"050000007e0500000720000001006802","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":300000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":310000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":400000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":1}
+{"timeNs":600000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":610000000,"kind":"up","device":2,"control":"south"}

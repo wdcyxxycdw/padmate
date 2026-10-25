@@ -1,0 +1,109 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input ../../../examples/traces/basic.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: ../../../examples/traces/basic.jsonl, 33 events of device 1 "example gamepad"
+
+      time  input               reason    action       label   binding                     owner
+     0.000  device 1 added
+   512.304  north down          dispatch  tap B        "画笔"  /layers/base/north          decl/1
+   512.304    send +B
+   532.304    send -B
+   583.911  north up            end                    "画笔"  /layers/base/north
+  2104.556  south down          dispatch  tap Ctrl+Z   "撤销"  /layers/base/south          decl/2
+  2104.556    send +LCtrl +Z
+  2124.556    send -Z -LCtrl
+  2171.020  south up            end                    "撤销"  /layers/base/south
+  2448.213  south down          dispatch  tap Ctrl+Z   "撤销"  /layers/base/south          decl/3
+  2448.213    send +LCtrl +Z
+  2468.213    send -Z -LCtrl
+  2509.877  south up            end                    "撤销"  /layers/base/south
+  3201.447  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/4
+  3201.447    send +Space
+  4352.090  east up             release   hold Space   "抓手"  /layers/base/east           decl/4
+  4352.090    send -Space
+  4996.802  lt down (15730)     dispatch  hold Alt     "吸管"  /layers/base/lt             decl/5
+  4996.802    send +LAlt
+  5436.977  lt up (2310)        release   hold Alt     "吸管"  /layers/base/lt             decl/5
+  5436.977    send +vk:0xE8 -vk:0xE8 -LAlt
+  6802.530  west down           dispatch  tap E        "橡皮"  /layers/base/west           decl/6
+  6802.530    send +E
+  6822.530    send -E
+  6871.144  west up             end                    "橡皮"  /layers/base/west
+  7905.118  leftshoulder down   dispatch  hold LCtrl           /layers/base/leftshoulder   decl/7
+  7905.118    send +LCtrl
+  8101.774  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/8
+  8101.774    send +Space
+  8930.442  east up             release   hold Space   "抓手"  /layers/base/east           decl/8
+  8930.442    send -Space
+  9012.336  leftshoulder up     release   hold LCtrl           /layers/base/leftshoulder   decl/7
+  9012.336    send -LCtrl
+  9604.201  rightshoulder down  dispatch  hold LShift          /layers/base/rightshoulder  decl/9
+  9604.201    send +LShift
+  9811.950  south down          dispatch  tap Ctrl+Z   "撤销"  /layers/base/south          decl/10
+  9811.950    send +LCtrl +Z
+  9831.950    send -Z -LCtrl
+  9873.318  south up            end                    "撤销"  /layers/base/south
+ 10022.657  rightshoulder up    release   hold LShift          /layers/base/rightshoulder  decl/9
+ 10022.657    send -LShift
+ 10540.880  dpad.left down      unbound
+ 10602.413  dpad.left up        end
+ 11240.667  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/12
+ 11240.667    send +Space
+ 11718.645  exit: release all
+ 11718.645  east                cancel    hold Space   "抓手"  /layers/base/east
+ 11718.645    send -Space
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input ../../../examples/traces/basic.jsonl --dry-run --decisions
+{"t":512.3041,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","action":"tap B","owner":"decl/1","reason":"dispatch"}
+{"t":512.3041,"send":["+B"]}
+{"t":532.3041,"send":["-B"]}
+{"t":583.9114,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","reason":"end"}
+{"t":2104.5563,"control":"south","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/2","reason":"dispatch"}
+{"t":2104.5563,"send":["+LCtrl","+Z"]}
+{"t":2124.5563,"send":["-Z","-LCtrl"]}
+{"t":2171.0208,"control":"south","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":2448.2139,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/3","reason":"dispatch"}
+{"t":2448.2139,"send":["+LCtrl","+Z"]}
+{"t":2468.2139,"send":["-Z","-LCtrl"]}
+{"t":2509.8771,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":3201.4476,"control":"east","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/4","reason":"dispatch"}
+{"t":3201.4476,"send":["+Space"]}
+{"t":4352.0902,"control":"east","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/4","reason":"release"}
+{"t":4352.0902,"send":["-Space"]}
+{"t":4996.8027,"control":"lt","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/5","reason":"dispatch"}
+{"t":4996.8027,"send":["+LAlt"]}
+{"t":5436.9778,"control":"lt","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/5","reason":"release"}
+{"t":5436.9778,"send":["+vk:0xE8","-vk:0xE8","-LAlt"]}
+{"t":6802.5307,"control":"west","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","action":"tap E","owner":"decl/6","reason":"dispatch"}
+{"t":6802.5307,"send":["+E"]}
+{"t":6822.5307,"send":["-E"]}
+{"t":6871.1449,"control":"west","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","reason":"end"}
+{"t":7905.1182,"control":"leftshoulder","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/7","reason":"dispatch"}
+{"t":7905.1182,"send":["+LCtrl"]}
+{"t":8101.7746,"control":"east","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/8","reason":"dispatch"}
+{"t":8101.7746,"send":["+Space"]}
+{"t":8930.4421,"control":"east","edge":"up","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/8","reason":"release"}
+{"t":8930.4421,"send":["-Space"]}
+{"t":9012.3368,"control":"leftshoulder","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/7","reason":"release"}
+{"t":9012.3368,"send":["-LCtrl"]}
+{"t":9604.2013,"control":"rightshoulder","edge":"down","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold LShift","owner":"decl/9","reason":"dispatch"}
+{"t":9604.2013,"send":["+LShift"]}
+{"t":9811.9507,"control":"south","edge":"down","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/10","reason":"dispatch"}
+{"t":9811.9507,"send":["+LCtrl","+Z"]}
+{"t":9831.9507,"send":["-Z","-LCtrl"]}
+{"t":9873.3185,"control":"south","edge":"up","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":10022.6579,"control":"rightshoulder","edge":"up","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold LShift","owner":"decl/9","reason":"release"}
+{"t":10022.6579,"send":["-LShift"]}
+{"t":10540.8801,"control":"dpad.left","edge":"down","cycle":11,"gesture":"press","reason":"unbound"}
+{"t":10602.4136,"control":"dpad.left","edge":"up","cycle":11,"gesture":"press","reason":"end"}
+{"t":11240.6679,"control":"east","edge":"down","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/12","reason":"dispatch"}
+{"t":11240.6679,"send":["+Space"]}
+{"t":11718.645,"control":"east","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":11718.645,"send":["-Space"]}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: ../../../examples/traces/basic.jsonl, 33 events of device 1 "example gamepad"
+exit 0
+

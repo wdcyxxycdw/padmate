@@ -1,0 +1,63 @@
+$ padmated --profile testdata/haptic.json --fake-input testdata/haptic.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/haptic.json, "haptic", 4 bindings
+fake input: testdata/haptic.jsonl, 11 events of device 3 "left pad"
+
+      time  input               reason    action      label     binding             owner
+     0.000  device 3 added
+   100.000  north down          dispatch  tap F13     "确认"    /layers/base/north  decl/1
+   100.000    haptic slot=0 confirm
+   100.000    send +F13
+   120.000    send -F13
+   150.000  north up            end                   "确认"    /layers/base/north
+   200.000  east down           dispatch  hold Space  "抓手"    /layers/base/east   decl/2
+   200.000    haptic slot=0 tick
+   200.000    send +Space
+   500.000  east up             release   hold Space  "抓手"    /layers/base/east   decl/2
+   500.000    send -Space
+   600.000  south down          dispatch  tap F14     "无触感"  /layers/base/south  decl/3
+   600.000    send +F14
+   620.000    send -F14
+   650.000  south up            end                   "无触感"  /layers/base/south
+  1000.000  west down           unbound               "长按"    /layers/base/west
+  1250.000  west down           dispatch  hold E      "长按"    /layers/base/west   decl/4
+  1250.000    haptic slot=0 pulse2
+  1250.000    send +E
+  1400.000  west up             release   hold E      "长按"    /layers/base/west   decl/4
+  1400.000    send -E
+  1500.000  west down           unbound               "长按"    /layers/base/west
+  1520.000  west down           dispatch  tap F15     "长按"    /layers/base/west   decl/5
+  1520.000    haptic slot=0 pulse2
+  1520.000    send +F15
+  1540.000    send -F15
+  1540.000  exit: release all
+exit 0
+
+$ padmated --profile testdata/haptic.json --fake-input testdata/haptic.jsonl --dry-run --decisions
+{"t":100,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"确认","action":"tap F13","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+F13"]}
+{"t":120,"send":["-F13"]}
+{"t":150,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"确认","reason":"end"}
+{"t":200,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/2","reason":"dispatch"}
+{"t":200,"send":["+Space"]}
+{"t":500,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/2","reason":"release"}
+{"t":500,"send":["-Space"]}
+{"t":600,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"无触感","action":"tap F14","owner":"decl/3","reason":"dispatch"}
+{"t":600,"send":["+F14"]}
+{"t":620,"send":["-F14"]}
+{"t":650,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"无触感","reason":"end"}
+{"t":1000,"control":"west","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","label":"长按","reason":"unbound"}
+{"t":1250,"control":"west","edge":"down","cycle":4,"gesture":"hold","level":"base","binding":"/layers/base/west","label":"长按","action":"hold E","owner":"decl/4","reason":"dispatch"}
+{"t":1250,"send":["+E"]}
+{"t":1400,"control":"west","edge":"up","cycle":4,"gesture":"hold","level":"base","binding":"/layers/base/west","label":"长按","action":"hold E","owner":"decl/4","reason":"release"}
+{"t":1400,"send":["-E"]}
+{"t":1500,"control":"west","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/west","label":"长按","reason":"unbound"}
+{"t":1520,"control":"west","edge":"down","cycle":5,"gesture":"tap","level":"base","binding":"/layers/base/west","label":"长按","action":"tap F15","owner":"decl/5","reason":"dispatch"}
+{"t":1520,"send":["+F15"]}
+{"t":1540,"send":["-F15"]}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/haptic.json, "haptic", 4 bindings
+fake input: testdata/haptic.jsonl, 11 events of device 3 "left pad"
+exit 0
+

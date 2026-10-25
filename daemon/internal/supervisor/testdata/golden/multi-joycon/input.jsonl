@@ -1,0 +1,16 @@
+# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0022), on
+# two slots (IN-08): the events of joycon-separate. Joy-Con (L) takes
+# slot 0 and holds east. Joy-Con (R) wakes and gets slot 1 at once,
+# provisionally, and its tap of south, which confirms the slot, maps
+# Ctrl+Z while L holds Space. L lets go of east and is switched off,
+# which frees slot 0, as nobody waits; R's next tap maps on slot 1.
+# The GUIDs and serials are joycon-separate's.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":200000000,"kind":"added","device":2,"info":{"id":2,"name":"Nintendo Switch Joy-Con (R)","type":"joyconright","vendor":1406,"product":8199,"version":1,"guid":"050000007e0500000720000001006802","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":300000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":310000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":400000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":1}
+{"timeNs":600000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":610000000,"kind":"up","device":2,"control":"south"}

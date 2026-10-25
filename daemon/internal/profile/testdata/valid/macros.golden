@@ -1,0 +1,5 @@
+name "宏", schemaVersion 1
+layer base
+	south         /layers/base/a             label "复制全部"  press: macro "复制全部.ts"
+	east          /layers/base/east          label ""
+	west          /layers/base/west          label ""

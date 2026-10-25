@@ -1,0 +1,23 @@
+# The pause outlives the gamepad (DMN-06, DMN-07). Pad A holds south
+# (Space) and back+start: the combo fires at 2300 and pauses, which lets
+# go of Space. A lets go of everything and is unplugged. It comes back
+# with a new id and the same info, so it reconnects to its slot, still
+# paused: its tap of south maps nothing. Its combo resumes at 5600, and
+# then south holds Space again.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":200000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":300000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":2400000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":2400000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":2400000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":2500000000,"kind":"removed","device":1}
+{"timeNs":3000000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":3100000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":3200000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":3500000000,"kind":"down","device":2,"control":"back"}
+{"timeNs":3600000000,"kind":"down","device":2,"control":"start"}
+{"timeNs":5800000000,"kind":"up","device":2,"control":"back"}
+{"timeNs":5800000000,"kind":"up","device":2,"control":"start"}
+{"timeNs":6000000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":6100000000,"kind":"up","device":2,"control":"south"}

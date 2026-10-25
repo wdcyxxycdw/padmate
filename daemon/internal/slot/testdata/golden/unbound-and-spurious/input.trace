@@ -1,0 +1,9 @@
+# west has no binding, east a label but no action.
++west@0 -west@10 +east@20 -east@30
+# A repeated down and a repeated up of south: the second of each is
+# spurious.
++south@40 +south@45 -south@50 -south@55
+# The sticks do nothing in M1a, not even a decision.
+leftx=-1@70 lefty=0.5@70
+# rt has no binding either.
+righttrigger=1@80 righttrigger=0@90

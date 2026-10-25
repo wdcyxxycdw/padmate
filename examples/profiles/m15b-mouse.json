@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schema/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "摇杆移动鼠标、鼠标按键、滚轮和精确模式",
+  "analog": {
+    "ls": {"mode": "mouse", "mouseSpeed": 1200, "curve": "quadratic", "mouseSmoothingMs": 40},
+    "rs": {"mode": "knob", "knobStepDeg": 20}
+  },
+  "layers": {
+    "base": {
+      "leftshoulder": {"label": "精确（按住降速）", "press": {"type": "mouse", "op": "precision", "factor": 0.3}},
+      "south": {"label": "左键（按住拖动）", "press": {"type": "keys", "keys": "MouseLeft", "mode": "hold"}},
+      "east": {"label": "右键", "press": {"type": "keys", "keys": "MouseRight", "mode": "tap"}},
+      "west": {"label": "中键", "press": {"type": "keys", "keys": "MouseMiddle", "mode": "tap"}},
+      "north": {"label": "移到屏幕中央", "press": {"type": "mouse", "op": "jump", "x": 0.5, "y": 0.5}},
+      "rs.cw": {"label": "放大", "press": {"type": "keys", "keys": "Ctrl+WheelUp", "mode": "tap"}},
+      "rs.ccw": {"label": "缩小", "press": {"type": "keys", "keys": "Ctrl+WheelDown", "mode": "tap"}}
+    }
+  }
+}

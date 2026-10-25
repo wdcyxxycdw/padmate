@@ -1,0 +1,41 @@
+# A short painting session with examples/profiles/basic.json, written by
+# hand in the format of "padmatectl record": brush, two undos, pan, the
+# eyedropper on the left trigger, eraser, Ctrl+Space zoom on LB + east,
+# redo on RB + south, an unbound d-pad press, and a last pan, held
+# through a nudge of the left stick, which maps to nothing, and still held
+# when the trace ends. Replay it from the repository root, after task
+# build, with
+#   bin/padmated --profile examples/profiles/basic.json --fake-input examples/traces/basic.jsonl --dry-run
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"example gamepad","type":"standard","gamepad":true}}
+{"timeNs":512304100,"kind":"down","device":1,"control":"north"}
+{"timeNs":583911400,"kind":"up","device":1,"control":"north"}
+{"timeNs":2104556300,"kind":"down","device":1,"control":"south"}
+{"timeNs":2171020800,"kind":"up","device":1,"control":"south"}
+{"timeNs":2448213900,"kind":"down","device":1,"control":"south"}
+{"timeNs":2509877100,"kind":"up","device":1,"control":"south"}
+{"timeNs":3201447600,"kind":"down","device":1,"control":"east"}
+{"timeNs":4352090200,"kind":"up","device":1,"control":"east"}
+{"timeNs":4980112000,"kind":"axis","device":1,"control":"lefttrigger","value":3120}
+{"timeNs":4988450300,"kind":"axis","device":1,"control":"lefttrigger","value":8911}
+{"timeNs":4996802700,"kind":"axis","device":1,"control":"lefttrigger","value":15730}
+{"timeNs":5005129000,"kind":"axis","device":1,"control":"lefttrigger","value":26418}
+{"timeNs":5013470500,"kind":"axis","device":1,"control":"lefttrigger","value":32767}
+{"timeNs":5420300000,"kind":"axis","device":1,"control":"lefttrigger","value":21004}
+{"timeNs":5428640200,"kind":"axis","device":1,"control":"lefttrigger","value":8120}
+{"timeNs":5436977800,"kind":"axis","device":1,"control":"lefttrigger","value":2310}
+{"timeNs":5445311400,"kind":"axis","device":1,"control":"lefttrigger","value":0}
+{"timeNs":6802530700,"kind":"down","device":1,"control":"west"}
+{"timeNs":6871144900,"kind":"up","device":1,"control":"west"}
+{"timeNs":7905118200,"kind":"down","device":1,"control":"leftshoulder"}
+{"timeNs":8101774600,"kind":"down","device":1,"control":"east"}
+{"timeNs":8930442100,"kind":"up","device":1,"control":"east"}
+{"timeNs":9012336800,"kind":"up","device":1,"control":"leftshoulder"}
+{"timeNs":9604201300,"kind":"down","device":1,"control":"rightshoulder"}
+{"timeNs":9811950700,"kind":"down","device":1,"control":"south"}
+{"timeNs":9873318500,"kind":"up","device":1,"control":"south"}
+{"timeNs":10022657900,"kind":"up","device":1,"control":"rightshoulder"}
+{"timeNs":10540880100,"kind":"down","device":1,"control":"dpad.left"}
+{"timeNs":10602413600,"kind":"up","device":1,"control":"dpad.left"}
+{"timeNs":11240667900,"kind":"down","device":1,"control":"east"}
+{"timeNs":11702310400,"kind":"axis","device":1,"control":"leftx","value":4211}
+{"timeNs":11718645000,"kind":"axis","device":1,"control":"leftx","value":0}

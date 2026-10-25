@@ -1,0 +1,663 @@
+/* Controller stage: 3D model, chips and leader lines (ADR-0045, UI-39). */
+.controller-3d {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  outline: none;
+}
+/*
+ * The canvas parent. Chips switch density with its size:
+ * - full (two lines) from 860×600, e.g. the default 1180×800 window;
+ * - compact (one line) from 600×440, e.g. 1180×800 with the key drawer open;
+ * - mini (badge only) below that, e.g. 850×620 with the drawer open.
+ */
+.stage-host {
+  position: absolute;
+  inset: 0;
+  container: stage / size;
+}
+.controller-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+.controller-unavailable {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/*
+ * Leader lines. The scene draws one <g data-line> per chip, from the chip edge
+ * facing the controller to the projected control.
+ */
+.controller-callouts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.stage-line-halo {
+  fill: none;
+  stroke: var(--halo);
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.stage-line {
+  fill: none;
+  stroke: #a9b1be;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.stage-line-end {
+  fill: #a9b1be;
+}
+.stage-line-anchor {
+  fill: #f2f4f7;
+  stroke: var(--halo);
+  stroke-width: 2;
+}
+.stage-line-glow {
+  fill: rgba(76, 194, 255, 0.22);
+  opacity: 0;
+}
+[data-bound="false"] > .stage-line {
+  stroke: var(--text-4);
+  stroke-width: 1.3;
+  stroke-linecap: butt;
+  stroke-dasharray: 3 3;
+}
+[data-bound="false"] > .stage-line-end,
+[data-bound="false"] > .stage-line-anchor {
+  fill: var(--text-4);
+}
+[data-bound="false"] > .stage-line-anchor {
+  r: 3.7px;
+}
+[data-active="true"] > .stage-line,
+[data-selected="true"] > .stage-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: none;
+}
+[data-active="true"] > .stage-line-end,
+[data-selected="true"] > .stage-line-end,
+[data-active="true"] > .stage-line-anchor,
+[data-selected="true"] > .stage-line-anchor {
+  fill: var(--accent);
+}
+[data-active="true"] > .stage-line-anchor,
+[data-selected="true"] > .stage-line-anchor {
+  r: 5.2px;
+}
+[data-active="true"] > .stage-line-glow,
+[data-selected="true"] > .stage-line-glow {
+  opacity: 1;
+}
+
+/*
+ * Stick gauge: while a stick is pushed past the rest threshold, a ring around
+ * the resting cap and a dot that reaches the ring at full push. The model can
+ * only tilt a little before the cap meets the shell; this carries the reading.
+ */
+.stage-gauge {
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+.stage-gauge[data-visible="true"] {
+  opacity: 1;
+  transition-duration: 80ms;
+}
+.stage-gauge-disc {
+  fill: var(--halo);
+  fill-opacity: 0.32;
+  stroke: var(--halo);
+  stroke-width: 4;
+  stroke-opacity: 0.7;
+}
+.stage-gauge-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-opacity: 0.7;
+}
+.stage-gauge-hub {
+  fill: var(--accent);
+  opacity: 0.7;
+}
+.stage-gauge-halo {
+  fill: none;
+  stroke: var(--halo);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.stage-gauge-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.stage-gauge-dot {
+  fill: var(--accent);
+  stroke: var(--halo);
+  stroke-width: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-gauge,
+  .stage-gauge[data-visible="true"] {
+    transition: none;
+  }
+}
+
+/*
+ * Chip layout. All sizes are per density; positions follow the model, whose
+ * half width is min(41cqh, 29.4cqw) (5.6 units under the scene's camera fit).
+ *
+ * - Side columns: slots 2–6 stack around the stage's middle, hugging the model.
+ * - Shoulder corners: slots 0–1 above a column, a little closer to the model.
+ * - Top row: centered above the model, raised chip a little higher.
+ * - Bottom: centered below the model, above the floating editor notice.
+ */
+.controller-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --chip-h: 48px;
+  --chip-w: clamp(150px, 17cqw, 196px);
+  --pitch: 58px;
+  --corner-gap: 14px;
+  --corner-shift: 24px;
+  --top-w: clamp(120px, 13cqw, 140px);
+  --top-gap: 10px;
+  --top-raise: 22px;
+  --top-y: clamp(12px, calc(22.6cqh - 64px), calc(50cqh - 300px));
+  --edge: 16px;
+  --model-gap: 24px;
+  --side-x: max(
+    var(--edge),
+    calc(50cqw - min(41cqh, 29.4cqw) - var(--chip-w) - var(--model-gap))
+  );
+}
+.stage-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: var(--chip-w);
+  height: var(--chip-h);
+  padding: 0 10px 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  pointer-events: auto;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+.stage-chip[data-placement="left"],
+.stage-chip[data-side="left"] {
+  flex-direction: row-reverse;
+  padding: 0 9px 0 10px;
+  text-align: right;
+}
+.stage-chip[data-placement="left"],
+.stage-chip[data-placement="right"],
+.stage-chip[data-side] {
+  top: calc(50% + (var(--slot) - 4) * var(--pitch));
+  transform: translateY(-50%);
+}
+.stage-chip[data-placement="left"] {
+  left: var(--side-x);
+}
+.stage-chip[data-placement="right"] {
+  right: var(--side-x);
+}
+.stage-chip[data-side] {
+  top: calc(50% + (var(--slot) - 4) * var(--pitch) - var(--corner-gap));
+}
+.stage-chip[data-side="left"] {
+  left: calc(var(--side-x) + var(--corner-shift));
+}
+.stage-chip[data-side="right"] {
+  right: calc(var(--side-x) + var(--corner-shift));
+}
+.stage-chip[data-placement="top"]:not([data-side]) {
+  width: var(--top-w);
+  left: calc(50% + var(--offset) * (var(--top-w) + var(--top-gap)));
+  top: var(--top-y);
+  transform: translateX(-50%);
+}
+.stage-chip[data-placement="top"][data-raised] {
+  top: max(8px, calc(var(--top-y) - var(--top-raise)));
+}
+.stage-chip[data-placement="bottom"] {
+  width: var(--top-w);
+  left: 50%;
+  top: min(
+    calc(50% + min(27.4cqh, 19.6cqw) + 6px),
+    calc(100% - 72px - var(--chip-h))
+  );
+  transform: translateX(-50%);
+}
+/* With the editor notice showing, the key preview line (UI-44) stacks above
+   it, about 100px from the bottom together: the chip keeps clear of both. */
+.controller-view:has(.editor-notice) .stage-chip[data-placement="bottom"] {
+  top: min(
+    calc(50% + min(27.4cqh, 19.6cqw) + 6px),
+    calc(100% - 112px - var(--chip-h))
+  );
+}
+
+/* Chip contents. */
+.stage-glyph {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #22252c;
+  box-shadow: inset 0 0 0 1px #30343d;
+  color: var(--face, #c9ced6);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.stage-glyph[data-shape="rect"] {
+  width: 30px;
+  border-radius: 7px;
+}
+.stage-glyph[data-shape="arrow"] {
+  border-radius: 7px;
+  font-size: 14px;
+}
+.stage-glyph > svg {
+  width: 13px;
+  height: 13px;
+}
+.stage-glyph[data-face="green"] {
+  --face: #7bd389;
+}
+.stage-glyph[data-face="red"] {
+  --face: #ff8a80;
+}
+.stage-glyph[data-face="blue"] {
+  --face: #6fb6ff;
+}
+.stage-glyph[data-face="yellow"] {
+  --face: #f5cf5b;
+}
+.stage-glyph[data-face="ps-blue"] {
+  --face: #8fb8ff;
+}
+.stage-glyph[data-face="pink"] {
+  --face: #f09ad6;
+}
+.stage-chip-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.stage-chip[data-placement="left"] .stage-chip-text,
+.stage-chip[data-side="left"] .stage-chip-text {
+  align-items: flex-end;
+}
+/*
+ * Both lines are one line of inline content, so a shortcut that does not fit
+ * ends in "…": keycaps are atomic inlines, and the one that would be cut is
+ * hidden whole instead of showing half a key (a flex line cannot do this).
+ */
+.stage-chip-title,
+.stage-chip-detail {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stage-chip-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.stage-chip-detail {
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1;
+}
+.stage-chip :is(.keycaps, .keycaps-chord) {
+  display: inline;
+}
+.stage-chip :is(.kc, .stage-script-tag) {
+  display: inline-flex;
+  vertical-align: middle;
+}
+/* The gaps the flex layout of .keycaps gave. */
+.stage-chip .kc + .kc {
+  margin-left: 3px;
+}
+.stage-chip .keycaps-sep {
+  margin: 0 3px;
+}
+.stage-chip-title > * + * {
+  margin-left: 4px;
+}
+.stage-chip-detail > * + * {
+  margin-left: 3px;
+}
+.stage-sep {
+  color: var(--text-4);
+}
+.stage-script-tag {
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(180, 156, 255, 0.12);
+  color: var(--violet);
+  font: 600 10px / 1 var(--mono);
+}
+/* A script (macro) a gesture runs; the warning colour when it is gone. */
+.stage-macro-icon {
+  display: inline;
+  vertical-align: middle;
+  color: var(--violet);
+}
+.stage-chip .stage-macro-missing,
+.stage-chip-detail-text[data-missing],
+.stage-chip[data-missing] .stage-chip-title {
+  color: #d9ae6a;
+}
+.stage-chip-pct {
+  flex: none;
+  color: var(--accent);
+  font: 600 11px / 1 var(--mono);
+}
+.stage-chip-lock {
+  flex: none;
+  display: grid;
+  color: var(--text-4);
+}
+.stage-chip-script {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(180, 156, 255, 0.16);
+  color: var(--violet);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Chip states. */
+.stage-chip:hover {
+  border-color: #3a3f4a;
+  background: #191b21;
+}
+.stage-chip[data-state="unbound"] {
+  border-style: dashed;
+  background: transparent;
+}
+.stage-chip[data-state="unbound"] .stage-glyph {
+  background: transparent;
+}
+.stage-chip[data-state="unbound"] .stage-chip-title,
+.stage-chip[data-state="unbound"] .stage-chip-detail {
+  color: var(--text-4);
+  font-weight: 500;
+}
+/* View and Menu switch sets and bind nothing (ADR-0069): a tag, not a button. */
+.stage-chip[data-state="function"] {
+  border-style: dotted;
+  background: transparent;
+  cursor: default;
+}
+.stage-chip[data-state="function"]:hover {
+  border-color: var(--border);
+  background: transparent;
+}
+.stage-chip[data-state="function"] .stage-chip-title {
+  color: var(--text-3);
+  font-weight: 500;
+}
+/*
+ * In the set of a function key: what the control does otherwise, greyed. The
+ * greying is a token color, not opacity, which would take the text below
+ * 4.5:1 (theme-contrast.test.ts). An unbound chip is already --text-4, and a
+ * script that is gone keeps its warning color.
+ */
+.stage-chip[data-inherited]:not([data-state="unbound"]):not([data-missing])
+.stage-chip-title,
+.stage-chip[data-inherited] .kc {
+  color: var(--text-3);
+}
+.stage-chip[data-active="true"] {
+  border-color: rgba(76, 194, 255, 0.6);
+}
+.stage-chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: 0 0 0 3px rgba(76, 194, 255, 0.12);
+  color: var(--text);
+}
+.stage-chip[aria-pressed="true"] .stage-glyph,
+.stage-chip[data-active="true"] .stage-glyph {
+  background: var(--face, var(--accent));
+  box-shadow: none;
+  color: #0f1013;
+}
+
+/* Compact: one line. */
+@container stage (width < 860px) or (height < 600px) {
+  .controller-labels {
+    --chip-h: 32px;
+    --chip-w: clamp(96px, 16cqw, 124px);
+    --pitch: 40px;
+    --corner-gap: 8px;
+    --corner-shift: 16px;
+    --top-w: clamp(88px, 14cqw, 112px);
+    --top-gap: 8px;
+    --top-raise: 16px;
+    --top-y: clamp(8px, calc(22.6cqh - 44px), calc(50cqh - 196px));
+    --edge: 12px;
+    --model-gap: 16px;
+  }
+  .stage-chip {
+    gap: 7px;
+    padding: 0 8px 0 4px;
+    border-radius: 8px;
+    color: #c9ced6;
+  }
+  .stage-chip[data-placement="left"],
+  .stage-chip[data-side="left"] {
+    padding: 0 4px 0 8px;
+  }
+  .stage-glyph {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+  .stage-glyph[data-shape="rect"] {
+    width: 24px;
+    border-radius: 6px;
+  }
+  .stage-glyph[data-shape="arrow"] {
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .stage-glyph > svg {
+    width: 11px;
+    height: 11px;
+  }
+  .stage-chip-title {
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .stage-chip-detail {
+    display: none;
+  }
+  .stage-chip-script {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    font-size: 9.5px;
+  }
+  .stage-line-anchor {
+    r: 3.4px;
+  }
+  [data-bound="false"] > .stage-line-anchor {
+    r: 2.9px;
+  }
+  [data-active="true"] > .stage-line-anchor,
+  [data-selected="true"] > .stage-line-anchor {
+    r: 4.4px;
+  }
+}
+
+/* Mini: the control's badge only; the name stays in aria-label and title. */
+@container stage (width < 600px) or (height < 440px) {
+  .controller-labels {
+    --chip-h: 30px;
+    --chip-w: 30px;
+    --pitch: 36px;
+    --corner-gap: 4px;
+    --corner-shift: 10px;
+    --top-w: 30px;
+    --top-gap: 8px;
+    --top-raise: 12px;
+    --top-y: clamp(6px, calc(22.6cqh - 36px), calc(50cqh - 170px));
+    --edge: 8px;
+    --model-gap: 12px;
+  }
+  .stage-chip,
+  .stage-chip[data-placement="left"],
+  .stage-chip[data-side="left"] {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 9px;
+  }
+  .stage-chip-text,
+  .stage-chip-pct {
+    display: none;
+  }
+  .stage-chip-lock {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    padding: 1px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+  .stage-chip-lock > svg {
+    width: 10px;
+    height: 10px;
+  }
+  .stage-glyph,
+  .stage-glyph[data-shape="rect"] {
+    width: 24px;
+    height: 24px;
+  }
+  .stage-chip-script {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 13px;
+    height: 13px;
+    border-radius: 4px;
+    background: #2b2640;
+    font-size: 8.5px;
+  }
+  .stage-line-anchor {
+    r: 3px;
+  }
+  [data-bound="false"] > .stage-line-anchor {
+    r: 2.5px;
+  }
+  [data-active="true"] > .stage-line-anchor,
+  [data-selected="true"] > .stage-line-anchor {
+    r: 4px;
+  }
+  .stage-line-end {
+    r: 1.6px;
+  }
+}
+
+.controller-hint {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 20px;
+  margin: 0;
+  text-align: center;
+  color: var(--text-4);
+  font-size: 12px;
+  pointer-events: none;
+}
+.controller-accessible-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A binding the profile takes from the one it is based on (PRO-19): a small
+   mark after the text, which the compact and mini chips leave to the tooltip. */
+.stage-chip-parent {
+  flex: none;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-3);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+@container stage (width < 860px) or (height < 600px) {
+  .stage-chip-parent {
+    display: none;
+  }
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .stage-chip[data-active="true"] {
+    border-width: 3px;
+  }
+  .stage-chip[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+}

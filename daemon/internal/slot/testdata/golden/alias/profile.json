@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "alias",
+  "layers": {
+    "base": {
+      "a": {"label": "确认", "press": {"type": "keys", "keys": "Enter", "mode": "tap"}},
+      "lb": {"press": {"type": "keys", "keys": "LCtrl"}}
+    }
+  }
+}

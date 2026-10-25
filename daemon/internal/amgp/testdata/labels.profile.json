@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "name": "A name with tabs and a very long tail A name with tabs and a very long tail A name w",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "label": "Line one Line two tab",
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "east": {
+        "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "press": {
+          "type": "keys",
+          "keys": "B"
+        }
+      },
+      "west": {
+        "label": "<b>&amp;</b>",
+        "press": {
+          "type": "keys",
+          "keys": "C"
+        }
+      }
+    }
+  }
+}

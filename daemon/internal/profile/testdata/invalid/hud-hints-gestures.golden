@@ -1,0 +1,10 @@
+6:46: error: a hints action shows the key hints while the control is held: use it on press or hold, not on tap (/layers/base/south/tap/op)
+	> "hints"}},
+7:49: error: a hints action shows the key hints while the control is held: use it on press or hold, not on release (/layers/base/east/release/op)
+	> "hints"}},
+8:52: error: a hints action shows the key hints while the control is held: use it on press or hold, not on doubleTap (/layers/base/north/doubleTap/op)
+	> "hints"}, "press": {"type": "hud", "op":…
+10:49: error: a hints action shows the key hints while the control is held: use it on press or hold, not on tripleTap (/layers/base/lb/tripleTap/op)
+	> "hints"}, "quadTap": {"type": "hud", "op…
+10:92: error: a hints action shows the key hints while the control is held: use it on press or hold, not on quadTap (/layers/base/lb/quadTap/op)
+	> "hints"}}

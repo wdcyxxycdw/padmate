@@ -1,0 +1,6 @@
+# C's east is pressed when C stands in on slot 0, let go of when A
+# takes the slot back, and pressed again when C gets slot 1.
++Space@200
+-Space@300
++Space@400
+-Space@500

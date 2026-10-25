@@ -1,0 +1,4 @@
+# Eleven days in: the time column widens to fit.
+{"timeNs":0,"kind":"added","device":1}
+{"timeNs":1000000000000000,"kind":"down","device":1,"control":"west"}
+{"timeNs":1000000050000000,"kind":"up","device":1,"control":"west"}

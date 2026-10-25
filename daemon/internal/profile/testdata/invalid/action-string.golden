@@ -1,0 +1,2 @@
+6:41: error: expected an action object, got a string; write {"type": "keys", "keys": "Ctrl+Z"} (/layers/base/south/press)
+	> "Ctrl+Z"}

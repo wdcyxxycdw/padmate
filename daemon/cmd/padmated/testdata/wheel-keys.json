@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "wheel-keys",
+  "layers": {
+    "base": {
+      "north": {"label": "放大", "press": {"type": "keys", "keys": "WheelUp", "mode": "tap"}},
+      "east": {"label": "缩小", "press": {"type": "keys", "keys": "Ctrl+WheelDown", "mode": "hold"}},
+      "south": {"label": "横滚", "press": {"type": "keys", "keys": ["WheelLeft", "WheelRight"], "mode": "tap"}}
+    }
+  }
+}

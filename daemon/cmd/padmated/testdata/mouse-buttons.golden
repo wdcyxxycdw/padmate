@@ -1,0 +1,73 @@
+$ padmated --profile testdata/mouse-buttons.json --fake-input testdata/mouse-buttons.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/mouse-buttons.json, "mouse-buttons", 5 bindings
+fake input: testdata/mouse-buttons.jsonl, 10 events of device 3 "left pad"
+
+      time  input               reason    action                     label   binding             owner
+     0.000  device 3 added
+   100.000  north down          dispatch  tap MouseLeft              "点击"  /layers/base/north  decl/1
+   100.000    send +MouseLeft
+   120.000    send -MouseLeft
+   150.000  north up            end                                  "点击"  /layers/base/north
+   200.000  east down           dispatch  hold Shift+MouseRight      "拖动"  /layers/base/east   decl/2
+   200.000    send +LShift +MouseRight
+   500.000  east up             release   hold Shift+MouseRight      "拖动"  /layers/base/east   decl/2
+   500.000    send -MouseRight -LShift
+   600.000  south down          dispatch  tap MouseLeft              "连点"  /layers/base/south  decl/3
+   600.000    send +MouseLeft
+   620.000    send -MouseLeft
+   700.000    send +MouseLeft
+   720.000    send -MouseLeft
+   800.000    send +MouseLeft
+   820.000    send -MouseLeft
+   900.000    send +MouseLeft
+   900.000  south up            end                                  "连点"  /layers/base/south
+   920.000    send -MouseLeft
+  1000.000  west down           dispatch  tap [MouseMiddle,MouseX2]  "序列"  /layers/base/west   decl/4
+  1000.000    send +MouseMiddle
+  1020.000    send -MouseMiddle
+  1040.000    send +MouseX2
+  1050.000  west up             end                                  "序列"  /layers/base/west
+  1060.000    send -MouseX2
+  1100.000  lt down (24000)     dispatch  hold MouseX1               "侧键"  /layers/base/lt     decl/5
+  1100.000    send +MouseX1
+  1100.000  exit: release all
+  1100.000  lt                  cancel    hold MouseX1               "侧键"  /layers/base/lt
+  1100.000    send -MouseX1
+exit 0
+
+$ padmated --profile testdata/mouse-buttons.json --fake-input testdata/mouse-buttons.jsonl --dry-run --decisions
+{"t":100,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"点击","action":"tap MouseLeft","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+MouseLeft"]}
+{"t":120,"send":["-MouseLeft"]}
+{"t":150,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"点击","reason":"end"}
+{"t":200,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"拖动","action":"hold Shift+MouseRight","owner":"decl/2","reason":"dispatch"}
+{"t":200,"send":["+LShift","+MouseRight"]}
+{"t":500,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"拖动","action":"hold Shift+MouseRight","owner":"decl/2","reason":"release"}
+{"t":500,"send":["-MouseRight","-LShift"]}
+{"t":600,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"连点","action":"tap MouseLeft","owner":"decl/3","reason":"dispatch"}
+{"t":600,"send":["+MouseLeft"]}
+{"t":620,"send":["-MouseLeft"]}
+{"t":700,"send":["+MouseLeft"]}
+{"t":720,"send":["-MouseLeft"]}
+{"t":800,"send":["+MouseLeft"]}
+{"t":820,"send":["-MouseLeft"]}
+{"t":900,"send":["+MouseLeft"]}
+{"t":900,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"连点","reason":"end"}
+{"t":920,"send":["-MouseLeft"]}
+{"t":1000,"control":"west","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","label":"序列","action":"tap [MouseMiddle,MouseX2]","owner":"decl/4","reason":"dispatch"}
+{"t":1000,"send":["+MouseMiddle"]}
+{"t":1020,"send":["-MouseMiddle"]}
+{"t":1040,"send":["+MouseX2"]}
+{"t":1050,"control":"west","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","label":"序列","reason":"end"}
+{"t":1060,"send":["-MouseX2"]}
+{"t":1100,"control":"lt","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"侧键","action":"hold MouseX1","owner":"decl/5","reason":"dispatch"}
+{"t":1100,"send":["+MouseX1"]}
+{"t":1100,"control":"lt","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"侧键","action":"hold MouseX1","reason":"cancel"}
+{"t":1100,"send":["-MouseX1"]}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/mouse-buttons.json, "mouse-buttons", 5 bindings
+fake input: testdata/mouse-buttons.jsonl, 10 events of device 3 "left pad"
+exit 0
+

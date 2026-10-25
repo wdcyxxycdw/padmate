@@ -1,0 +1,7 @@
+近似  set 1 / south / slot 1：“!”按美式键盘写成 Shift+1
+近似  set 1 / east / slot 2：“?”按美式键盘写成 Shift+/
+丢弃  set 1 / rightstick / slot 1：F25：padmate 只有 F1 至 F24
+近似  set 1 / dpad.up / slot 1：小键盘的 Up（NumLock 关时的 8）按 Num8 导入，要 NumLock 开着才对应
+丢弃  set 1 / misc1 / slot 1：原生键码 0x60000041：不知道它在哪个系统上写的
+丢弃  set 1 / paddle1 / slot 1：键码 0x1234567 不是 padmate 认识的键
+丢弃  set 1 / touchpad / slot 1：浏览器后退：padmate 没有这个键

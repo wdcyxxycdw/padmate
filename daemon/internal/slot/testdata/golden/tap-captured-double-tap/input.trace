@@ -1,0 +1,5 @@
+# west's tap, double tap and hold (E, balanced) are pending when east goes
+# down, so east's press waits in the buffer. west's release, before east's,
+# ends the pending gesture; west taps again within multiTapMs (MAP-07,
+# MAP-09).
++west@0 +east@10 -west@20 +west@30 -west@40 -east@50

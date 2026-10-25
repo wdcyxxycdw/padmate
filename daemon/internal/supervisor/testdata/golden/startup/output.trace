@@ -1,0 +1,5 @@
+# B's first press is mapped; the idle pad maps nothing.
++LCtrl@100 +Z@100
+-Z@120 -LCtrl@120
++Space@500
+-Space@600

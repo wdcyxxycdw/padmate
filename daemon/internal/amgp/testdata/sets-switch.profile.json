@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "name": "sets-switch",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "Z"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "Edit mode",
+          "op": "switch"
+        }
+      },
+      "east": {
+        "release": {
+          "type": "layer",
+          "layer": "set3",
+          "op": "switch"
+        }
+      },
+      "west": {
+        "release": {
+          "type": "layer",
+          "layer": "set4",
+          "op": "switch"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "B"
+        }
+      }
+    },
+    "Edit mode": {
+      "south": {
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "F2"
+        }
+      }
+    },
+    "set3": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F3"
+        }
+      },
+      "east": {
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      }
+    },
+    "set4": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F4"
+        }
+      }
+    },
+    "set5": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F5"
+        }
+      }
+    },
+    "set7": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F6"
+        }
+      }
+    },
+    "my layer": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F7"
+        }
+      }
+    }
+  }
+}

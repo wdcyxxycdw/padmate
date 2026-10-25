@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gamecontroller configversion="19" appversion="3.6.1">
+    <stickAxisAssociation index="1" xAxis="1" yAxis="2"/>
+    <stickAxisAssociation index="2" xAxis="3" yAxis="4"/>
+    <vdpadButtonAssociations index="1">
+        <vdpadButtonAssociation axis="0" button="12" direction="1"/>
+        <vdpadButtonAssociation axis="0" button="13" direction="4"/>
+        <vdpadButtonAssociation axis="0" button="14" direction="8"/>
+        <vdpadButtonAssociation axis="0" button="15" direction="2"/>
+    </vdpadButtonAssociations>
+    <calibration device="030000005e040000ff020000000072001118767">
+        <stick index="1" offsetx="0.1" gainx="1.1" offsety="0" gainy="1"/>
+    </calibration>
+    <sets>
+        <set index="1">
+            <button index="1">
+                <slots>
+                    <slot>
+                        <path>C:\Program Files\Tool\tool.exe</path>
+                        <arguments>--fast</arguments>
+                        <mode>execute</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="2">
+                <slots>
+                    <slot>
+                        <profile>other.amgp</profile>
+                        <mode>loadprofile</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="3">
+                <slots>
+                    <slot>
+                        <code>1</code>
+                        <mode>mousemovement</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="4">
+                <slots>
+                    <slot>
+                        <code>0x41</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                    <slot>
+                        <code>50</code>
+                        <mode>distance</mode>
+                    </slot>
+                    <slot>
+                        <code>0x42</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                    <slot>
+                        <code>100</code>
+                        <mode>distance</mode>
+                    </slot>
+                    <slot>
+                        <code>0x43</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="10">
+                <slots>
+                    <slot>
+                        <code>0x58</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                    <slot>
+                        <path>x.exe</path>
+                        <mode>execute</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="11">
+                <slots>
+                    <slot>
+                        <code>0x0</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <stick index="1">
+                <squareStick>50</squareStick>
+                <stickbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>0x57</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+            </stick>
+            <sensor type="1">
+                <sensorbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>0x41</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </sensorbutton>
+            </sensor>
+            <axis index="3">
+                <axisbutton index="2">
+                    <slots>
+                        <slot>
+                            <code>0x41</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </axisbutton>
+            </axis>
+        </set>
+    </sets>
+</gamecontroller>

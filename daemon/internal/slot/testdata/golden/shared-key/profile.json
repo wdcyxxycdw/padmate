@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "shared-key",
+  "layers": {
+    "base": {
+      "rightshoulder": {"press": {"type": "keys", "keys": "Shift", "mode": "hold"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "LShift", "mode": "hold"}}
+    }
+  }
+}

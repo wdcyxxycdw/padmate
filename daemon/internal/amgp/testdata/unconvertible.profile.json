@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "name": "unconvertible",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "X"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      }
+    }
+  }
+}

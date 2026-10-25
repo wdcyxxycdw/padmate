@@ -1,0 +1,20 @@
+# Macros (SCR-50): a tap runs 复制全部.ts, which taps Ctrl+A and, 50 ms
+# later, Ctrl+C; east holds Shift for 300 ms, and its second press while
+# the run goes on is ignored; leftstick maps as without a script while Shift is
+# held; north's hold runs 长按.js once; west's macro does not exist, which
+# the replay reports at its end.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"pad","type":"standard","guid":"0500a1b25e040000130b000009057200","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":150000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":520000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":600000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":620000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":650000000,"kind":"down","device":1,"control":"leftstick"}
+{"timeNs":700000000,"kind":"up","device":1,"control":"leftstick"}
+{"timeNs":1000000000,"kind":"down","device":1,"control":"north"}
+{"timeNs":1800000000,"kind":"up","device":1,"control":"north"}
+{"timeNs":2000000000,"kind":"down","device":1,"control":"west"}
+{"timeNs":2020000000,"kind":"up","device":1,"control":"west"}
+{"timeNs":2100000000,"kind":"down","device":1,"control":"west"}
+{"timeNs":2120000000,"kind":"up","device":1,"control":"west"}

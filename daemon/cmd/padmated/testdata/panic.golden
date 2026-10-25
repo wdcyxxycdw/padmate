@@ -1,0 +1,101 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/panic.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/panic.jsonl, 28 events of device 1 "panic pad"
+
+      time  input               reason    action       label   binding                     owner
+     0.000  device 1 added
+   100.000  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/1
+   100.000    send +Space
+   500.000  back down           function
+   600.000  start down          function
+  2000.000  lt down (20000)     dispatch  hold Alt     "吸管"  /layers/base/lt             decl/2
+  2000.000    send +LAlt
+  2600.000  mapping paused: release all
+  2600.000  east                cancel    hold Space   "抓手"  /layers/base/east
+  2600.000  lt                  cancel    hold Alt     "吸管"  /layers/base/lt
+  2600.000    feedback slot=0 mode=1 paused pulse x1 210ms gap=100 color=#FFAA00
+  2600.000    send -Space +vk:0xE8 -vk:0xE8 -LAlt
+  3000.000  back up             function
+  3000.000  start up            function
+  3100.000  lt up (0)           canceled               "吸管"  /layers/base/lt
+  3200.000  east up             canceled               "抓手"  /layers/base/east
+  3500.000  south down          paused                 "撤销"  /layers/base/south
+  3700.000  south up            canceled               "撤销"  /layers/base/south
+  4000.000  back down           function
+  4100.000  start down          function
+  5000.000  east down           paused                 "抓手"  /layers/base/east
+  6100.000  mapping resumed
+  6100.000    feedback slot=0 mode=1 pulse x1 210ms gap=100
+  6500.000  back up             function
+  6500.000  start up            function
+  7000.000  east up             canceled               "抓手"  /layers/base/east
+  7500.000  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/5
+  7500.000    send +Space
+  7800.000  east up             release   hold Space   "抓手"  /layers/base/east           decl/5
+  7800.000    send -Space
+  8000.000  south down          dispatch  tap Ctrl+Z   "撤销"  /layers/base/south          decl/6
+  8000.000    send +LCtrl +Z
+  8020.000    send -Z -LCtrl
+  8100.000  south up            end                    "撤销"  /layers/base/south
+  9000.000  back down           function
+  9100.000  start down          function
+ 11000.000  start up            function
+ 11100.000  back up             function
+ 12000.000  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/7
+ 12000.000    send +Space
+ 12500.000  back down           function
+ 12600.000  start down          function
+ 14600.000  mapping paused: release all
+ 14600.000  east                cancel    hold Space   "抓手"  /layers/base/east
+ 14600.000    feedback slot=0 mode=1 paused pulse x1 210ms gap=100 color=#FFAA00
+ 14600.000    send -Space
+ 14600.000  exit: release all
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/panic.jsonl --dry-run --decisions
+{"t":100,"control":"east","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+Space"]}
+{"t":500,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":600,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":2000,"control":"lt","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/2","reason":"dispatch"}
+{"t":2000,"send":["+LAlt"]}
+{"t":2600,"control":"east","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":2600,"control":"lt","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","reason":"cancel"}
+{"t":2600,"send":["-Space","+vk:0xE8","-vk:0xE8","-LAlt"]}
+{"t":3000,"control":"back","edge":"up","cycle":0,"reason":"function"}
+{"t":3000,"control":"start","edge":"up","cycle":0,"reason":"function"}
+{"t":3100,"control":"lt","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","reason":"canceled"}
+{"t":3200,"control":"east","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","reason":"canceled"}
+{"t":3500,"control":"south","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"paused"}
+{"t":3700,"control":"south","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"canceled"}
+{"t":4000,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":4100,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":5000,"control":"east","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","reason":"paused"}
+{"t":6500,"control":"back","edge":"up","cycle":0,"reason":"function"}
+{"t":6500,"control":"start","edge":"up","cycle":0,"reason":"function"}
+{"t":7000,"control":"east","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","reason":"canceled"}
+{"t":7500,"control":"east","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/5","reason":"dispatch"}
+{"t":7500,"send":["+Space"]}
+{"t":7800,"control":"east","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/5","reason":"release"}
+{"t":7800,"send":["-Space"]}
+{"t":8000,"control":"south","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/6","reason":"dispatch"}
+{"t":8000,"send":["+LCtrl","+Z"]}
+{"t":8020,"send":["-Z","-LCtrl"]}
+{"t":8100,"control":"south","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":9000,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":9100,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":11000,"control":"start","edge":"up","cycle":0,"reason":"function"}
+{"t":11100,"control":"back","edge":"up","cycle":0,"reason":"function"}
+{"t":12000,"control":"east","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/7","reason":"dispatch"}
+{"t":12000,"send":["+Space"]}
+{"t":12500,"control":"back","edge":"down","cycle":0,"reason":"function"}
+{"t":12600,"control":"start","edge":"down","cycle":0,"reason":"function"}
+{"t":14600,"control":"east","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":14600,"send":["-Space"]}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/panic.jsonl, 28 events of device 1 "panic pad"
+exit 0
+

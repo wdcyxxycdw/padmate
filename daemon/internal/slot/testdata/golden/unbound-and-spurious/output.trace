@@ -1,0 +1,3 @@
+# Only the first press of south makes output.
++LCtrl@40 +Z@40
+-Z@60 -LCtrl@60

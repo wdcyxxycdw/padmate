@@ -1,0 +1,6 @@
+# The collapsed lock still lets go of Space at 500; east maps again only
+# when pressed after it.
++Space@100
+-Space@500
++Space@900
+-Space@1100

@@ -1,0 +1,36 @@
+$ padmatectl validate ../../testdata/profiles/ok.json ../../testdata/profiles/syntax-error.json ../../testdata/profiles/schema-error.json ../../testdata/profiles/semantic-error.json
+../../testdata/profiles/ok.json: ok
+  /layers/base/south "撤销": press +0 ms
+  /layers/base/east "抓手": press +0 ms
+  /layers/base/west "橡皮": press +0 ms
+  /layers/base/lb: press +0 ms
+  /layers/base/lt "吸管": press +0 ms
+  /layers/base/rt "重做": press +0 ms
+../../testdata/profiles/syntax-error.json:9:70: error: trailing comma before "}" (strict JSON)
+../../testdata/profiles/schema-error.json:8:82: error: "toggle" is not a valid mode; use "hold" or "tap" (/layers/base/east/press/mode)
+../../testdata/profiles/semantic-error.json:9:69: error: unknown key "Shfit"; did you mean Shift? (/layers/base/rt/press/keys)
+exit 1
+$ padmatectl validate --json ../../testdata/profiles/ok.json ../../testdata/profiles/syntax-error.json ../../testdata/profiles/schema-error.json ../../testdata/profiles/semantic-error.json
+{"file":"../../testdata/profiles/ok.json","ok":true,"diagnostics":[],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/east","control":"east","label":"抓手","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/west","control":"west","label":"橡皮","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/lb","control":"leftshoulder","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/lt","control":"lt","label":"吸管","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/rt","control":"rt","label":"重做","gesture":"press","addedLatencyMs":0}]}
+{"file":"../../testdata/profiles/syntax-error.json","ok":false,"diagnostics":[{"severity":"error","pointer":"","offset":372,"line":9,"col":70,"message":"trailing comma before \"}\" (strict JSON)"}]}
+{"file":"../../testdata/profiles/schema-error.json","ok":false,"diagnostics":[{"severity":"error","pointer":"/layers/base/east/press/mode","offset":305,"line":8,"col":82,"message":"\"toggle\" is not a valid mode; use \"hold\" or \"tap\""}]}
+{"file":"../../testdata/profiles/semantic-error.json","ok":false,"diagnostics":[{"severity":"error","pointer":"/layers/base/rt/press/keys","offset":371,"line":9,"col":69,"message":"unknown key \"Shfit\"; did you mean Shift?"}]}
+exit 1
+$ padmatectl validate testdata/label-only.json
+testdata/label-only.json:7:15: warning: binding has no action (/layers/base/east)
+  /layers/base/south "撤销": press +0 ms
+  /layers/base/east "later": no action
+exit 0
+$ padmatectl validate --json testdata/label-only.json
+{"file":"testdata/label-only.json","ok":true,"diagnostics":[{"severity":"warning","pointer":"/layers/base/east","offset":186,"line":7,"col":15,"message":"binding has no action"}],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/east","control":"east","label":"later","addedLatencyMs":0}]}
+exit 0
+$ padmatectl validate testdata/function-keys.json
+testdata/function-keys.json:7:7: warning: back is a function key (ADR-0069): this binding has no effect (/layers/base/back)
+  /layers/base/south "撤销": press +0 ms
+  /functionKeys/back/south "重做": press +0 ms
+  /functionKeys/back/west: tap +250 ms
+  /functionKeys/start/ls.cw: press +0 ms
+exit 0
+$ padmatectl validate --json testdata/function-keys.json
+{"file":"testdata/function-keys.json","ok":true,"diagnostics":[{"severity":"warning","pointer":"/layers/base/back","offset":181,"line":7,"col":7,"message":"back is a function key (ADR-0069): this binding has no effect"}],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/south","control":"south","label":"重做","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/west","control":"west","gesture":"tap","addedLatencyMs":250},{"id":"/functionKeys/start/ls.cw","control":"ls.cw","gesture":"press","addedLatencyMs":0}]}
+exit 0

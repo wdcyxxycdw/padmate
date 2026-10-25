@@ -1,0 +1,6 @@
+# The lock lets go of Space at 300; the pause at 2600 has nothing left
+# to release, and nothing maps until east is pressed after the resume.
++Space@100
+-Space@300
++Space@6700
+-Space@6900

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "buffered-layer-release",
+  "layers": {
+    "base": {
+      "west": {"tap": {"type": "keys", "keys": "F13"}, "hold": {"type": "keys", "keys": "E"}},
+      "north": {"tap": {"type": "keys", "keys": "B"}, "hold": {"type": "keys", "keys": "F15"}},
+      "leftshoulder": {"press": {"type": "layer", "layer": "nav", "op": "hold"}},
+      "south": {"press": {"type": "keys", "keys": "A", "mode": "tap"}}
+    },
+    "nav": {
+      "south": {"press": {"type": "keys", "keys": "C", "mode": "tap"}}
+    }
+  }
+}

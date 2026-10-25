@@ -1,0 +1,7 @@
+# LCtrl goes down with west's hold at 28 and up only after south's press,
+# replayed at 40, has tapped Z: the app gets Ctrl+Z, as the edges came.
+# leftshoulder's release does not go ahead of south's earlier press.
++E@28 +LCtrl@28
++F15@40 +Z@40
+-LCtrl@48
+-F15@60 -Z@60 -E@60

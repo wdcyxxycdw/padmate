@@ -1,0 +1,10 @@
+# Nothing is held across either swap: R's Space ends at @500, the
+# pair's Space is its own, and R maps south again after the pair.
++LCtrl@100 +Z@100
+-Z@120 -LCtrl@120
++Space@200
+-Space@500
++Space@600
+-Space@700
++LCtrl@900 +Z@900
+-Z@920 -LCtrl@920

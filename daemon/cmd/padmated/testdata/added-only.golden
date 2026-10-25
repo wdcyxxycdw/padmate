@@ -1,0 +1,21 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/added-only.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/added-only.jsonl, 2 events of device 7 "first"
+
+      time  input               reason    action       label   binding                     owner
+     0.000  device 7 added
+     7.000  device 7 removed: release all
+     7.000  exit: release all
+--- stderr
+padmated: replaying device 7 only, the first, as none has button or axis events; skipped 1 event of device 8 "second"
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/added-only.jsonl --dry-run --decisions
+--- stderr
+padmated: replaying device 7 only, the first, as none has button or axis events; skipped 1 event of device 8 "second"
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/added-only.jsonl, 2 events of device 7 "first"
+exit 0
+

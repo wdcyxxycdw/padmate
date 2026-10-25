@@ -1,0 +1,25 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/far-time.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/far-time.jsonl, 3 events of device 1
+
+          time  input               reason    action       label   binding                     owner
+         0.000  device 1 added
+1000000000.000  west down           dispatch  tap E        "橡皮"  /layers/base/west           decl/1
+1000000000.000    send +E
+1000000020.000    send -E
+1000000050.000  west up             end                    "橡皮"  /layers/base/west
+1000000050.000  exit: release all
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/far-time.jsonl --dry-run --decisions
+{"t":1000000000,"control":"west","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","action":"tap E","owner":"decl/1","reason":"dispatch"}
+{"t":1000000000,"send":["+E"]}
+{"t":1000000020,"send":["-E"]}
+{"t":1000000050,"control":"west","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/west","label":"橡皮","reason":"end"}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/far-time.jsonl, 3 events of device 1
+exit 0
+

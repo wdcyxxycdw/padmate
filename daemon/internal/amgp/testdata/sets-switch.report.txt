@@ -1,0 +1,12 @@
+信息  set 4：set 的名称“base”已被别的层用了或是保留名，层叫“set4”
+信息  set 5：set 的名称“Edit mode”已被别的层用了或是保留名，层叫“set5”
+信息  set 1 / north：换 set 的目标是它自己所在的 set，忽略
+信息  set 1 / rightshoulder：换 set 的目标是它自己所在的 set，忽略
+信息  set 2 / north：换 set 的目标是它自己所在的 set，忽略
+信息  set 2：导入为层“Edit mode”
+信息  set 3：导入为层“set3”
+信息  set 4：导入为层“set4”
+信息  set 5：导入为层“set5”
+信息  set 6：导入为层“set7”
+信息  set 7：导入为层“my layer”
+信息  这个配置除了 base 还有 6 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留

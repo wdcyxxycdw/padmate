@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "edge \"cases\"",
+  "layers": {
+    "base": {
+      "a": {"label": "save \"as\" 💾", "press": {"type": "keys", "keys": "Ctrl+Shift+S", "mode": "hold"}},
+      "b": {"label": "ｶﾀｶﾅ", "press": {"type": "keys", "keys": "sc:0x2C", "mode": "tap"}},
+      "rt": {"press": {"type": "keys", "keys": "Pause"}},
+      "leftstick": {"press": {"type": "keys", "keys": "Num1", "mode": "hold"}},
+      "rightstick": {"label": "未绑定"}
+    }
+  }
+}

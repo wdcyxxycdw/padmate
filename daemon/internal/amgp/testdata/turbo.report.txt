@@ -1,0 +1,4 @@
+近似  set 1 / east：连点间隔 30 毫秒，padmate 同一个键最快每 40 毫秒一次（25 次/秒）
+近似  set 1 / leftstick：序列里的键是点按，不是按住到松开
+近似  set 1 / leftshoulder：连点方式“gradient”（速度随推动变化）按普通连点导入
+丢弃  set 1 / rightshoulder：“切换”（再按一次才松开）只对按住的键有意义，这个按键没有按住的键

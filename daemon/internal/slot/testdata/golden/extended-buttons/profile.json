@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "name": "extended-buttons",
+  "layers": {
+    "base": {
+      "paddle1": {"label": "P1", "press": {"type": "keys", "keys": "F13", "mode": "tap"}},
+      "paddle2": {"label": "P2", "press": {"type": "keys", "keys": "F14", "mode": "hold"}},
+      "paddle3": {"press": {"type": "keys", "keys": "F15", "mode": "tap"}},
+      "paddle4": {"press": {"type": "keys", "keys": "F16", "mode": "hold"}},
+      "misc1": {"press": {"type": "keys", "keys": "F17", "mode": "tap"}},
+      "misc2": {"press": {"type": "keys", "keys": "F18", "mode": "hold"}},
+      "misc3": {"press": {"type": "keys", "keys": "F19", "mode": "tap"}},
+      "misc4": {"press": {"type": "keys", "keys": "F20", "mode": "hold"}},
+      "misc5": {"press": {"type": "keys", "keys": "F21", "mode": "tap"}},
+      "misc6": {"press": {"type": "keys", "keys": "F22", "mode": "hold"}},
+      "touchpad": {"label": "触摸板", "press": {"type": "keys", "keys": "F23", "mode": "tap"}},
+      "guide": {"press": {"type": "keys", "keys": "F24", "mode": "hold"}}
+    }
+  }
+}

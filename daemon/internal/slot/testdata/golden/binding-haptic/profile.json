@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "binding-haptic",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "haptic": "tick", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"label": "抓手", "haptic": "confirm", "press": {"type": "keys", "keys": "Space", "mode": "hold", "repeat": {"delayMs": 100, "rateHz": 10}}},
+      "west": {
+        "haptic": "pulse2",
+        "tap": {"type": "keys", "keys": "F13"},
+        "doubleTap": {"type": "keys", "keys": "F14"},
+        "hold": {"type": "keys", "keys": "E"}
+      },
+      "north": {"label": "确认", "haptic": "error", "release": {"type": "keys", "keys": "F15"}},
+      "rb": {"label": "无触感", "press": {"type": "keys", "keys": "F16", "mode": "tap"}},
+      "dpad.up": {"block": true, "haptic": "tick"}
+    }
+  }
+}

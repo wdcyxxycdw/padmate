@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "trigger-threshold",
+  "layers": {
+    "base": {
+      "lt": {"label": "吸管", "press": {"type": "keys", "keys": "Alt", "mode": "hold"}}
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# a taps Enter; lb holds LCtrl, hold being the default mode.
++Enter@0
+-Enter@20
++LCtrl@200
+-LCtrl@300

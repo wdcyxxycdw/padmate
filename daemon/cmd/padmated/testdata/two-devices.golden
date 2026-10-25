@@ -1,0 +1,37 @@
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/two-devices.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/two-devices.jsonl, 5 events of device 3 "left pad"
+
+      time  input               reason    action       label   binding                     owner
+     0.000  device 3 added
+   100.000  north down          dispatch  tap B        "画笔"  /layers/base/north          decl/1
+   100.000    send +B
+   120.000    send -B
+   150.000  north up            end                    "画笔"  /layers/base/north
+   200.000  east down           dispatch  hold Space   "抓手"  /layers/base/east           decl/2
+   200.000    send +Space
+   300.000  device 3 removed: release all
+   300.000  east                cancel    hold Space   "抓手"  /layers/base/east
+   300.000    send -Space
+   300.000  exit: release all
+--- stderr
+padmated: replaying device 3 only, the first with button or axis events; skipped 2 events of device 9 "idle joystick", 3 events of device 5 "right pad"
+exit 0
+
+$ padmated --profile ../../../examples/profiles/basic.json --fake-input testdata/two-devices.jsonl --dry-run --decisions
+{"t":100,"control":"north","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","action":"tap B","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+B"]}
+{"t":120,"send":["-B"]}
+{"t":150,"control":"north","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/north","label":"画笔","reason":"end"}
+{"t":200,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/2","reason":"dispatch"}
+{"t":200,"send":["+Space"]}
+{"t":300,"control":"east","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":300,"send":["-Space"]}
+--- stderr
+padmated: replaying device 3 only, the first with button or axis events; skipped 2 events of device 9 "idle joystick", 3 events of device 5 "right pad"
+padmated: dry run, nothing is injected
+profile:    ../../../examples/profiles/basic.json, "绘画", 7 bindings
+fake input: testdata/two-devices.jsonl, 5 events of device 3 "left pad"
+exit 0
+

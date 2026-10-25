@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "west": {"tap": {"type": "keys", "keys": "F13", "mode": "hold"}, "doubleTap": {"type": "keys", "keys": "F14"}},
+      "east": {"tap": {"type": "keys", "keys": "F13"}, "doubleTap": {"type": "keys", "keys": "F14", "mode": "hold"}, "tripleTap": {"type": "keys", "keys": "F15"}},
+      "north": {"press": {"type": "keys", "keys": "Shift"}, "tap": {"type": "keys", "keys": "B", "repeat": {"rateHz": 10}}},
+      "south": {"release": {"type": "keys", "keys": "F17", "mode": "hold"}},
+      "leftshoulder": {"quadTap": {"type": "keys", "keys": "F18", "mode": "hold", "repeat": {}}}
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "tap-mode",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}}
+    }
+  }
+}

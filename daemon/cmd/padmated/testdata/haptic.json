@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "haptic",
+  "layers": {
+    "base": {
+      "north": {"label": "确认", "haptic": "confirm", "press": {"type": "keys", "keys": "F13", "mode": "tap"}},
+      "east": {"label": "抓手", "haptic": "tick", "press": {"type": "keys", "keys": "Space", "mode": "hold"}},
+      "south": {"label": "无触感", "press": {"type": "keys", "keys": "F14", "mode": "tap"}},
+      "west": {"label": "长按", "haptic": "pulse2", "tap": {"type": "keys", "keys": "F15"}, "hold": {"type": "keys", "keys": "E"}}
+    }
+  }
+}

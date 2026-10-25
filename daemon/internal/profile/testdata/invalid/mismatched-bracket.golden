@@ -1,0 +1,2 @@
+8:5: error: expected "}" to close "{" at 5:13, found "]"
+	> ]

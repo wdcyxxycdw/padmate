@@ -1,0 +1,34 @@
+{"t":104,"control":"rs.cw","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/1","reason":"dispatch"}
+{"t":104,"control":"rs.cw","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":204,"control":"rs.cw","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/2","reason":"dispatch"}
+{"t":204,"control":"rs.cw","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":244,"control":"rs.cw","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/3","reason":"dispatch"}
+{"t":244,"control":"rs.cw","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":354,"control":"rs.ccw","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/rs.ccw","label":"笔刷变小","action":"tap [","owner":"decl/4","reason":"dispatch"}
+{"t":354,"control":"rs.ccw","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/rs.ccw","label":"笔刷变小","reason":"end"}
+{"t":404,"control":"rs.ccw","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/rs.ccw","label":"笔刷变小","action":"tap [","owner":"decl/5","reason":"dispatch"}
+{"t":404,"control":"rs.ccw","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/rs.ccw","label":"笔刷变小","reason":"end"}
+{"t":1012,"control":"rs.cw","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/6","reason":"dispatch"}
+{"t":1012,"control":"rs.cw","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1052,"control":"rs.cw","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/7","reason":"dispatch"}
+{"t":1052,"control":"rs.cw","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1092,"control":"rs.cw","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/8","reason":"dispatch"}
+{"t":1092,"control":"rs.cw","edge":"up","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1132,"control":"rs.cw","edge":"down","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/9","reason":"dispatch"}
+{"t":1132,"control":"rs.cw","edge":"up","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1172,"control":"rs.cw","edge":"down","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/10","reason":"dispatch"}
+{"t":1172,"control":"rs.cw","edge":"up","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1212,"control":"rs.cw","edge":"down","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/11","reason":"dispatch"}
+{"t":1212,"control":"rs.cw","edge":"up","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1252,"control":"rs.cw","edge":"down","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/12","reason":"dispatch"}
+{"t":1252,"control":"rs.cw","edge":"up","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1292,"control":"rs.cw","edge":"down","cycle":13,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/13","reason":"dispatch"}
+{"t":1292,"control":"rs.cw","edge":"up","cycle":13,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1332,"control":"rs.cw","edge":"down","cycle":14,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/14","reason":"dispatch"}
+{"t":1332,"control":"rs.cw","edge":"up","cycle":14,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1372,"control":"rs.cw","edge":"down","cycle":15,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/15","reason":"dispatch"}
+{"t":1372,"control":"rs.cw","edge":"up","cycle":15,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1412,"control":"rs.cw","edge":"down","cycle":16,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/16","reason":"dispatch"}
+{"t":1412,"control":"rs.cw","edge":"up","cycle":16,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}
+{"t":1452,"control":"rs.cw","edge":"down","cycle":17,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","action":"tap ]","owner":"decl/17","reason":"dispatch"}
+{"t":1452,"control":"rs.cw","edge":"up","cycle":17,"gesture":"press","level":"base","binding":"/layers/base/rs.cw","label":"笔刷变大","reason":"end"}

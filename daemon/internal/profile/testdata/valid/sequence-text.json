@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "name": "序列与文字",
+  "layers": {
+    "base": {
+      "south": {"label": "全选后输入", "press": {"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"wait": 100}, {"text": "你好\n世界"}]}},
+      "east": {"label": "签名", "press": {"type": "text", "text": "Best regards,\tKim 😀"}},
+      "north": {"tap": {"type": "sequence", "steps": [{"wait": 1}, {"keys": "F13"}, {"keys": "VolumeMute"}, {"wait": 10000}]}, "hold": {"type": "text", "text": "x"}},
+      "west": {
+        "release": {"type": "text", "text": "r"},
+        "doubleTap": {"type": "sequence", "steps": [{"text": "d"}]},
+        "tripleTap": {"type": "sequence", "steps": [{"keys": "Shift+Tab"}, {"keys": "Tab"}]},
+        "quadTap": {"type": "text", "text": "q"}
+      },
+      "lb": {"press": {"type": "sequence", "steps": [{"keys": "Z"}]}}
+    }
+  },
+  "common": {
+    "rb": {"press": {"type": "text", "text": "common"}}
+  }
+}

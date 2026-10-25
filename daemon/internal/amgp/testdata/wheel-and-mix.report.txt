@@ -1,0 +1,3 @@
+近似  set 1 / east：滚轮每秒 60 格，padmate 一个键最快每秒 25 次，改成 25
+丢弃  set 1 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+丢弃  set 1 / rightshoulder / slot 2：同时按住的键里只能有一个不是修饰键：保留了 MouseMiddle，丢弃了 MouseRight

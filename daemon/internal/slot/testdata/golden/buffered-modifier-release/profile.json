@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "buffered-modifier-release",
+  "layers": {
+    "base": {
+      "west": {"tap": {"type": "keys", "keys": "F13"}, "hold": {"type": "keys", "keys": "E"}},
+      "north": {"tap": {"type": "keys", "keys": "B"}, "hold": {"type": "keys", "keys": "F15"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "south": {"press": {"type": "keys", "keys": "Z", "mode": "tap"}}
+    }
+  }
+}

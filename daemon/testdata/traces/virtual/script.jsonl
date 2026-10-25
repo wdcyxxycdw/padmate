@@ -1,0 +1,13 @@
+# padmatectl record ec750fc-dirty; SDL 3.4.16; preset default
+# hints in effect: SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 SDL_NO_SIGNAL_HANDLERS=1
+# hints unset (SDL's default): SDL_JOYSTICK_HIDAPI SDL_JOYSTICK_RAWINPUT SDL_XINPUT_ENABLED SDL_JOYSTICK_DIRECTINPUT SDL_JOYSTICK_WGI SDL_JOYSTICK_GAMEINPUT
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"padmate virtual gamepad","type":"standard","vendor":0,"product":0,"version":0,"guid":"ff0082287061646d6174652076007601","driver":"virtual","path":"","serial":"","gamepad":true,"virtual":true}}
+{"timeNs":2455600,"kind":"down","device":1,"control":"south"}
+{"timeNs":9587100,"kind":"up","device":1,"control":"south"}
+{"timeNs":15840400,"kind":"axis","device":1,"control":"leftx","value":32767}
+{"timeNs":21974700,"kind":"axis","device":1,"control":"leftx","value":0}
+{"timeNs":29360200,"kind":"axis","device":1,"control":"lefttrigger","value":32767}
+{"timeNs":35895400,"kind":"axis","device":1,"control":"lefttrigger","value":0}
+{"timeNs":42092900,"kind":"down","device":1,"control":"dpad.up"}
+{"timeNs":48503600,"kind":"up","device":1,"control":"dpad.up"}
+{"timeNs":55385200,"kind":"removed","device":1}

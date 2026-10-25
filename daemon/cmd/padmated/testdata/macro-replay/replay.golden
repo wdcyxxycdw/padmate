@@ -1,0 +1,70 @@
+$ padmated --profile testdata/macro-replay/profile.json --fake-input testdata/macro-replay/trace.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/macro-replay/profile.json, "macros", 5 bindings
+fake input: testdata/macro-replay/trace.jsonl, 15 events of device 1 "pad"
+
+      time  input               reason    action               label       binding                 owner
+     0.000  device 1 added
+   100.000  south down          unbound                        "复制全部"  /layers/base/south
+   150.000  south down          dispatch  macro 复制全部.ts    "复制全部"  /layers/base/south      decl/1
+   150.000    send +LCtrl +A
+   170.000    send -A -LCtrl
+   220.000    send +LCtrl +C
+   240.000    send -C -LCtrl
+   500.000  east down           dispatch  macro 按住 Shift.ts              /layers/base/east       decl/2
+   500.000    send +LShift
+   520.000  east up             end                                        /layers/base/east
+   600.000  east down           dispatch  macro 按住 Shift.ts              /layers/base/east       decl/3
+   620.000  east up             end                                        /layers/base/east
+   650.000  leftstick down      dispatch  hold F13                         /layers/base/leftstick  decl/4
+   650.000    send +F13
+   700.000  leftstick up        release   hold F13                         /layers/base/leftstick  decl/4
+   700.000    send -F13
+   800.000    send -LShift
+  1000.000  north down          unbound                                    /layers/base/north
+  1000.000  north down          dispatch  macro 长按.js                    /layers/base/north      decl/5
+  1000.000    send +F21
+  1020.000    send -F21
+  1800.000  north up            end                                        /layers/base/north
+  2000.000  west down           dispatch  macro 不存在.ts                  /layers/base/west       decl/6
+  2020.000  west up             end                                        /layers/base/west
+  2100.000  west down           dispatch  macro 不存在.ts                  /layers/base/west       decl/7
+  2120.000  west up             end                                        /layers/base/west
+  2120.000  exit: release all
+--- stderr
+padmated: 不存在.ts: error: macro file not found
+exit 1
+
+$ padmated --profile testdata/macro-replay/profile.json --fake-input testdata/macro-replay/trace.jsonl --dry-run --decisions
+{"t":100,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","label":"复制全部","reason":"unbound"}
+{"t":150,"control":"south","edge":"down","cycle":1,"gesture":"tap","level":"base","binding":"/layers/base/south","label":"复制全部","action":"macro 复制全部.ts","owner":"decl/1","reason":"dispatch"}
+{"t":150,"send":["+LCtrl","+A"]}
+{"t":170,"send":["-A","-LCtrl"]}
+{"t":220,"send":["+LCtrl","+C"]}
+{"t":240,"send":["-C","-LCtrl"]}
+{"t":500,"control":"east","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","action":"macro 按住 Shift.ts","owner":"decl/2","reason":"dispatch"}
+{"t":500,"send":["+LShift"]}
+{"t":520,"control":"east","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/east","reason":"end"}
+{"t":600,"control":"east","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/east","action":"macro 按住 Shift.ts","owner":"decl/3","reason":"dispatch"}
+{"t":620,"control":"east","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/east","reason":"end"}
+{"t":650,"control":"leftstick","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/leftstick","action":"hold F13","owner":"decl/4","reason":"dispatch"}
+{"t":650,"send":["+F13"]}
+{"t":700,"control":"leftstick","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/leftstick","action":"hold F13","owner":"decl/4","reason":"release"}
+{"t":700,"send":["-F13"]}
+{"t":800,"send":["-LShift"]}
+{"t":1000,"control":"north","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/north","reason":"unbound"}
+{"t":1000,"control":"north","edge":"down","cycle":5,"gesture":"hold","level":"base","binding":"/layers/base/north","action":"macro 长按.js","owner":"decl/5","reason":"dispatch"}
+{"t":1000,"send":["+F21"]}
+{"t":1020,"send":["-F21"]}
+{"t":1800,"control":"north","edge":"up","cycle":5,"gesture":"hold","level":"base","binding":"/layers/base/north","reason":"end"}
+{"t":2000,"control":"west","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/west","action":"macro 不存在.ts","owner":"decl/6","reason":"dispatch"}
+{"t":2020,"control":"west","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"end"}
+{"t":2100,"control":"west","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/west","action":"macro 不存在.ts","owner":"decl/7","reason":"dispatch"}
+{"t":2120,"control":"west","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/west","reason":"end"}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/macro-replay/profile.json, "macros", 5 bindings
+fake input: testdata/macro-replay/trace.jsonl, 15 events of device 1 "pad"
+padmated: 不存在.ts: error: macro file not found
+exit 1
+

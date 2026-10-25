@@ -1,0 +1,12 @@
+# A sequence and a text action (MAP-22, OUT-21, ADR-0070) in the dry run: the
+# steps show as the sends and typed text they cause, a wait only as the time
+# between them. A second trigger of south runs after the first is over.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":130000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":150000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":160000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":1000000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":1020000000,"kind":"up","device":3,"control":"east"}
+{"timeNs":2000000000,"kind":"down","device":3,"control":"west"}
+{"timeNs":2040000000,"kind":"up","device":3,"control":"west"}

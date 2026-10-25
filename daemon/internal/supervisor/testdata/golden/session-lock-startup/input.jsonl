@@ -1,0 +1,9 @@
+# Locked at startup (DMN-09): the session is locked when Run starts, so
+# the slots start held. Pad A connects at 500 and presses east at 600,
+# which maps nothing. After the unlock at 1000, east does nothing until it
+# is pressed again at 1400.
+{"timeNs":500000000,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":600000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1200000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":1400000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1600000000,"kind":"up","device":1,"control":"east"}

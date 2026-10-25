@@ -1,0 +1,2 @@
+6:41: error: missing property "type"; add "type": "keys" (/layers/base/south/press)
+	> {"keys": "Ctrl+Z", "mode": "tap"}}

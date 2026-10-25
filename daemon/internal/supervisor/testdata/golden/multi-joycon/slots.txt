@@ -1,0 +1,6 @@
+# R gets slot 1 at once; L's removal frees slot 0, and R keeps slot 1.
+@0 slot 0 gen=1 <- id 1 "Nintendo Switch Joy-Con (L)" key=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 home=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 provisional
+@100 slot 0 gen=1 <- id 1 "Nintendo Switch Joy-Con (L)" key=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 home=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 confirmed
+@200 slot 1 gen=1 <- id 2 "Nintendo Switch Joy-Con (R)" key=050000007e0500000720000001006802/s:aa-bb-cc-dd-ee-02 home=050000007e0500000720000001006802/s:aa-bb-cc-dd-ee-02 provisional
+@300 slot 1 gen=1 <- id 2 "Nintendo Switch Joy-Con (R)" key=050000007e0500000720000001006802/s:aa-bb-cc-dd-ee-02 home=050000007e0500000720000001006802/s:aa-bb-cc-dd-ee-02 confirmed
+@500 slot 0 gen=1 free

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schema/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "每个按键的触感和旋钮刻度",
+  "feedback": {"strength": 28672},
+  "analog": {
+    "rs": {"mode": "knob", "knobStepDeg": 30, "knobTick": true}
+  },
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "haptic": "tick", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"label": "保存", "haptic": "confirm", "press": {"type": "keys", "keys": "Ctrl+S", "mode": "tap"}},
+      "north": {"label": "清除", "haptic": "error", "press": {"type": "keys", "keys": "Delete", "mode": "tap"}},
+      "west": {"label": "抓手（按住，只在按下时响一次）", "haptic": "pulse1", "press": {"type": "keys", "keys": "Space", "mode": "hold"}},
+      "rs.cw": {"label": "笔刷变大", "press": {"type": "keys", "keys": "]", "mode": "tap"}},
+      "rs.ccw": {"label": "笔刷变小", "press": {"type": "keys", "keys": "[", "mode": "tap"}}
+    }
+  }
+}

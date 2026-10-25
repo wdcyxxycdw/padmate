@@ -1,0 +1,10 @@
+6:48: error: a precision action slows the pointer while the control is held: use it on press or hold, not on tap (/layers/base/south/tap/op)
+	> "precision"}},
+7:51: error: a precision action slows the pointer while the control is held: use it on press or hold, not on release (/layers/base/east/release/op)
+	> "precision", "factor": 0.5}},
+8:54: error: a precision action slows the pointer while the control is held: use it on press or hold, not on doubleTap (/layers/base/north/doubleTap/op)
+	> "precision"}, "press": {"type": "mouse",…
+10:51: error: a precision action slows the pointer while the control is held: use it on press or hold, not on tripleTap (/layers/base/lb/tripleTap/op)
+	> "precision"}, "quadTap": {"type": "mouse…
+10:100: error: a precision action slows the pointer while the control is held: use it on press or hold, not on quadTap (/layers/base/lb/quadTap/op)
+	> "precision"}}

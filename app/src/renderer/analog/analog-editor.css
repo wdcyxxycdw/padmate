@@ -1,0 +1,682 @@
+/* Stick, trigger and d-pad panels inside the key drawer (UI-39). */
+.analog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.analog-section,
+.analog-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+/* Fieldsets that disable only the editing controls of a read-only profile.
+   Zero specificity, so a layout class on the same element (a section, the
+   presets) keeps its own box. */
+:where(.analog-fieldset) {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.analog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.analog-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+.analog-caption {
+  margin: 0;
+  color: var(--text-4);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.analog-spacer {
+  flex: 1;
+  min-width: 0;
+}
+.analog-mono {
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.analog-mono[data-active="true"] {
+  color: var(--accent);
+}
+
+/* Mode segments size to their text, so long labels fit a narrow drawer. */
+.segmented.analog-mode > button {
+  flex: 1 1 auto;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sensitivity: the live view and two sliders. */
+.analog-sensitivity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.analog-visual {
+  flex: none;
+  display: block;
+}
+.analog-v-ring {
+  fill: var(--field);
+  stroke: var(--border);
+}
+.analog-v-cross {
+  fill: none;
+  stroke: #1d2026;
+}
+.analog-v-tick {
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+}
+.analog-v-sector {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.analog-v-saturation {
+  fill: none;
+  stroke: #3a3f4a;
+  stroke-dasharray: 2 3;
+}
+.analog-v-outer {
+  fill: none;
+  stroke: var(--text-4);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+.analog-visual[data-ring="outer"] .analog-v-outer {
+  stroke: var(--accent);
+}
+.analog-v-deadzone {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: #3a3f4a;
+}
+.analog-v-line {
+  stroke: var(--text-4);
+  stroke-width: 1.5;
+}
+.analog-v-halo {
+  fill: rgba(76, 194, 255, 0.18);
+}
+.analog-v-dot {
+  fill: var(--text-3);
+  stroke: var(--field);
+  stroke-width: 2;
+}
+.analog-visual[data-active="true"] .analog-v-line {
+  stroke: var(--accent);
+}
+.analog-visual[data-active="true"] .analog-v-dot {
+  fill: var(--accent);
+}
+.analog-sliders {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.analog-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.analog-slider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.analog-slider-head label {
+  color: var(--text-2);
+}
+.analog-readout {
+  color: var(--text-4);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.analog-range {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.analog-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--analog-fill, 0%),
+    var(--border) var(--analog-fill, 0%)
+  );
+}
+.analog-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+/* The ring of the global :focus-visible stays; the thumb glows as well. */
+.analog-range:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Number fields: plain text next to a slider, boxed in setting rows. */
+.analog-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.analog-number {
+  width: 46px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.analog-number::-webkit-inner-spin-button,
+.analog-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.analog-number:hover {
+  border-color: var(--control-border);
+}
+.analog-number:focus {
+  border-color: var(--accent);
+  background: var(--field);
+  outline: none;
+}
+.analog-number[aria-invalid="true"] {
+  border-color: var(--red);
+}
+.analog-number:disabled,
+.analog-range:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.analog-unit {
+  color: var(--text-3);
+}
+.analog-value:not(.boxed) .analog-number {
+  padding-right: 2px;
+}
+.analog-value.boxed {
+  gap: 5px;
+}
+.analog-value.boxed .analog-number {
+  width: 64px;
+  height: 30px;
+  padding: 0 7px;
+  border-color: var(--control-border);
+  background: var(--field);
+}
+.analog-value.boxed .analog-number:hover {
+  border-color: var(--text-3);
+}
+.analog-value.boxed .analog-number:focus {
+  border-color: var(--accent);
+}
+.analog-value.boxed .analog-unit {
+  min-width: 18px;
+}
+/* A slider whose field takes four or five digits, such as px/s. */
+.analog-slider[data-wide] .analog-number {
+  width: 58px;
+}
+.analog-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Direction cells and binding rows. */
+.analog-presets {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+.analog-chip-btn {
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.analog-chip-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.analog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  container-type: inline-size;
+}
+.analog-cell,
+.analog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #181a20;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+}
+.analog-cell {
+  height: auto;
+  min-height: 40px;
+  padding: 5px 10px;
+}
+.analog-row {
+  width: 100%;
+  height: auto;
+  min-height: 40px;
+  padding: 5px 12px;
+}
+.analog-cell:hover:not(:disabled),
+.analog-row:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+.analog-cell[data-unset],
+.analog-row[data-unset] {
+  border-style: dashed;
+  border-color: #2e323b;
+  background: transparent;
+}
+.analog-cell[aria-expanded="true"],
+.analog-row[aria-expanded="true"] {
+  border-style: solid;
+  border-color: #5a606b;
+  background: var(--surface-3);
+}
+.analog-cell[data-active="true"],
+.analog-row[data-active="true"] {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.analog-cell-arrow {
+  flex: none;
+  width: 14px;
+  color: var(--text-3);
+  font-size: 14px;
+  text-align: center;
+}
+.analog-cell[data-active="true"] .analog-cell-arrow,
+.analog-cell[aria-expanded="true"] .analog-cell-arrow {
+  color: var(--accent);
+}
+.analog-pressed {
+  flex: none;
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+/* In a narrow drawer the highlight alone shows a pressed direction, so the
+   keys keep their room. */
+@container (max-width: 330px) {
+  .analog-cell .analog-pressed {
+    display: none;
+  }
+}
+.analog-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.analog-row-title {
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.analog-row[data-unset] .analog-row-title {
+  color: var(--text-2);
+}
+.analog-row-hint {
+  color: var(--text-4);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.analog-row-icon {
+  color: var(--text-3);
+}
+.analog-row-icon.add {
+  color: var(--accent);
+}
+.analog-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.analog-summary .keycaps {
+  min-width: 0;
+  row-gap: 3px;
+}
+.analog-summary .keycaps-chord {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.analog-summary-text,
+.analog-unset,
+.analog-script-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analog-summary-text {
+  color: var(--text-2);
+}
+.analog-summary-macro > .ui-icon {
+  margin-right: 4px;
+  vertical-align: -2px;
+  color: var(--violet);
+}
+.analog-summary-macro[data-missing],
+.analog-summary-macro[data-missing] > .ui-icon {
+  color: #d9ae6a;
+}
+.analog-unset {
+  color: var(--text-4);
+  font-size: 12px;
+}
+.analog-script-label {
+  color: var(--violet);
+  font-size: 12px;
+}
+.analog-more {
+  flex: none;
+  color: var(--text-4);
+  font-size: 11px;
+}
+.analog-s {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--violet-bg);
+  color: var(--violet);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+/* The expanded editor of one direction or stage. */
+/* A rule on the left ties the editor to the cell above without a box around
+   the gesture cards, which have their own frames. */
+.analog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 0 4px 12px;
+  border-left: 2px solid #4a505c;
+}
+.analog-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+.analog-card-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analog-clear {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.analog-script-note {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(180, 156, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(180, 156, 255, 0.08);
+  color: #c9bdf0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.analog-card-body {
+  min-width: 0;
+}
+
+/* 高级 and setting rows. */
+.analog-panel > .disclosure {
+  border-top: 1px solid #22252c;
+}
+.analog-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 2px 0 8px;
+}
+.analog-params-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.analog-params-row > .analog-caption:first-child {
+  flex: 1;
+}
+.analog-setting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.analog-setting.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.analog-setting-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.analog-setting-text label,
+.analog-setting-label {
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* Trigger pressure bar with the press and release points. */
+.analog-bar {
+  position: relative;
+  height: 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--field);
+}
+.analog-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  max-width: 100%;
+  border-radius: 4px;
+  background: var(--text-4);
+}
+.analog-bar[data-active="true"] .analog-bar-fill {
+  background: var(--accent);
+}
+.analog-bar-mark {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text);
+}
+.analog-bar-mark[data-kind="release"] {
+  background: var(--text-3);
+}
+.analog-bar-mark[data-kind="full"] {
+  background: var(--accent);
+}
+
+/* Confirmation dialogs. */
+.analog-dialog-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.analog-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.analog-change-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.analog-change-name {
+  min-width: 40px;
+  color: var(--text);
+}
+/* The setting a preset replaces, dimmer than the new one: a token color, not
+   opacity, which would take the text below 4.5:1. */
+.analog-change-old {
+  display: inline-flex;
+  min-width: 0;
+  color: var(--text-3);
+}
+.analog-change-old :is(.analog-summary-text, .kc) {
+  color: var(--text-3);
+}
+.analog-change-to {
+  color: var(--text-4);
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .analog-bar {
+    border-color: ButtonText;
+  }
+  .analog-bar-fill,
+  .analog-bar[data-active="true"] .analog-bar-fill {
+    background: Highlight;
+  }
+  .analog-bar-mark {
+    background: ButtonText;
+  }
+  .analog-bar-mark[data-kind="release"] {
+    background: GrayText;
+  }
+  .analog-bar-mark[data-kind="full"] {
+    background: Highlight;
+  }
+  /* The gradient is dropped: the track is one line and the thumb says where. */
+  .analog-range::-webkit-slider-runnable-track {
+    background: ButtonText;
+  }
+  .analog-range::-webkit-slider-thumb {
+    border: 1px solid ButtonText;
+    background: Highlight;
+  }
+  .analog-range:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  .analog-number:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+  .analog-cell[aria-expanded="true"],
+  .analog-row[aria-expanded="true"],
+  .analog-cell[data-active="true"],
+  .analog-row[data-active="true"] {
+    border-width: 2px;
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "name": "old-and-odd",
+  "defaultLayer": "base",
+  "controlNames": {
+    "east": "Jump"
+  },
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "Space"
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "F1"
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "F2"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      }
+    }
+  }
+}

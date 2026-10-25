@@ -1,0 +1,11 @@
+# A missed unlock (DMN-09): the session locks at 500 and is unlocked at
+# 1000, but no unlock signal comes. The mapping stays suspended, so a tap
+# of south at 1600 maps nothing, until the tick at 2000 queries the
+# session and finds it unlocked; south taps at 2400.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":1500000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":1600000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":1650000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":2400000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":2450000000,"kind":"up","device":1,"control":"south"}

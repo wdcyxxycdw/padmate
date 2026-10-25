@@ -1,0 +1,21 @@
+# west has only a double tap. Tapped once, the window of the double tap runs
+# out (multiTapMs, 220 ms) and the tap has no action: a decision, no output.
++west@0 -west@30
+# Tapped twice, it is the double tap.
++west@500 -west@530 +west@600 -west@630
+# north has a tap and a triple tap. Tapped twice, the window runs out at a
+# count of two, which has no action. Tapped once, it is the tap.
++north@1000 -north@1030 +north@1100 -north@1130
++north@1600 -north@1630
+# west is tapped once and south pressed inside the window: the press ends the
+# window.
++west@2000 -west@2030 +south@2100 -south@2130
+# east (timeOnly, hold at 400 ms) is pending when west is tapped once: west's
+# edges wait in the buffer and replay when east is released as a tap, at 3300,
+# after the window west's release opened at 3030 is over (3250). The window
+# is decided at the replay.
++east@3000 +west@3010 -west@3030 -east@3300
+# leftshoulder has a press action next to its double tap. Tapped once, the
+# press ran its action and answered the cycle: the end of the window has nothing
+# more to decide.
++leftshoulder@4000 -leftshoulder@4030

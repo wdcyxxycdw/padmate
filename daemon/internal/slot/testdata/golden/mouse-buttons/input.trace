@@ -1,0 +1,13 @@
+# A click: a tap of MouseLeft, the minimum press included.
++north@0 -north@50
+# A drag held by two bindings: the button goes down once and up with the last.
++south@200 +west@250 -south@300 -west@400
+# A click during a drag does nothing: the button is down already, and a
+# second press would be a double click.
++south@500 +north@520 -north@540 -south@700
+# Shift+RButton as a hold: Shift is down around the button.
++east@800 -east@900
+# Repeated clicks: a tap repeat clicks again every 100 ms while it is held.
++leftshoulder@1000 -leftshoulder@1320
+# The trigger is still pulled when the trace ends: the exit lets go of XButton1.
+lefttrigger=0.8@1500

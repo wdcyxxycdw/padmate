@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "\"引号\" \u7ed8\u753b \ud83c\udfa8",
+  "layers": {
+    "base": {
+      "south": {"label": "Tab\tNew\nline", "press": {"type": "keys", "keys": "Ctrl+\u005A"}},
+      "east": {"label": "\/", "press": {"type": "k\u0065ys", "keys": "\u0053pace"}}
+    }
+  }
+}

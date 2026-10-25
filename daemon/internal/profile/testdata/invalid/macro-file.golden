@@ -1,0 +1,10 @@
+4:23: error: script entry must not be in the macros folder: each file there is a macro (/script/entry)
+	> "./a/../Macros/x.ts", "api": "0.21"},
+7:50: error: invalid macro file name: the name contains '.' (/layers/base/south/tap/file)
+	> "v1.2.ts"}},
+8:51: error: invalid macro file name: the name is a Windows device name (/layers/base/east/press/file)
+	> "CON.ts"}},
+9:50: error: invalid macro file name: the name must end in a lowercase .ts or .js (/layers/base/west/hold/file)
+	> "笔刷.TS"}},
+10:52: error: invalid macro file name: the name is not in Unicode normalization form C (NFC) (/layers/base/north/press/file)
+	> "e\u0301.ts"}},

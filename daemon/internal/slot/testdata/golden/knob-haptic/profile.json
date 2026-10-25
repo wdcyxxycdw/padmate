@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "knob-haptic",
+  "analog": {"rs": {"mode": "knob", "knobTick": true}},
+  "layers": {
+    "base": {
+      "rs.cw": {"label": "笔刷变大", "press": {"type": "keys", "keys": "]", "mode": "tap"}},
+      "rs.ccw": {"label": "笔刷变小", "haptic": "confirm", "press": {"type": "keys", "keys": "[", "mode": "tap"}}
+    }
+  }
+}

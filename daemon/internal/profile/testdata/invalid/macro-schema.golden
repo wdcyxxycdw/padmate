@@ -1,0 +1,6 @@
+6:60: error: unknown property "repeat" (/layers/base/north/press/repeat)
+	> "repeat": {"rateHz": 10}}},
+7:25: error: missing property "file" (/layers/base/back/press)
+	> {"type": "macro"}},
+8:52: error: file must not be empty (/layers/base/start/press/file)
+	> ""}}

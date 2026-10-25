@@ -1,0 +1,13 @@
+# Pad A presses north, unbound, so the slot is its own. Pad B connects
+# after A, so it waits, and its presses do nothing. It holds east when A
+# leaves: the slot goes to B at once, provisionally, and the Resync
+# presses Space. B's release lets go of it.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":20000000,"kind":"down","device":1,"control":"north"}
+{"timeNs":30000000,"kind":"up","device":1,"control":"north"}
+{"timeNs":50000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":2,"control":"east"}
+{"timeNs":120000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":140000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":300000000,"kind":"removed","device":1}
+{"timeNs":500000000,"kind":"up","device":2,"control":"east"}

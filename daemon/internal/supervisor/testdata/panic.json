@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "panic",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "keys", "keys": "Space", "mode": "hold"}}
+    }
+  }
+}

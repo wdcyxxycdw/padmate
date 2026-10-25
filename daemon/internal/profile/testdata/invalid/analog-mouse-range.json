@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "鼠标范围",
+  "analog": {
+    "ls": {"mode": "mouse", "mouseSpeed": 10, "mouseSmoothingMs": 900},
+    "rs": {"mode": "mouse", "mouseSpeed": 20000, "mouseSmoothingMs": -1}
+  },
+  "layers": {"base": {}}
+}

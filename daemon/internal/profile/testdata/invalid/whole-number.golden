@@ -1,0 +1,8 @@
+4:25: error: write a whole number without a decimal point or exponent (/timing/holdMs)
+	> 1e2, "tapGapMs": 30 },
+10:53: error: write a whole number without a decimal point or exponent (/layers/base/south/press/steps/1/wait)
+	> 2.0 }]
+12:35: error: number out of range; use a smaller whole number (/layers/base/south/timing/multiTapMs)
+	> 99999999999999999999 }
+15:71: error: write a whole number without a decimal point or exponent (/layers/base/east/press/repeat/rateHz)
+	> 10.0 } }

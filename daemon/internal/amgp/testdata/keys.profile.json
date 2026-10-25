@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "name": "keys",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "Shift+1"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+Shift+/"
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "Shift+Tab"
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "RCtrl+RShift+RAlt+RWin"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LWin+X"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "Num0"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "MediaPlayPause"
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "VolumeUp"
+        }
+      },
+      "paddle2": {
+        "press": {
+          "type": "keys",
+          "keys": "F24"
+        }
+      },
+      "paddle3": {
+        "press": {
+          "type": "keys",
+          "keys": "LAlt+,"
+        }
+      },
+      "paddle4": {
+        "press": {
+          "type": "keys",
+          "keys": "Enter"
+        }
+      },
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Num8"
+        }
+      }
+    }
+  }
+}

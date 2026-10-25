@@ -1,0 +1,30 @@
+{"t":0,"control":"paddle1","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/paddle1","label":"P1","action":"tap F13","owner":"decl/1","reason":"dispatch"}
+{"t":50,"control":"paddle1","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/paddle1","label":"P1","reason":"end"}
+{"t":100,"control":"paddle2","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/paddle2","label":"P2","action":"hold F14","owner":"decl/2","reason":"dispatch"}
+{"t":150,"control":"paddle2","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/paddle2","label":"P2","action":"hold F14","owner":"decl/2","reason":"release"}
+{"t":200,"control":"paddle3","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/paddle3","action":"tap F15","owner":"decl/3","reason":"dispatch"}
+{"t":250,"control":"paddle3","edge":"up","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/paddle3","reason":"end"}
+{"t":300,"control":"paddle4","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/paddle4","action":"hold F16","owner":"decl/4","reason":"dispatch"}
+{"t":350,"control":"paddle4","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/paddle4","action":"hold F16","owner":"decl/4","reason":"release"}
+{"t":400,"control":"misc1","edge":"down","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/misc1","action":"tap F17","owner":"decl/5","reason":"dispatch"}
+{"t":450,"control":"misc1","edge":"up","cycle":5,"gesture":"press","level":"base","binding":"/layers/base/misc1","reason":"end"}
+{"t":500,"control":"misc2","edge":"down","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/misc2","action":"hold F18","owner":"decl/6","reason":"dispatch"}
+{"t":550,"control":"misc2","edge":"up","cycle":6,"gesture":"press","level":"base","binding":"/layers/base/misc2","action":"hold F18","owner":"decl/6","reason":"release"}
+{"t":600,"control":"misc3","edge":"down","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/misc3","action":"tap F19","owner":"decl/7","reason":"dispatch"}
+{"t":650,"control":"misc3","edge":"up","cycle":7,"gesture":"press","level":"base","binding":"/layers/base/misc3","reason":"end"}
+{"t":700,"control":"misc4","edge":"down","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/misc4","action":"hold F20","owner":"decl/8","reason":"dispatch"}
+{"t":750,"control":"misc4","edge":"up","cycle":8,"gesture":"press","level":"base","binding":"/layers/base/misc4","action":"hold F20","owner":"decl/8","reason":"release"}
+{"t":800,"control":"misc5","edge":"down","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/misc5","action":"tap F21","owner":"decl/9","reason":"dispatch"}
+{"t":850,"control":"misc5","edge":"up","cycle":9,"gesture":"press","level":"base","binding":"/layers/base/misc5","reason":"end"}
+{"t":900,"control":"misc6","edge":"down","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/misc6","action":"hold F22","owner":"decl/10","reason":"dispatch"}
+{"t":950,"control":"misc6","edge":"up","cycle":10,"gesture":"press","level":"base","binding":"/layers/base/misc6","action":"hold F22","owner":"decl/10","reason":"release"}
+{"t":1000,"control":"touchpad","edge":"down","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/touchpad","label":"触摸板","action":"tap F23","owner":"decl/11","reason":"dispatch"}
+{"t":1050,"control":"touchpad","edge":"up","cycle":11,"gesture":"press","level":"base","binding":"/layers/base/touchpad","label":"触摸板","reason":"end"}
+{"t":1100,"control":"guide","edge":"down","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/guide","action":"hold F24","owner":"decl/12","reason":"dispatch"}
+{"t":1350,"control":"guide","edge":"up","cycle":12,"gesture":"press","level":"base","binding":"/layers/base/guide","action":"hold F24","owner":"decl/12","reason":"release"}
+{"t":1500,"control":"paddle2","edge":"down","cycle":13,"gesture":"press","level":"base","binding":"/layers/base/paddle2","label":"P2","action":"hold F14","owner":"decl/13","reason":"dispatch"}
+{"t":1510,"control":"misc2","edge":"down","cycle":14,"gesture":"press","level":"base","binding":"/layers/base/misc2","action":"hold F18","owner":"decl/14","reason":"dispatch"}
+{"t":1520,"control":"touchpad","edge":"down","cycle":15,"gesture":"press","level":"base","binding":"/layers/base/touchpad","label":"触摸板","action":"tap F23","owner":"decl/15","reason":"dispatch"}
+{"t":1530,"control":"touchpad","edge":"up","cycle":15,"gesture":"press","level":"base","binding":"/layers/base/touchpad","label":"触摸板","reason":"end"}
+{"t":1600,"control":"paddle2","edge":"up","cycle":13,"gesture":"press","level":"base","binding":"/layers/base/paddle2","label":"P2","action":"hold F14","owner":"decl/13","reason":"release"}
+{"t":1610,"control":"misc2","edge":"up","cycle":14,"gesture":"press","level":"base","binding":"/layers/base/misc2","action":"hold F18","owner":"decl/14","reason":"release"}

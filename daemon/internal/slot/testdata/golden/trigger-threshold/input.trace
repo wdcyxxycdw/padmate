@@ -1,0 +1,6 @@
+# Pull LT slowly: it presses at 30% of its travel...
+lefttrigger=0.1@0 lefttrigger=0.29@10 lefttrigger=0.3@20
+# ...stays down above 20%, and releases at 20%.
+lefttrigger=0.25@30 lefttrigger=0.2@40
+# Pull it again and let go.
+lefttrigger=0.5@50 lefttrigger=0@60

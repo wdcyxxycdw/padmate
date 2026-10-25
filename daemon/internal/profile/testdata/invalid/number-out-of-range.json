@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "name": "Number out of range",
+  "analog": { "ls": { "deadzone": 1E1000001 } },
+  "layers": { "base": {} }
+}

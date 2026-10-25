@@ -1,0 +1,4 @@
+# west's press action holds LCtrl; its tap and hold (E, balanced) are
+# pending when south goes down, so south's press waits in the buffer.
+# west's release, before south's, makes west a tap (MAP-09).
++west@0 +south@10 -west@20 -south@30

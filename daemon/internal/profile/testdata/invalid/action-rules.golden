@@ -1,0 +1,14 @@
+6:51: error: a key sequence needs mode "tap" (/layers/base/south/press/keys)
+	> ["Ctrl+K", "S"]}},
+8:86: error: a key sequence cannot repeat (/layers/base/west/hold/repeat)
+	> {}}},
+9:66: error: layer hold action is only valid for press/hold (/layers/base/north/tap/op)
+	> "hold"}},
+10:73: error: a key sequence needs mode "tap" (/layers/base/leftshoulder/press/mode)
+	> "hold"}},
+11:78: error: a key sequence needs mode "tap" (/layers/base/rightshoulder/hold/mode)
+	> "hold", "repeat": {"delayMs": 0}}}
+11:96: error: a key sequence cannot repeat (/layers/base/rightshoulder/hold/repeat)
+	> {"delayMs": 0}}}
+16:70: error: layer hold action is only valid for press/hold (/common/dpad.up/release/op)
+	> "hold"}}

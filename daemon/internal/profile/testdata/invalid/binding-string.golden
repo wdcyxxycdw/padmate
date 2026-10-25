@@ -1,0 +1,2 @@
+7:15: error: expected a binding object, got a string; write {"press": {"type": "keys", "keys": "Space"}} (/layers/base/east)
+	> "Space"

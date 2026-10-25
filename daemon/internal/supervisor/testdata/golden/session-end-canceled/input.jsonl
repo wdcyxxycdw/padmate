@@ -1,0 +1,11 @@
+# A canceled sign-out (DMN-09): WM_QUERYENDSESSION at 500 lets go of
+# Space, which east holds, and a tap of south maps nothing. An app cancels
+# the sign-out at 700 (WM_ENDSESSION with FALSE); east does nothing, and
+# south taps at 1100.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":600000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":650000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":900000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":1100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":1150000000,"kind":"up","device":1,"control":"south"}

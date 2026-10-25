@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "exit-releases",
+  "layers": {
+    "base": {
+      "east": {"label": "抓手", "press": {"type": "keys", "keys": "Space", "mode": "hold"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "lt": {"label": "吸管", "press": {"type": "keys", "keys": "Alt", "mode": "hold"}}
+    }
+  }
+}

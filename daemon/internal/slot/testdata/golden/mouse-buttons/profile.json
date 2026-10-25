@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-buttons",
+  "layers": {
+    "base": {
+      "north": {"label": "点击", "press": {"type": "keys", "keys": "MouseLeft", "mode": "tap"}},
+      "south": {"label": "拖动", "press": {"type": "keys", "keys": "MouseLeft", "mode": "hold"}},
+      "west": {"label": "再拖", "press": {"type": "keys", "keys": "LButton", "mode": "hold"}},
+      "east": {"label": "框选", "press": {"type": "keys", "keys": "Shift+MouseRight", "mode": "hold"}},
+      "leftshoulder": {"label": "连点", "press": {"type": "keys", "keys": "MouseMiddle", "mode": "tap", "repeat": {"delayMs": 100, "rateHz": 10}}},
+      "lt": {"label": "后退", "press": {"type": "keys", "keys": "XButton1", "mode": "hold"}}
+    }
+  }
+}

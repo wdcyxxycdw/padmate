@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "反馈",
+  "feedback": {"pause": false},
+  "common": {
+    "north": {"label": "换层", "press": {"type": "layer", "op": "cycle", "layers": ["base", "alt"]}}
+  },
+  "layers": {
+    "base": {"color": "#101010"},
+    "alt": {"color": "#112233"}
+  }
+}

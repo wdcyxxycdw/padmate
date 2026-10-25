@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "触感",
+  "layers": {
+    "base": {
+      "south": {"haptic": "buzz", "press": {"type": "keys", "keys": "A"}},
+      "east": {"haptic": "Tick", "press": {"type": "keys", "keys": "B"}},
+      "north": {"haptic": "", "press": {"type": "keys", "keys": "C"}}
+    }
+  }
+}

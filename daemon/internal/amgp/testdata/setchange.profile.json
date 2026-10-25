@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "name": "setchange",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "Z"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "Second",
+          "op": "switch"
+        }
+      },
+      "east": {
+        "hold": {
+          "type": "layer",
+          "layer": "set3",
+          "op": "switch"
+        },
+        "timing": {
+          "holdMs": 300
+        }
+      },
+      "west": {
+        "hold": {
+          "type": "layer",
+          "layer": "Second",
+          "op": "switch"
+        },
+        "timing": {
+          "holdMs": 300
+        }
+      },
+      "north": {
+        "release": {
+          "type": "layer",
+          "layer": "set6",
+          "op": "switch"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "Second",
+          "op": "switch"
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "Second",
+          "op": "switch"
+        }
+      }
+    },
+    "Second": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      }
+    },
+    "set3": {},
+    "set6": {}
+  }
+}

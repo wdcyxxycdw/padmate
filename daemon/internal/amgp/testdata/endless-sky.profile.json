@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "name": "endless-sky",
+  "defaultLayer": "base",
+  "timing": {
+    "tapPressMs": 200
+  },
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0,
+      "diagonalWidth": 30
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0,
+      "diagonalWidth": 5
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "label": "a / *k",
+        "tap": {
+          "type": "keys",
+          "keys": "A"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "K"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "east": {
+        "label": "d / *c",
+        "tap": {
+          "type": "keys",
+          "keys": "D"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "C"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "west": {
+        "label": "o / *u",
+        "tap": {
+          "type": "keys",
+          "keys": "O"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "U"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "north": {
+        "label": "s / *e",
+        "tap": {
+          "type": "keys",
+          "keys": "S"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "E"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "leftshoulder": {
+        "label": "R / *Set2",
+        "tap": {
+          "type": "keys",
+          "keys": "R"
+        },
+        "hold": {
+          "type": "layer",
+          "layer": "set2",
+          "op": "switch"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "rightshoulder": {
+        "label": "n / *w",
+        "tap": {
+          "type": "keys",
+          "keys": "N"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "W"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl"
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "Tab"
+        }
+      },
+      "leftstick": {
+        "label": "Full Stop (SHIFT+ARR_D)",
+        "press": {
+          "type": "keys",
+          "keys": "LShift+Down"
+        }
+      },
+      "rightstick": {
+        "release": {
+          "type": "layer",
+          "layer": "set2",
+          "op": "switch"
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "Esc"
+        }
+      },
+      "dpad.up": {
+        "label": "t / *[RETURN]",
+        "tap": {
+          "type": "keys",
+          "keys": "T"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "Enter"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.down": {
+        "label": "p / *v",
+        "tap": {
+          "type": "keys",
+          "keys": "P"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "V"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.left": {
+        "label": "j / *h",
+        "tap": {
+          "type": "keys",
+          "keys": "J"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "H"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.right": {
+        "label": "b / *[BKSP]",
+        "tap": {
+          "type": "keys",
+          "keys": "B"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "Backspace"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "ls.right": {
+        "press": {
+          "type": "keys",
+          "keys": "Right"
+        }
+      },
+      "ls.down": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "ls.left": {
+        "press": {
+          "type": "keys",
+          "keys": "Left"
+        }
+      },
+      "rs.up": {
+        "press": {
+          "type": "keys",
+          "keys": "PageUp"
+        }
+      },
+      "rs.right": {
+        "press": {
+          "type": "keys",
+          "keys": "-"
+        }
+      },
+      "rs.down": {
+        "press": {
+          "type": "keys",
+          "keys": "PageDown"
+        }
+      },
+      "rs.left": {
+        "press": {
+          "type": "keys",
+          "keys": "NumAdd"
+        }
+      }
+    },
+    "set2": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+A"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+D"
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+R"
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+N"
+        }
+      },
+      "leftshoulder": {
+        "label": "Back to Set1",
+        "tap": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift+W"
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl"
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseLeft"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseRight"
+        }
+      },
+      "rightstick": {
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      },
+      "dpad.up": {
+        "label": "1 / *[STRG]+1",
+        "tap": {
+          "type": "keys",
+          "keys": "1"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "LCtrl+1"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.down": {
+        "label": "4 / *[STRG]+4",
+        "tap": {
+          "type": "keys",
+          "keys": "4"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "LCtrl+4"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.left": {
+        "label": "2 / *[STRG]+2",
+        "tap": {
+          "type": "keys",
+          "keys": "2"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "LCtrl+2"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "dpad.right": {
+        "label": "3 / *[STRG]+3",
+        "tap": {
+          "type": "keys",
+          "keys": "3"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "LCtrl+3"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "rs.up": {
+        "label": "Wheel UP",
+        "press": {
+          "type": "keys",
+          "keys": "WheelUp",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      },
+      "rs.down": {
+        "label": "Wheel DOWN",
+        "press": {
+          "type": "keys",
+          "keys": "WheelDown",
+          "mode": "tap",
+          "repeat": {
+            "style": "tap",
+            "delayMs": 0,
+            "rateHz": 20
+          }
+        }
+      }
+    }
+  }
+}

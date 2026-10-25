@@ -1,0 +1,22 @@
+# Pad A presses north, unbound, so the slot is its own, and Pad B's
+# press of east takes nothing over. A leaves while B, holding east, and
+# Pad C wait: B stands in at once, and the Resync presses Space. C's
+# press of south, before B presses a button, takes the slot over: B's
+# east is let go of, B waits again, first in line, and C's south taps
+# Ctrl+Z. A comes back and waits. When C leaves, B stands in again, with
+# east, for C's slot now; A's press of south, after B let go of east,
+# takes it over again.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":20000000,"kind":"added","device":3,"info":{"id":3,"name":"Pad C","guid":"030000000c0000000c00000000000000","gamepad":true}}
+{"timeNs":30000000,"kind":"down","device":1,"control":"north"}
+{"timeNs":40000000,"kind":"up","device":1,"control":"north"}
+{"timeNs":50000000,"kind":"down","device":2,"control":"east"}
+{"timeNs":100000000,"kind":"removed","device":1}
+{"timeNs":200000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":210000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":300000000,"kind":"added","device":4,"info":{"id":4,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":400000000,"kind":"removed","device":3}
+{"timeNs":500000000,"kind":"up","device":2,"control":"east"}
+{"timeNs":550000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":560000000,"kind":"up","device":4,"control":"south"}

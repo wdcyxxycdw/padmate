@@ -1,0 +1,4 @@
+{"t":0,"control":"rightshoulder","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold Shift","owner":"decl/1","reason":"dispatch"}
+{"t":100,"control":"leftshoulder","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LShift","owner":"decl/2","reason":"dispatch"}
+{"t":200,"control":"rightshoulder","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/rightshoulder","action":"hold Shift","owner":"decl/1","reason":"release"}
+{"t":300,"control":"leftshoulder","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LShift","owner":"decl/2","reason":"release"}

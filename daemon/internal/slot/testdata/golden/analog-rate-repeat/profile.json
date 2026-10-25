@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "analog-rate-repeat",
+  "analog": {"ls": {"curve": "quadratic"}},
+  "layers": {
+    "base": {
+      "ls.up": {"label": "放大", "press": {"type": "keys", "keys": "A", "mode": "tap", "repeat": {"delayMs": 200, "rateHz": 20, "minRateHz": 4}}},
+      "rt": {"label": "刷", "press": {"type": "keys", "keys": "B", "mode": "hold", "repeat": {"delayMs": 200, "rateHz": 12, "minRateHz": 3}}}
+    }
+  }
+}

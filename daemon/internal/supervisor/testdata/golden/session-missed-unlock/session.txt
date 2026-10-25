@@ -1,0 +1,6 @@
+@500 world locked=true
+@500 lock
+# Unlocked, but the signal is lost.
+@1000 world locked=false
+# The tick queries the session while Lock is set.
+@2000 tick

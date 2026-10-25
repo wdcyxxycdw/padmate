@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "tap-captured-layer",
+  "layers": {
+    "base": {
+      "west": {
+        "press": {"type": "layer", "layer": "nav", "op": "hold"},
+        "tap": {"type": "keys", "keys": "F13"},
+        "hold": {"type": "keys", "keys": "E"}
+      },
+      "south": {"press": {"type": "keys", "keys": "A", "mode": "tap"}}
+    },
+    "nav": {
+      "south": {"press": {"type": "keys", "keys": "C", "mode": "tap"}}
+    }
+  }
+}

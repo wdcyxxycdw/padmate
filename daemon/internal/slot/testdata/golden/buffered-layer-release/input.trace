@@ -1,0 +1,5 @@
+# As buffered-modifier-release, but leftshoulder holds the layer nav:
+# south's press waits behind north's pending gesture, and leftshoulder's
+# release waits behind it (MAP-09).
++west@0 +leftshoulder@10 +north@20 +south@25 -leftshoulder@28
+-south@40 -north@50 -west@60

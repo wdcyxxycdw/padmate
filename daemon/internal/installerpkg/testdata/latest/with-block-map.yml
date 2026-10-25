@@ -1,0 +1,15 @@
+# A differential package adds blockMapSize; release notes are a block scalar the
+# parser does not read.
+version: 1.0.0
+files:
+  - url: padmate-v1.0.0-windows-amd64-setup.exe
+    sha512: AAAA
+    size: 10
+    blockMapSize: 1234
+releaseNotes: |
+  <p>Notes: with: colons, and	a tab
+  - a list-looking line
+stagingPercentage: 10
+path: padmate-v1.0.0-windows-amd64-setup.exe
+sha512: AAAA
+releaseDate: "2026-10-24T05:33:03.311Z"

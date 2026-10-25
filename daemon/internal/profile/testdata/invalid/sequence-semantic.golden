@@ -1,0 +1,16 @@
+6:87: error: "Z" is not a modifier; only the last key of a chord can be a non-modifier (/layers/base/south/press/steps/1/keys)
+	> Z+Ctrl"}, {"wait": 5}, {"keys": "NoSuchK…
+6:120: error: unknown key "NoSuchKey" (/layers/base/south/press/steps/3/keys)
+	> NoSuchKey"}]}},
+7:81: error: control character U+0007 at byte 4; only a newline (\n) and a tab (\t) can be typed (/layers/base/east/press/steps/1/text)
+	> "bell\u0007"}, {"text": "a\rb"}, {"text"…
+7:105: error: control character U+000D at byte 1; only a newline (\n) and a tab (\t) can be typed (/layers/base/east/press/steps/2/text)
+	> "a\rb"}, {"text": "tab\there\nfine"}]}},
+8:51: error: control character U+000D at byte 8; only a newline (\n) and a tab (\t) can be typed (/layers/base/north/press/text)
+	> "carriage\rreturn"}},
+9:50: error: control character U+0007 at byte 4; only a newline (\n) and a tab (\t) can be typed (/layers/base/west/press/text)
+	> "bell\u0007"}},
+10:48: error: control character U+001B at byte 12; only a newline (\n) and a tab (\t) can be typed (/layers/base/lb/press/text)
+	> "控制字符\u001b在这里"}},
+11:305: error: text is too long: at most 256 UTF-16 units (a character outside the Basic Multilingual Plane is two); it goes over at byte 256 (/layers/base/rb/press/text)
+	> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-move",
+  "analog": {
+    "ls": {"mode": "mouse", "mouseSpeed": 1000, "deadzone": 0, "saturation": 1}
+  },
+  "layers": {
+    "base": {
+      "north": {"press": {"type": "keys", "keys": "F13", "mode": "tap"}}
+    }
+  }
+}

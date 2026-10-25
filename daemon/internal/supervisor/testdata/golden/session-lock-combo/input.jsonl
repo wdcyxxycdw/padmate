@@ -1,0 +1,21 @@
+# The combo during a lock (DMN-07, DMN-09): the lock at 300 lets go of
+# Space, which east holds. Back and start go down during the lock, and the
+# combo fires at 2600: it pauses the mapping, which releases nothing more.
+# The unlock at 3000 leaves it paused, so a tap of south maps nothing; the
+# combo fires again at 6100 and resumes, which presses nothing. East, held
+# all along, does nothing until it is pressed again at 6700.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":600000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":2800000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":2800000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":3200000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":3250000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":4000000000,"kind":"down","device":1,"control":"back"}
+{"timeNs":4100000000,"kind":"down","device":1,"control":"start"}
+{"timeNs":6300000000,"kind":"up","device":1,"control":"back"}
+{"timeNs":6300000000,"kind":"up","device":1,"control":"start"}
+{"timeNs":6500000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":6700000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":6900000000,"kind":"up","device":1,"control":"east"}

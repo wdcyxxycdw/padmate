@@ -1,0 +1,2 @@
+6:50: error: unknown action type "launch"; use "keys", "layer", "script", "profile", "macro", "mouse", "hud", "sequence" or "text" (/layers/base/south/press/type)
+	> "launch", "keys": "Ctrl+Z"}}

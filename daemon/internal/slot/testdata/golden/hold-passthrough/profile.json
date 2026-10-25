@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "hold-passthrough",
+  "layers": {
+    "base": {
+      "east": {"label": "抓手", "press": {"type": "keys", "keys": "Space", "mode": "hold"}}
+    }
+  }
+}

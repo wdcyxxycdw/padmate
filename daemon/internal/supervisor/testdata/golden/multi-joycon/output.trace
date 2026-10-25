@@ -1,0 +1,7 @@
+# R's first tap maps on slot 1 while L, on slot 0, holds Space.
++Space@100
++LCtrl@300 +Z@300
+-Z@320 -LCtrl@320
+-Space@400
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620

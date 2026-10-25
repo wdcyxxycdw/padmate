@@ -1,0 +1,5 @@
+version="0.15.0-rc.1"
+path="padmate-v0.15.0-rc.1-windows-amd64-setup.exe"
+sha512="kQ0nLhj0m7aY5nPqIZYYy9xvbG2aWVPyyUEgRbVgmJYqSE3ZpX0p4SgRFqUZ0xbzG3sQ0rPB1uJm4C1m9Z0wzA=="
+releaseDate="2026-10-24T05:33:03.311Z"
+files[0] url="padmate-v0.15.0-rc.1-windows-amd64-setup.exe" sha512="kQ0nLhj0m7aY5nPqIZYYy9xvbG2aWVPyyUEgRbVgmJYqSE3ZpX0p4SgRFqUZ0xbzG3sQ0rPB1uJm4C1m9Z0wzA==" size=141234567

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "two-stage-trigger",
+  "layers": {
+    "base": {
+      "lt": {"label": "第一段", "press": {"type": "keys", "keys": "B", "mode": "hold"}},
+      "lt.full": {"label": "第二段", "press": {"type": "keys", "keys": "E", "mode": "hold"}}
+    }
+  }
+}

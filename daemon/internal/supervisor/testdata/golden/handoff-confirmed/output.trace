@@ -1,0 +1,5 @@
+# B's south taps Ctrl+Z; A's east counts as pressed when it stands in.
++LCtrl@200 +Z@200
+-Z@220 -LCtrl@220
++Space@400
+-Space@500

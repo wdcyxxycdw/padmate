@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "modifier-plus-tap",
+  "layers": {
+    "base": {
+      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}}
+    }
+  }
+}

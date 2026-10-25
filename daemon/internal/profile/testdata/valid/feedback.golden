@@ -1,0 +1,4 @@
+name "反馈", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+feedback shortMs=90 longMs=210 gapMs=100 strength=0 pausedColor=#112233

@@ -1,0 +1,8 @@
+# B stands in holding east twice; C and then A take the slot over.
++Space@100
+-Space@200 +LCtrl@200 +Z@200
+-Z@220 -LCtrl@220
++Space@400
+-Space@500
++LCtrl@550 +Z@550
+-Z@570 -LCtrl@570

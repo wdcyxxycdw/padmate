@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "两段扳机",
+  "analog": {
+    "lt": {"press": 0.6, "release": 0.5, "fullPress": 0.5, "fullRelease": 0.55},
+    "rt": {"fullPress": 0.7}
+  },
+  "layers": {"base": {"lt.full": {"press": {"type": "keys", "keys": "E"}}}}
+}

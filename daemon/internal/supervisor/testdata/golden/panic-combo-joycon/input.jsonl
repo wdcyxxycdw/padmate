@@ -1,0 +1,21 @@
+# The combo of a single Joy-Con (DMN-07): SL+SR, which SDL reports as
+# leftshoulder and rightshoulder when it is held sideways. Both are bound
+# here, so the members of the combo hold keys: LCtrl and LShift go down,
+# and the combo fires 2 s after the second, at 2300, which lets go of both
+# and pauses. While paused, a tap of leftshoulder maps nothing. Holding
+# both again resumes at 6100; they were held across the resume, so their
+# ups map nothing, and a new press of leftshoulder holds LCtrl again.
+# The Joy-Con is joycon-separate's.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"leftshoulder"}
+{"timeNs":300000000,"kind":"down","device":1,"control":"rightshoulder"}
+{"timeNs":2500000000,"kind":"up","device":1,"control":"leftshoulder"}
+{"timeNs":2500000000,"kind":"up","device":1,"control":"rightshoulder"}
+{"timeNs":3000000000,"kind":"down","device":1,"control":"leftshoulder"}
+{"timeNs":3100000000,"kind":"up","device":1,"control":"leftshoulder"}
+{"timeNs":4000000000,"kind":"down","device":1,"control":"leftshoulder"}
+{"timeNs":4100000000,"kind":"down","device":1,"control":"rightshoulder"}
+{"timeNs":6300000000,"kind":"up","device":1,"control":"leftshoulder"}
+{"timeNs":6300000000,"kind":"up","device":1,"control":"rightshoulder"}
+{"timeNs":6500000000,"kind":"down","device":1,"control":"leftshoulder"}
+{"timeNs":6600000000,"kind":"up","device":1,"control":"leftshoulder"}

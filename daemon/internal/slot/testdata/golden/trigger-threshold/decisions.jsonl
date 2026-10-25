@@ -1,0 +1,4 @@
+{"t":20,"control":"lt","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/1","reason":"dispatch"}
+{"t":40,"control":"lt","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/1","reason":"release"}
+{"t":50,"control":"lt","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/2","reason":"dispatch"}
+{"t":60,"control":"lt","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/2","reason":"release"}

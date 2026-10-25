@@ -1,0 +1,1137 @@
+/* Settings, Scripts and Logs pages and the empty states (ADR-0045).
+   The page frame (.page-content) never scrolls; each page scrolls inside
+   .page-scroll. Colors come from theme.css. */
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+/* Centers an empty state that scrolls when the window is short. */
+.page-scroll-center {
+  display: flex;
+  flex-direction: column;
+}
+.page-column {
+  width: 100%;
+  min-height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.page-column-settings {
+  max-width: 728px;
+  padding: 28px 24px 48px;
+  gap: 26px;
+}
+.page-column-scripts {
+  max-width: 808px;
+  padding: 28px 24px 48px;
+  gap: 16px;
+}
+.page-column-logs {
+  padding: 20px 20px 32px;
+  gap: 14px;
+}
+.page-hint {
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.page-footnote {
+  color: var(--text-4);
+  font-size: 12px;
+}
+.page-spacer {
+  flex: 1;
+}
+.page-mono-message {
+  font: 12px / 1.5 var(--mono);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+/* Settings. The save state floats over the page frame so it never moves
+   the rows; it is empty and invisible while idle. */
+.page-autosave {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid #2e323b;
+  border-radius: 15px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.page-autosave[data-state="idle"] {
+  opacity: 0;
+}
+.page-autosave[data-state="saved"] .page-autosave-icon {
+  color: var(--green);
+}
+.page-autosave[data-state="failed"] {
+  color: var(--red);
+}
+.page-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.page-section .row-title .tag {
+  font-weight: 500;
+}
+.select.page-select {
+  flex: none;
+  width: 148px;
+  height: 32px;
+  font-size: 12.5px;
+}
+.page-row-control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* A slider and its value in a settings row (the overlay's opacity, HUD-05);
+   the slider itself is styled with the calibration sliders, below. */
+.page-range {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.page-range-value {
+  min-width: 4ch;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-align: right;
+}
+.page-section .number-with-unit {
+  flex: none;
+}
+.page-section .input-number {
+  height: 32px;
+  font-size: 12.5px;
+}
+.page-section .input-number[aria-invalid="true"] {
+  border-color: rgba(255, 138, 128, 0.6);
+}
+.page-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+/* What a controller's row says about it, under its name (the identify note,
+   IN-13); the same size as a hint, which the rows otherwise do without. */
+.row-note {
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.page-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Scripts (UI-41, SCR-50): 新建 and 导入 on top, then one card per script
+   of the active profile, missing files and the legacy script last. */
+.page-macro-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.page-macro-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.page-macro {
+  padding: 12px 10px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.page-macro[data-tone="error"] {
+  border-color: #4a2f33;
+}
+.page-macro-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.page-macro-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #1e2127;
+  color: var(--violet);
+}
+.page-macro-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.page-macro-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-macro-tag {
+  /* A legacy script's tag names its profile, which can be long. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #22252c;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 500;
+}
+.page-macro-uses {
+  min-width: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.page-macro-uses[data-warning="true"] {
+  color: #d9ae6a;
+}
+.page-macro-error {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 42px;
+}
+.page-macro-error-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.page-macro-error-row .btn-ghost {
+  flex: none;
+  height: 26px;
+  font-size: 12px;
+}
+.page-macro-error-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.page-macro-error-toggle:disabled {
+  cursor: default;
+}
+.page-macro-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.page-macro-error-label {
+  flex: none;
+  color: var(--red);
+}
+.page-macro-error-first {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.page-macro-error pre {
+  max-height: 240px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid #262a31;
+  border-radius: 8px;
+  background: var(--field);
+  color: #f0b3ae;
+  font: 12px / 1.6 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.page-macro-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 2px;
+}
+.page-macro-empty h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.page-macro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.page-macro-form-error {
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Logs. */
+.page-logs-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: -8px 0 0;
+  padding: 8px 0 4px;
+  background: var(--bg);
+}
+.page-search {
+  flex: 1 1 180px;
+  max-width: 300px;
+  min-width: 160px;
+  height: 34px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-4);
+}
+.page-search:focus-within {
+  border-color: var(--accent);
+}
+.page-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+}
+.page-search input::placeholder {
+  color: var(--text-4);
+}
+.page-search input::-webkit-search-cancel-button {
+  filter: grayscale(1) brightness(0.8);
+}
+.segmented.page-seg {
+  flex: none;
+  background: var(--surface);
+}
+.page-count {
+  margin-left: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.page-count[data-level="error"] {
+  color: var(--red);
+}
+.page-count[data-level="warn"] {
+  color: var(--amber);
+}
+.page-log-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #23262d;
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.page-log-list > li + li {
+  border-top: 1px solid #1a1d22;
+}
+.page-log-list > li[data-expanded="true"] {
+  background: var(--surface-2);
+}
+.page-log-row {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  background: transparent;
+  color: #dadee4;
+  font-size: 12.5px;
+  text-align: left;
+}
+.page-log-row:hover {
+  background: #191b20;
+}
+.page-log-row:focus-visible {
+  outline-offset: -2px;
+}
+.page-log-time {
+  flex: none;
+  width: 64px;
+  color: var(--text-4);
+  font: 12px var(--mono);
+}
+.page-log-level {
+  flex: none;
+  width: 46px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #1e2127;
+  color: var(--text-3);
+  font: 600 10.5px / 1 var(--mono);
+}
+.page-log-level[data-level="warn"] {
+  background: rgba(242, 179, 91, 0.12);
+  color: var(--amber);
+}
+.page-log-level[data-level="error"] {
+  background: rgba(255, 138, 128, 0.12);
+  color: var(--red);
+}
+.page-log-level[data-level="debug"] {
+  background: transparent;
+  color: var(--text-4);
+}
+.page-log-source {
+  flex: none;
+  width: 36px;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.page-log-message {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-log-list > li[data-level="error"] .page-log-message {
+  color: #f0b3ae;
+}
+.page-log-fields {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-4);
+  font: 11.5px var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-log-chevron {
+  margin-left: auto;
+  color: var(--text-4);
+  transition: transform 120ms ease;
+}
+.page-log-row[aria-expanded="true"] .page-log-chevron {
+  transform: rotate(180deg);
+}
+.page-log-details {
+  max-height: 320px;
+  margin: 0 14px 12px 202px;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid #23262d;
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--text-2);
+  font: 11.5px / 1.65 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+@media (max-width: 1000px) {
+  .page-log-details {
+    margin-left: 14px;
+  }
+}
+
+/* Empty states. */
+.page-empty {
+  margin: auto;
+  max-width: 480px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.page-empty[data-variant="controller"] {
+  max-width: 600px;
+  gap: 18px;
+}
+.page-empty h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.page-empty[data-variant="controller"] h2 {
+  font-size: 20px;
+}
+.page-empty p {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.page-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid #23262d;
+  color: var(--text-4);
+}
+.page-empty-symbol {
+  width: 112px;
+  height: 112px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--text-4);
+}
+.page-empty-ports {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.page-empty-port {
+  height: 34px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #23262d;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.page-empty-note {
+  width: min(460px, 100%);
+  margin-top: 26px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #23262d;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: left;
+}
+.page-empty-note > .ui-icon {
+  margin-top: 3px;
+  color: var(--amber);
+}
+.page-empty-conflicts {
+  width: min(460px, 100%);
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  text-align: left;
+}
+.page-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: inherit;
+}
+.page-link:hover {
+  text-decoration: underline;
+}
+
+/* Conflicting software (Settings and the empty mapping page). */
+.page-conflicts {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+/* Compact: the name and the advice share one paragraph. */
+.page-conflicts .notice {
+  padding: 8px 8px 8px 12px;
+}
+.page-conflicts .notice > .ui-icon {
+  margin-top: 4px;
+}
+.page-conflicts .notice-body {
+  display: block;
+  padding-top: 2px;
+}
+/* A space follows the name (for screen readers and copied text); the margin
+   tops it up to the usual gap. */
+.page-conflicts .notice-title {
+  margin-right: 2px;
+}
+
+/* Settings → 按键判定 millisecond fields (UI-19). */
+.page-ms {
+  flex: none;
+}
+.page-ms .input-number {
+  height: 32px;
+  font-size: 12.5px;
+}
+.page-ms .input-number[aria-invalid="true"] {
+  border-color: rgba(255, 138, 128, 0.6);
+}
+
+/* The emergency combo dialog (UI-19). */
+.combo-dialog {
+  width: min(440px, calc(100vw - 48px));
+}
+.combo-dialog .dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.combo-record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 12px;
+  border: 1px solid #262a31;
+  border-radius: 12px;
+  background: var(--field);
+}
+.combo-record .page-combo {
+  font-size: 14px;
+}
+.combo-record-note {
+  margin: 0;
+  color: var(--text-4);
+  font-size: 12px;
+}
+.combo-record-note[data-problem="true"] {
+  color: var(--red);
+}
+
+/* The mapping wizard (IN-19). */
+.wizard-dialog {
+  width: min(520px, calc(100vw - 48px));
+}
+.wizard-dialog .dialog-body {
+  gap: 14px;
+}
+.wizard-pad {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wizard-wait,
+.wizard-saved {
+  margin: 0;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.wizard-prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #262a31;
+  border-radius: 12px;
+  background: var(--field);
+}
+.wizard-prompt .control-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+.wizard-prompt-text {
+  flex: 1;
+  min-width: 0;
+}
+.wizard-prompt-text h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.wizard-prompt-text p {
+  margin: 4px 0 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.wizard-count {
+  flex: none;
+  color: var(--text-4);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.wizard-status {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.wizard-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 220px;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 18px;
+  font-size: 12.5px;
+}
+.wizard-step {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.wizard-step[aria-current="step"] {
+  background: rgba(255, 255, 255, 0.06);
+}
+.wizard-step-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wizard-step-value {
+  flex: none;
+  color: var(--text-4);
+  font-family: var(--mono);
+}
+.wizard-step[data-bound="true"] .wizard-step-value {
+  color: var(--text);
+}
+
+/* The controller calibration dialog (IN-14). */
+.page-muted {
+  color: var(--text-4);
+  font-weight: 400;
+}
+.calibration-dialog {
+  width: min(480px, calc(100vw - 48px));
+}
+.calibration-dialog .dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.calibration-sticks {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.calibration-stick {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.calibration-view {
+  flex: none;
+}
+.calibration-ring {
+  fill: var(--field);
+  stroke: var(--border);
+}
+.calibration-cross {
+  fill: none;
+  stroke: #1d2026;
+}
+.calibration-outer {
+  fill: none;
+  stroke: var(--text-4);
+  stroke-dasharray: 3 3;
+}
+.calibration-dead {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: var(--text-4);
+}
+.calibration-dot {
+  fill: var(--text-3);
+  stroke: var(--field);
+  stroke-width: 2;
+}
+.calibration-view[data-active="true"] .calibration-dot {
+  fill: var(--accent);
+}
+.calibration-sliders {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.calibration-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.calibration-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.calibration-value {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+/* The slider look is shared by the calibration dialog and the overlay's
+   opacity row; both set --calibration-fill to the filled share. */
+.calibration-range,
+.page-range-input {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.calibration-range::-webkit-slider-runnable-track,
+.page-range-input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--calibration-fill, 0%),
+    var(--border) var(--calibration-fill, 0%)
+  );
+}
+.calibration-range::-webkit-slider-thumb,
+.page-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.calibration-range:focus-visible::-webkit-slider-thumb,
+.page-range-input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.calibration-range:disabled,
+.page-range-input:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+/* In a settings row the slider has a width of its own, not the dialog's full one. */
+.page-range-input {
+  width: 160px;
+}
+.calibration-failure {
+  margin: 0;
+  color: var(--red);
+  font-size: 12px;
+}
+
+/* Diagnostics (UI-20, UI-21, UI-22, IN-24; ADR-0071): a view inside Settings,
+   with the events of the latest presses, the latency figures and the
+   software that may hold the controller. */
+.page-column-diagnostics {
+  max-width: 920px;
+  padding: 24px 24px 40px;
+  gap: 26px;
+}
+.page-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.page-section-head .section-title {
+  margin-bottom: 0;
+}
+.page-act-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+/* A button that is on or off: it keeps an outline, so it reads as a switch. */
+.page-toggle {
+  border: 1px solid var(--border);
+}
+.page-toggle[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.page-act-scroll {
+  max-height: min(56vh, 480px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #23262d;
+  border-radius: 10px;
+  background: var(--surface);
+}
+/* Time, key, gesture, where, result; the pad's name before the key when
+   more than one pad is connected. The columns are the list's and each row
+   takes them over (subgrid), so they line up in every row and each is as wide
+   as the widest thing in it: a badge such as "Options" or an English gesture
+   such as "Quadruple tap" is wider than a face button or a Chinese gesture,
+   and with a width fixed for those it ran into the next column. The first
+   track has the row's 14px of padding as well, which a subgrid takes off the
+   items of its first and last track. */
+.page-act-list {
+  display: grid;
+  grid-template-columns:
+    110px max-content max-content fit-content(160px)
+    minmax(0, 1fr);
+  column-gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.page-act-list[data-pad] {
+  grid-template-columns:
+    110px fit-content(110px) max-content max-content fit-content(160px)
+    minmax(0, 1fr);
+}
+.page-act-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.page-act-row + .page-act-row {
+  border-top: 1px solid #1a1d22;
+}
+.page-act-time {
+  color: var(--text-4);
+  font: 12px var(--mono);
+}
+.page-act-pad,
+.page-act-where {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The least widths are what the common rows always had: a face button, a
+   Chinese gesture, a short place. */
+.page-act-key {
+  min-width: 30px;
+}
+.page-act-gesture {
+  min-width: 52px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.page-act-where {
+  min-width: 84px;
+}
+.page-act-result {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.page-act-action {
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+.page-act-reason {
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+.page-act-row[data-no-action] .page-act-reason {
+  color: var(--text);
+}
+.page-act-wait {
+  color: var(--text-4);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.page-act-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+.page-section > .page-footnote {
+  margin-top: 8px;
+}
+.page-latency {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 18px;
+}
+.page-latency-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.page-latency-pad + .page-latency-pad {
+  padding-top: 12px;
+  border-top: 1px solid #1f2228;
+}
+.page-latency-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-latency-name {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.page-latency-count {
+  color: var(--text-4);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.page-latency-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.page-latency-figures dt {
+  color: var(--text-4);
+  font-size: 11.5px;
+}
+.page-latency-figures dd {
+  margin: 2px 0 0;
+  color: var(--text);
+  font: 600 16px var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+/* Only the daemon's own verdict colors a figure (UI-22). */
+.page-latency-pad[data-warn] [data-figure="p99"] dd {
+  color: var(--amber);
+}
+.page-latency-note {
+  margin: 0;
+}
+
+/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+@media (forced-colors: active) {
+  .page-search:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+  .calibration-range::-webkit-slider-runnable-track,
+  .page-range-input::-webkit-slider-runnable-track {
+    background: ButtonText;
+  }
+  .calibration-range::-webkit-slider-thumb,
+  .page-range-input::-webkit-slider-thumb {
+    border: 1px solid ButtonText;
+    background: Highlight;
+  }
+  .calibration-range:focus-visible,
+  .page-range-input:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  .page-toggle[aria-pressed="true"] {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .wizard-step[aria-current="step"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

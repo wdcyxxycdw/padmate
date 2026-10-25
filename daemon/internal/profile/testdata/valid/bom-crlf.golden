@@ -1,0 +1,6 @@
+name "绘画", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	north         /layers/base/north         label "画笔"
+7:16: warning: binding has no action (/layers/base/north)
+	> {"label": "画笔"}

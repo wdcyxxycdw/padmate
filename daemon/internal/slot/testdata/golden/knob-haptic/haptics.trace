@@ -1,0 +1,22 @@
+# knobTick (HUD-10): a tick with each key of a clockwise step, at its time (the
+# time of the key in output.trace). rs.ccw has a haptic of its own, confirm,
+# which plays for its steps instead of the tick: one haptic for each step, never
+# two. The 12 steps queued by the quick turn at 1000 come out 40 ms apart, as
+# the keys do.
+tick@104
+tick@204
+tick@244
+confirm@354
+confirm@404
+tick@1012
+tick@1052
+tick@1092
+tick@1132
+tick@1172
+tick@1212
+tick@1252
+tick@1292
+tick@1332
+tick@1372
+tick@1412
+tick@1452

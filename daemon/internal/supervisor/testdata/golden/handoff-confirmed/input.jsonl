@@ -1,0 +1,13 @@
+# Pad A leaves while Pad B waits: B stands in, and its first press, of
+# south, makes the slot its own. A comes back and waits, holding east.
+# When B leaves, A stands in, provisionally since the slot is B's now,
+# and the Resync presses Space.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":10000000,"kind":"added","device":2,"info":{"id":2,"name":"Pad B","guid":"030000000b0000000b00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"removed","device":1}
+{"timeNs":200000000,"kind":"down","device":2,"control":"south"}
+{"timeNs":210000000,"kind":"up","device":2,"control":"south"}
+{"timeNs":300000000,"kind":"added","device":3,"info":{"id":3,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":350000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":400000000,"kind":"removed","device":2}
+{"timeNs":500000000,"kind":"up","device":3,"control":"east"}

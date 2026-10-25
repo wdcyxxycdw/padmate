@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "name": "mouse-stick-variants",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "mouse",
+      "deadzone": 0.1221,
+      "saturation": 0.9766,
+      "directionThreshold": 0,
+      "outerThreshold": 0.7143,
+      "mouseSpeed": 1000,
+      "curve": "quadratic"
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "ls.inner": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift"
+        }
+      }
+    }
+  }
+}

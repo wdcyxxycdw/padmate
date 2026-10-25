@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 0,
+  "name": "宏的引用",
+  "script": {"entry": "main.ts", "api": "0.21"},
+  "layers": {
+    "base": {
+      "a": {"label": "复制", "tap": {"type": "macro", "file": "复制全部.ts"}},
+      "east": {
+        "press": {"type": "keys", "keys": "Ctrl+Z"},
+        "hold": {"type": "macro", "file": "复制全部.ts"}
+      },
+      "west": {
+        "label": "只有宏",
+        "press": {"type": "macro", "file": "复制全部.ts"},
+        "timing": {"holdMs": 300}
+      },
+      "north": {"tap": {"type": "macro", "file": "其他.ts"}, "hold": {"file": "复制全部.ts", "type": "macro"}},
+      "rightstick": {"press": {"type": "script", "name": "cycleBrush"}}
+    },
+    "ink": {
+      "color": "#00FF00",
+      "south": {"doubleTap": {"type": "macro", "file": "复制全部.ts"}, "tap": {"type": "keys", "keys": "B"}},
+      "lb": {"press": {"type": "script", "name": "cycleBrush", "args": {"dir": 1}}}
+    }
+  },
+  "common": {
+    "leftstick": {"release": {"type": "macro", "file": "复制全部.ts"}},
+    "guide": {"label": "不相关", "press": {"type": "keys", "keys": "F13"}}
+  }
+}

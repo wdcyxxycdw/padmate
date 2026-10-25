@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "multi-tap-no-action",
+  "layers": {
+    "base": {
+      "west": {"label": "二连击", "doubleTap": {"type": "keys", "keys": "F14"}},
+      "north": {"tap": {"type": "keys", "keys": "F13"}, "tripleTap": {"type": "keys", "keys": "F15"}},
+      "south": {"press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "east": {"policy": "timeOnly", "timing": {"holdMs": 400}, "tap": {"type": "keys", "keys": "F18"}, "hold": {"type": "keys", "keys": "E"}},
+      "leftshoulder": {"press": {"type": "keys", "keys": "F13", "mode": "tap"}, "doubleTap": {"type": "keys", "keys": "F12"}}
+    }
+  }
+}

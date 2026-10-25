@@ -1,0 +1,390 @@
+# https://taskfile.dev
+version: "3"
+
+vars:
+  # Override on the command line: task build VERSION=v0.0.1
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+  LDFLAGS: -X github.com/wdcyxxycdw/padmate/daemon/internal/version.Version={{.VERSION}}
+  FUZZTIME: 60s
+  # The sample-count multiplier of task bench, (0, 10]: task bench BENCH_SCALE=5
+  BENCH_SCALE: "1"
+
+tasks:
+  default:
+    cmds:
+      - "{{.TASK_EXE}} --list"
+    silent: true
+
+  build:
+    desc: Build padmated, padmatectl and padmate-probe into bin/
+    dir: daemon
+    cmds:
+      - go run ./tools/build -version "{{.VERSION}}" -out ../bin -targets all
+
+  build:release:
+    desc: Build padmated as a GUI-subsystem (no console) release binary
+    dir: daemon
+    platforms: [windows]
+    cmds:
+      - go run ./tools/build -version "{{.VERSION}}" -out ../bin -targets padmated -gui
+
+  package:zip:
+    desc: Build and check the Windows x64 portable preview with examples, docs and runtime licenses in dist/
+    dir: daemon
+    platforms: [windows]
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    cmds:
+      # Sequential: a console build must not overwrite the GUI daemon.
+      - go run ./tools/build -version "{{.VERSION}}" -out ../bin -targets padmated,padmatectl -gui
+      - task: sdl
+      - go run ./tools/packagezip -version "{{.VERSION}}" -root .. -bin ../bin -out ../dist
+
+  package:installer:
+    desc: "Build the Windows x64 installer (NSIS, per user, no administrator) of VERSION=vX.Y.Z in dist/installer, and check that every part has that version (PKG-03, PKG-06). Run task app:install first; the first run downloads electron-builder's NSIS tools. INSTALLER_BIN=DIR builds the daemon and CLI there instead of bin/; INSTALLER_OUT=ABSOLUTE_DIR (inside .cache or dist) writes the installer there; PADMATE_SIGN=store|pfx|azure signs it (docs/build-installer.md) and verify then demands the signatures of PADMATE_SIGN_SUBJECT (-signed); VERIFY_FLAGS adds flags to verify, for example '-update-info' (PKG-09)"
+    dir: daemon
+    platforms: [windows]
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    vars:
+      INSTALLER_BIN: '{{.INSTALLER_BIN | default "../bin"}}'
+      INSTALLER_DIST: '{{.INSTALLER_OUT | default "../dist/installer"}}'
+      VERIFY_FLAGS: '{{.VERIFY_FLAGS | default ""}}'
+      # A signing build is always checked against the publisher it was signed as
+      # (the script refuses to sign without PADMATE_SIGN_SUBJECT, and verify
+      # refuses an empty -signed). The shell expands the variable, so a subject
+      # with spaces or commas needs no quoting here.
+      SIGNED_FLAG: '{{if and .PADMATE_SIGN (ne (trim .PADMATE_SIGN) "") (ne (trim .PADMATE_SIGN) "none")}}-signed "$PADMATE_SIGN_SUBJECT"{{end}}'
+    cmds:
+      # Refuses a VERSION that is not a release tag before anything is built.
+      - go run ./tools/packageinstaller version -version "{{.VERSION}}"
+      # Sequential: a console build must not overwrite the GUI daemon.
+      - go run ./tools/build -version "{{.VERSION}}" -out "{{.INSTALLER_BIN}}" -targets padmated,padmatectl -gui
+      - go run ./tools/sdlfetch -out "{{.INSTALLER_BIN}}"
+      - go run ./tools/packageinstaller stage -version "{{.VERSION}}" -root .. -bin "{{.INSTALLER_BIN}}" -out ../dist/installer-stage
+      - task: app:build
+      - task: app:installer
+      - go run ./tools/packageinstaller verify -version "{{.VERSION}}" -dist "{{.INSTALLER_DIST}}" {{.SIGNED_FLAG}} {{.VERIFY_FLAGS}}
+
+  test:installer:
+    desc: "Install, upgrade and uninstall the built installer under the test override (SPK-07, Windows); with PADMATE_TEST_INSTALLER_INTERACTIVE=1 in the environment it also drives the wizard and uninstaller windows (PKG-13). INSTALLER=ABSOLUTE_PATH of the installer (default: the one of VERSION in dist/installer); UPGRADE=ABSOLUTE_PATH of a second build to install over it (may be the same file). Needs no padmate installed; see docs/build-installer.md"
+    dir: daemon
+    platforms: [windows]
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    vars:
+      INSTALLER: '{{.INSTALLER | default (printf "%s/dist/installer/padmate-%s-windows-amd64-setup.exe" .ROOT_DIR .VERSION)}}'
+      UPGRADE: '{{.UPGRADE | default ""}}'
+    env:
+      PADMATE_TEST_INSTALLER: '{{.INSTALLER | fromSlash}}'
+      PADMATE_TEST_INSTALLER_UPGRADE: '{{if .UPGRADE}}{{.UPGRADE | fromSlash}}{{end}}'
+    cmds:
+      - go test -count=1 -v -timeout 30m -run '^TestInstaller(Smoke|Wizard)$' ./internal/installersmoke
+
+  test:sign:
+    desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (PKG-09, opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
+    platforms: [windows]
+    dir: app
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    env:
+      TASK_BIN: '{{.TASK_EXE}}'
+    cmds:
+      - node scripts/test-sign.mjs
+
+  pe:check:
+    desc: "Check bin/padmated.exe and bin/padmatectl.exe: sections, entropy, import table and the Windows functions they bind, against internal/pecheck/testdata (PKG-11). task pe:check -- -update rewrites the goldens after a deliberate change"
+    dir: daemon
+    platforms: [windows]
+    cmds:
+      - go run ./tools/pecheck -bin ../bin {{.CLI_ARGS}}
+
+  sdl:
+    desc: Download the pinned SDL3.dll into bin/, checking the zip and DLL SHA-256 (no network once it is there; Windows only, other systems use their libSDL3)
+    dir: daemon
+    platforms: [windows]
+    cmds:
+      - go run ./tools/sdlfetch -out ../bin
+
+  spk01:
+    desc: Build the SPK-01 spike (tray on the main thread, T-input, GUI subsystem) into bin/spk01.exe next to the pinned SDL3.dll
+    dir: daemon
+    platforms: [windows]
+    deps: [sdl]
+    cmds:
+      - go build -ldflags "-H=windowsgui {{.LDFLAGS}}" -o ../bin/spk01{{exeExt}} ./tools/spk01
+
+  spk03:
+    desc: Run the SPK-03 spike (goja dispatch and activation, esbuild, watchdog, QueryThreadCycleTime) and print its Markdown report; flags after --, e.g. task spk03 -- -dispatch 10000
+    dir: daemon
+    cmds:
+      - go run ./tools/spk03 {{.CLI_ARGS}}
+
+  dev:
+    desc: Build padmated for the console subsystem so its logs are visible
+    dir: daemon
+    cmds:
+      - go run ./tools/build -version "{{.VERSION}}" -out ../bin -targets padmated
+
+  test:
+    desc: Run the Go tests (extra flags after --, e.g. task test -- -run Parse -v)
+    dir: daemon
+    cmds:
+      - go test {{.CLI_ARGS}} ./...
+
+  test:sdl:
+    desc: Run the SDL-backed tests (virtual gamepad, no hardware) against bin/SDL3.dll on Windows and the system libSDL3 elsewhere; a missing library fails them
+    dir: daemon
+    deps: [sdl]
+    env:
+      PADMATE_REQUIRE_SDL: "1"
+    cmds:
+      - go test -count=1 -v ./internal/input/... ./cmd/padmatectl ./cmd/padmated ./tools/spk01
+
+  test:types:
+    desc: Check script declarations and scaffold with TypeScript (TSC is the absolute path to the compiler's JS entry point)
+    dir: daemon
+    requires:
+      vars: [TSC]
+    env:
+      PADMATE_TEST_TSC: '{{.TSC}}'
+    cmds:
+      - go test -count=1 -v -run 'WithTSC$' ./internal/script/dtsgen
+
+  gen:
+    desc: Regenerate the mkwinsyscall bindings (zsyscall_windows.go) and other go:generate output
+    dir: daemon
+    cmds:
+      - go generate ./...
+
+  test:inject:
+    desc: Run the tests that inject real keys (Windows; a low-level hook swallows every one)
+    dir: daemon
+    platforms: [windows]
+    deps: [sdl]
+    env:
+      PADMATE_TEST_INJECT: "1"
+      # padmated's tests inject from a virtual gamepad: fail, not skip,
+      # without SDL3.dll.
+      PADMATE_REQUIRE_SDL: "1"
+      # TestSessionToProbe: fail, not skip, when the session already
+      # suspends the mapping at the start (DMN-09).
+      PADMATE_REQUIRE_SESSION: "1"
+    cmds:
+      - go test -p 1 -count=1 -v ./internal/injecttest ./internal/output ./internal/winhook ./cmd/padmatectl ./cmd/padmated
+
+  test:layouts:
+    desc: Compare the keyboard layouts of this machine, as Dump and SystemLayouts read them, with the fixtures (Windows; loads each layout without activating it)
+    dir: daemon
+    platforms: [windows]
+    env:
+      PADMATE_TEST_LAYOUTS: "1"
+    cmds:
+      # -p 1: the layout list is shared by the session, so the two packages
+      # must not load and unload layouts at the same time.
+      - go test -p 1 -count=1 -v -run '^(TestDumpMatchesFixtures|TestSystemLayoutsMatchFixtures)$' ./internal/kblayout ./internal/output
+
+  bench:
+    desc: "Measure the end-to-end latency (ENG-11, Windows): hot-path benchmarks (with the engine's zero-allocation Gestures, ENG-13), SendInput alone, then a virtual gamepad drives live mode with real SendInput that a hook swallows; reports in bin/; about 4.5 min (task bench BENCH_SCALE=5 for a longer run, at most 10)"
+    dir: daemon
+    platforms: [windows]
+    deps: [sdl]
+    env:
+      PADMATE_BENCH: "1"
+      PADMATE_TEST_INJECT: "1"
+      PADMATE_REQUIRE_SDL: "1"
+      PADMATE_BENCH_GATE: "1"
+      PADMATE_BENCH_SCALE: "{{.BENCH_SCALE}}"
+      PADMATE_BENCH_DIR: "{{.ROOT_DIR}}/bin"
+    cmds:
+      # -p 1: benchmarks of different packages must not run at the same
+      # time. -benchtime 2000x fixes b.N. The timeouts cover a scale of 10;
+      # a timed-out test panics without its cleanups, so TestInjectLatency
+      # and TestLatencyLive check their deadlines themselves.
+      - go test -p 1 -count=1 -timeout 15m -run '^$' -bench 'Latency|Gestures' -benchtime 2000x -benchmem ./internal/engine ./internal/slot ./internal/output ./internal/supervisor
+      - go test -count=1 -timeout 15m -v -run '^TestInjectLatency$' ./internal/output
+      - go test -count=1 -timeout 45m -v -run '^TestLatencyLive$' ./cmd/padmated
+
+  layouts:
+    desc: Regenerate the keyboard layout fixtures in daemon/testdata/layouts (Windows)
+    dir: daemon
+    platforms: [windows]
+    cmds:
+      - go run ./cmd/padmate-probe dump-layout --out testdata/layouts
+
+  fuzz:
+    desc: Run each fuzz target for FUZZTIME (default 60s)
+    dir: daemon
+    cmds:
+      - go test -run '^$' -fuzz '^FuzzParseChord$' -fuzztime {{.FUZZTIME}} ./internal/keys
+      - go test -run '^$' -fuzz '^FuzzValidateText$' -fuzztime {{.FUZZTIME}} ./internal/keys
+      - go test -run '^$' -fuzz '^FuzzArbiter$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzArbiterTiming$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzTypeText$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzSequence$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzMenuMask$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzHeldLog$' -fuzztime {{.FUZZTIME}} ./internal/output
+      - go test -run '^$' -fuzz '^FuzzParseTrace$' -fuzztime {{.FUZZTIME}} ./internal/simtest
+      - go test -run '^$' -fuzz '^FuzzParse$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzResolve$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzMigrate$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzConfig$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzState$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzCheckMacroFile$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzHUD$' -fuzztime {{.FUZZTIME}} ./internal/script
+      - go test -run '^$' -fuzz '^FuzzEffects$' -fuzztime {{.FUZZTIME}} ./internal/script
+      - go test -run '^$' -fuzz '^FuzzMixer$' -fuzztime {{.FUZZTIME}} ./internal/haptic
+      - go test -run '^$' -fuzz '^FuzzReplay$' -fuzztime {{.FUZZTIME}} ./internal/slot
+      - go test -run '^$' -fuzz '^FuzzResync$' -fuzztime {{.FUZZTIME}} ./internal/slot
+      - go test -run '^$' -fuzz '^FuzzRouter$' -fuzztime {{.FUZZTIME}} ./internal/supervisor
+      - go test -run '^$' -fuzz '^FuzzReadEvents$' -fuzztime {{.FUZZTIME}} ./internal/input
+      - go test -run '^$' -fuzz '^FuzzParseDeviceKey$' -fuzztime {{.FUZZTIME}} ./internal/input
+      - go test -run '^$' -fuzz '^FuzzImport$' -fuzztime {{.FUZZTIME}} ./internal/amgp
+      - go test -run '^$' -fuzz '^FuzzParse$' -fuzztime {{.FUZZTIME}} ./internal/sdlmapping
+      - go test -run '^$' -fuzz '^FuzzDetector$' -fuzztime {{.FUZZTIME}} ./internal/mapwizard
+      - go test -run '^$' -fuzz '^FuzzSetDeviceMappings$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzDiscovery$' -fuzztime {{.FUZZTIME}} ./internal/ipc
+      - go test -run '^$' -fuzz '^FuzzHello$' -fuzztime {{.FUZZTIME}} ./internal/ipc
+      - go test -run '^$' -fuzz '^FuzzFromMessage$' -fuzztime {{.FUZZTIME}} ./internal/winsession
+      - go test -run '^$' -fuzz '^FuzzSessionTracker$' -fuzztime {{.FUZZTIME}} ./internal/winsession
+      - go test -run '^$' -fuzz '^FuzzGestures$' -fuzztime {{.FUZZTIME}} ./internal/engine
+      - go test -run '^$' -fuzz '^FuzzMouseStick$' -fuzztime {{.FUZZTIME}} ./internal/engine
+      - go test -run '^$' -fuzz '^FuzzKeyHints$' -fuzztime {{.FUZZTIME}} ./internal/engine
+      - go test -run '^$' -fuzz '^FuzzReadArchive$' -fuzztime {{.FUZZTIME}} ./internal/profilelib
+      - go test -run '^$' -fuzz '^FuzzMacroFileExports$' -fuzztime {{.FUZZTIME}} ./internal/profilelib
+      - go test -run '^$' -fuzz '^FuzzReadAsarFile$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+      - go test -run '^$' -fuzz '^FuzzParseVersionInfo$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+      - go test -run '^$' -fuzz '^FuzzParseUpdateInfo$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+      - go test -run '^$' -fuzz '^FuzzRead$' -fuzztime {{.FUZZTIME}} ./internal/authenticode
+      - go test -run '^$' -fuzz '^FuzzUpdaterAccepts$' -fuzztime {{.FUZZTIME}} ./internal/authenticode
+      - go test -run '^$' -fuzz '^FuzzMatchesOwnSubject$' -fuzztime {{.FUZZTIME}} ./internal/authenticode
+      - go test -run '^$' -fuzz '^FuzzInspect$' -fuzztime {{.FUZZTIME}} ./internal/pecheck
+      - go test -run '^$' -fuzz '^FuzzMainBundleRequires$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+      - go test -run '^$' -fuzz '^FuzzCheckUpdateConfig$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+
+  lint:
+    desc: Run golangci-lint
+    dir: daemon
+    cmds:
+      - golangci-lint run {{.CLI_ARGS}}
+
+  fmt:
+    desc: Format the Go code with gofmt and goimports
+    dir: daemon
+    cmds:
+      - golangci-lint fmt
+
+  vet:
+    desc: Run go vet
+    dir: daemon
+    cmds:
+      - go vet ./...
+
+  roadmap:check:
+    desc: Check ROADMAP.md IDs, references, milestone status and the §0 当前里程碑 line, then CLAUDE.md (TestClaudeMD); both are skipped in the public code mirror, which has neither. Also runs, uncached, the tests that read git, the marker and this Taskfile (TestRepo* of tools/mirror, internal/publicmirror)
+    dir: daemon
+    cmds:
+      - go run ./tools/roadmapcheck
+      # Uncached: go test does not recheck files outside daemon/.
+      - go test -count=1 -run '^TestClaudeMD$' ./tools/roadmapcheck
+      # Uncached: go test neither sees git nor files outside daemon/ (the
+      # Taskfile, the marker), so a new document or an edited precondition
+      # would pass from the cache. The export tool is not in the mirror.
+      - cmd: go test -count=1 -run '^TestRepo' ./tools/mirror
+        if: test -d tools/mirror
+      - go test -count=1 ./internal/publicmirror
+
+  app:install:
+    desc: Install the pinned frontend dependencies and Electron runtime
+    dir: app
+    cmds:
+      - npm{{if eq OS "windows"}}.cmd{{end}} ci
+
+  app:prepare:
+    desc: Build a private dry-run development daemon and CLI in .cache/ui-bin
+    dir: app
+    platforms: [windows]
+    cmds:
+      - npm.cmd run prepare:dev
+
+  app:dev:
+    desc: Start the isolated Electron development UI (dry-run daemon)
+    dir: app
+    platforms: [windows]
+    cmds:
+      - npm.cmd run dev
+
+  app:gen-check:
+    desc: Check schema-derived Go and TypeScript files without rewriting them
+    dir: daemon
+    cmds:
+      - go run ./tools/codegen -check
+
+  app:ci:
+    desc: Run frontend typecheck, Biome, vitest and production build
+    dir: app
+    cmds:
+      - npm{{if eq OS "windows"}}.cmd{{end}} run ci
+
+  app:build:
+    desc: Build the Electron app's main, preload and renderer into app/out
+    dir: app
+    cmds:
+      - npm{{if eq OS "windows"}}.cmd{{end}} run build
+
+  app:installer:
+    desc: Run electron-builder on app/out and the staged files for VERSION (called by package:installer, which stages them first); INSTALLER_OUT=ABSOLUTE_DIR for a test build
+    dir: app
+    platforms: [windows]
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    vars:
+      INSTALLER_OUT: '{{.INSTALLER_OUT | default ""}}'
+    cmds:
+      - node scripts/package-installer.mjs --version "{{.VERSION}}"{{if .INSTALLER_OUT}} --output "{{.INSTALLER_OUT}}"{{end}}
+
+  app:e2e:
+    desc: Run real Electron/Go IPC Playwright E2E with private dry-run test endpoints
+    dir: app
+    platforms: [windows]
+    cmds:
+      - npm.cmd run test:e2e
+
+  ci:
+    desc: Run Go and frontend checks and builds, stopping at the first failure
+    cmds:
+      - task: vet
+      - task: lint
+      - task: test
+      - task: roadmap:check
+      - task: build
+      - task: pe:check
+      - task: app:gen-check
+      - task: app:ci
+
+  clean:
+    desc: Remove build output in bin/
+    cmds:
+      - rm -rf bin
+
+  mirror:export:
+    desc: "Export the public code mirror (no documentation) of COMMIT (default HEAD) to OUT, an absolute path: a missing or empty folder, or an existing mirror checkout whose tree is replaced and whose .git is kept. Uses the files of the commit, not the working tree; prints what it kept and left out (docs/build-installer.md, 公开的代码仓库)"
+    dir: daemon
+    preconditions:
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: it is exported from the development repository, which has the export tool"
+    requires:
+      vars: [OUT]
+    cmds:
+      - go run ./tools/mirror -out "{{.OUT}}"{{if .COMMIT}} -commit "{{.COMMIT}}"{{end}}

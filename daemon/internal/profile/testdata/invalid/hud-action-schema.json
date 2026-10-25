@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "HUD 动作",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "hud", "op": "show"}},
+      "east": {"press": {"type": "hud"}},
+      "north": {"press": {"type": "hud", "op": "hints", "factor": 0.5}},
+      "west": {"press": {"type": "hud", "op": "hints", "keys": "Z"}},
+      "lb": {"press": {"type": "hud", "op": "hints", "x": 0.5, "y": 0.5}}
+    }
+  }
+}

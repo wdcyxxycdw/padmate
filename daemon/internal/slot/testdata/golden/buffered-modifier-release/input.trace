@@ -1,0 +1,7 @@
+# west (balanced) is pending. leftshoulder (LCtrl), north and south go
+# down; leftshoulder's release makes west a hold. Replaying the buffer
+# presses LCtrl, then stops at north's pending gesture with south's press
+# and leftshoulder's release still in the buffer (MAP-09).
++west@0 +leftshoulder@10 +north@20 +south@25 -leftshoulder@28
+# south's release makes north a hold; the buffer replays in order.
+-south@40 -north@50 -west@60

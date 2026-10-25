@@ -1,0 +1,15 @@
+# Macros (SCR-50) on every kind of gesture. The golden tests' fake macro
+# runtime presses the key a macro's file names (F13.ts: F13) for 100 ms,
+# under an owner of each run (TestGolden).
+# press runs at the press, release at the release.
++south@0 -south@30
++east@200 -east@260
+# tap at the release; hold once, when the hold time is up, and not again
+# while west stays down; releasing west does not end the run.
++west@500 -west@540
++west@1000 -west@1300
+# Two taps make the double tap.
++north@2000 -north@2030 +north@2100 -north@2130
+# LCtrl, held across a run, is the binding's: the run does not release
+# it, and its release does not end the run.
++lb@3000 +south@3050 -lb@3100 -south@3120

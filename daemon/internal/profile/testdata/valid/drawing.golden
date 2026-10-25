@@ -1,0 +1,15 @@
+name "绘画", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	east          /layers/base/b             label "抓手"  press: keys Space hold
+	west          /layers/base/x             label "橡皮"  press: keys E tap
+	north         /layers/base/north         label "画笔"  press: keys B tap
+	leftstick     /layers/base/leftstick     label ""  press: keys F13 tap
+	leftshoulder  /layers/base/lb            label ""  press: keys LCtrl hold
+	rightshoulder /layers/base/rightshoulder label ""  press: keys Shift hold
+	dpad.up       /layers/base/dpad.up       label "放大"  press: keys Ctrl+Plus tap
+	dpad.down     /layers/base/dpad.down     label "缩小"  press: keys Ctrl+- tap
+	paddle1       /layers/base/paddle1       label ""  press: keys sc:0x2C tap
+	touchpad      /layers/base/touchpad      label ""  press: keys KeyZ hold
+	lt            /layers/base/lt            label "吸管"  press: keys Alt hold
+	rt            /layers/base/rt            label "重做"  press: keys Ctrl+Shift+Z tap

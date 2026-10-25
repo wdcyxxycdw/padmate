@@ -1,0 +1,7 @@
+# The pause lets go of both members' keys in one batch; after the resume
+# only a new press of leftshoulder maps.
++LCtrl@100
++LShift@300
+-LShift@2300 -LCtrl@2300
++LCtrl@6500
+-LCtrl@6600

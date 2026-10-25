@@ -1,0 +1,6 @@
+6:94: error: minRateHz must not exceed rateHz (/layers/base/ls.up/press/repeat/minRateHz)
+	> 11}}},
+7:80: error: minRateHz needs a stick, trigger or half-axis control (/layers/base/south/press/repeat/minRateHz)
+	> 3}}},
+8:95: error: minRateHz needs a stick, trigger or half-axis control (/layers/base/rs.cw/press/repeat/minRateHz)
+	> 3}}},

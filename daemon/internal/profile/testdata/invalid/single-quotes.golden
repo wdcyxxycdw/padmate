@@ -1,0 +1,2 @@
+6:66: error: strings need double quotes, not single quotes
+	> 'Ctrl+Z'}}

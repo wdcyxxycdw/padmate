@@ -1,0 +1,8 @@
+# A sign-out (DMN-09): WM_QUERYENDSESSION at 500 lets go of Space,
+# which east holds; WM_ENDSESSION with TRUE at 600 changes nothing more.
+# Nothing maps after it: not a tap of south, not east's release.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad A","guid":"030000000a0000000a00000000000000","gamepad":true}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":700000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":750000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":800000000,"kind":"up","device":1,"control":"east"}

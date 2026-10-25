@@ -1,0 +1,4 @@
+# The query lets go of Space at 500; south maps again after the
+# cancel.
++Space@100
+-Space@500

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "绘画",
+  "layers": {
+    "base": {
+      "Cross": {"press": {"type": "keys", "keys": "Ctrl+Z"}},
+      "circle": {"press": {"type": "keys", "keys": "Space"}},
+      "ls.up": {"press": {"type": "keys", "keys": "Up"}},
+      "dpad.upleft": {"press": {"type": "keys", "keys": "Home"}},
+      "lb>south": {"press": {"type": "keys", "keys": "Ctrl+Y"}},
+      "button3": {"press": {"type": "keys", "keys": "F13"}}
+    }
+  }
+}

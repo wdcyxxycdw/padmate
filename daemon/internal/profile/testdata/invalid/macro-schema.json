@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "宏",
+  "layers": {
+    "base": {
+      "north": {"press": {"type": "macro", "file": "a.ts", "repeat": {"rateHz": 10}}},
+      "back": {"press": {"type": "macro"}},
+      "start": {"press": {"type": "macro", "file": ""}}
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# The lock lets go of Space at 500; nothing maps until the tick finds
+# the session unlocked.
++Space@100
+-Space@500

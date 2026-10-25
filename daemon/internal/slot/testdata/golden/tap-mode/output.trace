@@ -1,0 +1,5 @@
+# Each press taps Ctrl+Z for 20 ms, however long the button is down.
++LCtrl@0 +Z@0
+-Z@20 -LCtrl@20
++LCtrl@100 +Z@100
+-Z@120 -LCtrl@120

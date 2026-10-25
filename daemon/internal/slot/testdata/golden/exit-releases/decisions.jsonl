@@ -1,0 +1,8 @@
+{"t":0,"control":"east","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","owner":"decl/1","reason":"dispatch"}
+{"t":100,"control":"leftshoulder","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","owner":"decl/2","reason":"dispatch"}
+{"t":150,"control":"lt","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","owner":"decl/3","reason":"dispatch"}
+{"t":200,"control":"south","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","action":"tap Ctrl+Z","owner":"decl/4","reason":"dispatch"}
+{"t":250,"control":"south","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/south","label":"撤销","reason":"end"}
+{"t":250,"control":"east","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/east","label":"抓手","action":"hold Space","reason":"cancel"}
+{"t":250,"control":"leftshoulder","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/leftshoulder","action":"hold LCtrl","reason":"cancel"}
+{"t":250,"control":"lt","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/lt","label":"吸管","action":"hold Alt","reason":"cancel"}

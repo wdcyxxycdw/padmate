@@ -1,0 +1,9 @@
+# The lock lets go of Space and Shift in one batch at 500; each maps
+# again only when pressed after the unlock.
++Space@100
++LShift@200
+-Space@500 -LShift@500
++Space@1400
++LShift@1500
+-Space@1600
+-LShift@1700

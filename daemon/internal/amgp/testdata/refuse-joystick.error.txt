@@ -1,0 +1,2 @@
+joystick
+这是原始摇杆的配置（根元素 joystick）：它按原始按键编号写，没有标准按键名，padmate 无法对应。只能导入游戏手柄的配置（根元素 gamecontroller）

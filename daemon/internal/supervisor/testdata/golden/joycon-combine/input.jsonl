@@ -1,0 +1,29 @@
+# Two Joy-Cons under --hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1, the
+# stream the Source delivers with the fix for gone devices (IN-07,
+# ADR-0022). Joy-Con (L) holds east. Joy-Con (R) wakes: SDL reports R
+# added, L removed, R removed and the pair added. The Source skips R's
+# add (id 2), since R is already gone, and R's removal finds no device;
+# without the fix the stream would also carry a DeviceAdded and a
+# DeviceRemoved of id 2 with an empty GUID. SDL's recentering ButtonUp of
+# east is included, so Space is released at the edge and the ReleaseAll
+# at L's removal has nothing left. The pair, a new key, takes the free
+# slot provisionally and maps at once.
+# R is switched off: SDL deletes the pair and finds L again at its next
+# scan, here 10 ms later, with a new id and its old key.
+# The GUIDs are made up in the layout of SDL's HIDAPI GUIDs: Bluetooth,
+# CRC 0, Nintendo's 057e with product 2006, 2007 or 2008, and an arbitrary
+# last byte. The serials are made-up MACs. The pair's serial and path
+# are the ones SDL_hidapi_combined.c gives it; the lone Joy-Cons' paths
+# are left empty, since the key of a gamepad with a serial does not use
+# them.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"up","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":1}
+{"timeNs":500000000,"kind":"added","device":3,"info":{"id":3,"name":"Nintendo Switch Joy-Con (L/R)","type":"joyconpair","vendor":1406,"product":8200,"version":1,"guid":"050000007e0500000820000001006803","driver":"hidapi","path":"nintendo_joycons_combined","serial":"aa-bb-cc-dd-ee-01,aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":600000000,"kind":"down","device":3,"control":"south"}
+{"timeNs":610000000,"kind":"up","device":3,"control":"south"}
+{"timeNs":800000000,"kind":"removed","device":3}
+{"timeNs":810000000,"kind":"added","device":4,"info":{"id":4,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":900000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":910000000,"kind":"up","device":4,"control":"south"}

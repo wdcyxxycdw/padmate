@@ -1,0 +1,2 @@
+doctype
+文件含有 DOCTYPE 或其他声明；AntiMicroX 不会写这些，出于安全不读取

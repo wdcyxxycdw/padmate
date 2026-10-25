@@ -1,0 +1,13 @@
+# Push the left stick up to half its travel: it is active and in the inner ring.
+leftx=0@0 lefty=-0.55@0
+# Past 90%: it leaves the inner ring and enters the outer one.
+leftx=0@100 lefty=-0.91@100
+# 87.5% is under the threshold but above threshold - 5%: still the outer ring.
+leftx=0@200 lefty=-0.85@200
+# 81%: back in the inner ring.
+leftx=0@300 lefty=-0.798@300
+# Let go: ls.active, then the ring, then the direction.
+leftx=0@400 lefty=-0.15@400
+# A flick to the rim goes straight to the outer ring, and the inner ring never goes down.
+leftx=0@500 lefty=-0.95@500
+leftx=0@600 lefty=-0.15@600

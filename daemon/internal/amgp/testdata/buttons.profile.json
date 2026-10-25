@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "name": "Basic test",
+  "defaultLayer": "base",
+  "controlNames": {
+    "south": "Undo",
+    "north": "Brush",
+    "lt": "Left trigger",
+    "dpad.up": "Up key"
+  },
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.0916,
+      "release": 0.0416
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "label": "Undo",
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+Z"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "Space"
+        }
+      },
+      "west": {
+        "press": {
+          "type": "keys",
+          "keys": "MouseLeft"
+        }
+      },
+      "north": {
+        "press": {
+          "type": "keys",
+          "keys": "F5"
+        }
+      },
+      "leftshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LShift"
+        }
+      },
+      "rightshoulder": {
+        "press": {
+          "type": "keys",
+          "keys": "LAlt+Tab"
+        }
+      },
+      "lt": {
+        "press": {
+          "type": "keys",
+          "keys": "["
+        }
+      },
+      "rt": {
+        "press": {
+          "type": "keys",
+          "keys": "Plus"
+        }
+      },
+      "leftstick": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+LShift+Z"
+        }
+      },
+      "rightstick": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      },
+      "guide": {
+        "press": {
+          "type": "keys",
+          "keys": "Esc"
+        }
+      },
+      "dpad.up": {
+        "press": {
+          "type": "keys",
+          "keys": "Up"
+        }
+      },
+      "dpad.down": {
+        "press": {
+          "type": "keys",
+          "keys": "Down"
+        }
+      },
+      "dpad.left": {
+        "press": {
+          "type": "keys",
+          "keys": "Left"
+        }
+      },
+      "dpad.right": {
+        "press": {
+          "type": "keys",
+          "keys": "Right"
+        }
+      },
+      "ls.up": {
+        "press": {
+          "type": "keys",
+          "keys": "W"
+        }
+      },
+      "ls.right": {
+        "press": {
+          "type": "keys",
+          "keys": "D"
+        }
+      },
+      "ls.down": {
+        "press": {
+          "type": "keys",
+          "keys": "S"
+        }
+      },
+      "ls.left": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      }
+    }
+  }
+}

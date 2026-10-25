@@ -1,0 +1,2 @@
+7:74: error: trailing comma before "}" (strict JSON)
+	> ,

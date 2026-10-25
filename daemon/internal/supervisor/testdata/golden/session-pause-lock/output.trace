@@ -1,0 +1,6 @@
+# The pause lets go of Space at 2300; the lock and the unlock change
+# nothing, and south maps again only after the resume.
++Space@100
+-Space@2300
++LCtrl@6200 +Z@6200
+-Z@6220 -LCtrl@6220

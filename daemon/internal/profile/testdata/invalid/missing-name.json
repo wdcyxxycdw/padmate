@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}}
+    }
+  }
+}

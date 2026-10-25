@@ -1,0 +1,69 @@
+$ padmated --profile testdata/sequence-actions.json --fake-input testdata/sequence-actions.jsonl --dry-run
+padmated: dry run, nothing is injected
+profile:    testdata/sequence-actions.json, "sequence-actions", 3 bindings
+fake input: testdata/sequence-actions.jsonl, 9 events of device 3 "left pad"
+
+      time  input               reason    action                                          label         binding             owner
+     0.000  device 3 added
+   100.000  south down          dispatch  sequence: Ctrl+A, wait 100, text "你好", Enter  "全选后输入"  /layers/base/south  decl/1
+   100.000    send +LCtrl +A
+   110.000    send -A -LCtrl
+   130.000  south up            end                                                       "全选后输入"  /layers/base/south
+   150.000  south down          dispatch  sequence: Ctrl+A, wait 100, text "你好", Enter  "全选后输入"  /layers/base/south  decl/2
+   160.000  south up            end                                                       "全选后输入"  /layers/base/south
+   210.000    text "你好"
+   240.000    send +Enter
+   250.000    send -Enter
+   250.000    send +LCtrl +A
+   260.000    send -A -LCtrl
+   360.000    text "你好"
+   390.000    send +Enter
+   400.000    send -Enter
+  1000.000  east down           unbound                                                   "签名"        /layers/base/east
+  1020.000  east down           dispatch  text "ab\ncd"                                   "签名"        /layers/base/east   decl/3
+  1020.000    text "ab"
+  1050.000    send +Enter
+  1060.000    send -Enter
+  1075.000    text "cd"
+  2000.000  west down           unbound                                                   "静音"        /layers/base/west
+  2040.000  west up             end                                                       "静音"        /layers/base/west
+  2040.000  west down           dispatch  sequence: text "😀", wait 30, VolumeMute        "静音"        /layers/base/west   decl/4
+  2040.000    text "😀"
+  2070.000    send +VolumeMute
+  2080.000    send -VolumeMute
+  2080.000  exit: release all
+exit 0
+
+$ padmated --profile testdata/sequence-actions.json --fake-input testdata/sequence-actions.jsonl --dry-run --decisions
+{"t":100,"control":"south","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","action":"sequence: Ctrl+A, wait 100, text \"你好\", Enter","owner":"decl/1","reason":"dispatch"}
+{"t":100,"send":["+LCtrl","+A"]}
+{"t":110,"send":["-A","-LCtrl"]}
+{"t":130,"control":"south","edge":"up","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","reason":"end"}
+{"t":150,"control":"south","edge":"down","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","action":"sequence: Ctrl+A, wait 100, text \"你好\", Enter","owner":"decl/2","reason":"dispatch"}
+{"t":160,"control":"south","edge":"up","cycle":2,"gesture":"press","level":"base","binding":"/layers/base/south","label":"全选后输入","reason":"end"}
+{"t":210,"text":"你好"}
+{"t":240,"send":["+Enter"]}
+{"t":250,"send":["-Enter"]}
+{"t":250,"send":["+LCtrl","+A"]}
+{"t":260,"send":["-A","-LCtrl"]}
+{"t":360,"text":"你好"}
+{"t":390,"send":["+Enter"]}
+{"t":400,"send":["-Enter"]}
+{"t":1000,"control":"east","edge":"down","cycle":3,"gesture":"press","level":"base","binding":"/layers/base/east","label":"签名","reason":"unbound"}
+{"t":1020,"control":"east","edge":"down","cycle":3,"gesture":"tap","level":"base","binding":"/layers/base/east","label":"签名","action":"text \"ab\\ncd\"","owner":"decl/3","reason":"dispatch"}
+{"t":1020,"text":"ab"}
+{"t":1050,"send":["+Enter"]}
+{"t":1060,"send":["-Enter"]}
+{"t":1075,"text":"cd"}
+{"t":2000,"control":"west","edge":"down","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","label":"静音","reason":"unbound"}
+{"t":2040,"control":"west","edge":"up","cycle":4,"gesture":"press","level":"base","binding":"/layers/base/west","label":"静音","reason":"end"}
+{"t":2040,"control":"west","edge":"down","cycle":4,"gesture":"release","level":"base","binding":"/layers/base/west","label":"静音","action":"sequence: text \"😀\", wait 30, VolumeMute","owner":"decl/4","reason":"dispatch"}
+{"t":2040,"text":"😀"}
+{"t":2070,"send":["+VolumeMute"]}
+{"t":2080,"send":["-VolumeMute"]}
+--- stderr
+padmated: dry run, nothing is injected
+profile:    testdata/sequence-actions.json, "sequence-actions", 3 bindings
+fake input: testdata/sequence-actions.jsonl, 9 events of device 3 "left pad"
+exit 0
+

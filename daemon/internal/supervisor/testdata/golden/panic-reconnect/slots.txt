@@ -1,0 +1,9 @@
+# The pause outlives the removal. A press while paused maps nothing but
+# still confirms the slot.
+@0 slot 0 gen=1 <- id 1 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 provisional
+@100 slot 0 gen=1 <- id 1 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 confirmed
+@2300 paused
+@2500 slot 0 gen=1 free
+@3000 slot 0 gen=1 <- id 2 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 provisional reconnected
+@3100 slot 0 gen=1 <- id 2 "Pad A" key=030000000a0000000a00000000000000 home=030000000a0000000a00000000000000 confirmed
+@5600 resumed

@@ -1,0 +1,8 @@
+3:11: error: expected a string, got an array (/name)
+	> ["绘画"],
+6:26: error: expected a string, got a number (/layers/base/south/label)
+	> 5, "press": {"type": "keys", "keys": 90}…
+6:63: error: 'oneOf' failed, none matched (/layers/base/south/press/keys)
+	> 90}},
+7:15: error: expected a binding object, got null (/layers/base/east)
+	> null

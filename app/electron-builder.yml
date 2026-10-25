@@ -1,0 +1,107 @@
+# The Windows installer (PKG-03, PKG-06). `task package:installer VERSION=v0.14.0`
+# stages the daemon, the CLI, SDL3.dll and the documents in ../dist/installer-stage
+# (daemon/tools/packageinstaller), builds the app, and runs electron-builder with
+# the version from VERSION (app/scripts/package-installer.mjs). docs/build-installer.md.
+#
+# Paths are relative to app/. The version is not here: the script passes
+# extraMetadata.version, so no file has to be edited for a release.
+appId: io.github.wdcyxxycdw.padmate
+productName: padmate
+executableName: padmate
+copyright: Copyright (c) 2026 padmate contributors
+directories:
+  output: ../dist/installer
+# The source of the automatic update (PKG-10, ADR-0073). With --publish never
+# this only makes electron-builder write resources\app-update.yml and
+# latest.yml next to the installer; nothing is uploaded from here (release.yml
+# does that). owner and repo are also constants in src/main/update-config.ts,
+# which TestElectronBuilderConfig pins equal. A repository that is private
+# cannot be read by the installed application: it then only fails to check.
+publish:
+  - provider: github
+    owner: wdcyxxycdw
+    repo: padmate
+# The Electron runtime that npm installed, not a second download.
+electronDist: node_modules/electron/dist
+# Only the languages the UI has (zh-CN and en-US).
+electronLanguages:
+  - zh-CN
+  - en-US
+# No native modules: the Go daemon does the native work.
+npmRebuild: false
+asar: true
+# Everything the renderer needs is bundled into out/ by electron-vite, so no
+# node_modules go into the app.
+files:
+  - out/**
+  - package.json
+  - "!node_modules"
+# resources\bin\padmated.exe, padmatectl.exe and SDL3.dll, where
+# runtime-options.ts and ownwindow.TrustedPaths look for them, and the
+# examples, docs, licenses and schema the portable preview ships.
+extraResources:
+  - from: ../dist/installer-stage/resources
+    to: .
+# Runs after electron-builder has edited padmate.exe's resources and signed it,
+# and before NSIS packs it. electron-builder reads the numeric file version out
+# of the string "0.15.1-rc.1" as 0.15.0.1, so this writes MAJOR.MINOR.PATCH.0
+# (PKG-06); that edit drops the signature, so the hook signs the file again
+# (PKG-09, docs/build-installer.md).
+afterSign: ./scripts/stamp-exe-version.mjs
+win:
+  target:
+    - target: nsis
+      arch: x64
+  icon: ../dist/installer-stage/icon.ico
+  requestedExecutionLevel: asInvoker
+  # Whether and how to sign is chosen by PADMATE_SIGN in the environment of
+  # scripts/package-installer.mjs (none, store, pfx or azure; ADR-0073), never
+  # here: no certificate file, password, thumbprint or Azure account belongs in
+  # this file (TestElectronBuilderConfig). A signing mode makes the script pass
+  # forceCodeSigning=true, so that a build that cannot sign fails. The default
+  # build does not sign, hence false. signAndEditExecutable stays true: without
+  # it electron-builder skips afterSign.
+  signAndEditExecutable: true
+  forceCodeSigning: false
+  signtoolOptions:
+    # SHA-256 only, with an RFC 3161 timestamp, so that a signature outlives its
+    # certificate. PADMATE_SIGN_TIMESTAMP names another server. Arrays can only
+    # be set here: the command line sets scalars.
+    signingHashAlgorithms:
+      - sha256
+    rfc3161TimeStampServer: http://timestamp.digicert.com
+nsis:
+  # A wizard: folder page, progress, finish page with "run padmate" (ADR-0068).
+  # electron-builder's assisted installer offers an all-users install, which
+  # needs administrator rights; padmate installs for the current user only
+  # and never asks for elevation: build/installer.nsh skips that page for good
+  # and ignores /allusers. The default folder is
+  # %LOCALAPPDATA%\Programs\padmate, and the install folder is a "padmate"
+  # folder.
+  # allowToChangeInstallationDirectory is not set on purpose: it makes
+  # electron-builder add a folder page of its own, which has no place to check
+  # the folder when Next is pressed and wants "padmate" anywhere in the path.
+  # build/installer.nsh adds the folder page (customPageAfterChangeDir).
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  packElevateHelper: false
+  # The GUID names the uninstall entry and the install registry key; the
+  # installer smoke test (daemon/internal/installersmoke) refuses to run when
+  # they exist. Never change it: an install under another GUID is not upgraded.
+  guid: 6e1c5b0a-3f7d-4c8e-9a52-7d0b1f4c2e83
+  artifactName: padmate-v${version}-windows-amd64-setup.${ext}
+  multiLanguageInstaller: true
+  installerLanguages:
+    - zh_CN
+    - en_US
+  differentialPackage: false
+  runAfterFinish: true
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: padmate
+  deleteAppDataOnUninstall: false
+  uninstallDisplayName: padmate
+  # Stops the daemon before files are replaced or removed, and cleans up
+  # after an uninstall (PKG-04, PKG-05). build/installer.nsh.
+  include: build/installer.nsh

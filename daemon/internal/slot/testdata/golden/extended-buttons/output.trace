@@ -1,0 +1,34 @@
+# paddle1, paddle3, misc1, misc3, misc5 and touchpad tap their F-key for
+# 20 ms, however long they are down (the last touchpad press lasts
+# 10 ms); paddle2, paddle4, misc2, misc4, misc6 and guide hold theirs
+# while they are down.
++F13@0
+-F13@20
++F14@100
+-F14@150
++F15@200
+-F15@220
++F16@300
+-F16@350
++F17@400
+-F17@420
++F18@500
+-F18@550
++F19@600
+-F19@620
++F20@700
+-F20@750
++F21@800
+-F21@820
++F22@900
+-F22@950
++F23@1000
+-F23@1020
++F24@1100
+-F24@1350
++F14@1500
++F18@1510
++F23@1520
+-F23@1540
+-F14@1600
+-F18@1610

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "触感",
+  "analog": {"ls": {"mode": "knob", "knobTick": "yes"}, "rs": {"mode": "knob", "knobTick": 1}},
+  "layers": {
+    "base": {
+      "south": {"haptic": 1, "press": {"type": "keys", "keys": "A"}},
+      "east": {"haptic": true, "press": {"type": "keys", "keys": "B"}},
+      "north": {"haptic": ["tick"], "press": {"type": "keys", "keys": "C"}}
+    }
+  }
+}

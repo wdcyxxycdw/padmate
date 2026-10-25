@@ -1,0 +1,24 @@
+# The mouse buttons are held like keys (ADR-0062): +MouseLeft is the button
+# down and -MouseLeft the button up, both injected. A click is a tap: down,
+# and up 20 ms later. The drag held by two bindings (200 to 400) goes down once
+# and up with the last. The click during the drag at 520 sends nothing, as the
+# button is down already. Shift+MouseRight holds Shift around the button. A tap
+# repeat clicks every 100 ms while the control is held (1000 to 1320). The
+# exit, ReleaseAll at 1500, lets go of the XButton1 that the trigger still holds.
++MouseLeft@0
+-MouseLeft@20
++MouseLeft@200
+-MouseLeft@400
++MouseLeft@500
+-MouseLeft@700
++LShift@800 +MouseRight@800
+-MouseRight@900 -LShift@900
++MouseMiddle@1000
+-MouseMiddle@1020
++MouseMiddle@1100
+-MouseMiddle@1120
++MouseMiddle@1200
+-MouseMiddle@1220
++MouseMiddle@1300
+-MouseMiddle@1320
++MouseX1@1500 -MouseX1@1500

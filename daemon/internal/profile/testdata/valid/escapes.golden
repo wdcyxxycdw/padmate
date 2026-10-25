@@ -1,0 +1,4 @@
+name "\"引号\" 绘画 🎨", schemaVersion 1
+layer base
+	south         /layers/base/south         label "Tab\tNew\nline"  press: keys Ctrl+Z hold
+	east          /layers/base/east          label "/"  press: keys Space hold

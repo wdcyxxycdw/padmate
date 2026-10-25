@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "name": "Eight",
+  "defaultLayer": "base",
+  "analog": {
+    "ls": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "rs": {
+      "mode": "standard",
+      "deadzone": 0.2441,
+      "saturation": 0.9766,
+      "directionThreshold": 0
+    },
+    "lt": {
+      "press": 0.061,
+      "release": 0.011
+    },
+    "rt": {
+      "press": 0.061,
+      "release": 0.011
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F1"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S2",
+          "op": "switch"
+        }
+      }
+    },
+    "S2": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F2"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S3",
+          "op": "switch"
+        }
+      }
+    },
+    "S3": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F3"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S4",
+          "op": "switch"
+        }
+      }
+    },
+    "S4": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F4"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S5",
+          "op": "switch"
+        }
+      }
+    },
+    "S5": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F5"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S6",
+          "op": "switch"
+        }
+      }
+    },
+    "S6": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F6"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S7",
+          "op": "switch"
+        }
+      }
+    },
+    "S7": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F7"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "S8",
+          "op": "switch"
+        }
+      }
+    },
+    "S8": {
+      "south": {
+        "press": {
+          "type": "keys",
+          "keys": "F8"
+        },
+        "release": {
+          "type": "layer",
+          "layer": "base",
+          "op": "switch"
+        }
+      }
+    }
+  }
+}
