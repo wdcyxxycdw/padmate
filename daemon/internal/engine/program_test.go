@@ -133,8 +133,8 @@ func TestBindings(t *testing.T) {
 // which a Registry's levels use, agrees with Compile. So every profile
 // Parse returns compiles.
 func TestParseAndCompileAgree(t *testing.T) {
-	// The same rules hold for the bindings of a layer and for those of the set
-	// of a function key (MAP-27), which Parse and Compile read the same way.
+	// The same rules hold for the bindings of a layer and for those of the
+	// function set (MAP-27), which Parse and Compile read the same way.
 	for _, onSet := range []bool{false, true} {
 		t.Run(map[bool]string{false: "layer", true: "function key set"}[onSet], func(t *testing.T) {
 			testParseAndCompileAgree(t, onSet)
@@ -164,10 +164,10 @@ func testParseAndCompileAgree(t *testing.T, onSet bool) {
 		model := &profile.Profile{Layers: []*profile.Layer{{Name: "base"}, {Name: "paint"}}}
 		b := &profile.Binding{ID: id, Control: c}
 		if onSet {
-			id = "/functionKeys/back/" + c.String()
+			id = "/functionSet/" + c.String()
 			b.ID = id
-			src = `{"schemaVersion": 0, "name": "t", "layers": {"base": {}, "paint": {}}, "functionKeys": {"back": {"` + c.String() + `": ` + binding + `}}}`
-			model.FunctionKeys = &profile.FunctionKeys{Back: &profile.Layer{Name: "function:back", Bindings: []*profile.Binding{b}}}
+			src = `{"schemaVersion": 0, "name": "t", "layers": {"base": {}, "paint": {}}, "functionSet": {"` + c.String() + `": ` + binding + `}}`
+			model.FunctionSet = &profile.Layer{Name: profile.FunctionSetName, Bindings: []*profile.Binding{b}}
 		} else {
 			model.Layers[0].Bindings = []*profile.Binding{b}
 		}
@@ -191,7 +191,7 @@ func testParseAndCompileAgree(t *testing.T, onSet bool) {
 		// too.
 		parsed := p.Layer("base")
 		if onSet {
-			parsed = p.FunctionKeys.Back
+			parsed = p.FunctionSet
 		}
 		if got := parsed.Binding(c).Action(g); !reflect.DeepEqual(got, want) {
 			t.Errorf("%s %s: %s: Parse gives %+v; the test built %+v", c, g, member, got, want)
@@ -354,17 +354,12 @@ func TestCheckBinding(t *testing.T) {
 	}
 }
 
-// TestExamples checks that every example profile, and every starter
-// template of the UI, compiles and reports a binding for each binding in the
-// file.
+// TestExamples checks that every example profile compiles and reports a
+// binding for each binding in the file.
 func TestExamples(t *testing.T) {
-	var files []string
-	for _, pattern := range []string{"../../../examples/profiles/*.json", "../../../examples/profiles/templates/*.json"} {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			t.Fatal(err)
-		}
-		files = append(files, matches...)
+	files, err := filepath.Glob("../../../examples/profiles/*.json")
+	if err != nil {
+		t.Fatal(err)
 	}
 	if len(files) == 0 {
 		t.Skip("examples/profiles not found; this test needs the whole repository")

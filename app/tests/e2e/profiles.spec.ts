@@ -243,12 +243,12 @@ test("配置 page creates, binds, moves, switches and deletes profiles through c
     await card("default")
       .getByRole("button", { name: "「默认」的更多操作", exact: true })
       .click();
-    await expect(p.getByRole("menuitem")).toHaveText([
-      "配置设置…",
-      "复制",
-      "导出…",
-    ]);
+    await expect(p.getByRole("menuitem")).toHaveText(["配置设置…", "导出…"]);
     await p.keyboard.press("Escape");
+    // 复制 is a button of its own on every card, the fixed default's too.
+    await expect(
+      card("default").getByRole("button", { name: "复制", exact: true }),
+    ).toBeEnabled();
     await expect(
       card("paint").getByRole("heading", { name: "E2E paint" }),
     ).toBeVisible();
@@ -294,14 +294,17 @@ test("配置 page creates, binds, moves, switches and deletes profiles through c
     await rpc(f, "profiles.activate", { id: "paint" });
     await expect.poll(() => activeProfile(f)).toBe("paint");
 
-    // 新建配置 from blank: a non-ASCII name gets the fallback library ID.
-    // The name field has no placeholder, and a name in use is refused.
+    // 新建配置 asks for a name only and makes a blank profile: a non-ASCII
+    // name gets the fallback library ID. The name field has no placeholder,
+    // and a name in use is refused (ADR-0076).
     await p.getByRole("button", { name: "新建配置", exact: true }).click();
     const create = p.getByRole("dialog", { name: "新建配置" });
     await expect(create).toBeVisible();
-    await expect(
-      create.getByRole("radio", { name: "空白", exact: true }),
-    ).toHaveAttribute("aria-checked", "true");
+    await expect(create.getByRole("textbox")).toHaveCount(1);
+    await expect(create.getByRole("textbox")).toHaveValue("");
+    await expect(create.getByRole("radio")).toHaveCount(0);
+    await expect(create.getByRole("combobox")).toHaveCount(0);
+    await expect(create).not.toContainText(/模板|复制当前|基于/);
     await expect(create.getByRole("textbox")).not.toHaveAttribute(
       "placeholder",
     );
@@ -609,6 +612,89 @@ test("配置 page creates, binds, moves, switches and deletes profiles through c
   }
 });
 
+// biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
+test("复制 on a card makes a whole copy with its keys and scripts, bound to no app and not based on the original", async ({}, info) => {
+  test.setTimeout(90000);
+  const f = await profilesFixture();
+  const profiles = join(f.path, "data", "profiles");
+  const source = {
+    schemaVersion: 1,
+    name: "Other profile",
+    layers: {
+      base: { south: { press: { type: "keys", keys: "Ctrl+Z", mode: "tap" } } },
+    },
+  };
+  await writeFile(join(profiles, "other", "profile.json"), pretty(source));
+  let app: ElectronApplication | undefined;
+  let page: Page | undefined;
+  try {
+    const opened = await launch(f);
+    app = opened.app;
+    page = opened.page;
+    const p = page;
+    const card = (id: string) => p.locator(`li[data-profile-id="${id}"]`);
+    await p
+      .getByRole("navigation")
+      .getByRole("button", { name: "配置", exact: true })
+      .click();
+    await expect(card("other")).toBeVisible();
+    await expect(
+      card("other").getByRole("button", { name: "notepad.exe", exact: true }),
+    ).toBeVisible();
+
+    // The button is beside 编辑按键; the card's menu has no second copy.
+    await card("other")
+      .getByRole("button", { name: "「Other profile」的更多操作", exact: true })
+      .click();
+    await expect(
+      p.getByRole("menuitem", { name: "删除…", exact: true }),
+    ).toBeVisible();
+    await expect(p.getByRole("menuitem", { name: /复制/ })).toHaveCount(0);
+    await p.keyboard.press("Escape");
+    const before = await readdir(profiles);
+    await card("other")
+      .getByRole("button", { name: "复制", exact: true })
+      .click();
+    const copy = p.getByRole("article", { name: "Other profile 副本" });
+    await expect(copy).toBeVisible();
+    await expect(p.locator(".profiles-pill")).toContainText(
+      "已复制为「Other profile 副本」",
+    );
+    await p.screenshot({ path: info.outputPath("profiles-copy.png") });
+
+    // One new folder with the same files; only the name differs, nothing
+    // says it is based on the original, and it has no app.
+    const added = (await readdir(profiles)).filter(
+      (name) => !before.includes(name),
+    );
+    expect(added).toHaveLength(1);
+    const id = added[0] as string;
+    const copied = JSON.parse(
+      await readFile(join(profiles, id, "profile.json"), "utf8"),
+    );
+    expect(copied).toEqual({ ...source, name: "Other profile 副本" });
+    expect("extends" in copied).toBe(false);
+    expect(await folderFiles(join(profiles, id))).toEqual(
+      await folderFiles(join(profiles, "other")),
+    );
+    await expect(card(id).locator(".app-icon")).toHaveCount(0);
+    // The original is as it was.
+    expect(
+      JSON.parse(
+        await readFile(join(profiles, "other", "profile.json"), "utf8"),
+      ),
+    ).toEqual(source);
+  } catch (error) {
+    console.error(
+      "Page text:",
+      await page?.locator("body").innerText({ timeout: 2000 }).catch(String),
+    );
+    throw error;
+  } finally {
+    await cleanup(f, app);
+  }
+});
+
 /** The files of a profile folder, relative and sorted, without .history. */
 async function folderFiles(dir: string, prefix = ""): Promise<string[]> {
   const files: string[] = [];
@@ -691,7 +777,7 @@ test("导出 and 导入 back up one profile with its scripts; saved versions sta
     // the version it replaced, but no page lists or restores it (F9).
     const label = p
       .getByTestId("mapping-editor")
-      .getByRole("textbox", { name: "在手柄图上显示为" });
+      .getByRole("textbox", { name: "功能" });
     await p.locator('button[data-callout="south"]').click();
     await expect(label).toBeVisible();
     await label.fill("撤销一步");
@@ -705,7 +791,6 @@ test("导出 and 导入 back up one profile with its scripts; saved versions sta
     await expect(p.getByRole("menuitem")).toHaveText([
       "配置设置…",
       "重命名…",
-      "复制",
       "导出…",
       "删除…",
     ]);

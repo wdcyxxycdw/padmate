@@ -8,8 +8,8 @@ import type { ProfileDocument } from "../../src/shared/api";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, fixture, launch, recordShortcut } from "./helpers";
 
-// UI-31, MAP-22, OUT-20, OUT-21 (ADR-0070): the steps of a sequence, the type
-// text action and the media keys, in the key drawer. The fake pad is a
+// UI-31, MAP-22, OUT-20 (ADR-0070, ADR-0076): the steps of a sequence (a
+// shortcut or a wait) and the media keys, in the key drawer. The fake pad is a
 // standard one: south is printed S. The fixture's south taps Ctrl+Z.
 
 async function openControl(page: Page, control: string): Promise<void> {
@@ -44,13 +44,13 @@ function chords(client: FixtureClient): string[] {
     .map((event) => String(event.data.chord));
 }
 
-async function addStep(page: Page, kind: "快捷键" | "等待" | "文字") {
+async function addStep(page: Page, kind: "快捷键" | "等待") {
   await page.getByRole("button", { name: "添加下一步" }).click();
   await page.getByRole("menuitem", { name: kind, exact: true }).click();
 }
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("a key sends a sequence with a wait and a text, and types a text, and sends a media key", async ({}, info) => {
+test("a key sends a sequence with a wait, and sends a media key", async ({}, info) => {
   test.setTimeout(120000);
   const f = await fixture();
   let app: ElectronApplication | undefined;
@@ -75,91 +75,44 @@ test("a key sends a sequence with a wait and a text, and types a text, and sends
       type: "sequence",
       steps: [{ keys: "Ctrl+Z" }, { wait: 100 }],
     });
-    // ... of 150 ms, and a text after it.
+    // ... of 150 ms.
     await wait.fill("150");
     await wait.press("Enter");
-    await addStep(page, "文字");
-    const text = page
-      .getByRole("group", { name: "第 3 步" })
-      .getByRole("textbox", { name: "输入的文字" });
-    await expect(text).toBeFocused();
-    await text.fill("你好");
-    await expect(page.getByTestId("text-left")).toHaveText("剩余 254");
-    // Typing saves nothing; leaving the box does.
-    await text.blur();
     await expect.poll(south).toEqual({
       type: "sequence",
-      steps: [{ keys: "Ctrl+Z" }, { wait: 150 }, { text: "你好" }],
+      steps: [{ keys: "Ctrl+Z" }, { wait: 150 }],
     });
     await expect(page.getByTestId("editor-notice")).toHaveCount(0);
     await page.screenshot({ path: info.outputPath("sequence-steps.png") });
 
-    // A press runs the steps: the shortcut at once, the text as the engine
+    // A press runs the steps: the shortcut at once, the wait as the engine
     // says it (the dry run prints both).
     live.events.length = 0;
     await live.call("fake.press", { control: "south" });
     await live.call("fake.release", { control: "south" });
     await expect
       .poll(() => decisions(live))
-      .toContain('sequence: Ctrl+Z, wait 150, text "你好"');
-    // The shortcut step reached the output (the preview lists chords; a text
-    // is not one, so it is only in the decision above).
+      .toContain("sequence: Ctrl+Z, wait 150");
     await expect.poll(() => chords(live)).toContain("LCtrl+Z");
     await expect(page.getByTestId("key-preview")).toHaveText(
-      "S → Ctrl+Z, 150 ms, “你好”",
+      "S → Ctrl+Z, 150 ms",
     );
 
-    // A step moves up; the chip is a sequence of three steps.
-    await page.getByRole("button", { name: "上移第 3 步" }).click();
+    // A step moves up; the chip is still the sequence.
+    await page.getByRole("button", { name: "上移第 2 步" }).click();
     await expect.poll(south).toEqual({
       type: "sequence",
-      steps: [{ keys: "Ctrl+Z" }, { text: "你好" }, { wait: 150 }],
+      steps: [{ wait: 150 }, { keys: "Ctrl+Z" }],
     });
     await expect(page.locator('button[data-callout="south"]')).toContainText(
       "撤销",
     );
 
-    // Taking away the last wait and text makes it the shortcut again.
-    await page.getByRole("button", { name: "删除第 3 步" }).click();
-    await page.getByRole("button", { name: "删除第 2 步" }).click();
-    await expect
-      .poll(south)
-      .toEqual({ type: "keys", keys: "Ctrl+Z", mode: "tap" });
+    // Taking away the wait makes it the shortcut again, as the drawer writes
+    // a shortcut: held, with no mode.
+    await page.getByRole("button", { name: "删除第 1 步" }).click();
+    await expect.poll(south).toEqual({ type: "keys", keys: "Ctrl+Z" });
     await expect(page.getByRole("group", { name: "快捷键" })).toBeVisible();
-
-    // 输入文字 is an action type of its own, on any gesture.
-    await openControl(page, "east");
-    await page
-      .getByTestId("action-type")
-      .getByRole("radio", { name: "输入文字" })
-      .click();
-    const box = page.getByRole("textbox", { name: "输入的文字" });
-    await box.fill("签名\nKim");
-    await box.blur();
-    await expect
-      .poll(async () => (await onDisk(live)).layers.base.east?.press)
-      .toEqual({ type: "text", text: "签名\nKim" });
-    live.events.length = 0;
-    await live.call("fake.press", { control: "east" });
-    await live.call("fake.release", { control: "east" });
-    await expect.poll(() => decisions(live)).toContain('text "签名\\nKim"');
-    await expect(page.getByTestId("key-preview")).toContainText(
-      "输入文字「签名 Kim」",
-    );
-    await page.screenshot({ path: info.outputPath("type-text.png") });
-
-    // A text that cannot be typed is not saved and says why.
-    await box.fill("a\u0007b");
-    await expect(
-      page.getByTestId("mapping-editor").getByRole("alert"),
-    ).toHaveText("不能含有换行和制表符以外的控制字符");
-    await box.blur();
-    expect((await onDisk(live)).layers.base.east?.press).toEqual({
-      type: "text",
-      text: "签名\nKim",
-    });
-    await box.press("Escape");
-    await expect(box).toHaveValue("签名\nKim");
 
     // A media key is recorded like any shortcut, and shown by name.
     await openControl(page, "west");
@@ -183,7 +136,7 @@ test("a key sends a sequence with a wait and a text, and types a text, and sends
 });
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("a profile based on another shows what it inherits, owns what it edits, gives it back with 恢复为继承, and keeps the keys when the parent is deleted", async ({}, info) => {
+test("a profile file that extends another shows what it takes as plain keys, writes what it edits into its own file, and keeps the keys when the parent is deleted", async ({}, info) => {
   test.setTimeout(120000);
   const f = await fixture();
   let app: ElectronApplication | undefined;
@@ -194,9 +147,24 @@ test("a profile based on another shows what it inherits, owns what it edits, giv
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
-    const chip = page.locator('button[data-callout="south"]');
-    const mark = chip.getByTestId("inherited-mark");
+    const chip = (control: string) =>
+      page.locator(`button[data-callout="${control}"]`);
     const sketch = () => onDisk(live, "sketch");
+    // The UI does not write extends any more (ADR-0076), so the profile is
+    // made in the UI and the extends is written into its file, as a person
+    // editing the file by hand would. The parent binds south and east.
+    const paint = await live.call<ProfileDocument>("profiles.get", {
+      id: "paint",
+    });
+    const parentFile = JSON.parse(paint.text);
+    parentFile.layers.base.east = {
+      press: { type: "keys", keys: "Ctrl+Y", mode: "tap" },
+    };
+    await live.call("profiles.put", {
+      id: "paint",
+      text: JSON.stringify(parentFile),
+      revision: paint.revision,
+    });
 
     // A new profile from the top bar, which switches to it ...
     await page.getByTestId("profile-menu").click();
@@ -206,36 +174,40 @@ test("a profile based on another shows what it inherits, owns what it edits, giv
     await create.getByRole("button", { name: "新建", exact: true }).click();
     await expect(create).toHaveCount(0);
     await expect(page.getByTestId("profile-menu")).toContainText("Sketch");
-    await expect(mark).toHaveCount(0);
+    await expect(chip("south")).toHaveAttribute("data-state", "unbound");
 
-    // ... based on the paint profile in its 配置设置.
-    await page.getByTestId("profile-menu").click();
-    await page.getByTestId("profile-settings").click();
-    const dialog = page.getByRole("dialog", { name: "配置设置" });
-    const based = dialog.getByRole("combobox", { name: "基于" });
-    await expect(based).toHaveValue("");
-    // Not itself; the default and the other profiles can be chosen.
-    await expect(based.locator("option")).toHaveText([
-      "无",
-      "默认",
-      "E2E paint",
-    ]);
-    await based.selectOption({ label: "E2E paint" });
-    await expect.poll(async () => (await sketch()).extends).toBe("paint");
-    await dialog.getByRole("button", { name: "完成" }).click();
-    await expect(dialog).toBeHidden();
+    // ... whose file then says it extends the paint profile.
+    const created = await live.call<ProfileDocument>("profiles.get", {
+      id: "sketch",
+    });
+    await live.call("profiles.put", {
+      id: "sketch",
+      text: JSON.stringify({ ...JSON.parse(created.text), extends: "paint" }),
+      revision: created.revision,
+    });
 
-    // South is the parent's: its chip shows the parent's binding, marked.
-    await expect(chip).toHaveAttribute("data-from-parent", "true");
-    await expect(chip).toHaveAttribute("data-state", "bound");
-    await expect(mark).toHaveText("继承");
-    await expect(chip).toContainText("撤销");
+    // South and east are the parent's, and look like any other key: no mark,
+    // and the settings have no "基于".
+    await expect(chip("south")).toHaveAttribute("data-state", "bound");
+    await expect(chip("south")).toContainText("撤销");
+    await expect(chip("east")).toHaveAttribute("data-state", "bound");
+    await expect(page.getByTestId("inherited-mark")).toHaveCount(0);
+    await expect(chip("south")).not.toHaveAttribute("data-from-parent", "true");
     // Nothing of the parent's was copied into the file.
     expect((await sketch()).layers.base).toEqual({});
+    await page.getByTestId("profile-menu").click();
+    await page.getByTestId("profile-settings").click();
+    const settings = page.getByRole("dialog", { name: "配置设置" });
+    await expect(settings.getByRole("textbox", { name: "名称" })).toBeVisible();
+    await expect(settings.getByRole("combobox")).toHaveCount(0);
+    await expect(settings).not.toContainText("基于");
+    await settings.getByRole("button", { name: "完成" }).click();
+    await expect(settings).toBeHidden();
+
+    // The drawer shows the parent's shortcut as the key's own, with nothing
+    // to give it back.
     await openControl(page, "south");
-    await expect(page.getByTestId("drawer-parent")).toHaveText(
-      "继承自 E2E paint",
-    );
+    await expect(page.getByTestId("drawer-parent")).toHaveCount(0);
     await expect(
       page.getByRole("group", { name: "快捷键", exact: true }),
     ).toHaveAttribute("data-keys", "Ctrl+Z");
@@ -244,20 +216,9 @@ test("a profile based on another shows what it inherits, owns what it edits, giv
       page.getByRole("menuitem", { name: "恢复为继承" }),
     ).toHaveCount(0);
     await page.keyboard.press("Escape");
-    await page.screenshot({ path: info.outputPath("inherited-key.png") });
+    await page.screenshot({ path: info.outputPath("extends-key.png") });
 
-    // The 配置 page says what it is based on, under the name.
-    await page.getByRole("button", { name: "配置", exact: true }).click();
-    await expect(page.getByRole("article", { name: "Sketch" })).toContainText(
-      "基于「E2E paint」",
-    );
-    await expect(
-      page.getByRole("article", { name: "E2E paint" }),
-    ).not.toContainText("基于");
-    await page.getByRole("button", { name: "映射", exact: true }).click();
-
-    // Editing it makes it the profile's own, whole.
-    await openControl(page, "south");
+    // Editing south makes it the profile's own, and the file still extends.
     await recordShortcut(
       app,
       page.getByRole("group", { name: "快捷键", exact: true }),
@@ -265,61 +226,52 @@ test("a profile based on another shows what it inherits, owns what it edits, giv
     );
     await expect
       .poll(async () => (await sketch()).layers.base.south)
-      .toEqual({
+      .toMatchObject({
         label: "撤销",
-        press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" },
+        press: { type: "keys", keys: "Ctrl+Shift+Z" },
       });
-    await expect(chip).not.toHaveAttribute("data-from-parent", "true");
-    await expect(mark).toHaveCount(0);
-    await expect(page.getByTestId("drawer-parent")).toHaveCount(0);
-    // And a press types it.
+    expect((await sketch()).extends).toBe("paint");
+    // East, which was not touched, is still the parent's: not in the file.
+    expect((await sketch()).layers.base).not.toHaveProperty("east");
     live.events.length = 0;
     await live.call("fake.press", { control: "south" });
     await live.call("fake.release", { control: "south" });
-    await expect.poll(() => decisions(live)).toContain("tap Ctrl+Shift+Z");
-
-    // 恢复为继承 gives the key back to the parent: the control leaves the file.
-    await page.getByTestId("key-actions").click();
-    await page.getByRole("menuitem", { name: "恢复为继承" }).click();
-    await expect.poll(async () => (await sketch()).layers.base).toEqual({});
-    await expect(chip).toHaveAttribute("data-from-parent", "true");
-    await expect(page.getByTestId("drawer-parent")).toHaveText(
-      "继承自 E2E paint",
-    );
+    // The preview names the sided keys that are pressed.
+    await expect.poll(() => chords(live)).toContain("LCtrl+LShift+Z");
     live.events.length = 0;
-    await live.call("fake.press", { control: "south" });
-    await live.call("fake.release", { control: "south" });
-    await expect.poll(() => decisions(live)).toContain("tap Ctrl+Z");
+    await live.call("fake.press", { control: "east" });
+    await live.call("fake.release", { control: "east" });
+    await expect.poll(() => chords(live)).toContain("LCtrl+Y");
 
-    // Deleting the parent says how many profiles are based on it, and they
-    // keep what they inherited.
+    // The 配置 page says nothing of what a profile extends. Deleting the
+    // parent does not warn about the profiles that extend it; they keep the
+    // keys they had.
     await page.getByRole("button", { name: "配置", exact: true }).click();
+    await expect(
+      page.getByRole("article", { name: "Sketch" }),
+    ).not.toContainText("基于");
     const parentCard = page.getByRole("article", { name: "E2E paint" });
     await parentCard
       .getByRole("button", { name: "「E2E paint」的更多操作" })
       .click();
     await page.getByRole("menuitem", { name: "删除…" }).click();
     const confirm = page.getByRole("dialog", { name: "删除「E2E paint」？" });
-    await expect(confirm).toContainText(
-      "有 1 个配置基于它，将保留各自现有的按键。",
-    );
+    await expect(confirm).not.toContainText("基于");
     await page.screenshot({ path: info.outputPath("delete-parent.png") });
     await confirm.getByRole("button", { name: "删除", exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(parentCard).toHaveCount(0);
     await expect.poll(async () => "extends" in (await sketch())).toBe(false);
-    expect((await sketch()).layers.base.south).toEqual({
-      label: "撤销",
-      press: { type: "keys", keys: "Ctrl+Z", mode: "tap" },
+    expect((await sketch()).layers.base.south).toMatchObject({
+      press: { type: "keys", keys: "Ctrl+Shift+Z" },
     });
-    await expect(
-      page.getByRole("article", { name: "Sketch" }),
-    ).not.toContainText("基于");
-    // The mapping page shows the keys as the profile's own now.
+    expect((await sketch()).layers.base.east).toMatchObject({
+      press: { type: "keys", keys: "Ctrl+Y" },
+    });
+    // The mapping page shows the keys as before.
     await page.getByRole("button", { name: "映射", exact: true }).click();
-    await expect(chip).toHaveAttribute("data-state", "bound");
-    await expect(chip).not.toHaveAttribute("data-from-parent", "true");
-    await expect(mark).toHaveCount(0);
+    await expect(chip("south")).toHaveAttribute("data-state", "bound");
+    await expect(chip("east")).toHaveAttribute("data-state", "bound");
   } finally {
     client?.close();
     await cleanup(f, app);

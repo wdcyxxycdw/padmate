@@ -11,7 +11,6 @@ import {
   copyName,
   DEFAULT_PROFILE_ID,
   defaultProfileName,
-  descendantsOf,
   effectiveRule,
   exeLabel,
   failureText,
@@ -24,13 +23,11 @@ import {
   nameProblemText,
   nextActiveAfterDelete,
   normalizeExe,
-  parentChoices,
-  parentName,
   parseConfigText,
   profileHasScript,
   profileName,
+  profileNameOf,
   profileNameProblem,
-  profilesBasedOn,
   readConfig,
   removeProfileReferences,
   renameProfileText,
@@ -1136,116 +1133,22 @@ describe("an AntiMicroX file that was refused (PRO-21)", () => {
   });
 });
 
-describe("profiles based on others (PRO-19)", () => {
-  const entry = (id: string, extendsId?: string, rest = {}): ProfileEntry => ({
-    id,
-    name: id,
-    ...(extendsId ? { extends: extendsId } : {}),
-    ...rest,
-  });
-  const ids = (list: readonly ProfileEntry[]) => list.map((item) => item.id);
-
-  it("lists the profiles directly based on one, and all that are based on it", () => {
+describe("profiles that extend others (PRO-19, ADR-0076)", () => {
+  it("names a profile by its library ID", () => {
+    const entry = (id: string, rest = {}): ProfileEntry => ({
+      id,
+      name: id,
+      ...rest,
+    });
     const profiles = [
-      entry("default"),
-      entry("paint", "default"),
-      entry("sketch", "paint"),
-      entry("ink", "paint"),
-      entry("photo"),
-      entry("detail", "sketch"),
+      entry("paint", { name: "Paint" }),
+      entry("default", { default: true, name: "default" }),
     ];
-    expect(ids(profilesBasedOn(profiles, "paint"))).toEqual(["sketch", "ink"]);
-    expect(ids(profilesBasedOn(profiles, "photo"))).toEqual([]);
-    expect(ids(descendantsOf(profiles, "default")).sort()).toEqual([
-      "detail",
-      "ink",
-      "paint",
-      "sketch",
-    ]);
-    expect(ids(descendantsOf(profiles, "sketch"))).toEqual(["detail"]);
-    expect(descendantsOf(profiles, "detail")).toEqual([]);
-  });
-
-  it("stops at a loop in what the library says", () => {
-    const profiles = [entry("a", "b"), entry("b", "a")];
-    expect(ids(descendantsOf(profiles, "a")).sort()).toEqual(["a", "b"]);
-  });
-
-  it("offers every other profile to a profile that has no relatives", () => {
-    const profiles = [entry("paint"), entry("photo"), entry("ink")];
-    expect(ids(parentChoices(profiles, "paint"))).toEqual(["ink", "photo"]);
-  });
-
-  it("puts the fixed default first, then the rest by name", () => {
-    const profiles = [
-      entry("zeta"),
-      entry("default", undefined, { default: true }),
-      entry("alpha"),
-      entry("me"),
-    ];
-    expect(ids(parentChoices(profiles, "me"))).toEqual([
-      "default",
-      "alpha",
-      "zeta",
-    ]);
-  });
-
-  it("does not offer a profile itself, nor one that is based on it, however far", () => {
-    const profiles = [
-      entry("paint"),
-      entry("sketch", "paint"),
-      entry("detail", "sketch"),
-      entry("photo"),
-    ];
-    expect(ids(parentChoices(profiles, "paint"))).toEqual(["photo"]);
-    expect(ids(parentChoices(profiles, "sketch"))).toEqual(["paint", "photo"]);
-    // A profile in the middle of a chain may be based on what is above it.
-    expect(ids(parentChoices(profiles, "detail"))).toEqual([
-      "paint",
-      "photo",
-      "sketch",
-    ]);
-  });
-
-  it("does not offer a profile with errors", () => {
-    const profiles = [
-      entry("a"),
-      entry("b", undefined, { problem: "bad" }),
-      entry("c"),
-    ];
-    expect(ids(parentChoices(profiles, "a"))).toEqual(["c"]);
-  });
-
-  it("does not offer a profile that would make a chain of more than four parents", () => {
-    // d is based on c, c on b, b on a: d has three parents.
-    const profiles = [
-      entry("a"),
-      entry("b", "a"),
-      entry("c", "b"),
-      entry("d", "c"),
-      entry("x"),
-    ];
-    // x on d gives x four parents (d, c, b, a): the most there can be.
-    expect(ids(parentChoices(profiles, "x"))).toContain("d");
-    // With e based on x and f on e, x on d would give f six parents. x can be
-    // based on a (f has three) or b (four), not on c or d.
-    const more = [...profiles, entry("e", "x"), entry("f", "e")];
-    expect(ids(parentChoices(more, "x"))).toEqual(["a", "b"]);
-    // a has b, c and d below it, three levels: only a profile without a
-    // parent of its own can be its parent.
-    expect(ids(parentChoices(more, "a"))).toEqual(["x"]);
-  });
-
-  it("names the parent a profile is based on", () => {
-    const profiles = [
-      entry("paint", undefined, { name: "Paint" }),
-      entry("default", undefined, { default: true, name: "default" }),
-    ];
-    expect(parentName("paint", profiles, "zh-CN")).toBe("Paint");
-    expect(parentName("default", profiles, "zh-CN")).toBe("默认");
-    expect(parentName("default", profiles, "en")).toBe("Default");
-    // A parent the library no longer lists goes by its ID.
-    expect(parentName("gone", profiles, "en")).toBe("gone");
+    expect(profileNameOf("paint", profiles, "zh-CN")).toBe("Paint");
+    expect(profileNameOf("default", profiles, "zh-CN")).toBe("默认");
+    expect(profileNameOf("default", profiles, "en")).toBe("Default");
+    // A profile the library no longer lists goes by its ID.
+    expect(profileNameOf("gone", profiles, "en")).toBe("gone");
   });
 
   it("tells the profile a delete cannot write out whole (-32023)", () => {
@@ -1286,29 +1189,39 @@ describe("profiles based on others (PRO-19)", () => {
       reason: "script",
       profile: "sketch",
     } as const;
+    // No word of 基于 or inheriting: the interface has dropped that idea
+    // (ADR-0076), and a hand-written file that still uses it is only told
+    // what keeps this one from being deleted.
     expect(failureText(script, "zh-CN", label)).toBe(
-      "基于它的「草图」继承了它的脚本，无法先写成完整内容",
+      "「草图」要用到它的脚本，所以无法删除",
     );
     expect(failureText(script, "en", label)).toBe(
-      "“草图” is based on it and inherits its script, so it can't be written out whole first",
+      "“草图” uses its script, so it can't be deleted",
     );
     const invalid = { ...script, reason: "invalid" } as const;
     expect(failureText(invalid, "zh-CN", label)).toBe(
-      "基于它的「草图」有错误，无法先写成完整内容",
+      "「草图」有错误，请先修好它，或者删除它",
     );
     expect(failureText(invalid, "en", label)).toBe(
-      "“草图” is based on it and has errors, so it can't be written out whole first",
+      "“草图” has errors: fix it or delete it first",
+    );
+    const other = { ...script, reason: "other" } as const;
+    expect(failureText(other, "zh-CN", label)).toBe(
+      "「草图」要用到它，所以无法删除",
+    );
+    expect(failureText(other, "en", label)).toBe(
+      "“草图” depends on it, so it can't be deleted",
     );
     // Without a label for the profile, its ID stands in; without one at all,
     // the line still reads.
     expect(failureText(invalid, "en")).toBe(
-      "“sketch” is based on it and has errors, so it can't be written out whole first",
+      "“sketch” has errors: fix it or delete it first",
     );
     expect(failureText({ kind: "childBlocked", message: "raw" }, "zh-CN")).toBe(
-      "基于它的配置无法先写成完整内容",
+      "有别的配置要用到它，所以无法删除",
     );
     expect(failureText({ kind: "childBlocked", message: "raw" }, "en")).toBe(
-      "A profile based on it can't be written out whole first",
+      "Another profile depends on it, so it can't be deleted",
     );
   });
 });

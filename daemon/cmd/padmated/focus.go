@@ -322,6 +322,7 @@ func (r *liveRun) installSelectionLocked(ctx context.Context, id, path string, d
 		r.cfg.opts.memory.SetLastProfile(id)
 	}
 	r.log.Info("profile selected", "profile", id, "gen", gen, "warnings", len(ds))
+	r.logIgnoredFunctionKeyBindings(prog, id)
 	return nil
 }
 

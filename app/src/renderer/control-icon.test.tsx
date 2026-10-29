@@ -130,9 +130,6 @@ describe("control icons of the key preview (UI-44)", () => {
       kind: "badge",
       text: "SR",
     });
-    expect(icon("back", "xboxone")).toEqual({ kind: "badge", text: "View" });
-    expect(icon("guide", "ps5")).toEqual({ kind: "badge", text: "PS" });
-    expect(icon("start", "switchpro")).toEqual({ kind: "badge", text: "+" });
     // The back buttons and the extra buttons have names of their own, as
     // the tray names them, never padmate's position names.
     expect(icon("paddle1", "xboxone")).toEqual({
@@ -140,7 +137,7 @@ describe("control icons of the key preview (UI-44)", () => {
       text: "背键 1",
     });
     expect(icon("paddle4", "ps5")).toEqual({ kind: "badge", text: "左 Fn" });
-    expect(icon("misc1", "xboxone")).toEqual({ kind: "badge", text: "Share" });
+    expect(icon("misc1", "ps5")).toEqual({ kind: "badge", text: "Mute" });
     expect(icon("misc2", "xboxone")).toEqual({
       kind: "badge",
       text: "附加键 2",
@@ -156,6 +153,67 @@ describe("control icons of the key preview (UI-44)", () => {
     });
     // A control nobody names keeps its name.
     expect(icon("bogus", "xboxone")).toEqual({ kind: "badge", text: "bogus" });
+  });
+
+  it("draws the system buttons with the symbol printed on them, not a word", () => {
+    const glyph = (control: string, type: string, buttonMask?: number) => {
+      const spec = icon(control, type, buttonMask);
+      return spec.kind === "glyph" ? spec.glyph : spec;
+    };
+    // Xbox One and Series: View, Menu, the Xbox button and Share.
+    expect(glyph("back", "xboxone")).toBe("view");
+    expect(glyph("start", "xboxone")).toBe("menu");
+    expect(glyph("guide", "xboxone")).toBe("xbox");
+    expect(glyph("misc1", "xboxone")).toBe("upload");
+    // Xbox 360: the arrows of Back and Start.
+    expect(glyph("back", "xbox360")).toBe("back");
+    expect(glyph("start", "xbox360")).toBe("start");
+    // PlayStation: Create and Share, Options, the PS button; Select is a bar.
+    expect(glyph("back", "ps5")).toBe("share");
+    expect(glyph("back", "ps4")).toBe("share");
+    expect(glyph("back", "ps3")).toBe("select");
+    expect(glyph("start", "ps5")).toBe("menu");
+    expect(glyph("start", "ps3")).toBe("start");
+    expect(glyph("guide", "ps5")).toBe("home");
+    // Nintendo: −, +, Home and Capture.
+    expect(glyph("back", "switchpro")).toBe("minus");
+    expect(glyph("start", "switchpro")).toBe("plus");
+    expect(glyph("guide", "switchpro")).toBe("home");
+    expect(glyph("misc1", "switchpro")).toBe("capture");
+    // A single Joy-Con held sideways: − or +, and Capture or Home.
+    expect(glyph("start", "joyconleft", 0xf)).toBe("minus");
+    expect(glyph("guide", "joyconleft", 0xf)).toBe("capture");
+    expect(glyph("start", "joyconright", 0xf)).toBe("plus");
+    expect(glyph("guide", "joyconright", 0xf)).toBe("home");
+    // Any other pad: Back, Start and Home.
+    expect(glyph("back", "unknown")).toBe("back");
+    expect(glyph("start", "unknown")).toBe("start");
+    expect(glyph("guide", "unknown")).toBe("home");
+    // A name SDL reports that has no symbol here stays a word.
+    expect(controlIcon("start", "generic", { start: "Plus Menu" })).toEqual({
+      kind: "badge",
+      text: "Plus Menu",
+    });
+  });
+
+  it("draws a symbol on a disc, without text", () => {
+    const { container } = render(
+      <>
+        <ControlIcon icon={icon("start", "xboxone")} />
+        <ControlIcon icon={icon("back", "xboxone")} />
+      </>,
+    );
+    const [menu, view] = [...container.querySelectorAll(".control-icon")];
+    expect(menu.getAttribute("data-kind")).toBe("glyph");
+    expect(menu.getAttribute("data-glyph")).toBe("menu");
+    expect(menu.hasAttribute("data-label")).toBe(false);
+    expect(menu.querySelector("svg .control-icon-disc")).not.toBeNull();
+    expect(menu.querySelectorAll("svg .control-icon-glyph")).not.toHaveLength(
+      0,
+    );
+    expect(view.getAttribute("data-glyph")).toBe("view");
+    expect(container.textContent).toBe("");
+    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}|rgb/i);
   });
 
   it("draws inline SVG in theme colours, hidden from screen readers and without text", () => {

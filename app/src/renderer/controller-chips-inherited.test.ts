@@ -8,8 +8,9 @@ import {
 import { controllerLabels } from "./controller-model";
 import type { LabelDisplay } from "./store";
 
-// Chips of a profile that takes bindings from its parent (PRO-19), and of the
-// sequence and text actions (MAP-22, OUT-21), which the editor sets now.
+// The binding keys a chip shows, and the chips of the sequence and text
+// actions (MAP-22, OUT-21), which the editor sets now. A chip says nothing of
+// where a binding comes from (PRO-19, ADR-0076).
 
 const labels = controllerLabels("xboxone");
 const controls = Object.keys(labels);
@@ -25,11 +26,7 @@ const profile: Profile = {
   },
 };
 
-function chips(
-  fromParent?: (keys: string[]) => string | undefined,
-  display: LabelDisplay = "actions",
-  value: Profile = profile,
-) {
+function chips(display: LabelDisplay = "actions", value: Profile = profile) {
   return controllerChips({
     profile: value,
     controls,
@@ -37,7 +34,7 @@ function chips(
     registrations: [],
     display,
     language: "zh-CN",
-    fromParent,
+    functionKey: "start",
   });
 }
 
@@ -55,43 +52,25 @@ describe("relatedKeys", () => {
   });
 });
 
-describe("a chip whose binding comes from the parent", () => {
-  it("carries the name of the profile the parent supplied it from", () => {
-    const result = chips((keys) => (keys[0] === "south" ? "Paint" : undefined));
-    expect(result.south.fromParent).toBe("Paint");
-    // The chip itself looks like any other bound chip.
+describe("a chip", () => {
+  it("looks like any other bound chip and carries no mark of where its binding comes from", () => {
+    const result = chips();
     expect(result.south).toMatchObject({
       state: "bound",
       title: "Ctrl+Z",
       detail: [],
     });
-    expect(result.east.fromParent).toBeUndefined();
-    expect("fromParent" in result.east).toBe(false);
+    for (const chip of Object.values(result))
+      expect("fromParent" in chip).toBe(false);
   });
-  it("is asked with every binding key of the chip", () => {
-    const asked: string[][] = [];
-    chips((keys) => {
-      asked.push(keys);
-      return undefined;
-    });
-    expect(asked).toContainEqual(["south"]);
-    expect(asked).toContainEqual(relatedKeys("leftstick"));
+  it("is not made for the function key, which holds nothing", () => {
+    const result = chips();
+    expect(result.start.state).toBe("function");
+    // The other two of View, Menu and the Xbox button are ordinary keys.
+    expect(result.back.state).toBe("unbound");
+    expect(result.guide.state).toBe("unbound");
   });
-  it("is not asked about View and Menu, which hold nothing", () => {
-    const asked: string[][] = [];
-    chips((keys) => {
-      asked.push(keys);
-      return undefined;
-    });
-    expect(asked.flat()).not.toContain("back");
-    expect(asked.flat()).not.toContain("start");
-  });
-  it("shows no mark on a profile without a parent", () => {
-    for (const chip of Object.values(chips()))
-      expect(chip.fromParent).toBe(undefined);
-  });
-  it("is dropped from the greyed chip a function key's set falls back on", () => {
-    const marked = chips((keys) => (keys[0] === "south" ? "Paint" : undefined));
+  it("is the usual chip, greyed, where the function set falls back on it", () => {
     const empty = controllerChips({
       profile: { ...profile, layers: { base: {} } },
       controls,
@@ -99,15 +78,16 @@ describe("a chip whose binding comes from the parent", () => {
       registrations: [],
       display: "actions",
       language: "zh-CN",
+      functionKey: "start",
     });
     const result = inheritedChips({
       own: empty,
-      normal: marked,
-      display: "actions",
+      normal: chips(),
       language: "zh-CN",
     });
     expect(result.south.inherited).toBe(true);
-    expect(result.south.fromParent).toBeUndefined();
+    expect(result.south.state).toBe("unbound");
+    expect("fromParent" in result.south).toBe(false);
   });
 });
 
@@ -127,12 +107,12 @@ describe("chips of the sequence and text actions", () => {
     },
   };
   it("are not locked: the editor sets them (UI-31)", () => {
-    const result = chips(undefined, "actions", value);
+    const result = chips("actions", value);
     expect(result.south.state).toBe("bound");
     expect(result.east.state).toBe("bound");
   });
   it("say what they do", () => {
-    const result = chips(undefined, "actions", value);
+    const result = chips("actions", value);
     expect(result.south.title).toBe("3 步序列");
     expect(result.east.title).toBe("输入文字「Best regards, Ki…」");
   });

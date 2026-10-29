@@ -175,10 +175,6 @@ it("labels chips with the action and its keys in each display mode", async () =>
   ).toBe("unbound");
   view.rerender(<Harness editor={editor} display="keys" />);
   expect(screen.getByRole("button", { name: "A · Ctrl+Z" })).toBeDefined();
-  view.rerender(<Harness editor={editor} display="names" />);
-  expect(screen.getByRole("button", { name: "A · A" }).textContent).toContain(
-    "撤销",
-  );
 });
 
 it("opens the drawer from a chip and returns focus to it on close", async () => {
@@ -471,14 +467,14 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(zh("/analog/dpad/mode")).toBe("十字键设置");
   expect(zh("/analog/ls/deadzone")).toBe("左摇杆 · 摇杆设置");
   expect(zh("/analog/rt/press")).toBe("RT 键 · 扳机设置");
-  expect(zh("/layers/base/south/press")).toBe("撤销键 · 按下");
+  expect(zh("/layers/base/south/press")).toBe("撤销键 · 点按");
   // A blank key name falls back to the control.
   expect(zh("/controlNames/east")).toBe("B 键 · 按键名称");
   expect(zh("/layers/base/east/label")).toBe("B 键 · 显示文字");
   expect(zh("/layers/base/south/haptic")).toBe("撤销键 · 触感");
   expect(zh("/layers/base/ls.up/hold")).toBe("左摇杆 · ↑ 长按");
   expect(zh("/layers/base/ls.active")).toBe("左摇杆 · 任意方向");
-  expect(zh("/layers/base/leftx+/press")).toBe("左摇杆 · 原始轴向右 按下");
+  expect(zh("/layers/base/leftx+/press")).toBe("左摇杆 · 原始轴向右 点按");
   expect(zh("/layers/base/lefttrigger+")).toBe("LT 键 · 半按");
   expect(zh("/layers/base/lt/tap")).toBe("LT 键 · 点按");
   expect(zh("/layers/base/dpad.upleft/tap")).toBe("十字键 ↑ · ↖ 点按");
@@ -529,7 +525,7 @@ it("opens the drawer that edits a diagnostic, but not for profile settings", asy
   fireEvent.click(problem("配置设置 · 名称"));
   expect(select).not.toHaveBeenCalled();
   expect(screen.queryByRole("complementary")).toBeNull();
-  fireEvent.click(problem("LT 键 · 半按 按下"));
+  fireEvent.click(problem("LT 键 · 半按 点按"));
   expect(select).toHaveBeenLastCalledWith("lefttrigger");
   expect(
     within(screen.getByRole("complementary")).getByText("lefttrigger"),
@@ -669,17 +665,16 @@ it("shows what a press sends where the hint was (UI-44)", async () => {
   }
 });
 
-// UI-30 (ADR-0069): View and Menu are function keys; the page edits the
-// usual bindings or the set one of them switches to.
-describe("the function keys", () => {
-  const withSets: Profile = {
+// UI-30 (ADR-0075): one of View, Menu and the Xbox button is the function key
+// (config.json functionKey, Menu unless it says otherwise); the page edits the
+// usual bindings or the function set it switches to.
+describe("the function key", () => {
+  const withSet: Profile = {
     ...paint,
-    functionKeys: {
-      back: {
-        south: {
-          label: "重做",
-          press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" },
-        },
+    functionSet: {
+      south: {
+        label: "重做",
+        press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" },
       },
     },
   };
@@ -713,48 +708,68 @@ describe("the function keys", () => {
     />
   );
 
-  it("are switched between at the top of the page, named as the pad prints them", async () => {
-    const editor = await editorFor(withSets);
+  it("is switched to at the top of the page, as 按住功能键", async () => {
+    const editor = await editorFor(withSet);
     render(<Harness editor={editor} />);
     expect(switchOptions()).toEqual([
       ["平时", "true"],
-      ["按住 View", "false"],
-      ["按住 Menu", "false"],
+      ["按住功能键", "false"],
     ]);
   });
 
-  it("have English names too", async () => {
-    const editor = await editorFor(withSets);
+  it("is named the same whichever key the settings choose (ADR-0076)", async () => {
+    const editor = await editorFor(withSet);
+    act(() => editor.getState().setFunctionKey("back"));
+    const { rerender } = render(<Harness editor={editor} />);
+    expect(switchOptions()[1][0]).toBe("按住功能键");
+    act(() => editor.getState().setFunctionKey("guide"));
+    rerender(<Harness editor={editor} />);
+    expect(switchOptions()[1][0]).toBe("按住功能键");
+  });
+
+  it("has an English name too", async () => {
+    const editor = await editorFor(withSet);
     render(workspace(editor, { ...info, type: "ps5" }, "en"));
     expect(
       within(screen.getByRole("radiogroup", { name: "Keys being edited" }))
         .getAllByRole("radio")
         .map((radio) => radio.textContent),
-    ).toEqual(["Normal", "Hold Create", "Hold Options"]);
+    ).toEqual(["Normal", "Hold function key"]);
+    act(() => editor.getState().setFunctionKey("guide"));
+    expect(
+      within(screen.getByRole("radiogroup", { name: "Keys being edited" }))
+        .getAllByRole("radio")
+        .map((radio) => radio.textContent),
+    ).toEqual(["Normal", "Hold function key"]);
   });
 
-  it("lack View on a single Joy-Con held sideways", async () => {
-    const editor = await editorFor(withSets);
+  it("has no switch on a single Joy-Con held sideways when View is the function key, which it lacks", async () => {
+    const editor = await editorFor(withSet);
     const { container } = render(workspace(editor, joyCon));
     expect(switchOptions()).toEqual([
       ["平时", "true"],
-      ["按住 −", "false"],
+      ["按住功能键", "false"],
     ]);
     // Nor does it have a chip for it.
     expect(chip(container, "back")).toBeNull();
     expect(chip(container, "start")?.dataset.state).toBe("function");
+    // With View as the function key the pad has none: no switch to show.
+    act(() => editor.getState().setFunctionKey("back"));
+    expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
+    // Menu is an ordinary key then, with nothing set.
+    expect(chip(container, "start")?.dataset.state).toBe("unbound");
   });
 
-  it("show the set they switch to, and what a control does otherwise where the set leaves it out", async () => {
-    const editor = await editorFor(withSets);
+  it("shows the set it switches to, and what a control does otherwise where the set leaves it out", async () => {
+    const editor = await editorFor(withSet);
     const { container } = render(<Harness editor={editor} />);
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
       "A · 撤销",
     );
-    fireEvent.click(screen.getByRole("radio", { name: "按住 View" }));
+    fireEvent.click(screen.getByRole("radio", { name: "按住功能键" }));
     expect(
       screen
-        .getByRole("radio", { name: "按住 View" })
+        .getByRole("radio", { name: "按住功能键" })
         .getAttribute("aria-checked"),
     ).toBe("true");
     // Set in the set.
@@ -772,11 +787,6 @@ describe("the function keys", () => {
       "Y · 未设置",
     );
     expect(chip(container, "north")?.dataset.inherited).toBeUndefined();
-    // The other function key has nothing set.
-    fireEvent.click(screen.getByRole("radio", { name: "按住 Menu" }));
-    expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
-      "A · 平时：撤销",
-    );
     fireEvent.click(screen.getByRole("radio", { name: "平时" }));
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
       "A · 撤销",
@@ -786,45 +796,99 @@ describe("the function keys", () => {
     expect(editor.getState().canUndo).toBe(false);
   });
 
-  it("are tagged on the pad in every view, and cannot be opened", async () => {
+  it("shows the set of a file of the old functionKeys as the one set it stands for", async () => {
     const editor = await editorFor({
-      ...withSets,
+      ...paint,
+      functionKeys: {
+        back: {
+          south: { press: { type: "keys", keys: "Ctrl+Y", mode: "tap" } },
+          north: { press: { type: "keys", keys: "F13", mode: "tap" } },
+        },
+        start: {
+          south: {
+            label: "重做",
+            press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" },
+          },
+        },
+      },
+    });
+    const { container } = render(<Harness editor={editor} />);
+    fireEvent.click(screen.getByRole("radio", { name: "按住功能键" }));
+    // Menu's set wins; View's set fills in what Menu's leaves out.
+    expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
+      "A · 重做",
+    );
+    expect(chip(container, "north")?.getAttribute("aria-label")).toBe(
+      "Y · F13",
+    );
+    // Only opening the file is no edit.
+    expect(editor.getState().unsaved).toBe(false);
+  });
+
+  it("is tagged on the pad in every view, and cannot be opened", async () => {
+    const editor = await editorFor({
+      ...withSet,
       layers: {
         base: {
-          ...withSets.layers.base,
-          // What an older file bound on them no longer works.
-          back: { press: { type: "keys", keys: "Ctrl+V", mode: "tap" } },
+          ...withSet.layers.base,
+          // What a file binds on it is ignored by the daemon.
           start: { press: { type: "keys", keys: "Ctrl+S", mode: "tap" } },
         },
       },
     });
     const select = vi.fn();
     const { container } = render(<Harness editor={editor} onSelect={select} />);
-    for (const view of ["平时", "按住 View", "按住 Menu"]) {
+    for (const view of ["平时", "按住功能键"]) {
       fireEvent.click(screen.getByRole("radio", { name: view }));
-      for (const [control, name] of [
-        ["back", "View"],
-        ["start", "Menu"],
-      ]) {
-        const tag = chip(container, control) as HTMLElement;
-        expect(tag.tagName, view).toBe("DIV");
-        expect(tag.getAttribute("aria-label"), view).toBe(`${name} · 功能键`);
-        expect(tag.title, view).toBe(
-          `${name} · 功能键\n按住时其他键换成另一套`,
-        );
-        fireEvent.click(tag);
-        fireEvent.contextMenu(tag);
-      }
+      const tag = chip(container, "start") as HTMLElement;
+      expect(tag.tagName, view).toBe("DIV");
+      expect(tag.getAttribute("aria-label"), view).toBe("Menu · 功能键");
+      expect(tag.title, view).toBe("Menu · 功能键\n按住时其他键换成另一套");
+      fireEvent.click(tag);
+      fireEvent.contextMenu(tag);
     }
     expect(select).not.toHaveBeenCalled();
     expect(screen.queryByRole("complementary")).toBeNull();
   });
 
-  it("go back to the usual keys when the profile changes", async () => {
-    const editor = await editorFor(withSets);
+  it("leaves the other two of View, Menu and the Xbox button as keys to open and set", async () => {
+    const editor = await editorFor({
+      ...withSet,
+      layers: {
+        base: {
+          ...withSet.layers.base,
+          back: {
+            label: "粘贴",
+            press: { type: "keys", keys: "Ctrl+V", mode: "tap" },
+          },
+        },
+      },
+    });
+    const select = vi.fn();
+    const { container } = render(<Harness editor={editor} onSelect={select} />);
+    const back = chip(container, "back") as HTMLElement;
+    expect(back.tagName).toBe("BUTTON");
+    expect(back.getAttribute("aria-label")).toBe("View · 粘贴");
+    // The Xbox button has nothing yet, and can be given something.
+    const guide = chip(container, "guide") as HTMLElement;
+    expect(guide.tagName).toBe("BUTTON");
+    expect(guide.dataset.state).toBe("unbound");
+    fireEvent.click(back);
+    expect(select).toHaveBeenLastCalledWith("back");
+    fireEvent.click(guide);
+    expect(select).toHaveBeenLastCalledWith("guide");
+    // Whichever key is the function key is the one that is only a tag.
+    act(() => editor.getState().setFunctionKey("guide"));
+    expect(chip(container, "guide")?.tagName).toBe("DIV");
+    expect(chip(container, "start")?.tagName).toBe("BUTTON");
+    expect(chip(container, "start")?.dataset.state).toBe("unbound");
+  });
+
+  it("goes back to the usual keys when the profile changes", async () => {
+    const editor = await editorFor(withSet);
     render(<Harness editor={editor} />);
-    fireEvent.click(screen.getByRole("radio", { name: "按住 Menu" }));
-    expect(switchOptions()[2]).toEqual(["按住 Menu", "true"]);
+    fireEvent.click(screen.getByRole("radio", { name: "按住功能键" }));
+    expect(switchOptions()[1]).toEqual(["按住功能键", "true"]);
     await act(async () => {
       await editor
         .getState()
@@ -834,27 +898,28 @@ describe("the function keys", () => {
     expect(editor.getState().view).toBe("normal");
   });
 
-  it("show the usual keys when the pad has not the function key that was chosen", async () => {
-    const editor = await editorFor(withSets);
+  it("shows the usual keys when the pad has not the function key that was chosen", async () => {
+    const editor = await editorFor(withSet);
+    act(() => editor.getState().setFunctionKey("back"));
     const store = createPadmateStore(
       editorAPIFixture() as unknown as PadmateAPI,
     );
     const { container, rerender } = render(
       workspace(editor, info, "zh-CN", store),
     );
-    fireEvent.click(screen.getByRole("radio", { name: "按住 View" }));
+    fireEvent.click(screen.getByRole("radio", { name: "按住功能键" }));
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
       "A · 重做",
     );
     rerender(workspace(editor, joyCon, "zh-CN", store));
-    expect(switchOptions()[0]).toEqual(["平时", "true"]);
+    expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
       "S · 撤销",
     );
   });
 
-  it("show the set a problem is in, and the usual keys for a problem there", async () => {
-    const editor = await editorFor(withSets);
+  it("shows the set a problem is in, and the usual keys for a problem there", async () => {
+    const editor = await editorFor(withSet);
     const select = vi.fn();
     const { container } = render(<Harness editor={editor} onSelect={select} />);
     const problem = (
@@ -864,51 +929,63 @@ describe("the function keys", () => {
     act(() =>
       editor.setState({
         diagnostics: [
-          problem("/functionKeys/back/south/press", "error"),
+          problem("/functionSet/south/press", "error"),
           problem("/layers/base/east/press", "error"),
-          problem("/layers/base/back", "warning"),
+          problem("/functionKeys/start/south", "warning"),
+          problem("/layers/base/start", "warning"),
         ],
       }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "3 个问题" }));
+    fireEvent.click(screen.getByRole("button", { name: "4 个问题" }));
     const items = screen.getAllByTestId("profile-diagnostic");
     expect(items.map((item) => item.textContent)).toEqual([
-      expect.stringContaining("按住 View · A 键 · 按下"),
-      expect.stringContaining("B 键 · 按下"),
-      expect.stringContaining("View 键"),
+      expect.stringContaining("按住功能键 · A 键 · 点按"),
+      expect.stringContaining("B 键 · 点按"),
+      // A file of the old format points into functionKeys: the same set.
+      expect.stringContaining("按住功能键 · A 键"),
+      expect.stringContaining("Menu 键"),
     ]);
     // A problem in the set opens that set, with the key.
     fireEvent.click(items[0]);
-    expect(editor.getState().view).toBe("back");
+    expect(editor.getState().view).toBe("function");
     expect(select).toHaveBeenLastCalledWith("south");
     expect(chip(container, "south")?.getAttribute("aria-pressed")).toBe("true");
     // A problem in the usual keys goes back to them.
-    fireEvent.click(screen.getByRole("button", { name: "3 个问题" }));
+    fireEvent.click(screen.getByRole("button", { name: "4 个问题" }));
     fireEvent.click(screen.getAllByTestId("profile-diagnostic")[1]);
     expect(editor.getState().view).toBe("normal");
     expect(select).toHaveBeenLastCalledWith("east");
-    // The warning about an old binding on View has nothing to open.
+    // A problem about a binding on the function key has nothing to open.
     select.mockClear();
-    fireEvent.click(screen.getByRole("button", { name: "3 个问题" }));
-    fireEvent.click(screen.getAllByTestId("profile-diagnostic")[2]);
+    fireEvent.click(screen.getByRole("button", { name: "4 个问题" }));
+    fireEvent.click(screen.getAllByTestId("profile-diagnostic")[3]);
     expect(select).not.toHaveBeenCalled();
   });
 });
 
-it("tells where a problem in the set of a function key is", () => {
+it("tells where a problem in the function set is", () => {
+  expect(diagnosticControl(at("/functionSet/a/press"))).toBe("south");
+  expect(diagnosticControl(at("/functionSet/lt.full/tap"))).toBe("lefttrigger");
+  expect(diagnosticControl(at("/functionSet"))).toBeNull();
+  // The old format points into one of its two sets, which is the set here.
   expect(diagnosticControl(at("/functionKeys/back/a/press"))).toBe("south");
   expect(diagnosticControl(at("/functionKeys/start/lt.full/tap"))).toBe(
     "lefttrigger",
   );
   expect(diagnosticControl(at("/functionKeys/start"))).toBeNull();
   expect(diagnosticControl(at("/functionKeys"))).toBeNull();
-  expect(diagnosticView(at("/functionKeys/back/a/press"))).toBe("back");
-  expect(diagnosticView(at("/functionKeys/start/a"))).toBe("start");
+  expect(diagnosticView(at("/functionSet/a/press"))).toBe("function");
+  expect(diagnosticView(at("/functionKeys/back/a/press"))).toBe("function");
+  expect(diagnosticView(at("/functionKeys/start/a"))).toBe("function");
   expect(diagnosticView(at("/layers/base/a/press"))).toBe("normal");
   expect(diagnosticView(at("/layers/alt/a/press"))).toBeNull();
   expect(diagnosticView(at("/controlNames/south"))).toBeNull();
   expect(diagnosticView(at("/analog/ls/mode"))).toBeNull();
   const labels = controllerLabels("xboxone");
+  expect(
+    describeDiagnostic(at("/functionSet/lt.full/tap"), null, labels, "en"),
+  ).toBe("Hold function key · LT key · full pull Tap");
+  // The old format reads the same, and says "function key" whichever it is.
   expect(
     describeDiagnostic(
       at("/functionKeys/start/lt.full/tap"),
@@ -916,5 +993,8 @@ it("tells where a problem in the set of a function key is", () => {
       labels,
       "en",
     ),
-  ).toBe("Hold Menu · LT key · full pull Tap");
+  ).toBe("Hold function key · LT key · full pull Tap");
+  expect(
+    describeDiagnostic(at("/functionSet/a/press"), null, labels, "zh-CN"),
+  ).toBe("按住功能键 · A 键 · 点按");
 });

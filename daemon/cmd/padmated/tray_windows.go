@@ -73,6 +73,29 @@ func runNativeTray(r *liveRun) (code int) {
 			}
 			quit := systray.AddMenuItem("退出 padmate", "")
 			ui.pause, ui.startup, ui.quit = pause.ClickedCh, start.ClickedCh, quit.ClickedCh
+			// A double click opens the window; a single left click shows the
+			// menu, once the double-click time has passed without a second
+			// one (tray.Taps). The right button shows it at once.
+			open := make(chan struct{}, 1)
+			taps := &tray.Taps{
+				Interval: tray.DoubleClickInterval(),
+				Open: func() {
+					// Right after the click this process may still give the
+					// window it starts the foreground.
+					_ = tray.AllowForeground()
+					select {
+					case open <- struct{}{}:
+					default:
+					}
+				},
+				Menu: func() {
+					if err := tray.ShowMenu(); err != nil {
+						r.log.Warn("tray menu unavailable", "err", err)
+					}
+				},
+			}
+			systray.SetOnTapped(taps.Tap)
+			ui.open = open
 			ready()
 		}, exit)
 		registered = true

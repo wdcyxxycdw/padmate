@@ -20,8 +20,8 @@ import (
 // repeat on press and on hold, release, a tap-mode sequence, a sequence action
 // and a text action (they hold nothing, MAP-22, OUT-21), a latch, the
 // three interrupt policies, and layer hold and toggle of the overlay fn,
-// which rebinds some of the controls. The sets of the function keys
-// (MAP-27) rebind more of them, with every kind of action they may hold.
+// which rebinds some of the controls. The function set (MAP-27) rebinds more
+// of them, with every kind of action it may hold.
 const fuzzProfile = `{"schemaVersion": 0, "name": "fuzz", "layers": {
   "base": {
     "west": {"tap": {"type": "keys", "keys": "F13"}, "doubleTap": {"type": "keys", "keys": "F14"},
@@ -45,21 +45,16 @@ const fuzzProfile = `{"schemaVersion": 0, "name": "fuzz", "layers": {
     "east": {"press": {"type": "keys", "keys": "A", "repeat": {"style": "tap", "delayMs": 0, "rateHz": 1000}},
       "doubleTap": {"type": "text", "text": "dt"}}
   }
-}, "functionKeys": {
-  "back": {
-    "west": {"press": {"type": "keys", "keys": "F9"}, "release": {"type": "keys", "keys": "F10"}},
-    "east": {"press": {"type": "keys", "keys": "A", "repeat": {"delayMs": 20, "rateHz": 60}}},
-    "north": {"tap": {"type": "keys", "keys": "F11"}, "hold": {"type": "keys", "keys": "F12"},
-      "tripleTap": {"type": "sequence", "steps": [{"text": "t"}, {"wait": 1}]}},
-    "dpad.down": {"press": {"type": "layer", "layer": "fn", "op": "hold"}},
-    "rightshoulder": {"block": true}
-  },
-  "start": {
-    "south": {"press": {"type": "keys", "keys": ["Ctrl+K", "S"], "mode": "tap"}, "doubleTap": {"type": "keys", "keys": "F13"}},
-    "dpad.up": {"policy": "timeOnly", "tap": {"type": "keys", "keys": "F18"}, "hold": {"type": "keys", "keys": "F19"}},
-    "leftshoulder": {"press": {"type": "layer", "layer": "fn", "op": "toggle"}},
-    "west": {"press": {"type": "keys", "keys": "Shift"}}
-  }
+}, "functionSet": {
+  "west": {"press": {"type": "keys", "keys": "Shift"}},
+  "east": {"press": {"type": "keys", "keys": "A", "repeat": {"delayMs": 20, "rateHz": 60}}},
+  "north": {"tap": {"type": "keys", "keys": "F11"}, "hold": {"type": "keys", "keys": "F12"},
+    "tripleTap": {"type": "sequence", "steps": [{"text": "t"}, {"wait": 1}]}},
+  "south": {"press": {"type": "keys", "keys": ["Ctrl+K", "S"], "mode": "tap"}, "doubleTap": {"type": "keys", "keys": "F13"}},
+  "dpad.up": {"policy": "timeOnly", "tap": {"type": "keys", "keys": "F18"}, "hold": {"type": "keys", "keys": "F19"}},
+  "dpad.down": {"press": {"type": "layer", "layer": "fn", "op": "hold"}},
+  "leftshoulder": {"press": {"type": "layer", "layer": "fn", "op": "toggle"}},
+  "rightshoulder": {"block": true}
 }}`
 
 // fuzzControls are the controls FuzzGestures presses, by operation code.
@@ -82,8 +77,10 @@ var fuzzLatched = keys.MustParse("Ctrl")
 //	      script does (SCR-05): a consumed press leaves the control up in
 //	      the engine, so its release is stale, and a consumed release ends
 //	      the cycle without its tap or release action; with bit 6 set
-//	      (0x40) it is a function key instead: back for an even op, start
-//	      for an odd one, pressed if up, else released (MAP-27)
+//	      (0x40) it is a center key instead: start for an even op, back for
+//	      an odd one, pressed if up, else released. The first program's
+//	      function key is start and the second's back (MAP-27, ADR-0075), so
+//	      the other one is an ordinary control that nothing binds
 //	8     wait max(1, next byte) ms
 //	9     wait until the next deadline
 //	10    wait until 1 ms before the next deadline
@@ -110,7 +107,9 @@ var fuzzLatched = keys.MustParse("Ctrl")
 // command may come, only the latch may hold a chord, and after CancelAll
 // nothing is held and no deadline is left.
 func FuzzGestures(f *testing.F) {
-	progs := [2]*engine.Program{compileProfile(f, fuzzProfile), compileProfile(f, strings.Replace(fuzzProfile, `"name": "fuzz",`, `"name": "fuzz", "defaultLayer": "fn",`, 1))}
+	// The programs differ in the function key too: start for the first, back for
+	// the second, so a Reload changes it.
+	progs := [2]*engine.Program{compileProfile(f, fuzzProfile), compileProfileFn(f, strings.Replace(fuzzProfile, `"name": "fuzz",`, `"name": "fuzz", "defaultLayer": "fn",`, 1), control.Back)}
 	f.Add([]byte{0, 1, 2, 3, 4, 5})
 	f.Add([]byte{7, 7, 1, 0, 2, 9, 3})
 	f.Add([]byte{0, 8, 10, 0, 8, 240})                                    // the window of a single tap expires
@@ -137,15 +136,18 @@ func FuzzGestures(f *testing.F) {
 	f.Add([]byte{2, 8, 100, 0, 8, 5, 3, 8, 15, 2, 8, 250, 3, 0})          // east's release waits behind south's press: its repeat stops
 	f.Add([]byte{6, 2, 8, 40, 0, 2, 8, 255, 6, 0})                        // east's press replayed with its release buffered: no repeat
 	f.Add([]byte{0, 0x9B, 2, 0x9B, 0, 0x9B, 0, 0x9B, 0, 0x9B, 2, 9, 9})   // west's double tap across east's earlier press
-	f.Add([]byte{0x40, 0, 0, 0x40, 2, 2})                                 // back held: west and east use its set
-	f.Add([]byte{0, 0x40, 0, 0, 0x40})                                    // west goes down before back, is released under it
-	f.Add([]byte{0x40, 0x41, 3, 3, 0x40, 3, 3, 0x41})                     // two function keys, the first let go under south
-	f.Add([]byte{0x40, 7, 7, 0x40, 7, 7})                                 // back's set holds the layer fn
-	f.Add([]byte{0x41, 4, 4, 0x41, 6, 8, 20, 6})                          // start's set toggles fn, dpad.up has a timeOnly pair
-	f.Add([]byte{6, 3, 0x40, 3, 0x40, 6, 9})                              // a function key under a pending timeOnly gesture, south buffered
-	f.Add([]byte{0, 3, 0x40, 3, 0x40, 0, 0x41, 3, 3, 9, 9, 0x41})         // west pending, south buffered under back
-	f.Add([]byte{0x40, 2, 8, 100, 13, 2, 0x40, 2, 8, 50, 14, 2, 2})       // cancel and reset with back held and east repeating
-	f.Add([]byte{0x40, 12, 0, 0, 12, 0x40, 0, 0, 15, 0x40, 0, 0})         // pause and reload with back held
+	f.Add([]byte{0x40, 0, 0, 0x40, 2, 2})                                 // start held: west and east use the set
+	f.Add([]byte{0, 0x40, 0, 0, 0x40})                                    // west goes down before start, is released under it
+	f.Add([]byte{0x40, 0x41, 3, 3, 0x40, 3, 3, 0x41})                     // the function key and back, an ordinary control; the function key let go under south
+	f.Add([]byte{0x40, 7, 7, 0x40, 7, 7})                                 // the set holds the layer fn
+	f.Add([]byte{0x40, 4, 4, 0x40, 6, 8, 20, 6})                          // the set toggles fn, dpad.up has a timeOnly pair
+	f.Add([]byte{6, 3, 0x40, 3, 0x40, 6, 9})                              // the function key under a pending timeOnly gesture, south buffered
+	f.Add([]byte{0, 3, 0x40, 3, 0x40, 0, 0x41, 3, 3, 9, 9, 0x41})         // west pending, south buffered under start, back pressed
+	f.Add([]byte{0x40, 2, 8, 100, 13, 2, 0x40, 2, 8, 50, 14, 2, 2})       // cancel and reset with start held and east repeating
+	f.Add([]byte{0x40, 12, 0, 0, 12, 0x40, 0, 0, 15, 0x40, 0, 0})         // pause and reload with start held
+	f.Add([]byte{0x40, 3, 15, 3, 0x40, 3, 0x41, 3, 3, 0x41})              // reload to back as the function key with start held
+	f.Add([]byte{0x41, 0x40, 0, 15, 0x41, 0, 0, 0x40, 0})                 // back down as an ordinary control, a reload makes it the function key
+	f.Add([]byte{0x40, 0x41, 15, 3, 0x41, 3, 0x40, 3})                    // both held across a reload that changes the function key
 	f.Add([]byte{6, 3, 6, 9, 3})                                          // dpad.up's tap is decided ahead of south's press, its release is not
 	f.Add([]byte{0, 2, 0, 9, 2})                                          // west's window opens after east's earlier press replays
 	f.Add([]byte{3, 3, 8, 240})                                           // south's single tap: its press action answered the cycle, so the window ends with nothing more
@@ -174,12 +176,13 @@ func FuzzGestures(f *testing.F) {
 		l.e = e
 		var now clock.Time
 		var down [len(fuzzControls)]bool
-		// fnDown are back and start as the operations left them, and fnFirst
-		// is the one whose set is used: the one pressed first of those held,
-		// which the engine must report as ActiveFunctionKey.
-		fnKeys := [2]control.Control{control.Back, control.Start}
+		// fnDown are start and back as the operations left them, and active
+		// is the function key when it is held, which the engine must report as
+		// ActiveFunctionKey: none after a Reload that changes the function key
+		// or a Reset, whatever is down then.
+		fnKeys := [2]control.Control{control.Start, control.Back}
 		var fnDown [2]bool
-		fnFirst := control.Invalid
+		active := control.Invalid
 		advanceTo := func(target clock.Time) {
 			for steps := 0; ; steps++ {
 				d, ok := e.NextDeadline()
@@ -198,30 +201,33 @@ func FuzzGestures(f *testing.F) {
 			b := data[i]
 			switch op := b & 0x0F; {
 			case op < 8 && b&0x40 != 0:
-				// A function key: no output and no deadline, whatever else is
-				// going on.
 				k := op & 1
+				c := fnKeys[k]
 				fnDown[k] = !fnDown[k]
-				switch {
-				case fnDown[k] && (fnFirst == control.Invalid || !fnDown[fnIndex(fnFirst)]):
-					fnFirst = fnKeys[k]
-				case !fnDown[k] && fnFirst == fnKeys[k]:
-					fnFirst = control.Invalid
-					if fnDown[1-k] {
-						fnFirst = fnKeys[1-k]
-					}
+				if c != progs[prog].FunctionKey() {
+					// An ordinary control that no binding of the profile uses.
+					l.down[c] = fnDown[k]
+					l.stepped(c, fnDown[k])
+					e.Step(engine.Input{T: now, Kind: engine.InputButton, Control: c, Down: fnDown[k]})
+					break
+				}
+				// The function key: no output and no deadline, whatever else
+				// is going on.
+				active = control.Invalid
+				if fnDown[k] {
+					active = c
 				}
 				cmds := l.cmds
 				deadline, deadlineSet := e.NextDeadline()
-				e.Step(engine.Input{T: now, Kind: engine.InputButton, Control: fnKeys[k], Down: fnDown[k]})
+				e.Step(engine.Input{T: now, Kind: engine.InputButton, Control: c, Down: fnDown[k]})
 				if l.cmds != cmds {
-					t.Fatalf("an edge of %s sent %d commands", fnKeys[k], l.cmds-cmds)
+					t.Fatalf("an edge of %s sent %d commands", c, l.cmds-cmds)
 				}
 				if d, ok := e.NextDeadline(); d != deadline || ok != deadlineSet {
-					t.Fatalf("an edge of %s moved the next deadline from %v (%t) to %v (%t)", fnKeys[k], deadline, deadlineSet, d, ok)
+					t.Fatalf("an edge of %s moved the next deadline from %v (%t) to %v (%t)", c, deadline, deadlineSet, d, ok)
 				}
-				if got := e.ActiveFunctionKey(); got != fnFirst {
-					t.Fatalf("the active function key is %v after an edge of %s; want %v", got, fnKeys[k], fnFirst)
+				if got := e.ActiveFunctionKey(); got != active {
+					t.Fatalf("the function key held is %v after an edge of %s; want %v", got, c, active)
 				}
 			case op < 8:
 				down[op] = !down[op]
@@ -261,15 +267,22 @@ func FuzzGestures(f *testing.F) {
 				e.Reset(now)
 				l.releaseAll()
 				down = [len(fuzzControls)]bool{}
-				fnDown, fnFirst = [2]bool{}, control.Invalid
+				fnDown, active = [2]bool{}, control.Invalid
 				clear(l.down[:])
 				if got := e.ActiveFunctionKey(); got != control.Invalid {
-					t.Fatalf("the active function key is %v after Reset", got)
+					t.Fatalf("the function key held is %v after Reset", got)
 				}
 			case op == 15:
+				changes := progs[prog].FunctionKey() != progs[1-prog].FunctionKey()
 				prog = 1 - prog
 				e.Reload(now, progs[prog])
 				l.releaseAll()
+				if changes {
+					active = control.Invalid
+				}
+				if got := e.ActiveFunctionKey(); got != active {
+					t.Fatalf("the function key held is %v after a Reload; want %v", got, active)
+				}
 			}
 		}
 		for i, d := range down {
@@ -281,11 +294,15 @@ func FuzzGestures(f *testing.F) {
 		}
 		for k, d := range fnDown {
 			if d {
+				l.down[fnKeys[k]] = false
+				if fnKeys[k] != progs[prog].FunctionKey() {
+					l.stepped(fnKeys[k], false)
+				}
 				e.Step(engine.Input{T: now, Kind: engine.InputButton, Control: fnKeys[k], Down: false})
 			}
 		}
 		if got := e.ActiveFunctionKey(); got != control.Invalid {
-			t.Fatalf("the active function key is %v with both released", got)
+			t.Fatalf("the function key held is %v with both center keys released", got)
 		}
 		for steps := 0; ; steps++ {
 			d, ok := e.NextDeadline()
@@ -318,23 +335,22 @@ func FuzzGestures(f *testing.F) {
 	})
 }
 
-// fnIndex is 0 for back and 1 for start.
-func fnIndex(c control.Control) int {
-	if c == control.Start {
-		return 1
-	}
-	return 0
-}
-
 // compileProfile parses and compiles the profile src. Warnings are fine;
 // errors fail the test.
 func compileProfile(t testing.TB, src string) *engine.Program {
+	t.Helper()
+	return compileProfileFn(t, src, control.Invalid)
+}
+
+// compileProfileFn is compileProfile with function key fn (control.Invalid for
+// the default).
+func compileProfileFn(t testing.TB, src string, fn control.Control) *engine.Program {
 	t.Helper()
 	p, ds := profile.Parse([]byte(src))
 	if p == nil {
 		t.Fatalf("profile.Parse: %v", ds)
 	}
-	prog, err := engine.Compile(p)
+	prog, err := engine.Compile(p, engine.WithFunctionKey(fn))
 	if err != nil {
 		t.Fatalf("Compile: %v", err)
 	}
@@ -364,6 +380,9 @@ type ledger struct {
 	// index after the edge that the last edge decision matched.
 	edges []ledgerEdge
 	next  int
+	// record, when set, makes the ledger list the chord of each Down in sent.
+	record bool
+	sent   []string
 }
 
 type ledgerEdge struct {
@@ -431,6 +450,9 @@ func (l *ledger) command(what string, o engine.OwnerID, c keys.Chord) {
 func (l *ledger) Down(o engine.OwnerID, c keys.Chord, _ time.Duration) {
 	l.command("Down", o, c)
 	l.held[ledgerKey{o, c}]++
+	if l.record {
+		l.sent = append(l.sent, c.String())
+	}
 }
 
 func (l *ledger) Up(o engine.OwnerID, c keys.Chord) {

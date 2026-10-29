@@ -245,8 +245,8 @@ func gestureOf(name string) (Gesture, bool) {
 
 // actionRef is one action object of a scanned profile: a member of its
 // binding, which is a member of its layer. prefix is the JSON Pointer tokens
-// of the layer, such as {"layers", "base"}, {"common"} or {"functionKeys",
-// "back"}.
+// of the layer, such as {"layers", "base"}, {"common"}, {"functionSet"} or
+// {"functionKeys", "back"}.
 type actionRef struct {
 	layer, binding, action *node
 	prefix                 []string
@@ -255,10 +255,11 @@ type actionRef struct {
 }
 
 // actionRefs returns every action object of the scanned profile root, in
-// document order: the members of each layer's bindings, then of common's and
-// of the function keys' sets, that name a gesture. Only the syntax matters, so it works on a profile
-// that fails the schema or the semantic checks; names that are not
-// controls, and values that are not objects, are skipped.
+// document order: the members of each layer's bindings, then of common's,
+// of functionSet and of the old function keys' sets, that name a gesture.
+// Only the syntax matters, so it works on a profile that fails the schema or
+// the semantic checks; names that are not controls, and values that are not
+// objects, are skipped.
 func actionRefs(root *node) []actionRef {
 	var refs []actionRef
 	visit := func(layer *node, prefix ...string) {
@@ -288,6 +289,7 @@ func actionRefs(root *node) []actionRef {
 		}
 	}
 	visit(root.members["common"], "common")
+	visit(root.members["functionSet"], "functionSet")
 	if fk := root.members["functionKeys"]; fk != nil {
 		for _, name := range []string{"back", "start"} {
 			visit(fk.members[name], "functionKeys", name)

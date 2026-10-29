@@ -156,10 +156,10 @@ describe("the depth rate (ANA-12, ANA-13, ANA-15)", () => {
     expect(usesDepthRate(file, "rt")).toBe(false);
   });
 
-  it("finds them in the sets of the function keys too", () => {
+  it("finds them in the function set too", () => {
     const file = {
       ...base({ base: { "ls.up": { press: repeat() } } }),
-      functionKeys: { back: { "rs.outer": { press: repeat(3) } } },
+      functionSet: { "rs.outer": { press: repeat(3) } },
     } as Profile;
     expect(usesDepthRate(file, "rs")).toBe(true);
     expect(usesDepthRate(file, "ls")).toBe(false);
@@ -289,30 +289,26 @@ describe("the two stages the editor set up before lt.full", () => {
     expect(analogIssues(next.analog)).toEqual([]);
   });
 
-  it("makes the same move in the sets of the function keys (ADR-0069)", () => {
+  it("makes the same move in the function set (ADR-0075)", () => {
     const source = old();
-    source.functionKeys = {
-      back: { "lefttrigger+": { press: { type: "keys", keys: "C" } } },
-      start: { lt: { press: { type: "keys", keys: "F" } } },
+    source.functionSet = {
+      "lefttrigger+": { press: { type: "keys", keys: "C" } },
+      lt: { press: { type: "keys", keys: "F" } },
     };
     const before = JSON.stringify(source);
     const next = convertToFullPull(source, "lt");
     expect(JSON.stringify(source)).toBe(before);
-    expect(next.functionKeys?.back?.lt).toEqual(
-      source.functionKeys.back?.["lefttrigger+"],
-    );
-    expect(next.functionKeys?.back?.["lefttrigger+"]).toBeUndefined();
-    expect(next.functionKeys?.start?.["lt.full"]).toEqual(
-      source.functionKeys.start?.lt,
-    );
+    expect(next.functionSet?.lt).toEqual(source.functionSet["lefttrigger+"]);
+    expect(next.functionSet?.["lefttrigger+"]).toBeUndefined();
+    expect(next.functionSet?.["lt.full"]).toEqual(source.functionSet.lt);
     expect(legacyTwoStage(next, "lt")).toBe(false);
   });
 
-  it("is not offered when a function key's set uses the second stage", () => {
+  it("is not offered when the function set uses the second stage", () => {
     expect(
       shape((f) => {
-        f.functionKeys = {
-          start: { "lt.full": { press: { type: "keys", keys: "X" } } },
+        f.functionSet = {
+          "lt.full": { press: { type: "keys", keys: "X" } },
         };
       }),
     ).toBe(false);

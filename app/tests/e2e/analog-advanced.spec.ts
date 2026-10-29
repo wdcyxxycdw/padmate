@@ -11,10 +11,9 @@ import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut, setWindowSize } from "./helpers";
 
-// The advanced analog editor (UI-28, M15): the knob and its ticks, the rings,
-// the second stage of a trigger, the response curve and the repeat rate that
-// follows the push depth. Every edit is read back from the profile file the
-// daemon has on disk, and a few are driven through the fake pad.
+// The advanced analog editor (UI-28, M15): the knob and its ticks, the rings
+// and the second stage of a trigger. Every edit is read back from the profile
+// file the daemon has on disk, and a few are driven through the fake pad.
 
 async function openControl(page: Page, control: string): Promise<void> {
   await page.locator(`button[data-callout="${control}"]`).click();
@@ -133,8 +132,6 @@ test("a knob is set up with its step and ticks, and turning the stick sends a ti
       cw.getByRole("group", { name: "快捷键", exact: true }),
       "F21",
     );
-    // A tick is a press and a release at once: nothing to repeat.
-    await expect(cw.getByRole("switch", { name: "连发" })).toHaveCount(0);
     await panel.locator('.analog-row[data-control="rs.ccw"]').click();
     await recordShortcut(
       app,
@@ -261,7 +258,7 @@ test("the rings are bound and set, and the hard push sends its key", async ({}, 
 });
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("the full pull of a trigger is bound and set, a depth rate and its curve are saved, and the old two-stage set-up moves over", async ({}, info) => {
+test("the full pull of a trigger is bound and set, and the old two-stage set-up moves over", async ({}, info) => {
   test.setTimeout(120000);
   const f = await editorFixture();
   // A file made by the editor of M12: the full press as the trigger's own
@@ -362,66 +359,6 @@ test("the full pull of a trigger is bound and set, a depth rate and its curve ar
         async () => (await onDisk(live)).layers.base["lt.full"]?.press?.keys,
       )
       .toBe("F15");
-
-    // A rate that follows how far the trigger is pulled.
-    await full.getByRole("switch", { name: "连发", exact: true }).click();
-    await expect(
-      full.getByRole("textbox", { name: "每秒次数", exact: true }),
-    ).toBeVisible();
-    await full
-      .getByRole("switch", { name: "推得越深越快", exact: true })
-      .click();
-    await expect
-      .poll(
-        async () =>
-          (await onDisk(live)).layers.base["lt.full"]?.press?.repeat?.minRateHz,
-      )
-      .toBe(3);
-    const slowest = full.getByRole("textbox", {
-      name: "最慢（每秒）",
-      exact: true,
-    });
-    await expect(slowest).toHaveValue("3");
-    await expect(
-      full.getByRole("textbox", { name: "最快（每秒）", exact: true }),
-    ).toHaveValue("12");
-    // Slower than the fastest only.
-    await slowest.fill("20");
-    await slowest.press("Enter");
-    await expect(slowest).toHaveAttribute("aria-invalid", "true");
-    expect(
-      (await onDisk(live)).layers.base["lt.full"].press.repeat.minRateHz,
-    ).toBe(3);
-    await slowest.fill("5");
-    await slowest.press("Enter");
-    await expect
-      .poll(
-        async () =>
-          (await onDisk(live)).layers.base["lt.full"]?.press?.repeat?.minRateHz,
-      )
-      .toBe(5);
-
-    // The curve appears once a repeat follows the depth.
-    const curve = panel.getByRole("radiogroup", {
-      name: "响应曲线",
-      exact: true,
-    });
-    await expect(curve).toBeVisible();
-    await curve.getByRole("radio", { name: "三次", exact: true }).click();
-    await expect
-      .poll(async () => (await onDisk(live)).analog?.lt?.curve)
-      .toBe("cubic");
-    // Turned off, the rate and the curve control go away again.
-    await full
-      .getByRole("switch", { name: "推得越深越快", exact: true })
-      .click();
-    await expect
-      .poll(
-        async () =>
-          (await onDisk(live)).layers.base["lt.full"]?.press?.repeat?.minRateHz,
-      )
-      .toBeUndefined();
-    await expect(curve).toHaveCount(0);
 
     // Pulling past the second stage sends both keys.
     live.events.length = 0;

@@ -52,7 +52,7 @@ func TestHeldLayerBlocksTheStickRings(t *testing.T) {
 			if !has(tree, "layers", "base", tc.bound, "press") {
 				t.Fatalf("base: %v", at(t, tree, "layers", "base"))
 			}
-			for _, where := range [][]string{{"layers", "Held"}, {"functionKeys", "back"}, {"functionKeys", "start"}} {
+			for _, where := range [][]string{{"layers", "Held"}, {"functionSet"}} {
 				if !has(tree, append(where, tc.bound, "block")...) {
 					t.Errorf("%v does not block %s: %v", where, tc.bound, at(t, tree, where...))
 				}
@@ -76,8 +76,10 @@ func TestHeldLayerBlocksTheStickRings(t *testing.T) {
 	}
 }
 
-// AntiMicroX writes the way back itself when a button holds a set; for a
-// function key that is not a binding that is lost.
+// AntiMicroX writes the way back itself when a button holds a set; for the
+// function set that is not a binding that is lost. A binding on View or Menu is
+// an ordinary one since ADR-0075 (it sits in the function set here), and the
+// report says that Menu is the function key by default.
 func TestFunctionKeyBackLinkIsNotAnError(t *testing.T) {
 	doc := xmlDoc("",
 		xmlSet(1, "", xmlButton(5, heldTo2)),
@@ -85,46 +87,128 @@ func TestFunctionKeyBackLinkIsNotAnError(t *testing.T) {
 			xmlButton(1, "", xmlSlot("keyboard", 'A')),
 			// What AntiMicroX adds: back to set 1 while held, no slots.
 			xmlButton(5, "<setselect>1</setselect><setselectcondition>while-held</setselectcondition>"),
-			// A real binding on the function key still is lost.
+			// A real binding on Menu.
 			xmlButton(7, "", xmlSlot("keyboard", 'Z'))))
-	_, _, report := imported(t, doc)
-	lost := linesOf(report, "function.key")
-	var dropped []ReportLine
-	for _, l := range lost {
+	_, tree, report := imported(t, doc)
+	for _, l := range report {
 		if l.Severity == SeverityDropped {
-			dropped = append(dropped, l)
+			t.Errorf("a dropped line: %v", l)
 		}
 	}
-	if len(dropped) != 1 || dropped[0].Set != 2 || dropped[0].Control != "start" {
-		t.Errorf("dropped lines: %v", dropped)
+	if lines := linesOf(report, "function.key"); len(lines) != 1 || lines[0].Set != 1 || lines[0].Control != "back" || lines[0].Severity != SeverityInfo {
+		t.Errorf("function.key lines: %v", lines)
 	}
-	if len(lost) != 2 {
-		t.Errorf("want the line for the working key and the one for Menu, got %v", lost)
+	if !has(tree, "functionSet", "start", "press") || has(tree, "functionSet", "back") {
+		t.Errorf("function set: %v", at(t, tree, "functionSet"))
 	}
-	// A way back that carries a key, or goes somewhere else, is a binding.
-	for name, button := range map[string]string{
-		"with a key":     xmlButton(5, "<setselect>1</setselect><setselectcondition>while-held</setselectcondition>", xmlSlot("keyboard", 'Q')),
-		"to another set": xmlButton(5, heldTo3),
-	} {
-		_, _, report := imported(t, xmlDoc("", xmlSet(1, "", xmlButton(5, heldTo2)), xmlSet(2, "On view", button), xmlSet(3, "")))
-		found := false
-		for _, l := range linesOf(report, "function.key") {
-			found = found || l.Severity == SeverityDropped && l.Set == 2
-		}
-		if !found {
-			t.Errorf("%s: no dropped line in %v", name, report)
-		}
+	if lines := linesOf(report, "function.default"); len(lines) != 1 || lines[0].Control != "start" {
+		t.Errorf("function.default lines: %v", lines)
 	}
-	// Nor is it a way back when set 1 does not hold this set with that key.
+	if lines := linesOf(report, "function.set"); len(lines) != 1 || !strings.Contains(lines[0].Message, "在设置里选") {
+		t.Errorf("function.set lines: %v", lines)
+	}
+	// A way back that carries a key is an ordinary button that holds set 1:
+	// AntiMicroX does not fire its own key then, and a layer cannot hold set 1,
+	// so the report says what is lost. One that goes somewhere else is a hold
+	// of that layer, a binding.
+	_, _, report = imported(t, xmlDoc("", xmlSet(1, "", xmlButton(5, heldTo2)), xmlSet(2, "On view",
+		xmlButton(5, "<setselect>1</setselect><setselectcondition>while-held</setselectcondition>", xmlSlot("keyboard", 'Q'))), xmlSet(3, "")))
+	var carries bool
+	for _, l := range linesOf(report, "select.held.base") {
+		carries = carries || l.Severity == SeverityDropped && l.Set == 2 && l.Control == "back"
+	}
+	if !carries {
+		t.Errorf("a way back with a key is not reported: %v", report)
+	}
+	_, tree, _ = imported(t, xmlDoc("", xmlSet(1, "", xmlButton(5, heldTo2)), xmlSet(2, "On view", xmlButton(5, heldTo3)), xmlSet(3, "")))
+	if !has(tree, "functionSet", "back", "press") {
+		t.Errorf("a hold of another set: View is not bound in the function set: %v", at(t, tree, "functionSet"))
+	}
+	// Nor is it a way back when set 1 does not hold this set with that key: an
+	// ordinary binding, which a layer cannot do.
 	stray := xmlDoc("", xmlSet(1, "", xmlButton(5, heldTo2)), xmlSet(2, ""),
 		xmlSet(3, "", xmlButton(5, "<setselect>1</setselect><setselectcondition>while-held</setselectcondition>")))
 	_, _, report = imported(t, stray)
 	found := false
-	for _, l := range linesOf(report, "function.key") {
-		found = found || l.Severity == SeverityDropped && l.Set == 3
+	for _, l := range report {
+		found = found || l.Severity == SeverityDropped && l.Set == 3 && l.Control == "back"
 	}
 	if !found {
 		t.Errorf("a stray way back is not reported: %v", report)
+	}
+}
+
+// View and Menu can each hold a set. padmate has one function key, so the two
+// become one function set: Menu's set first, View's filling what Menu's does not
+// bind, and the report says how, and where the function key is chosen. Two
+// buttons that hold the same set are that set.
+func TestFunctionSetOfViewAndMenu(t *testing.T) {
+	heldTo := func(n int) string {
+		return "<setselect>" + string(rune('0'+n)) + "</setselect><setselectcondition>while-held</setselectcondition>"
+	}
+	both := xmlDoc("",
+		xmlSet(1, "", xmlButton(5, heldTo(2)), xmlButton(7, heldTo(3))),
+		xmlSet(2, "View", xmlButton(1, "", xmlSlot("keyboard", 'A')), xmlButton(2, "", xmlSlot("keyboard", 'B'))),
+		xmlSet(3, "Menu", xmlButton(1, "", xmlSlot("keyboard", 'C'))))
+	_, tree, report := imported(t, both)
+	if got := at(t, tree, "functionSet", "south", "press", "keys"); got != "C" {
+		t.Errorf("south is %v, want Menu's C", got)
+	}
+	if got := at(t, tree, "functionSet", "east", "press", "keys"); got != "B" {
+		t.Errorf("east is %v, want View's B", got)
+	}
+	if has(tree, "layers", "View") || has(tree, "layers", "Menu") || has(tree, "functionKeys") {
+		t.Errorf("the sets are layers or the old format: %v", tree)
+	}
+	if lines := linesOf(report, "function.set"); len(lines) != 1 || !strings.Contains(lines[0].Message, "Menu 的没有绑定") || !strings.Contains(lines[0].Message, "默认是 Menu") {
+		t.Errorf("function.set lines: %v", lines)
+	}
+	same := xmlDoc("",
+		xmlSet(1, "", xmlButton(5, heldTo(2)), xmlButton(7, heldTo(2))),
+		xmlSet(2, "Both", xmlButton(1, "", xmlSlot("keyboard", 'A'))))
+	_, tree, report = imported(t, same)
+	if got := at(t, tree, "functionSet", "south", "press", "keys"); got != "A" {
+		t.Errorf("south is %v", got)
+	}
+	if lines := linesOf(report, "function.set"); len(lines) != 1 || strings.Contains(lines[0].Message, "再加") {
+		t.Errorf("function.set lines: %v", lines)
+	}
+	// Only View holds: its set is the function set, with no ordinary binding on Menu.
+	_, tree, report = imported(t, xmlDoc("", xmlSet(1, "", xmlButton(5, heldTo(2))), xmlSet(2, "View", xmlButton(1, "", xmlSlot("keyboard", 'A')))))
+	if !has(tree, "functionSet", "south", "press") || hasCode(report, "function.default") {
+		t.Errorf("only View: %v, report %v", at(t, tree, "functionSet"), report)
+	}
+}
+
+// Only a hold of a set in set 1 makes the function set. Every other setting of
+// View and Menu is an ordinary binding, whatever it does with sets: a set
+// change on release is a binding with a layer switch, a hold of a set in another
+// set is a binding that holds that layer, and nothing is dropped (the user
+// documents say so).
+func TestOtherSettingsOfViewAndMenuAreOrdinaryBindings(t *testing.T) {
+	doc := xmlDoc("",
+		xmlSet(1, "",
+			xmlButton(5, "<setselect>2</setselect><setselectcondition>one-way</setselectcondition>", xmlSlot("keyboard", 'Z')),
+			xmlButton(7, "<setselect>3</setselect><setselectcondition>two-way</setselectcondition>", xmlSlot("keyboard", '['))),
+		xmlSet(2, "Two", xmlButton(1, "", xmlSlot("keyboard", 'A')),
+			xmlButton(5, "<setselect>3</setselect><setselectcondition>while-held</setselectcondition>")),
+		xmlSet(3, "Three", xmlButton(1, "", xmlSlot("keyboard", 'B'))))
+	_, tree, report := imported(t, doc)
+	for _, l := range report {
+		if l.Severity == SeverityDropped {
+			t.Errorf("a dropped line: %v", l)
+		}
+	}
+	if has(tree, "functionSet") || has(tree, "functionKeys") {
+		t.Errorf("a function set without a hold of a set in set 1: %v", tree)
+	}
+	for control, layer := range map[string]string{"back": "Two", "start": "Three"} {
+		if !has(tree, "layers", "base", control, "press") || at(t, tree, "layers", "base", control, "release", "layer") != layer {
+			t.Errorf("base %s: %v", control, at(t, tree, "layers", "base", control))
+		}
+	}
+	if at(t, tree, "layers", "Two", "back", "press", "op") != "hold" || at(t, tree, "layers", "Two", "back", "press", "layer") != "Three" {
+		t.Errorf("Two back: %v", at(t, tree, "layers", "Two", "back"))
 	}
 }
 

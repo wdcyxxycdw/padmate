@@ -257,9 +257,7 @@ it("lets a locked stick be read but not edited", async () => {
     true,
   );
   expect(isDisabled(screen.getByRole("button", { name: "WASD" }))).toBe(true);
-  expect(
-    isDisabled(screen.getByRole("textbox", { name: "在手柄图上显示为" })),
-  ).toBe(true);
+  expect(isDisabled(screen.getByRole("textbox", { name: "功能" }))).toBe(true);
 });
 
 it("lets a locked trigger's half press be read but not edited", async () => {

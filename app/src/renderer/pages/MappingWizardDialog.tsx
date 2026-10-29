@@ -44,8 +44,10 @@ export type WizardAPI = Pick<
 const defaultClock = () => performance.now() * 1e6;
 
 /**
- * When the window is back, the capture is asked for again; Main may not have
- * the window in front yet. A few tries a moment apart, then the wizard ends.
+ * When the window is back, the capture is asked for again (it is on, which
+ * changes nothing; Main would have ended it only when the connection went)
+ * and Main may not have the window in front yet. A few tries a moment apart,
+ * then the wizard ends.
  */
 const RESUME_TRIES = 3;
 const RESUME_RETRY_MS = 300;
@@ -115,10 +117,13 @@ type Phase = "starting" | "running" | "saving" | "saved" | "error";
  *
  * While it is open the mapping is paused (the capture gate, so pressing the
  * buttons sends no keys) and the controller's raw events come as input.raw
- * events. Main ends the capture when the window loses the front, and it ends
- * the raw watch when the page goes: every way this dialog is left ends both
- * too, by the effect's cleanup. The rules that find the element are in
- * mapwizard.ts; times are those of the clock, the moment an event arrives.
+ * events. The capture is asked for so that it stays when the window is not
+ * in front (ADR-0076): the user may be in the painting app meanwhile, and
+ * that must receive nothing, also after a lock or a sleep. Main ends it, and
+ * the raw watch, when the page goes (a reload, a crash, the window closing);
+ * every way this dialog is left ends both too, by the effect's cleanup. The
+ * rules that find the element are in mapwizard.ts; times are those of the
+ * clock, the moment an event arrives.
  */
 export function MappingWizardDialog({
   open,
@@ -247,8 +252,9 @@ export function MappingWizardDialog({
       if (sessionRef.current) setAway(true);
     }
 
-    // Main ended the capture when the window lost the front; it is asked for
-    // again when the window is back. A press that began before is forgotten.
+    // The capture stays while the window is away, a lock and a sleep too: it
+    // is asked for again when the window is back, which is no change when it
+    // is on. A press that began before is forgotten.
     function onFocus() {
       focused = true;
       if (!sessionRef.current || resuming) return;
@@ -261,7 +267,7 @@ export function MappingWizardDialog({
     // mapping is not paused: the wizard ends rather than wait for answers it
     // would not get.
     function resume(attempt: number) {
-      api.padCaptureStart().then(
+      api.padCaptureStart(true).then(
         () => {
           resuming = false;
           if (!alive || released || !focused) return;
@@ -318,7 +324,7 @@ export function MappingWizardDialog({
 
     (async () => {
       try {
-        await api.padCaptureStart();
+        await api.padCaptureStart(true);
         if (!alive) return;
         requested = true;
         const info = await api.rawWatchStart(selector);

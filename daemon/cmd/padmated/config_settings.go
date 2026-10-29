@@ -4,6 +4,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
@@ -51,8 +52,8 @@ func (r *liveRun) feedbackSwitches() profile.FeedbackSwitches {
 
 // liveSettings is the effective config after committing next: the fields
 // applied at once (automatic selection, output.sendToOwnWindow,
-// output.eventGapMs, timing, safety, the feedback switches and the stick
-// calibration of each device, IN-14) come from next, everything captured at startup
+// output.eventGapMs, timing, the function key, safety, the feedback switches and
+// the stick calibration of each device, IN-14) come from next, everything captured at startup
 // (restoreLayerState, which devices are ignored and the rest of output)
 // stays as startup has it. Both inputs are immutable and may share slices and
 // maps with the result.
@@ -62,6 +63,7 @@ func liveSettings(startup, next *profile.Config) *profile.Config {
 	}
 	c := *startup
 	c.Timing, c.Safety = next.Timing, next.Safety
+	c.FunctionKey = next.FunctionKeyOrDefault()
 	c.Enabled, c.ReleaseOnSwitch, c.Rules = next.Enabled, next.ReleaseOnSwitch, next.Rules
 	c.Output, c.Feedback = next.Output, next.Feedback
 	c.Devices = liveDevices(startup.Devices, next.Devices)
@@ -101,6 +103,7 @@ func liveDevices(startup, next map[string]profile.DeviceSettings) map[string]pro
 func startupFields(c *profile.Config) profile.Config {
 	s := *c
 	s.Timing, s.Safety = profile.Timing{}, profile.SafetySettings{}
+	s.FunctionKey = control.Invalid
 	s.Enabled, s.ReleaseOnSwitch, s.Rules = false, "", nil
 	s.Output = profile.OutputSettings{}
 	s.Feedback = profile.FeedbackSwitches{}

@@ -5,6 +5,7 @@ import {
   actionText,
   bindingAt,
   canonicalControl,
+  diagnosticSet,
   type Gesture,
   gestureName,
   gestures,
@@ -211,7 +212,7 @@ const analogGroups: Record<ControlKind, (control: string) => string | null> = {
 
 /**
  * Validation results that point at this control, in plain words. view is the
- * set being edited: the base layer, or the set of a function key.
+ * set being edited: the base layer, or the function set.
  */
 export function controlDiagnostics(
   diagnostics: ProfileDiagnostic[],
@@ -248,13 +249,10 @@ export function controlDiagnostics(
       });
       continue;
     }
-    const inView =
-      view === "normal"
-        ? bits[0] === "layers" && bits[1] === "base"
-        : bits[0] === "functionKeys" && bits[1] === view;
-    if (!inView || !bits[2]) continue;
-    if (!ownsKey(bits[2], bindingKey, kind, control)) continue;
-    const part = bits[3];
+    const found = diagnosticSet(diagnostic.pointer);
+    if (found?.view !== view || !found.rest[0]) continue;
+    if (!ownsKey(found.rest[0], bindingKey, kind, control)) continue;
+    const part = found.rest[1];
     const field = gestures.includes(part as Gesture)
       ? gestureName(part as Gesture, language)
       : part === "label"
@@ -268,7 +266,7 @@ export function controlDiagnostics(
               : part === "haptic"
                 ? tx(language, "触感", "Haptic")
                 : tx(language, "此按键", "This key");
-    const canonical = canonicalControl(bits[2]);
+    const canonical = canonicalControl(found.rest[0]);
     const direction =
       canonical !== bindingKey
         ? (analogControlPart(canonical, language) ??

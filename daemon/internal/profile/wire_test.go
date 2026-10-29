@@ -72,7 +72,7 @@ func TestWireMatchesSchema(t *testing.T) {
 			t.Errorf("%s: wire fields %q, schema properties %q", tc.name, tags, tc.schema)
 		}
 	}
-	if len(s.Defs) != 23 {
+	if len(s.Defs) != 24 {
 		t.Errorf("the schema has %d definitions; check the new ones here", len(s.Defs))
 	}
 	if reflect.TypeOf(wireLayers{}).Kind() != reflect.Map || reflect.TypeOf(wireLayers{}).Elem() != reflect.TypeOf(wireLayer{}) {

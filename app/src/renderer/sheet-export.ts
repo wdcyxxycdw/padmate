@@ -34,6 +34,7 @@ export function useSheetExport({
 }) {
   const draft = useStore(editor, (value) => value.draft);
   const parent = useStore(editor, (value) => value.parent);
+  const functionKey = useStore(editor, (value) => value.functionKey);
   const id = useStore(editor, (value) => value.id);
   const [format, setFormat] = useState<SheetFormat>("png");
   const devices = state.status?.devices ?? [];
@@ -48,6 +49,7 @@ export function useSheetExport({
   );
   const options: SheetOptions = {
     language,
+    functionKey,
     controlName: (control) => listControlName(control, labels, language),
     ...(isDefaultProfile(id)
       ? { profileName: defaultProfileName(language) }

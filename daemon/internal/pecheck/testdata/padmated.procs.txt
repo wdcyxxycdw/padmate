@@ -26,9 +26,12 @@ internal/ownwindow.GetWindowThreadProcessId
 internal/script.QueryPerformanceCounter
 internal/script.QueryPerformanceFrequency
 internal/script.QueryThreadCycleTime
+internal/tray.AllowSetForegroundWindow
 internal/tray.FindWindowExW
+internal/tray.GetDoubleClickTime
 internal/tray.GetWindowThreadProcessId
 internal/tray.PeekMessageW
+internal/tray.PostMessageW
 internal/tray.PostThreadMessageW
 internal/tray.Shell_NotifyIconW
 internal/winfocus.EnumChildWindows

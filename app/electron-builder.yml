@@ -97,7 +97,12 @@ nsis:
     - en_US
   differentialPackage: false
   runAfterFinish: true
-  createDesktopShortcut: false
+  # A desktop shortcut as well (ADR-0074). "always" also makes it when an
+  # installer runs over an installation that has none (every one before
+  # v1.0.2), and again when the user deleted it, but not in an automatic
+  # update (--updated), which keeps the shortcuts as they are. The uninstaller
+  # deletes it.
+  createDesktopShortcut: always
   createStartMenuShortcut: true
   shortcutName: padmate
   deleteAppDataOnUninstall: false

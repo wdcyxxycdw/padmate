@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "两种写法",
+  "layers": {"base": {"south": {"press": {"type": "keys", "keys": "A"}}}},
+  "functionKeys": {
+    "start": {"east": {"press": {"type": "keys", "keys": "B"}}}
+  },
+  "functionSet": {
+    "south": {"press": {"type": "keys", "keys": "F1"}}
+  }
+}

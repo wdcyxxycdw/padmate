@@ -195,14 +195,15 @@ func TestReplayCombo(t *testing.T) {
 			"7500.000 +Space", "7800.000 -Space", "8000.000 +LCtrl +Z", "8020.000 -Z -LCtrl",
 			"12000.000 +Space", "14600.000 -Space",
 		}},
-		{"presses while paused", paused, []string{"3500.000 south down", "5000.000 east down"}},
-		// back and start are the function keys (MAP-27): every edge of them,
-		// paused or not, is a decision with that reason and nothing else.
+		// back is an ordinary, unbound control here; its press is "paused" as
+		// any press is.
+		{"presses while paused", paused, []string{"3500.000 south down", "4000.000 back down", "5000.000 east down"}},
+		// start is the function key (MAP-27, ADR-0075; the default): every
+		// edge of it, paused or not, is a decision with that reason and
+		// nothing else.
 		{"function key edges", function, []string{
-			"500.000 back down", "600.000 start down", "3000.000 back up", "3000.000 start up",
-			"4000.000 back down", "4100.000 start down", "6500.000 back up", "6500.000 start up",
-			"9000.000 back down", "9100.000 start down", "11000.000 start up", "11100.000 back up",
-			"12500.000 back down", "12600.000 start down",
+			"600.000 start down", "3000.000 start up", "4100.000 start down", "6500.000 start up",
+			"9100.000 start down", "11000.000 start up", "12600.000 start down",
 		}},
 	} {
 		if !slices.Equal(c.got, c.want) {

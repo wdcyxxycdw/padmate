@@ -38,10 +38,41 @@ type Program struct {
 	// Response curves (ANA-13), indexed by curveLS, curveRS, curveLT, curveRT.
 	curves [4]curveKind
 
-	// fnSets are the sets of the function keys (MAP-27): back's, then start's;
-	// nil for a key without one.
-	fnSets [2]*profile.Layer
+	// fnKey is the function key of this Program (MAP-27, ADR-0075): back,
+	// start or guide, never control.Invalid. fnSet is the profile's function
+	// set, nil when it has none, and fnLevel the name that set has in lookups
+	// and decisions, profile.FunctionLevel(fnKey).
+	fnKey   control.Control
+	fnSet   *profile.Layer
+	fnLevel string
+	// fnIgnored are the IDs of the bindings that sit on the function key in a
+	// layer, in common or in the function set: Compile leaves them out.
+	fnIgnored []string
 }
+
+// CompileOption changes how Compile compiles a profile.
+type CompileOption func(*compileOptions)
+
+type compileOptions struct{ functionKey control.Control }
+
+// WithFunctionKey makes c the function key of the Program (ADR-0075): back,
+// start or guide, the one control that sends nothing, cannot be bound and
+// selects the function set while it is held. Any other control, and without
+// this option, means control.DefaultFunctionKey (start). The key comes from
+// config.json, which this pure package does not read, so the caller passes it.
+func WithFunctionKey(c control.Control) CompileOption {
+	return func(o *compileOptions) { o.functionKey = c }
+}
+
+// FunctionKey returns the function key the Program was compiled with.
+func (p *Program) FunctionKey() control.Control { return p.fnKey }
+
+// IgnoredFunctionKeyBindings returns the IDs (JSON Pointers) of the bindings
+// that Compile left out because they sit on the function key: in a layer, in
+// common or in the function set, in that order. They stay in the file, and
+// take effect if the function key is changed in the settings. The result is
+// empty when there are none, and must not be changed.
+func (p *Program) IgnoredFunctionKeyBindings() []string { return p.fnIgnored }
 
 // BindingInfo describes one binding of a Program (PRO-04).
 type BindingInfo struct {
@@ -60,9 +91,17 @@ type BindingInfo struct {
 // pointers into p, which must not change afterwards. The error is only for
 // a nil or inconsistent profile: Compile accepts everything profile.Parse
 // returns.
-func Compile(p *profile.Profile) (*Program, error) {
+func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 	if p == nil {
 		return nil, errors.New("engine: no profile")
+	}
+	var copts compileOptions
+	for _, o := range opts {
+		o(&copts)
+	}
+	fnKey := copts.functionKey
+	if !fnKey.CanBeFunctionKey() {
+		fnKey = control.DefaultFunctionKey
 	}
 	analog := p.Analog
 	if !p.AnalogResolved {
@@ -170,6 +209,8 @@ func Compile(p *profile.Profile) (*Program, error) {
 		analog:         analog,
 		analogResolved: p.AnalogResolved,
 		haptics:        hapticSettingsOf(p),
+		fnKey:          fnKey,
+		fnLevel:        profile.FunctionLevel(fnKey),
 	}
 	prog.curves[curveLS], _ = parseCurve(analog.LS.Curve)
 	prog.curves[curveRS], _ = parseCurve(analog.RS.Curve)
@@ -216,13 +257,13 @@ func Compile(p *profile.Profile) (*Program, error) {
 	if prog.layers[prog.defaultLayer] == nil {
 		return nil, fmt.Errorf("engine: default layer %q does not exist", prog.defaultLayer)
 	}
-	// back and start are the function keys in every profile: a binding on
-	// them in a layer or in common is ignored (ADR-0069), and Compile does not
-	// even check it. profile.Parse drops them and warns; a model built by hand
-	// may still have them.
+	// A binding on the function key sends nothing and is not looked up
+	// (ADR-0075): Compile does not even check it, and remembers it for the
+	// log. Every other control, back, start and guide too, is an ordinary one.
 	for _, l := range p.Layers {
 		for i, b := range l.Bindings {
-			if b != nil && b.Control.IsFunctionKey() {
+			if b != nil && b.Control == fnKey {
+				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
 			if err := prog.checkBinding(l, i, b); err != nil {
@@ -232,7 +273,8 @@ func Compile(p *profile.Profile) (*Program, error) {
 	}
 	if p.Common != nil {
 		for i, b := range p.Common.Bindings {
-			if b != nil && b.Control.IsFunctionKey() {
+			if b != nil && b.Control == fnKey {
+				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
 			if err := prog.checkBinding(p.Common, i, b); err != nil {
@@ -240,22 +282,17 @@ func Compile(p *profile.Profile) (*Program, error) {
 			}
 		}
 	}
-	if p.FunctionKeys != nil {
-		for i, set := range [2]*profile.Layer{p.FunctionKeys.Back, p.FunctionKeys.Start} {
-			if set == nil {
+	if set := p.EffectiveFunctionSet(); set != nil {
+		for j, b := range set.Bindings {
+			if b != nil && b.Control == fnKey {
+				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
-			fn := [2]control.Control{control.Back, control.Start}[i]
-			for j, b := range set.Bindings {
-				if b != nil && b.Control.IsFunctionKey() {
-					return nil, fmt.Errorf("engine: binding %s: %s is a function key and cannot be bound in the set of %s", b.ID, b.Control, fn)
-				}
-				if err := prog.checkBinding(set, j, b); err != nil {
-					return nil, err
-				}
+			if err := prog.checkBinding(set, j, b); err != nil {
+				return nil, err
 			}
-			prog.fnSets[i] = set
 		}
+		prog.fnSet = set
 	}
 	for _, l := range p.Layers {
 		prog.addBindingInfo(l, l.Name)
@@ -263,10 +300,8 @@ func Compile(p *profile.Profile) (*Program, error) {
 	if p.Common != nil {
 		prog.addBindingInfo(p.Common, p.Common.Name)
 	}
-	for i, fn := range [2]control.Control{control.Back, control.Start} {
-		if prog.fnSets[i] != nil {
-			prog.addBindingInfo(prog.fnSets[i], profile.FunctionLevel(fn))
-		}
+	if prog.fnSet != nil {
+		prog.addBindingInfo(prog.fnSet, prog.fnLevel)
 	}
 	return prog, nil
 }
@@ -277,7 +312,7 @@ func (p *Program) addBindingInfo(l *profile.Layer, name string) {
 	bindings := slices.Clone(l.Bindings)
 	slices.SortFunc(bindings, func(a, b *profile.Binding) int { return int(a.Control) - int(b.Control) })
 	for _, b := range bindings {
-		if b.Control.IsFunctionKey() {
+		if b.Control == p.fnKey {
 			continue // ignored (Compile)
 		}
 		gs := gesturesOf(b)

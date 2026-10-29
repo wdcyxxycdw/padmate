@@ -75,6 +75,12 @@
           "op": "switch"
         }
       },
+      "back": {
+        "press": {
+          "type": "keys",
+          "keys": "A"
+        }
+      },
       "guide": {
         "press": {
           "type": "keys",

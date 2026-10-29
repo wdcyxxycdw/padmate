@@ -10,14 +10,12 @@
 // the same canvas and draws.
 //
 // The trade-off is GPU memory held while the page is away: one WebGL context,
-// the textures and the drawing buffer. It is kept for one model at a time,
-// freed when another model is needed, when the context is lost, and after
-// STAGE_IDLE_MS without a visit. Nothing is drawn while no mount holds the
-// stage.
+// the textures and the drawing buffer (parked at 1×1). It is kept for one
+// model at a time, freed when another model is needed or the context is lost,
+// and otherwise kept until padmate quits: the window stays loaded after it is
+// closed (ADR-0077), and ten minutes away used to free it (ADR-0058) and so
+// bring the upload back. Nothing is drawn while no mount holds the stage.
 import type { ModelInfo } from "./controller-callouts";
-
-/** How long a stage that no mount holds stays alive, in milliseconds. */
-export const STAGE_IDLE_MS = 10 * 60 * 1000;
 
 /**
  * What a stage is made from: the shell and the labels of the buttons, so the
@@ -35,8 +33,6 @@ export interface RetainedStage {
 export interface StageStore<I, S extends RetainedStage> {
   /** The stage for a model: the kept one, or a new one (the old one is disposed). */
   acquire(info: I): S;
-  /** A mount lets go of the stage. The last one starts the idle time. */
-  release(stage: S): void;
   /** Disposes a stage that failed in use. */
   discard(stage: S): void;
   /** The stage that is kept, if any. */
@@ -47,52 +43,29 @@ export function createStageStore<I, S extends RetainedStage>({
   key,
   create,
   usable = () => true,
-  idleMs = STAGE_IDLE_MS,
 }: {
   key: (info: I) => string;
   create: (info: I) => S;
   /** False for a stage that cannot draw any more, e.g. a lost context. */
   usable?: (stage: S) => boolean;
-  idleMs?: number;
 }): StageStore<I, S> {
-  let kept:
-    | {
-        key: string;
-        stage: S;
-        /** Mounts that hold the stage. */
-        holders: number;
-        idle?: ReturnType<typeof setTimeout>;
-      }
-    | undefined;
+  let kept: { key: string; stage: S } | undefined;
   const drop = () => {
     if (!kept) return;
-    const { stage, idle } = kept;
+    const { stage } = kept;
     kept = undefined;
-    if (idle !== undefined) clearTimeout(idle);
     stage.dispose();
   };
   return {
     acquire(info) {
       const wanted = key(info);
-      if (kept?.key === wanted && usable(kept.stage)) {
-        if (kept.idle !== undefined) clearTimeout(kept.idle);
-        kept.idle = undefined;
-        kept.holders++;
-        return kept.stage;
-      }
+      if (kept?.key === wanted && usable(kept.stage)) return kept.stage;
       // Another model, or a stage that cannot draw: nothing is kept if the
       // new one cannot be made.
       drop();
       const stage = create(info);
-      kept = { key: wanted, stage, holders: 1 };
+      kept = { key: wanted, stage };
       return stage;
-    },
-    release(stage) {
-      // A stage that was dropped meanwhile has nothing left to release.
-      if (!kept || kept.stage !== stage) return;
-      kept.holders = Math.max(0, kept.holders - 1);
-      if (kept.holders > 0 || kept.idle !== undefined) return;
-      kept.idle = setTimeout(drop, idleMs);
     },
     discard(stage) {
       if (kept?.stage === stage) drop();

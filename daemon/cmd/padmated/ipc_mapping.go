@@ -345,7 +345,7 @@ type rpcMappingDevice struct {
 
 // rpcMappingWarning is something to tell the user after a mapping: code is
 // noBack (View is not mapped) or noStart (Menu is not mapped) -- the emergency
-// combo and the function keys need them -- shadowed (SDL reads another
+// combo and the function key need them -- shadowed (SDL reads another
 // mapping for the controller, such as the one in the user's
 // SDL_GAMECONTROLLERCONFIG, which has a higher priority than ours) or
 // notGamepad (SDL still reads the controller as a joystick).
@@ -528,9 +528,10 @@ func (r *liveRun) changeMapping(ctx context.Context, dev supervisor.DeviceView, 
 		res.Applied, res.Revision = true, profilelib.Revision(data)
 	}
 	if mapping.GUID != "" {
-		// The emergency combo is back+start on most controllers, and View and
-		// Menu are function keys (ADR-0069): a mapping without them leaves the
-		// controller without a way to pause (ARCHITECTURE section 5).
+		// The emergency combo is back+start on most controllers, and the
+		// function key is one of View, Menu and the Xbox button (ADR-0075): a
+		// mapping without View and Menu leaves the controller without a way to
+		// pause (ARCHITECTURE section 5).
 		if !mapping.Binds("back") {
 			res.Warnings = append(res.Warnings, rpcMappingWarning{Code: "noBack"})
 		}

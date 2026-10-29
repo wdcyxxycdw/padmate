@@ -48,11 +48,11 @@ func TestElectronBuilderConfig(t *testing.T) {
 		t.Errorf("artifactName is %q, want %q", got, want)
 	}
 	// A wizard (PKG-13), per user, no administrator rights (PKG-03). It
-	// finishes with "run padmate" ticked, makes no desktop shortcut, and has no
-	// license page (TestNoLicensePage).
+	// finishes with "run padmate" ticked, makes a Start Menu and a desktop
+	// shortcut (ADR-0074), and has no license page (TestNoLicensePage).
 	for key, value := range map[string]string{
 		"oneClick": "false", "perMachine": "false", "allowElevation": "false", "runAfterFinish": "true",
-		"createDesktopShortcut": "false", "createStartMenuShortcut": "true",
+		"createDesktopShortcut": "always", "createStartMenuShortcut": "true",
 		"requestedExecutionLevel": "asInvoker", "asar": "true", "include": "build/installer.nsh",
 	} {
 		if got := configValue(t, config, key); got != value {

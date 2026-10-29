@@ -39,7 +39,8 @@ const (
 )
 
 // Warning is something the user should know before saving the mapping.
-// View and Menu are function keys and the emergency combo (ADR-0069).
+// View and Menu are the emergency combo, and one of them is the function key by
+// default (ADR-0075).
 type Warning struct {
 	Code string
 	Step string // the step the warning is about, when there is one

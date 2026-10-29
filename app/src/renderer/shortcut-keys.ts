@@ -1,13 +1,15 @@
 // KeySpec chords as apps see them, for the shortcut table (OUT-18): sides of
 // modifiers dropped, aliases folded, scan codes of F13–F24 named. Pure.
-import type {
-  ProfileAction,
-  ProfileKeysAction,
-} from "../shared/generated/schema";
+import type { ProfileAction } from "../shared/generated/schema";
 import type { Gesture } from "./editor-model";
 
-type Modifier = "Ctrl" | "Shift" | "Alt" | "Win";
-const modifierOrder: readonly Modifier[] = ["Ctrl", "Shift", "Alt", "Win"];
+export type Modifier = "Ctrl" | "Shift" | "Alt" | "Win";
+export const modifierOrder: readonly Modifier[] = [
+  "Ctrl",
+  "Shift",
+  "Alt",
+  "Win",
+];
 
 const modifierNames = new Map<string, Modifier>(
   Object.entries({
@@ -60,7 +62,6 @@ export type WheelKey = (typeof wheelKeys)[number];
 export const mouseKeys = [...mouseButtons, ...wheelKeys] as const;
 export type MouseKey = (typeof mouseKeys)[number];
 const mouseKeySet = new Set<string>(mouseKeys);
-const mouseButtonSet = new Set<string>(mouseButtons);
 /**
  * The volume and media keys (ADR-0070, OUT-20): keyboard keys the daemon sends
  * by virtual-key code, whatever the layout. Like every key but a modifier they
@@ -230,20 +231,18 @@ function formatChord(chord: Chord): string {
 }
 
 /**
- * spec with its main key replaced by a mouse key: the modifiers stay as they
- * are written, once per kind ("LCtrl+Shift+Z" gives "LCtrl+Shift+WheelUp"); a
- * spec without any gives the mouse key alone.
+ * The modifiers of a chord spec as it names them, by kind: "LCtrl+Shift+Z"
+ * gives { Ctrl: "LCtrl", Shift: "Shift" }. A kind the chord lacks is absent.
  */
-export function withMouseKey(spec: string, mouse: MouseKey): string {
-  const seen = new Set<Modifier>();
-  const mods: string[] = [];
+export function chordModifiers(
+  spec: string,
+): Partial<Record<Modifier, string>> {
+  const found: Partial<Record<Modifier, string>> = {};
   for (const token of spec.split("+").map((part) => part.trim())) {
     const mod = modifierNames.get(token.toLowerCase());
-    if (!mod || seen.has(mod)) continue;
-    seen.add(mod);
-    mods.push(token);
+    if (mod && found[mod] === undefined) found[mod] = token;
   }
-  return [...mods, mouse].join("+");
+  return found;
 }
 
 /**
@@ -298,36 +297,6 @@ export function mediaKeysText(
       })
       .join("+");
   return (typeof keys === "string" ? [keys] : keys).map(named).join(" → ");
-}
-
-/** Whether the main key of the chord spec is a mouse button, not a wheel key. */
-export function endsInMouseButton(spec: string): boolean {
-  const key = parseChord(spec)?.key;
-  return !!key && mouseButtonSet.has(key);
-}
-
-/**
- * A press or hold keys action whose chord ends in a mouse button must not
- * repeat in hold mode: a held button is never pressed again and again, and
- * the daemon refuses the combination (ADR-0062). Such a repeat becomes
- * repeated clicks: tap mode and the tap style. Any other action is returned
- * as it is. canHold: the gesture is press or hold, where hold is the default
- * mode.
- */
-export function withoutHeldButtonRepeat(
-  action: ProfileKeysAction,
-  canHold: boolean,
-): ProfileKeysAction {
-  const { keys, repeat } = action;
-  if (!repeat || typeof keys !== "string" || !endsInMouseButton(keys))
-    return action;
-  const mode =
-    action.mode ?? (canHold && repeat.style !== "tap" ? "hold" : "tap");
-  const typematic =
-    repeat.style === "typematic" ||
-    (repeat.style === undefined && mode === "hold");
-  if (!typematic) return action;
-  return { ...action, mode: "tap", repeat: { ...repeat, style: "tap" } };
 }
 
 /**

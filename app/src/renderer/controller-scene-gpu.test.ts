@@ -64,8 +64,6 @@ vi.mock("./controller-models", () => ({
   modelShell: () => "xbox",
 }));
 
-import { STAGE_IDLE_MS } from "./controller-stage";
-
 describe("the GPU stage of the controller scene (H2)", () => {
   const info: ModelInfo = { type: "xboxone" };
   let createControllerScene: typeof import("./controller-scene").createControllerScene;
@@ -110,15 +108,14 @@ describe("the GPU stage of the controller scene (H2)", () => {
     expect(gl.renderers[1].lost).toBe(false);
   });
 
-  it("shrinks its drawing buffer when the page lets go, and frees the renderer after the idle time", () => {
+  it("shrinks its drawing buffer when the page lets go, and keeps the renderer (ADR-0077)", () => {
     const scene = createControllerScene(host(), info, vi.fn(), vi.fn());
     expect(gl.renderers[0].sizes).toEqual([]);
     scene.dispose();
     expect(gl.renderers[0].sizes).toEqual([[1, 1]]);
+    vi.advanceTimersByTime(24 * 60 * 60 * 1000);
     expect(gl.renderers[0].disposed).toBe(0);
-    vi.advanceTimersByTime(STAGE_IDLE_MS);
-    expect(gl.renderers[0].disposed).toBe(1);
-    // A stage that is gone is not resized again.
+    // A mount that has let go does not resize it again.
     scene.dispose();
     expect(gl.renderers[0].sizes).toEqual([[1, 1]]);
   });

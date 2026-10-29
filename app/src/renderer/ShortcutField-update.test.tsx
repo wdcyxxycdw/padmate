@@ -65,14 +65,14 @@ describe("an update dialog and a running shortcut capture", () => {
   it("do not meet: the dialog waits, and the half-pressed chord is not committed", async () => {
     const { capture, update } = await startCapture();
     // The person holds Ctrl, K is yet to come.
-    await capture.emit({ active: true, chord: "Ctrl" });
+    await capture.emit({ active: true, chord: "LCtrl" });
 
     update.push(offer);
     // Give the dialog every chance to open.
     await new Promise((done) => setTimeout(done, 20));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(
-      screen.getByRole("button", { name: "停止捕获" }),
+      screen.getByRole("button", { name: "录入中…" }),
       "the capture goes on",
     ).toBeTruthy();
     expect(draft().press).toEqual({ type: "keys", keys: "F13" });
@@ -81,10 +81,10 @@ describe("an update dialog and a running shortcut capture", () => {
   it("opens when the capture has ended, with the chord the person made", async () => {
     const { capture, update } = await startCapture();
     update.push(offer);
-    await capture.emit({ active: true, chord: "Ctrl+K" });
     expect(screen.queryByRole("dialog")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "停止捕获" }));
+    // The first key ends the capture, and the dialog is free to open.
+    await capture.emit({ active: true, chord: "Ctrl+K" });
     await waitFor(() =>
       expect(screen.getByRole("dialog", { name: "有新版本" })).toBeTruthy(),
     );

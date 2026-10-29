@@ -32,7 +32,9 @@ func controlRanks() map[string]int {
 
 // fillControls lists the controls that a hold of a set blocks when the set
 // does not bind them: every control that can fire with the stick and d-pad
-// modes of the profile and every ring that is bound, except the function keys.
+// modes of the profile and every ring that is bound, except back and start. One
+// of them is the function key, which cannot be blocked, and which one is
+// chosen in padmate's settings, so neither is touched.
 func (cv *converter) fillControls() []string {
 	list := []string{
 		"south", "east", "west", "north", "leftshoulder", "rightshoulder", "lt", "rt",
@@ -169,17 +171,10 @@ func (cv *converter) build() *obj {
 	p.set("layers", layers)
 
 	if len(cv.fn) > 0 {
-		fk := newObj()
-		for _, c := range []string{"back", "start"} {
-			t, ok := cv.fn[c]
-			if !ok {
-				continue
-			}
-			at := loc{set: t}
-			fk.set(c, cv.layerObj(cv.converted[t], true, at))
-			cv.rep.info("function.set", at, "set %d 导入为按住 %s 时的一套按键", t, functionKeyControls[c])
-		}
-		p.set("functionKeys", fk)
+		p.set("functionSet", cv.functionSet())
+	}
+	if cv.startBound {
+		cv.rep.info("function.default", loc{control: "start"}, "Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View 或 Xbox 键")
 	}
 	if emitted > 0 {
 		cv.rep.info("layers.ui", loc{}, "这个配置除了 base 还有 %d 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留", emitted)
@@ -208,4 +203,43 @@ func firstLine(s string) string {
 		return s[:i]
 	}
 	return s
+}
+
+// functionSet returns the function set (ADR-0075): padmate has one function
+// key, chosen in its settings (Menu by default), so the sets that View and Menu
+// hold in AntiMicroX become one. Menu's comes first, and View's fills the
+// controls Menu's does not bind. Like a held layer, the controls the set does
+// not bind are blocked. The report says so once, with where the function key is
+// chosen.
+func (cv *converter) functionSet() *obj {
+	merged := map[string]*binding{}
+	start, hasStart := cv.fn["start"]
+	back, hasBack := cv.fn["back"]
+	at := loc{set: start}
+	if hasStart {
+		for c, b := range cv.converted[start] {
+			merged[c] = b
+		}
+	}
+	both := hasStart && hasBack && back != start
+	if hasBack && (!hasStart || both) {
+		if !hasStart {
+			at = loc{set: back}
+		}
+		for c, b := range cv.converted[back] {
+			if merged[c] == nil {
+				merged[c] = b
+			}
+		}
+	}
+	const where = "padmate 只有一个功能键，在设置里选，默认是 Menu（右边的小键）"
+	switch {
+	case both:
+		cv.rep.info("function.set", at, "按住功能键时用 set %d（Menu 的）的按键，再加 set %d（View 的）里 Menu 的没有绑定的控件。%s", start, back, where)
+	case hasStart:
+		cv.rep.info("function.set", at, "按住功能键时用 set %d（Menu 的）的按键。%s", start, where)
+	default:
+		cv.rep.info("function.set", at, "按住功能键时用 set %d（View 的）的按键。%s", back, where)
+	}
+	return cv.layerObj(merged, true, at)
 }

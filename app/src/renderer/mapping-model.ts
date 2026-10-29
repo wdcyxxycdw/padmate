@@ -188,33 +188,33 @@ const stepDefinitions: Record<string, StepDefinition> = {
   lt: trigger("LT"),
   rt: trigger("RT"),
   view: {
-    icon: { kind: "badge", text: "View" },
+    icon: { kind: "glyph", glyph: "view" },
     zh: [
       "View（返回键）",
       "按下 View 键",
-      "有的手柄叫 Back、Select 或 −，用于紧急暂停和功能键",
+      "有的手柄叫 Back、Select 或 −，用于紧急暂停",
     ],
     en: [
       "View (Back)",
       "Press View",
-      "Also called Back, Select or −. Used for the emergency pause and the function key",
+      "Also called Back, Select or −. Used for the emergency pause",
     ],
   },
   menu: {
-    icon: { kind: "badge", text: "Menu" },
+    icon: { kind: "glyph", glyph: "menu" },
     zh: [
       "Menu（开始键）",
       "按下 Menu 键",
-      "有的手柄叫 Start、Options 或 +，用于紧急暂停和功能键",
+      "有的手柄叫 Start、Options 或 +，用于紧急暂停",
     ],
     en: [
       "Menu (Start)",
       "Press Menu",
-      "Also called Start, Options or +. Used for the emergency pause and the function key",
+      "Also called Start, Options or +. Used for the emergency pause",
     ],
   },
   home: {
-    icon: { kind: "badge", text: "Home" },
+    icon: { kind: "glyph", glyph: "home" },
     zh: [
       "Home（主页键）",
       "按下 Home 键",
@@ -328,9 +328,9 @@ export function liveElement(
 }
 
 /**
- * The line for a mapping that leaves out View, Menu or both: they are function
- * keys and the emergency pause (ADR-0069), so a controller without them cannot
- * use it. null when neither is missing.
+ * The line for a mapping that leaves out View, Menu or both: they are the keys
+ * of the emergency pause, so a controller without them cannot use it. null
+ * when neither is missing.
  */
 export function missingKeysNotice(
   back: boolean,
@@ -340,15 +340,15 @@ export function missingKeysNotice(
   if (back && start)
     return tx(
       language,
-      "没有映射 View 和 Menu。它们是功能键，也是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
-      "View and Menu are not mapped. They are function keys and the emergency pause, so without them this controller cannot use the emergency pause.",
+      "没有映射 View 和 Menu。它们是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
+      "View and Menu are not mapped. They are the buttons of the emergency pause, so without them this controller cannot use it.",
     );
   if (!back && !start) return null;
   const name = back ? "View" : "Menu";
   return tx(
     language,
-    `没有映射 ${name}。它是功能键，也是紧急暂停的按键，缺了它这只手柄无法用紧急暂停。`,
-    `${name} is not mapped. It is a function key and part of the emergency pause, so without it this controller cannot use the emergency pause.`,
+    `没有映射 ${name}。它是紧急暂停的按键，缺了它这只手柄无法用紧急暂停。`,
+    `${name} is not mapped. It is a button of the emergency pause, so without it this controller cannot use it.`,
   );
 }
 

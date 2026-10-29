@@ -366,6 +366,9 @@ func TestInstallerWizard(t *testing.T) {
 		if s.exists(s.startMenuLink) {
 			t.Error("a Start Menu shortcut was made")
 		}
+		if s.exists(s.desktopLink) {
+			t.Error("a desktop shortcut was made")
+		}
 		_ = removeAllRetry(parent)
 	})
 	if t.Failed() {

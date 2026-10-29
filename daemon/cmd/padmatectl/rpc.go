@@ -141,7 +141,7 @@ platform:Windows, in config.json under every device key with that GUID (SDL
 applies a mapping by GUID), and applies it at once; devices mapping reset takes
 it away again. The result says which keys were written, what SDL reads back for
 the controllers with that GUID, and warns (noBack, noStart) when View or Menu
-is not mapped, which the emergency combo and the function keys need, shadowed
+is not mapped, which the emergency combo and the function key need, shadowed
 when SDL reads another mapping (the user's SDL_GAMECONTROLLERCONFIG wins), or
 notGamepad. --device is optional with one controller connected.
 release-all remains an independent emergency event, without IPC.

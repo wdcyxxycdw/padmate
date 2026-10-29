@@ -8,9 +8,9 @@ For Windows 10 and 11 (x64). MIT license.
 
 ## Features
 
-- Each button can have its own tap, hold, and double to quadruple tap, as well as repeat, turbo, sequences sent in order, and typed text.
+- Each button can have its own tap, hold and double tap, as well as sequences sent in order.
 - Sticks and triggers can act as arrow keys, a knob or a mouse, and a trigger can have two stages.
-- While View or Menu is held, the other buttons switch to another set of shortcuts.
+- While the function key is held (Menu by default, or View or the Xbox button, as you choose in the settings), the other buttons switch to another set of shortcuts.
 - One profile per app, switched automatically by the app in front.
 - TypeScript scripts (macros) handle more complex actions.
 - The Diagnostics page lists what each press sent, and says why when nothing happened.

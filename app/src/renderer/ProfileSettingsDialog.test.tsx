@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -153,21 +152,19 @@ describe("配置设置 holds the name and the timing only (UI-27, ADR-0067)", ()
   });
 });
 
-describe("基于: the profile this one is based on (PRO-19)", () => {
-  const library = (extra: Partial<ProfileEntry>[] = []): ProfileEntry[] => [
+describe("a file that has extends (PRO-19, ADR-0076)", () => {
+  const library = (): ProfileEntry[] => [
     { id: "default", name: "default", default: true },
     { id: "paint", name: "Paint" },
     { id: "photo", name: "Photo" },
     { id: "sketch", name: "Sketch", extends: "paint" },
-    ...extra.map((entry) => ({ id: "x", ...entry })),
   ];
   async function openWith(
-    profiles: ProfileEntry[],
     profile: Profile = base,
     language: Language = "zh-CN",
   ) {
     const api = editorAPIFixture();
-    api.listProfiles.mockResolvedValue(profiles);
+    api.listProfiles.mockResolvedValue(library());
     api.getProfile.mockImplementation(async (id: string) => ({
       id,
       text: JSON.stringify(profile),
@@ -189,69 +186,37 @@ describe("基于: the profile this one is based on (PRO-19)", () => {
     );
     return { editor, api };
   }
-  const select = () =>
-    screen.getByRole("combobox", { name: "基于" }) as HTMLSelectElement;
-  const options = () =>
-    [...select().options].map((option) => [option.value, option.textContent]);
 
-  it("offers none and the other profiles, the default first, not itself nor one based on it", async () => {
-    await openWith(library());
-    // The profile is paint: sketch is based on it, so it cannot be its parent.
-    expect(options()).toEqual([
-      ["", "无"],
-      ["default", "默认"],
-      ["photo", "Photo"],
-    ]);
-    expect(select().value).toBe("");
-  });
-
-  it("offers a profile made or renamed after the dialog's editor read the list", async () => {
-    const { editor, api } = await openWith(library());
-    expect(options().map(([value]) => value)).toEqual(["", "default", "photo"]);
-    // A profile is copied on the 配置 page; another is renamed. This one is
-    // not touched, so the editor sees only profile.changed.
-    api.listProfiles.mockResolvedValue([
-      ...library().map((entry) =>
-        entry.id === "photo" ? { ...entry, name: "Photo 2" } : entry,
-      ),
-      { id: "copy", name: "Paint 2" },
-    ]);
-    await act(async () => {
-      await editor.getState().profileChanged();
-    });
-    await waitFor(() =>
-      expect(options()).toEqual([
-        ["", "无"],
-        ["default", "默认"],
-        ["copy", "Paint 2"],
-        ["photo", "Photo 2"],
-      ]),
-    );
-  });
-
-  it("is a field of its own, with no hint under it", async () => {
-    await openWith(library());
+  it("has no 基于 choice, whether the profile extends another or not", async () => {
+    await openWith();
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByText("基于")).toBeNull();
+    cleanup();
+    await openWith({ ...base, extends: "photo" });
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByText("基于")).toBeNull();
+    expect(screen.queryByText("Photo")).toBeNull();
     expect(
       screen.getAllByRole("heading").map((heading) => heading.textContent),
     ).toEqual(["配置设置", "按键判定"]);
-    expect(screen.queryByText(/沿用/)).toBeNull();
   });
 
-  it("shows the profile it is based on", async () => {
-    await openWith(library(), { ...base, extends: "photo" });
-    expect(select().value).toBe("photo");
+  it("has none in English either", async () => {
+    await openWith({ ...base, extends: "photo" }, "en");
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByText("Based on")).toBeNull();
   });
 
-  it("keeps showing a parent the library does not offer", async () => {
-    await openWith(library(), { ...base, extends: "gone" });
-    expect(select().value).toBe("gone");
-    expect(options()).toContainEqual(["gone", "gone"]);
-  });
-
-  it("bases the profile on the profile chosen, and saves it right after the name", async () => {
-    const { api, editor } = await openWith(library());
-    fireEvent.change(select(), { target: { value: "default" } });
-    expect(draft(editor).extends).toBe("default");
+  it("keeps the extends member when an edit saves the file", async () => {
+    const { api } = await openWith({
+      schemaVersion: 1,
+      name: "Paint",
+      extends: "photo",
+      layers: { base: {} },
+    });
+    const name = screen.getByRole("textbox", { name: "名称" });
+    fireEvent.change(name, { target: { value: "Renamed" } });
+    fireEvent.blur(name);
     await waitFor(() => expect(api.putProfile).toHaveBeenCalledTimes(1));
     expect(Object.keys(saved(api))).toEqual([
       "schemaVersion",
@@ -259,44 +224,16 @@ describe("基于: the profile this one is based on (PRO-19)", () => {
       "extends",
       "layers",
     ]);
-    expect(saved(api).extends).toBe("default");
-    // It is a step that can be taken back.
-    expect(editor.getState().canUndo).toBe(true);
+    expect(saved(api).extends).toBe("photo");
   });
 
-  it("takes the base away with 无", async () => {
-    const { api, editor } = await openWith(library(), {
-      ...base,
-      extends: "photo",
-    });
-    fireEvent.change(select(), { target: { value: "" } });
-    expect(draft(editor)).not.toHaveProperty("extends");
-    await waitFor(() => expect(api.putProfile).toHaveBeenCalledTimes(1));
-    expect(saved(api)).not.toHaveProperty("extends");
-  });
-
-  it("is in English when the language is", async () => {
-    await openWith(library(), base, "en");
-    const field = screen.getByRole("combobox", { name: "Based on" });
-    expect(
-      [...(field as HTMLSelectElement).options].map(
-        (option) => option.textContent,
-      ),
-    ).toEqual(["None", "Default", "Photo"]);
-    expect(screen.queryByText(/follow the profile/)).toBeNull();
-  });
-
-  it("shows the timing it takes from its parent in the empty fields", async () => {
-    const { editor } = await openWith(library(), {
-      ...base,
-      extends: "photo",
-    });
+  it("shows the timing it takes from the parent in the empty fields, without naming it", async () => {
+    const { editor } = await openWith({ ...base, extends: "photo" });
     // The parent sets the long-press delay, not the multi-tap window.
     editor.setState({
       parent: {
         id: "photo",
         profile: { ...base, name: "Photo", timing: { holdMs: 333 } },
-        origins: [],
       },
     });
     await waitFor(() =>
@@ -308,11 +245,25 @@ describe("基于: the profile this one is based on (PRO-19)", () => {
         ).placeholder,
       ).toBe("333"),
     );
-    expect(screen.getByText("留空则沿用「Photo」（333 ms）。")).toBeTruthy();
+    expect(screen.getByText("留空则使用 333 ms。")).toBeTruthy();
+    expect(screen.queryByText(/Photo/)).toBeNull();
     expect(
       (screen.getByRole("textbox", { name: "连击间隔" }) as HTMLInputElement)
         .placeholder,
     ).toBe("220");
     expect(screen.getByText("留空则使用全局设置（220 ms）。")).toBeTruthy();
+  });
+
+  it("says the same in English", async () => {
+    const { editor } = await openWith({ ...base, extends: "photo" }, "en");
+    editor.setState({
+      parent: {
+        id: "photo",
+        profile: { ...base, name: "Photo", timing: { holdMs: 333 } },
+      },
+    });
+    await waitFor(() =>
+      expect(screen.getByText("Leave empty to use 333 ms.")).toBeTruthy(),
+    );
   });
 });

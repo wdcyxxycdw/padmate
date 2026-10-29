@@ -139,21 +139,63 @@ func TestExtendsMerge(t *testing.T) {
 			want:   `{"schemaVersion":1,"name":"C","common":{"lt":{"block":true}},"layers":{"base":{}}}`,
 		},
 		{
-			name: "function keys are merged per set and per control",
+			name: "the old function keys are merged as the one set they stand for",
 			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionKeys":{
 				"back":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}},
 				"start":{"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}}`,
 			child: `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionKeys":{
 				"back":{"east":{"press":{"type":"keys","keys":"X","mode":"tap"}}}}}`,
-			want: `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionKeys":{
-				"back":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"east":{"press":{"type":"keys","keys":"X","mode":"tap"}}},
-				"start":{"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}}`,
+			want: `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{
+				"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},
+				"east":{"press":{"type":"keys","keys":"X","mode":"tap"}},
+				"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}`,
+		},
+		{
+			name: "start's set wins over back's in the one set of a side",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionKeys":{
+				"back":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}},
+				"start":{"a":{"press":{"type":"keys","keys":"S","mode":"tap"}}}}}`,
+			child: `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionSet":{
+				"east":{"press":{"type":"keys","keys":"E","mode":"tap"}}}}`,
+			want: `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{
+				"a":{"press":{"type":"keys","keys":"S","mode":"tap"}},
+				"east":{"press":{"type":"keys","keys":"E","mode":"tap"}}}}`,
+		},
+		{
+			name:   "functionSet is merged per control",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"back":{"press":{"type":"keys","keys":"V","mode":"tap"}}}}`,
+			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionSet":{"select":{"press":{"type":"keys","keys":"X","mode":"tap"}},"guide":{"block":true}}}`,
+			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"select":{"press":{"type":"keys","keys":"X","mode":"tap"}},"guide":{"block":true}}}`,
+		},
+		{
+			name:   "an old parent and a child with functionSet",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionKeys":{"back":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}},"start":{"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}}}}`,
+			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"C","mode":"tap"}}}}`,
+			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"C","mode":"tap"}},"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}}}`,
+		},
+		{
+			name:   "a parent with functionSet and an old child",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"east":{"press":{"type":"keys","keys":"B","mode":"tap"}},"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}`,
+			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionKeys":{"back":{"east":{"press":{"type":"keys","keys":"X","mode":"tap"}}},"start":{"south":{"press":{"type":"keys","keys":"Y","mode":"tap"}}}}}`,
+			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"Y","mode":"tap"}},"east":{"press":{"type":"keys","keys":"X","mode":"tap"}},"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}`,
+		},
+		{
+			name:   "a child that writes both keeps the old one, which it ignores, as it wrote it",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}}}`,
+			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionSet":{"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}},"functionKeys":{"start":{"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}}`,
+			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}},"functionKeys":{"start":{"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}}}}`,
 		},
 		{
 			name:   "function keys only the child has",
 			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}}}`,
 			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionKeys":{"start":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}}}}`,
 			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionKeys":{"start":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}}}}`,
+		},
+		{
+			name:   "functionSet only the parent has",
+			parent: `{"schemaVersion":1,"name":"P","layers":{"base":{}},"functionSet":{"back":{"press":{"type":"keys","keys":"A","mode":"tap"}}}}`,
+			child:  `{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}}}`,
+			want:   `{"schemaVersion":1,"name":"C","layers":{"base":{}},"functionSet":{"back":{"press":{"type":"keys","keys":"A","mode":"tap"}}}}`,
 		},
 		{
 			name:   "timing is merged member by member",
@@ -339,6 +381,58 @@ func TestExtendsChain(t *testing.T) {
 	mid := l.mustResolve(t, "mid")
 	if ids := parentIDs(mid); !slices.Equal(ids, []string{"root"}) {
 		t.Errorf("mid parents %v", ids)
+	}
+}
+
+// The function set is inherited per control whatever format each profile of the
+// chain wrote it in (ADR-0075), and Inherited says where each control comes
+// from, under the pointer it has in the merged document, functionSet.
+func TestExtendsFunctionSetChain(t *testing.T) {
+	l := extLib{
+		"root": `{"schemaVersion":1,"name":"R","layers":{"base":{}},"functionKeys":{
+			"back":{"south":{"press":{"type":"keys","keys":"A","mode":"tap"}},"east":{"press":{"type":"keys","keys":"B","mode":"tap"}},"north":{"press":{"type":"keys","keys":"N","mode":"tap"}}},
+			"start":{"south":{"press":{"type":"keys","keys":"S","mode":"tap"}}}}}`,
+		"mid":  `{"schemaVersion":1,"name":"M","extends":"root","layers":{"base":{}},"functionSet":{"east":{"press":{"type":"keys","keys":"C","mode":"tap"}},"guide":{"block":true}}}`,
+		"leaf": `{"schemaVersion":1,"name":"L","extends":"mid","layers":{"base":{}},"functionKeys":{"start":{"west":{"press":{"type":"keys","keys":"W","mode":"tap"}}}}}`,
+	}
+	r := l.mustResolve(t, "leaf")
+	const want = `{"schemaVersion":1,"name":"L","layers":{"base":{}},"functionSet":{
+		"south":{"press":{"type":"keys","keys":"S","mode":"tap"}},
+		"east":{"press":{"type":"keys","keys":"C","mode":"tap"}},
+		"west":{"press":{"type":"keys","keys":"W","mode":"tap"}},
+		"north":{"press":{"type":"keys","keys":"N","mode":"tap"}},
+		"guide":{"block":true}}}`
+	if !sameJSON(t, r.Merged, []byte(want)) {
+		t.Errorf("merged profile\n%s\nwant\n%s", r.Merged, want)
+	}
+	set := r.Profile.EffectiveFunctionSet()
+	if set == nil || r.Profile.FunctionKeys != nil || set != r.Profile.FunctionSet {
+		t.Fatalf("function set %+v, function keys %+v", set, r.Profile.FunctionKeys)
+	}
+	if b := set.Binding(control.South); b == nil || b.Press.Keys.String() != "S" || b.ID != "/functionSet/south" {
+		t.Errorf("south: %+v", b)
+	}
+	got := map[string]string{}
+	for _, o := range r.Inherited() {
+		got[o.Pointer] = o.Profile
+	}
+	wantOrigins := map[string]string{
+		"/functionSet/south": "root",
+		"/functionSet/north": "root",
+		"/functionSet/east":  "mid",
+		"/functionSet/guide": "mid",
+	}
+	if !reflect.DeepEqual(got, wantOrigins) {
+		t.Errorf("inherited %v, want %v", got, wantOrigins)
+	}
+	// The middle one on its own is the merge of the old format and its own set.
+	mid := l.mustResolve(t, "mid")
+	got = map[string]string{}
+	for _, o := range mid.Inherited() {
+		got[o.Pointer] = o.Profile
+	}
+	if want := map[string]string{"/functionSet/south": "root", "/functionSet/north": "root"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("mid inherited %v, want %v", got, want)
 	}
 }
 

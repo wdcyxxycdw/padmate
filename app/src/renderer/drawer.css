@@ -399,27 +399,17 @@
   height: 36px;
   padding: 0 12px;
 }
-.btn.drawer-mouse {
-  height: 36px;
-  padding: 0 12px;
-}
-.btn.drawer-mouse[aria-expanded="true"] {
-  border-color: #3a3f4a;
-  color: var(--text);
-}
-/* The mouse menu and the capture button stay together at the right end,
-   also when they wrap below a long chord. */
+/* The capture button stays at the right end, also when it wraps below a long
+   chord. */
 .drawer-capture-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
 }
-/* Short items: narrower than the gesture menu, so that the menu of a
-   button at the drawer's right edge stays inside the drawer. */
-.drawer-section .drawer-capture-actions .menu,
-.drawer-section .drawer-step-row .menu {
-  min-width: 150px;
+/* A click on the field starts the recording like its button (ADR-0076). */
+.drawer-shortcut:not([data-active="true"]) .drawer-capture {
+  cursor: pointer;
 }
 .drawer-rec-dot {
   flex: none;
@@ -490,6 +480,9 @@
   display: flex;
   align-items: center;
 }
+.drawer-step:not([data-active="true"]) .drawer-step-keys {
+  cursor: pointer;
+}
 .drawer-option {
   display: flex;
   align-items: center;
@@ -502,15 +495,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-/* A row whose control cannot shrink (a segmented control) moves the control
-   under its label instead of drawing it over the label. */
-.drawer-option[data-wrap="true"] {
-  flex-wrap: wrap;
-  row-gap: 6px;
-}
-.drawer-option[data-wrap="true"] > .drawer-option-text {
-  min-width: auto;
 }
 .drawer-option-label {
   color: #c9ced6;
@@ -826,47 +810,6 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--field);
-}
-.drawer-step[data-kind="text"] > .drawer-step-row {
-  border: 0;
-  background: transparent;
-}
-.drawer-step-text {
-  padding: 0 8px 0 10px;
-}
-.drawer-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.input.drawer-text-area {
-  display: block;
-  height: auto;
-  min-height: 56px;
-  padding: 8px 10px;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.5;
-}
-.drawer-text-foot {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 16px;
-}
-.drawer-text-error {
-  min-width: 0;
-}
-.drawer-text-count {
-  flex: none;
-  margin-left: auto;
-  color: var(--text-4);
-  font-size: 12px;
-}
-.drawer-text-count[data-over] {
-  color: var(--red);
 }
 .drawer-preview-steps {
   min-width: 0;

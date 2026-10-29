@@ -142,6 +142,34 @@
           "op": "switch"
         }
       },
+      "back": {
+        "label": "i / *l",
+        "tap": {
+          "type": "keys",
+          "keys": "I"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "L"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
+      "start": {
+        "label": "m / *q",
+        "tap": {
+          "type": "keys",
+          "keys": "M"
+        },
+        "hold": {
+          "type": "keys",
+          "keys": "Q"
+        },
+        "timing": {
+          "holdMs": 400
+        }
+      },
       "guide": {
         "press": {
           "type": "keys",

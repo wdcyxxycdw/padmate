@@ -2,7 +2,7 @@ import type { DeviceInfo } from "../shared/api";
 import {
   controllerLabels,
   familyName,
-  functionKeysOf,
+  padHasFunctionKey,
 } from "./controller-model";
 
 export type ModelInfo = Pick<
@@ -50,8 +50,8 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
   // DOM order is the keyboard order: top band left to right, then the columns.
   add("lefttrigger", "top", { side: "left", slot: 0 });
   add("leftshoulder", "top", { side: "left", slot: 1 });
-  // A single Joy-Con held sideways has no back (ADR-0069), only start.
-  if (functionKeysOf(info.type, info.buttonMask).includes("back"))
+  // A single Joy-Con held sideways has no back, only start (ADR-0075).
+  if (padHasFunctionKey("back", info.type, info.buttonMask))
     add("back", "top", { offset: -1 });
   if (ps) {
     // The PS button sits low between the sticks; the touchpad takes the top center.

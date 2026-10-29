@@ -16,7 +16,6 @@ import type {
   AmgpImported,
   AmgpReportLine,
   DaemonEvent,
-  DeviceEntry,
   InstalledApp,
   PadmateAPI,
   ProfileEntry,
@@ -30,7 +29,6 @@ import { forgetAppIcons } from "../app-icons";
 import { editorAPIFixture } from "../editor-api-fixture";
 import { slugId } from "../library-model";
 import { CAPTURE_TIMEOUT_MS, createPadmateStore } from "../store";
-import { templateText } from "../templates";
 import { boundHint, pickableApps } from "./InstalledAppsDialog";
 import { NewProfileDialog } from "./ProfileDialogs";
 import { ProfilesPage } from "./ProfilesPage";
@@ -77,7 +75,6 @@ function fakeDaemon({
   recent = [],
   broken = [],
   startup = "",
-  devices = [],
   created = {},
   appPaths = {},
   iconless = false,
@@ -95,7 +92,6 @@ function fakeDaemon({
   broken?: string[];
   /** The profile padmated was started with, which it never deletes. */
   startup?: string;
-  devices?: DeviceEntry[];
 }) {
   let listener = (_event: DaemonEvent) => {};
   let revision = 0;
@@ -160,7 +156,6 @@ function fakeDaemon({
     getStatus: vi.fn(async () => ({
       ...status,
       profileId: daemon.active,
-      devices,
     })),
     getDevices: vi.fn(async () => []),
     pause: vi.fn(async () => ({ paused: true, capturing: false })),
@@ -413,33 +408,13 @@ function openCardMenu(name: string) {
   );
 }
 
-function openPicker(scope: HTMLElement, name = "添加软件") {
-  fireEvent.click(within(scope).getByRole("button", { name }));
+/** The card's own 复制 button (ADR-0076). */
+function duplicate(name: string) {
+  fireEvent.click(within(cardOf(name)).getByRole("button", { name: "复制" }));
 }
 
-/** A connected pad of the given type that reports south (sideways). */
-function pad(type: string): DeviceEntry {
-  return {
-    info: {
-      id: 7,
-      name: type,
-      type,
-      vendor: 0,
-      product: 0,
-      version: 0,
-      guid: type,
-      driver: "virtual",
-      path: "",
-      serial: "",
-      gamepad: true,
-      virtual: true,
-      buttonMask: 0xf,
-    },
-    key: type,
-    slot: 0,
-    status: "mapped",
-    disabled: false,
-  };
+function openPicker(scope: HTMLElement, name = "添加软件") {
+  fireEvent.click(within(scope).getByRole("button", { name }));
 }
 
 /** The new-profile dialog alone, open, on a loaded store. */
@@ -480,13 +455,6 @@ async function dialogSetup(
 
 const nameField = (scope: HTMLElement, name = "名称") =>
   within(scope).getByRole("textbox", { name }) as HTMLInputElement;
-
-/** The checked options of a radiogroup. */
-const checked = (scope: HTMLElement, group: string) =>
-  within(within(scope).getByRole("radiogroup", { name: group }))
-    .getAllByRole("radio")
-    .filter((radio) => radio.getAttribute("aria-checked") === "true")
-    .map((radio) => radio.textContent);
 
 const baseConfig: Config = {
   schemaVersion: 0,
@@ -803,8 +771,9 @@ describe("profile cards", () => {
     openCardMenu("默认");
     expect(
       screen.getAllByRole("menuitem").map((item) => item.textContent),
-    ).toEqual(["配置设置…", "复制", "导出…"]);
-    chooseMenuItem("复制");
+    ).toEqual(["配置设置…", "导出…"]);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    duplicate("默认");
     await waitFor(() =>
       expect(api.copyProfile).toHaveBeenCalledWith("default", "profile"),
     );
@@ -871,9 +840,14 @@ describe("profile cards", () => {
     const item = (name: string) =>
       screen.getByRole("menuitem", { name }) as HTMLButtonElement;
     expect(item("重命名…").disabled).toBe(true);
-    expect(item("复制").disabled).toBe(true);
     expect(item("导出…").disabled).toBe(true);
     expect(item("删除…").disabled).toBe(false);
+    // The copy button cannot copy what cannot be renamed afterwards.
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    const copy = within(photo).getByRole("button", {
+      name: "复制",
+    }) as HTMLButtonElement;
+    expect(copy.disabled).toBe(true);
   });
 
   it("still opens a broken profile that is in use", async () => {
@@ -1481,145 +1455,57 @@ describe("profile operations", () => {
     expect(await screen.findByRole("article", { name: "绘画" })).toBeTruthy();
   });
 
-  it("copies the active profile under a new name", async () => {
-    const { api, daemon, user } = await setup({ config: baseConfig });
-    await user.click(screen.getByRole("button", { name: "新建配置" }));
-    const dialog = await screen.findByRole("dialog", { name: "新建配置" });
-    const copy = within(dialog).getByRole("radio", { name: "复制当前" });
-    expect(copy.title).toBe("Paint");
-    await user.click(copy);
-    await user.type(
-      within(dialog).getByRole("textbox", { name: "名称" }),
-      "Paint 2{Enter}",
-    );
-    await waitFor(() =>
-      expect(api.copyProfile).toHaveBeenCalledWith("paint", "paint-2"),
-    );
-    await screen.findByRole("article", { name: "Paint 2" });
-    expect(JSON.parse(daemon.profiles.get("paint-2")?.text ?? "").name).toBe(
-      "Paint 2",
-    );
-  });
-
-  it("starts on a blank profile and cannot copy without an active one", async () => {
-    const { dialog, stop } = await dialogSetup({
-      config: baseConfig,
-      active: "",
-    });
+  it("asks only for a name, with nothing to choose from (ADR-0076)", async () => {
+    const { dialog, stop } = await dialogSetup({ config: baseConfig });
     expect(nameField(dialog).value).toBe("");
-    expect(checked(dialog, "内容")).toEqual(["空白"]);
-    const copy = within(dialog).getByRole("radio", { name: "复制当前" });
-    expect((copy as HTMLButtonElement).disabled).toBe(true);
-    expect(
-      within(dialog).queryByRole("radiogroup", { name: "手柄" }),
-    ).toBeNull();
+    expect(within(dialog).queryByRole("radiogroup")).toBeNull();
+    expect(within(dialog).queryByRole("radio")).toBeNull();
+    expect(within(dialog).queryByRole("combobox")).toBeNull();
+    expect(within(dialog).getAllByRole("textbox")).toHaveLength(1);
+    expect(dialog.textContent).not.toMatch(/模板|复制当前|基于/);
     stop();
   });
 
-  it("starts an empty library on the template for the connected pad", async () => {
+  it("starts an empty library on a blank profile too, and names nothing for you", async () => {
     const { api, created, dialog, user, stop } = await dialogSetup({
       config: baseConfig,
       profiles: {},
       active: "",
-      devices: [pad("ps5")],
     });
     const name = nameField(dialog);
-    expect(name.value).toBe("绘画");
-    // Selected, so typing replaces the suggestion.
+    expect(name.value).toBe("");
     expect(document.activeElement).toBe(name);
-    expect([name.selectionStart, name.selectionEnd]).toEqual([0, 2]);
-    expect(checked(dialog, "内容")).toEqual(["模板"]);
-    expect(checked(dialog, "手柄")).toEqual(["标准手柄"]);
-    expect(within(dialog).getByText(/可在映射页导出对照表/)).toBeTruthy();
-    await user.click(within(dialog).getByRole("button", { name: "新建" }));
-    await waitFor(() => expect(created).toHaveBeenCalledWith("profile"));
+    await user.type(name, "Krita{Enter}");
+    await waitFor(() => expect(created).toHaveBeenCalledWith("krita"));
     expect(api.putProfile.mock.calls).toEqual([
-      ["profile", templateText("standard", "绘画", "zh-CN"), ""],
+      ["krita", profileText("Krita"), ""],
     ]);
+    expect(api.copyProfile).not.toHaveBeenCalled();
     stop();
   });
 
-  it("picks the Joy-Con template for a sideways Joy-Con until another is chosen", async () => {
+  it("is a blank profile in English too", async () => {
     const { api, dialog, user, stop } = await dialogSetup({
       config: baseConfig,
-      devices: [pad("joyconright")],
-    });
-    await user.click(within(dialog).getByRole("radio", { name: "模板" }));
-    expect(checked(dialog, "手柄")).toEqual(["单只 Joy-Con 横握"]);
-    await user.click(within(dialog).getByRole("radio", { name: "标准手柄" }));
-    expect(checked(dialog, "手柄")).toEqual(["标准手柄"]);
-    await user.click(
-      within(dialog).getByRole("radio", { name: "单只 Joy-Con 横握" }),
-    );
-    await user.clear(nameField(dialog));
-    await user.type(nameField(dialog), "Joy{Enter}");
-    await waitFor(() => expect(api.putProfile).toHaveBeenCalled());
-    expect(api.putProfile.mock.calls).toEqual([
-      ["joy", templateText("joycon", "Joy", "zh-CN"), ""],
-    ]);
-    stop();
-  });
-
-  it("suggests a name for a template only while the field is not typed in", async () => {
-    const { api, dialog, user, stop } = await dialogSetup({
-      config: baseConfig,
-    });
-    const radio = (name: string) => within(dialog).getByRole("radio", { name });
-    await user.click(radio("模板"));
-    expect(nameField(dialog).value).toBe("绘画");
-    await user.click(radio("空白"));
-    expect(nameField(dialog).value).toBe("");
-    await user.type(nameField(dialog), "Krita");
-    await user.click(radio("模板"));
-    await user.click(radio("复制当前"));
-    expect(nameField(dialog).value).toBe("Krita");
-    await user.click(radio("空白"));
-    await user.click(within(dialog).getByRole("button", { name: "新建" }));
-    await waitFor(() =>
-      expect(api.putProfile).toHaveBeenCalledWith(
-        "krita",
-        profileText("Krita"),
-        "",
-      ),
-    );
-    stop();
-  });
-
-  it("names the template choices in English", async () => {
-    const { api, dialog, user, stop } = await dialogSetup({
-      config: baseConfig,
-      profiles: {},
-      active: "",
       language: "en",
     });
-    expect(nameField(dialog, "Name").value).toBe("Painting");
-    expect(checked(dialog, "Start from")).toEqual(["Template"]);
-    expect(
-      within(dialog)
-        .getAllByRole("radio")
-        .map((radio) => radio.textContent),
-    ).toEqual([
-      "Template",
-      "Blank",
-      "Copy current",
-      "Standard controller",
-      "Single Joy-Con, sideways",
-    ]);
+    expect(nameField(dialog, "Name").value).toBe("");
+    expect(within(dialog).queryByRole("radio")).toBeNull();
+    await user.type(nameField(dialog, "Name"), "Painting");
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     await waitFor(() =>
       expect(api.putProfile).toHaveBeenCalledWith(
         "painting",
-        templateText("standard", "Painting", "en"),
+        profileText("Painting"),
         "",
       ),
     );
     stop();
   });
 
-  it("duplicates a profile from its menu, numbering a name in use", async () => {
+  it("duplicates a profile with its card's own button, numbering a name in use", async () => {
     const { api } = await setup({ config: baseConfig });
-    openCardMenu("Photo");
-    chooseMenuItem("复制");
+    duplicate("Photo");
     await waitFor(() =>
       expect(api.copyProfile).toHaveBeenCalledWith("photo", "photo-2"),
     );
@@ -1627,12 +1513,61 @@ describe("profile operations", () => {
       await screen.findByRole("article", { name: "Photo 副本" }),
     ).toBeTruthy();
     expect(screen.getByText("已复制为「Photo 副本」")).toBeTruthy();
-    openCardMenu("Photo");
-    chooseMenuItem("复制");
+    duplicate("Photo");
     expect(
       await screen.findByRole("article", { name: "Photo 副本 2" }),
     ).toBeTruthy();
     expect(screen.getByText("已复制为「Photo 副本 2」")).toBeTruthy();
+  });
+
+  it("makes the copy a whole, independent profile, not one based on the original", async () => {
+    const { api, daemon } = await setup({ config: baseConfig });
+    const original =
+      '{"schemaVersion":1,"name":"Photo","layers":{"base":{"south":{"press":{"type":"keys","keys":"Ctrl+Z"}}}}}';
+    daemon.profiles.set("photo", { text: original, revision: "photo-0" });
+    duplicate("Photo");
+    await screen.findByRole("article", { name: "Photo 副本" });
+    expect(api.copyProfile).toHaveBeenCalledExactlyOnceWith("photo", "photo-2");
+    const copy = JSON.parse(daemon.profiles.get("photo-2")?.text ?? "");
+    expect(copy).toEqual({ ...JSON.parse(original), name: "Photo 副本" });
+    expect(copy.extends).toBeUndefined();
+    // The original is untouched, and only the copy has the new name.
+    expect(daemon.profiles.get("photo")?.text).toBe(original);
+  });
+
+  it("copies the fixed default and a profile that is in use as well", async () => {
+    const { api } = await setup({ config: baseConfig });
+    duplicate("默认");
+    await waitFor(() =>
+      expect(api.copyProfile).toHaveBeenCalledWith("default", "profile"),
+    );
+    expect(
+      await screen.findByRole("article", { name: "默认 副本" }),
+    ).toBeTruthy();
+    duplicate("Paint");
+    await waitFor(() =>
+      expect(api.copyProfile).toHaveBeenLastCalledWith("paint", "paint-2"),
+    );
+    expect(
+      await screen.findByRole("article", { name: "Paint 副本" }),
+    ).toBeTruthy();
+  });
+
+  it("has the copy button beside 编辑按键 and none in the card's menu, in English too", async () => {
+    await setup({ config: baseConfig, language: "en" });
+    const card = cardOf("Photo");
+    expect(
+      within(card)
+        .getAllByRole("button")
+        .map((button) => button.textContent)
+        .slice(0, 2),
+    ).toEqual(["Edit keys", "Duplicate"]);
+    fireEvent.click(
+      within(card).getByRole("button", { name: "More for “Photo”" }),
+    );
+    expect(
+      screen.getAllByRole("menuitem").map((item) => item.textContent),
+    ).not.toContain("Duplicate");
   });
 
   it("names the field by its label alone and announces its error (UI-24)", async () => {
@@ -1924,8 +1859,7 @@ describe("export and import (PRO-20)", () => {
 
   it("copies a profile from its card after saving its edits", async () => {
     const { api, saveEdits } = await setup({ config: baseConfig });
-    openCardMenu("Paint");
-    chooseMenuItem("复制");
+    duplicate("Paint");
     await waitFor(() => expect(api.copyProfile).toHaveBeenCalledOnce());
     expect(saveEdits).toHaveBeenCalledWith("paint");
     expect(saveEdits.mock.invocationCallOrder[0]).toBeLessThan(
@@ -1938,7 +1872,7 @@ describe("export and import (PRO-20)", () => {
     openCardMenu("默认");
     expect(
       screen.getAllByRole("menuitem").map((item) => item.textContent),
-    ).toEqual(["配置设置…", "复制", "导出…"]);
+    ).toEqual(["配置设置…", "导出…"]);
     chooseMenuItem("导出…");
     await waitFor(() =>
       expect(api.exportProfile).toHaveBeenCalledWith("default", "默认"),
@@ -2384,13 +2318,13 @@ describe("配置设置 from a profile card (UI-27)", () => {
       openCardMenu(name);
       expect(
         screen.getAllByRole("menuitem").map((item) => item.textContent),
-      ).toEqual(["配置设置…", "重命名…", "复制", "导出…", "删除…"]);
+      ).toEqual(["配置设置…", "重命名…", "导出…", "删除…"]);
       fireEvent.keyDown(document.body, { key: "Escape" });
     }
     openCardMenu("默认");
     expect(
       screen.getAllByRole("menuitem").map((item) => item.textContent),
-    ).toEqual(["配置设置…", "复制", "导出…"]);
+    ).toEqual(["配置设置…", "导出…"]);
   });
 
   it("is in English with the UI", async () => {
@@ -2441,8 +2375,8 @@ describe("配置设置 from a profile card (UI-27)", () => {
   });
 });
 
-describe("profiles based on others (PRO-19)", () => {
-  /** Profiles stored with an extends, as padmated writes them. */
+describe("profiles whose files have extends (PRO-19, ADR-0076)", () => {
+  /** Profiles stored with an extends, as a hand-written file has it. */
   function based(
     daemon: Awaited<ReturnType<typeof setup>>["daemon"],
     children: Record<string, string>,
@@ -2466,23 +2400,21 @@ describe("profiles based on others (PRO-19)", () => {
     sketch: "Sketch",
   };
 
-  it("shows under the name of a profile what it is based on", async () => {
+  it("shows nothing of what a profile extends on its card", async () => {
     const { daemon, store } = await setup({
       config: baseConfig,
       profiles: sketches,
     });
-    based(daemon, { sketch: "paint", ink: "default" });
+    based(daemon, { sketch: "paint", ink: "default", paint: "gone" });
     await act(async () => {
       await store.getState().refresh();
     });
-    expect(within(cardOf("Sketch")).getByText("基于「Paint」")).toBeTruthy();
-    // The fixed default goes by its own name.
-    expect(within(cardOf("Ink")).getByText("基于「默认」")).toBeTruthy();
-    expect(within(cardOf("Paint")).queryByText(/^基于/)).toBeNull();
-    expect(within(cardOf("默认")).queryByText(/^基于/)).toBeNull();
+    for (const name of ["Sketch", "Ink", "Paint", "默认"])
+      expect(cardOf(name).textContent).not.toMatch(/基于|Based on/);
+    expect(screen.getByRole("article", { name: "Sketch" })).toBeTruthy();
   });
 
-  it("says it in English", async () => {
+  it("shows nothing of it in English either", async () => {
     const { daemon, store } = await setup({
       config: baseConfig,
       profiles: sketches,
@@ -2492,23 +2424,11 @@ describe("profiles based on others (PRO-19)", () => {
     await act(async () => {
       await store.getState().refresh();
     });
-    expect(within(cardOf("Sketch")).getByText("Based on Paint")).toBeTruthy();
-    expect(within(cardOf("Ink")).getByText("Based on Default")).toBeTruthy();
+    for (const name of ["Sketch", "Ink", "Paint", "Default"])
+      expect(cardOf(name).textContent).not.toMatch(/基于|Based on/);
   });
 
-  it("names a parent the library does not list by its ID", async () => {
-    const { daemon, store } = await setup({
-      config: baseConfig,
-      profiles: sketches,
-    });
-    based(daemon, { sketch: "gone" });
-    await act(async () => {
-      await store.getState().refresh();
-    });
-    expect(within(cardOf("Sketch")).getByText("基于「gone」")).toBeTruthy();
-  });
-
-  it("tells how many profiles are based on the one to delete, and that they keep their keys", async () => {
+  it("deletes the parent without a word about the profiles based on it, which keep their keys", async () => {
     const { api, daemon, store, user } = await setup({
       config: baseConfig,
       profiles: { ...sketches, photo: "Photo" },
@@ -2526,9 +2446,7 @@ describe("profiles based on others (PRO-19)", () => {
     expect(dialog.textContent).toContain(
       "删除后无法恢复，绑定的软件将一并解除。",
     );
-    expect(dialog.textContent).toContain(
-      "有 2 个配置基于它，将保留各自现有的按键。",
-    );
+    expect(dialog.textContent).not.toContain("基于");
     await user.click(within(dialog).getByRole("button", { name: "删除" }));
     await waitFor(() =>
       expect(api.deleteProfile).toHaveBeenCalledWith("paint", "paint-0"),
@@ -2536,38 +2454,14 @@ describe("profiles based on others (PRO-19)", () => {
     await waitFor(() =>
       expect(screen.queryByRole("article", { name: "Paint" })).toBeNull(),
     );
-    // The profiles that were based on it stand on their own now.
+    // The daemon wrote the profiles that were based on it out whole.
     expect(screen.getByRole("article", { name: "Sketch" })).toBeTruthy();
-    expect(within(cardOf("Sketch")).queryByText(/^基于/)).toBeNull();
     expect(
       JSON.parse(daemon.profiles.get("sketch")?.text ?? "{}"),
     ).not.toHaveProperty("extends");
   });
 
-  it("counts one profile in the singular, in English", async () => {
-    const { daemon, store } = await setup({
-      config: baseConfig,
-      profiles: sketches,
-      active: "default",
-      language: "en",
-    });
-    based(daemon, { sketch: "paint" });
-    await act(async () => {
-      await store.getState().refresh();
-    });
-    fireEvent.click(
-      within(cardOf("Paint")).getByRole("button", { name: "More for “Paint”" }),
-    );
-    chooseMenuItem("Delete…");
-    const dialog = await screen.findByRole("dialog", {
-      name: "Delete “Paint”?",
-    });
-    expect(dialog.textContent).toContain(
-      "1 profile is based on it and keeps its current keys.",
-    );
-  });
-
-  it("counts several in the plural, in English", async () => {
+  it("says nothing of them in English either", async () => {
     const { daemon, store } = await setup({
       config: baseConfig,
       profiles: sketches,
@@ -2585,27 +2479,7 @@ describe("profiles based on others (PRO-19)", () => {
     const dialog = await screen.findByRole("dialog", {
       name: "Delete “Paint”?",
     });
-    expect(dialog.textContent).toContain(
-      "2 profiles are based on it and keep their current keys.",
-    );
-  });
-
-  it("says nothing of other profiles when none is based on the one to delete", async () => {
-    const { daemon, store } = await setup({
-      config: baseConfig,
-      profiles: sketches,
-      active: "default",
-    });
-    based(daemon, { sketch: "ink" });
-    await act(async () => {
-      await store.getState().refresh();
-    });
-    openCardMenu("Paint");
-    chooseMenuItem("删除…");
-    const dialog = await screen.findByRole("dialog", {
-      name: "删除「Paint」？",
-    });
-    expect(dialog.textContent).not.toContain("基于");
+    expect(dialog.textContent).not.toMatch(/based on/i);
   });
 
   it("shows the reason when the daemon cannot write a profile out whole, and deletes nothing", async () => {
@@ -2626,9 +2500,7 @@ describe("profiles based on others (PRO-19)", () => {
     });
     await user.click(within(dialog).getByRole("button", { name: "删除" }));
     expect(
-      await within(dialog).findByText(
-        "基于它的「Sketch」继承了它的脚本，无法先写成完整内容",
-      ),
+      await within(dialog).findByText("「Sketch」要用到它的脚本，所以无法删除"),
     ).toBeTruthy();
     expect(daemon.profiles.has("paint")).toBe(true);
     // The rules that the delete cleaned up are back.
@@ -2639,7 +2511,7 @@ describe("profiles based on others (PRO-19)", () => {
     await user.click(within(dialog).getByRole("button", { name: "删除" }));
     expect(
       await within(dialog).findByText(
-        "基于它的「Sketch」有错误，无法先写成完整内容",
+        "「Sketch」有错误，请先修好它，或者删除它",
       ),
     ).toBeTruthy();
   });

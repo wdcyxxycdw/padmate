@@ -1,3 +1,5 @@
+// OUT-18: shortcuts are recorded in the drawer, and the table lists them. The
+// starter templates this file once tested are gone (ADR-0076).
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -6,37 +8,11 @@ import {
   type Page,
   test,
 } from "@playwright/test";
-import type { StatusResult } from "../../src/shared/api";
-import {
-  cleanup,
-  type Fixture,
-  fixture,
-  launch,
-  recordShortcut,
-  root,
-  rpc,
-} from "./helpers";
+import { cleanup, fixture, launch, recordShortcut } from "./helpers";
 
 // A missing control fails its step with the locator instead of the whole
 // test running out of time without cleanup.
 test.use({ actionTimeout: 15000 });
-
-const templates = join(root, "examples", "profiles", "templates");
-
-/** A committed template fixture, as written for a profile named name. */
-async function templateFile(file: string, name: string): Promise<string> {
-  const text = await readFile(join(templates, file), "utf8");
-  const named = text.replace(
-    '"name": "绘画"',
-    `"name": ${JSON.stringify(name)}`,
-  );
-  expect(named).not.toBe(text);
-  return named;
-}
-
-async function activeProfile(f: Fixture): Promise<string> {
-  return ((await rpc(f, "status.get")) as StatusResult).profileId;
-}
 
 async function openControl(page: Page, control: string): Promise<void> {
   await page.locator(`button[data-callout="${control}"]`).click();
@@ -50,125 +26,12 @@ async function openMore(page: Page, item: string): Promise<void> {
   await page.getByRole("menuitem", { name: item, exact: true }).click();
 }
 
-// biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("新建配置 from a template writes the committed template and the daemon loads it", async ({}, info) => {
-  test.setTimeout(90000);
-  const f = await fixture();
-  const data = join(f.path, "data");
-  const profileFile = (id: string) =>
-    readFile(join(data, "profiles", id, "profile.json"), "utf8");
-  let app: ElectronApplication | undefined;
-  let page: Page | undefined;
-  try {
-    const opened = await launch(f);
-    app = opened.app;
-    page = opened.page;
-    const p = page;
-    const card = (id: string) => p.locator(`li[data-profile-id="${id}"]`);
-    const rail = (name: string) =>
-      p.getByRole("navigation").getByRole("button", { name, exact: true });
-    await rail("配置").click();
-    await expect(rail("配置")).toHaveAttribute("aria-current", "page");
-
-    // The library is not empty, so the dialog starts blank; 模板 suggests
-    // a name and preselects the template for the connected standard pad.
-    await p.getByRole("button", { name: "新建配置", exact: true }).click();
-    const create = p.getByRole("dialog", { name: "新建配置" });
-    await expect(create).toBeVisible();
-    const startFrom = create.getByRole("radiogroup", { name: "内容" });
-    await expect(
-      startFrom.getByRole("radio", { name: "空白", exact: true }),
-    ).toHaveAttribute("aria-checked", "true");
-    await expect(
-      startFrom.getByRole("radio", { name: "复制当前", exact: true }),
-    ).toBeEnabled();
-    const name = create.getByRole("textbox", { name: "名称" });
-    await expect(name).toHaveValue("");
-    await startFrom.getByRole("radio", { name: "模板", exact: true }).click();
-    await expect(name).toHaveValue("绘画");
-    const pad = create.getByRole("radiogroup", { name: "手柄" });
-    await expect(
-      pad.getByRole("radio", { name: "标准手柄", exact: true }),
-    ).toHaveAttribute("aria-checked", "true");
-    await expect(
-      pad.getByRole("radio", { name: "单只 Joy-Con 横握", exact: true }),
-    ).toHaveAttribute("aria-checked", "false");
-    expect(await create.innerText()).not.toMatch(/层/);
-    await p.screenshot({ path: info.outputPath("new-profile-template.png") });
-    await name.fill("My studio");
-    await create.getByRole("button", { name: "新建", exact: true }).click();
-    await expect(create).toHaveCount(0);
-    await expect(
-      card("my-studio").getByRole("heading", { name: "My studio" }),
-    ).toBeVisible();
-    expect(await profileFile("my-studio")).toBe(
-      await templateFile("standard-zh.json", "My studio"),
-    );
-
-    // A picked template wins over the connected pad.
-    await p.getByRole("button", { name: "新建配置", exact: true }).click();
-    await expect(create).toBeVisible();
-    await startFrom.getByRole("radio", { name: "模板", exact: true }).click();
-    await pad
-      .getByRole("radio", { name: "单只 Joy-Con 横握", exact: true })
-      .click();
-    await expect(
-      pad.getByRole("radio", { name: "单只 Joy-Con 横握", exact: true }),
-    ).toHaveAttribute("aria-checked", "true");
-    await name.fill("Joy-Con");
-    await create.getByRole("button", { name: "新建", exact: true }).click();
-    await expect(create).toHaveCount(0);
-    await expect(
-      card("joy-con").getByRole("heading", { name: "Joy-Con" }),
-    ).toBeVisible();
-    expect(await profileFile("joy-con")).toBe(
-      await templateFile("joycon-zh.json", "Joy-Con"),
-    );
-
-    // Creating never activates; 编辑按键 does, so the daemon must accept
-    // the template, and every bound control shows its label on a chip.
-    expect(await activeProfile(f)).toBe("paint");
-    await card("my-studio")
-      .getByRole("button", { name: "编辑按键", exact: true })
-      .click();
-    await expect.poll(() => activeProfile(f)).toBe("my-studio");
-    await expect(rail("映射")).toHaveAttribute("aria-current", "page");
-    await expect(p.getByTestId("profile-menu")).toContainText("My studio");
-    const chips: [string, string][] = [
-      ["lefttrigger", "抓手"],
-      ["leftshoulder", "Ctrl"],
-      ["rightshoulder", "Shift"],
-      ["righttrigger", "Alt"],
-      ["dpad.left", "撤销"],
-      ["dpad.right", "重做"],
-      ["dpad.up", "画笔"],
-      ["dpad.down", "橡皮"],
-      ["south", "自由变换"],
-      ["north", "新建图层"],
-      ["east", "水平翻转画布"],
-    ];
-    for (const [callout, label] of chips)
-      await expect(
-        p.locator(`button[data-callout="${callout}"]`),
-      ).toContainText(label);
-    await p.screenshot({ path: info.outputPath("template-mapping.png") });
-  } catch (error) {
-    console.error(
-      "Page text:",
-      await page?.locator("body").innerText({ timeout: 2000 }).catch(String),
-    );
-    throw error;
-  } finally {
-    await cleanup(f, app);
-  }
-});
-
 // Keys in the base layer, in the other key group and in common.
 const tableProfile = {
   schemaVersion: 0,
   name: "录入测试",
-  // Not on back or start: they are function keys, whose bindings a save
-  // removes (ADR-0069).
+  // Not on start: it is the function key unless the settings say otherwise,
+  // and what a file binds on it is not used (ADR-0075).
   common: {
     leftstick: {
       label: "切换",
@@ -211,23 +74,20 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
     page = opened.page;
     const p = page;
     const drawer = p.getByTestId("mapping-editor");
-    const label = drawer.getByRole("textbox", { name: "在手柄图上显示为" });
-    const sending = drawer.getByRole("radiogroup", { name: "发送方式" });
+    const label = drawer.getByRole("textbox", { name: "功能" });
     const shortcut = drawer.getByRole("group", { name: "快捷键", exact: true });
     const saved = async () => JSON.parse(await readFile(file, "utf8"));
 
-    // Two named keys: X held, B tapped. Neither has a shortcut, and there
-    // is nowhere to type one (OUT-18).
+    // Two named keys, X and B. Neither has a shortcut, and there is nowhere
+    // to type one (OUT-18).
     await openControl(p, "west");
     await label.fill("抓手");
-    await sending.getByRole("radio", { name: "按住保持", exact: true }).click();
     await expect(shortcut).toHaveAttribute("data-keys", "");
     await expect(drawer.getByRole("textbox", { name: "快捷键" })).toHaveCount(
       0,
     );
     await openControl(p, "east");
     await label.fill("画笔");
-    await sending.getByRole("radio", { name: "单次点按", exact: true }).click();
     await expect(shortcut).toHaveAttribute("data-keys", "");
 
     // Nothing offers to fill them in: not 更多, not the export.
@@ -263,7 +123,7 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
       .poll(async () => (await saved()).layers.base.west)
       .toEqual({
         label: "抓手",
-        press: { type: "keys", keys: "F16", mode: "hold" },
+        press: { type: "keys", keys: "F16" },
       });
     const written = await saved();
     expect(written.layers.base.east).toEqual({ label: "画笔" });

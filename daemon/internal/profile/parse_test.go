@@ -157,6 +157,11 @@ func formatProfile(t *testing.T, p *Profile) string {
 		fmt.Fprintf(&b, "function key set %s\n", l.Name)
 		formatBindings(t, &b, l)
 	}
+	// The old format's two sets, merged into the one the engine reads.
+	if e := p.EffectiveFunctionSet(); e != nil && p.FunctionSet == nil {
+		fmt.Fprintf(&b, "effective function set %s\n", e.Name)
+		formatBindings(t, &b, e)
+	}
 	// Only a feedback that differs from the default is shown, so that the
 	// fixtures that do not set one keep their golden files.
 	if f := p.Feedback; f != nil && *f != DefaultFeedback() {
@@ -197,19 +202,12 @@ func TestInvalidProfiles(t *testing.T) {
 	}
 }
 
-// TestExamples checks that the example profiles in the repository, and the
-// UI's starter templates (written by app/src/renderer/templates.test.ts),
-// have no diagnostics at all. A template only names the keys whose shortcut
-// the user records (OUT-18), so those label-only bindings may warn that they
-// have no action, and nothing else.
+// TestExamples checks that the example profiles in the repository have no
+// diagnostics at all.
 func TestExamples(t *testing.T) {
-	var files []string
-	for _, pattern := range []string{"../../../examples/profiles/*.json", "../../../examples/profiles/templates/*.json"} {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			t.Fatal(err)
-		}
-		files = append(files, matches...)
+	files, err := filepath.Glob("../../../examples/profiles/*.json")
+	if err != nil {
+		t.Fatal(err)
 	}
 	if len(files) == 0 {
 		t.Skip("examples/profiles not found; this test needs the whole repository")
@@ -218,11 +216,6 @@ func TestExamples(t *testing.T) {
 		p, ds, err := Load(file)
 		if err != nil {
 			t.Fatal(err)
-		}
-		if filepath.Base(filepath.Dir(file)) == "templates" {
-			ds = slices.DeleteFunc(ds, func(d Diagnostic) bool {
-				return d.Severity == SeverityWarning && d.Message == "binding has no action"
-			})
 		}
 		if p == nil || len(ds) > 0 {
 			data, _ := os.ReadFile(file)

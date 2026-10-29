@@ -1,9 +1,13 @@
-// Recording a new emergency combo (UI-19). capture.start, through the UI's
-// own bridge connection, pauses the mapping while the controller's input
-// events keep flowing, so pressing the new combo triggers no shortcut. The
-// capture ends when the renderer stops it, and Main stops it when the
-// window loses focus, closes or reloads, or the session locks or sleeps.
-// When the bridge connection ends, the daemon ends the capture itself.
+// Recording a new emergency combo (UI-19) and the mapping wizard (IN-19).
+// capture.start, through the UI's own bridge connection, pauses the mapping
+// while the controller's input events keep flowing, so pressing the new combo
+// triggers no shortcut. The capture ends when the renderer stops it, and Main
+// stops it when the window closes or reloads, and when the window loses focus
+// or the session locks or sleeps, except for a capture that was asked to
+// stay: the wizard's, which keeps the mapping paused while the user is in
+// another program, and after an unlock or a wake (the daemon's own system
+// pause covers the lock itself), until the wizard is closed (ADR-0076). When
+// the bridge connection ends, the daemon ends the capture itself.
 //
 // The bridge connection lives as long as the UI, so a lost capture.stop
 // would leave the mapping paused. A capture.start that failed or timed out
@@ -21,6 +25,8 @@ export interface PadCaptureOptions {
 
 export class PadCapture {
   private active = false;
+  // The capture was asked to stay when the window loses the front.
+  private stays = false;
   // A capture.start was sent, and no capture.stop sent after it succeeded.
   private mayBeOn = false;
   // Counts the starts and the disconnections: a request's result counts
@@ -31,13 +37,20 @@ export class PadCapture {
   private retry: ReturnType<typeof setTimeout> | undefined;
   constructor(private options: PadCaptureOptions) {}
 
-  async start(): Promise<void> {
+  /**
+   * Starts (or, when it is on, confirms) the capture, from the front window.
+   * stays: the window losing the front does not end it; only stop(), the
+   * window going away or the connection ending do.
+   */
+  async start(stays = false): Promise<void> {
     if (!this.options.focused())
       throw new Error("Controller capture requires the focused padmate window");
     const pending = this.options.call("capture.start");
     if (!pending) throw new Error("Daemon is not connected");
-    // Set first: a blur while the request runs must still stop it.
+    // Set first: a blur while the request runs must still stop it, unless
+    // the capture stays.
     this.active = true;
+    this.stays = stays;
     this.mayBeOn = true;
     this.stopping = false;
     const generation = this.next();
@@ -54,7 +67,7 @@ export class PadCapture {
       // stop sent then arrives after this start.
       throw new Error("Controller capture stopped");
     }
-    if (!this.options.focused()) {
+    if (!this.stays && !this.options.focused()) {
       this.stop();
       throw new Error("Controller capture requires the focused padmate window");
     }
@@ -63,12 +76,22 @@ export class PadCapture {
   /** Ends a capture this window started; a no-op otherwise. */
   stop(): void {
     this.active = false;
+    this.stays = false;
     if (this.mayBeOn && !this.stopping) this.sendStop();
+  }
+
+  /**
+   * The window lost the front, or the session locks or sleeps: ends the
+   * capture unless it stays.
+   */
+  windowAway(): void {
+    if (!this.stays) this.stop();
   }
 
   /** The bridge is gone, and the daemon ended its capture with it. */
   disconnected(): void {
     this.active = false;
+    this.stays = false;
     this.mayBeOn = false;
     this.stopping = false;
     this.next();

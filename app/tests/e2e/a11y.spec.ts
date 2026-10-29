@@ -108,18 +108,15 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
     await check("dialog: 改为 WASD？");
     await closeDialog(page);
     await openControl(page, "south");
-    // Sequence, gestures, the menus of the key.
+    // Sequence, mappings, the menus of the key.
     await page.getByTestId("add-step").click();
     await check("drawer: menu of 添加下一步");
     await page.getByRole("menuitem", { name: "等待" }).click();
     await page.getByTestId("add-step").click();
-    await page.getByRole("menuitem", { name: "文字" }).click();
-    await check("drawer: a sequence of a shortcut, a wait and a text");
+    await page.getByRole("menuitem", { name: "快捷键" }).click();
+    await check("drawer: a sequence of a shortcut, a wait and a shortcut");
     await page.getByTestId("add-gesture").click();
-    await check("drawer: menu of 添加手势");
-    await page.keyboard.press("Escape");
-    await page.getByTestId("shortcut-mouse").first().click();
-    await check("drawer: the mouse menu");
+    await check("drawer: menu of 添加映射");
     await page.keyboard.press("Escape");
     await page.getByTestId("key-actions").click();
     await check("drawer: the menu of the key");
@@ -595,7 +592,7 @@ async function helperSays(
 }
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("holding Esc for a second ends a capture and keeps the shortcut before it", async ({}) => {
+test("holding Esc for a second cancels a capture and changes nothing", async ({}) => {
   test.setTimeout(90000);
   const f = await fixture();
   let app: ElectronApplication | undefined;
@@ -605,30 +602,37 @@ test("holding Esc for a second ends a capture and keeps the shortcut before it",
     const page = launched.page;
     await openControl(page, "south");
     const field = page.getByRole("group", { name: "快捷键" });
+    const before = await field.getAttribute("data-keys");
     await field.getByRole("button", { name: "录入快捷键" }).click();
-    const stop = field.getByRole("button", { name: "停止捕获", exact: true });
-    await expect(stop).toBeVisible();
+    const busy = field.getByRole("button", { name: "录入中…", exact: true });
+    await expect(busy).toBeVisible();
     await expect(page.getByText(/按住 Esc 1 秒/)).toBeVisible();
+    // The Esc that is held: the helper hears it once (it drops repeats), the
+    // window gets it as keys. A second Esc from the helper would be a second
+    // key and end the capture, so it is sent again only when the first was
+    // not taken.
+    let sent = 0;
     await expect
       .poll(async () => {
-        await helperSays(app as ElectronApplication, {
-          chord: "Ctrl+K",
-          vk: 75,
-        });
-        return field.getAttribute("data-keys");
+        const keys = await field.getAttribute("data-keys");
+        if (keys !== "Esc" && Date.now() - sent > 2000) {
+          sent = Date.now();
+          await helperSays(app as ElectronApplication, {
+            chord: "Esc",
+            vk: 27,
+          });
+        }
+        return keys;
       })
-      .toBe("Ctrl+K");
-    // The Esc that is held: the helper hears it, the window gets it as keys.
-    await helperSays(app, { chord: "Esc", vk: 27 });
-    await expect(field).toHaveAttribute("data-keys", "Esc");
+      .toBe("Esc");
     await page.keyboard.down("Escape");
     // Not before a second, and the capture is still there.
     await page.waitForTimeout(600);
-    await expect(stop).toBeVisible();
+    await expect(busy).toBeVisible();
     await page.waitForTimeout(700);
-    await expect(stop).toHaveCount(0);
-    // The held press is no shortcut: the one before it was kept.
-    await expect(field).toHaveAttribute("data-keys", "Ctrl+K");
+    await expect(busy).toHaveCount(0);
+    // The held press is no shortcut: nothing was recorded.
+    await expect(field).toHaveAttribute("data-keys", before ?? "");
     // The Esc that is still down does not close the editor behind it.
     await page.keyboard.down("Escape");
     await page.keyboard.up("Escape");

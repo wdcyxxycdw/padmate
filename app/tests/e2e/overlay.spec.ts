@@ -10,9 +10,11 @@ import {
 import {
   cleanup,
   closeApplication,
+  closeWindow,
   type Fixture,
   fixture,
   launch,
+  mainWindowVisible,
   queryWindow,
   rpc,
 } from "./helpers";
@@ -276,19 +278,25 @@ test("the overlay never takes the foreground, and its window has the right style
   }
 });
 
-test("closing the main window quits the app although the overlay window is alive", async () => {
+test("closing the main window keeps the overlay, and quitting ends the app although the overlay window is alive", async () => {
   test.setTimeout(90000);
   const f = await fixture();
   let app: ElectronApplication | undefined;
   try {
     const opened = await launch(f);
     app = opened.app;
-    await overlayShown(app);
-    // closeApplication closes the first window, the main one, and waits for
-    // the process to end: without the overlay being destroyed with the main
-    // window, window-all-closed would not follow and this times out.
-    // The handle is taken first: once the app has gone, app.process() can no
-    // longer be asked.
+    const handle = await overlayShown(app);
+    // Closing the main window only hides it (ADR-0077): the overlay stays.
+    await closeWindow(app);
+    await expect
+      .poll(() => mainWindowVisible(app as ElectronApplication))
+      .toBe(false);
+    expect((await queryWindow(handle)).window?.visible).toBe(true);
+    expect(app.process().exitCode).toBeNull();
+    // closeApplication quits and waits for the process to end: without the
+    // overlay being destroyed with the main window, window-all-closed would
+    // not follow and this times out. The handle is taken first: once the app
+    // has gone, app.process() can no longer be asked.
     const child = app.process();
     await closeApplication(app);
     expect(child.exitCode).not.toBeNull();

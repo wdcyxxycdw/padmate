@@ -165,7 +165,7 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     const expectFits = async () => {
       await expectPageFits(page);
       const stage = await page.locator(".controller-stage").boundingBox();
-      // The switch between the usual keys and the function-key sets (UI-30)
+      // The switch between the usual keys and the function set (UI-30)
       // sits above the controller: it is centred in the rest of the stage.
       const bar = await page.locator(".key-view-bar").boundingBox();
       const controller = await page
@@ -338,10 +338,11 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       fullPage: true,
     });
     const calloutButtons = page.locator("button[data-callout]");
-    // View and Menu are function-key tags, not buttons (UI-30).
-    await expect(calloutButtons).toHaveCount(15);
-    await expect(page.locator("[data-callout='back']")).toHaveCount(1);
-    await expect(page.locator("button[data-callout='back']")).toHaveCount(0);
+    // The function key, Menu unless the settings say otherwise, is a tag and
+    // not a button; View and the Xbox button are ordinary buttons (UI-30).
+    await expect(calloutButtons).toHaveCount(16);
+    await expect(page.locator("[data-callout='start']")).toHaveCount(1);
+    await expect(page.locator("button[data-callout='start']")).toHaveCount(0);
     for (const control of [
       "south",
       "east",
@@ -351,6 +352,7 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       "dpad.down",
       "dpad.left",
       "dpad.right",
+      "back",
       "guide",
       "leftstick",
       "rightstick",

@@ -9,8 +9,9 @@ import type {
 import type { Profile } from "../shared/generated/schema";
 import { createEditorStore, type EditorStore } from "./editor-store";
 
-// The profile a profile is based on, which the editor reads next to it
-// (PRO-19, ADR-0070).
+// The profile a hand-written profile file extends, which the editor reads next
+// to it (PRO-19, ADR-0070, ADR-0076): the UI does not make profiles that
+// extend another any more, but a file that does still works.
 
 const parentProfile: Profile = {
   schemaVersion: 1,
@@ -67,22 +68,14 @@ const draft = (store: EditorStore) => {
 };
 
 describe("the parent of an edited profile", () => {
-  it("is read when the profile is loaded, merged and with who wrote what", async () => {
+  it("is read when the profile is loaded, merged", async () => {
     const { api, store } = setup();
-    api.resolveProfile.mockImplementation(async (id: string) => ({
-      id,
-      text: JSON.stringify(parentProfile),
-      revision: "r1",
-      inherited: [{ pointer: "/layers/base/south", profile: "root" }],
-      diagnostics: [],
-    }));
     await store.getState().activate(context);
     await settled();
     expect(api.resolveProfile).toHaveBeenCalledExactlyOnceWith("paint");
     expect(store.getState().parent).toEqual({
       id: "paint",
       profile: parentProfile,
-      origins: [{ pointer: "/layers/base/south", profile: "root" }],
     });
     // The draft is still the profile's own file.
     expect(draft(store)).toEqual(child);
@@ -105,6 +98,9 @@ describe("the parent of an edited profile", () => {
     expect(store.getState().error).toBe("");
     store.getState().edit({ ...draft(store), name: "Renamed" });
     expect(await store.getState().flush()).toBe(true);
+    // The file still names the parent it cannot find: a save never drops it.
+    const text = (api.putProfile.mock.calls.at(-1) as unknown[])[1] as string;
+    expect((JSON.parse(text) as Profile).extends).toBe("paint");
   });
 
   it("is none when its text is not a profile", async () => {
@@ -140,27 +136,29 @@ describe("the parent of an edited profile", () => {
     });
   });
 
-  it("follows the extends of the draft: another parent, or none", async () => {
-    const { api, store, files } = setup();
-    files.other = { ...parentProfile, name: "Other" };
+  it("keeps extends in the file when the profile is edited and saved", async () => {
+    const { api, store } = setup();
     await store.getState().activate(context);
     await settled();
-    expect(store.getState().parent?.id).toBe("paint");
-    store.getState().edit({ ...draft(store), extends: "other" });
-    await settled();
-    expect(api.resolveProfile).toHaveBeenLastCalledWith("other");
-    expect(store.getState().parent?.id).toBe("other");
-    // Based on none: the parent goes at once, and nothing is asked.
-    const asked = api.resolveProfile.mock.calls.length;
-    const { extends: _extends, ...alone } = draft(store);
-    store.getState().edit(alone as Profile);
-    expect(store.getState().parent).toBeNull();
-    await settled();
-    expect(api.resolveProfile).toHaveBeenCalledTimes(asked);
-    // And back: undo reads the parent again.
-    expect(store.getState().undo()).toBe(true);
-    await settled();
-    expect(store.getState().parent?.id).toBe("other");
+    store.getState().edit({
+      ...draft(store),
+      layers: {
+        base: {
+          ...draft(store).layers.base,
+          south: { tap: { type: "keys", keys: "Ctrl+Shift+Z" } },
+        },
+      },
+    });
+    expect(await store.getState().flush()).toBe(true);
+    const text = (api.putProfile.mock.calls.at(-1) as unknown[])[1] as string;
+    const saved = JSON.parse(text) as Profile;
+    expect(saved.extends).toBe("paint");
+    // The edited key is the profile's own now; nothing else of the parent's
+    // is copied into the file.
+    expect(saved.layers.base).toEqual({
+      east: { tap: { type: "keys", keys: "E" } },
+      south: { tap: { type: "keys", keys: "Ctrl+Shift+Z" } },
+    });
   });
 
   it("does not read the parent again for an edit that leaves extends alone", async () => {
@@ -175,7 +173,6 @@ describe("the parent of an edited profile", () => {
 
   it("ignores an answer that comes after a newer question", async () => {
     const { api, store, files, resolution } = setup();
-    files.other = { ...parentProfile, name: "Other" };
     let release: (value: ProfileResolution) => void = () => {};
     api.resolveProfile
       .mockImplementationOnce(
@@ -186,13 +183,15 @@ describe("the parent of an edited profile", () => {
       )
       .mockImplementation(async (id: string) => resolution(id));
     await store.getState().activate(context);
-    // The first question is open; the draft is based on another profile now.
-    store.getState().edit({ ...draft(store), extends: "other" });
+    // The first question is open; the parent's file changes and is asked again.
+    const stale = resolution("paint");
+    files.paint = { ...parentProfile, name: "Paint (newer)" };
+    await store.getState().profileChanged();
     await settled();
-    expect(store.getState().parent?.id).toBe("other");
-    release(resolution("paint"));
+    expect(store.getState().parent?.profile.name).toBe("Paint (newer)");
+    release(stale);
     await settled();
-    expect(store.getState().parent?.id).toBe("other");
+    expect(store.getState().parent?.profile.name).toBe("Paint (newer)");
   });
 
   it("goes when another profile is opened", async () => {

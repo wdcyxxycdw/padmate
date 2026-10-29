@@ -1,0 +1,18 @@
+name "功能键", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	guide         /layers/base/guide         label ""  press: layer  mode(0)
+	start         /layers/base/start         label "保存"  press: keys Ctrl+S tap
+layer paint
+	back          /layers/paint/select       label ""  press: keys Q hold
+function key set function
+	south         /functionSet/south         label "重做"  press: keys Ctrl+Shift+Z tap
+	west          /functionSet/west          label ""
+	back          /functionSet/back          label "粘贴"  press: keys Ctrl+V tap
+	guide         /functionSet/guide         label "只有名字"
+	start         /functionSet/start         label ""  press: keys Q hold
+	leftshoulder  /functionSet/lb            label ""  press: layer  mode(0)
+	dpad.up       /functionSet/dpad.up       label ""
+	ls.cw         /functionSet/ls.cw         label ""  press: keys Ctrl+] tap
+24:14: warning: binding has no action (/functionSet/guide)
+	> {"label": "只有名字"},

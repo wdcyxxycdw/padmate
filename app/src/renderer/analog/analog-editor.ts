@@ -11,7 +11,6 @@ import {
   baseBinding,
   bindingAt,
   canonicalControl,
-  functionKeys,
   functionSetId,
   gestures,
   hasDepth,
@@ -468,14 +467,14 @@ export function toPercent(value: number): number {
 }
 
 /**
- * Every key set of a profile: its groups, the shared one and the sets of the
- * function keys (MAP-27), which use the same stick and trigger settings.
+ * Every key set of a profile: its groups, the shared one and the function set
+ * (MAP-27), which uses the same stick and trigger settings.
  */
 function allLayers(profile: Profile): ProfileLayer[] {
   return [
     ...Object.values(profile.layers),
     ...(profile.common ? [profile.common] : []),
-    ...functionKeys.flatMap((key) => profile.functionKeys?.[key] ?? []),
+    ...(profile.functionSet ? [profile.functionSet] : []),
   ];
 }
 
@@ -511,15 +510,13 @@ export function usesDepthRate(
 
 /**
  * Every key set of a profile, as the IDs `bindingAt` takes: its layers, the
- * common set when it has one and the sets of the function keys it has.
+ * common set when it has one and the function set when it has one.
  */
 function keySets(profile: Profile): string[] {
   return [
     ...Object.keys(profile.layers),
     ...(profile.common ? ["common"] : []),
-    ...functionKeys
-      .filter((key) => profile.functionKeys?.[key])
-      .map(functionSetId),
+    ...(profile.functionSet ? [functionSetId] : []),
   ];
 }
 

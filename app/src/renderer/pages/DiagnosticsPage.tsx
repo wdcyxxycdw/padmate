@@ -37,8 +37,6 @@ export const LATENCY_POLL_MS = 1000;
 /** A pad as the event list needs it: what it is called and what its keys are called. */
 interface Pad {
   type: string;
-  buttonLabels?: Record<string, string>;
-  buttonMask?: number;
   labels: Record<string, string>;
 }
 
@@ -78,7 +76,7 @@ function RowView({
         <span className="visually-hidden">{name}</span>
       </span>
       <span className="page-act-gesture">{rowGesture(row, language)}</span>
-      <span className="page-act-where">{rowWhere(row, pad, language)}</span>
+      <span className="page-act-where">{rowWhere(row, language)}</span>
       <span
         className="page-act-result"
         data-action={result.action || undefined}
@@ -125,8 +123,6 @@ function ActivitySection({
     for (const { info } of devices ?? [])
       byId.set(info.id, {
         type: info.type,
-        buttonLabels: info.buttonLabels,
-        buttonMask: info.buttonMask,
         labels: controllerLabels(info.type, info.buttonLabels, info.buttonMask),
       });
     return byId;

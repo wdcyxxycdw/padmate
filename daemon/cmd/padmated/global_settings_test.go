@@ -150,7 +150,7 @@ func TestReapplyTimingRereadsStartupProfile(t *testing.T) {
 	writeLibraryProfile(t, dir, "first", `{"schemaVersion":0,"name":"changed","layers":{"base":{}}}`)
 	client := rpcTestClient(t, tl.liveRun)
 	saved := putConfig(t, client, `{"schemaVersion":0,"timing":{"holdMs":400}}`)
-	if saved.Applied || !strings.Contains(saved.Problem, "global timing not applied") || saved.RestartRequired {
+	if saved.Applied || !strings.Contains(saved.Problem, "global settings not applied") || saved.RestartRequired {
 		t.Fatalf("%+v", saved)
 	}
 	if got := tl.timing().HoldMs; got != 250 {

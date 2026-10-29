@@ -124,23 +124,22 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
       await access(join(macros, file));
     await expect.poll(() => opened(f)).toEqual([join(macros, "复制全部.ts")]);
 
-    // 2. The drawer binds it to A's tap, saved at once (UI-43); the fake
-    // controller runs it, and the mapping page's key preview names it.
+    // 2. The drawer binds it to A's 点按 (the key's only mapping, so a press
+    // in the file: ADR-0076), replacing its shortcut, saved at once (UI-43);
+    // the fake controller runs it, and the mapping page's key preview names
+    // it.
     await page.getByRole("button", { name: "映射", exact: true }).click();
     await page.locator('button[data-callout="south"]').click();
     const drawer = page.getByTestId("mapping-editor");
-    await drawer.getByTestId("add-gesture").click();
-    await page.getByRole("menuitem", { name: /^点按/ }).click();
     await drawer
       .getByTestId("action-type")
-      .last()
       .getByRole("radio", { name: "脚本", exact: true })
       .click();
     await drawer
       .getByRole("combobox", { name: "选择脚本" })
       .selectOption({ label: "复制全部" });
     await expect
-      .poll(async () => (await profile()).layers.base.south.tap)
+      .poll(async () => (await profile()).layers.base.south.press)
       .toEqual({ type: "macro", file: "复制全部.ts" });
     // released runs right after the release: the key preview shows the
     // decision then and fades after about 3 s, before a slow build ends.
@@ -223,7 +222,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     await expect(card(page, "全选复制")).toContainText("S 点按");
     await access(join(macros, "全选复制.ts"));
     await expect(access(join(macros, "复制全部.ts"))).rejects.toThrow();
-    expect((await profile()).layers.base.south.tap).toEqual({
+    expect((await profile()).layers.base.south.press).toEqual({
       type: "macro",
       file: "全选复制.ts",
     });
@@ -236,7 +235,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     await page.waitForTimeout(600);
     await page.keyboard.press("Control+Z");
     await page.waitForTimeout(300);
-    expect((await profile()).layers.base.south.tap).toEqual({
+    expect((await profile()).layers.base.south.press).toEqual({
       type: "macro",
       file: "全选复制.ts",
     });
@@ -254,8 +253,9 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     await remove.getByRole("button", { name: "删除", exact: true }).click();
     await expect(card(page, "全选复制")).toHaveCount(0);
     await expect(access(join(macros, "全选复制.ts"))).rejects.toThrow();
-    expect((await profile()).layers.base.south.tap).toBeUndefined();
-    expect((await profile()).layers.base.south.press).toBeDefined();
+    // The key's only action was the script: the daemon removes the binding
+    // with it (profile.RemoveMacroRefs).
+    expect((await profile()).layers?.base?.south).toBeUndefined();
 
     // 6. A syntax error shows on its card; fixed, it goes away (the page
     // reads the list again when the window gets focus back).

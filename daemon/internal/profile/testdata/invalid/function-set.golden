@@ -1,0 +1,10 @@
+6:5: error: a function set has no color: it is not a layer (/functionSet/color)
+	> "color": "#FF0000",
+7:5: error: unknown control "southh"; did you mean "south"? (/functionSet/southh)
+	> "southh": {},
+8:5: error: unknown control "menu"; did you mean "start"? (/functionSet/menu)
+	> "menu": {},
+9:5: error: unknown control "bak"; did you mean "back"? (/functionSet/bak)
+	> "bak": {},
+10:13: error: expected a binding object, got an array (/functionSet/west)
+	> []

@@ -242,11 +242,17 @@ func (c Control) String() string {
 // IsValid reports whether c is one of the declared controls.
 func (c Control) IsValid() bool { return c >= South && c <= lastControl }
 
-// IsFunctionKey reports whether c is one of the two function keys, Back and
-// Start (MAP-27, ADR-0069): in every profile they send nothing and cannot be
-// bound, and while one is held the other controls use that key's set of
-// bindings first.
-func (c Control) IsFunctionKey() bool { return c == Back || c == Start }
+// DefaultFunctionKey is the function key when config.json does not choose
+// one: Start (Menu, Options, Plus; MAP-27, ADR-0075).
+const DefaultFunctionKey = Start
+
+// CanBeFunctionKey reports whether c is one of the controls that config.json
+// can make the function key: Back, Start and Guide (MAP-27, ADR-0075). There
+// is only one function key at a time, the same for every profile: it sends
+// nothing and cannot be bound, and while it is held the other controls use
+// the profile's function set first. Every other control, these two included,
+// is an ordinary control.
+func (c Control) CanBeFunctionKey() bool { return c == Back || c == Guide || c == Start }
 
 // IsTrigger reports whether c is LT or RT, a virtual button driven by a
 // trigger axis.

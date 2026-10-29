@@ -52,7 +52,7 @@ const switching: Profile = {
 
 describe("layer usage", () => {
   it("reports what the GUI does not show", () => {
-    const usage = layerUsage(layered);
+    const usage = layerUsage(layered, "start");
     expect(usage).toEqual({
       extraLayers: ["alt"],
       commonBindings: 1,
@@ -65,25 +65,31 @@ describe("layer usage", () => {
     expect(usesOnlyBase(usage)).toBe(false);
     expect(
       usesOnlyBase(
-        layerUsage({ schemaVersion: 1, name: "x", layers: { base: {} } }),
+        layerUsage(
+          { schemaVersion: 1, name: "x", layers: { base: {} } },
+          "start",
+        ),
       ),
     ).toBe(true);
   });
 
   it("counts profile switches without making the file multi-layer", () => {
-    const usage = layerUsage(switching);
+    const usage = layerUsage(switching, "start");
     expect(usage.profileActions).toBe(2);
     expect(usage.layerActions).toBe(0);
     // A single-layer file keeps its single-layer cheat sheet.
     expect(usesOnlyBase(usage)).toBe(true);
     expect(
-      layerUsage({
-        ...layered,
-        layers: {
-          ...layered.layers,
-          alt: { south: { press: { type: "profile", profile: "photo" } } },
+      layerUsage(
+        {
+          ...layered,
+          layers: {
+            ...layered.layers,
+            alt: { south: { press: { type: "profile", profile: "photo" } } },
+          },
         },
-      }).profileActions,
+        "start",
+      ).profileActions,
     ).toBe(1);
   });
 

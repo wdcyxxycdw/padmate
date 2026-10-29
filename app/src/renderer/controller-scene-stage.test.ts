@@ -6,7 +6,7 @@ import {
   createFrameScheduler,
   type SceneStage,
 } from "./controller-scene";
-import { createStageStore, STAGE_IDLE_MS, stageKey } from "./controller-stage";
+import { createStageStore, stageKey } from "./controller-stage";
 import type { PadInput } from "./store";
 
 describe("frame scheduler flush", () => {
@@ -222,20 +222,18 @@ describe("a retained controller scene (H2)", () => {
     expect(nextHost.firstElementChild).toBe(stages[1].canvas);
   });
 
-  it("frees the stage after the idle time, and not while a mount holds it", async () => {
+  it("keeps the stage while no mount holds it, however long the page is away (ADR-0077)", async () => {
     const { stages, create } = setup();
     const first = create(host(), info, vi.fn(), vi.fn());
     await stages[0].built();
-    vi.advanceTimersByTime(STAGE_IDLE_MS * 2);
-    expect(stages[0].dispose).not.toHaveBeenCalled();
     first.dispose();
-    vi.advanceTimersByTime(STAGE_IDLE_MS - 1);
+    // Ten minutes used to free it; the window stays loaded now.
+    vi.advanceTimersByTime(24 * 60 * 60 * 1000);
     expect(stages[0].dispose).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
-    expect(stages[0].dispose).toHaveBeenCalledOnce();
-    // The page is shown again: a new stage, as on the first visit.
+    // The page is shown again: the same stage, no new upload.
     create(host(), info, vi.fn(), vi.fn());
-    expect(stages).toHaveLength(2);
+    expect(stages).toHaveLength(1);
+    expect(stages[0].uploads).toBe(1);
   });
 
   it("shrinks the drawing buffer while the page is away, and only for the mount that held the canvas", async () => {
@@ -268,12 +266,15 @@ describe("a retained controller scene (H2)", () => {
     expect(() =>
       create(nextHost, info, vi.fn(), vi.fn(), undefined, { input }),
     ).toThrow("update failed");
-    // The mount that failed holds nothing: its canvas is off the page and the
-    // idle time frees the stage, as if the page had never been shown.
+    // The mount that failed holds nothing: its canvas is off the page, and
+    // the stage is kept for the next visit, as if the page had never been
+    // shown.
     expect(nextHost.contains(stages[0].canvas)).toBe(false);
     expect(stages[0].dispose).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(STAGE_IDLE_MS);
-    expect(stages[0].dispose).toHaveBeenCalledOnce();
+    const lastHost = host();
+    create(lastHost, info, vi.fn(), vi.fn(), undefined, { input });
+    expect(stages).toHaveLength(1);
+    expect(lastHost.firstElementChild).toBe(stages[0].canvas);
   });
 
   it("gives the canvas to the newest mount", async () => {
@@ -290,12 +291,9 @@ describe("a retained controller scene (H2)", () => {
     runFrames();
     expect(secondHost.contains(stages[0].canvas)).toBe(true);
     expect(stages[0].modelUpdate()).not.toHaveBeenCalledWith(input);
-    // Only the last one to let go starts the idle time.
-    vi.advanceTimersByTime(STAGE_IDLE_MS * 2);
-    expect(stages[0].dispose).not.toHaveBeenCalled();
+    // Letting go of both keeps it for the next visit.
     second.dispose();
-    vi.advanceTimersByTime(STAGE_IDLE_MS);
-    expect(stages[0].dispose).toHaveBeenCalledOnce();
+    expect(stages[0].dispose).not.toHaveBeenCalled();
   });
 
   it("reports a model that cannot be built, and builds a new stage next time", async () => {

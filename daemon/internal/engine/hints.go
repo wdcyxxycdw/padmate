@@ -81,7 +81,8 @@ func (e *Engine) updateHints() {
 // binding for it wins, and a binding that blocks hides it. A control is left
 // out when the binding it resolves to has nothing to show (no label, and no
 // action with a text), and the controls that hold a hints action are left out:
-// the one the user is holding is not an answer to what the buttons do.
+// the one the user is holding is not an answer to what the buttons do. The
+// function key is left out too: a binding on it is ignored.
 //
 // The hints are of the declared bindings; what a script registers for a
 // control is not in them.
@@ -89,8 +90,8 @@ func (e *Engine) hintList() []Hint {
 	list := make([]Hint, 0, 16)
 	for i := 1; i < control.Count; i++ {
 		c := control.Control(i)
-		if e.ctl[c].hints || e.latch[c].hints {
-			continue
+		if c == e.prog.fnKey || e.ctl[c].hints || e.latch[c].hints {
+			continue // the function key does nothing of its own
 		}
 		_, b, _, blocked := e.lookup(c, GesturePress)
 		if b == nil || blocked {

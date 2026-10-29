@@ -5,8 +5,9 @@ import {
   controlStrength,
   faceLabels,
   familyName,
-  functionKeyLabels,
-  functionKeysOf,
+  functionKeyLabel,
+  padFunctionKeys,
+  padHasFunctionKey,
   stickActiveThreshold,
   stickDeflection,
   triggerValue,
@@ -159,39 +160,55 @@ describe("controller presentation", () => {
   });
 });
 
-describe("the function keys of a controller (ADR-0069)", () => {
+describe("the function key of a controller (ADR-0075)", () => {
   it.each([
-    ["xboxone", "View", "Menu"],
-    ["xboxseries", "View", "Menu"],
-    ["xbox360", "Back", "Start"],
-    ["ps5", "Create", "Options"],
-    ["ps4", "Share", "Options"],
-    ["ps3", "Select", "Start"],
-    ["switchpro", "−", "+"],
-    ["joyconpair", "−", "+"],
-    ["unknown", "Back", "Start"],
-  ])("are named as %s prints them: %s and %s", (type, back, start) => {
-    expect(functionKeyLabels(type)).toEqual({ back, start });
+    ["xboxone", "View", "Menu", "Xbox"],
+    ["xboxseries", "View", "Menu", "Xbox"],
+    ["xbox360", "Back", "Start", "Xbox"],
+    ["ps5", "Create", "Options", "PS"],
+    ["ps4", "Share", "Options", "PS"],
+    ["ps3", "Select", "Start", "PS"],
+    ["switchpro", "−", "+", "Home"],
+    ["joyconpair", "−", "+", "Home"],
+    ["unknown", "Back", "Start", "Home"],
+  ])("is named as %s prints it: %s, %s and %s", (type, back, start, guide) => {
+    expect(functionKeyLabel("back", type)).toBe(back);
+    expect(functionKeyLabel("start", type)).toBe(start);
+    expect(functionKeyLabel("guide", type)).toBe(guide);
   });
 
-  it("has Menu only on a single Joy-Con held sideways", () => {
+  it("has all three on a controller, and no View on a single Joy-Con held sideways", () => {
     // Held sideways it reports face buttons (buttonMask bit 0), as the
-    // templates and the labels decide it.
-    expect(functionKeyLabels("joyconleft", {}, 1)).toEqual({ start: "−" });
-    expect(functionKeyLabels("joyconright", {}, 0xf)).toEqual({ start: "+" });
-    // Held upright it has − or + as the Start button of a pad.
-    expect(functionKeyLabels("joyconleft", {}, 2)).toEqual({
-      back: "−",
-      start: "+",
-    });
-    expect(functionKeysOf("joyconleft", 1)).toEqual(["start"]);
-    expect(functionKeysOf("joyconleft", 2)).toEqual(["back", "start"]);
-    expect(functionKeysOf("xboxone")).toEqual(["back", "start"]);
+    // labels decide it.
+    expect(padFunctionKeys("joyconleft", 1)).toEqual(["start", "guide"]);
+    expect(padFunctionKeys("joyconright", 0xf)).toEqual(["start", "guide"]);
+    expect(padHasFunctionKey("back", "joyconleft", 1)).toBe(false);
+    expect(padHasFunctionKey("start", "joyconleft", 1)).toBe(true);
+    expect(padHasFunctionKey("guide", "joyconleft", 1)).toBe(true);
+    expect(functionKeyLabel("start", "joyconleft", {}, 1)).toBe("−");
+    expect(functionKeyLabel("start", "joyconright", {}, 0xf)).toBe("+");
+    expect(functionKeyLabel("guide", "joyconleft", {}, 1)).toBe("Capture");
+    expect(functionKeyLabel("guide", "joyconright", {}, 1)).toBe("Home");
+    // Held upright it has − or + as the Back and Start buttons of a pad.
+    expect(padFunctionKeys("joyconleft", 2).sort()).toEqual([
+      "back",
+      "guide",
+      "start",
+    ]);
+    expect(padFunctionKeys("xboxone").sort()).toEqual([
+      "back",
+      "guide",
+      "start",
+    ]);
   });
 
   it("takes the names the controller reports", () => {
     expect(
-      functionKeyLabels("xboxone", { back: "Select", start: "Menu" }),
-    ).toEqual({ back: "Select", start: "Menu" });
+      functionKeyLabel("back", "xboxone", { back: "Select", start: "Menu" }),
+    ).toBe("Select");
+    // A control with no name of its own is named by itself.
+    expect(functionKeyLabel("start", "xboxone", { start: "Menu" })).toBe(
+      "Menu",
+    );
   });
 });

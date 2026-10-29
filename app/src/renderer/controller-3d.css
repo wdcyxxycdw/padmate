@@ -632,25 +632,6 @@
   border: 0;
 }
 
-/* A binding the profile takes from the one it is based on (PRO-19): a small
-   mark after the text, which the compact and mini chips leave to the tooltip. */
-.stage-chip-parent {
-  flex: none;
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-3);
-  font-size: 10.5px;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-}
-@container stage (width < 860px) or (height < 600px) {
-  .stage-chip-parent {
-    display: none;
-  }
-}
-
 /* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .stage-chip[data-active="true"] {

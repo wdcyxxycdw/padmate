@@ -3,6 +3,7 @@
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 import type { KeyboardCaptureEvent, PadmateAPI } from "../shared/api";
+import { isModifierOnly } from "./shortcut-keys";
 
 type CaptureAPI = Pick<PadmateAPI, "onCapture" | "captureStart">;
 
@@ -30,8 +31,9 @@ export function fakeCapture<T extends CaptureAPI>(api: T) {
     });
   /**
    * Records chord in the shortcut field called field (快捷键, 第 2 步, …;
-   * the only one in scope when omitted): starts its capture, presses the
-   * chord and stops the capture, which commits it.
+   * the only one in scope when omitted): starts its capture and presses the
+   * chord, which ends the capture and commits it (ADR-0076); a chord of
+   * modifiers only is recorded when they are let go, which this does.
    */
   const record = async (
     chord: string,
@@ -48,7 +50,7 @@ export function fakeCapture<T extends CaptureAPI>(api: T) {
     // The session id arrives after captureStart resolves.
     await act(async () => {});
     await emit({ active: true, chord });
-    fireEvent.click(button);
+    if (isModifierOnly(chord)) fireEvent.keyUp(button, { key: "Control" });
   };
   return { emit, record, session: () => session };
 }

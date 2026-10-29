@@ -1,3 +1,4 @@
+import type { FunctionKey } from "./editor-model";
 import type { PadInput } from "./store";
 
 export type ControllerFamily = "xbox" | "playstation" | "nintendo" | "generic";
@@ -196,31 +197,41 @@ export function controllerLabels(
 }
 
 /**
- * The function keys a pad has (MAP-27, ADR-0069): back (View) and start
- * (Menu), but a single Joy-Con held sideways has no back, only − or +.
+ * Which of the three keys a function key can be (back, start, guide) a pad
+ * has (MAP-27, ADR-0075). A single Joy-Con held sideways has no back, only
+ * − or +, and Capture or Home. A pad without the function key has no function
+ * key: its other keys work as usual.
  */
-export function functionKeysOf(
+export function padFunctionKeys(
   type: string,
   buttonMask?: number,
-): ("back" | "start")[] {
-  return isSidewaysJoyCon(type, buttonMask) ? ["start"] : ["back", "start"];
+): FunctionKey[] {
+  return isSidewaysJoyCon(type, buttonMask)
+    ? ["start", "guide"]
+    : ["start", "back", "guide"];
+}
+
+/** Whether the pad has the function key. */
+export function padHasFunctionKey(
+  key: FunctionKey,
+  type: string,
+  buttonMask?: number,
+): boolean {
+  return padFunctionKeys(type, buttonMask).includes(key);
 }
 
 /**
- * What the pad prints on its function keys, e.g. View and Menu on an Xbox
- * pad, Create and Options on a DualSense. A key the pad lacks is absent.
+ * What the pad prints on the function key, e.g. Menu on an Xbox pad, Options
+ * on a DualSense, + on a Switch pad; View, Create, −, or the Xbox button, the
+ * PS button and Home for the others of the three.
  */
-export function functionKeyLabels(
+export function functionKeyLabel(
+  key: FunctionKey,
   type: string,
   reported: Record<string, string> = {},
   buttonMask?: number,
-): { back?: string; start: string } {
-  const labels = controllerLabels(type, reported, buttonMask);
-  const has = functionKeysOf(type, buttonMask);
-  return {
-    ...(has.includes("back") ? { back: labels.back } : {}),
-    start: labels.start,
-  };
+): string {
+  return controllerLabels(type, reported, buttonMask)[key] ?? key;
 }
 
 export function axisPosition(value = 0): number {

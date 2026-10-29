@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
@@ -38,12 +39,18 @@ var validateFixtures = []string{
 // no action, next to one with an action.
 const labelOnly = "testdata/label-only.json"
 
-// functionKeys is a profile with the sets of the function keys (MAP-27), and
-// an old binding on back, which has no effect: a warning, and no binding.
-const functionKeys = "testdata/function-keys.json"
+// functionKeys is a profile with the sets of the old functionKeys format
+// (MAP-27, ADR-0069), and a binding on back, an ordinary control since
+// ADR-0075. functionSet is the same in the new format, with a binding on the
+// default function key, start, in the layer and in the set: validate compiles
+// with the default, which ignores them, so they are not listed.
+const (
+	functionKeys = "testdata/function-keys.json"
+	functionSet  = "testdata/function-set.json"
+)
 
 // TestValidateGolden compares a transcript of validate over the fixtures
-// labelOnly and functionKeys, as text and as JSON, with
+// labelOnly, functionKeys and functionSet, as text and as JSON, with
 // testdata/validate.golden.
 func TestValidateGolden(t *testing.T) {
 	var b strings.Builder
@@ -54,6 +61,8 @@ func TestValidateGolden(t *testing.T) {
 		{"validate", "--json", labelOnly},
 		{"validate", functionKeys},
 		{"validate", "--json", functionKeys},
+		{"validate", functionSet},
+		{"validate", "--json", functionSet},
 	} {
 		code, stdout, stderr := runCmd(t, args...)
 		if stderr != "" {
@@ -221,7 +230,7 @@ func TestLatencyMs(t *testing.T) {
 // TestCompileError covers the diagnostic for a profile the engine cannot
 // compile, which profile.Parse never returns.
 func TestCompileError(t *testing.T) {
-	bs, ds := compileBindings(nil)
+	bs, ds := compileBindings(nil, control.DefaultFunctionKey)
 	if bs != nil || len(ds) != 1 || ds[0].String() != "1:1: error: cannot compile the profile: engine: no profile" {
 		t.Errorf("compileBindings(nil) = %v, %v; want no bindings and one error", bs, ds)
 	}

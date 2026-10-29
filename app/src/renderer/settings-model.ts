@@ -1,7 +1,8 @@
-// Pure helpers for the global settings (UI-19): config.json's timing and
-// emergency combos, and start at sign-in. Config helpers take a parsed
+// Pure helpers for the global settings (UI-19): config.json's timing,
+// emergency combos and function key, and start at sign-in. Config helpers take a parsed
 // config.json and return a new object, or null when the change alters
 // nothing; they never mutate their input and keep members they do not know.
+
 import {
   type DeviceBattery,
   type DeviceCombo,
@@ -16,6 +17,11 @@ import type {
   ConfigSafety,
   ConfigTiming,
 } from "../shared/generated/schema";
+import {
+  asFunctionKey,
+  defaultFunctionKey,
+  type FunctionKey,
+} from "./editor-model";
 
 /** The largest timing value config.schema.json accepts, in ms. */
 export const TIMING_MAX_MS = 60000;
@@ -79,6 +85,33 @@ export function setGlobalTiming(
   }
   const { timing: _previous, ...rest } = config;
   return Object.keys(timing).length ? { ...config, timing } : rest;
+}
+
+/**
+ * The function key config.json chooses (UI-30, ADR-0075): Menu unless it says
+ * View or the Xbox button. Anything else it holds reads as Menu, as the
+ * daemon reads it.
+ */
+export function configuredFunctionKey(config: Config | null): FunctionKey {
+  return asFunctionKey(config?.functionKey);
+}
+
+/**
+ * Chooses the function key. The file only says what is not the default:
+ * choosing Menu removes the member. Null when the file already says it.
+ */
+export function setFunctionKey(
+  config: Config,
+  key: FunctionKey,
+): Config | null {
+  const written: unknown = config.functionKey;
+  if (key === defaultFunctionKey) {
+    if (written === undefined) return null;
+    const { functionKey: _previous, ...rest } = config;
+    return rest;
+  }
+  if (written === key) return null;
+  return { ...config, functionKey: key };
 }
 
 /**

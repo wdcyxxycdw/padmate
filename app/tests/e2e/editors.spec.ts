@@ -12,7 +12,9 @@ import { FixtureClient } from "./fixture-client";
 import {
   cleanup,
   closeApplication,
+  closeWindow,
   launch,
+  mainWindowVisible,
   recordShortcut,
   setWindowSize,
 } from "./helpers";
@@ -259,9 +261,18 @@ test("edits save at once: a capture without a key saves nothing, undo and redo s
     const shortcut = page.getByRole("group", { name: "快捷键", exact: true });
     const chip = page.locator('button[data-callout="north"]');
 
-    // A capture stopped before any key changes nothing and saves nothing.
+    // A capture cancelled before any key (Esc held for a second) changes
+    // nothing and saves nothing.
     await shortcut.getByRole("button", { name: "录入快捷键" }).click();
-    await shortcut.getByRole("button", { name: "停止捕获" }).click();
+    await expect(
+      shortcut.getByRole("button", { name: "录入中…" }),
+    ).toBeVisible();
+    await page.keyboard.down("Escape");
+    await page.waitForTimeout(1200);
+    await page.keyboard.up("Escape");
+    await expect(shortcut.getByRole("button", { name: "录入中…" })).toHaveCount(
+      0,
+    );
     const notice = page.getByTestId("editor-notice");
     await expect(shortcut).toHaveAttribute("data-keys", "F13");
     await expect(notice).toHaveCount(0);
@@ -325,17 +336,30 @@ test("edits save at once: a capture without a key saves nothing, undo and redo s
     }, original);
     expect(error).toEqual({ rejected: true, code: -32009 });
 
-    // Closing the window saves the field being typed in, without asking.
+    // Closing the window saves the field being typed in, without asking;
+    // the window only hides (ADR-0077).
     const label = page.getByRole("textbox", {
-      name: "在手柄图上显示为",
+      name: "功能",
       exact: true,
     });
     await label.fill("关窗前");
-    // closeApplication closes the window the same way and waits for the
+    await closeWindow(app);
+    await expect
+      .poll(async () => (await onDisk(live)).layers.base.north?.label)
+      .toBe("关窗前");
+    expect(await mainWindowVisible(app)).toBe(false);
+    // Quitting does the same; closeApplication quits and waits for the
     // process; it also detaches Playwright's inspector, without which the
     // "close" event never fires.
+    await page.bringToFront();
+    await app.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() !== "padmate overlay")
+        ?.show();
+    });
+    await label.fill("退出前");
     await closeApplication(app);
-    expect((await onDisk(live)).layers.base.north?.label).toBe("关窗前");
+    expect((await onDisk(live)).layers.base.north?.label).toBe("退出前");
   } finally {
     client?.close();
     await cleanup(f, app);
@@ -430,6 +454,63 @@ test("UI deadzone save is applied to fake input within 100 ms", async ({}, info)
   }
 });
 
+test("the mouse is recorded as a key inside the window, and a click or a notch of the wheel ends the capture (ADR-0076)", async () => {
+  const f = await editorFixture();
+  let app: ElectronApplication | undefined;
+  let client: FixtureClient | undefined;
+  try {
+    const opened = await launch(f);
+    app = opened.app;
+    const page = opened.page;
+    client = await FixtureClient.connect(f);
+    const live = client;
+    await openControl(page, "north");
+    const north = async () => (await onDisk(live)).layers.base.north?.press;
+    const shortcut = page.getByRole("group", { name: "快捷键", exact: true });
+    const busy = shortcut.getByRole("button", { name: "录入中…" });
+    const start = shortcut.getByRole("button", { name: "录入快捷键" });
+    // Nothing in the page that a click or the wheel could use.
+    const title = page.getByTestId("mapping-editor").locator(".drawer-title");
+
+    // A click on the field starts a capture, and is not recorded; there is no
+    // 鼠标 menu and no button to stop.
+    await expect(page.getByTestId("shortcut-mouse")).toHaveCount(0);
+    await shortcut.locator(".drawer-capture-keys").click();
+    await expect(busy).toBeVisible();
+    await expect(shortcut).toHaveAttribute("data-keys", "F13");
+    await expect(page.getByRole("button", { name: "停止捕获" })).toHaveCount(0);
+
+    // A click elsewhere in the window does not cancel: it is the left button.
+    await title.click();
+    await expect(busy).toHaveCount(0);
+    await expect(shortcut).toHaveAttribute("data-keys", "MouseLeft");
+    await expect.poll(north).toMatchObject({ keys: "MouseLeft" });
+
+    // The right button too, and no menu comes up for it.
+    await start.click();
+    await expect(busy).toBeVisible();
+    await title.click({ button: "right" });
+    await expect(busy).toHaveCount(0);
+    await expect(shortcut).toHaveAttribute("data-keys", "MouseRight");
+    await expect.poll(north).toMatchObject({ keys: "MouseRight" });
+    await expect(page.getByRole("menu")).toHaveCount(0);
+
+    // One notch of the wheel is the key, with the modifiers held.
+    await start.click();
+    await expect(busy).toBeVisible();
+    await title.hover();
+    await page.keyboard.down("Control");
+    await page.mouse.wheel(0, -120);
+    await page.keyboard.up("Control");
+    await expect(busy).toHaveCount(0);
+    await expect(shortcut).toHaveAttribute("data-keys", "Ctrl+WheelUp");
+    await expect.poll(north).toMatchObject({ keys: "Ctrl+WheelUp" });
+  } finally {
+    client?.close();
+    await cleanup(f, app);
+  }
+});
+
 test("native capture blocks mapping and blur releases only its owner without replaying held input", async () => {
   const f = await editorFixture();
   let app: ElectronApplication | undefined;
@@ -451,7 +532,10 @@ test("native capture blocks mapping and blur releases only its owner without rep
         async () => (await client?.call<StatusResult>("status.get"))?.capturing,
       )
       .toBe(true);
-    await page.getByRole("button", { name: "停止捕获", exact: true }).click();
+    // Esc held for a second cancels the capture, and lets go of its lease.
+    await page.keyboard.down("Escape");
+    await page.waitForTimeout(1200);
+    await page.keyboard.up("Escape");
     await expect
       .poll(
         async () => (await client?.call<StatusResult>("status.get"))?.capturing,
@@ -616,7 +700,7 @@ test("menus near the bottom of the drawer open inside the visible drawer", async
     await page.locator('.analog-cell[data-direction="up"]').click();
     const card = page.locator(".analog-card").first();
     await card.getByTestId("add-gesture").click();
-    const menu = page.getByRole("menu", { name: "添加手势" });
+    const menu = page.getByRole("menu", { name: "添加映射" });
     await expect(menu).toBeVisible();
     const body = await page.locator(".drawer-body").boundingBox();
     const items = await menu

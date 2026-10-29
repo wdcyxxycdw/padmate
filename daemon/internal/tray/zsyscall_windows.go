@@ -42,9 +42,12 @@ var (
 	moduser32  = windows.NewLazySystemDLL("user32.dll")
 
 	procShell_NotifyIconW        = modshell32.NewProc("Shell_NotifyIconW")
+	procAllowSetForegroundWindow = moduser32.NewProc("AllowSetForegroundWindow")
 	procFindWindowExW            = moduser32.NewProc("FindWindowExW")
+	procGetDoubleClickTime       = moduser32.NewProc("GetDoubleClickTime")
 	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
 	procPeekMessageW             = moduser32.NewProc("PeekMessageW")
+	procPostMessageW             = moduser32.NewProc("PostMessageW")
 	procPostThreadMessageW       = moduser32.NewProc("PostThreadMessageW")
 )
 
@@ -56,9 +59,23 @@ func shellNotifyIcon(message uint32, data *nativeNotification) (err error) {
 	return
 }
 
+func allowSetForegroundWindow(pid uint32) (err error) {
+	r1, _, e1 := syscall.SyscallN(procAllowSetForegroundWindow.Addr(), uintptr(pid))
+	if r1 == 0 {
+		err = errnoErr(e1)
+	}
+	return
+}
+
 func findWindowEx(parent windows.HWND, after windows.HWND, class *uint16, title *uint16) (window windows.HWND) {
 	r0, _, _ := syscall.SyscallN(procFindWindowExW.Addr(), uintptr(parent), uintptr(after), uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(title)))
 	window = windows.HWND(r0)
+	return
+}
+
+func getDoubleClickTime() (ms uint32) {
+	r0, _, _ := syscall.SyscallN(procGetDoubleClickTime.Addr())
+	ms = uint32(r0)
 	return
 }
 
@@ -74,6 +91,14 @@ func getWindowThreadProcessID(window windows.HWND, pid *uint32) (thread uint32, 
 func peekMessage(message *nativeMessage, window windows.HWND, minMessage uint32, maxMessage uint32, remove uint32) (found bool) {
 	r0, _, _ := syscall.SyscallN(procPeekMessageW.Addr(), uintptr(unsafe.Pointer(message)), uintptr(window), uintptr(minMessage), uintptr(maxMessage), uintptr(remove))
 	found = r0 != 0
+	return
+}
+
+func postMessage(window windows.HWND, message uint32, wParam uintptr, lParam uintptr) (err error) {
+	r1, _, e1 := syscall.SyscallN(procPostMessageW.Addr(), uintptr(window), uintptr(message), uintptr(wParam), uintptr(lParam))
+	if r1 == 0 {
+		err = errnoErr(e1)
+	}
 	return
 }
 

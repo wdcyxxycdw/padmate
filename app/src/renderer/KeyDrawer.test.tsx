@@ -137,7 +137,7 @@ function registration(
   };
 }
 
-it("shows the key, its label and the first gesture ready to edit", async () => {
+it("shows the key, its function and the first mapping ready to edit", async () => {
   const { onClose } = await setup();
   const aside = screen.getByRole("complementary", { name: "按键编辑" });
   expect(aside.dataset.testid).toBe("mapping-editor");
@@ -146,7 +146,7 @@ it("shows the key, its label and the first gesture ready to edit", async () => {
   expect(
     (
       screen.getByRole("textbox", {
-        name: "在手柄图上显示为",
+        name: "功能",
       }) as HTMLInputElement
     ).value,
   ).toBe("");
@@ -160,12 +160,12 @@ it("shows the key, its label and the first gesture ready to edit", async () => {
   expect(within(types).getByRole("radio", { name: "脚本" })).toBeDefined();
   // One app, one profile: the editor offers no profile switch.
   expect(within(types).queryByRole("radio", { name: "切换配置" })).toBeNull();
-  // Shortcut, script, precision and key hints (a press holds them); no switch.
+  // A shortcut or a script, and nothing else (ADR-0076); no switch.
   expect(
     within(types)
       .getAllByRole("radio")
       .map((radio) => radio.textContent),
-  ).toEqual(["快捷键", "输入文字", "脚本", "精确模式", "按键提示"]);
+  ).toEqual(["快捷键", "脚本"]);
   expect(shortcutValue()).toBe("F13");
   expect(screen.getByRole("button", { name: "录入快捷键" })).toBeDefined();
   expect(aside.textContent).not.toMatch(/层/);
@@ -225,7 +225,7 @@ it("renames the key from the title and removes an empty name", async () => {
 
 it("edits the label shown on the controller and drops it when emptied", async () => {
   const { editor } = await setup();
-  const label = screen.getByRole("textbox", { name: "在手柄图上显示为" });
+  const label = screen.getByRole("textbox", { name: "功能" });
   expect(label.getAttribute("placeholder")).toBe("F13");
   fireEvent.change(label, { target: { value: "画笔" } });
   expect(base(editor)?.north?.label).toBeUndefined();
@@ -237,40 +237,50 @@ it("edits the label shown on the controller and drops it when emptied", async ()
   });
 });
 
-it("adds a gesture from the menu as a draft and removes it again", async () => {
+it("adds a mapping from the menu as a draft and removes it again", async () => {
   const { editor, record } = await setup();
   fireEvent.click(screen.getByTestId("add-gesture"));
-  const menu = screen.getByRole("menu", { name: "添加手势" });
-  expect(within(menu).queryByRole("menuitem", { name: /^按下/ })).toBeNull();
+  const menu = screen.getByRole("menu", { name: "添加映射" });
+  expect(within(menu).queryByRole("menuitem", { name: /^点按/ })).toBeNull();
   fireEvent.click(within(menu).getByRole("menuitem", { name: /^长按/ }));
-  // The new gesture opens alone and is not in the draft until it is set.
+  // The new mapping opens alone and is not in the draft until it is set.
   expect(base(editor)?.north?.hold).toBeUndefined();
   expect(editor.getState().unsaved).toBe(false);
   expect(
-    screen.getByRole("button", { name: /^按下/ }).getAttribute("aria-expanded"),
+    screen.getByRole("button", { name: /^点按/ }).getAttribute("aria-expanded"),
   ).toBe("false");
   expect(
     screen.getByRole("button", { name: /^长按/ }).getAttribute("aria-expanded"),
   ).toBe("true");
   expect(shortcutValue()).toBe("");
   await record("Ctrl+H");
-  expect(base(editor)?.north?.hold).toEqual({ type: "keys", keys: "Ctrl+H" });
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
-  expect(base(editor)?.north?.hold).toBeUndefined();
-  expect(base(editor)?.north?.press).toEqual({ type: "keys", keys: "F13" });
+  // The 点按 becomes a tap with it, and its action stays (ADR-0076).
+  expect(base(editor)?.north).toEqual({
+    tap: { type: "keys", keys: "F13" },
+    hold: { type: "keys", keys: "Ctrl+H" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  expect(base(editor)?.north).toEqual({
+    press: { type: "keys", keys: "F13" },
+  });
 });
 
-it("offers a ready press gesture for an unset key without touching the draft", async () => {
+it("offers a ready empty 点按 for an unset key without touching the draft", async () => {
   const { editor, record } = await setup(paint, "west");
   expect(screen.getByRole("heading", { name: "X 键" })).toBeDefined();
   expect(
-    screen.getByRole("button", { name: /^按下/ }).getAttribute("aria-expanded"),
+    screen.getByRole("button", { name: /^点按/ }).getAttribute("aria-expanded"),
   ).toBe("true");
-  expect(screen.queryByRole("button", { name: "删除此手势" })).toBeNull();
   expect(base(editor)?.west).toBeUndefined();
+  expect(editor.getState().unsaved).toBe(false);
   await record("F9");
   expect(base(editor)?.west).toEqual({ press: { type: "keys", keys: "F9" } });
-  expect(screen.getByRole("button", { name: "删除此手势" })).toBeDefined();
+  // The last mapping goes for good: the key has none and sends nothing.
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  expect(base(editor)?.west).toBeUndefined();
+  expect(screen.queryByRole("group", { name: "快捷键" })).toBeNull();
+  expect(screen.queryByRole("button", { name: /^点按/ })).toBeNull();
+  expect(screen.getByTestId("add-gesture")).toBeDefined();
 });
 
 it("runs a script of the library: one pick, one save, one undo step", async () => {
@@ -323,7 +333,7 @@ it("runs a script of the library: one pick, one save, one undo step", async () =
   expect(
     (
       screen.getByRole("textbox", {
-        name: "在手柄图上显示为",
+        name: "功能",
       }) as HTMLInputElement
     ).placeholder,
   ).toBe("复制全部");
@@ -357,9 +367,7 @@ it("makes the drawer read-only when the profile starts in another key group", as
     screen.getByRole("button", { name: "录入快捷键" }).matches(":disabled"),
   ).toBe(true);
   expect(
-    screen
-      .getByRole("textbox", { name: "在手柄图上显示为" })
-      .matches(":disabled"),
+    screen.getByRole("textbox", { name: "功能" }).matches(":disabled"),
   ).toBe(true);
   expect(
     within(screen.getByTestId("action-type"))
@@ -374,7 +382,7 @@ it("makes the drawer read-only when the profile starts in another key group", as
       .disabled,
   ).toBe(true);
   // Cards still open and close so the settings can be read.
-  fireEvent.click(screen.getByRole("button", { name: /^按下/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^点按/ }));
   expect(screen.queryByRole("group", { name: "快捷键" })).toBeNull();
   expect(screen.getByRole("complementary").textContent).not.toMatch(/层/);
 });
@@ -400,7 +408,7 @@ it("shows layer actions from the file read-only and replaces them only after con
   expect(screen.getByText("切换按键组（在配置文件中设置）")).toBeDefined();
   expect(screen.queryByTestId("action-type")).toBeNull();
   // Removing it asks first: the editor cannot set it again.
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
   expect(screen.getByText(/^此按键的长按当前会切换按键组。/)).toBeDefined();
   expect(base(editor)?.leftshoulder?.hold?.type).toBe("layer");
   fireEvent.click(screen.getByRole("button", { name: "取消" }));
@@ -432,13 +440,14 @@ it("removes a layer action from the file only after confirming", async () => {
     "leftshoulder",
   );
   fireEvent.click(screen.getByRole("button", { name: /^长按/ }));
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
-  const dialog = screen.getByRole("dialog", { name: "删除此手势？" });
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  const dialog = screen.getByRole("dialog", { name: "删除此映射？" });
   expect(dialog.textContent).not.toMatch(/层/);
   expect(base(editor)?.leftshoulder?.hold?.type).toBe("layer");
   fireEvent.click(within(dialog).getByRole("button", { name: "删除" }));
+  // Without its 长按 the 点按 is a press again.
   expect(base(editor)?.leftshoulder).toEqual({
-    tap: { type: "keys", keys: "F13" },
+    press: { type: "keys", keys: "F13" },
   });
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(document.activeElement).toBe(screen.getByTestId("add-gesture"));
@@ -509,15 +518,13 @@ it("shows a profile switch from the file locked and replaces it only after confi
   expect(locked.textContent).toContain("切换到「Photo」（在配置文件中设置）");
   expect(locked.textContent).toContain("此动作无法在界面中修改，将原样保留。");
   expect(screen.queryByTestId("action-type")).toBeNull();
-  // The label suggestion describes the first gesture, as the chip does.
+  // The label suggestion describes the first mapping, as the chip does.
   expect(
-    screen
-      .getByRole("textbox", { name: "在手柄图上显示为" })
-      .getAttribute("placeholder"),
+    screen.getByRole("textbox", { name: "功能" }).getAttribute("placeholder"),
   ).toBe("F13");
   // Removing it asks first: the editor cannot set it again.
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
-  const remove = screen.getByRole("dialog", { name: "删除此手势？" });
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  const remove = screen.getByRole("dialog", { name: "删除此映射？" });
   expect(remove.textContent).toContain("此按键的长按当前会切换到「Photo」。");
   fireEvent.click(within(remove).getByRole("button", { name: "取消" }));
   expect(base(editor)?.leftshoulder?.hold).toEqual({
@@ -530,12 +537,12 @@ it("shows a profile switch from the file locked and replaces it only after confi
   expect(base(editor)?.leftshoulder?.hold?.type).toBe("profile");
   fireEvent.click(within(replace).getByRole("button", { name: "改用快捷键" }));
   expect(base(editor)?.leftshoulder?.hold).toEqual({ type: "keys", keys: "" });
-  // The new action offers shortcut, script, precision and key hints.
+  // The new action offers a shortcut or a script.
   expect(
     within(screen.getByTestId("action-type"))
       .getAllByRole("radio")
       .map((radio) => radio.textContent),
-  ).toEqual(["快捷键", "输入文字", "脚本", "精确模式", "按键提示"]);
+  ).toEqual(["快捷键", "脚本"]);
   expect(base(editor)?.rightshoulder).toEqual(
     switching.layers.base.rightshoulder,
   );
@@ -545,15 +552,15 @@ it("shows a profile switch from the file locked and replaces it only after confi
 it("removes a profile switch from the file only after confirming", async () => {
   const { editor } = await setup(switching, "rightshoulder");
   // A target the library does not list shows by its ID.
-  expect(screen.getByRole("button", { name: /^按下/ }).textContent).toContain(
+  expect(screen.getByRole("button", { name: /^点按/ }).textContent).toContain(
     "切换到「sketch」",
   );
   expect(screen.getByTestId("locked-action").textContent).toContain(
     "切换到「sketch」（在配置文件中设置）",
   );
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
-  const dialog = screen.getByRole("dialog", { name: "删除此手势？" });
-  expect(dialog.textContent).toContain("此按键的按下当前会切换到「sketch」。");
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  const dialog = screen.getByRole("dialog", { name: "删除此映射？" });
+  expect(dialog.textContent).toContain("此按键的点按当前会切换到「sketch」。");
   expect(dialog.textContent).not.toMatch(/层/);
   expect(base(editor)?.rightshoulder?.press?.type).toBe("profile");
   fireEvent.click(within(dialog).getByRole("button", { name: "删除" }));
@@ -622,7 +629,7 @@ it("explains that a setting here takes the place of a shared one", async () => {
     "界面未显示的设置",
   );
   expect(screen.getByTestId("drawer-common-notice").textContent).toContain(
-    "按下 F1",
+    "点按 F1",
   );
   await record("F2");
   expect(screen.queryByTestId("drawer-common-notice")).toBeNull();
@@ -733,7 +740,7 @@ it("shows what the script does with the key and when it competes with bindings",
     within(rows)
       .getAllByRole("listitem")
       .map((row) => row.textContent),
-  ).toEqual(["按下换笔刷接管", "长按临时橡皮可消费", "松开统计只读取"]);
+  ).toEqual(["点按换笔刷接管", "长按临时橡皮可消费", "松开统计只读取"]);
   expect(screen.getByText(/^此按键同时有绑定和脚本处理/)).toBeDefined();
   expect(screen.getByTestId("script-other-scopes").textContent).toContain(
     "1 处",
@@ -753,13 +760,16 @@ it("shows what the script does with the key and when it competes with bindings",
   expect(screen.queryByText(/此按键同时有绑定和脚本处理/)).toBeNull();
 });
 
-it("does not suggest a gesture for a key the script owns", async () => {
+it("does not suggest a mapping for a key the script owns", async () => {
   const { editor } = await setup(paint, "west");
   act(() => editor.setState({ registrations: [registration(1, "west")] }));
   expect(screen.getByTestId("script-ownership").textContent).toBe("S");
   expect(screen.getByText("此按键的输入先由脚本处理。")).toBeDefined();
   expect(screen.queryByRole("group", { name: "快捷键" })).toBeNull();
-  expect(screen.getByText("尚未设置手势。")).toBeDefined();
+  // Only 添加映射 is there, with no sentence about it.
+  expect(screen.queryByRole("button", { name: /^点按/ })).toBeNull();
+  expect(screen.getByTestId("add-gesture")).toBeDefined();
+  expect(document.querySelector(".drawer-empty")).toBeNull();
 });
 
 it("lists the validation results for this key in plain words", async () => {
@@ -804,13 +814,13 @@ it("lists the validation results for this key in plain words", async () => {
   );
   const items = screen.getAllByTestId("control-diagnostic");
   expect(items.map((item) => item.textContent)).toEqual([
-    '错误 · 按下：unknown key "NotAKey"',
+    '错误 · 点按：unknown key "NotAKey"',
     "警告 · 按键名称：name is long",
   ]);
   expect(items[1].dataset.severity).toBe("warning");
 });
 
-it("explains gesture waits in one sentence and tags the header", async () => {
+it("explains the waits of mappings in one sentence and tags the header", async () => {
   const { editor } = await setup(paint, "south");
   const tap = screen.getByRole("button", { name: /^点按/ });
   expect(tap.getAttribute("aria-expanded")).toBe("true");
@@ -901,7 +911,7 @@ it("sets the key's haptic under 高级 and takes the key out again for 无 (MAP-
   expect(base(editor)?.south?.latch).toBe(true);
 });
 
-it("shows a block from the file and offers gestures only after unblocking", async () => {
+it("shows a block from the file and offers mappings only after unblocking", async () => {
   const { editor, record } = await setup({
     ...paint,
     layers: { base: { north: { block: true } } },
@@ -1147,8 +1157,8 @@ it("offers no 自动 and no example label in the key and stick drawers (F7)", as
   expect(screen.queryByRole("button", { name: "自动" })).toBeNull();
   expect(screen.getByRole("group", { name: "快捷键" })).toBeDefined();
   rerender("east");
-  // A key without gestures has no example label to suggest.
-  const label = screen.getByRole("textbox", { name: "在手柄图上显示为" });
+  // A key without mappings has no example label to suggest.
+  const label = screen.getByRole("textbox", { name: "功能" });
   expect(label.getAttribute("placeholder")).toBeNull();
   rerender("leftstick");
   const drawerRoot = screen.getByRole("complementary");
@@ -1170,14 +1180,17 @@ it("saves a capture once, as one undo step, however many keys it saw", async () 
   }) as unknown as typeof api.onCapture;
   fireEvent.click(screen.getByRole("button", { name: "录入快捷键" }));
   await waitFor(() => expect(api.captureStart).toHaveBeenCalledOnce());
-  // Each key going down sends the chord so far.
-  for (const chord of ["Ctrl", "Ctrl+Shift", "Ctrl+Shift+Z"])
+  const press = (chord: string) =>
     act(() => {
       for (const listener of [...listeners])
         listener({ session: 1, active: true, chord });
     });
+  // Each modifier going down sends the chord so far.
+  press("Ctrl");
+  press("Ctrl+Shift");
   expect(api.putProfile).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "停止捕获" }));
+  // The first other key ends the capture, which is the one edit.
+  press("Ctrl+Shift+Z");
   await act(() => editor.getState().flush());
   expect(api.putProfile).toHaveBeenCalledOnce();
   expect(base(editor)?.north).toEqual({
@@ -1190,7 +1203,7 @@ it("saves a capture once, as one undo step, however many keys it saw", async () 
   expect(editor.getState().canUndo).toBe(false);
 });
 
-it("saves a wheel key picked from the 鼠标 menu once, as one undo step (ADR-0062)", async () => {
+it("saves a wheel key recorded once, as one undo step (ADR-0062, ADR-0076)", async () => {
   const { api, editor, record } = await setup();
   const sent = (call: number) =>
     (
@@ -1198,12 +1211,17 @@ it("saves a wheel key picked from the 鼠标 menu once, as one undo step (ADR-00
         (api.putProfile.mock.calls[call] as unknown[])[1] as string,
       ) as Profile
     ).layers.base.north?.press;
-  const pick = (item: string) => {
-    fireEvent.click(screen.getByRole("button", { name: "鼠标" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: item }));
+  // One notch of the wheel inside the window is the key, and ends the capture.
+  const turn = async (init: WheelEventInit) => {
+    const starts = api.captureStart.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "录入快捷键" }));
+    await waitFor(() =>
+      expect(api.captureStart).toHaveBeenCalledTimes(starts + 1),
+    );
+    fireEvent.wheel(document.body, init);
   };
   // A key that is not a modifier goes: only the wheel key is left.
-  pick("滚轮向上");
+  await turn({ deltaY: -100 });
   expect(base(editor)?.north).toEqual({
     press: { type: "keys", keys: "WheelUp" },
   });
@@ -1211,9 +1229,9 @@ it("saves a wheel key picked from the 鼠标 menu once, as one undo step (ADR-00
   await act(() => editor.getState().flush());
   expect(api.putProfile).toHaveBeenCalledOnce();
   expect(sent(0)).toEqual({ type: "keys", keys: "WheelUp" });
-  // The modifiers of a recorded chord stay; each pick is one undo step.
+  // The modifiers held are part of it; each recording is one undo step.
   await record("Ctrl+Z");
-  pick("滚轮向下");
+  await turn({ deltaY: 100, ctrlKey: true });
   expect(base(editor)?.north?.press).toMatchObject({ keys: "Ctrl+WheelDown" });
   act(() => {
     editor.getState().undo();
@@ -1238,55 +1256,6 @@ it("saves a wheel key picked from the 鼠标 menu once, as one undo step (ADR-00
     type: "keys",
     keys: "WheelUp",
   });
-});
-
-it("saves a mouse button and its repeat as clicks, and undoes each step (ADR-0062)", async () => {
-  const { api, editor } = await setup();
-  const sent = (call: number) =>
-    (
-      JSON.parse(
-        (api.putProfile.mock.calls[call] as unknown[])[1] as string,
-      ) as Profile
-    ).layers.base.north?.press;
-  const pick = (item: string) => {
-    fireEvent.click(screen.getByRole("button", { name: "鼠标" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: item }));
-  };
-  pick("右键");
-  expect(base(editor)?.north?.press).toEqual({
-    type: "keys",
-    keys: "MouseRight",
-  });
-  await act(() => editor.getState().flush());
-  expect(sent(0)).toEqual({ type: "keys", keys: "MouseRight" });
-  // A held button is never pressed again and again: the repeat is clicks,
-  // and the file says so, in one edit.
-  fireEvent.click(screen.getByRole("switch", { name: "连发" }));
-  expect(base(editor)?.north?.press).toEqual({
-    type: "keys",
-    keys: "MouseRight",
-    mode: "tap",
-    repeat: { style: "tap", delayMs: 350, rateHz: 12 },
-  });
-  await act(() => editor.getState().flush());
-  expect(sent(api.putProfile.mock.calls.length - 1)).toEqual({
-    type: "keys",
-    keys: "MouseRight",
-    mode: "tap",
-    repeat: { style: "tap", delayMs: 350, rateHz: 12 },
-  });
-  act(() => {
-    editor.getState().undo();
-  });
-  expect(base(editor)?.north?.press).toEqual({
-    type: "keys",
-    keys: "MouseRight",
-  });
-  act(() => {
-    editor.getState().undo();
-  });
-  expect(base(editor)?.north?.press).toEqual({ type: "keys", keys: "F13" });
-  expect(editor.getState().canUndo).toBe(false);
 });
 
 const triggers: Profile = {
@@ -1351,7 +1320,7 @@ it("lists the validation results of the second stage and the rings with their dr
   expect(
     screen.getAllByTestId("control-diagnostic").map((item) => item.textContent),
   ).toEqual([
-    "错误 · 按到底 按下：bad full",
+    "错误 · 按到底 点按：bad full",
     "错误 · 扳机设置：fullRelease must not exceed fullPress",
   ]);
   cleanup();
@@ -1359,40 +1328,7 @@ it("lists the validation results of the second stage and the rings with their dr
   act(() => stick.editor.setState({ diagnostics }));
   expect(
     screen.getAllByTestId("control-diagnostic").map((item) => item.textContent),
-  ).toEqual(["错误 · 重推 按下：bad ring", "错误 · 逆时针一格 点按：bad tick"]);
-});
-
-it("offers a rate that follows the push depth on a trigger's keys, and keeps it off other keys", async () => {
-  const { editor, rerender } = await setup(triggers, "lefttrigger");
-  // The first stage's own key, in the drawer's gesture list.
-  fireEvent.click(screen.getByRole("switch", { name: "连发" }));
-  expect(
-    screen
-      .getByRole("switch", { name: "推得越深越快" })
-      .getAttribute("aria-checked"),
-  ).toBe("false");
-  fireEvent.click(screen.getByRole("switch", { name: "推得越深越快" }));
-  expect(base(editor)?.lt?.press).toMatchObject({
-    repeat: { rateHz: 12, minRateHz: 3 },
-  });
-  // The second stage's key, in the panel, has it too.
-  fireEvent.click(
-    document.querySelector('.analog-row[data-control="lt.full"]') as Element,
-  );
-  const card = screen.getByRole("region", { name: "按到底" });
-  expect(
-    within(card)
-      .getByRole("switch", { name: "推得越深越快" })
-      .getAttribute("aria-checked"),
-  ).toBe("true");
-  expect(
-    within(card).getByRole("textbox", { name: "最慢（每秒）" }),
-  ).toBeDefined();
-  // A button has no depth.
-  rerender("north");
-  fireEvent.click(screen.getByRole("switch", { name: "连发" }));
-  expect(screen.queryByRole("switch", { name: "推得越深越快" })).toBeNull();
-  expect(screen.getByRole("textbox", { name: "每秒次数" })).toBeDefined();
+  ).toEqual(["错误 · 重推 点按：bad ring", "错误 · 逆时针一格 点按：bad tick"]);
 });
 
 it("takes the rate that follows the push depth out of a key pasted onto a key without depth", async () => {

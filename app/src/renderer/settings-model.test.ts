@@ -4,6 +4,7 @@ import {
   batteryTags,
   ComboRecorder,
   comboProblem,
+  configuredFunctionKey,
   deviceCombo,
   FEEDBACK_SWITCHES,
   feedbackSwitchOn,
@@ -12,6 +13,7 @@ import {
   isPanicFamily,
   parseMs,
   setFeedbackSwitch,
+  setFunctionKey,
   setGlobalTiming,
   setPanicCombo,
   startupDryRun,
@@ -122,6 +124,76 @@ describe("emergency combos (UI-19)", () => {
     recorder.update(["north"]);
     expect(recorder.update([])).toBe(true);
     expect(recorder.recorded).toEqual(["north"]);
+  });
+});
+
+describe("the function key of config.json (UI-30, ADR-0075)", () => {
+  it("is Menu unless the file says View or the Xbox button", () => {
+    expect(configuredFunctionKey(null)).toBe("start");
+    expect(configuredFunctionKey({ schemaVersion: 0 })).toBe("start");
+    for (const key of ["start", "back", "guide"] as const)
+      expect(
+        configuredFunctionKey({ schemaVersion: 0, functionKey: key }),
+      ).toBe(key);
+    // Anything else reads as Menu, as the daemon reads a repaired file.
+    for (const value of ["select", "Menu", "", 1, null, ["back"]])
+      expect(
+        configuredFunctionKey({
+          schemaVersion: 0,
+          functionKey: value as never,
+        }),
+        String(value),
+      ).toBe("start");
+  });
+
+  it("sets the member, keeping the others in their order", () => {
+    const config: Config = {
+      schemaVersion: 0,
+      timing: { holdMs: 300 },
+      rules: [],
+    };
+    const next = setFunctionKey(config, "guide");
+    expect(next).toEqual({ ...config, functionKey: "guide" });
+    expect(Object.keys(next ?? {})).toEqual([
+      "schemaVersion",
+      "timing",
+      "rules",
+      "functionKey",
+    ]);
+    // Changing it keeps the member where it is.
+    const placed: Config = {
+      schemaVersion: 0,
+      functionKey: "guide",
+      rules: [],
+    };
+    expect(Object.keys(setFunctionKey(placed, "back") ?? {})).toEqual([
+      "schemaVersion",
+      "functionKey",
+      "rules",
+    ]);
+    expect(setFunctionKey(placed, "back")?.functionKey).toBe("back");
+    // The config it was given is not changed.
+    expect(config).not.toHaveProperty("functionKey");
+  });
+
+  it("removes the member for Menu, which the file leaves unsaid", () => {
+    expect(
+      setFunctionKey(
+        { schemaVersion: 0, functionKey: "back", rules: [] },
+        "start",
+      ),
+    ).toEqual({ schemaVersion: 0, rules: [] });
+    // A value that is not a key is Menu too, and goes.
+    expect(
+      setFunctionKey({ schemaVersion: 0, functionKey: "x" as never }, "start"),
+    ).toEqual({ schemaVersion: 0 });
+  });
+
+  it("writes nothing when the file already says it", () => {
+    expect(setFunctionKey({ schemaVersion: 0 }, "start")).toBeNull();
+    expect(
+      setFunctionKey({ schemaVersion: 0, functionKey: "back" }, "back"),
+    ).toBeNull();
   });
 });
 

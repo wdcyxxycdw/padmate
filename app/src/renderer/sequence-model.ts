@@ -1,6 +1,6 @@
-// The steps of a sequence and the text a binding types (MAP-22, OUT-21,
-// UI-31, ADR-0070): what the step editor shows, how its edits become an
-// action, and the rules for a text. Pure.
+// The steps of a sequence (MAP-22, UI-31, ADR-0070): what the step editor
+// shows and how its edits become an action. Pure. The drawer offers a
+// shortcut and a wait (ADR-0076); a text step of a file is still told apart.
 import type {
   ProfileAction,
   ProfileKeysAction,
@@ -14,10 +14,11 @@ export const maxSteps = 64;
 export const waitRange = { min: 1, max: 10000 } as const;
 /** What a new wait step waits, in milliseconds. */
 export const defaultWaitMs = 100;
-/** The most UTF-16 code units a text has; a character outside the BMP is two. */
-export const maxTextUnits = 256;
 
+/** The kinds of a step; a text step only a file has (ADR-0076). */
 export type StepKind = "keys" | "wait" | "text";
+/** The steps a sequence can be given in the drawer. */
+export type NewStepKind = Exclude<StepKind, "text">;
 export type Step = ProfileSequenceStep;
 
 /** What a step does: tap a shortcut, wait, or type a text. */
@@ -43,15 +44,20 @@ export function isEmptyStep(step: Step): boolean {
 }
 
 /** A step of a kind, ready to be filled in. */
-export function newStep(kind: StepKind): Step {
-  switch (kind) {
-    case "keys":
-      return { keys: "" };
-    case "wait":
-      return { wait: defaultWaitMs };
-    case "text":
-      return { text: "" };
-  }
+export function newStep(kind: NewStepKind): Step {
+  return kind === "keys" ? { keys: "" } : { wait: defaultWaitMs };
+}
+
+/**
+ * Whether an action is a sequence with a text step. The drawer cannot edit
+ * one (ADR-0076): it keeps working from the file, and the drawer shows it as
+ * an action of no type until a shortcut or a script replaces it.
+ */
+export function hasTextStep(action: ProfileAction | undefined): boolean {
+  return (
+    action?.type === "sequence" &&
+    action.steps.some((step) => stepKind(step) === "text")
+  );
 }
 
 /**
@@ -101,45 +107,4 @@ export function movedStep(steps: Step[], index: number, delta: -1 | 1): Step[] {
   const next = [...steps];
   [next[index], next[to]] = [next[to], next[index]];
   return next;
-}
-
-/** The number of UTF-16 code units of a text, which is what the limit counts. */
-export function textUnits(text: string): number {
-  return text.length;
-}
-
-/** What is wrong with a text, if anything; empty is not (it is not saved yet). */
-export type TextProblem = "long" | "control";
-
-// The C0 and C1 control characters and DEL, except the newline and the tab:
-// the rule of the daemon's keys.ValidateText.
-function hasRefusedControl(text: string): boolean {
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    if (code === 0x09 || code === 0x0a) continue;
-    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return true;
-  }
-  return false;
-}
-
-/** Why a text cannot be typed, or null. */
-export function textProblem(text: string): TextProblem | null {
-  if (hasRefusedControl(text)) return "control";
-  if (textUnits(text) > maxTextUnits) return "long";
-  return null;
-}
-
-/** The message under a text field for a problem. */
-export function textProblemText(
-  problem: TextProblem,
-  language: string | undefined,
-): string {
-  const en = language === "en";
-  return problem === "control"
-    ? en
-      ? "No control characters except a newline and a tab"
-      : "不能含有换行和制表符以外的控制字符"
-    : en
-      ? `At most ${maxTextUnits} characters; an emoji counts as two`
-      : `最多 ${maxTextUnits} 个字符，表情符号占两个`;
 }

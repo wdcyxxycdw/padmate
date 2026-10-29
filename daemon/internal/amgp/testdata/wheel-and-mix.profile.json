@@ -95,6 +95,12 @@
           "type": "keys",
           "keys": "WheelDown"
         }
+      },
+      "back": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl"
+        }
       }
     }
   }

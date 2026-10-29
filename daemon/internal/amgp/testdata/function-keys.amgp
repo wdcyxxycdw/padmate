@@ -77,20 +77,6 @@
         </set>
         <set index="4">
             <name>Bumper set</name>
-            <button index="5">
-                <setselect>3</setselect>
-                <setselectcondition>while-held</setselectcondition>
-            </button>
-            <button index="7">
-                <setselect>2</setselect>
-                <setselectcondition>one-way</setselectcondition>
-                <slots>
-                    <slot>
-                        <code>0x43</code>
-                        <mode>keyboard</mode>
-                    </slot>
-                </slots>
-            </button>
             <button index="2">
                 <slots>
                     <slot>

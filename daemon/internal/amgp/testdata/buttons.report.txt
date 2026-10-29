@@ -1,4 +1,3 @@
 信息  这份配置是为“Xbox 360 Controller”做的
-丢弃  set 1 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
-丢弃  set 1 / start：Menu（Start） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
 丢弃  set 1 / rightstick / slot 2：同时按住的键里只能有一个不是修饰键：保留了 W，丢弃了 A
+信息  start：Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View 或 Xbox 键

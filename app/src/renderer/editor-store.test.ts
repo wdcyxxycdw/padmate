@@ -965,17 +965,34 @@ describe("the profile format version", () => {
   });
 });
 
-// The mapping page shows the usual bindings or the set of a function key
-// (UI-30, ADR-0069); which one is view state, not part of the profile.
-describe("the shown key set (function keys)", () => {
-  const withOld: Profile = {
+// The mapping page shows the usual bindings or the function set (UI-30,
+// ADR-0075); which one is view state, not part of the profile.
+describe("the shown key set (function key)", () => {
+  const key = (value: string) =>
+    ({ type: "keys", keys: value, mode: "tap" }) as const;
+  // Under the default function key (Menu), back is an ordinary control.
+  const withBack: Profile = {
     schemaVersion: 1,
     name: "p",
     layers: {
       base: {
-        south: { press: { type: "keys", keys: "Ctrl+Z", mode: "tap" } },
-        back: { press: { type: "keys", keys: "Ctrl+V", mode: "tap" } },
+        south: { press: key("Ctrl+Z") },
+        back: { press: key("Ctrl+V") },
+        start: { press: key("Ctrl+S") },
       },
+    },
+  };
+  // The old format: View's set and Menu's, which stand for one set.
+  const old: Profile = {
+    schemaVersion: 1,
+    name: "p",
+    layers: { base: { south: { press: key("Ctrl+Z") } } },
+    functionKeys: {
+      back: {
+        east: { press: key("F14") },
+        north: { press: key("F15") },
+      },
+      start: { north: { press: key("F13") } },
     },
   };
 
@@ -983,8 +1000,8 @@ describe("the shown key set (function keys)", () => {
     const { store } = setup();
     await store.getState().activate(context);
     expect(store.getState().view).toBe("normal");
-    store.getState().setView("back");
-    expect(store.getState().view).toBe("back");
+    store.getState().setView("function");
+    expect(store.getState().view).toBe("function");
     // Not part of the profile: nothing to save, nothing to undo.
     expect(store.getState().unsaved).toBe(false);
     expect(store.getState().canUndo).toBe(false);
@@ -993,7 +1010,7 @@ describe("the shown key set (function keys)", () => {
   it("goes back to the usual bindings when another profile is shown", async () => {
     const { store } = setup();
     await store.getState().activate(context);
-    store.getState().setView("start");
+    store.getState().setView("function");
     await store.getState().activate({ ...context, id: "other" });
     expect(store.getState().view).toBe("normal");
   });
@@ -1001,81 +1018,132 @@ describe("the shown key set (function keys)", () => {
   it("stays when the same profile is read again or the pad changes", async () => {
     const { store } = setup();
     await store.getState().activate(context);
-    store.getState().setView("start");
+    store.getState().setView("function");
     await store.getState().reload();
-    expect(store.getState().view).toBe("start");
+    expect(store.getState().view).toBe("function");
     await store.getState().activate({ ...context, device: "d2" });
-    expect(store.getState().view).toBe("start");
+    expect(store.getState().view).toBe("function");
   });
 
   it("goes back to the usual bindings when the profile is read on a new connection", async () => {
     const { store } = setup();
     await store.getState().activate(context);
-    store.getState().setView("back");
+    store.getState().setView("function");
     await store.getState().activate({ ...context, connection: "c2" });
     expect(store.getState().view).toBe("normal");
   });
 
-  it("does not save a file only because it was opened with old bindings on back", async () => {
+  it("is Menu as the function key until the settings choose another", async () => {
+    const { store } = setup();
+    expect(store.getState().functionKey).toBe("start");
+    store.getState().setFunctionKey("guide");
+    expect(store.getState().functionKey).toBe("guide");
+    store.getState().setFunctionKey("back");
+    expect(store.getState().functionKey).toBe("back");
+    // The profile is not part of it: nothing to save.
+    await store.getState().activate(context);
+    store.getState().setFunctionKey("start");
+    expect(store.getState().unsaved).toBe(false);
+    expect(store.getState().canUndo).toBe(false);
+  });
+
+  it("counts what a layer binds on the function key as nothing, whichever key it is", async () => {
+    const { store, writeElsewhere } = setup();
+    writeElsewhere("paint", {
+      ...withBack,
+      layers: { base: withBack.layers.base },
+      common: { back: { block: true } },
+    });
+    await store.getState().activate(context);
+    // Menu is the function key: View's block in common is an ordinary one.
+    expect(store.getState().usage?.blocks).toBe(1);
+    expect(store.getState().usage?.commonBindings).toBe(1);
+    // With View chosen, the daemon ignores it, and the page follows.
+    store.getState().setFunctionKey("back");
+    expect(store.getState().usage?.blocks).toBe(0);
+    expect(store.getState().usage?.commonBindings).toBe(0);
+    store.getState().setFunctionKey("start");
+    expect(store.getState().usage?.blocks).toBe(1);
+  });
+
+  it("keeps the bindings on back and start in the file through a save", async () => {
+    const { api, store, writeElsewhere, onDisk } = setup();
+    writeElsewhere("paint", withBack);
+    await store.getState().activate(context);
+    store.getState().edit(named(store, "changed"));
+    expect(await store.getState().flush()).toBe(true);
+    expect(api.putProfile).toHaveBeenCalledOnce();
+    expect(onDisk().layers.base).toEqual(withBack.layers.base);
+    expect(onDisk().name).toBe("changed");
+    expect(store.getState().unsaved).toBe(false);
+  });
+
+  it("does not save a file only because it was opened with the old functionKeys", async () => {
     const { api, store, writeElsewhere } = setup();
-    writeElsewhere("paint", withOld);
+    writeElsewhere("paint", old);
     await store.getState().activate(context);
     await settled();
     expect(store.getState().unsaved).toBe(false);
     expect(api.putProfile).not.toHaveBeenCalled();
   });
 
-  it("drops the old bindings of back and start with the next save", async () => {
+  it("saves the old functionKeys as the one functionSet they stand for, with the next save", async () => {
     const { api, store, writeElsewhere, onDisk } = setup();
-    writeElsewhere("paint", withOld);
+    writeElsewhere("paint", old);
     await store.getState().activate(context);
+    // The page reads them as the set already.
+    expect(draft(store).functionSet).toEqual({
+      north: { press: key("F13") },
+      east: { press: key("F14") },
+    });
     store.getState().edit(named(store, "changed"));
     expect(await store.getState().flush()).toBe(true);
     expect(api.putProfile).toHaveBeenCalledOnce();
-    expect(onDisk().layers.base).toEqual({ south: withOld.layers.base.south });
-    expect(onDisk().name).toBe("changed");
+    expect(onDisk().functionSet).toEqual({
+      north: { press: key("F13") },
+      east: { press: key("F14") },
+    });
+    expect(onDisk()).not.toHaveProperty("functionKeys");
     expect(store.getState().unsaved).toBe(false);
   });
 
-  it("keeps the warning about them until a save drops them", async () => {
+  it("saves a binding of the set under functionSet", async () => {
+    const { store, onDisk } = setup();
+    await store.getState().activate(context);
+    const next = swapView(draft(store), "function");
+    const edited = setBinding(next, "base", "south", {
+      press: key("Ctrl+Shift+Z"),
+    });
+    store.getState().edit(swapView(edited, "function"));
+    expect(await store.getState().flush()).toBe(true);
+    expect(onDisk().functionSet).toEqual({
+      south: { press: key("Ctrl+Shift+Z") },
+    });
+    expect(onDisk().layers.base).toEqual({});
+  });
+
+  it("keeps the warning the daemon gives about a file until a save writes another", async () => {
     const { api, store, writeElsewhere } = setup();
-    writeElsewhere("paint", withOld);
+    writeElsewhere("paint", old);
     const warning = {
       severity: "warning" as const,
-      pointer: "/layers/base/back",
+      pointer: "/functionKeys",
       offset: 0,
       line: 1,
       col: 1,
-      message: "back is a function key (ADR-0069): this binding has no effect",
+      message: "functionKeys is ignored because functionSet is also written",
     };
     api.getProfile.mockImplementationOnce(async (id: string) => ({
       id,
-      text: JSON.stringify(withOld),
+      text: JSON.stringify(old),
       revision: "r2",
       diagnostics: [warning],
     }));
     await store.getState().activate(context);
     expect(store.getState().diagnostics).toEqual([warning]);
-    // The saved text has no such binding, so the daemon has no such warning.
+    // The saved text has no functionKeys, so the daemon has no such warning.
     store.getState().edit(named(store, "changed"));
     expect(await store.getState().flush()).toBe(true);
     expect(store.getState().diagnostics).toEqual([]);
-  });
-
-  it("saves a binding of a set under functionKeys", async () => {
-    const { store, onDisk } = setup();
-    await store.getState().activate(context);
-    const next = swapView(draft(store), "back");
-    const edited = setBinding(next, "base", "south", {
-      press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" },
-    });
-    store.getState().edit(swapView(edited, "back"));
-    expect(await store.getState().flush()).toBe(true);
-    expect(onDisk().functionKeys).toEqual({
-      back: {
-        south: { press: { type: "keys", keys: "Ctrl+Shift+Z", mode: "tap" } },
-      },
-    });
-    expect(onDisk().layers.base).toEqual({});
   });
 });

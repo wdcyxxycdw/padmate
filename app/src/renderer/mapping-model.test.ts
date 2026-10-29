@@ -86,12 +86,30 @@ describe("what each prompt of the wizard shows", () => {
       arms: ["left"],
     });
     expect(stepInfo("lt", "en").icon).toEqual({ kind: "badge", text: "LT" });
+    // The middle buttons carry the symbol printed on them (ADR-0077).
     expect(stepInfo("view", "zh-CN")).toMatchObject({
       name: "View（返回键）",
-      icon: { kind: "badge", text: "View" },
+      icon: { kind: "glyph", glyph: "view" },
+    });
+    expect(stepInfo("menu", "en").icon).toEqual({
+      kind: "glyph",
+      glyph: "menu",
+    });
+    expect(stepInfo("home", "en").icon).toEqual({
+      kind: "glyph",
+      glyph: "home",
     });
     // Home may be missing: it can be skipped.
     expect(stepInfo("home", "zh-CN").hint).toContain("跳过");
+  });
+
+  it("says that View and Menu are for the emergency pause, and does not call them the function key (ADR-0075: the function key is one of three, chosen in Settings)", () => {
+    for (const id of ["view", "menu"]) {
+      expect(stepInfo(id, "zh-CN").hint).toContain("用于紧急暂停");
+      expect(stepInfo(id, "zh-CN").hint).not.toContain("功能键");
+      expect(stepInfo(id, "en").hint).toContain("emergency pause");
+      expect(stepInfo(id, "en").hint).not.toMatch(/function key/i);
+    }
   });
 });
 
@@ -197,17 +215,17 @@ describe("what to tell after a mapping is saved", () => {
       "zh-CN",
     );
     expect(both).toEqual([
-      "没有映射 View 和 Menu。它们是功能键，也是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
+      "没有映射 View 和 Menu。它们是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
     ]);
     expect(
       mappingNotices(result({ warnings: [{ code: "noStart" }] }), "zh-CN"),
     ).toEqual([
-      "没有映射 Menu。它是功能键，也是紧急暂停的按键，缺了它这只手柄无法用紧急暂停。",
+      "没有映射 Menu。它是紧急暂停的按键，缺了它这只手柄无法用紧急暂停。",
     ]);
     expect(
       mappingNotices(result({ warnings: [{ code: "noBack" }] }), "en"),
     ).toEqual([
-      "View is not mapped. It is a function key and part of the emergency pause, so without it this controller cannot use the emergency pause.",
+      "View is not mapped. It is a button of the emergency pause, so without it this controller cannot use it.",
     ]);
     expect(
       mappingNotices(
@@ -215,7 +233,7 @@ describe("what to tell after a mapping is saved", () => {
         "en",
       ),
     ).toEqual([
-      "View and Menu are not mapped. They are function keys and the emergency pause, so without them this controller cannot use the emergency pause.",
+      "View and Menu are not mapped. They are the buttons of the emergency pause, so without them this controller cannot use it.",
     ]);
   });
 

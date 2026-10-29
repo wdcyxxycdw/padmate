@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "功能键",
+  "layers": {"base": {"south": {"press": {"type": "keys", "keys": "A"}}}},
+  "functionSet": {
+    "color": "#FF0000",
+    "southh": {},
+    "menu": {},
+    "bak": {},
+    "west": []
+  }
+}

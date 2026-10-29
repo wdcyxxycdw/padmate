@@ -88,6 +88,18 @@
           "keys": "LCtrl+LWin+O"
         }
       },
+      "back": {
+        "press": {
+          "type": "keys",
+          "keys": "LWin+G"
+        }
+      },
+      "start": {
+        "press": {
+          "type": "keys",
+          "keys": "Esc"
+        }
+      },
       "guide": {
         "release": {
           "type": "layer",

@@ -146,7 +146,7 @@ export function nextScriptName(macros: MacroInfo[], language: Language) {
 
 /**
  * How many actions of a profile.json text run a legacy script action, in the
- * layers, common and the sets of the function keys.
+ * layers, common and the function set (or the old functionKeys).
  */
 export function scriptActionCount(text: string): number {
   let profile: unknown;
@@ -169,7 +169,8 @@ export function scriptActionCount(text: string): number {
   const root = profile as Record<string, unknown> | null;
   visit(root?.layers);
   visit(root?.common);
-  visit(root?.functionKeys);
+  // The daemon ignores functionKeys when functionSet is there (ADR-0075).
+  visit(root?.functionSet ?? root?.functionKeys);
   return count;
 }
 

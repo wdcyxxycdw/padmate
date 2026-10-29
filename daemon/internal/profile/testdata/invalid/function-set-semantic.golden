@@ -1,0 +1,10 @@
+1:1: error: block cannot have an action (/functionSet/north)
+	> {
+1:1: error: unknown layer "nonesuch" (/functionSet/east/press/layer)
+	> {
+9:5: error: "south" is already bound as "a" at 8:5 ("a" is an alias of "south") (/functionSet/south)
+	> "south": {"press": {"type": "keys", "key…
+10:49: error: unknown key "Shfit"; did you mean Shift? (/functionSet/start/hold/keys)
+	> Shfit"}},
+11:59: error: tap runs after the control is released: use mode "tap" (/functionSet/back/tap/mode)
+	> "hold"}}

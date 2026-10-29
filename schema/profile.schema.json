@@ -104,10 +104,16 @@
       "x-go-field": "Layers"
     },
     "functionKeys": {
-      "description": "Bindings that apply while a function key is held: back (View, Create, Share, Minus) or start (Menu, Options, Plus). A control that the held key's set does not bind keeps its normal binding. Optional; the function keys themselves cannot be bound.",
+      "description": "The old format of the function key bindings (ADR-0069), still valid: the sets of back (View, Create, Share, Minus) and start (Menu, Options, Plus). Without functionSet, the set used is start's, plus back's for the controls start's does not bind. Optional; write functionSet instead. The sets cannot bind back or start.",
       "$ref": "#/$defs/functionKeys",
       "x-go-type": "*wireFunctionKeys",
       "x-go-field": "FunctionKeys"
+    },
+    "functionSet": {
+      "description": "Bindings that apply while the function key is held (ADR-0075, MAP-27). The function key is one for every profile, chosen in config.json (functionKey: start by default, back or guide). A control that the set does not bind keeps its normal binding. Optional. When both functionSet and functionKeys are written, functionKeys is ignored.",
+      "$ref": "#/$defs/functionBindings",
+      "x-go-type": "*wireLayer",
+      "x-go-field": "FunctionSet"
     }
   },
   "$defs": {
@@ -517,15 +523,15 @@
           "$ref": "#/$defs/binding"
         },
         "back": {
-          "description": "Left center button: View or Back (Xbox), Create, Share or Select (PlayStation), Minus (Nintendo). It is a function key in every profile (ADR-0069): a binding here is ignored, with a warning. Bind the other controls in functionKeys.back instead.",
+          "description": "Left center button: View or Back (Xbox), Create, Share or Select (PlayStation), Minus (Nintendo). Ignored while it is the function key (config.json functionKey, ADR-0075): then it sends nothing and cannot be bound.",
           "$ref": "#/$defs/binding"
         },
         "guide": {
-          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Windows or Steam may also react to it.",
+          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Windows or Steam may also react to it. Ignored while it is the function key (config.json functionKey, ADR-0075).",
           "$ref": "#/$defs/binding"
         },
         "start": {
-          "description": "Right center button: Menu or Start (Xbox), Options or Start (PlayStation), Plus (Nintendo). It is a function key in every profile (ADR-0069): a binding here is ignored, with a warning. Bind the other controls in functionKeys.start instead.",
+          "description": "Right center button: Menu or Start (Xbox), Options or Start (PlayStation), Plus (Nintendo). Ignored while it is the function key (config.json functionKey, ADR-0075), which it is by default: then it sends nothing and cannot be bound.",
           "$ref": "#/$defs/binding"
         },
         "leftstick": {
@@ -821,7 +827,7 @@
           "$ref": "#/$defs/binding"
         },
         "select": {
-          "description": "Alias of back, a function key: a binding here is ignored, with a warning.",
+          "description": "Alias of back.",
           "$ref": "#/$defs/binding"
         }
       },
@@ -830,7 +836,7 @@
     },
     "functionKeys": {
       "title": "Function keys",
-      "description": "The two function keys, View (back) and Menu (start). They are function keys in every profile (ADR-0069, MAP-27): they send no keys and cannot be bound in a layer. While one is held, the other controls look up their binding in that key's set first. Each set is written like a layer.",
+      "description": "The old format of the function key bindings (ADR-0069): the sets of View (back) and Menu (start). Still valid; functionSet (ADR-0075) replaces it. Each set is written like a layer.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -1165,6 +1171,340 @@
         },
         "r3": {
           "description": "Alias of rightstick.",
+          "$ref": "#/$defs/binding"
+        }
+      },
+      "x-go-name": "wireLayer",
+      "x-go-layer": true
+    },
+    "functionBindings": {
+      "title": "Function set",
+      "description": "Bindings used while the function key is held (ADR-0075, MAP-27), keyed by control and written like a layer without a color: the same bindings, gestures and actions. A control the set does not bind keeps its normal binding. Any control can be bound here, back, start and guide too, except the function key itself (config.json functionKey, start by default): a binding on it is ignored. Bind each control only once.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "south": {
+          "description": "Bottom face button: A (Xbox), Cross (PlayStation), B (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "east": {
+          "description": "Right face button: B (Xbox), Circle (PlayStation), A (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "west": {
+          "description": "Left face button: X (Xbox), Square (PlayStation), Y (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "north": {
+          "description": "Top face button: Y (Xbox), Triangle (PlayStation), X (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "back": {
+          "description": "Left center button: View or Back (Xbox), Create, Share or Select (PlayStation), Minus (Nintendo). Bindable here, except while it is the function key (config.json functionKey, ADR-0075): then the binding is ignored.",
+          "$ref": "#/$defs/binding"
+        },
+        "guide": {
+          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Bindable here, except while it is the function key (config.json functionKey, ADR-0075): then the binding is ignored. Windows or Steam may also react to it.",
+          "$ref": "#/$defs/binding"
+        },
+        "start": {
+          "description": "Right center button: Menu or Start (Xbox), Options or Start (PlayStation), Plus (Nintendo). Bindable here, except while it is the function key (config.json functionKey, ADR-0075; it is by default): then the binding is ignored.",
+          "$ref": "#/$defs/binding"
+        },
+        "leftstick": {
+          "description": "Left stick click: LS (Xbox), L3 (PlayStation).",
+          "$ref": "#/$defs/binding"
+        },
+        "rightstick": {
+          "description": "Right stick click: RS (Xbox), R3 (PlayStation).",
+          "$ref": "#/$defs/binding"
+        },
+        "leftshoulder": {
+          "description": "Left shoulder button: LB (Xbox), L1 (PlayStation), L (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "rightshoulder": {
+          "description": "Right shoulder button: RB (Xbox), R1 (PlayStation), R (Nintendo).",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.up": {
+          "description": "D-pad up.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.down": {
+          "description": "D-pad down.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.left": {
+          "description": "D-pad left.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.right": {
+          "description": "D-pad right.",
+          "$ref": "#/$defs/binding"
+        },
+        "misc1": {
+          "description": "Extra button: Share (Xbox Series), Microphone (PlayStation 5), Capture (Nintendo Switch Pro).",
+          "$ref": "#/$defs/binding"
+        },
+        "misc2": {
+          "description": "Extra button 2, on pads that have one. Which button it is depends on the pad; padmatectl monitor shows the name.",
+          "$ref": "#/$defs/binding"
+        },
+        "misc3": {
+          "description": "Extra button 3, on pads that have one, such as the GameCube left trigger click.",
+          "$ref": "#/$defs/binding"
+        },
+        "misc4": {
+          "description": "Extra button 4, on pads that have one, such as the GameCube right trigger click.",
+          "$ref": "#/$defs/binding"
+        },
+        "misc5": {
+          "description": "Extra button 5, on pads that have one. Which button it is depends on the pad; padmatectl monitor shows the name.",
+          "$ref": "#/$defs/binding"
+        },
+        "misc6": {
+          "description": "Extra button 6, on pads that have one. Which button it is depends on the pad; padmatectl monitor shows the name.",
+          "$ref": "#/$defs/binding"
+        },
+        "paddle1": {
+          "description": "Upper back paddle under the right hand: P1 (Xbox Elite), right back button (DualSense Edge).",
+          "$ref": "#/$defs/binding"
+        },
+        "paddle2": {
+          "description": "Upper back paddle under the left hand: P3 (Xbox Elite), left back button (DualSense Edge).",
+          "$ref": "#/$defs/binding"
+        },
+        "paddle3": {
+          "description": "Lower back paddle under the right hand: P2 (Xbox Elite), right Fn button (DualSense Edge).",
+          "$ref": "#/$defs/binding"
+        },
+        "paddle4": {
+          "description": "Lower back paddle under the left hand: P4 (Xbox Elite), left Fn button (DualSense Edge).",
+          "$ref": "#/$defs/binding"
+        },
+        "touchpad": {
+          "description": "Touchpad click (PlayStation).",
+          "$ref": "#/$defs/binding"
+        },
+        "lt": {
+          "description": "Left trigger as a button: LT (Xbox), L2 (PlayStation), ZL (Nintendo). It goes down at 30% of its travel and up again below 20%.",
+          "$ref": "#/$defs/binding"
+        },
+        "rt": {
+          "description": "Right trigger as a button: RT (Xbox), R2 (PlayStation), ZR (Nintendo). It goes down at 30% of its travel and up again below 20%.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.up": {
+          "description": "Left stick up direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.down": {
+          "description": "Left stick down direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.left": {
+          "description": "Left stick left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.right": {
+          "description": "Left stick right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.upleft": {
+          "description": "Left stick up-left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.upright": {
+          "description": "Left stick up-right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.downleft": {
+          "description": "Left stick down-left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.downright": {
+          "description": "Left stick down-right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.active": {
+          "description": "Left stick pushed beyond its active threshold.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.up": {
+          "description": "Right stick up direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.down": {
+          "description": "Right stick down direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.left": {
+          "description": "Right stick left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.right": {
+          "description": "Right stick right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.upleft": {
+          "description": "Right stick up-left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.upright": {
+          "description": "Right stick up-right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.downleft": {
+          "description": "Right stick down-left direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.downright": {
+          "description": "Right stick down-right direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.active": {
+          "description": "Right stick pushed beyond its active threshold.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.upleft": {
+          "description": "D-pad up-left virtual direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.upright": {
+          "description": "D-pad up-right virtual direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.downleft": {
+          "description": "D-pad down-left virtual direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "dpad.downright": {
+          "description": "D-pad down-right virtual direction.",
+          "$ref": "#/$defs/binding"
+        },
+        "leftx+": {
+          "description": "Positive left-x half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "leftx-": {
+          "description": "Negative left-x half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "lefty+": {
+          "description": "Positive left-y half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "lefty-": {
+          "description": "Negative left-y half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "rightx+": {
+          "description": "Positive right-x half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "rightx-": {
+          "description": "Negative right-x half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "righty+": {
+          "description": "Positive right-y half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "righty-": {
+          "description": "Negative right-y half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "lefttrigger+": {
+          "description": "Positive left-trigger half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "lefttrigger-": {
+          "description": "Negative left-trigger half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "righttrigger+": {
+          "description": "Positive right-trigger half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "righttrigger-": {
+          "description": "Negative right-trigger half-axis.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.inner": {
+          "description": "Left stick pushed past its active threshold but not into the outer ring. Down together with ls.active and the direction controls.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.outer": {
+          "description": "Left stick pushed into its outer ring (analog.ls.outerThreshold). Down together with ls.active and the direction controls.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.cw": {
+          "description": "One clockwise tick of the left stick used as a knob (analog.ls.mode knob). It goes down and up at once.",
+          "$ref": "#/$defs/binding"
+        },
+        "ls.ccw": {
+          "description": "One counter-clockwise tick of the left stick used as a knob (analog.ls.mode knob). It goes down and up at once.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.inner": {
+          "description": "Right stick pushed past its active threshold but not into the outer ring. Down together with rs.active and the direction controls.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.outer": {
+          "description": "Right stick pushed into its outer ring (analog.rs.outerThreshold). Down together with rs.active and the direction controls.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.cw": {
+          "description": "One clockwise tick of the right stick used as a knob (analog.rs.mode knob). It goes down and up at once.",
+          "$ref": "#/$defs/binding"
+        },
+        "rs.ccw": {
+          "description": "One counter-clockwise tick of the right stick used as a knob (analog.rs.mode knob). It goes down and up at once.",
+          "$ref": "#/$defs/binding"
+        },
+        "lt.full": {
+          "description": "Left trigger second stage: down from analog.lt.fullPress (90% of its travel) until analog.lt.fullRelease (80%). lt stays down while it is.",
+          "$ref": "#/$defs/binding"
+        },
+        "rt.full": {
+          "description": "Right trigger second stage: down from analog.rt.fullPress (90% of its travel) until analog.rt.fullRelease (80%). rt stays down while it is.",
+          "$ref": "#/$defs/binding"
+        },
+        "a": {
+          "description": "Alias of south.",
+          "$ref": "#/$defs/binding"
+        },
+        "b": {
+          "description": "Alias of east.",
+          "$ref": "#/$defs/binding"
+        },
+        "x": {
+          "description": "Alias of west.",
+          "$ref": "#/$defs/binding"
+        },
+        "y": {
+          "description": "Alias of north.",
+          "$ref": "#/$defs/binding"
+        },
+        "lb": {
+          "description": "Alias of leftshoulder.",
+          "$ref": "#/$defs/binding"
+        },
+        "rb": {
+          "description": "Alias of rightshoulder.",
+          "$ref": "#/$defs/binding"
+        },
+        "l3": {
+          "description": "Alias of leftstick.",
+          "$ref": "#/$defs/binding"
+        },
+        "r3": {
+          "description": "Alias of rightstick.",
+          "$ref": "#/$defs/binding"
+        },
+        "select": {
+          "description": "Alias of back.",
           "$ref": "#/$defs/binding"
         }
       },

@@ -1,22 +1,26 @@
 name "功能键", schemaVersion 1
 layer base
 	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+	back          /layers/base/back          label "粘贴"  press: keys Ctrl+V tap
 layer paint
+	back          /layers/paint/select       label ""  press: keys Q hold
 function key set function:back
 	south         /functionKeys/back/south   label "重做"  press: keys Ctrl+Shift+Z tap
 	west          /functionKeys/back/west    label ""
 	leftshoulder  /functionKeys/back/lb      label ""  press: layer  mode(0)
 	dpad.up       /functionKeys/back/dpad.up label ""
 function key set function:start
+	south         /functionKeys/start/south  label "填充"  press: keys F tap
 	rt            /functionKeys/start/rt     label "只有名字"
 	ls.cw         /functionKeys/start/ls.cw  label ""  press: keys Ctrl+] tap
-7:7: warning: back is a function key (ADR-0069): this binding has no effect (/layers/base/back)
-	> "back": {"label": "粘贴", "press": {"type"…
-8:7: warning: start is a function key (ADR-0069): this binding has no effect (/layers/base/start)
-	> "start": {"press": {"type": "layer", "la…
-11:7: warning: select is an alias of back, a function key (ADR-0069): this binding has no effect (/layers/paint/select)
-	> "select": {"press": {"type": "keys", "ke…
-15:5: warning: back is a function key (ADR-0069): this binding has no effect (/common/back)
-	> "back": {"block": true}
+effective function set function
+	south         /functionKeys/start/south  label "填充"  press: keys F tap
+	west          /functionKeys/back/west    label ""
+	leftshoulder  /functionKeys/back/lb      label ""  press: layer  mode(0)
+	dpad.up       /functionKeys/back/dpad.up label ""
+	rt            /functionKeys/start/rt     label "只有名字"
+	ls.cw         /functionKeys/start/ls.cw  label ""  press: keys Ctrl+] tap
+8:16: warning: binding left out because it is not valid: unknown layer "no such layer" (/layers/base/start/press/layer)
+	> {"press": {"type": "layer", "layer": "no…
 26:13: warning: binding has no action (/functionKeys/start/rt)
-	> {"label": "只有名字"}
+	> {"label": "只有名字"},

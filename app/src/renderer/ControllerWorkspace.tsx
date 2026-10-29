@@ -16,6 +16,7 @@ import { controllerLabels, familyName } from "./controller-model";
 import { EditorNotice, hasEditorNotice } from "./EditorNotice";
 import {
   canonicalControl,
+  diagnosticSet,
   type Gesture,
   gestureName,
   gestures,
@@ -26,12 +27,12 @@ import {
 } from "./editor-model";
 import type { EditorStore } from "./editor-store";
 import type { Translate } from "./i18n";
-import { keyInheritance, withInherited } from "./inheritance";
+import { withInherited } from "./inheritance";
 import { KeyDrawer } from "./KeyDrawer";
 import { KeyPreview } from "./KeyPreview";
 import { KeyViewSwitch } from "./KeyViewSwitch";
 import { effectiveView, viewRegistrations } from "./key-view";
-import { parentName, readConfig } from "./library-model";
+import { readConfig } from "./library-model";
 import { failingMacros, MacroContext, missingMacros } from "./macro-context";
 import type { LabelDisplay, Language, PadmateStore } from "./store";
 import { useUndoShortcuts } from "./undo-shortcuts";
@@ -73,37 +74,23 @@ export function diagnosticControl(
   diagnostic: ProfileDiagnostic,
 ): string | null {
   const bits = pointerParts(diagnostic.pointer);
-  // `color` is a property of the key group, not a control.
-  if (
-    bits[0] === "layers" &&
-    bits[1] === "base" &&
-    bits[2] &&
-    bits[2] !== "color"
-  )
-    return calloutFor(bits[2]);
-  // The set a function key switches to is edited like the base layer.
-  if (
-    bits[0] === "functionKeys" &&
-    (bits[1] === "back" || bits[1] === "start") &&
-    bits[2]
-  )
-    return calloutFor(bits[2]);
+  // The function set is edited like the base layer. `color` is a property
+  // of the key group, not a control.
+  const found = diagnosticSet(diagnostic.pointer);
+  if (found?.rest[0] && found.rest[0] !== "color")
+    return calloutFor(found.rest[0]);
   if (bits[0] === "controlNames" && bits[1]) return calloutFor(bits[1]);
   if (bits[0] === "analog") return own(analogCallouts, bits[1]) ?? null;
   return null;
 }
 
 /**
- * The key set a diagnostic is about, when it points into one: a function
- * key's set, or the base layer (the usual bindings). Null for the rest
- * (names, stick settings), which show in any view.
+ * The key set a diagnostic is about, when it points into one: the function
+ * set, or the base layer (the usual bindings). Null for the rest (names,
+ * stick settings), which show in any view.
  */
 export function diagnosticView(diagnostic: ProfileDiagnostic): KeyView | null {
-  const bits = pointerParts(diagnostic.pointer);
-  if (bits[0] === "layers" && bits[1] === "base") return "normal";
-  if (bits[0] === "functionKeys" && (bits[1] === "back" || bits[1] === "start"))
-    return bits[1];
-  return null;
+  return diagnosticSet(diagnostic.pointer)?.view ?? null;
 }
 
 /**
@@ -188,11 +175,11 @@ export function describeDiagnostic(
   language: Language,
 ): string {
   const rawBits = pointerParts(diagnostic.pointer);
-  // A binding in the set of a function key reads like one of the base layer,
-  // under the name of the set.
-  const set = diagnosticView(diagnostic);
-  const inSet = set !== null && set !== "normal";
-  const bits = inSet ? ["layers", "base", ...rawBits.slice(2)] : rawBits;
+  // A binding in the function set reads like one of the base layer, under the
+  // name of the set.
+  const found = diagnosticSet(diagnostic.pointer);
+  const inSet = found?.view === "function";
+  const bits = inSet ? ["layers", "base", ...found.rest] : rawBits;
   if (diagnosticProfileSetting(diagnostic)) {
     const [zh, en] =
       bits[0] === "name"
@@ -225,7 +212,7 @@ export function describeDiagnostic(
   const part = diagnosticPart(bits, control, language);
   const where = part ? `${name} · ${part}` : name;
   return inSet
-    ? `${tx(language, "按住", "Hold")} ${labels[set] ?? set} · ${where}`
+    ? `${tx(language, "按住功能键", "Hold function key")} · ${where}`
     : where;
 }
 
@@ -252,8 +239,10 @@ export function ControllerWorkspace({
   onShowScripts?: () => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  // View and Menu only switch sets: there is nothing to open on them.
-  const open = selected && !isFunctionKey(selected) ? selected : undefined;
+  // The function key only switches sets: there is nothing to open on it.
+  const functionKey = useStore(editor, (value) => value.functionKey);
+  const open =
+    selected && !isFunctionKey(selected, functionKey) ? selected : undefined;
   const input = useStore(store, (value) => value.inputs[info.id]);
   // The sticks this controller has its own calibration for (IN-14), as a
   // string so the selector's result compares by value.
@@ -278,10 +267,11 @@ export function ControllerWorkspace({
   );
   const draft = useStore(editor, (value) => value.draft);
   const allRegistrations = useStore(editor, (value) => value.registrations);
-  // The usual bindings, or the set of a function key (UI-30, ADR-0069).
+  // The usual bindings, or the function set (UI-30, ADR-0075).
   const view = effectiveView(
     useStore(editor, (value) => value.view),
     info,
+    functionKey,
   );
   const registrations = useMemo(
     () => viewRegistrations(allRegistrations, view),
@@ -293,7 +283,8 @@ export function ControllerWorkspace({
   );
   const scriptEntry = useStore(editor, (value) => value.description?.entry);
   const profiles = useStore(editor, (value) => value.profiles);
-  // The profile this one is based on (PRO-19): its bindings show here too.
+  // The profile a hand-written file extends (PRO-19, ADR-0076): its bindings
+  // show here as the profile's own.
   const parent = useStore(editor, (value) => value.parent);
   // The profile's scripts (SCR-50): the drawer picks from them, and a key
   // that runs a missing one says so.
@@ -344,17 +335,13 @@ export function ControllerWorkspace({
     () => (draft ? savedForm(draft, parent) : null),
     [draft, parent],
   );
-  // With what the profile takes from the profile it is based on.
+  // With what the profile takes from the profile it extends.
   const effective = useMemo(
     () => (shown ? withInherited(shown, parent) : null),
     [shown, parent],
   );
   const chips = useMemo(() => {
-    const make = (
-      profile: Profile | null,
-      scripts: typeof allRegistrations,
-      of: KeyView,
-    ) =>
+    const make = (profile: Profile | null, scripts: typeof allRegistrations) =>
       controllerChips({
         profile,
         controls: Object.keys(labels),
@@ -366,29 +353,20 @@ export function ControllerWorkspace({
         profiles,
         missing,
         scriptEntry: shown?.script?.entry ?? scriptEntry,
-        // A chip none of whose bindings the profile writes shows who does.
-        fromParent: (keys) => {
-          if (!shown) return undefined;
-          const found = keyInheritance(shown, parent, of, keys);
-          return found.inherited.length > 0 && !found.own
-            ? parentName(found.from ?? parent?.id ?? "", profiles, language)
-            : undefined;
-        },
+        functionKey,
       });
-    if (view === "normal") return make(effective, allRegistrations, view);
-    // In a function key's set, a control the set leaves out does what it
-    // does otherwise: its usual chip, greyed and noted.
+    if (view === "normal") return make(effective, allRegistrations);
+    // In the function set, a control the set leaves out does what it does
+    // otherwise: its usual chip, greyed and noted.
     return inheritedChips({
-      own: make(effective && swapView(effective, view), registrations, view),
-      normal: make(effective, allRegistrations, "normal"),
-      display: labelDisplay,
+      own: make(effective && swapView(effective, view), registrations),
+      normal: make(effective, allRegistrations),
       language,
     });
   }, [
     missing,
     shown,
     effective,
-    parent,
     view,
     labels,
     allRegistrations,
@@ -398,9 +376,11 @@ export function ControllerWorkspace({
     actions,
     profiles,
     scriptEntry,
+    functionKey,
   ]);
   const select = (control: string | undefined) => {
-    if (control === undefined || !isFunctionKey(control)) onSelect(control);
+    if (control === undefined || !isFunctionKey(control, functionKey))
+      onSelect(control);
   };
   const close = () => {
     // Return focus to the chip of the closed control, where editing started.
@@ -428,6 +408,7 @@ export function ControllerWorkspace({
           }
           chips={chips}
           hint={!open && !notice && !previewing}
+          functionKey={functionKey}
         />
         {/* The key preview (UI-44) above the notice, where the hint is. */}
         <div className="workspace-bottom">
@@ -450,7 +431,7 @@ export function ControllerWorkspace({
               // Name and timing are in 配置设置; describe() says so.
               if (diagnosticProfileSetting(diagnostic)) return;
               const control = diagnosticControl(diagnostic);
-              if (!control || isFunctionKey(control)) return;
+              if (!control || isFunctionKey(control, functionKey)) return;
               // The key sits in a set: show that set (or the usual keys).
               const shown = diagnosticView(diagnostic);
               if (shown) editor.getState().setView(shown);

@@ -3,14 +3,11 @@ import { useStore } from "zustand";
 import type { ProfileTiming } from "../shared/generated/schema";
 import { resolveTiming } from "./editor-model";
 import type { EditorStore } from "./editor-store";
-import { parentOf, withExtends } from "./inheritance";
+import { parentOf } from "./inheritance";
 import {
   defaultProfileName,
   isDefaultProfile,
   nameProblemText,
-  parentChoices,
-  parentName,
-  profileName,
   profileNameProblem,
 } from "./library-model";
 import type { Language } from "./store";
@@ -92,21 +89,17 @@ export function ProfileSettingsDialog({
   const state = useStore(editor);
   // Typed text goes with the dialog: it starts empty each time it opens.
   const [session, setSession] = useState(0);
-  const basedOnId = useId();
   const close = () => {
     setSession(session + 1);
     onClose();
   };
   const profile = state.draft;
   if (!profile) return null;
-  // What an empty timing field falls back to: the profile it is based on
-  // sets some of it, the global settings the rest.
+  // What an empty timing field falls back to: the profile a hand-written file
+  // extends sets some of it (ADR-0076), the global settings the rest.
   const up = parentOf(profile, state.parent);
-  const upName = up ? parentName(up.id, state.profiles, language) : "";
   const global = resolveTiming(state.globalTiming, up?.profile.timing);
   const locked = !!state.readOnly || state.busy;
-  const choices = parentChoices(state.profiles, state.id);
-  const basedOn = profile.extends ?? "";
   const setTiming = (key: keyof ProfileTiming, value: number | undefined) => {
     const timing: ProfileTiming = { ...profile.timing, [key]: value };
     if (value === undefined) delete timing[key];
@@ -117,8 +110,8 @@ export function ProfileSettingsDialog({
     up?.profile.timing?.[key] !== undefined
       ? tx(
           language,
-          `留空则沿用「${upName}」（${global[key]} ms）。`,
-          `Leave empty to use ${upName}'s ${global[key]} ms.`,
+          `留空则使用 ${global[key]} ms。`,
+          `Leave empty to use ${global[key]} ms.`,
         )
       : tx(
           language,
@@ -163,31 +156,6 @@ export function ProfileSettingsDialog({
             state.edit({ ...profile, name: next }, { history: false })
           }
         />
-        <div className="field">
-          <label className="field-label" htmlFor={basedOnId}>
-            {tx(language, "基于", "Based on")}
-          </label>
-          <select
-            id={basedOnId}
-            className="select"
-            value={basedOn}
-            onChange={(event) =>
-              state.edit(withExtends(profile, event.target.value || undefined))
-            }
-          >
-            <option value="">{tx(language, "无", "None")}</option>
-            {basedOn && !choices.some((entry) => entry.id === basedOn) && (
-              <option value={basedOn}>
-                {parentName(basedOn, state.profiles, language)}
-              </option>
-            )}
-            {choices.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {profileName(entry, language)}
-              </option>
-            ))}
-          </select>
-        </div>
         <section>
           <h3 className="section-title">
             {tx(language, "按键判定", "Key timing")}

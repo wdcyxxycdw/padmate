@@ -55,6 +55,13 @@
         "timing": {
           "holdMs": 300
         }
+      },
+      "back": {
+        "press": {
+          "type": "mouse",
+          "op": "precision",
+          "factor": 1
+        }
       }
     }
   }

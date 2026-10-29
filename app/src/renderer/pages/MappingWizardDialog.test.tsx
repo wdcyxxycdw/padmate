@@ -225,6 +225,12 @@ describe("starting the wizard (IN-19)", () => {
     expect(screen.getByText("Generic USB Joystick")).toBeTruthy();
   });
 
+  it("asks for a capture that stays while the window is away (ADR-0076)", async () => {
+    const s = await setup();
+    await waitFor(() => expect(s.api.rawWatchStart).toHaveBeenCalledOnce());
+    expect(s.api.padCaptureStart).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
   it("leaves the controller alone for a second before the first prompt", async () => {
     const s = await setup();
     await screen.findByText("请先别碰手柄，稍等一下…");
@@ -452,7 +458,7 @@ describe("saving the mapping", () => {
     expect(within(list).getAllByRole("listitem")).toHaveLength(25);
     expect(
       screen.getByText(
-        "没有映射 View 和 Menu。它们是功能键，也是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
+        "没有映射 View 和 Menu。它们是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
       ),
     ).toBeTruthy();
   });
@@ -604,7 +610,43 @@ describe("every way out ends the watch and the capture", () => {
   });
 });
 
-describe("the window loses the front (Main ends the capture then)", () => {
+describe("the window loses the front (the mapping stays paused, ADR-0076)", () => {
+  it("keeps the capture while the window is away, and asks for it again, staying, when it is back", async () => {
+    const s = await ready();
+    await act(async () => {
+      window.dispatchEvent(new Event("blur"));
+    });
+    // Main does not end a capture that stays, so there is nothing to give
+    // back: the wizard neither stops the capture nor asks for another.
+    await s.pass(2000);
+    expect(s.api.padCaptureStop).not.toHaveBeenCalled();
+    expect(s.api.padCaptureStart).toHaveBeenCalledOnce();
+    expect(s.api.rawWatchStop).not.toHaveBeenCalled();
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    // Main may have ended it meanwhile (a lock, a sleep): it is asked for
+    // again, and the daemon takes that as the same capture when it is on.
+    await waitFor(() => expect(s.api.padCaptureStart).toHaveBeenCalledTimes(2));
+    expect(s.api.padCaptureStart).toHaveBeenNthCalledWith(1, true);
+    expect(s.api.padCaptureStart).toHaveBeenNthCalledWith(2, true);
+    expect(s.api.padCaptureStop).not.toHaveBeenCalled();
+  });
+
+  it("ends the capture when the wizard closes while the window is away", async () => {
+    const s = await ready();
+    await act(async () => {
+      window.dispatchEvent(new Event("blur"));
+    });
+    // The window is not in front, so the dialog cannot be clicked: it goes
+    // with the page, or with Esc from a shortcut. Either way it ends the
+    // capture, and Main does not need the window to be in front for that.
+    cleanup();
+    await waitFor(() => expect(s.api.padCaptureStop).toHaveBeenCalledOnce());
+    expect(s.api.rawWatchStop).toHaveBeenCalledOnce();
+    expect(s.api.listeners.size).toBe(0);
+  });
+
   it("ignores the controller until the window is back and the capture is asked for again", async () => {
     const s = await ready();
     s.press(0);

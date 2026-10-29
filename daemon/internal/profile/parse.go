@@ -96,6 +96,9 @@ type resolver struct {
 	// where formats the position of an offset for a message; nil counts in
 	// data. A merged profile (Resolve) says where the text came from.
 	where func(off int) string
+	// unread holds the IDs of the bindings on back and start in a layer or in
+	// common, which ADR-0069 used to drop unread (leaveOutUnread).
+	unread map[string]bool
 }
 
 func (r *resolver) errorAt(off int, ptr, msg string) {
@@ -185,21 +188,65 @@ func resolve(data []byte, root *node, where func(off int) string) (*Profile, Dia
 		p.Layers = append(p.Layers, r.layer(name, w.Layers[name]))
 	}
 	if w.Common != nil {
-		p.Common = r.layerAt("common", []string{"common"}, *w.Common)
+		p.Common = r.layerAt("common", []string{"common"}, *w.Common, true)
+	}
+	if w.FunctionSet != nil {
+		p.FunctionSet = r.layerAt(FunctionSetName, []string{"functionSet"}, *w.FunctionSet, false)
 	}
 	if w.FunctionKeys != nil {
 		p.FunctionKeys = &FunctionKeys{}
 		if w.FunctionKeys.Back != nil {
-			p.FunctionKeys.Back = r.layerAt(FunctionLevel(control.Back), []string{"functionKeys", "back"}, *w.FunctionKeys.Back)
+			p.FunctionKeys.Back = r.layerAt(FunctionLevel(control.Back), []string{"functionKeys", "back"}, *w.FunctionKeys.Back, false)
 		}
 		if w.FunctionKeys.Start != nil {
-			p.FunctionKeys.Start = r.layerAt(FunctionLevel(control.Start), []string{"functionKeys", "start"}, *w.FunctionKeys.Start)
+			p.FunctionKeys.Start = r.layerAt(FunctionLevel(control.Start), []string{"functionKeys", "start"}, *w.FunctionKeys.Start, false)
 		}
+	}
+	if w.FunctionSet != nil && w.FunctionKeys != nil {
+		// The old format yields to the new one (ADR-0075), so what it holds
+		// has no effect; it is still checked like the rest.
+		r.warnAt(root.members["functionKeys"].key, "/functionKeys", "functionKeys is ignored because functionSet is also written (ADR-0075)")
 	}
 	for _, check := range checks {
 		check(r, p)
 	}
+	r.leaveOutUnread(p)
 	return p, r.ds
+}
+
+// leaveOutUnread keeps a profile valid that was valid before ADR-0075. ADR-0069
+// dropped a binding on back or start in a layer or in common before any check,
+// so such a file may hold one that is not valid, and the format is frozen: a
+// valid profile stays valid. Each error of such a binding becomes a warning, and
+// the binding is taken out of p, so that engine.Compile never sees it, whichever
+// control is the function key. A binding that is valid stays. guide was never
+// dropped and the function set is new, so they get no such tolerance.
+func (r *resolver) leaveOutUnread(p *Profile) {
+	left := map[string]bool{}
+	for i := range r.ds {
+		d := &r.ds[i]
+		if d.Severity != SeverityError {
+			continue
+		}
+		for id := range r.unread {
+			if d.Pointer == id || strings.HasPrefix(d.Pointer, id+"/") {
+				d.Severity = SeverityWarning
+				d.Message = "binding left out because it is not valid: " + d.Message
+				if n := r.root.lookupPointer(id); n != nil && d.Offset == r.root.start {
+					d.Offset = n.start // the layer checks point at the document, not the binding
+				}
+				left[id] = true
+			}
+		}
+	}
+	if len(left) == 0 {
+		return
+	}
+	for _, l := range append(slices.Clone(p.Layers), p.Common) {
+		if l != nil {
+			l.Bindings = slices.DeleteFunc(l.Bindings, func(b *Binding) bool { return left[b.ID] })
+		}
+	}
 }
 
 func resolveAnalog(w *wireAnalog) Analog {
@@ -295,10 +342,13 @@ func resolveAnalog(w *wireAnalog) Analog {
 // layer resolves the bindings of layer name, reporting controls bound
 // twice under different names.
 func (r *resolver) layer(name string, w wireLayer) *Layer {
-	return r.layerAt(name, []string{"layers", name}, w)
+	return r.layerAt(name, []string{"layers", name}, w, true)
 }
 
-func (r *resolver) layerAt(name string, parts []string, w wireLayer) *Layer {
+// layerAt resolves the bindings of the layer or set at parts. inLayer is true
+// for a layer and for common, whose bindings on back and start leaveOutUnread
+// tolerates.
+func (r *resolver) layerAt(name string, parts []string, w wireLayer, inLayer bool) *Layer {
 	ptr := pointer(parts)
 	l := &Layer{Name: name}
 	if w.Color != nil {
@@ -331,19 +381,17 @@ func (r *resolver) layerAt(name string, parts []string, w wireLayer) *Layer {
 			continue
 		}
 		first[c] = m
-		if c.IsFunctionKey() {
-			// Back and start are the function keys in every profile
-			// (ADR-0069): a binding on them, such as an old profile's,
-			// loads as nothing. The schema keeps them out of the function
-			// keys' own sets, so this is a layer or common.
-			msg := c.String() + " is a function key (ADR-0069): this binding has no effect"
-			if m.name != c.String() {
-				msg = m.name + " is an alias of " + c.String() + ", a function key (ADR-0069): this binding has no effect"
+		// A binding on back, start or guide is kept like any other: which of
+		// them is the function key is config.json's choice (ADR-0075), not
+		// known here, and engine.Compile ignores the one that is.
+		id := childPointer(ptr, m.name)
+		if inLayer && (c == control.Back || c == control.Start) {
+			if r.unread == nil {
+				r.unread = map[string]bool{}
 			}
-			r.warnAt(m.key, childPointer(ptr, m.name), msg)
-			continue
+			r.unread[id] = true
 		}
-		l.Bindings = append(l.Bindings, r.binding(childPointer(ptr, m.name), c, m, w.Bindings[m.name]))
+		l.Bindings = append(l.Bindings, r.binding(id, c, m, w.Bindings[m.name]))
 	}
 	slices.SortFunc(l.Bindings, func(a, b *Binding) int { return int(a.Control) - int(b.Control) })
 	return l

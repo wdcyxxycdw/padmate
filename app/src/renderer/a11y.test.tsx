@@ -207,13 +207,6 @@ describe("menus", () => {
     await screen.findByRole("menu");
     await clean("more menu");
   });
-  it("the mouse menu of a shortcut", async () => {
-    renderApp();
-    const drawer = await openDrawer("south");
-    fireEvent.click(within(drawer).getAllByTestId("shortcut-mouse")[0]);
-    await screen.findByRole("menu");
-    await clean("mouse menu");
-  });
   it("the add-step menu of a shortcut", async () => {
     renderApp();
     const drawer = await openDrawer("south");
@@ -636,14 +629,15 @@ describe("states of the key drawer", () => {
     const drawer = await openDrawer("south");
     fireEvent.click(within(drawer).getByRole("button", { name: "录入快捷键" }));
     await vi.waitFor(() => expect(app.api.captureStart).toHaveBeenCalled());
-    await screen.findByRole("button", { name: "停止捕获" });
+    await screen.findByRole("button", { name: "录入中…" });
     await clean("recording");
-    fireEvent.click(screen.getByRole("button", { name: "停止捕获" }));
+    // A notch of the wheel is a key, and ends the capture.
+    fireEvent.wheel(document.body, { deltaY: 100 });
   });
-  it("with a sequence of a wait, a text and a shortcut", async () => {
+  it("with a sequence of a wait and a shortcut", async () => {
     renderApp();
     const drawer = await openDrawer("south");
-    for (const kind of ["等待", "文字", "快捷键"]) {
+    for (const kind of ["等待", "快捷键"]) {
       fireEvent.click(within(drawer).getByTestId("add-step"));
       fireEvent.click(await screen.findByRole("menuitem", { name: kind }));
     }
@@ -655,7 +649,7 @@ describe("states of the key drawer", () => {
     fireEvent.click(within(drawer).getByText("高级"));
     await clean("advanced");
   });
-  it("the menu to add a gesture, and its gestures", async () => {
+  it("the menu to add a mapping, and its mappings", async () => {
     renderApp();
     const drawer = await openDrawer("south");
     fireEvent.click(within(drawer).getByTestId("add-gesture"));
@@ -867,13 +861,13 @@ describe("the other confirm dialogs of the editors", () => {
     await dialogNamed("粘贴参数？");
     await clean("paste parameters");
   });
-  it("删除此手势？ and 改用快捷键？ of an action from the file", async () => {
+  it("删除此映射？ and 改用快捷键？ of an action from the file", async () => {
     renderApp(withConfirmable);
     const drawer = await openDrawer("leftshoulder");
     fireEvent.click(within(drawer).getByRole("button", { name: /^长按/ }));
-    fireEvent.click(within(drawer).getByRole("button", { name: "删除此手势" }));
-    const remove = await dialogNamed("删除此手势？");
-    await clean("remove gesture");
+    fireEvent.click(within(drawer).getByRole("button", { name: "删除此映射" }));
+    const remove = await dialogNamed("删除此映射？");
+    await clean("remove mapping");
     fireEvent.click(within(remove).getByRole("button", { name: "取消" }));
     fireEvent.click(
       within(drawer).getByRole("button", { name: "改用快捷键…" }),

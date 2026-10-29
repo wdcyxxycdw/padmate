@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
 func TestConfigDefaults(t *testing.T) {
@@ -335,6 +337,51 @@ func TestConfigFeedbackSwitches(t *testing.T) {
 	} {
 		if c, ds := ParseConfig([]byte(doc)); c != nil || !ds.HasErrors() {
 			t.Errorf("%s: accepted: config=%v diagnostics=%v", doc, c, ds)
+		}
+	}
+}
+
+// TestConfigFunctionKey: config.json functionKey picks the one function key
+// (MAP-27, ADR-0075): start unless it says back or guide. Anything else, in
+// type or value, is a schema error that the repair (PRO-29) resets.
+func TestConfigFunctionKey(t *testing.T) {
+	if got := DefaultConfig().FunctionKey; got != control.Start {
+		t.Errorf("DefaultConfig().FunctionKey = %s; want start", got)
+	}
+	for _, tc := range []struct {
+		doc  string
+		want control.Control
+	}{
+		{`{"schemaVersion":0}`, control.Start},
+		{`{"schemaVersion":0,"functionKey":"start"}`, control.Start},
+		{`{"schemaVersion":0,"functionKey":"back"}`, control.Back},
+		{`{"schemaVersion":0,"functionKey":"guide"}`, control.Guide},
+	} {
+		c, ds := ParseConfig([]byte(tc.doc))
+		if c == nil || ds.HasErrors() {
+			t.Fatalf("%s: config=%v diagnostics=%v", tc.doc, c, ds)
+		}
+		if c.FunctionKey != tc.want || c.FunctionKeyOrDefault() != tc.want {
+			t.Errorf("%s: FunctionKey = %s, FunctionKeyOrDefault = %s; want %s", tc.doc, c.FunctionKey, c.FunctionKeyOrDefault(), tc.want)
+		}
+	}
+	// A Config built by hand has no key set, and means the default.
+	if got := (&Config{}).FunctionKeyOrDefault(); got != control.Start {
+		t.Errorf("zero Config: %s", got)
+	}
+	var none *Config
+	if got := none.FunctionKeyOrDefault(); got != control.Start {
+		t.Errorf("nil Config: %s", got)
+	}
+	for _, doc := range []string{
+		`{"schemaVersion":0,"functionKey":"select"}`, `{"schemaVersion":0,"functionKey":"south"}`,
+		`{"schemaVersion":0,"functionKey":"Start"}`, `{"schemaVersion":0,"functionKey":""}`,
+		`{"schemaVersion":0,"functionKey":null}`, `{"schemaVersion":0,"functionKey":1}`,
+		`{"schemaVersion":0,"functionKey":["start"]}`, `{"schemaVersion":0,"functionKey":"start","functionKey":"back"}`,
+	} {
+		c, ds := ParseConfig([]byte(doc))
+		if c != nil || !ds.HasErrors() || ds[0].Line == 0 {
+			t.Errorf("%s: accepted or unlocated: config=%v diagnostics=%v", doc, c, ds)
 		}
 	}
 }

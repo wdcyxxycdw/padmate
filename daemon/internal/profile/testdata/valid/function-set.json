@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "功能键",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "start": {"label": "保存", "press": {"type": "keys", "keys": "Ctrl+S", "mode": "tap"}},
+      "guide": {"press": {"type": "layer", "layer": "paint", "op": "hold"}}
+    },
+    "paint": {
+      "select": {"press": {"type": "keys", "keys": "Q"}}
+    }
+  },
+  "common": {
+    "back": {"block": true}
+  },
+  "functionSet": {
+    "south": {"label": "重做", "press": {"type": "keys", "keys": "Ctrl+Shift+Z", "mode": "tap"}},
+    "lb": {"press": {"type": "layer", "layer": "paint", "op": "hold"}},
+    "west": {"tap": {"type": "keys", "keys": "F13", "mode": "tap"}, "hold": {"type": "keys", "keys": "F14"}},
+    "dpad.up": {"block": true},
+    "back": {"label": "粘贴", "press": {"type": "keys", "keys": "Ctrl+V", "mode": "tap"}},
+    "start": {"press": {"type": "keys", "keys": "Q"}},
+    "guide": {"label": "只有名字"},
+    "ls.cw": {"press": {"type": "keys", "keys": "Ctrl+]", "mode": "tap"}}
+  }
+}

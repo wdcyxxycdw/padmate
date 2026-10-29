@@ -308,10 +308,11 @@ type Engine struct {
 	modulated        int        // rate-modulated repeats running (actionState.mod)
 	precision        float64    // the smallest factor of the precision actions held; 0 when none (updatePrecision)
 	hints            hintsState // the key hints (HUD-03): on while a hints action is held, with the list to show (hints.go)
-	// fnActive is the function key whose set the next press looks up first
-	// (function_keys.go), control.Invalid when none is held. It follows the
-	// physical state of back and start, so CancelAll, Pause and Reload keep
-	// it and Reset clears it.
+	// fnActive is the function key (prog.fnKey) while it is held, whose set
+	// the next press looks up first (function_keys.go), else control.Invalid.
+	// It follows the physical state of the key, so CancelAll, Pause and a
+	// Reload with the same function key keep it, and Reset and a Reload that
+	// changes the key clear it.
 	fnActive control.Control
 	// The stick calibration of the controller (IN-14): calSrc as set, cal what
 	// the sticks recognize with, calIgnored the sticks whose calibration does
@@ -550,11 +551,11 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 	if !down {
 		e.physicalReleased[c] = t
 	}
-	if c.IsFunctionKey() {
-		// The function keys (MAP-27, ADR-0069) never enter gesture
-		// recognition: no cycle, no buffering, no script, and they do not
+	if c == e.prog.fnKey {
+		// The function key (MAP-27, ADR-0069, ADR-0075) never enters gesture
+		// recognition: no cycle, no buffering, no script, and it does not
 		// interrupt a pending gesture.
-		e.stepFunctionKey(t, c, down)
+		e.stepFunctionKey(t, down)
 		return
 	}
 	in.fn = e.fnActive
@@ -1507,8 +1508,8 @@ func (e *Engine) cancelAll(now clock.Time, lockPointer bool) {
 		if st.down && !st.canceled {
 			e.decide(now, control.Control(c), EdgeNone, st, st.held, OwnerID{}, ReasonCancel)
 		}
-		// A function key has no cycle to cancel: its edges never reach ctl.
-		st.down = e.physical[c] && !control.Control(c).IsFunctionKey()
+		// The function key has no cycle to cancel: its edges never reach ctl.
+		st.down = e.physical[c] && control.Control(c) != e.prog.fnKey
 		st.canceled = true
 		st.held = nil
 		st.holds = [2]*profile.Action{}
@@ -1602,11 +1603,23 @@ func (e *Engine) Paused() bool { return e.paused }
 // automatic profile switch, which can fall while the user holds the stick, so
 // the pointer goes on with the new settings, unless the stick is locked, as
 // after a pause.
+//
+// A prog with another function key (config.json's functionKey changed,
+// ADR-0075) makes the old key an ordinary control and the new one the
+// function key. Nothing is held then: the engine forgets that the function key
+// is held, whichever of the two it was, and the new key, even if it is down
+// now, selects the function set only from its next press. The old key, if it
+// is down, has no cycle, as it had none as the function key: its release sends
+// and decides nothing.
 func (e *Engine) Reload(now clock.Time, prog *Program) {
 	if prog == nil {
 		panic("engine: Reload needs a Program")
 	}
 	e.cancelAll(now, false)
+	if e.prog.fnKey != prog.fnKey {
+		e.fnActive = control.Invalid
+		e.ctl[prog.fnKey] = ctlState{} // it may have been down, as an ordinary control
+	}
 	e.prog = prog
 	e.resolveCalibration() // settled with everything else just below
 	e.baseLayer = prog.defaultLayer
@@ -1673,7 +1686,7 @@ func (e *Engine) press(now, raw clock.Time, c, fn control.Control) {
 	// that window: it ends the window like the press of another control, and
 	// starts a new count. A script's plan is the snapshot of the first press
 	// and goes on (ARCHITECTURE §7.9).
-	if m := &e.multi[c]; m.count > 0 && m.state.plan == nil && level != m.state.level && (isFunctionLevel(level) || isFunctionLevel(m.state.level)) {
+	if m := &e.multi[c]; m.count > 0 && m.state.plan == nil && level != m.state.level && (e.prog.isFunctionLevel(level) || e.prog.isFunctionLevel(m.state.level)) {
 		e.commitMulti(now, c)
 	}
 	cycle := uint64(0)

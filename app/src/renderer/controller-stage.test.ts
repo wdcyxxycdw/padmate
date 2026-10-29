@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createStageStore, STAGE_IDLE_MS, stageKey } from "./controller-stage";
+import { createStageStore, stageKey } from "./controller-stage";
 
 afterEach(() => vi.useRealTimers());
 
@@ -48,7 +48,6 @@ describe("stage store", () => {
     const { create, created } = fakeFactory();
     const stages = store(create);
     const first = stages.acquire({ type: "xboxone" });
-    stages.release(first);
     const second = stages.acquire({ type: "xboxone" });
     expect(second).toBe(first);
     expect(create).toHaveBeenCalledTimes(1);
@@ -59,13 +58,10 @@ describe("stage store", () => {
     const { create, created } = fakeFactory();
     const stages = store(create);
     const xbox = stages.acquire({ type: "xboxone" });
-    stages.release(xbox);
     const pad = stages.acquire({ type: "ps5" });
     expect(pad).not.toBe(xbox);
     expect(created[0].dispose).toHaveBeenCalledOnce();
     expect(created[1].dispose).not.toHaveBeenCalled();
-    // The old stage's release comes too late to matter.
-    stages.release(xbox);
     expect(stages.current()).toBe(pad);
     // Back to the first model: it is built again.
     stages.acquire({ type: "xboxone" });
@@ -73,57 +69,22 @@ describe("stage store", () => {
     expect(created[1].dispose).toHaveBeenCalledOnce();
   });
 
-  it("frees a stage nobody came back for, and builds it again after that", () => {
+  it("keeps a stage nobody came back for, however long (ADR-0077)", () => {
     vi.useFakeTimers();
     const { create, created } = fakeFactory();
     const stages = store(create);
     const stage = stages.acquire({ type: "xboxone" });
-    stages.release(stage);
-    vi.advanceTimersByTime(STAGE_IDLE_MS - 1);
+    vi.advanceTimersByTime(24 * 60 * 60 * 1000);
     expect(created[0].dispose).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
-    expect(created[0].dispose).toHaveBeenCalledOnce();
-    expect(stages.current()).toBeUndefined();
-    expect(stages.acquire({ type: "xboxone" })).not.toBe(stage);
-    expect(create).toHaveBeenCalledTimes(2);
-  });
-
-  it("keeps a stage that is used again before the idle time is over", () => {
-    vi.useFakeTimers();
-    const { create, created } = fakeFactory();
-    const stages = store(create);
-    const stage = stages.acquire({ type: "xboxone" });
-    stages.release(stage);
-    vi.advanceTimersByTime(STAGE_IDLE_MS - 1000);
+    expect(stages.current()).toBe(stage);
     expect(stages.acquire({ type: "xboxone" })).toBe(stage);
-    // In use: the old timer is gone.
-    vi.advanceTimersByTime(STAGE_IDLE_MS * 2);
-    expect(created[0].dispose).not.toHaveBeenCalled();
-    // The idle time starts again with the next release.
-    stages.release(stage);
-    vi.advanceTimersByTime(STAGE_IDLE_MS);
-    expect(created[0].dispose).toHaveBeenCalledOnce();
-  });
-
-  it("waits for every mount that holds the stage before the idle time starts", () => {
-    vi.useFakeTimers();
-    const { create, created } = fakeFactory();
-    const stages = store(create);
-    const stage = stages.acquire({ type: "xboxone" });
-    stages.acquire({ type: "xboxone" });
-    stages.release(stage);
-    vi.advanceTimersByTime(STAGE_IDLE_MS * 2);
-    expect(created[0].dispose).not.toHaveBeenCalled();
-    stages.release(stage);
-    vi.advanceTimersByTime(STAGE_IDLE_MS);
-    expect(created[0].dispose).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledOnce();
   });
 
   it("builds a new stage when the kept one cannot be used any more", () => {
     const { create, created } = fakeFactory();
     const stages = store(create);
     const stage = stages.acquire({ type: "xboxone" });
-    stages.release(stage);
     // E.g. the GPU lost its context while the page was away.
     stage.broken = true;
     const next = stages.acquire({ type: "xboxone" });
@@ -139,7 +100,6 @@ describe("stage store", () => {
     expect(created[0].dispose).toHaveBeenCalledOnce();
     expect(stages.current()).toBeUndefined();
     stages.discard(stage);
-    stages.release(stage);
     expect(created[0].dispose).toHaveBeenCalledOnce();
     expect(stages.acquire({ type: "xboxone" })).not.toBe(stage);
   });
@@ -147,8 +107,7 @@ describe("stage store", () => {
   it("keeps nothing when a stage cannot be created", () => {
     const { create, created } = fakeFactory();
     const stages = store(create);
-    const stage = stages.acquire({ type: "xboxone" });
-    stages.release(stage);
+    stages.acquire({ type: "xboxone" });
     create.mockImplementationOnce(() => {
       throw new Error("No WebGL");
     });

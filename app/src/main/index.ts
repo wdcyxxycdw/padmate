@@ -79,9 +79,11 @@ import {
   uiFailureText,
 } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
+import { systemSettingsHandlers } from "./system-settings";
 import type { UpdateController } from "./update-controller";
 import { updateHandlers } from "./update-handlers";
 import { createUpdates, removeStaleUpdate } from "./update-main";
+import { closeHides, quitsWhileHidden } from "./window-close";
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -120,6 +122,11 @@ let failureDialog = false;
 // installer's, PKG-04): the window finishes its saves, tells the daemon and
 // quits, and a close in between waits for that.
 let trayExiting = false;
+// ADR-0077: closing the window hid it, and padmate.exe stays with the page
+// and the controller's model loaded until a second start shows it again.
+let hiddenByClose = false;
+// A quit waits for the saves (before-quit): the close it makes goes through.
+let quitHeld = false;
 // UI-43: closing waits for the mapping page's saves; nothing asks the user.
 const closeGuard = new CloseGuard({
   ask: () => {
@@ -233,6 +240,18 @@ const overlayPreferences = new OverlayPreferences(() => [
 const rendererRoot = resolve(__dirname, "../renderer");
 const rendererURL = process.env.ELECTRON_RENDERER_URL;
 const developmentServer = !app.isPackaged && !!rendererURL;
+
+/**
+ * A close while the daemon is connected (ADR-0077): the window hides, and a
+ * field still being typed in is committed, as when it closes (UI-43). The
+ * page stays, so nothing waits for the saves.
+ */
+function hideOnClose(): void {
+  if (!window || window.isDestroyed()) return;
+  hiddenByClose = true;
+  window.webContents.send("padmate:closing");
+  window.hide();
+}
 
 /** A second padmate was started: the window of this one comes to the front. */
 function showExistingWindow(): void {
@@ -458,6 +477,9 @@ function registerHandlers(update: UpdateController): void {
       (method, params) => manager?.call(method, params),
       runtimeOptions().packagedTest,
     ),
+    // UI-30: the Game Bar page of Windows Settings, the one address Main
+    // opens for the window (system-settings.ts).
+    ...systemSettingsHandlers((url) => shell.openExternal(url)),
     // UI-45: the page that says why the mapping service did not start.
     ...startFailureHandlers({
       state: () => manager?.state,
@@ -581,8 +603,12 @@ function registerHandlers(update: UpdateController): void {
     // HUD-05: the UI's choices about the overlay; invalid fields are ignored.
     overlayPrefs: { count: 1, run: (prefs) => overlayPreferences.push(prefs) },
     captureStart: { count: 0, run: () => capture.start() },
-    // UI-19: recording a new emergency combo on the controller.
-    padCaptureStart: { count: 0, run: () => padCapture.start() },
+    // UI-19: recording a new emergency combo on the controller. IN-19: the
+    // mapping wizard asks for a capture that stays while the window is away.
+    padCaptureStart: {
+      count: 1,
+      run: (stays) => padCapture.start(stays === true),
+    },
     padCaptureStop: { count: 0, run: () => padCapture.stop() },
     captureStop: {
       count: 1,
@@ -747,16 +773,34 @@ app
     });
     window.on("blur", () => {
       capture.stop("blur");
-      padCapture.stop();
+      // The wizard's capture stays: the mapping is paused until it closes.
+      padCapture.windowAway();
     });
     window.on("close", (event) => {
       capture.stop("close");
       padCapture.stop();
+      // Hidden, the page stays: the wizard keeps its raw watch and resumes,
+      // paused again, once the window is back in front.
+      if (
+        closeHides({
+          quitting,
+          leaving: trayExiting || quitHeld,
+          phase: manager?.state.phase,
+          pageReady,
+        })
+      ) {
+        event.preventDefault();
+        hideOnClose();
+        return;
+      }
       rawWatch.reset();
       // The daemon's exit saves and quits by itself (DMN-22); its own quit
       // closes the window through here and is let through.
       if (holdsWindowClose({ trayExiting, quitting }, () => closeGuard.hold()))
         event.preventDefault();
+    });
+    window.on("show", () => {
+      hiddenByClose = false;
     });
     window.on("closed", () => {
       window = undefined;
@@ -784,13 +828,15 @@ app
       closeGuard.release();
     });
     bindEventDelivery(window.webContents, events);
+    // The daemon pauses the mapping itself while the session is locked or
+    // asleep; the wizard's capture is kept, to hold it after the unlock.
     powerMonitor.on("suspend", () => {
       capture.stop("suspend");
-      padCapture.stop();
+      padCapture.windowAway();
     });
     powerMonitor.on("lock-screen", () => {
       capture.stop("lock");
-      padCapture.stop();
+      padCapture.windowAway();
     });
     manager = await createDaemonManager(
       routeDaemonEvents({
@@ -839,6 +885,10 @@ app
         send("padmate:connectionChanged", state);
         showWhenReady();
         if (quitting) return;
+        if (quitsWhileHidden(hiddenByClose, state.phase)) {
+          app.quit();
+          return;
+        }
         switch (
           pageRecovery(state.phase, { broken: pageBroken, gone: rendererGone })
         ) {
@@ -881,6 +931,7 @@ app
 app.on("before-quit", (event) => {
   // Quitting closes the window first, which waits for the saves.
   if (window && !window.isDestroyed() && !quitting && closeGuard.hold()) {
+    quitHeld = true;
     event.preventDefault();
     return;
   }

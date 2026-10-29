@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// The step editor of the key drawer (UI-31): the steps of a sequence, the text
-// a binding types, and the choices around them.
+// The step editor of the key drawer (UI-31): the steps of a sequence, a
+// shortcut or a wait each (ADR-0076), and the choices around them.
 import {
   cleanup,
   fireEvent,
@@ -60,11 +60,19 @@ const step = (n: number) => screen.getByRole("group", { name: `第 ${n} 步` });
 const mixed: ProfileBinding = {
   press: {
     type: "sequence",
+    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { keys: "Ctrl+B" }],
+  },
+};
+
+/** A sequence with a text step, which only a file can have (ADR-0076). */
+const withText: ProfileBinding = {
+  press: {
+    type: "sequence",
     steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好" }],
   },
 };
 
-it("offers a shortcut, a wait and a text as the next step", () => {
+it("offers a shortcut and a wait as the next step, and no text", () => {
   captureAPI();
   render(<Draft initial={{ press: { type: "keys", keys: "F13" } }} />);
   fireEvent.click(screen.getByRole("button", { name: "添加下一步" }));
@@ -73,7 +81,7 @@ it("offers a shortcut, a wait and a text as the next step", () => {
     within(menu)
       .getAllByRole("menuitem")
       .map((item) => item.textContent),
-  ).toEqual(["快捷键", "等待", "文字"]);
+  ).toEqual(["快捷键", "等待"]);
 });
 
 it("names the next steps in English", () => {
@@ -84,7 +92,7 @@ it("names the next steps in English", () => {
   fireEvent.click(screen.getByRole("button", { name: "Add a next step" }));
   expect(
     screen.getAllByRole("menuitem").map((item) => item.textContent),
-  ).toEqual(["Shortcut", "Wait", "Text"]);
+  ).toEqual(["Shortcut", "Wait"]);
 });
 
 it("keeps shortcuts only as a list, as before", () => {
@@ -108,9 +116,6 @@ it("adds a wait: the draft becomes a sequence of the shortcut and 100 ms", () =>
     type: "sequence",
     steps: [{ keys: "F13" }, { wait: 100 }],
   });
-  // Neither a send mode nor a repeat: a sequence taps.
-  expect(screen.queryByRole("radiogroup", { name: "发送方式" })).toBeNull();
-  expect(screen.queryByRole("switch", { name: "连发" })).toBeNull();
   expect(step(1).textContent).toContain("快捷键");
   expect(step(2).textContent).toContain("等待");
   const wait = within(step(2)).getByRole("textbox", {
@@ -128,12 +133,12 @@ it("commits a wait on Enter or when it is left, from 1 to 10000 ms", () => {
     within(step(2)).getByRole("textbox", { name: "等待时间（ms）" });
   commit(wait(), "250");
   expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 250 }, { text: "你好" }],
+    steps: [{ keys: "Ctrl+A" }, { wait: 250 }, { keys: "Ctrl+B" }],
   });
   fireEvent.change(wait(), { target: { value: "10000" } });
   fireEvent.keyDown(wait(), { key: "Enter" });
   expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 10000 }, { text: "你好" }],
+    steps: [{ keys: "Ctrl+A" }, { wait: 10000 }, { keys: "Ctrl+B" }],
   });
   for (const bad of ["0", "10001", "abc", "1.5", ""]) {
     commit(wait(), bad);
@@ -143,7 +148,7 @@ it("commits a wait on Enter or when it is left, from 1 to 10000 ms", () => {
     expect(wait().getAttribute("aria-invalid")).toBe("true");
     // Nothing was committed, and Escape puts the wait back.
     expect(draft().press).toMatchObject({
-      steps: [{ keys: "Ctrl+A" }, { wait: 10000 }, { text: "你好" }],
+      steps: [{ keys: "Ctrl+A" }, { wait: 10000 }, { keys: "Ctrl+B" }],
     });
     fireEvent.keyDown(wait(), { key: "Escape" });
     expect((wait() as HTMLInputElement).value).toBe("10000");
@@ -151,125 +156,14 @@ it("commits a wait on Enter or when it is left, from 1 to 10000 ms", () => {
   }
 });
 
-it("adds a text: a sequence with an empty text, ready to be written", () => {
-  captureAPI();
-  render(<Draft initial={{ press: { type: "keys", keys: "F13" } }} />);
-  addStep("文字");
-  expect(draft().press).toEqual({
-    type: "sequence",
-    steps: [{ keys: "F13" }, { text: "" }],
-  });
-  const box = within(step(2)).getByRole("textbox", { name: "输入的文字" });
-  expect(document.activeElement).toBe(box);
-  expect(within(step(2)).getByTestId("text-left").textContent).toBe("剩余 256");
-  commit(box, "你好");
-  expect(draft().press).toEqual({
-    type: "sequence",
-    steps: [{ keys: "F13" }, { text: "你好" }],
-  });
-  expect(within(step(2)).getByTestId("text-left").textContent).toBe("剩余 254");
-});
-
-it("counts what is left while typing, an emoji as two", () => {
-  captureAPI();
-  render(<Draft initial={mixed} />);
-  const box = () =>
-    within(step(3)).getByRole("textbox", { name: "输入的文字" });
-  const left = () => within(step(3)).getByTestId("text-left");
-  expect(left().textContent).toBe("剩余 254");
-  fireEvent.change(box(), { target: { value: "😀😀" } });
-  expect(left().textContent).toBe("剩余 252");
-  // Typing is not committing.
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好" }],
-  });
-  fireEvent.blur(box());
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "😀😀" }],
-  });
-});
-
-it("takes Enter as a new line, which a text may have, and keeps a tab", () => {
-  captureAPI();
-  render(<Draft initial={mixed} />);
-  const box = within(step(3)).getByRole("textbox", { name: "输入的文字" });
-  fireEvent.change(box, { target: { value: "第一行\n\t第二行" } });
-  // Enter is the key's own, so the browser adds the line; nothing is taken.
-  expect(fireEvent.keyDown(box, { key: "Enter" })).toBe(true);
-  expect(within(step(3)).queryByRole("alert")).toBeNull();
-  fireEvent.blur(box);
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "第一行\n\t第二行" }],
-  });
-});
-
-it("does not commit a text that is too long, and says so", () => {
-  captureAPI();
-  render(<Draft initial={mixed} />);
-  const box = () =>
-    within(step(3)).getByRole("textbox", { name: "输入的文字" });
-  fireEvent.change(box(), { target: { value: "x".repeat(257) } });
-  // The message and the count are there while typing.
-  expect(within(step(3)).getByRole("alert").textContent).toBe(
-    "最多 256 个字符，表情符号占两个",
-  );
-  expect(within(step(3)).getByTestId("text-left").textContent).toBe("剩余 -1");
-  expect(
-    within(step(3)).getByTestId("text-left").getAttribute("data-over"),
-  ).not.toBeNull();
-  fireEvent.blur(box());
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好" }],
-  });
-  expect(box().getAttribute("aria-invalid")).toBe("true");
-  // Escape puts the committed text back.
-  fireEvent.keyDown(box(), { key: "Escape" });
-  expect((box() as HTMLTextAreaElement).value).toBe("你好");
-  expect(within(step(3)).queryByRole("alert")).toBeNull();
-  // Exactly the limit is fine.
-  commit(box(), "x".repeat(256));
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "x".repeat(256) }],
-  });
-});
-
-it("does not commit a text with a control character, and says so", () => {
-  captureAPI();
-  render(<Draft initial={mixed} />);
-  const box = () =>
-    within(step(3)).getByRole("textbox", { name: "输入的文字" });
-  commit(box(), "a\u0007b");
-  expect(within(step(3)).getByRole("alert").textContent).toBe(
-    "不能含有换行和制表符以外的控制字符",
-  );
-  expect(draft().press).toMatchObject({
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好" }],
-  });
-});
-
-it("says the same in English", () => {
+it("says what is wrong with a wait in English", () => {
   captureAPI();
   render(<Draft language="en" initial={mixed} />);
-  const group = screen.getByRole("group", { name: "Step 3" });
-  const box = within(group).getByRole("textbox", { name: "Text to type" });
-  expect(within(group).getByTestId("text-left").textContent).toBe("254 left");
-  commit(box, "x".repeat(300));
+  const group = screen.getByRole("group", { name: "Step 2" });
+  commit(within(group).getByRole("textbox", { name: "Wait (ms)" }), "0");
   expect(within(group).getByRole("alert").textContent).toBe(
-    "At most 256 characters; an emoji counts as two",
+    "Enter a whole number from 1 to 10000",
   );
-  commit(box, "\u0000");
-  expect(within(group).getByRole("alert").textContent).toBe(
-    "No control characters except a newline and a tab",
-  );
-  const wait = within(screen.getByRole("group", { name: "Step 2" })).getByRole(
-    "textbox",
-    { name: "Wait (ms)" },
-  );
-  commit(wait, "0");
-  expect(
-    within(screen.getByRole("group", { name: "Step 2" })).getByRole("alert")
-      .textContent,
-  ).toBe("Enter a whole number from 1 to 10000");
 });
 
 it("shows a sequence from the file as rows, not locked", () => {
@@ -283,12 +177,11 @@ it("shows a sequence from the file as rows, not locked", () => {
   expect(step(1).textContent).toContain("快捷键");
   expect(shortcutValue("第 1 步")).toBe("Ctrl+A");
   expect(step(2).textContent).toContain("等待");
-  expect(step(3).textContent).toContain("文字");
+  expect(step(3).textContent).toContain("快捷键");
   // The line above the rows reads the sequence left to right.
   const preview = document.querySelector(".drawer-sequence-preview");
   expect(preview?.textContent).toContain("Ctrl");
   expect(preview?.textContent).toContain("100 ms");
-  expect(preview?.textContent).toContain("“你好”");
 });
 
 it("moves a step up or down, and the first cannot go up nor the last down", () => {
@@ -301,7 +194,7 @@ it("moves a step up or down, and the first cannot go up nor the last down", () =
   fireEvent.click(button("上移第 2 步"));
   expect(draft().press).toEqual({
     type: "sequence",
-    steps: [{ wait: 100 }, { keys: "Ctrl+A" }, { text: "你好" }],
+    steps: [{ wait: 100 }, { keys: "Ctrl+A" }, { keys: "Ctrl+B" }],
   });
   // The moved step is first now and cannot go up again: the focus is on the
   // button that moves it down.
@@ -314,7 +207,7 @@ it("keeps the focus on the same button when a step moves down", () => {
   fireEvent.click(screen.getByRole("button", { name: "下移第 1 步" }));
   expect(draft().press).toEqual({
     type: "sequence",
-    steps: [{ wait: 100 }, { keys: "Ctrl+A" }, { text: "你好" }],
+    steps: [{ wait: 100 }, { keys: "Ctrl+A" }, { keys: "Ctrl+B" }],
   });
   expect(document.activeElement).toBe(
     screen.getByRole("button", { name: "下移第 2 步" }),
@@ -333,17 +226,17 @@ it("moves shortcuts too, ending a capture that is running", async () => {
   fireEvent.click(screen.getByRole("button", { name: "下移第 1 步" }));
   await waitFor(() => expect(api.captureStop).toHaveBeenCalledTimes(1));
   expect(draft().press).toEqual({ type: "keys", keys: ["F14", "F13", "F15"] });
-  expect(screen.queryByRole("button", { name: "停止捕获" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "录入中…" })).toBeNull();
 });
 
-it("removes a step, and with the last wait or text it is a list of shortcuts again", () => {
+it("removes a step, and with the last wait it is a list of shortcuts again, then one shortcut", () => {
   captureAPI();
   render(
     <Draft
       initial={{
         press: {
           type: "sequence",
-          steps: [{ keys: "F13" }, { wait: 5 }, { keys: "F14" }, { text: "x" }],
+          steps: [{ keys: "F13" }, { wait: 5 }, { keys: "F14" }, { wait: 9 }],
         },
       }}
     />,
@@ -365,12 +258,13 @@ it("removes a step, and with the last wait or text it is a list of shortcuts aga
   });
   // A list of shortcuts is a list as before: the rows say they are shortcuts.
   expect(step(1).textContent).toContain("快捷键");
+  // One shortcut is written as the drawer writes a shortcut: held, no mode.
   fireEvent.click(screen.getByRole("button", { name: "删除第 1 步" }));
-  expect(draft().press).toEqual({ type: "keys", keys: "F14", mode: "tap" });
+  expect(draft().press).toEqual({ type: "keys", keys: "F14" });
   expect(screen.getByRole("group", { name: "快捷键" })).toBeDefined();
 });
 
-it("focuses the previous step's field when a wait or a text goes", () => {
+it("focuses the previous step's field when a step goes", () => {
   captureAPI();
   render(<Draft initial={mixed} />);
   fireEvent.click(screen.getByRole("button", { name: "删除第 3 步" }));
@@ -394,36 +288,39 @@ it("moves a wait that is the only step", () => {
   ).toBe(true);
   // Removing it leaves nothing to send: an empty shortcut.
   fireEvent.click(screen.getByRole("button", { name: "删除第 1 步" }));
-  expect(draft().press).toEqual({ type: "keys", keys: "", mode: "tap" });
+  expect(draft().press).toEqual({ type: "keys", keys: "" });
 });
 
-it("adds steps of every kind to a sequence, a shortcut by recording", async () => {
+it("adds steps of both kinds to a sequence, a shortcut by recording", async () => {
   const { record } = captureAPI();
   render(<Draft initial={mixed} />);
   addStep("快捷键");
   expect(draft().press).toEqual({
     type: "sequence",
-    steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好" }, { keys: "" }],
+    steps: [
+      { keys: "Ctrl+A" },
+      { wait: 100 },
+      { keys: "Ctrl+B" },
+      { keys: "" },
+    ],
   });
   await record("Enter", { field: "第 4 步" });
   expect(draft().press).toMatchObject({
     steps: [
       { keys: "Ctrl+A" },
       { wait: 100 },
-      { text: "你好" },
+      { keys: "Ctrl+B" },
       { keys: "Enter" },
     ],
   });
   addStep("等待");
-  addStep("文字");
   expect(draft().press).toMatchObject({
     steps: [
       { keys: "Ctrl+A" },
       { wait: 100 },
-      { text: "你好" },
+      { keys: "Ctrl+B" },
       { keys: "Enter" },
       { wait: 100 },
-      { text: "" },
     ],
   });
 });
@@ -438,71 +335,57 @@ it("stops offering a next step at 64", () => {
   ).toBe(true);
 });
 
-it("types a text: the action type 输入文字 on any gesture", () => {
-  captureAPI();
-  render(<Draft initial={{ tap: { type: "keys", keys: "F13" } }} />);
-  const types = within(screen.getByTestId("action-type"));
-  fireEvent.click(types.getByRole("radio", { name: "输入文字" }));
-  expect(draft().tap).toEqual({ type: "text", text: "" });
-  const box = screen.getByRole("textbox", { name: "输入的文字" });
-  expect(document.activeElement).not.toBe(box);
-  expect(screen.getByTestId("text-left").textContent).toBe("剩余 256");
-  commit(box, "Best regards,\nKim");
-  expect(draft().tap).toEqual({ type: "text", text: "Best regards,\nKim" });
-  expect(screen.getByTestId("text-left").textContent).toBe("剩余 239");
-  // No shortcut, no send mode, no steps: a text is typed as it stands.
-  expect(screen.queryByRole("button", { name: "添加下一步" })).toBeNull();
-  expect(screen.queryByRole("radiogroup", { name: "发送方式" })).toBeNull();
-  // Going back to a shortcut finds the shortcut that was there.
-  fireEvent.click(types.getByRole("radio", { name: "快捷键" }));
-  expect(draft().tap).toEqual({ type: "keys", keys: "F13" });
-  // And back to the text.
-  fireEvent.click(types.getByRole("radio", { name: "输入文字" }));
-  expect(draft().tap).toEqual({ type: "text", text: "Best regards,\nKim" });
-});
-
-it("edits a text action from the file, not locked", () => {
+it("offers no way to type a text, and shows a text action of the file as no type", () => {
   captureAPI();
   render(<Draft initial={{ hold: { type: "text", text: "签名 😀" } }} />);
   expect(screen.queryByTestId("locked-action")).toBeNull();
   const types = within(screen.getByTestId("action-type"));
+  expect(types.getAllByRole("radio").map((radio) => radio.textContent)).toEqual(
+    ["快捷键", "脚本"],
+  );
+  // Neither is selected, and nothing below says what the text is: the card
+  // does, as a file's action.
+  for (const radio of types.getAllByRole("radio"))
+    expect(radio.getAttribute("aria-checked")).toBe("false");
+  expect(screen.queryByRole("textbox", { name: "输入的文字" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "添加下一步" })).toBeNull();
+  expect(screen.getByRole("button", { name: /^长按/ }).textContent).toContain(
+    "签名 😀",
+  );
+  // Opening and not editing leaves the file's text as it is.
+  expect(draft()).toEqual({ hold: { type: "text", text: "签名 😀" } });
+  // Choosing a shortcut replaces it.
+  fireEvent.click(types.getByRole("radio", { name: "快捷键" }));
+  expect(draft().hold).toEqual({ type: "keys", keys: "" });
   expect(
-    types.getByRole("radio", { name: "输入文字" }).getAttribute("aria-checked"),
+    types.getByRole("radio", { name: "快捷键" }).getAttribute("aria-checked"),
   ).toBe("true");
-  const box = screen.getByRole("textbox", {
-    name: "输入的文字",
-  }) as HTMLTextAreaElement;
-  expect(box.value).toBe("签名 😀");
-  expect(screen.getByTestId("text-left").textContent).toBe("剩余 251");
 });
 
-it("shows a sequence and a text in the collapsed gesture, as what they send", () => {
+it("shows a sequence with a text step of the file as no type, and a shortcut replaces it", () => {
   captureAPI();
-  render(
-    <Draft
-      initial={{
-        ...mixed,
-        tap: { type: "text", text: "Best regards,\nKim here" },
-      }}
-    />,
-  );
-  const press = screen.getByRole("button", { name: /^按下/ });
-  expect(press.textContent).toContain("Ctrl");
+  render(<Draft initial={withText} />);
+  const types = within(screen.getByTestId("action-type"));
+  for (const radio of types.getAllByRole("radio"))
+    expect(radio.getAttribute("aria-checked")).toBe("false");
+  // No rows to edit, but the card still reads the sequence as it is.
+  expect(screen.queryByRole("group", { name: "第 1 步" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "添加下一步" })).toBeNull();
+  const press = screen.getByRole("button", { name: /^点按/ });
   expect(press.textContent).toContain("100 ms");
   expect(press.textContent).toContain("你好");
-  expect(press.querySelector(".drawer-summary-locked")).toBeNull();
-  const tap = screen.getByRole("button", { name: /^点按/ });
-  expect(tap.textContent).toContain("Best regards, Ki");
-  expect(tap.querySelector(".drawer-summary-locked")).toBeNull();
+  expect(draft()).toEqual(withText);
+  fireEvent.click(types.getByRole("radio", { name: "快捷键" }));
+  expect(draft().press).toEqual({ type: "keys", keys: "" });
 });
 
-it("keeps the text of a step when another step is edited", () => {
+it("keeps the other steps when one is edited", () => {
   captureAPI();
   render(<Draft initial={mixed} />);
   commit(within(step(2)).getByRole("textbox", { name: "等待时间（ms）" }), "7");
   expect(draft().press).toEqual({
     type: "sequence",
-    steps: [{ keys: "Ctrl+A" }, { wait: 7 }, { text: "你好" }],
+    steps: [{ keys: "Ctrl+A" }, { wait: 7 }, { keys: "Ctrl+B" }],
   });
 });
 
@@ -520,8 +403,8 @@ it("records a media key from the keyboard and shows it by name (OUT-20)", async 
   expect(caps()).toEqual(["音量加"]);
   await record("Ctrl+MediaNext");
   expect(caps()).toEqual(["Ctrl", "下一首"]);
-  // The gesture's summary reads them the same way.
-  expect(screen.getByRole("button", { name: /^按下/ }).textContent).toContain(
+  // The mapping's summary reads them the same way.
+  expect(screen.getByRole("button", { name: /^点按/ }).textContent).toContain(
     "下一首",
   );
 });
@@ -543,35 +426,6 @@ it("shows media keys in English, as steps too", async () => {
   expect(screen.getByRole("group", { name: "Step 2" }).textContent).toContain(
     "Mute",
   );
-});
-
-it("does not carry text typed in a step, and not committed, to the step that takes its place", () => {
-  captureAPI();
-  render(
-    <Draft
-      initial={{
-        press: { type: "sequence", steps: [{ text: "A" }, { text: "B" }] },
-      }}
-    />,
-  );
-  const box = (n: number) =>
-    within(step(n)).getByRole("textbox", {
-      name: "输入的文字",
-    }) as HTMLTextAreaElement;
-  // Too long to be a text: the box keeps it and says why, nothing is saved.
-  fireEvent.change(box(2), { target: { value: "x".repeat(257) } });
-  fireEvent.blur(box(2));
-  expect(within(step(2)).getByRole("alert")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "上移第 2 步" }));
-  expect(draft().press).toEqual({
-    type: "sequence",
-    steps: [{ text: "B" }, { text: "A" }],
-  });
-  // Each row shows its own step; the junk went with the step it was typed in.
-  expect(box(1).value).toBe("B");
-  expect(box(2).value).toBe("A");
-  expect(within(step(1)).queryByRole("alert")).toBeNull();
-  expect(within(step(2)).queryByRole("alert")).toBeNull();
 });
 
 it("does not carry a wait typed and not committed to the step that takes its place", () => {
@@ -599,39 +453,37 @@ it("does not carry a wait typed and not committed to the step that takes its pla
   expect(within(step(2)).queryByRole("alert")).toBeNull();
 });
 
-it("does not hand the text typed in a removed step to the step after it", () => {
+it("does not hand a wait typed in a removed step to the step after it", () => {
   captureAPI();
   render(
     <Draft
       initial={{
-        press: { type: "sequence", steps: [{ text: "A" }, { text: "B" }] },
+        press: { type: "sequence", steps: [{ wait: 100 }, { wait: 200 }] },
       }}
     />,
   );
-  const box = (n: number) =>
+  const field = (n: number) =>
     within(step(n)).getByRole("textbox", {
-      name: "输入的文字",
-    }) as HTMLTextAreaElement;
-  fireEvent.change(box(1), { target: { value: "x".repeat(257) } });
-  fireEvent.blur(box(1));
+      name: "等待时间（ms）",
+    }) as HTMLInputElement;
+  commit(field(1), "abc");
   fireEvent.click(screen.getByRole("button", { name: "删除第 1 步" }));
-  expect(draft().press).toEqual({ type: "sequence", steps: [{ text: "B" }] });
-  expect(box(1).value).toBe("B");
+  expect(draft().press).toEqual({ type: "sequence", steps: [{ wait: 200 }] });
+  expect(field(1).value).toBe("200");
   expect(within(step(1)).queryByRole("alert")).toBeNull();
 });
 
-it("says 未设置 for a text or a sequence still to be filled in, as for a shortcut", () => {
+it("says 未设置 for a text of the file or a shortcut still to be filled in", () => {
   captureAPI();
   render(
     <Draft
       initial={{
         tap: { type: "text", text: "" },
-        press: { type: "sequence", steps: [{ keys: "" }, { text: "" }] },
         hold: { type: "keys", keys: "" },
       }}
     />,
   );
-  for (const name of [/^点按/, /^按下/, /^长按/])
+  for (const name of [/^点按/, /^长按/])
     expect(screen.getByRole("button", { name }).textContent).toContain(
       "未设置",
     );
@@ -649,7 +501,7 @@ it("shows a sequence with a wait as what it sends, though its shortcut is not se
       }}
     />,
   );
-  const press = screen.getByRole("button", { name: /^按下/ });
+  const press = screen.getByRole("button", { name: /^点按/ });
   expect(press.textContent).toContain("150 ms");
   expect(press.textContent).not.toContain("未设置");
 });

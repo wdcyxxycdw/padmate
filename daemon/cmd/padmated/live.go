@@ -219,6 +219,10 @@ type liveConfig struct {
 	// RPCs (UI-19); nil means systemStartup, which gives a development or
 	// test build none. Only tests set it, with a fake entry.
 	startup func(options) (startupSetting, error)
+	// openWindow opens padmate's window for a double click on the tray
+	// icon and returns its path; nil means systemWindowOpener, which opens
+	// none in a development or test build. Only tests set it, with a fake.
+	openWindow func() (string, error)
 }
 
 // sessionWatcher watches the session's events: a *winsession.Watcher.
@@ -526,6 +530,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	r.profileWatchWake = make(chan struct{}, 1)
 	r.macroWatchWake = make(chan struct{}, 1)
 	r.profileTarget.Store(&liveProfile{id: opts.profileID, path: opts.profile, sum: cfg.sum, gen: 1, parents: cfg.profile.Parents})
+	r.logIgnoredFunctionKeyBindings(cfg.prog, opts.profileID)
 	r.end, r.endStop = context.WithCancelCause(ctx)
 	defer func() {
 		if run == nil {
@@ -1063,6 +1068,7 @@ func (r *liveRun) reloadProfileLocked(ctx context.Context, expected *liveProfile
 	r.cfg.prog = prog
 	r.publishProfile(&liveProfile{id: target.id, path: path, sum: c.Sum, gen: gen})
 	r.log.Info("profile reloaded", "file", path, "gen", gen, "warnings", len(ds))
+	r.logIgnoredFunctionKeyBindings(prog, target.id)
 	return nil
 }
 

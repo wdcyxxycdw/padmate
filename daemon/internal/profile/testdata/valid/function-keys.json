@@ -23,7 +23,8 @@
     },
     "start": {
       "ls.cw": {"press": {"type": "keys", "keys": "Ctrl+]", "mode": "tap"}},
-      "rt": {"label": "只有名字"}
+      "rt": {"label": "只有名字"},
+      "south": {"label": "填充", "press": {"type": "keys", "keys": "F", "mode": "tap"}}
     }
   }
 }

@@ -218,12 +218,12 @@ it("still describes a profile switch from the file", async () => {
         ?.textContent?.includes("切换到「photo」"),
     );
   expect(row?.querySelector(".bindings-actions")?.textContent).toBe(
-    "按下 切换到「photo」",
+    "点按 切换到「photo」",
   );
   // With the library, the target has the display name the drawer shows.
   act(() => editor.setState({ profiles: [{ id: "photo", name: "Photo" }] }));
   expect(row?.querySelector(".bindings-actions")?.textContent).toBe(
-    "按下 切换到「Photo」",
+    "点按 切换到「Photo」",
   );
 });
 
@@ -301,14 +301,11 @@ it("lists what is saved: a shortcut cleared in the drawer is left out (H1)", asy
   expect(listed).not.toContain("按住");
 });
 
-// UI-30 (ADR-0069): View and Menu are listed as function keys, and the list
-// follows the set the page shows.
-const withSets: Profile = {
+// UI-30 (ADR-0075): the function key is listed as one that cannot be opened,
+// and the list follows the set the page shows.
+const withSet: Profile = {
   ...profile,
-  functionKeys: {
-    back: { east: keys("Ctrl+Shift+Z"), "ls.up": keys("Up") },
-    start: { north: keys("F13") },
-  },
+  functionSet: { east: keys("Ctrl+Shift+Z"), "ls.up": keys("Up") },
 };
 const rowsOf = () =>
   [...document.querySelectorAll(".bindings-list li")].map((row) => [
@@ -318,21 +315,57 @@ const rowsOf = () =>
     row.querySelector("button") ? "button" : "fixed",
   ]);
 
-it("lists View and Menu as function keys that cannot be opened", async () => {
-  const editor = await editorFor(withSets);
+it("lists the function key as one that cannot be opened", async () => {
+  const editor = await editorFor(withSet);
   const onSelect = vi.fn();
   render(<Harness editor={editor} onSelect={onSelect} />);
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   const rows = rowsOf();
-  expect(rows.slice(-2)).toEqual([
-    ["View", "功能键", "按住时其他键换成另一套", "fixed"],
+  expect(rows.slice(-1)).toEqual([
     ["Menu", "功能键", "按住时其他键换成另一套", "fixed"],
   ]);
   // The rows of bindings come first, and open their chips.
-  expect(rows.slice(0, -2).every((row) => row[3] === "button")).toBe(true);
+  expect(rows.slice(0, -1).every((row) => row[3] === "button")).toBe(true);
+  expect(rows.filter((row) => row[3] === "fixed")).toHaveLength(1);
   const fixed = document.querySelector(".bindings-fixed") as HTMLElement;
   fireEvent.click(fixed);
   expect(onSelect).not.toHaveBeenCalled();
+});
+
+it("lists the one the settings choose, and the others as keys with their bindings", async () => {
+  const editor = await editorFor({
+    ...profile,
+    layers: {
+      base: {
+        ...profile.layers.base,
+        start: keys("Ctrl+S"),
+        back: keys("Ctrl+V"),
+      },
+    },
+  });
+  render(<Harness editor={editor} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "列表" }));
+  // Menu is the function key: what the file binds on it is not listed.
+  let rows = rowsOf();
+  expect(rows.map((row) => row[0])).toContain("View");
+  expect(rows.slice(-1)).toEqual([
+    ["Menu", "功能键", "按住时其他键换成另一套", "fixed"],
+  ]);
+  expect(rows.filter((row) => row[0] === "Menu")).toHaveLength(1);
+  expect(rows).toContainEqual(["View", "", "点按 Ctrl+V", "button"]);
+  // Another choice swaps the two.
+  act(() => editor.getState().setFunctionKey("back"));
+  rows = rowsOf();
+  expect(rows).toContainEqual(["Menu", "", "点按 Ctrl+S", "button"]);
+  expect(rows.slice(-1)).toEqual([
+    ["View", "功能键", "按住时其他键换成另一套", "fixed"],
+  ]);
+  expect(rows.filter((row) => row[0] === "View")).toHaveLength(1);
+  // The Xbox button.
+  act(() => editor.getState().setFunctionKey("guide"));
+  expect(rowsOf().slice(-1)).toEqual([
+    ["Xbox", "功能键", "按住时其他键换成另一套", "fixed"],
+  ]);
 });
 
 it("lists them when nothing else is set", async () => {
@@ -340,57 +373,66 @@ it("lists them when nothing else is set", async () => {
   render(<Harness editor={editor} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   expect(screen.getByText("尚未设置任何按键。")).toBeDefined();
-  expect(rowsOf().map((row) => row[0])).toEqual(["View", "Menu"]);
+  expect(rowsOf().map((row) => row[0])).toEqual(["Menu"]);
 });
 
 it("lists the keys of the set the page shows, under its name", async () => {
-  const editor = await editorFor(withSets);
+  const editor = await editorFor(withSet);
   render(<Harness editor={editor} onSelect={vi.fn()} />);
-  act(() => editor.getState().setView("back"));
+  act(() => editor.getState().setView("function"));
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   const dialog = screen.getByRole("dialog", { name: "所有按键" });
-  expect(dialog.textContent).toContain("绘画 · 按住 View");
+  expect(dialog.textContent).toContain("绘画 · 按住功能键");
   expect(rowsOf().map((row) => row.slice(0, 3))).toEqual([
-    ["B", "", "按下 Ctrl+Shift+Z"],
-    ["LS ↑", "", "按下 Up"],
-    ["View", "功能键", "按住时其他键换成另一套"],
+    ["B", "", "点按 Ctrl+Shift+Z"],
+    ["LS ↑", "", "点按 Up"],
     ["Menu", "功能键", "按住时其他键换成另一套"],
   ]);
-  act(() => editor.getState().setView("start"));
-  expect(rowsOf().map((row) => row[0])).toEqual(["Y", "View", "Menu"]);
   act(() => editor.getState().setView("normal"));
   expect(
     screen.getByRole("dialog", { name: "所有按键" }).textContent,
-  ).not.toContain("按住 View");
+  ).not.toContain("按住功能键");
+});
+
+it("lists the set of a file of the old functionKeys as the one set it stands for", async () => {
+  const editor = await editorFor({
+    ...profile,
+    functionKeys: {
+      back: { east: keys("Ctrl+Shift+Z") },
+      start: { north: keys("F13") },
+    },
+  });
+  render(<Harness editor={editor} onSelect={vi.fn()} />);
+  act(() => editor.getState().setView("function"));
+  fireEvent.click(screen.getByRole("button", { name: "列表" }));
+  expect(rowsOf().map((row) => row[0])).toEqual(["Y", "B", "Menu"]);
 });
 
 it("lists a set with nothing in it as empty", async () => {
   const editor = await editorFor(profile);
   render(<Harness editor={editor} onSelect={vi.fn()} />);
-  act(() => editor.getState().setView("start"));
+  act(() => editor.getState().setView("function"));
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   expect(screen.getByText("尚未设置任何按键。")).toBeDefined();
 });
 
-it("names the function keys as the pad prints them, in English too", async () => {
-  const editor = await editorFor(withSets);
-  render(
-    <BindingsListDialog
-      open
-      editor={editor}
-      info={{ ...info, type: "ps5" }}
-      language="en"
-      onClose={() => {}}
-      onSelect={() => {}}
-    />,
-  );
-  expect(rowsOf().slice(-2)).toEqual([
-    [
-      "Create",
-      "Function key",
-      "While held, other keys switch to another set",
-      "fixed",
-    ],
+it("names the function key as the pad prints it, in English too", async () => {
+  const editor = await editorFor(withSet);
+  const names = (type: string) => {
+    cleanup();
+    render(
+      <BindingsListDialog
+        open
+        editor={editor}
+        info={{ ...info, type }}
+        language="en"
+        onClose={() => {}}
+        onSelect={() => {}}
+      />,
+    );
+    return rowsOf().slice(-1);
+  };
+  expect(names("ps5")).toEqual([
     [
       "Options",
       "Function key",
@@ -398,24 +440,35 @@ it("names the function keys as the pad prints them, in English too", async () =>
       "fixed",
     ],
   ]);
+  act(() => editor.getState().setFunctionKey("back"));
+  expect(names("ps5")[0][0]).toBe("Create");
+  act(() => editor.getState().setFunctionKey("guide"));
+  expect(names("ps5")[0][0]).toBe("PS");
 });
 
-it("lists only Menu for a single Joy-Con held sideways", async () => {
-  const editor = await editorFor(withSets);
-  render(
-    <BindingsListDialog
-      open
-      editor={editor}
-      info={{ ...info, type: "joyconleft", buttonMask: 0xf }}
-      language="zh-CN"
-      onClose={() => {}}
-      onSelect={() => {}}
-    />,
-  );
+it("lists Menu for a single Joy-Con held sideways, and nothing for View, which it lacks", async () => {
+  const editor = await editorFor(withSet);
+  const show = () => {
+    cleanup();
+    render(
+      <BindingsListDialog
+        open
+        editor={editor}
+        info={{ ...info, type: "joyconleft", buttonMask: 0xf }}
+        language="zh-CN"
+        onClose={() => {}}
+        onSelect={() => {}}
+      />,
+    );
+  };
+  show();
   expect(rowsOf().slice(-1)).toEqual([
     ["−", "功能键", "按住时其他键换成另一套", "fixed"],
   ]);
   expect(rowsOf().filter((row) => row[3] === "fixed")).toHaveLength(1);
+  act(() => editor.getState().setFunctionKey("back"));
+  show();
+  expect(rowsOf().filter((row) => row[3] === "fixed")).toHaveLength(0);
 });
 
 it("lists the volume and media keys by name", async () => {
@@ -432,11 +485,11 @@ it("lists the volume and media keys by name", async () => {
   render(<Harness editor={editor} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   const dialog = screen.getByRole("dialog", { name: "所有按键" });
-  expect(dialog.textContent).toContain("按下 音量加");
+  expect(dialog.textContent).toContain("点按 音量加");
   expect(dialog.textContent).toContain("点按 Ctrl+下一首");
 });
 
-it("lists what the profile takes from the one it is based on, marked 继承 (PRO-19)", async () => {
+it("lists what the profile takes from the one its file extends, unmarked (PRO-19, ADR-0076)", async () => {
   const parent: Profile = {
     schemaVersion: 1,
     name: "绘画",
@@ -450,22 +503,46 @@ it("lists what the profile takes from the one it is based on, marked 继承 (PRO
     layers: { base: { south: keys("Ctrl+Shift+Z"), west: keys("E") } },
   };
   const editor = await editorFor(child, "sketch");
-  editor.setState({ parent: { id: "paint", profile: parent, origins: [] } });
+  editor.setState({ parent: { id: "paint", profile: parent } });
   render(<Harness editor={editor} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
   const dialog = screen.getByRole("dialog", { name: "所有按键" });
   const rows = [...dialog.querySelectorAll("li")]
     .filter((row) => row.querySelector(".bindings-control")?.textContent)
     .map((row) => row.textContent);
-  // Its own bindings first, then what the parent adds, under the parent's name.
+  // Its own bindings first, then what the parent adds, under the parent's name
+  // and with no mark.
   expect(rows.slice(0, 3)).toEqual([
-    "A按下 Ctrl+Shift+Z",
-    "X按下 E",
-    "重做继承按下 Ctrl+Y",
+    "A点按 Ctrl+Shift+Z",
+    "X点按 E",
+    "重做点按 Ctrl+Y",
   ]);
-  const inherited = [...dialog.querySelectorAll("li")].filter((row) =>
-    row.querySelector('[data-testid="inherited-mark"]'),
+  expect(dialog.querySelector('[data-testid="inherited-mark"]')).toBeNull();
+});
+
+it("shows the icon of each key before its name, as the key preview does (ADR-0076)", async () => {
+  const editor = await editorFor(profile);
+  render(<Harness editor={editor} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "列表" }));
+  const kinds = Object.fromEntries(
+    [...document.querySelectorAll(".bindings-list li")].map((row) => {
+      const control = row.querySelector(".bindings-control");
+      const icon = control?.firstElementChild;
+      // Drawn, not read: a screen reader gets the name.
+      expect(icon?.classList.contains("control-icon")).toBe(true);
+      expect(icon?.getAttribute("aria-hidden")).toBe("true");
+      return [control?.textContent, icon?.getAttribute("data-kind")];
+    }),
   );
-  expect(inherited).toHaveLength(1);
-  expect(inherited[0].textContent).toContain("Ctrl+Y");
+  expect(kinds).toEqual({
+    A: "face",
+    "LS ↑": "stick",
+    "LS 原始轴向右": "stick",
+    "LT 半按": "badge",
+    RT: "badge",
+    "十字键 ↖": "dpad",
+    // The function key, which cannot be opened, is listed the same way,
+    // with the symbol printed on it (ADR-0077).
+    Menu: "glyph",
+  });
 });

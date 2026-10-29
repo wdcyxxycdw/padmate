@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type {
-  ProfileAction,
-  ProfileKeysAction,
-} from "../shared/generated/schema";
+import type { ProfileAction } from "../shared/generated/schema";
 import type { Gesture } from "./editor-model";
 import {
-  endsInMouseButton,
+  chordModifiers,
   isHoldAction,
   isModifierOnly,
   type MediaKey,
@@ -20,8 +17,6 @@ import {
   normaliseChord,
   usesHighFunctionKey,
   wheelKeys,
-  withMouseKey,
-  withoutHeldButtonRepeat,
 } from "./shortcut-keys";
 
 describe("normaliseChord", () => {
@@ -212,126 +207,21 @@ describe("the mouse keys", () => {
   ])("%j names %s", (token, want) => {
     expect(mouseKeyName(token)).toBe(want);
   });
-  it.each<[string, boolean]>([
-    ["MouseLeft", true],
-    ["Ctrl+MouseRight", true],
-    ["LCtrl+Shift+xbutton1", true],
-    ["Alt+MButton", true],
-    ["WheelUp", false],
-    ["Ctrl+WheelDown", false],
-    ["Ctrl+Z", false],
-    ["Ctrl", false],
-    ["MouseLeft+Ctrl", false],
-    ["", false],
-  ])("%j ends in a button: %s", (spec, want) => {
-    expect(endsInMouseButton(spec)).toBe(want);
-  });
 });
 
-describe("withMouseKey", () => {
-  it.each<[string, MouseKey, string]>([
-    // The modifiers stay as written, the main key goes.
-    ["Ctrl+Z", "WheelUp", "Ctrl+WheelUp"],
-    ["LCtrl+Shift+Z", "WheelDown", "LCtrl+Shift+WheelDown"],
-    ["Alt+Win+F13", "WheelLeft", "Alt+Win+WheelLeft"],
-    ["Ctrl+sc25", "WheelRight", "Ctrl+WheelRight"],
-    ["Ctrl+Z", "MouseLeft", "Ctrl+MouseLeft"],
-    ["LShift+K", "MouseX2", "LShift+MouseX2"],
-    // A chord of modifiers only keeps them all.
-    ["Ctrl+Shift", "WheelUp", "Ctrl+Shift+WheelUp"],
-    ["rshift", "WheelUp", "rshift+WheelUp"],
-    ["Alt", "MouseRight", "Alt+MouseRight"],
-    // Another mouse key is replaced, of either kind.
-    ["Ctrl+WheelUp", "WheelDown", "Ctrl+WheelDown"],
-    ["WheelLeft", "WheelRight", "WheelRight"],
-    ["Ctrl+MouseLeft", "MouseRight", "Ctrl+MouseRight"],
-    ["MouseLeft", "WheelUp", "WheelUp"],
-    ["Shift+WheelUp", "MouseMiddle", "Shift+MouseMiddle"],
-    ["Ctrl+LButton", "MouseX1", "Ctrl+MouseX1"],
-    // Without a chord there is the mouse key alone.
-    ["", "WheelUp", "WheelUp"],
-    ["  ", "WheelDown", "WheelDown"],
-    ["Z", "WheelUp", "WheelUp"],
-    ["", "MouseLeft", "MouseLeft"],
-    ["Z", "MouseMiddle", "MouseMiddle"],
-    // A modifier twice (both sides, an alias) is kept once.
-    ["LCtrl+RCtrl+Z", "WheelUp", "LCtrl+WheelUp"],
-    ["Ctrl+Control+Shift", "WheelUp", "Ctrl+Shift+WheelUp"],
-    ["LCtrl+RCtrl+Z", "MouseLeft", "LCtrl+MouseLeft"],
-    // A dangling "+" leaves nothing behind.
-    ["Ctrl+", "WheelUp", "Ctrl+WheelUp"],
-    ["Ctrl+", "MouseRight", "Ctrl+MouseRight"],
-  ])("%j with %s gives %j", (spec, mouse, want) => {
-    expect(withMouseKey(spec, mouse)).toBe(want);
-  });
-  it("gives chords the daemon reads back", () => {
-    for (const mouse of mouseKeys) {
-      expect(normaliseChord(withMouseKey("lctrl+Z", mouse))).toBe(
-        `Ctrl+${mouse}`,
-      );
-      expect(normaliseChord(withMouseKey("", mouse))).toBe(mouse);
-    }
-  });
-});
-
-describe("withoutHeldButtonRepeat", () => {
-  const keys = (extra: Partial<ProfileKeysAction>): ProfileKeysAction => ({
-    type: "keys",
-    keys: "MouseLeft",
-    ...extra,
-  });
-  const typematic = { style: "typematic", delayMs: 350, rateHz: 12 } as const;
-  const clicks = { style: "tap", delayMs: 350, rateHz: 12 } as const;
-
-  it("turns a hold repeat of a button into repeated clicks", () => {
-    // An explicit hold mode, the default mode of press and hold, a repeat
-    // style that says it: all hold.
-    expect(
-      withoutHeldButtonRepeat(keys({ mode: "hold", repeat: typematic }), true),
-    ).toEqual(keys({ mode: "tap", repeat: clicks }));
-    expect(withoutHeldButtonRepeat(keys({ repeat: typematic }), true)).toEqual(
-      keys({ mode: "tap", repeat: clicks }),
-    );
-    expect(
-      withoutHeldButtonRepeat(keys({ repeat: { rateHz: 5 } }), true),
-    ).toEqual(keys({ mode: "tap", repeat: { rateHz: 5, style: "tap" } }));
-    expect(
-      withoutHeldButtonRepeat(
-        keys({ keys: "Ctrl+xbutton1", repeat: typematic }),
-        true,
-      ),
-    ).toEqual(keys({ keys: "Ctrl+xbutton1", mode: "tap", repeat: clicks }));
-  });
-  it("keeps the other settings of the repeat", () => {
-    const repeat = {
-      style: "typematic",
-      delayMs: 0,
-      rateHz: 30,
-      minRateHz: 5,
-    } as const;
-    expect(
-      withoutHeldButtonRepeat(keys({ mode: "hold", repeat }), true),
-    ).toEqual(keys({ mode: "tap", repeat: { ...repeat, style: "tap" } }));
-  });
-  it("leaves repeated clicks, holds and every other chord as they are", () => {
-    const same: [ProfileKeysAction, boolean][] = [
-      [keys({ mode: "tap", repeat: clicks }), true],
-      [keys({ repeat: { style: "tap" } }), true],
-      [keys({ mode: "tap", repeat: { rateHz: 5 } }), true],
-      [keys({ mode: "hold" }), true],
-      [keys({}), true],
-      [keys({ mode: "tap" }), true],
-      // Not a gesture that holds: its mode is tap.
-      [keys({ repeat: { rateHz: 5 } }), false],
-      [keys({ keys: "Ctrl+Z", mode: "hold", repeat: typematic }), true],
-      [keys({ keys: "WheelUp", mode: "hold", repeat: typematic }), true],
-      [keys({ keys: "Ctrl+WheelDown", repeat: typematic }), true],
-      [keys({ keys: "", mode: "hold", repeat: typematic }), true],
-      // A sequence has no repeat to settle.
-      [keys({ keys: ["MouseLeft", "F13"], mode: "tap" }), true],
-    ];
-    for (const [action, canHold] of same)
-      expect(withoutHeldButtonRepeat(action, canHold)).toBe(action);
+describe("chordModifiers", () => {
+  it.each<[string, Record<string, string>]>([
+    ["LCtrl+Shift+Z", { Ctrl: "LCtrl", Shift: "Shift" }],
+    ["RAlt+LWin+WheelUp", { Alt: "RAlt", Win: "LWin" }],
+    ["Ctrl+Shift", { Ctrl: "Ctrl", Shift: "Shift" }],
+    ["rshift+MouseLeft", { Shift: "rshift" }],
+    // A modifier twice is named once, by the first.
+    ["LCtrl+RCtrl+Z", { Ctrl: "LCtrl" }],
+    ["F13", {}],
+    ["MouseLeft", {}],
+    ["", {}],
+  ])("%j has %j", (spec, want) => {
+    expect(chordModifiers(spec)).toEqual(want);
   });
 });
 

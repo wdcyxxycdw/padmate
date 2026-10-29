@@ -513,11 +513,9 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
         mounts.delete(stage);
         stage.park();
       }
-      stages.release(stage);
     };
-    // The stage is held from here on: whatever throws while the mount is set
-    // up must still let go of it, or its idle time never starts and the
-    // caller, which gets no mount to dispose, cannot do it.
+    // Whatever throws while the mount is set up must still take the canvas
+    // off the page: the caller, which gets no mount to dispose, cannot do it.
     try {
       mounts.set(stage, detach);
       host.prepend(stage.canvas);

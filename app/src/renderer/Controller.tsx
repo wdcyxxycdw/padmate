@@ -23,7 +23,11 @@ import {
 } from "./controller-model";
 import { createControllerScene } from "./controller-scene";
 import { stageKey } from "./controller-stage";
-import { isFunctionKey } from "./editor-model";
+import {
+  defaultFunctionKey,
+  type FunctionKey,
+  isFunctionKey,
+} from "./editor-model";
 import type { Translate } from "./i18n";
 import type { Language, PadInput } from "./store";
 import { Icon } from "./ui/Icon";
@@ -46,6 +50,8 @@ interface ControllerProps {
   chips?: Record<string, ChipInfo>;
   /** Show the bottom hint (only while no drawer or editor notice is open). */
   hint?: boolean;
+  /** The function key (ADR-0075), whose chip is only a tag; Menu by default. */
+  functionKey?: FunctionKey;
 }
 
 /** Printed face colors, matched by the label the controller reports. */
@@ -215,13 +221,6 @@ function Chip({
     chip.scriptOwned && chip.state !== "script"
       ? tx(language, "由脚本接管", "Handled by a script")
       : "",
-    chip.fromParent
-      ? tx(
-          language,
-          `继承自 ${chip.fromParent}`,
-          `Inherited from ${chip.fromParent}`,
-        )
-      : "",
     locked
       ? tx(language, "只能在配置文件中修改", "Only editable in the file")
       : "",
@@ -265,7 +264,6 @@ function Chip({
       {...position}
       data-missing={chip.missing || undefined}
       data-inherited={chip.inherited || undefined}
-      data-from-parent={!!chip.fromParent || undefined}
       aria-label={name}
       aria-pressed={selected}
       title={notes.length ? `${name}\n${notes.join(" · ")}` : name}
@@ -298,11 +296,6 @@ function Chip({
           </span>
         )}
       </span>
-      {chip.fromParent && (
-        <span className="stage-chip-parent" data-testid="inherited-mark">
-          {tx(language, "继承", "Inherited")}
-        </span>
-      )}
       {trigger && strength > 0 && (
         <span className="stage-chip-pct">{Math.round(strength * 100)}%</span>
       )}
@@ -330,6 +323,7 @@ export function Controller({
   onMenuControl,
   chips,
   hint = false,
+  functionKey = defaultFunctionKey,
 }: ControllerProps) {
   const stageHost = useRef<HTMLDivElement>(null);
   const callouts = useRef<SVGSVGElement>(null);
@@ -433,7 +427,7 @@ export function Controller({
                 callout={callout}
                 chip={
                   chips?.[callout.control] ??
-                  (isFunctionKey(callout.control)
+                  (isFunctionKey(callout.control, functionKey)
                     ? functionKeyChip(language)
                     : {
                         title: callout.label,

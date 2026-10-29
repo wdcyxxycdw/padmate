@@ -342,19 +342,23 @@ func TestHasDepth(t *testing.T) {
 	}
 }
 
-// Back and Start are the function keys (MAP-27, ADR-0069), and only they.
-func TestIsFunctionKey(t *testing.T) {
+// Back, Guide and Start are the controls that can be the function key
+// (MAP-27, ADR-0075), and only they; Start is the default.
+func TestCanBeFunctionKey(t *testing.T) {
 	for _, c := range control.All() {
-		want := c == control.Back || c == control.Start
-		if got := c.IsFunctionKey(); got != want {
-			t.Errorf("%s.IsFunctionKey() = %t, want %t", c, got, want)
+		want := c == control.Back || c == control.Guide || c == control.Start
+		if got := c.CanBeFunctionKey(); got != want {
+			t.Errorf("%s.CanBeFunctionKey() = %t, want %t", c, got, want)
 		}
 	}
-	if control.Invalid.IsFunctionKey() {
-		t.Error("Invalid is a function key")
+	if control.Invalid.CanBeFunctionKey() {
+		t.Error("Invalid can be the function key")
 	}
-	// The alias of back is the function key, too.
-	if c, ok := control.Parse("select"); !ok || !c.IsFunctionKey() {
+	// The alias of back can be, too.
+	if c, ok := control.Parse("select"); !ok || !c.CanBeFunctionKey() {
 		t.Errorf("select parses to %v, %t", c, ok)
+	}
+	if !control.DefaultFunctionKey.CanBeFunctionKey() || control.DefaultFunctionKey != control.Start {
+		t.Errorf("DefaultFunctionKey = %s", control.DefaultFunctionKey)
 	}
 }

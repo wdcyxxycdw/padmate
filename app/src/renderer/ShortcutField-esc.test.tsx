@@ -2,7 +2,8 @@
 // UI-24: recording a shortcut swallows every key, so a keyboard user needs a
 // way out that is not a click: hold Esc for 1 second. The helper only watches
 // the keyboard (it never swallows), so the window sees the Esc press and its
-// release, and times the hold itself. A short Esc is still a shortcut (Esc).
+// release, and times the hold itself. A short Esc is still a shortcut (Esc),
+// recorded when it is let go (ADR-0076); a held one records nothing.
 import {
   act,
   cleanup,
@@ -23,6 +24,8 @@ import type { Language } from "./store";
 afterEach(() => {
   vi.useRealTimers();
   cleanup();
+  // A mouse press that was never released keeps the next click from the page.
+  window.dispatchEvent(new Event("blur"));
 });
 
 function Draft({
@@ -54,19 +57,15 @@ async function capturing(language: Language = "zh-CN") {
   const { emit } = fakeCapture(api);
   const view = render(<Draft language={language} />);
   const name = language === "en" ? "Capture shortcut" : "录入快捷键";
+  const busyName = language === "en" ? "Recording…" : "录入中…";
   fireEvent.click(screen.getByRole("button", { name }));
   await waitFor(() => expect(api.captureStart).toHaveBeenCalledTimes(1));
   // waitFor and the session's promises keep their real timers.
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
-  const button = () =>
-    screen.getByRole("button", {
-      name: language === "en" ? "Stop capture" : "停止捕获",
-    });
+  const button = () => screen.getByRole("button", { name: busyName });
   const idle = () =>
     screen.queryByRole("button", { name }) !== null &&
-    screen.queryByRole("button", {
-      name: language === "en" ? "Stop capture" : "停止捕获",
-    }) === null;
+    screen.queryByRole("button", { name: busyName }) === null;
   const key = (type: "keyDown" | "keyUp", init: KeyboardEventInit = {}) =>
     fireEvent[type](button(), { key: "Escape", ...init });
   /** What the helper reports for one press of Esc. */
@@ -75,10 +74,9 @@ async function capturing(language: Language = "zh-CN") {
   return { api, emit, view, button, idle, key, helperEsc, pass };
 }
 
-describe("hold Esc to end a capture (UI-24)", () => {
-  it("ends the capture after 1 second and keeps the chord before the Esc", async () => {
+describe("hold Esc to cancel a capture (UI-24)", () => {
+  it("ends the capture after 1 second and records nothing, not the Esc that is held", async () => {
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
     await c.helperEsc();
     // While it is held the field shows what the helper heard.
     expect(shortcutValue()).toBe("Esc");
@@ -88,9 +86,9 @@ describe("hold Esc to end a capture (UI-24)", () => {
     expect(draft().press).toEqual({ type: "keys", keys: "F13" });
     c.pass(1);
     expect(c.idle()).toBe(true);
-    // The held Esc is not a shortcut: the one before it is committed.
-    expect(draft().press).toEqual({ type: "keys", keys: "Ctrl+K" });
-    expect(shortcutValue()).toBe("Ctrl+K");
+    // Nothing changed, and the field is back to what it had.
+    expect(draft().press).toEqual({ type: "keys", keys: "F13" });
+    expect(shortcutValue()).toBe("F13");
     // The session is let go as the field leaves capturing (no waitFor: it
     // needs the timer that is faked here).
     expect(c.api.captureStop).toHaveBeenCalledExactlyOnceWith(1);
@@ -98,22 +96,11 @@ describe("hold Esc to end a capture (UI-24)", () => {
 
   it("does not care which comes first, the key event or the helper's", async () => {
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
     c.key("keyDown");
     await c.helperEsc();
-    c.pass(1000);
-    expect(c.idle()).toBe(true);
-    expect(draft().press).toEqual({ type: "keys", keys: "Ctrl+K" });
-  });
-
-  it("changes nothing when nothing was recorded before the Esc", async () => {
-    const c = await capturing();
-    await c.helperEsc();
-    c.key("keyDown");
     c.pass(1000);
     expect(c.idle()).toBe(true);
     expect(draft().press).toEqual({ type: "keys", keys: "F13" });
-    expect(shortcutValue()).toBe("F13");
   });
 
   it("changes nothing when the helper never heard the Esc either", async () => {
@@ -124,34 +111,52 @@ describe("hold Esc to end a capture (UI-24)", () => {
     expect(draft().press).toEqual({ type: "keys", keys: "F13" });
   });
 
-  it("still records a short Esc as Esc", async () => {
+  it("still records a short Esc as Esc, when it is let go", async () => {
     const c = await capturing();
     await c.helperEsc();
     c.key("keyDown");
     c.pass(400);
-    c.key("keyUp");
-    c.pass(5000);
+    // Held, it is not yet anything: it may be the start of a hold.
     expect(c.idle()).toBe(false);
-    fireEvent.click(c.button());
+    expect(draft().press).toEqual({ type: "keys", keys: "F13" });
+    c.key("keyUp");
+    expect(c.idle()).toBe(true);
+    expect(draft().press).toEqual({ type: "keys", keys: "Esc" });
+    // Nothing is left of the hold that was running.
+    expect(vi.getTimerCount()).toBe(0);
+    c.pass(5000);
     expect(draft().press).toEqual({ type: "keys", keys: "Esc" });
   });
 
-  it("keeps an earlier short Esc when a later one is held", async () => {
+  it("records an Esc let go just before the second is up", async () => {
     const c = await capturing();
     await c.helperEsc();
     c.key("keyDown");
-    c.pass(100);
+    c.pass(999);
     c.key("keyUp");
-    await c.helperEsc();
-    c.key("keyDown");
-    c.pass(1000);
+    c.pass(10);
     expect(c.idle()).toBe(true);
     expect(draft().press).toEqual({ type: "keys", keys: "Esc" });
   });
 
+  it("records the Esc as its position when asked", async () => {
+    const api = editorAPIFixture();
+    const { emit } = fakeCapture(api);
+    render(<Draft />);
+    fireEvent.click(screen.getByRole("button", { name: "录入快捷键" }));
+    await waitFor(() => expect(api.captureStart).toHaveBeenCalledTimes(1));
+    // (The key position option is in the drawer's 高级, as for any shortcut.)
+    fireEvent.click(screen.getByText("高级"));
+    fireEvent.click(screen.getByRole("switch", { name: "映射扫描码" }));
+    await emit({ active: true, chord: "Esc", physicalChord: "sc:0x01" });
+    fireEvent.keyUp(screen.getByRole("button", { name: "录入中…" }), {
+      key: "Escape",
+    });
+    expect(draft().press).toEqual({ type: "keys", keys: "sc:0x01" });
+  });
+
   it("times from the first press: repeats of a held key do not restart it", async () => {
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
     await c.helperEsc();
     c.key("keyDown");
     c.pass(600);
@@ -161,23 +166,13 @@ describe("hold Esc to end a capture (UI-24)", () => {
     c.key("keyDown", { repeat: true });
     c.pass(100);
     expect(c.idle()).toBe(true);
-    expect(draft().press).toEqual({ type: "keys", keys: "Ctrl+K" });
+    expect(draft().press).toEqual({ type: "keys", keys: "F13" });
   });
 
   it("a repeat alone never starts a hold", async () => {
     const c = await capturing();
     c.key("keyDown", { repeat: true });
     c.pass(5000);
-    expect(c.idle()).toBe(false);
-  });
-
-  it("is cancelled by releasing Esc before the second is up", async () => {
-    const c = await capturing();
-    await c.helperEsc();
-    c.key("keyDown");
-    c.pass(999);
-    c.key("keyUp");
-    c.pass(10);
     expect(c.idle()).toBe(false);
   });
 
@@ -193,27 +188,47 @@ describe("hold Esc to end a capture (UI-24)", () => {
     expect(c.idle()).toBe(false);
   });
 
-  it("is cancelled when focus leaves the field, which ends the capture anyway", async () => {
+  it("is the first key when another goes down while it is held", async () => {
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
+    await c.helperEsc();
+    c.key("keyDown");
+    c.pass(300);
+    await c.emit({ active: true, chord: "K", vk: 75 });
+    expect(c.idle()).toBe(true);
+    expect(draft().press).toEqual({ type: "keys", keys: "Esc" });
+  });
+
+  it("is a chord like any other with a modifier: it ends the capture at once", async () => {
+    const c = await capturing();
+    await c.emit({ active: true, chord: "LShift+Esc", vk: 27 });
+    expect(c.idle()).toBe(true);
+    expect(draft().press).toEqual({ type: "keys", keys: "LShift+Esc" });
+  });
+
+  it("goes with the capture when focus leaves the field, which ends the capture anyway", async () => {
+    const c = await capturing();
     const idle = vi.getTimerCount();
     c.key("keyDown");
     expect(vi.getTimerCount()).toBe(idle + 1);
     fireEvent.blur(c.button(), { relatedTarget: document.body });
     expect(c.idle()).toBe(true);
-    expect(draft().press).toEqual({ type: "keys", keys: "Ctrl+K" });
+    expect(draft().press).toEqual({ type: "keys", keys: "F13" });
     // The hold is gone with the capture: nothing is left to run later.
     expect(vi.getTimerCount()).toBe(idle);
   });
 
-  it("is cancelled when the capture is stopped by hand, and when the field goes away", async () => {
+  it("goes with the capture when it ends otherwise, and when the field goes away", async () => {
     const c = await capturing();
     const idle = vi.getTimerCount();
     c.key("keyDown");
     expect(vi.getTimerCount()).toBe(idle + 1);
-    fireEvent.click(c.button());
+    // A click in the window is a key, and ends the capture.
+    fireEvent.mouseDown(c.button());
     expect(c.idle()).toBe(true);
+    expect(draft().press).toEqual({ type: "keys", keys: "MouseLeft" });
     expect(vi.getTimerCount()).toBe(idle);
+    // (The press is never released here: the window losing focus ends it.)
+    window.dispatchEvent(new Event("blur"));
 
     // A hold that is running while the field unmounts leaves no timer behind.
     c.view.unmount();
@@ -273,9 +288,10 @@ describe("hold Esc to end a capture (UI-24)", () => {
     }
   });
 
-  it("does not hold on after an ordinary stop: Esc is the page's at once", async () => {
+  it("does not hold on after an ordinary end: Esc is the page's at once", async () => {
     const c = await capturing();
-    fireEvent.click(c.button());
+    await c.emit({ active: true, chord: "F5", vk: 116 });
+    expect(c.idle()).toBe(true);
     const target = screen.getByRole("button", { name: "录入快捷键" });
     const down = new KeyboardEvent("keydown", {
       key: "Escape",
@@ -286,17 +302,17 @@ describe("hold Esc to end a capture (UI-24)", () => {
     expect(down.defaultPrevented).toBe(false);
   });
 
-  it("says how to end the capture, in both languages", async () => {
+  it("says how to cancel the capture, in both languages", async () => {
     const zh = await capturing();
-    expect(screen.getByText(/^请按下快捷键。/).textContent).toBe(
-      "请按下快捷键。点击“停止捕获”、按住 Esc 1 秒或切换到其他窗口即结束录入。",
+    expect(document.querySelector(".drawer-hint")?.textContent).toContain(
+      "按住 Esc 1 秒取消",
     );
     zh.view.unmount();
     cleanup();
     vi.useRealTimers();
     await capturing("en");
-    expect(screen.getByText(/^Press a shortcut\./).textContent).toBe(
-      "Press a shortcut. Stop, hold Esc for 1 second or switch windows to finish.",
+    expect(document.querySelector(".drawer-hint")?.textContent).toContain(
+      "Hold Esc for 1 second to cancel",
     );
   });
 });
@@ -311,12 +327,12 @@ describe("why a capture ended by itself (UI-24)", () => {
       cleanup();
       vi.useRealTimers();
       const c = await capturing();
-      await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
+      await c.emit({ active: true, chord: "LCtrl", vk: 162 });
       await c.emit({ active: false, reason });
       expect(c.idle(), reason).toBe(true);
       expect(screen.queryByRole("alert"), reason).toBeNull();
       // What was recorded is kept, as before.
-      expect(draft().press, reason).toEqual({ type: "keys", keys: "Ctrl+K" });
+      expect(draft().press, reason).toEqual({ type: "keys", keys: "LCtrl" });
     }
   });
 
@@ -340,23 +356,23 @@ describe("why a capture ended by itself (UI-24)", () => {
 
   it("does not say that no key was pressed: the 30 seconds are the whole capture", async () => {
     // The helper stops itself 30 seconds after it started, key or no key; a
-    // person who recorded Ctrl+K at 5 s and waited is told how long a capture
+    // person who held Ctrl at 5 s and waited is told how long a capture
     // lasts, not that nothing was pressed.
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
+    await c.emit({ active: true, chord: "LCtrl", vk: 162 });
     c.pass(30000);
     await c.emit({ active: false, reason: "timeout" });
     const alert = screen.getByRole("alert");
     expect(alert.textContent).toBe(CAP);
     expect(alert.textContent).not.toContain("没有按键");
-    expect(draft().press).toEqual({ type: "keys", keys: "Ctrl+K" });
+    expect(draft().press).toEqual({ type: "keys", keys: "LCtrl" });
   });
 
   it("says the same when the helper ends after 30 seconds, which is how it does", async () => {
     // The helper's own 30 s context ends first and it exits without a final
     // event, so the main process reports the exit as "ended".
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
+    await c.emit({ active: true, chord: "LCtrl", vk: 162 });
     c.pass(30000);
     await c.emit({ active: false, reason: "ended" });
     expect(screen.getByRole("alert").textContent).toBe(CAP);
@@ -364,7 +380,7 @@ describe("why a capture ended by itself (UI-24)", () => {
 
   it("says it broke off when the helper ends early", async () => {
     const c = await capturing();
-    await c.emit({ active: true, chord: "Ctrl+K", vk: 75 });
+    await c.emit({ active: true, chord: "LCtrl", vk: 162 });
     c.pass(4000);
     await c.emit({ active: false, reason: "ended" });
     expect(screen.getByRole("alert").textContent).toBe(

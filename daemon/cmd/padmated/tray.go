@@ -60,6 +60,8 @@ type trayUI struct {
 	notify      func(tray.Notification) error
 	pause, quit <-chan struct{}
 	startup     <-chan struct{}
+	// open is a double click on the icon: open padmate's window.
+	open <-chan struct{}
 }
 
 func (r *liveRun) driveTray(ui *trayUI) (code int) {
@@ -170,6 +172,8 @@ func (r *liveRun) serveTray(ui *trayUI, done <-chan struct{}) {
 				r.log.Warn("tray pause failed", "err", err)
 			}
 			refresh()
+		case <-ui.open:
+			r.openWindow()
 		case <-ui.startup:
 			// The menu item is disabled without an entry; a click that comes
 			// anyway writes nothing.

@@ -689,10 +689,16 @@ func parseProfileIn(lib *profilelib.Library, id, path string, data []byte, stder
 	if ds.HasErrors() {
 		return nil, nil, ds, errProfile
 	}
-	if len(settings) > 0 && settings[0] != nil {
-		p = settings[0].WithDefaults(p)
+	var cfg *profile.Config
+	if len(settings) > 0 {
+		cfg = settings[0]
 	}
-	prog, err = engine.Compile(p)
+	if cfg != nil {
+		p = cfg.WithDefaults(p)
+	}
+	// The function key is config.json's (ADR-0075); without settings it is the
+	// default, start.
+	prog, err = engine.Compile(p, engine.WithFunctionKey(cfg.FunctionKeyOrDefault()))
 	if err != nil {
 		fmt.Fprintf(stderr, "padmated: %s: cannot compile the profile: %v\n", path, err) // not reached for a parsed profile
 		return nil, nil, ds, err

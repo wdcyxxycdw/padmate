@@ -156,10 +156,10 @@ export function BindingSummary({
           className="analog-more"
           title={tx(
             language,
-            `另有 ${gestures.length - 1} 个手势`,
+            `另有 ${gestures.length - 1} 个映射`,
             gestures.length > 2
-              ? `${gestures.length - 1} more gestures`
-              : "1 more gesture",
+              ? `${gestures.length - 1} more mappings`
+              : "1 more mapping",
           )}
         >
           +{gestures.length - 1}
@@ -533,7 +533,6 @@ export function BindingCard({
       <div className="analog-card-body">
         <BindingFields
           key={control}
-          control={control}
           value={binding}
           onChange={(next) => onChange(next)}
           timing={timing}

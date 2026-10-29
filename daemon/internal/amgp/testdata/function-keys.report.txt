@@ -1,12 +1,8 @@
-信息  set 1 / back：View（Back） 在 AntiMicroX 里按住换到 set 2；导入为“按住 View（Back）”的一套按键（功能键）
-信息  set 1 / start：Menu（Start） 在 AntiMicroX 里按住换到 set 3；导入为“按住 Menu（Start）”的一套按键（功能键）
-丢弃  set 2 / start：Menu（Start） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
-丢弃  set 4 / back：View（Back） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
-丢弃  set 4 / start：Menu（Start） 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键
+信息  set 1 / back：View（Back） 在 AntiMicroX 里按住换到 set 2；导入为按住功能键时的一套按键
+信息  set 1 / start：Menu（Start） 在 AntiMicroX 里按住换到 set 3；导入为按住功能键时的一套按键
 信息  set 4：按住它的层里没有绑定的 28 个控件设成了“屏蔽”：AntiMicroX 的 set 是整套替换，没绑的就什么也不做
 信息  set 4：导入为层“Bumper set”
-信息  set 2：按住它的层里没有绑定的 28 个控件设成了“屏蔽”：AntiMicroX 的 set 是整套替换，没绑的就什么也不做
-信息  set 2：set 2 导入为按住 View（Back） 时的一套按键
-信息  set 3：按住它的层里没有绑定的 28 个控件设成了“屏蔽”：AntiMicroX 的 set 是整套替换，没绑的就什么也不做
-信息  set 3：set 3 导入为按住 Menu（Start） 时的一套按键
+信息  set 3：按住功能键时用 set 3（Menu 的）的按键，再加 set 2（View 的）里 Menu 的没有绑定的控件。padmate 只有一个功能键，在设置里选，默认是 Menu（右边的小键）
+信息  set 3：按住它的层里没有绑定的 27 个控件设成了“屏蔽”：AntiMicroX 的 set 是整套替换，没绑的就什么也不做
+信息  start：Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View 或 Xbox 键
 信息  这个配置除了 base 还有 1 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留

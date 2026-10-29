@@ -2,15 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Profile } from "../shared/generated/schema";
 import { savedForm, setBaseBinding, swapView } from "./editor-model";
 import {
-  keyInheritance,
-  originOf,
+  isClearedInherited,
   type ParentProfile,
   parentOf,
-  restoreInherited,
-  withExtends,
   withInherited,
   writeBack,
-  writesControl,
 } from "./inheritance";
 
 const parentProfile: Profile = {
@@ -28,13 +24,14 @@ const parentProfile: Profile = {
       back: { tap: { type: "keys", keys: "F20" } },
     },
   },
+  // The old format, which the parent's own file may still be in: it stands
+  // for the one function set of ADR-0075.
   functionKeys: { back: { south: { tap: { type: "keys", keys: "F1" } } } },
 };
 
 const parent: ParentProfile = {
   id: "paint",
   profile: parentProfile,
-  origins: [],
 };
 
 const child: Profile = {
@@ -67,7 +64,12 @@ describe("withInherited", () => {
   it("adds the controls of the parent that the profile does not write", () => {
     const shown = withInherited(child, parent);
     // Its own bindings first, in order; then what the parent adds.
-    expect(keysOf(shown.layers.base)).toEqual(["east", "north", "south"]);
+    expect(keysOf(shown.layers.base)).toEqual([
+      "east",
+      "north",
+      "south",
+      "back",
+    ]);
     expect(shown.layers.base.south).toEqual(parentProfile.layers.base.south);
   });
   it("lets a control the profile writes replace the parent's, under any alias", () => {
@@ -78,26 +80,70 @@ describe("withInherited", () => {
     });
     expect(keysOf(shown.layers.base)).not.toContain("b");
   });
-  it("leaves the layer's color and the function keys' old bindings out", () => {
+  it("leaves the layer's color out, and adds back, which is an ordinary control", () => {
     const shown = withInherited(child, parent);
     expect(shown.layers.base).not.toHaveProperty("color");
-    expect(shown.layers.base).not.toHaveProperty("back");
-  });
-  it("adds the sets of the function keys", () => {
-    const shown = withInherited(child, parent);
-    expect(shown.functionKeys).toEqual({
-      back: { south: { tap: { type: "keys", keys: "F1" } } },
+    expect(shown.layers.base.back).toEqual({
+      tap: { type: "keys", keys: "F20" },
     });
+  });
+  it("adds the function set, whichever format the parent writes it in", () => {
+    const shown = withInherited(child, parent);
+    expect(shown.functionSet).toEqual({
+      south: { tap: { type: "keys", keys: "F1" } },
+    });
+    expect(shown).not.toHaveProperty("functionKeys");
+    const written = withInherited(child, {
+      ...parent,
+      profile: {
+        ...parentProfile,
+        functionKeys: undefined,
+        functionSet: { south: { tap: { type: "keys", keys: "F1" } } },
+      },
+    });
+    expect(written.functionSet).toEqual(shown.functionSet);
     const own = withInherited(
       {
         ...child,
-        functionKeys: { back: { north: { tap: { type: "keys", keys: "N" } } } },
+        functionSet: { north: { tap: { type: "keys", keys: "N" } } },
       },
       parent,
     );
-    expect(own.functionKeys?.back).toEqual({
+    expect(own.functionSet).toEqual({
       north: { tap: { type: "keys", keys: "N" } },
       south: { tap: { type: "keys", keys: "F1" } },
+    });
+  });
+  it("takes a profile of the old functionKeys as the set it stands for, as the parent is", () => {
+    const own = withInherited(
+      {
+        ...child,
+        functionKeys: {
+          back: { north: { tap: { type: "keys", keys: "N" } } },
+          start: { west: { tap: { type: "keys", keys: "W" } } },
+        },
+      },
+      parent,
+    );
+    // Menu's set first, View's controls after it, then the parent's.
+    expect(Object.keys(own.functionSet ?? {})).toEqual([
+      "west",
+      "north",
+      "south",
+    ]);
+    expect(own).not.toHaveProperty("functionKeys");
+  });
+  it("lets a control of the set that the profile writes replace the parent's", () => {
+    const own = withInherited(
+      {
+        ...child,
+        functionSet: { a: { tap: { type: "keys", keys: "S" } } },
+      },
+      parent,
+    );
+    // a is south under its alias.
+    expect(own.functionSet).toEqual({
+      a: { tap: { type: "keys", keys: "S" } },
     });
   });
   it("merges the key names and the timing member by member", () => {
@@ -152,7 +198,6 @@ describe("withInherited", () => {
     const bare: ParentProfile = {
       id: "paint",
       profile: { schemaVersion: 1, name: "P", layers: { base: {} } },
-      origins: [],
     };
     expect(withInherited(child, bare)).toBe(child);
   });
@@ -184,7 +229,7 @@ describe("writeBack", () => {
     expect(result.controlNames).toBeUndefined();
     expect(result.timing).toEqual({ multiTapMs: 200 });
     expect(result.analog).toBeUndefined();
-    expect(result.functionKeys).toBeUndefined();
+    expect(result.functionSet).toBeUndefined();
   });
   it("changes only the control edited when it is the profile's own", () => {
     const edited = setBaseBinding(shown(), "north", {
@@ -245,16 +290,33 @@ describe("writeBack", () => {
       east: { tap: { type: "keys", keys: "E" } },
     });
   });
-  it("writes a function key's set the same way", () => {
-    const swapped = swapView(shown(), "back");
+  it("writes the function set the same way", () => {
+    const swapped = swapView(shown(), "function");
     const edited = setBaseBinding(swapped, "south", {
       tap: { type: "keys", keys: "F2" },
     });
-    const result = writeBack(child, parent, swapView(edited, "back"));
-    expect(result.functionKeys).toEqual({
-      back: { south: { tap: { type: "keys", keys: "F2" } } },
+    const result = writeBack(child, parent, swapView(edited, "function"));
+    expect(result.functionSet).toEqual({
+      south: { tap: { type: "keys", keys: "F2" } },
     });
+    expect(result).not.toHaveProperty("functionKeys");
     expect(result.layers.base).toEqual(child.layers.base);
+  });
+  it("leaves the set a profile of the old format has to be saved as functionSet", () => {
+    const old: Profile = {
+      ...child,
+      functionKeys: { start: { east: { tap: { type: "keys", keys: "Z" } } } },
+    };
+    const swapped = swapView(withInherited(old, parent), "function");
+    const edited = setBaseBinding(swapped, "south", {
+      tap: { type: "keys", keys: "F2" },
+    });
+    const result = writeBack(old, parent, swapView(edited, "function"));
+    expect(result.functionSet).toEqual({
+      east: { tap: { type: "keys", keys: "Z" } },
+      south: { tap: { type: "keys", keys: "F2" } },
+    });
+    expect(result).not.toHaveProperty("functionKeys");
   });
   it("writes only the key names and timing the edit changed", () => {
     const edited: Profile = {
@@ -282,18 +344,18 @@ describe("writeBack", () => {
     expect(result.analog).toEqual({ ls: { deadzone: 0.15 } });
   });
   it("keeps what the profile has in the order the file has it", () => {
-    const withFunctionKeys: Profile = {
+    const withSet: Profile = {
       ...child,
-      functionKeys: { start: { east: { tap: { type: "keys", keys: "Z" } } } },
+      functionSet: { east: { tap: { type: "keys", keys: "Z" } } },
       controlNames: { east: "E" },
     };
     const edited = setBaseBinding(
-      withInherited(withFunctionKeys, parent),
+      withInherited(withSet, parent),
       "south",
       south,
     );
-    const result = writeBack(withFunctionKeys, parent, edited);
-    expect(Object.keys(result)).toEqual(Object.keys(withFunctionKeys));
+    const result = writeBack(withSet, parent, edited);
+    expect(Object.keys(result)).toEqual(Object.keys(withSet));
   });
   it("does not change the profile it was given", () => {
     const before = structuredClone(child);
@@ -331,9 +393,6 @@ describe("savedForm of a profile with a parent", () => {
     const saved = savedForm(draft, parent);
     expect(saved.layers.base).toEqual({ south: {} });
     // The file says south does nothing here; the parent's is not inherited.
-    const found = keyInheritance(saved, parent, "normal", ["south"]);
-    expect(found.inherited).toEqual([]);
-    expect(found.overridden).toEqual(["south"]);
     expect(withInherited(saved, parent).layers.base.south).toEqual({});
   });
   it("drops a key emptied that the parent does not bind, as it does without a parent", () => {
@@ -368,20 +427,16 @@ describe("savedForm of a profile with a parent", () => {
       south: { label: "撤销", hold: { type: "keys", keys: "F2" } },
     });
   });
-  it("does the same in the set of a function key", () => {
-    const draft = emptied(
-      { base: {} },
-      { functionKeys: { back: { south: empty } } },
-    );
-    expect(savedForm(draft, parent).functionKeys).toEqual({
-      back: { south: {} },
-    });
+  it("does the same in the function set", () => {
+    const draft = emptied({ base: {} }, { functionSet: { south: empty } });
+    expect(savedForm(draft, parent).functionSet).toEqual({ south: {} });
     // The parent binds nothing there: the set goes.
-    const other = emptied(
-      { base: {} },
-      { functionKeys: { start: { south: empty } } },
-    );
-    expect(savedForm(other, parent)).not.toHaveProperty("functionKeys");
+    const other = emptied({ base: {} }, { functionSet: { west: empty } });
+    expect(savedForm(other, parent)).not.toHaveProperty("functionSet");
+  });
+  it("does the same for back, start and guide, ordinary controls the parent may bind", () => {
+    const draft = emptied({ base: { back: empty } });
+    expect(savedForm(draft, parent).layers.base).toEqual({ back: {} });
   });
   it("does the same for the shared (common) controls", () => {
     const up: ParentProfile = {
@@ -400,238 +455,69 @@ describe("savedForm of a profile with a parent", () => {
   });
 });
 
-describe("keyInheritance", () => {
-  it("tells a key the parent binds and the profile leaves to it", () => {
-    expect(keyInheritance(child, parent, "normal", ["south"])).toEqual({
-      inherited: ["south"],
-      overridden: [],
-      own: false,
-      from: "paint",
-    });
+describe("isClearedInherited", () => {
+  const warning = (pointer: string) => ({
+    severity: "warning",
+    pointer,
+    message: "binding has no action",
   });
-  it("tells a key both bind: the profile's own settings win", () => {
-    expect(keyInheritance(child, parent, "normal", ["east"])).toEqual({
-      inherited: [],
-      overridden: ["east"],
-      own: true,
-    });
-  });
-  it("tells a key only the profile binds", () => {
-    expect(keyInheritance(child, parent, "normal", ["north"])).toEqual({
-      inherited: [],
-      overridden: [],
-      own: true,
-    });
-  });
-  it("knows an alias for the key it is", () => {
-    expect(keyInheritance(child, parent, "normal", ["b"]).overridden).toEqual([
-      "b",
-    ]);
-  });
-  it("covers every key of a control, such as a stick", () => {
-    const stick: ParentProfile = {
-      ...parent,
-      profile: {
-        ...parentProfile,
-        layers: {
-          base: {
-            "ls.up": { tap: { type: "keys", keys: "W" } },
-            "ls.down": { tap: { type: "keys", keys: "S" } },
-          },
-        },
-      },
-    };
-    const own: Profile = {
-      ...child,
-      layers: { base: { "ls.up": { tap: { type: "keys", keys: "Up" } } } },
-    };
+  const cleared: Profile = { ...child, layers: { base: { south: {} } } };
+  it("is the warning about a key left empty while the parent binds it", () => {
     expect(
-      keyInheritance(own, stick, "normal", [
-        "leftstick",
-        "ls.up",
-        "ls.down",
-        "ls.left",
-      ]),
-    ).toEqual({
-      inherited: ["ls.down"],
-      overridden: ["ls.up"],
-      own: true,
-      from: "paint",
-    });
-  });
-  it("counts an empty binding as the profile's own, overriding the parent", () => {
-    const cleared: Profile = {
-      ...child,
-      layers: { base: { south: {} } },
-    };
-    expect(keyInheritance(cleared, parent, "normal", ["south"])).toEqual({
-      inherited: [],
-      overridden: ["south"],
-      own: false,
-    });
-  });
-  it("reads the set of a function key in its view", () => {
-    expect(keyInheritance(child, parent, "back", ["south"])).toEqual({
-      inherited: ["south"],
-      overridden: [],
-      own: false,
-      from: "paint",
-    });
-    expect(keyInheritance(child, parent, "start", ["south"]).inherited).toEqual(
-      [],
-    );
-  });
-  it("says nothing without a parent for the profile", () => {
-    const none = { inherited: [], overridden: [], own: false };
-    expect(keyInheritance(child, null, "normal", ["south"])).toEqual(none);
-    expect(
-      keyInheritance(child, { ...parent, id: "other" }, "normal", ["south"]),
-    ).toEqual(none);
-  });
-  it("names the profile that wrote the key, which may be the parent's own parent", () => {
-    const deep: ParentProfile = {
-      ...parent,
-      origins: [{ pointer: "/layers/base/south", profile: "root" }],
-    };
-    expect(keyInheritance(child, deep, "normal", ["south"]).from).toBe("root");
-  });
-});
-
-describe("originOf", () => {
-  const origins = (...list: [string, string][]): ParentProfile => ({
-    ...parent,
-    origins: list.map(([pointer, profile]) => ({ pointer, profile })),
-  });
-  it("is the parent when its own parents wrote nothing of the control", () => {
-    expect(originOf(parent, "normal", "south")).toBe("paint");
-    expect(
-      originOf(origins(["/layers/base/east", "root"]), "normal", "south"),
-    ).toBe("paint");
-  });
-  it("is the parent's parent that the merge listed for the control", () => {
-    expect(
-      originOf(origins(["/layers/base/south", "root"]), "normal", "south"),
-    ).toBe("root");
+      isClearedInherited(warning("/layers/base/south"), cleared, parent),
+    ).toBe(true);
     // Under another name of the control.
-    expect(
-      originOf(origins(["/layers/base/a", "root"]), "normal", "south"),
-    ).toBe("root");
-  });
-  it("is the one listed for a layer or a set the merge took whole", () => {
-    expect(originOf(origins(["/layers/base", "root"]), "normal", "south")).toBe(
-      "root",
-    );
-    expect(originOf(origins(["/layers", "root"]), "normal", "south")).toBe(
-      "root",
-    );
-    expect(
-      originOf(origins(["/functionKeys/back", "root"]), "back", "south"),
-    ).toBe("root");
-    expect(originOf(origins(["/functionKeys", "root"]), "back", "south")).toBe(
-      "root",
+    const aliased: Profile = { ...child, layers: { base: { a: {} } } };
+    expect(isClearedInherited(warning("/layers/base/a"), aliased, parent)).toBe(
+      true,
     );
   });
-  it("prefers the most specific pointer", () => {
+  it("is not the warning about a key the parent does not bind", () => {
+    const north: Profile = { ...child, layers: { base: { north: {} } } };
     expect(
-      originOf(
-        origins(["/layers/base", "root"], ["/layers/base/south", "mid"]),
-        "normal",
-        "south",
+      isClearedInherited(warning("/layers/base/north"), north, parent),
+    ).toBe(false);
+  });
+  it("is not the warning about a key the profile fills in, or does not write", () => {
+    expect(
+      isClearedInherited(warning("/layers/base/east"), child, parent),
+    ).toBe(false);
+    expect(
+      isClearedInherited(warning("/layers/base/south"), child, parent),
+    ).toBe(false);
+  });
+  it("reads the function set in its view", () => {
+    const set: Profile = { ...child, functionSet: { south: {} } };
+    expect(isClearedInherited(warning("/functionSet/south"), set, parent)).toBe(
+      true,
+    );
+  });
+  it("is not any other diagnostic, nor without a parent for the profile", () => {
+    expect(
+      isClearedInherited(
+        { ...warning("/layers/base/south"), severity: "error" },
+        cleared,
+        parent,
       ),
-    ).toBe("mid");
-  });
-  it("looks only at the set of the view", () => {
+    ).toBe(false);
     expect(
-      originOf(origins(["/layers/base/south", "root"]), "back", "south"),
-    ).toBe("paint");
-    expect(
-      originOf(
-        origins(["/functionKeys/back/south", "root"]),
-        "normal",
-        "south",
+      isClearedInherited(
+        { ...warning("/layers/base/south"), message: "something else" },
+        cleared,
+        parent,
       ),
-    ).toBe("paint");
+    ).toBe(false);
     expect(
-      originOf(origins(["/timing/holdMs", "root"]), "normal", "south"),
-    ).toBe("paint");
-  });
-});
-
-describe("restoreInherited", () => {
-  it("takes the keys out of the profile's own set", () => {
-    const result = restoreInherited(child, "normal", ["east"]);
-    expect(result.layers.base).toEqual({
-      north: { tap: { type: "keys", keys: "N" } },
-    });
-    expect(child.layers.base.east).toBeDefined();
-  });
-  it("takes an empty binding out too", () => {
-    const cleared: Profile = { ...child, layers: { base: { south: {} } } };
-    expect(restoreInherited(cleared, "normal", ["south"]).layers.base).toEqual(
-      {},
-    );
-  });
-  it("works on the set of a function key", () => {
-    const own: Profile = {
-      ...child,
-      functionKeys: {
-        back: { south: { tap: { type: "keys", keys: "F2" } } },
-        start: { east: { tap: { type: "keys", keys: "F3" } } },
-      },
-    };
-    const result = restoreInherited(own, "back", ["south"]);
-    expect(result.functionKeys).toEqual({
-      start: { east: { tap: { type: "keys", keys: "F3" } } },
-    });
-    expect(result.layers.base).toEqual(child.layers.base);
-  });
-  it("leaves a key the profile does not write as it is", () => {
-    expect(restoreInherited(child, "normal", ["south"]).layers.base).toEqual(
-      child.layers.base,
-    );
-  });
-});
-
-describe("writesControl", () => {
-  it("is whether the profile's own set has the control", () => {
-    expect(writesControl(child, "normal", "east")).toBe(true);
-    expect(writesControl(child, "normal", "b")).toBe(true);
-    expect(writesControl(child, "normal", "south")).toBe(false);
-    expect(writesControl(child, "back", "south")).toBe(false);
-  });
-});
-
-describe("withExtends", () => {
-  const alone: Profile = {
-    schemaVersion: 1,
-    name: "P",
-    timing: { holdMs: 1 },
-    layers: { base: {} },
-  };
-  it("puts extends right after the name", () => {
-    const result = withExtends(alone, "paint");
-    expect(Object.keys(result)).toEqual([
-      "schemaVersion",
-      "name",
-      "extends",
-      "timing",
-      "layers",
-    ]);
-    expect(result.extends).toBe("paint");
-  });
-  it("changes it where it is, and takes it out", () => {
-    const based = withExtends(alone, "paint");
-    const other = withExtends({ ...based, name: "Q" }, "photo");
-    expect(Object.keys(other)).toEqual(Object.keys(based));
-    expect(other.extends).toBe("photo");
-    const none = withExtends(based, undefined);
-    expect(none).toEqual(alone);
-    expect("extends" in none).toBe(false);
-    expect(withExtends(alone, undefined)).toEqual(alone);
-  });
-  it("does not change the profile it was given", () => {
-    const before = structuredClone(alone);
-    withExtends(alone, "paint");
-    expect(alone).toEqual(before);
+      isClearedInherited(warning("/layers/base/south"), cleared, null),
+    ).toBe(false);
+    expect(
+      isClearedInherited(warning("/layers/base/south"), cleared, {
+        ...parent,
+        id: "other",
+      }),
+    ).toBe(false);
+    expect(
+      isClearedInherited(warning("/layers/base/south"), null, parent),
+    ).toBe(false);
   });
 });

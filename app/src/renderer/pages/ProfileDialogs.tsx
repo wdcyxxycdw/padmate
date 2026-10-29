@@ -1,7 +1,7 @@
-// Dialogs of the profiles page (UI-17, UI-18, PRO-20, SCR-51): create,
-// rename and delete a library profile, answer a name clash of an imported
-// file or scripts that clash with the library's, pick a window and confirm
-// moving an app to another profile.
+// Dialogs of the profiles page (UI-17, UI-18, PRO-20, SCR-51): create a
+// blank library profile, rename and delete one, answer a name clash of an
+// imported file or scripts that clash with the library's, pick a window and
+// confirm moving an app to another profile.
 // The topbar profile menu reuses NewProfileDialog.
 import {
   type FormEvent,
@@ -24,25 +24,16 @@ import { macroName } from "../../shared/macro-names";
 import {
   exeLabel,
   failureText,
-  isDefaultProfile,
   nameProblemText,
-  parentName,
   profileHasScript,
   profileName,
+  profileNameOf,
   profileNameProblem,
-  profilesBasedOn,
   uniqueName,
 } from "../library-model";
-import { activeProfileId, type Language, type PadmateState } from "../store";
-import {
-  TEMPLATES,
-  type TemplateId,
-  templateForDevice,
-  templateName,
-  templateProfileName,
-} from "../templates";
+import type { Language, PadmateState } from "../store";
 import { FieldError } from "../ui/commit-field";
-import { Dialog, Notice, Segmented } from "../ui/controls";
+import { Dialog, Notice } from "../ui/controls";
 import "./profiles.css";
 
 const tx = (language: Language, zh: string, en: string) =>
@@ -126,25 +117,13 @@ function useOpenFocus(open: boolean) {
 
 type NewProfileState = Pick<
   PadmateState,
-  "language" | "profiles" | "status" | "selectedDevice" | "createProfile"
+  "language" | "profiles" | "createProfile"
 >;
 
-type StartFrom = "template" | "blank" | "copy";
-
-/** The pad a template is preselected for: the selected one, else the first. */
-function connectedPad(state: Pick<PadmateState, "status" | "selectedDevice">) {
-  const devices = state.status?.devices ?? [];
-  return (
-    devices.find((entry) => entry.info.id === state.selectedDevice) ??
-    devices[0]
-  )?.info;
-}
-
 /**
- * 新建配置: a name, and a starter template (PRO-18), a blank profile or a
- * copy of the active one. A library with only the fixed default starts on
- * a template. Names are unique (F2). onCreated gets the new library ID after
- * the list has been reloaded.
+ * 新建配置: asks for a name and makes a blank profile of it (ADR-0076; a copy
+ * is the card's 复制). Names are unique (F2). onCreated gets the new library
+ * ID after the list has been reloaded.
  */
 export function NewProfileDialog({
   open,
@@ -160,31 +139,17 @@ export function NewProfileDialog({
   const language = state.language;
   const t = (zh: string, en: string) => tx(language, zh, en);
   const formId = useId();
-  // A template's name, numbered when a profile has it already.
-  const suggestion = () =>
-    uniqueName(templateProfileName(language), state.profiles);
   const [name, setName] = useState("");
-  // The name is the template's suggestion, not typed by the user.
-  const [suggested, setSuggested] = useState(false);
-  const [source, setSource] = useState<StartFrom>("blank");
-  // null follows the connected pad until the user picks a template.
-  const [picked, setPicked] = useState<TemplateId | null>(null);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
   // Starts over while rendering the opening, so the focus effect below
-  // selects the suggested name.
+  // finds the empty field.
   const [shown, setShown] = useState(false);
   if (shown !== open) {
     setShown(open);
     if (open) {
-      const first = !state.profiles.some(
-        (entry) => !isDefaultProfile(entry.id),
-      );
-      setName(first ? suggestion() : "");
-      setSuggested(first);
-      setSource(first ? "template" : "blank");
-      setPicked(null);
+      setName("");
       setTried(false);
       setBusy(false);
       setFailure("");
@@ -192,41 +157,14 @@ export function NewProfileDialog({
   }
   const input = useOpenFocus(open);
   const inline = useInlineReport(open);
-  const activeId = activeProfileId(state);
-  const active = state.profiles.find((entry) => entry.id === activeId);
-  // A broken profile cannot be renamed after copying it.
-  const canCopy = !!active && !active.problem;
-  const current = source === "copy" && !canCopy ? "blank" : source;
-  const template = picked ?? templateForDevice(connectedPad(state));
   const problem = profileNameProblem(name, state.profiles);
-  const changeName = (value: string) => {
-    setName(value);
-    setSuggested(false);
-  };
-  const changeSource = (next: StartFrom) => {
-    setSource(next);
-    if (next === "template" && !name.trim()) {
-      setName(suggestion());
-      setSuggested(true);
-    } else if (next !== "template" && suggested) {
-      setName("");
-      setSuggested(false);
-    }
-  };
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
     setTried(true);
     if (problem || busy) return;
     setBusy(true);
     setFailure("");
-    const outcome = await state.createProfile(name, {
-      ...(current === "copy"
-        ? { copyFrom: activeId }
-        : current === "template"
-          ? { template }
-          : {}),
-      inline,
-    });
+    const outcome = await state.createProfile(name, { inline });
     setBusy(false);
     if (outcome.ok) {
       onClose();
@@ -261,7 +199,7 @@ export function NewProfileDialog({
         <TextField
           label={t("名称", "Name")}
           value={name}
-          onChange={changeName}
+          onChange={setName}
           error={
             problem && (tried || problem === "taken")
               ? nameProblemText(problem, language)
@@ -269,44 +207,6 @@ export function NewProfileDialog({
           }
           inputRef={input}
         />
-        <div className="field">
-          <span className="field-label">{t("内容", "Start from")}</span>
-          <Segmented
-            label={t("内容", "Start from")}
-            value={current}
-            onChange={changeSource}
-            options={[
-              { value: "template", label: t("模板", "Template") },
-              { value: "blank", label: t("空白", "Blank") },
-              {
-                value: "copy",
-                label: t("复制当前", "Copy current"),
-                disabled: !canCopy,
-                title: canCopy ? profileName(active, language) : undefined,
-              },
-            ]}
-          />
-        </div>
-        {current === "template" && (
-          <div className="field">
-            <span className="field-label">{t("手柄", "Controller")}</span>
-            <Segmented
-              label={t("手柄", "Controller")}
-              value={template}
-              onChange={setPicked}
-              options={TEMPLATES.map((info) => ({
-                value: info.id,
-                label: templateName(info.id, language),
-              }))}
-            />
-            <span className="field-hint">
-              {t(
-                "多数快捷键需先在绘画软件中设置，可在映射页导出对照表。",
-                "Most shortcuts need setting up in your painting app first; the Mapping page can export a table of them.",
-              )}
-            </span>
-          </div>
-        )}
         {failure && (
           <Notice kind="error" role="alert">
             {failure}
@@ -466,12 +366,10 @@ export function DeleteProfileDialog({
     } else
       setFailure(
         failureText(outcome.failure, language, (id) =>
-          parentName(id, state.profiles, language),
+          profileNameOf(id, state.profiles, language),
         ),
       );
   };
-  // Profiles based on this one (PRO-19) are written out whole before it goes.
-  const basedOn = entry ? profilesBasedOn(state.profiles, entry.id).length : 0;
   return (
     <Dialog
       open={!!entry}
@@ -513,17 +411,6 @@ export function DeleteProfileDialog({
             {t(
               "文件夹中的脚本也将一并删除。",
               "Script files in its folder are deleted too.",
-            )}
-          </>
-        )}
-        {basedOn > 0 && (
-          <>
-            <br />
-            {t(
-              `有 ${basedOn} 个配置基于它，将保留各自现有的按键。`,
-              basedOn === 1
-                ? "1 profile is based on it and keeps its current keys."
-                : `${basedOn} profiles are based on it and keep their current keys.`,
             )}
           </>
         )}

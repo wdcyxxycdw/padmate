@@ -11,13 +11,16 @@ import type {
 import type { Profile, ProfileTiming } from "../shared/generated/schema";
 import { EditHistory } from "./editor-history";
 import {
+  defaultFunctionKey,
   editorError,
+  type FunctionKey,
   isLabelOnlyWarning,
   type KeyView,
   type LayerUsage,
   layerUsage,
   savedForm,
   stableStringify,
+  withNewFunctionSet,
 } from "./editor-model";
 import { isClearedInherited, type ParentProfile } from "./inheritance";
 
@@ -100,21 +103,29 @@ interface EditorState {
    */
   macros: MacroList | null;
   /**
-   * The profile this one is based on (PRO-19, ADR-0070), merged with its own
-   * parents, to show what this one inherits from it; null when this one is
-   * based on none, before it is read, or when it cannot be (the profile's
-   * problem says why). It is what the parent's file holds, not this profile's
-   * draft: the draft is always this profile's own file.
+   * The profile this one's file says it extends (PRO-19, ADR-0070), merged
+   * with its own parents, to show what this one takes from it; null when it
+   * extends none (the usual case: the UI no longer writes `extends`,
+   * ADR-0076), before it is read, or when it cannot be (the profile's problem
+   * says why). It is what the parent's file holds, not this profile's draft:
+   * the draft is always this profile's own file.
    */
   parent: ParentProfile | null;
   /**
    * Which set of bindings the mapping page shows and edits: the usual one, or
-   * the set a function key switches to while held (UI-30, ADR-0069). View
-   * state, not part of the profile; it is the usual one again whenever a
-   * profile is loaded.
+   * the function set that applies while the function key is held (UI-30,
+   * ADR-0075). View state, not part of the profile; it is the usual one again
+   * whenever a profile is loaded.
    */
   view: KeyView;
   setView(view: KeyView): void;
+  /**
+   * The function key (config.json functionKey): Menu until the app tells
+   * otherwise, and the same for every profile and controller. It is held
+   * here, as globalTiming is, so the editor's parts read it from one place.
+   */
+  functionKey: FunctionKey;
+  setFunctionKey(key: FunctionKey): void;
   /** What the file uses beyond the base layer; null until a draft loads. */
   usage: LayerUsage | null;
   /** Non-empty when the GUI must not edit this profile (ADR-0045). */
@@ -243,8 +254,11 @@ export function createEditorStore(api: PadmateAPI) {
         !isLabelOnlyWarning(diagnostic, draft) &&
         !isClearedInherited(diagnostic, draft, heldParent),
     );
+  // The function key the settings choose (setFunctionKey); the daemon ignores
+  // a layer's bindings on it, so the usage does not count them.
+  let functionKey: FunctionKey = defaultFunctionKey;
   const analyse = (draft: Profile) => ({
-    usage: layerUsage(draft),
+    usage: layerUsage(draft, functionKey),
     readOnly: (draft.defaultLayer && draft.defaultLayer !== "base"
       ? "defaultLayer"
       : "") as EditorState["readOnly"],
@@ -323,9 +337,8 @@ export function createEditorStore(api: PadmateAPI) {
     /**
      * Reads the list of profiles again, and nothing else: another profile
      * made, copied, imported, renamed or deleted changes the names the editor
-     * offers (the profiles to base this one on, the name of the parent) while
-     * this profile's own file stays as it is. A list that cannot be read
-     * leaves the one held.
+     * checks a name against while this profile's own file stays as it is. A
+     * list that cannot be read leaves the one held.
      */
     async function profileList() {
       const state = get();
@@ -368,10 +381,10 @@ export function createEditorStore(api: PadmateAPI) {
       try {
         const result = await api.resolveProfile(id);
         if (token !== sequence || parentToken !== parentSequence) return;
-        const profile: Profile = JSON.parse(result.text);
+        const profile: Profile = withNewFunctionSet(JSON.parse(result.text));
         if (!profile.layers?.base)
           throw new Error("The parent does not contain a base layer");
-        heldParent = { id, profile, origins: result.inherited ?? [] };
+        heldParent = { id, profile };
         // The warnings about keys the profile empties are not shown now.
         savedDiagnostics = shown(savedDiagnostics, get().draft);
         set({
@@ -391,7 +404,9 @@ export function createEditorStore(api: PadmateAPI) {
      * file is the one its steps were made on.
      */
     function fromDisk(id: string, result: ProfileDocument) {
-      const draft: Profile = JSON.parse(result.text);
+      // A file of the old functionKeys is edited as the functionSet it stands
+      // for (ADR-0075); form() is the same for both, so it is not unsaved.
+      const draft: Profile = withNewFunctionSet(JSON.parse(result.text));
       if (!draft.layers?.base)
         throw new Error("The profile does not contain a base layer");
       stopGroup();
@@ -718,12 +733,10 @@ export function createEditorStore(api: PadmateAPI) {
      */
     function show(id: string, draft: Profile) {
       halted = false;
-      // Based on another profile now (or on none): read that one.
-      const basedOn = get().draft?.extends;
       const unsaved = form(draft) !== saved;
       set({
         draft,
-        usage: layerUsage(draft),
+        usage: layerUsage(draft, functionKey),
         unsaved,
         reloaded: false,
         discarded: false,
@@ -732,7 +745,6 @@ export function createEditorStore(api: PadmateAPI) {
           : { saveProblem: "", saveError: "", diagnostics: savedDiagnostics }),
         ...steps(id),
       });
-      if (basedOn !== draft.extends) void parentView();
     }
     /**
      * Shows a draft from the history and saves it. The profile's name is
@@ -769,6 +781,16 @@ export function createEditorStore(api: PadmateAPI) {
       parent: null,
       view: "normal",
       setView: (view) => set({ view }),
+      functionKey: defaultFunctionKey,
+      setFunctionKey: (key) => {
+        if (key === functionKey) return;
+        functionKey = key;
+        const draft = get().draft;
+        set({
+          functionKey: key,
+          ...(draft ? { usage: layerUsage(draft, key) } : {}),
+        });
+      },
       usage: null,
       readOnly: "",
       globalTiming: {},

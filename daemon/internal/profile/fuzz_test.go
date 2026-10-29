@@ -28,6 +28,8 @@ var fuzzSeeds = map[string]string{
 	"text action":     `{"schemaVersion":1,"name":"t","layers":{"base":{"south":{"press":{"type":"text","text":"a\tb😀"},"hold":{"type":"text","text":"x"}}}}}`,
 	"text bad":        `{"schemaVersion":1,"name":"t","layers":{"base":{"south":{"press":{"type":"text","text":"a\u0007"},"tap":{"type":"text","text":""},"hold":{"type":"text","text":5},"release":{"type":"text","text":"x","mode":"tap"}}}}}`,
 	"text escaped":    `{"schemaVersion":1,"name":"t","layers":{"base":{"south":{"press":{"type":"text","text":"\ud83d\ude00 \ud800"}}}}}`,
+	"function set":    `{"schemaVersion":1,"name":"n","layers":{"base":{"back":{"press":{"type":"keys","keys":"A"}}}},"functionSet":{"back":{"press":{"type":"keys","keys":"B"}},"select":{},"start":{"block":true},"guide":{"label":"g"}},"functionKeys":{"back":{"south":{}}}}`,
+	"function bad":    `{"schemaVersion":1,"name":"n","layers":{"base":{}},"functionSet":{"color":"#000000","menu":{},"south":[]}}`,
 	"deep":            strings.Repeat(`{"a":`, maxDepth) + "0" + strings.Repeat("}", maxDepth),
 	"too deep":        strings.Repeat("[", maxDepth+1),
 	"escaped keys":    `{"schemaVersion": 0, "name": "n", "layers": {"base": {"\u0073outh": {}, "a": {}}}}`,
@@ -66,7 +68,6 @@ func FuzzParse(f *testing.F) {
 		"testdata/invalid/*.json",
 		"../../testdata/profiles/*.json",
 		"../../../examples/profiles/*.json",
-		"../../../examples/profiles/templates/*.json",
 	} {
 		files, err := filepath.Glob(pattern)
 		if err != nil {

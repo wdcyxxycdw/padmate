@@ -23,11 +23,16 @@ import (
 // The merge works on documents, not on the parsed models. The parent's merged
 // document is the base, and the child's document overrides it:
 //
-//   - layers, common and the two sets of functionKeys are merged per layer and
-//     then per control: a control the child writes replaces the parent's whole
-//     control (under whatever name either of them wrote it: an alias is the
-//     same control); a layer the child does not have is the parent's; a
-//     layer's color is the child's if it has one;
+//   - layers and common are merged per layer and then per control: a control
+//     the child writes replaces the parent's whole control (under whatever
+//     name either of them wrote it: an alias is the same control); a layer
+//     the child does not have is the parent's; a layer's color is the
+//     child's if it has one;
+//   - the function set (functionSet, ADR-0075) is merged per control like a
+//     layer. A side that writes the old functionKeys is taken as the one set
+//     it stands for (Profile.EffectiveFunctionSet) first: when both sides
+//     have a set, the merged document has functionSet and no functionKeys;
+//     when only one does, the document keeps it as it was written;
 //   - timing and feedback are merged member by member, analog one level
 //     deeper (analog.ls.deadzone is a member), and controlNames per control;
 //   - defaultLayer, $schema and name are the child's if it writes them (name
@@ -467,7 +472,11 @@ type mobj struct {
 type mmember struct {
 	name string
 	key  ref // the member whose key token the document copies
-	val  mval
+	// keyLit, when set, is the key that the document writes instead of key's:
+	// functionSet, for the members that were functionKeys. The key token maps
+	// to key's all the same.
+	keyLit string
+	val    mval
 }
 
 // merger writes the merge of parent and child, the parent's merged document
@@ -516,18 +525,25 @@ func (m *merger) originOf(side *doc, ptr string) string {
 // leaf takes the whole value n of side, which is at ptr in the merged
 // document and, because the merge keeps the structure, in side.
 func (m *merger) leaf(side *doc, n *node, ptr string) mval {
+	return m.leafFrom(side, n, ptr, ptr)
+}
+
+// leafFrom is leaf for a value that is at src in side but at dst in the merged
+// document: a member of the old functionKeys that the merge moves into
+// functionSet.
+func (m *merger) leafFrom(side *doc, n *node, src, dst string) mval {
 	if side == m.parent {
 		// A parent that is a merge itself knows where the parts of the value
 		// come from; keep that, and name the value only if it does not.
-		below := m.originsBelow(ptr)
+		below := m.originsBelow(src)
 		for _, k := range below {
-			m.origins[k] = m.pres.origins[k]
+			m.origins[dst+strings.TrimPrefix(k, src)] = m.pres.origins[k]
 		}
 		if len(below) > 0 {
 			return mval{src: ref{side, n}}
 		}
 	}
-	m.origins[ptr] = m.originOf(side, ptr)
+	m.origins[dst] = m.originOf(side, src)
 	return mval{src: ref{side, n}}
 }
 
@@ -576,8 +592,86 @@ func (m *merger) top() *mobj {
 	pick("script")
 	combine("common", m.layer)
 	combine("layers", m.named)
-	combine("functionKeys", m.named)
+	m.functionSets(o, add, pick)
 	return o
+}
+
+// setMember is a member of a layer or set, with where it is in its document.
+type setMember struct {
+	side ref    // the member's node and the document it is in
+	src  string // its JSON Pointer in that document
+}
+
+// functionSet returns the function set of document d (ADR-0075): the members
+// of its functionSet, or else of the one set its old functionKeys stands for:
+// start's, then back's for the controls start's does not bind. at is the node
+// whose "{" the merged object maps to; it is nil when d has no set.
+func functionSet(d *doc) (at *node, members []setMember) {
+	root := d.root
+	if fs := root.members["functionSet"]; fs != nil && isObject(fs) {
+		return fs, nodeMembers(d, fs, "/functionSet")
+	}
+	fk := root.members["functionKeys"]
+	if fk == nil || !isObject(fk) {
+		return nil, nil
+	}
+	taken := map[string]bool{}
+	for _, name := range []string{"start", "back"} {
+		set := fk.members[name]
+		if set == nil || !isObject(set) {
+			continue
+		}
+		for _, e := range nodeMembers(d, set, childPointer("/functionKeys", name)) {
+			if name == "start" || !taken[canonicalName(e.side.n.name)] {
+				members = append(members, e)
+			}
+		}
+		for _, e := range set.order {
+			taken[canonicalName(e.name)] = true
+		}
+	}
+	return fk, members
+}
+
+// nodeMembers lists the members of n, an object of d at ptr, in order.
+func nodeMembers(d *doc, n *node, ptr string) []setMember {
+	out := make([]setMember, len(n.order))
+	for i, e := range n.order {
+		out[i] = setMember{ref{d, e}, childPointer(ptr, e.name)}
+	}
+	return out
+}
+
+// canonicalName is the name of the control that name is a key of, or name
+// itself when it is none.
+func canonicalName(name string) string {
+	if c, ok := control.Parse(name); ok {
+		return c.String()
+	}
+	return name
+}
+
+// functionSets adds the function set members to the merged document. When both
+// documents have a set (functionSet, or the old functionKeys) the merged one
+// is functionSet, merged per control like a layer; the child's own
+// functionKeys stays when it also writes functionSet, so that the warning
+// about it is still given. Otherwise the members are picked as they are.
+func (m *merger) functionSets(o *mobj, add func(name string, key ref, v mval), pick func(name string)) {
+	pat, pmem := functionSet(m.parent)
+	cat, cmem := functionSet(m.child)
+	if pat == nil || cat == nil {
+		pick("functionSet")
+		pick("functionKeys")
+		return
+	}
+	merged := m.mergeSets("/functionSet", ref{m.child, cat}, pmem, cmem)
+	add("functionSet", ref{m.child, cat}, merged)
+	o.members[len(o.members)-1].keyLit = "functionSet" // whichever format the child wrote
+	if m.child.root.members["functionSet"] != nil {
+		if fk := m.child.root.members["functionKeys"]; fk != nil {
+			add("functionKeys", ref{m.child, fk}, m.leaf(m.child, fk, "/functionKeys"))
+		}
+	}
 }
 
 // members merges two objects member by member: a member of the child
@@ -612,9 +706,8 @@ func (m *merger) members(depth int) func(ptr string, pn, cn *node) mval {
 	return func(ptr string, pn, cn *node) mval { return merge(ptr, pn, cn, depth) }
 }
 
-// named merges two objects of layers, or of sets of function keys, by name:
-// a name only one has is taken as it is, and one both have is merged as a
-// layer. The parent's names come first.
+// named merges two objects of layers by name: a name only one has is taken as
+// it is, and one both have is merged as a layer. The parent's names come first.
 func (m *merger) named(ptr string, pn, cn *node) mval {
 	o := &mobj{at: ref{m.child, cn}}
 	seen := map[string]bool{}
@@ -647,10 +740,16 @@ func (m *merger) named(ptr string, pn, cn *node) mval {
 // still reported. The color is the child's if it has one. The controls come
 // in control order.
 func (m *merger) layer(ptr string, pn, cn *node) mval {
+	return m.mergeSets(ptr, ref{m.child, cn}, nodeMembers(m.parent, pn, ptr), nodeMembers(m.child, cn, ptr))
+}
+
+// mergeSets is layer for two lists of members, which are at ptr in the merged
+// document, whatever they are in their own: at is the child's object that the
+// merged "{" maps to.
+func (m *merger) mergeSets(ptr string, at ref, parent, child []setMember) mval {
 	type entry struct {
-		side  ref
-		canon string
-		rank  int
+		mem  setMember
+		rank int
 	}
 	canon := func(name string) (string, int) {
 		if name == "color" {
@@ -662,30 +761,30 @@ func (m *merger) layer(ptr string, pn, cn *node) mval {
 		return name, math.MaxInt
 	}
 	written := map[string]bool{}
-	for _, e := range cn.order {
-		c, _ := canon(e.name)
+	for _, e := range child {
+		c, _ := canon(e.side.n.name)
 		written[c] = true
 	}
 	var ents []entry
-	for _, side := range []ref{{m.parent, pn}, {m.child, cn}} {
-		for _, e := range side.n.order {
-			c, rank := canon(e.name)
-			if side.d == m.parent && written[c] {
+	for _, side := range [][]setMember{parent, child} {
+		for _, e := range side {
+			c, rank := canon(e.side.n.name)
+			if e.side.d == m.parent && written[c] {
 				continue
 			}
-			ents = append(ents, entry{ref{side.d, e}, c, rank})
+			ents = append(ents, entry{e, rank})
 		}
 	}
 	slices.SortStableFunc(ents, func(a, b entry) int {
 		if a.rank != b.rank {
 			return cmp.Compare(a.rank, b.rank)
 		}
-		return strings.Compare(a.side.n.name, b.side.n.name)
+		return strings.Compare(a.mem.side.n.name, b.mem.side.n.name)
 	})
-	o := &mobj{at: ref{m.child, cn}}
+	o := &mobj{at: at}
 	for _, e := range ents {
-		p := childPointer(ptr, e.side.n.name)
-		o.members = append(o.members, mmember{name: e.side.n.name, key: e.side, val: m.leaf(e.side.d, e.side.n, p)})
+		name := e.mem.side.n.name
+		o.members = append(o.members, mmember{name: name, key: e.mem.side, val: m.leafFrom(e.mem.side.d, e.mem.side.n, e.mem.src, childPointer(ptr, name))})
 	}
 	return mval{obj: o}
 }
@@ -753,7 +852,14 @@ func (m *merger) writeObj(o *mobj, depth int) {
 	}
 	for i, mem := range o.members {
 		m.nl(depth + 1)
-		m.copy(mem.key.d, mem.key.n.key, keyEnd(mem.key.d.data, mem.key.n.key))
+		if mem.keyLit != "" {
+			if !m.over {
+				m.pieces = append(m.pieces, piece{start: len(m.out), n: 1, src: mem.key.d, off: mem.key.n.key})
+			}
+			m.lit(strconv.Quote(mem.keyLit))
+		} else {
+			m.copy(mem.key.d, mem.key.n.key, keyEnd(mem.key.d.data, mem.key.n.key))
+		}
 		m.lit(": ")
 		m.writeVal(mem.val, depth+1)
 		if i < len(o.members)-1 {

@@ -23,7 +23,6 @@ import {
   LOG_LIMIT,
   readBasicSettings,
 } from "./store";
-import { templateText } from "./templates";
 
 const status: StatusResult = {
   version: "test",
@@ -1376,44 +1375,25 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("creates a profile from a copy and names it", async () => {
-    const { b, store, stop } = await library();
-    const outcome = await store
-      .getState()
-      .createProfile("Ink", { copyFrom: "paint" });
-    expect(outcome).toEqual({ ok: true, value: "ink" });
-    expect(b.api.copyProfile).toHaveBeenCalledWith("paint", "ink");
-    expect(b.api.getProfile).toHaveBeenCalledWith("ink");
+  it("copies a profile whole and renames only the copy", async () => {
+    const { b, store, stop } = await library((b) =>
+      b.api.listProfiles.mockResolvedValue([{ id: "paint", name: "Paint" }]),
+    );
+    const outcome = await store.getState().copyProfile("paint");
+    expect(outcome).toEqual({
+      ok: true,
+      value: { id: "paint-2", name: "Paint 副本" },
+    });
+    expect(b.api.copyProfile).toHaveBeenCalledWith("paint", "paint-2");
+    expect(b.api.getProfile).toHaveBeenCalledWith("paint-2");
     const [id, text, revision] = b.api.putProfile.mock.calls[0] ?? [];
-    expect([id, revision]).toEqual(["ink", "r1"]);
+    expect([id, revision]).toEqual(["paint-2", "r1"]);
+    // Not a profile that extends the original (ADR-0076).
     expect(JSON.parse(text as string)).toEqual({
       schemaVersion: 0,
-      name: "Ink",
+      name: "Paint 副本",
       layers: { base: {} },
     });
-    stop();
-  });
-
-  it("creates a profile from a template in the UI language", async () => {
-    const { b, store, stop } = await library();
-    const outcome = await store
-      .getState()
-      .createProfile(" Ink ", { template: "joycon" });
-    expect(outcome).toEqual({ ok: true, value: "ink" });
-    expect(b.api.putProfile.mock.calls).toEqual([
-      ["ink", templateText("joycon", "Ink", "zh-CN"), ""],
-    ]);
-    // Nothing to rename afterwards.
-    expect(b.api.copyProfile).not.toHaveBeenCalled();
-    expect(b.api.getProfile).not.toHaveBeenCalled();
-    // Not setLanguage, which would remember it for later tests.
-    store.setState({ language: "en" });
-    await store.getState().createProfile("Pen", { template: "standard" });
-    expect(b.api.putProfile.mock.calls[1]).toEqual([
-      "pen",
-      templateText("standard", "Pen", "en"),
-      "",
-    ]);
     stop();
   });
 

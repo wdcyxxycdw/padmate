@@ -7,3 +7,6 @@ package tray
 //sys findWindowEx(parent windows.HWND, after windows.HWND, class *uint16, title *uint16) (window windows.HWND) = user32.FindWindowExW
 //sys getWindowThreadProcessID(window windows.HWND, pid *uint32) (thread uint32, err error) = user32.GetWindowThreadProcessId
 //sys shellNotifyIcon(message uint32, data *nativeNotification) (err error) = shell32.Shell_NotifyIconW
+//sys postMessage(window windows.HWND, message uint32, wParam uintptr, lParam uintptr) (err error) = user32.PostMessageW
+//sys allowSetForegroundWindow(pid uint32) (err error) = user32.AllowSetForegroundWindow
+//sys getDoubleClickTime() (ms uint32) = user32.GetDoubleClickTime

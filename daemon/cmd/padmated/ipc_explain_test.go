@@ -72,26 +72,28 @@ func TestIPCActivateAndExplainLayers(t *testing.T) {
 	checkBalanced(t, tl.stdout.String())
 }
 
-// profiles.explain lists the sets of the two function keys beside the layers
-// and says which function key is held (MAP-27, ADR-0069, ADR-0071). A set
-// that binds the control and belongs to the key held now wins over the layers.
+// profiles.explain lists the function set beside the layers and says whether
+// the function key is held (MAP-27, ADR-0069, ADR-0071, ADR-0075). The set,
+// when it binds the control and the function key is held now, wins over the
+// layers; a binding on the function key itself is ignored.
 func TestIPCExplainFunctionKeys(t *testing.T) {
 	dir := t.TempDir()
-	const source = `{"schemaVersion":1,"name":"fn","layers":{"base":{"south":{"label":"undo","press":{"type":"keys","keys":"F13"}},"east":{"press":{"type":"keys","keys":"F14"}}}},"functionKeys":{"back":{"south":{"label":"redo","press":{"type":"keys","keys":"F1"}}},"start":{"south":{"block":true}}}}`
+	const source = `{"schemaVersion":1,"name":"fn","layers":{"base":{"south":{"label":"undo","press":{"type":"keys","keys":"F13"}},"east":{"press":{"type":"keys","keys":"F14"}},"dpad.up":{"press":{"type":"keys","keys":"F17"}},"back":{"label":"paste","press":{"type":"keys","keys":"F15"}},"start":{"press":{"type":"keys","keys":"F16"}}}},"functionSet":{"south":{"label":"redo","press":{"type":"keys","keys":"F1"}},"dpad.up":{"block":true},"start":{"press":{"type":"keys","keys":"F2"}}}}`
 	writeLibraryProfile(t, dir, "fn", source)
 	writeLibraryProfile(t, dir, "plain", `{"schemaVersion":1,"name":"plain","layers":{"base":{"south":{"press":{"type":"keys","keys":"F13"}}}}}`)
 	tl, src := startFocusLive(t, dir, "fn", `{"schemaVersion":0}`, false)
 	client := rpcTestClient(t, tl.liveRun)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	explain := func(params map[string]string) rpcSlotExplanation {
+	explainAll := func(params map[string]string) rpcExplanation {
 		t.Helper()
 		var result rpcExplanation
 		if err := client.CallResult(ctx, "profiles.explain", params, &result); err != nil || len(result.Slots) != 1 {
 			t.Fatalf("explain %v: %+v, %v", params, result, err)
 		}
-		return result.Slots[0]
+		return result
 	}
+	explain := func(params map[string]string) rpcSlotExplanation { t.Helper(); return explainAll(params).Slots[0] }
 	selected := func(s rpcSlotExplanation) string {
 		got := ""
 		for _, l := range s.Layers {
@@ -99,89 +101,132 @@ func TestIPCExplainFunctionKeys(t *testing.T) {
 				got += l.Layer
 			}
 		}
-		for _, f := range s.FunctionSets {
-			if f.Selected {
-				got += f.Layer
-			}
+		if s.FunctionSet.Selected {
+			got += s.FunctionSet.Layer
 		}
 		return got
 	}
+	layer := func(s rpcSlotExplanation, name string) rpcLayerResult {
+		for _, l := range s.Layers {
+			if l.Layer == name {
+				return l
+			}
+		}
+		t.Fatalf("no layer %q in %+v", name, s.Layers)
+		return rpcLayerResult{}
+	}
 
-	t.Run("a library profile lists both sets and holds none", func(t *testing.T) {
-		s := explain(map[string]string{"id": "fn", "control": "south"})
-		if s.FunctionKey != "" || len(s.FunctionSets) != 2 {
-			t.Fatalf("function key %q, sets %+v", s.FunctionKey, s.FunctionSets)
+	t.Run("a library profile lists the set and holds nothing", func(t *testing.T) {
+		result := explainAll(map[string]string{"id": "fn", "control": "south"})
+		s := result.Slots[0]
+		if result.FunctionKey != "start" || result.IsFunctionKey || s.FunctionHeld {
+			t.Fatalf("function key %q, is function key %t, held %t", result.FunctionKey, result.IsFunctionKey, s.FunctionHeld)
 		}
-		back, start := s.FunctionSets[0], s.FunctionSets[1]
-		if back.Key != "back" || back.Layer != "function:back" || !back.HasSet || back.Active || back.Selected || back.Resolution != "inactive" ||
-			back.Binding != "/functionKeys/back/south" || back.Label != "redo" || back.Actions["press"] == "" {
-			t.Errorf("back %+v", back)
-		}
-		if start.Key != "start" || start.Layer != "function:start" || !start.HasSet || start.Active || !start.Block || start.Resolution != "inactive" {
-			t.Errorf("start %+v", start)
+		f := s.FunctionSet
+		if f.Key != "start" || f.Layer != "function:start" || !f.HasSet || f.Active || f.Selected || f.Resolution != "inactive" ||
+			f.Binding != "/functionSet/south" || f.Label != "redo" || f.Actions["press"] == "" {
+			t.Errorf("function set %+v", f)
 		}
 		if got := selected(s); got != "base" {
 			t.Errorf("selected %q, want base", got)
 		}
 	})
-	t.Run("a profile without the sets lists them as empty", func(t *testing.T) {
-		s := explain(map[string]string{"id": "plain", "control": "south"})
-		if len(s.FunctionSets) != 2 || s.FunctionSets[0].HasSet || s.FunctionSets[1].HasSet || s.FunctionSets[0].Binding != "" || s.FunctionSets[0].Resolution != "inactive" {
-			t.Errorf("sets %+v", s.FunctionSets)
+	t.Run("a profile without the set lists it as empty", func(t *testing.T) {
+		f := explain(map[string]string{"id": "plain", "control": "south"}).FunctionSet
+		if f.HasSet || f.Binding != "" || f.Resolution != "inactive" || f.Key != "start" || f.Actions == nil {
+			t.Errorf("function set %+v", f)
 		}
 	})
-	t.Run("a set the held function key owns wins over the layers", func(t *testing.T) {
-		button(src, "back", true)
+	t.Run("the set wins over the layers while the function key is held", func(t *testing.T) {
+		button(src, "start", true)
 		tl.sync()
 		s := explain(map[string]string{"device": "1", "control": "south"})
-		if s.FunctionKey != "back" {
-			t.Fatalf("function key %q, want back", s.FunctionKey)
+		if !s.FunctionHeld {
+			t.Fatal("the function key is not held")
 		}
-		if got := selected(s); got != "function:back" {
-			t.Errorf("selected %q, want function:back", got)
+		if got := selected(s); got != "function:start" {
+			t.Errorf("selected %q, want function:start", got)
 		}
-		if f := s.FunctionSets[0]; !f.Active || !f.Selected || f.Resolution != "binding" {
-			t.Errorf("back %+v", f)
+		if f := s.FunctionSet; !f.Active || !f.Selected || f.Resolution != "binding" {
+			t.Errorf("function set %+v", f)
 		}
-		if f := s.FunctionSets[1]; f.Active || f.Selected {
-			t.Errorf("start %+v while back is held", f)
-		}
-		for _, l := range s.Layers {
-			if l.Layer == "base" && (l.Selected || l.Resolution != "shadowed") {
-				t.Errorf("base %+v under the set", l)
-			}
+		if l := layer(s, "base"); l.Selected || l.Resolution != "shadowed" {
+			t.Errorf("base %+v under the set", l)
 		}
 		// A control the set does not bind falls through to the layers.
 		s = explain(map[string]string{"device": "1", "control": "east"})
-		if f := s.FunctionSets[0]; !f.Active || f.Selected || f.Resolution != "fallthrough" {
-			t.Errorf("back for east %+v", f)
+		if f := s.FunctionSet; !f.Active || f.Selected || f.Resolution != "fallthrough" {
+			t.Errorf("set for east %+v", f)
 		}
 		if got := selected(s); got != "base" {
 			t.Errorf("selected %q for east, want base", got)
 		}
-		button(src, "back", false)
+		// A set can block the control.
+		s = explain(map[string]string{"device": "1", "control": "dpad.up"})
+		if f := s.FunctionSet; !f.Active || !f.Selected || f.Resolution != "blocked" {
+			t.Errorf("set for dpad.up %+v", f)
+		}
+		button(src, "start", false)
 		tl.sync()
-		if s := explain(map[string]string{"device": "1", "control": "south"}); s.FunctionKey != "" || selected(s) != "base" || s.FunctionSets[0].Active {
-			t.Errorf("after the release: key %q, selected %q", s.FunctionKey, selected(s))
+		if s := explain(map[string]string{"device": "1", "control": "south"}); s.FunctionHeld || selected(s) != "base" || s.FunctionSet.Active {
+			t.Errorf("after the release: held %t, selected %q", s.FunctionHeld, selected(s))
 		}
 	})
-	t.Run("a set can block the control", func(t *testing.T) {
+	t.Run("another center key is an ordinary control", func(t *testing.T) {
+		result := explainAll(map[string]string{"id": "fn", "control": "back"})
+		if result.IsFunctionKey || selected(result.Slots[0]) != "base" || layer(result.Slots[0], "base").Binding != "/layers/base/back" {
+			t.Errorf("explain back: %+v", result)
+		}
+		// pressed while the function key is held, it is not the function key
 		button(src, "start", true)
 		tl.sync()
-		s := explain(map[string]string{"device": "1", "control": "south"})
-		if f := s.FunctionSets[1]; s.FunctionKey != "start" || !f.Active || !f.Selected || f.Resolution != "blocked" {
-			t.Errorf("key %q, start %+v", s.FunctionKey, f)
+		s := explain(map[string]string{"device": "1", "control": "back"})
+		if !s.FunctionHeld || selected(s) != "base" || s.FunctionSet.Selected {
+			t.Errorf("back under start: %+v", s)
 		}
 		button(src, "start", false)
 		tl.sync()
 	})
-	t.Run("a function key is no control to bind", func(t *testing.T) {
-		var result rpcExplanation
-		if err := client.CallResult(ctx, "profiles.explain", map[string]string{"id": "fn", "control": "back"}, &result); err != nil || !result.IsFunctionKey {
-			t.Errorf("explain back: %+v, %v", result, err)
+	t.Run("the function key is no control to bind", func(t *testing.T) {
+		result := explainAll(map[string]string{"id": "fn", "control": "start"})
+		s := result.Slots[0]
+		if !result.IsFunctionKey || result.FunctionKey != "start" {
+			t.Errorf("explain start: %+v", result)
 		}
-		if err := client.CallResult(ctx, "profiles.explain", map[string]string{"id": "fn", "control": "south"}, &result); err != nil || result.IsFunctionKey {
-			t.Errorf("explain south: %+v, %v", result, err)
+		if selected(s) != "" || layer(s, "base").Resolution != "ignored" || s.FunctionSet.Resolution != "ignored" || s.FunctionSet.Binding != "/functionSet/start" {
+			t.Errorf("explain start: layers %+v, set %+v", s.Layers, s.FunctionSet)
+		}
+		if result := explainAll(map[string]string{"id": "fn", "control": "south"}); result.IsFunctionKey {
+			t.Errorf("explain south: %+v", result)
 		}
 	})
+}
+
+// With another function key in config.json, the explanation follows it.
+func TestIPCExplainFunctionKeyFromConfig(t *testing.T) {
+	dir := t.TempDir()
+	writeLibraryProfile(t, dir, "fn", `{"schemaVersion":1,"name":"fn","layers":{"base":{"south":{"press":{"type":"keys","keys":"F13"}},"start":{"press":{"type":"keys","keys":"F16"}},"guide":{"press":{"type":"keys","keys":"F18"}}}},"functionSet":{"south":{"press":{"type":"keys","keys":"F1"}}}}`)
+	tl, src := startFocusLive(t, dir, "fn", `{"schemaVersion":0,"functionKey":"guide"}`, false)
+	client := rpcTestClient(t, tl.liveRun)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var guide, start, south rpcExplanation
+	for control, result := range map[string]*rpcExplanation{"guide": &guide, "start": &start, "south": &south} {
+		if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": control}, result); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !guide.IsFunctionKey || guide.FunctionKey != "guide" || start.IsFunctionKey || south.IsFunctionKey {
+		t.Fatalf("guide %+v, start %+v, south %+v", guide, start, south)
+	}
+	if f := guide.Slots[0].FunctionSet; f.Key != "guide" || f.Layer != "function:guide" {
+		t.Errorf("function set %+v", f)
+	}
+	button(src, "guide", true)
+	tl.sync()
+	if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": "south"}, &south); err != nil || !south.Slots[0].FunctionHeld || !south.Slots[0].FunctionSet.Selected {
+		t.Errorf("south under guide: %+v, %v", south, err)
+	}
+	button(src, "guide", false)
+	tl.sync()
 }

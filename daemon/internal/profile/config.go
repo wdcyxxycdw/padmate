@@ -39,6 +39,11 @@ type Config struct {
 	Timing            Timing
 	Output            OutputSettings
 	Safety            SafetySettings
+	// FunctionKey is the one function key, back, start or guide (MAP-27,
+	// ADR-0075), the same for every profile and controller. DefaultConfig has
+	// control.DefaultFunctionKey; the zero value, such as a Config built by
+	// hand, means the same (FunctionKeyOrDefault).
+	FunctionKey control.Control
 	// Feedback holds the four controller feedback switches (UI-27, ADR-0067),
 	// global for every profile and controller.
 	Feedback FeedbackSwitches
@@ -82,7 +87,17 @@ func (r Rule) Matches(exe string) bool { return matchExe(r.Exe, exe) }
 // DefaultConfig is the config of a missing config.json: automatic selection
 // on, without rules, so every application uses the fixed default profile.
 func DefaultConfig() *Config {
-	return &Config{Enabled: true, RestoreLayerState: true, ReleaseOnSwitch: "profileChange", Feedback: DefaultFeedbackSwitches()}
+	return &Config{Enabled: true, RestoreLayerState: true, ReleaseOnSwitch: "profileChange", FunctionKey: control.DefaultFunctionKey, Feedback: DefaultFeedbackSwitches()}
+}
+
+// FunctionKeyOrDefault returns the function key of c: its FunctionKey, or
+// control.DefaultFunctionKey when that is not set. A nil Config has the
+// default.
+func (c *Config) FunctionKeyOrDefault() control.Control {
+	if c == nil || !c.FunctionKey.CanBeFunctionKey() {
+		return control.DefaultFunctionKey
+	}
+	return c.FunctionKey
 }
 
 func ConfigSchema() []byte { return bytes.Clone(configSchemaJSON) }
@@ -137,6 +152,9 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 	}
 	if w.ReleaseOnSwitch != "" {
 		c.ReleaseOnSwitch = w.ReleaseOnSwitch
+	}
+	if fk, ok := control.Parse(w.FunctionKey); ok && fk.String() == w.FunctionKey && fk.CanBeFunctionKey() {
+		c.FunctionKey = fk // the schema allows only start, back and guide
 	}
 	c.Devices = w.Devices
 	c.Timing, c.Output, c.Safety = resolveTiming(w.Timing), w.Output, w.Safety

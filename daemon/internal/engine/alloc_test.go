@@ -59,9 +59,10 @@ func TestNoAllocs(t *testing.T) {
 		"spurious":         {btn(control.East, false), btn(control.LT, true), {Kind: 0}},
 		"trigger crossing": {trig(32767), trig(8000), trig(0), trig(-5), trig(9830), trig(6553)},
 		"stick":            {{Kind: engine.InputAxis, Axis: control.LeftX, Value: 100}},
-		// The function keys (MAP-27): their edges, and a press under one.
-		"function key":      {btn(control.Back, true), btn(control.Back, false), btn(control.Start, true), btn(control.Start, false)},
-		"function key held": {btn(control.Back, true), btn(control.South, true), btn(control.South, false), btn(control.Start, true), btn(control.Back, false), btn(control.East, true), btn(control.East, false), btn(control.Start, false)},
+		// The function key (MAP-27, start by default): its edges, and a press
+		// under it, with an ordinary center key (back) pressed in between.
+		"function key":      {btn(control.Start, true), btn(control.Start, false), btn(control.Back, true), btn(control.Back, false)},
+		"function key held": {btn(control.Start, true), btn(control.South, true), btn(control.South, false), btn(control.Back, true), btn(control.Back, false), btn(control.East, true), btn(control.East, false), btn(control.Start, false)},
 	}
 	prog := compile(t, eastHold, southTap, ltAlt)
 	var decisions int
@@ -132,8 +133,8 @@ func TestNoAllocs(t *testing.T) {
 // tap-mode sequence on leftshoulder, a latch on rightshoulder, and hold
 // and toggle of the overlay fn, which binds south, on dpad.down and
 // dpad.left, a sequence action on leftstick and a text action, and a sequence
-// on hold, on rightstick (MAP-22, OUT-21), and the sets of the function keys
-// (MAP-27): back rebinds south and west, start rebinds south. misc1 has only a
+// on hold, on rightstick (MAP-22, OUT-21), and the function set (MAP-27, start
+// is the function key): it rebinds south and west. misc1 has only a
 // double tap, so a single tap ends its window with no action (ADR-0071).
 const gestureAllocProfile = `{"schemaVersion": 0, "name": "alloc", "layers": {
   "base": {
@@ -152,9 +153,8 @@ const gestureAllocProfile = `{"schemaVersion": 0, "name": "alloc", "layers": {
     "misc1": {"doubleTap": {"type": "keys", "keys": "F16"}}
   },
   "fn": {"south": {"press": {"type": "keys", "keys": "F20"}}}
-}, "functionKeys": {
-  "back": {"south": {"press": {"type": "keys", "keys": "F22"}}, "west": {"press": {"type": "keys", "keys": "F18", "mode": "tap"}}},
-  "start": {"south": {"press": {"type": "keys", "keys": "F23", "mode": "tap"}}}
+}, "functionSet": {
+  "south": {"press": {"type": "keys", "keys": "F22"}}, "west": {"press": {"type": "keys", "keys": "F18", "mode": "tap"}}
 }}`
 
 // gestureDriver drives an Engine in virtual milliseconds, running every
@@ -345,17 +345,17 @@ var gestureScenarios = []gestureScenario{
 		d.settle()
 	}, counter{taps: 1, repeats: 2}},
 	{"function key set", func(d *gestureDriver) {
-		d.press(control.Back)
+		d.press(control.Start)
 		d.press(control.South)
 		d.wait(10)
 		d.release(control.South)
-		d.release(control.Back)
+		d.release(control.Start)
 		d.settle()
 	}, counter{downs: 1, ups: 1}},
 	{"function key let go before the release", func(d *gestureDriver) {
-		d.press(control.Back)
+		d.press(control.Start)
 		d.press(control.South)
-		d.release(control.Back)
+		d.release(control.Start)
 		d.wait(10)
 		d.release(control.South)
 		d.settle()
@@ -363,25 +363,25 @@ var gestureScenarios = []gestureScenario{
 	{"function key under a pending gesture", func(d *gestureDriver) {
 		d.press(control.West)
 		d.wait(10)
-		d.press(control.Back)
+		d.press(control.Start)
 		d.press(control.South)
 		d.release(control.South)
-		d.release(control.Back)
+		d.release(control.Start)
 		d.wait(10)
 		d.release(control.West)
 		d.settle()
 	}, counter{downs: 2, ups: 2}},
-	{"two function keys", func(d *gestureDriver) {
-		d.press(control.Back)
+	{"an ordinary center key under the function key", func(d *gestureDriver) {
 		d.press(control.Start)
+		d.press(control.Back)
 		d.press(control.South)
 		d.wait(10)
 		d.release(control.South)
 		d.release(control.Back)
+		d.release(control.Start)
 		d.press(control.South)
 		d.wait(10)
 		d.release(control.South)
-		d.release(control.Start)
 		d.settle()
 	}, counter{downs: 1, ups: 1, taps: 1}},
 }

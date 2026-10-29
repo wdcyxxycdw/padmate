@@ -18,11 +18,13 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-const traceUsage = `usage: padmatectl trace --profile FILE --input FILE [--json]
+const traceUsage = `usage: padmatectl trace --profile FILE --input FILE [--json] [--function-key KEY]
 
 Replays one recorded gamepad trace without injecting keys and prints the
 timeline from raw input through gesture decisions to keyboard output.
---json prints one JSON object per timeline item.`
+--json prints one JSON object per timeline item. --function-key (start,
+back or guide; default start) is the function key the profile is compiled
+with, as config.json's functionKey is for padmated: trace does not read it.`
 
 type traceItem struct {
 	T        json.Number     `json:"t"`
@@ -96,8 +98,14 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	profilePath := fs.String("profile", "", "profile to load")
 	inputPath := fs.String("input", "", "recorded input trace")
 	asJSON := fs.Bool("json", false, "print JSON timeline items")
+	functionKey := fs.String("function-key", "start", "the function key the profile is compiled with: start, back or guide")
 	if code, ok := parseFlags(fs, args, traceUsage+"\n", stdout, stderr); !ok {
 		return code
+	}
+	fn, err := parseFunctionKey(*functionKey)
+	if err != nil {
+		fmt.Fprintln(stderr, "padmatectl trace:", err)
+		return 2
 	}
 	if *profilePath == "" || *inputPath == "" || fs.NArg() != 0 {
 		fmt.Fprintln(stderr, "padmatectl trace: --profile and --input are required")
@@ -124,7 +132,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	if ds.HasErrors() {
 		return 1
 	}
-	prog, err := engine.Compile(p)
+	prog, err := engine.Compile(p, engine.WithFunctionKey(fn))
 	if err != nil {
 		fmt.Fprintln(stderr, "padmatectl trace: cannot compile profile:", err)
 		return 1

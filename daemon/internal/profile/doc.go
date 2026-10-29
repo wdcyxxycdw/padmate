@@ -15,10 +15,12 @@
 //     specs are parsed, a control bound under two names is an error, layer
 //     names and the targets of layer actions must exist, every action obeys
 //     the action rules that engine.Compile checks too (ARCHITECTURE §7.7),
-//     and a binding without an action is a warning. Back and start are
-//     the function keys (MAP-27, ADR-0069): a binding on them in a layer or
-//     in common is dropped with a warning, and the sets of bindings that
-//     are used while one is held, FunctionKeys, are resolved like layers.
+//     and a binding without an action is a warning. The set of bindings
+//     used while the function key is held (MAP-27, ADR-0075), FunctionSet,
+//     and the old format's sets, FunctionKeys, are resolved like layers;
+//     which control is the function key is config.json's choice, so a
+//     binding on back, start or guide is kept here and engine.Compile
+//     ignores the one that is.
 //
 // A profile of the library may extend another (PRO-19, ADR-0070): Resolve
 // merges the chain of parents into one document first (extends.go) and checks

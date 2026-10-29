@@ -802,91 +802,15 @@ export function nextActiveAfterDelete(
 }
 
 // ---------------------------------------------------------------------------
-// Profiles based on others (PRO-19, ADR-0070).
-
-/** The most parents a profile has; the daemon refuses a fifth. */
-export const MAX_EXTENDS_DEPTH = 4;
-
-/** The profiles directly based on profile id, in the order of profiles. */
-export function profilesBasedOn(
-  profiles: readonly ProfileEntry[],
-  id: string,
-): ProfileEntry[] {
-  return profiles.filter((entry) => entry.extends === id);
-}
+// Profiles that extend others (PRO-19, ADR-0070, ADR-0076): the UI no longer
+// makes them, but a file that has `extends` still works.
 
 /**
- * The profiles level by level below profile id: the ones based on it, then
- * the ones based on those, and so on. A loop in what the library says (which
- * the daemon refuses) ends the walk.
+ * The name of the profile with library ID id: 默认 / Default, its name, or its
+ * ID when the library lacks it. A refused delete names the profile that is
+ * based on the one deleted and cannot be written out whole.
  */
-function levelsBelow(
-  profiles: readonly ProfileEntry[],
-  id: string,
-): ProfileEntry[][] {
-  const levels: ProfileEntry[][] = [];
-  const seen = new Set<string>();
-  let level = [id];
-  for (;;) {
-    const next = profiles.filter(
-      (entry) =>
-        !seen.has(entry.id) && !!entry.extends && level.includes(entry.extends),
-    );
-    if (!next.length) return levels;
-    for (const entry of next) seen.add(entry.id);
-    levels.push(next);
-    level = next.map((entry) => entry.id);
-  }
-}
-
-/** Every profile based on profile id, however far down. */
-export function descendantsOf(
-  profiles: readonly ProfileEntry[],
-  id: string,
-): ProfileEntry[] {
-  return levelsBelow(profiles, id).flat();
-}
-
-/** How many parents profile id has, following what the library says. */
-function parentsAbove(profiles: readonly ProfileEntry[], id: string): number {
-  const seen = new Set<string>([id]);
-  let count = 0;
-  for (
-    let parent = profiles.find((entry) => entry.id === id)?.extends;
-    parent && !seen.has(parent);
-    parent = profiles.find((entry) => entry.id === parent)?.extends
-  ) {
-    seen.add(parent);
-    count++;
-  }
-  return count;
-}
-
-/**
- * The profiles that profile id can be based on, in the order a menu lists
- * them: not itself, not one that is based on it (however far: that would be a
- * loop), not one with errors, and not one that would give it, or a profile
- * based on it, more than four parents.
- */
-export function parentChoices(
-  profiles: readonly ProfileEntry[],
-  id: string,
-): ProfileEntry[] {
-  const below = new Set(descendantsOf(profiles, id).map((entry) => entry.id));
-  const height = levelsBelow(profiles, id).length;
-  return sortProfilesByName(
-    profiles.filter(
-      (entry) =>
-        entry.id !== id &&
-        !below.has(entry.id) &&
-        !entry.problem &&
-        height + 1 + parentsAbove(profiles, entry.id) <= MAX_EXTENDS_DEPTH,
-    ),
-  );
-}
-
-/** The name of the profile another is based on: 默认 / Default, its name, or its ID when the library lacks it. */
-export function parentName(
+export function profileNameOf(
   id: string,
   profiles: readonly ProfileEntry[],
   language: Language,
@@ -1116,29 +1040,32 @@ export function failureText(
     case "brokenProfile":
       return tx(language, "配置文件有错误", "The profile file has errors");
     case "childBlocked": {
+      // Only a hand-written file can be in the way (the interface no longer
+      // makes profiles that build on another, ADR-0076): the line says what
+      // keeps this one, without the idea.
       if (!failure.profile)
         return tx(
           language,
-          "基于它的配置无法先写成完整内容",
-          "A profile based on it can't be written out whole first",
+          "有别的配置要用到它，所以无法删除",
+          "Another profile depends on it, so it can't be deleted",
         );
       const name = label?.(failure.profile) ?? failure.profile;
       return failure.reason === "script"
         ? tx(
             language,
-            `基于它的「${name}」继承了它的脚本，无法先写成完整内容`,
-            `“${name}” is based on it and inherits its script, so it can't be written out whole first`,
+            `「${name}」要用到它的脚本，所以无法删除`,
+            `“${name}” uses its script, so it can't be deleted`,
           )
         : failure.reason === "invalid"
           ? tx(
               language,
-              `基于它的「${name}」有错误，无法先写成完整内容`,
-              `“${name}” is based on it and has errors, so it can't be written out whole first`,
+              `「${name}」有错误，请先修好它，或者删除它`,
+              `“${name}” has errors: fix it or delete it first`,
             )
           : tx(
               language,
-              `基于它的「${name}」无法先写成完整内容`,
-              `“${name}” is based on it and can't be written out whole first`,
+              `「${name}」要用到它，所以无法删除`,
+              `“${name}” depends on it, so it can't be deleted`,
             );
     }
     case "notExportable":

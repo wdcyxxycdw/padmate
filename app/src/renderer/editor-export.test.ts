@@ -11,7 +11,6 @@ import {
   wrapText,
 } from "./shortcut-sheet";
 import type { Language } from "./store";
-import { templateProfile } from "./templates";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -19,10 +18,86 @@ function options(language: Language = "zh-CN", type = "xboxone") {
   const labels = controllerLabels(type);
   return {
     language,
+    functionKey: "start",
     controlName: (control: string) =>
       listControlName(control, labels, language),
   } satisfies SheetOptions;
 }
+
+// A painting profile as a user sets it up: a few keys with a shortcut, the
+// rest only named (OUT-18), on a standard pad and on a sideways Joy-Con.
+const standardPaint: Profile = {
+  schemaVersion: 1,
+  name: "绘画",
+  analog: { ls: { mode: "fourWay" } },
+  layers: {
+    base: {
+      lt: {
+        label: "抓手",
+        press: { type: "keys", keys: "Space", mode: "hold" },
+      },
+      leftshoulder: {
+        label: "Ctrl",
+        press: { type: "keys", keys: "Ctrl", mode: "hold" },
+      },
+      "dpad.left": {
+        label: "撤销",
+        press: { type: "keys", keys: "Ctrl+Z", mode: "tap" },
+      },
+      "dpad.right": { label: "重做" },
+      "dpad.up": { label: "画笔" },
+      "dpad.down": { label: "橡皮" },
+      "ls.left": { label: "笔刷缩小" },
+      "ls.right": { label: "笔刷放大" },
+      "ls.up": { label: "画布放大" },
+      "ls.down": { label: "画布缩小" },
+      rightshoulder: {
+        label: "Shift",
+        press: { type: "keys", keys: "Shift", mode: "hold" },
+      },
+      rt: {
+        label: "Alt",
+        press: { type: "keys", keys: "Alt", mode: "hold" },
+      },
+      south: {
+        label: "自由变换",
+        press: { type: "keys", keys: "Ctrl+T", mode: "tap" },
+      },
+      north: { label: "新建图层" },
+      east: { label: "水平翻转画布" },
+    },
+  },
+};
+
+const joyConPaint: Profile = {
+  schemaVersion: 1,
+  name: "绘画",
+  analog: { ls: { mode: "fourWay" } },
+  layers: {
+    base: {
+      "ls.left": { label: "笔刷缩小" },
+      "ls.right": { label: "笔刷放大" },
+      "ls.up": { label: "画布放大" },
+      "ls.down": { label: "画布缩小" },
+      south: { label: "画笔" },
+      east: { label: "橡皮" },
+      west: {
+        label: "抓手",
+        press: { type: "keys", keys: "Space", mode: "hold" },
+      },
+      north: {
+        label: "Ctrl",
+        press: { type: "keys", keys: "Ctrl", mode: "hold" },
+      },
+      leftshoulder: {
+        label: "撤销",
+        press: { type: "keys", keys: "Ctrl+Z", mode: "tap" },
+      },
+      rightshoulder: { label: "重做" },
+      leftstick: { label: "水平翻转画布" },
+    },
+  },
+};
 
 const mixed: Profile = {
   schemaVersion: 1,
@@ -70,30 +145,50 @@ describe("shortcut table", () => {
     ]);
   });
 
-  it("counts the sets of the function keys among the settings it leaves out, and lists no binding of back or start", () => {
-    const sheet = shortcutSheet(
-      {
-        ...mixed,
-        functionKeys: {
-          back: { south: { press: { type: "keys", keys: "Ctrl+Y" } } },
-          start: { north: { press: { type: "keys", keys: "F13" } } },
+  it("counts the function set among the settings it leaves out, and lists no binding of the function key", () => {
+    const file: Profile = {
+      ...mixed,
+      functionSet: {
+        south: { press: { type: "keys", keys: "Ctrl+Y" } },
+        north: { press: { type: "keys", keys: "F13" } },
+      },
+      layers: {
+        base: {
+          ...mixed.layers.base,
+          start: { press: { type: "keys", keys: "Ctrl+S" } },
+          back: { press: { type: "keys", keys: "Ctrl+V" } },
         },
+        tools: mixed.layers.tools,
+      },
+    };
+    // Menu is the function key: what the file binds on it is ignored, and
+    // View's binding is a shortcut like any other.
+    const sheet = shortcutSheet(file, options());
+    const text = sheet.rows.flat().join("|");
+    expect(text).not.toContain("Ctrl+S");
+    expect(text).not.toContain("Ctrl+Y");
+    expect(text).toContain("Ctrl+V");
+    expect(sheet.rows).toHaveLength(5);
+    // The other group and common, and the two bindings of the function set.
+    expect(sheet.footnote).toBe("配置文件中还有 4 项设置未列出。");
+    // With View chosen it is the other way round, under the alias too.
+    const { back: _view, ...others } = file.layers.base;
+    const back = shortcutSheet(
+      {
+        ...file,
         layers: {
+          ...file.layers,
           base: {
-            ...mixed.layers.base,
-            back: { press: { type: "keys", keys: "Ctrl+V" } },
+            ...others,
             select: { press: { type: "keys", keys: "Ctrl+B" } },
           },
-          tools: mixed.layers.tools,
         },
       },
-      options(),
+      { ...options(), functionKey: "back" },
     );
-    const text = sheet.rows.flat().join("|");
-    for (const absent of ["Ctrl+V", "Ctrl+B", "Ctrl+Y"])
-      expect(text).not.toContain(absent);
-    expect(sheet.rows).toHaveLength(4);
-    expect(sheet.footnote).toBe("配置文件中还有 4 项设置未列出。");
+    const backText = back.rows.flat().join("|");
+    expect(backText).not.toContain("Ctrl+B");
+    expect(backText).toContain("Ctrl+S");
   });
 
   it("writes Markdown with escaped cells and never names key groups", () => {
@@ -248,21 +343,19 @@ describe("shortcut table", () => {
     expect(markdown).not.toContain("| --- |");
   });
 
-  it("lists only the shortcuts a template sets", () => {
+  it("lists only the shortcuts that keys set, not the keys that are only named", () => {
     for (const id of ["standard", "joycon"] as const) {
-      const sheet = shortcutSheet(templateProfile(id, "绘画", "zh-CN"), {
-        ...options("zh-CN", id === "joycon" ? "joyconleft" : "xboxone"),
-      });
+      const sheet = shortcutSheet(
+        id === "joycon" ? joyConPaint : standardPaint,
+        options("zh-CN", id === "joycon" ? "joyconleft" : "xboxone"),
+      );
       const keys = sheet.rows.map(([, keys]) => keys);
       expect(new Set(keys).size).toBe(keys.length);
       expect(sheet.footnote).toBe("");
       // No F13–F24, so no notes about apps that ignore them.
       expect(sheet.notes).toHaveLength(1);
     }
-    const standard = shortcutSheet(
-      templateProfile("standard", "绘画", "zh-CN"),
-      options(),
-    );
+    const standard = shortcutSheet(standardPaint, options());
     expect(standard.title).toBe("绘画 快捷键对照表");
     expect(standard.rows).toEqual([
       ["LT", "Space", "抓手（通常已是默认）"],
@@ -327,10 +420,7 @@ describe("shortcut table image", () => {
         sizes.push(this.width, this.height);
         return "data:image/png;base64,AA==";
       });
-    const sheet = shortcutSheet(
-      templateProfile("standard", "绘画", "zh-CN"),
-      options(),
-    );
+    const sheet = shortcutSheet(standardPaint, options());
     expect(shortcutSheetPNG(sheet)).toBe("data:image/png;base64,AA==");
     expect(toDataURL).toHaveBeenCalledWith("image/png");
     const texts = drawn.map((entry) => entry.text);

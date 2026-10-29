@@ -11,6 +11,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/haptic"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
@@ -62,16 +63,17 @@ func (r *liveRun) combos(infos []input.DeviceInfo) []rpcCombo {
 	return out
 }
 
-// applyLiveSettings applies the global timing, the emergency combos, the
-// stick calibrations, the gamepad mappings and the feedback switches of next, the effective config
-// just stored, where they differ from prev, the one before (UI-19, ADR-0051,
-// IN-14, UI-27, ADR-0067). The caller holds configApplyMu; this takes
-// profileMu after it, the only order the two are taken in.
+// applyLiveSettings applies the global timing, the function key, the emergency
+// combos, the stick calibrations, the gamepad mappings and the feedback
+// switches of next, the effective config just stored, where they differ from
+// prev, the one before (UI-19, ADR-0051, IN-14, UI-27, ADR-0067, ADR-0075).
+// The caller holds configApplyMu; this takes profileMu after it, the only
+// order the two are taken in.
 func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
 	var errs []error
-	if prev.Timing != next.Timing {
+	if prev.Timing != next.Timing || prev.FunctionKeyOrDefault() != next.FunctionKeyOrDefault() {
 		r.profileMu.Lock()
-		errs = append(errs, r.reapplyTimingLocked(next))
+		errs = append(errs, r.reapplyProfileSettingsLocked(next))
 		r.profileMu.Unlock()
 	}
 	if !reflect.DeepEqual(prev.Safety, next.Safety) {
@@ -146,24 +148,26 @@ func (r *liveRun) applyFeedbackSwitches(prev, next profile.FeedbackSwitches) err
 	return err
 }
 
-// reapplyTimingLocked compiles the running profile again with the global
-// timing of settings and, when the timing that results differs from the
-// running one, switches every slot to it with Supervisor.Reload, as a save
-// of the profile does: keys are released, scripts start again, the layer
-// state and the session stay. A profile that sets all its timing itself
-// keeps running untouched. The caller holds profileMu.
-func (r *liveRun) reapplyTimingLocked(settings *profile.Config) error {
+// reapplyProfileSettingsLocked compiles the running profile again with the
+// global timing and the function key of settings and, when the timing or the
+// function key that results differs from the running one, switches every slot
+// to it with Supervisor.Reload, as a save of the profile does: keys are
+// released, held function key included (invariant 1), scripts start again, the
+// layer state and the session stay. A press after it looks up the new function
+// key's set. A profile that sets all its timing itself keeps running untouched
+// when only the timing changed. The caller holds profileMu.
+func (r *liveRun) reapplyProfileSettingsLocked(settings *profile.Config) error {
 	target := r.targetLocked()
 	data, err := r.runningDataLocked(target)
 	if err != nil {
-		r.log.Warn("global timing not applied to the running profile", "err", err)
-		return fmt.Errorf("global timing not applied: %w", err)
+		r.log.Warn("global settings not applied to the running profile", "err", err)
+		return fmt.Errorf("global settings not applied: %w", err)
 	}
 	p, prog, _, err := parseProfileIn(r.cfg.opts.library, target.id, target.path, data, io.Discard, settings)
 	if err != nil {
-		return fmt.Errorf("global timing not applied: %w", err) // not reached: it runs
+		return fmt.Errorf("global settings not applied: %w", err) // not reached: it runs
 	}
-	if timingMs(prog.Timing()) == timingMs(r.cfg.prog.Timing()) {
+	if timingMs(prog.Timing()) == timingMs(r.cfg.prog.Timing()) && prog.FunctionKey() == r.cfg.prog.FunctionKey() {
 		return nil
 	}
 	oldProfile := r.cfg.profile
@@ -173,7 +177,7 @@ func (r *liveRun) reapplyTimingLocked(settings *profile.Config) error {
 	if err != nil {
 		r.cfg.profile = oldProfile
 		r.scriptDef.useProfile(oldProfile)
-		r.log.Debug("global timing not applied: padmated is stopping", "err", err)
+		r.log.Debug("global settings not applied: padmated is stopping", "err", err)
 		return err
 	}
 	timing := arbiterTiming(prog, nil) // the tap timing; the event gap is config.json's
@@ -183,9 +187,22 @@ func (r *liveRun) reapplyTimingLocked(settings *profile.Config) error {
 	r.cfg.prog = prog
 	r.publishProfile(&liveProfile{id: target.id, path: target.path, sum: target.sum, gen: gen})
 	t := prog.Timing()
-	r.log.Info("global timing applied", "profile", target.id, "gen", gen,
+	r.log.Info("global settings applied", "profile", target.id, "gen", gen, "functionKey", prog.FunctionKey().String(),
 		"holdMs", t.HoldMs, "multiTapMs", t.MultiTapMs, "tapPressMs", t.TapPressMs, "tapGapMs", t.TapGapMs)
+	r.logIgnoredFunctionKeyBindings(prog, target.id)
 	return nil
+}
+
+// logIgnoredFunctionKeyBindings says once, at info level, for the Program that
+// was just installed, that bindings on its function key are left out
+// (ADR-0075): they stay in the file, and take effect if the function key is
+// changed in the settings. It is no warning: the profile is not wrong.
+func (r *liveRun) logIgnoredFunctionKeyBindings(prog *engine.Program, profileID string) {
+	ignored := prog.IgnoredFunctionKeyBindings()
+	if len(ignored) == 0 {
+		return
+	}
+	r.log.Info("bindings on the function key are ignored", "profile", profileID, "functionKey", prog.FunctionKey().String(), "count", len(ignored), "bindings", ignored)
 }
 
 // timingMs is what a profile's resolved timing does: its four times, not

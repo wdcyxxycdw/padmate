@@ -487,8 +487,7 @@ describe("stick panel", () => {
 
   it("suggests the label a stick shows, and no example without one", () => {
     const { unmount } = render(<Harness />);
-    const label = () =>
-      screen.getByRole("textbox", { name: "在手柄图上显示为" });
+    const label = () => screen.getByRole("textbox", { name: "功能" });
     expect(label().getAttribute("placeholder")).toBe("方向键");
     unmount();
     render(
@@ -501,7 +500,7 @@ describe("stick panel", () => {
 
   it("edits the stick click and the label shown on the controller", () => {
     render(<Harness />);
-    commit(screen.getByRole("textbox", { name: "在手柄图上显示为" }), {
+    commit(screen.getByRole("textbox", { name: "功能" }), {
       target: { value: "平移画布" },
     });
     expect(draft().layers.base.leftstick).toEqual({ label: "平移画布" });
@@ -715,9 +714,9 @@ describe("stick panel", () => {
       expect(isDisabled(screen.getByRole("spinbutton", { name }))).toBe(true);
       expect(isDisabled(screen.getByRole("slider", { name }))).toBe(true);
     }
-    expect(
-      isDisabled(screen.getByRole("textbox", { name: "在手柄图上显示为" })),
-    ).toBe(true);
+    expect(isDisabled(screen.getByRole("textbox", { name: "功能" }))).toBe(
+      true,
+    );
     expect(isDisabled(screen.getByRole("radio", { name: "8 方向" }))).toBe(
       true,
     );

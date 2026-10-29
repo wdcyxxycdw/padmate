@@ -25,12 +25,25 @@ $ padmatectl validate --json testdata/label-only.json
 {"file":"testdata/label-only.json","ok":true,"diagnostics":[{"severity":"warning","pointer":"/layers/base/east","offset":186,"line":7,"col":15,"message":"binding has no action"}],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/east","control":"east","label":"later","addedLatencyMs":0}]}
 exit 0
 $ padmatectl validate testdata/function-keys.json
-testdata/function-keys.json:7:7: warning: back is a function key (ADR-0069): this binding has no effect (/layers/base/back)
+testdata/function-keys.json: ok
   /layers/base/south "撤销": press +0 ms
+  /layers/base/back "paste": press +0 ms
   /functionKeys/back/south "重做": press +0 ms
   /functionKeys/back/west: tap +250 ms
   /functionKeys/start/ls.cw: press +0 ms
 exit 0
 $ padmatectl validate --json testdata/function-keys.json
-{"file":"testdata/function-keys.json","ok":true,"diagnostics":[{"severity":"warning","pointer":"/layers/base/back","offset":181,"line":7,"col":7,"message":"back is a function key (ADR-0069): this binding has no effect"}],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/south","control":"south","label":"重做","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/west","control":"west","gesture":"tap","addedLatencyMs":250},{"id":"/functionKeys/start/ls.cw","control":"ls.cw","gesture":"press","addedLatencyMs":0}]}
+{"file":"testdata/function-keys.json","ok":true,"diagnostics":[],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/back","control":"back","label":"paste","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/south","control":"south","label":"重做","gesture":"press","addedLatencyMs":0},{"id":"/functionKeys/back/west","control":"west","gesture":"tap","addedLatencyMs":250},{"id":"/functionKeys/start/ls.cw","control":"ls.cw","gesture":"press","addedLatencyMs":0}]}
+exit 0
+$ padmatectl validate testdata/function-set.json
+testdata/function-set.json: ok
+  /layers/base/south "撤销": press +0 ms
+  /layers/base/back "paste": press +0 ms
+  /functionSet/south "重做": press +0 ms
+  /functionSet/west: tap +250 ms
+  /functionSet/back: press +0 ms
+  /functionSet/ls.cw: press +0 ms
+exit 0
+$ padmatectl validate --json testdata/function-set.json
+{"file":"testdata/function-set.json","ok":true,"diagnostics":[],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/back","control":"back","label":"paste","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/south","control":"south","label":"重做","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/west","control":"west","gesture":"tap","addedLatencyMs":250},{"id":"/functionSet/back","control":"back","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/ls.cw","control":"ls.cw","gesture":"press","addedLatencyMs":0}]}
 exit 0

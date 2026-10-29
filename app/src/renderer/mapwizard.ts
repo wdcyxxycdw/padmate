@@ -451,7 +451,7 @@ export const DEFAULT_STEPS: readonly Step[] = [
 
 /**
  * Something the user should know before saving the mapping. View and Menu are
- * function keys and the emergency combo (ADR-0069).
+ * the buttons of the emergency combo.
  */
 export interface Warning {
   code: "noBack" | "noStart";

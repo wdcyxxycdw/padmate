@@ -18,21 +18,24 @@ import (
 
 // Schema locations, as fragments of a ValidationError's SchemaURL, that
 // get their own messages. TestSchemaMessages checks that each exists.
+// schemaFunctionBindings is the profile's functionSet (ADR-0075) and
+// schemaFunctionSet a set of the old functionKeys (ADR-0069).
 const (
-	schemaRoot         = ""
-	schemaVersionProp  = "/properties/schemaVersion"
-	schemaScript       = "/$defs/script"
-	schemaLayers       = "/properties/layers"
-	schemaLayer        = "/$defs/layer"
-	schemaFunctionKeys = "/$defs/functionKeys"
-	schemaFunctionSet  = "/$defs/functionSet"
-	schemaBinding      = "/$defs/binding"
-	schemaAction       = "/$defs/action"
-	schemaActionType   = "/$defs/action/properties/type"
-	schemaKeysAction   = "/$defs/keysAction"
-	schemaKeys         = "/$defs/keysAction/properties/keys"
-	schemaMode         = "/$defs/keysAction/properties/mode"
-	schemaSequenceStep = "/$defs/sequenceStep"
+	schemaRoot             = ""
+	schemaVersionProp      = "/properties/schemaVersion"
+	schemaScript           = "/$defs/script"
+	schemaLayers           = "/properties/layers"
+	schemaLayer            = "/$defs/layer"
+	schemaFunctionKeys     = "/$defs/functionKeys"
+	schemaFunctionSet      = "/$defs/functionSet"
+	schemaFunctionBindings = "/$defs/functionBindings"
+	schemaBinding          = "/$defs/binding"
+	schemaAction           = "/$defs/action"
+	schemaActionType       = "/$defs/action/properties/type"
+	schemaKeysAction       = "/$defs/keysAction"
+	schemaKeys             = "/$defs/keysAction/properties/keys"
+	schemaMode             = "/$defs/keysAction/properties/mode"
+	schemaSequenceStep     = "/$defs/sequenceStep"
 )
 
 // validate checks the document against the embedded schema and turns each
@@ -317,6 +320,11 @@ func unknownProperty(where, p string) string {
 		return unknownFunctionKey(p)
 	case schemaFunctionSet:
 		return functionSetProperty(p)
+	case schemaFunctionBindings:
+		if p == "color" {
+			return "a function set has no color: it is not a layer"
+		}
+		return "unknown control " + quote(p) + controlHint(p, schemaFunctionBindings)
 	}
 	if where == schemaBinding && slices.Contains(actionProperties, p) {
 		return "unknown property " + quote(p) + `; put the action inside "press": {"press": {"type": "keys", ...}}`
@@ -327,12 +335,16 @@ func unknownProperty(where, p string) string {
 	return "unknown property " + quote(p) + didYouMean(suggest(p, propertyNames(schemaAt(where))))
 }
 
-// functionKeyNamed returns the function key, "back" or "start", that name
-// means, in any case: its own name, an alias (select) or a name printed on a
-// pad (View, Menu, Options).
+// legacyFunctionKey reports whether c is back or start, the two keys that the
+// old functionKeys format (ADR-0069) has sets for.
+func legacyFunctionKey(c control.Control) bool { return c == control.Back || c == control.Start }
+
+// functionKeyNamed returns the function key of the old functionKeys format,
+// "back" or "start", that name means, in any case: its own name, an alias
+// (select) or a name printed on a pad (View, Menu, Options).
 func functionKeyNamed(name string) (string, bool) {
 	name = strings.ToLower(name)
-	if c, ok := control.Parse(name); ok && c.IsFunctionKey() {
+	if c, ok := control.Parse(name); ok && legacyFunctionKey(c) {
 		return c.String(), true
 	}
 	if c, ok := controlNicknames[name]; ok && (c == "back" || c == "start") {
@@ -355,16 +367,16 @@ func unknownFunctionKey(p string) string {
 	return "unknown property " + quote(p) + `; only "back" and "start" are function keys`
 }
 
-// functionSetProperty words the diagnostic for property p that a function key
-// set does not allow: the function keys themselves (and the names printed on
-// them, which a layer would hint at), a color, which only a layer has, or a
-// name that is no control.
+// functionSetProperty words the diagnostic for property p that a set of the
+// old functionKeys does not allow: back and start (and the names printed on
+// them, which a layer would hint at), which only functionSet (ADR-0075) can
+// bind, a color, which only a layer has, or a name that is no control.
 func functionSetProperty(p string) string {
-	if c, ok := control.Parse(p); ok && c.IsFunctionKey() {
-		return quote(p) + " is a function key (ADR-0069); a function key set cannot bind it"
+	if c, ok := control.Parse(p); ok && legacyFunctionKey(c) {
+		return quote(p) + " cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can"
 	}
 	if c, ok := controlNicknames[strings.ToLower(p)]; ok && (c == "back" || c == "start") {
-		return quote(p) + " is a function key (ADR-0069); a function key set cannot bind it"
+		return quote(p) + " cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can"
 	}
 	if p == "color" {
 		return "a function key set has no color: it is not a layer"
@@ -373,7 +385,7 @@ func functionSetProperty(p string) string {
 }
 
 // controlHint words the hint after an unknown control name p of the layer, or
-// the function key set, at where.
+// the function set, at where.
 func controlHint(p, where string) string {
 	switch {
 	case strings.HasPrefix(p, "ls.") || strings.HasPrefix(p, "rs."):

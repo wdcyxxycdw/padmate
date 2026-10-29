@@ -4,7 +4,6 @@
 // the daemon or to React; the store keeps the rows (a ring of ACTIVITY_LIMIT) and
 // the page only shows them.
 import type { LatencyDevice, StatusResult } from "../shared/api";
-import { functionKeyLabels } from "./controller-model";
 import { type Gesture, gestureName, gestures } from "./editor-model";
 import { pressedControlName, previewAction } from "./key-preview";
 import type { Language } from "./store";
@@ -63,7 +62,7 @@ export interface ActivityRow {
   /** "down", "up" or ""; the engine writes EdgeDown for a gesture that a release decided. */
   edge: string;
   gesture: string;
-  /** The level the binding was found in: a layer, "common" or "function:back". */
+  /** The level the binding was found in: a layer, "common" or "function:<function key>", e.g. "function:start". */
   level: string;
   /** The engine's reason; "unrouted" for an unrouted press. */
   reason: string;
@@ -232,8 +231,8 @@ export const reasonSentences: Readonly<Record<string, Sentence>> = {
     en: "This key has a name but no action.",
   },
   "unbound.gesture": {
-    zh: "这个手势没有设置动作",
-    en: "No action is set for this gesture.",
+    zh: "这个映射没有设置动作",
+    en: "No action is set for this mapping.",
   },
   // The end of the wait for more taps, when the binding has no action for
   // the number of taps made (tapCount): "{n}" is that number.
@@ -491,23 +490,12 @@ export function activityTime(at: number): string {
   return `${two(time.getHours())}:${two(time.getMinutes())}:${two(time.getSeconds())}.${String(time.getMilliseconds()).padStart(3, "0")}`;
 }
 
-/** The pad's description that the names of its keys and function keys come from. */
-export interface PadNames {
-  type: string;
-  buttonLabels?: Record<string, string>;
-  buttonMask?: number;
-}
-
 /**
- * Where the row's binding was found: the layer, the set of a function key
- * ("按住 View" with what the pad prints on it), shared by all layers, or the
+ * Where the row's binding was found: the layer, the function set ("按住功能键",
+ * whichever of the three keys it is, ADR-0076), shared by all layers, or the
  * script.
  */
-export function rowWhere(
-  row: ActivityRow,
-  pad: PadNames,
-  language: Language,
-): string {
+export function rowWhere(row: ActivityRow, language: Language): string {
   if (row.reason === "script") return text(language, "脚本", "Script");
   switch (row.level) {
     case "":
@@ -516,17 +504,10 @@ export function rowWhere(
       return text(language, "共用", "Shared");
     case "base":
       return text(language, "平时", "Normal");
-    case "function:back":
-    case "function:start": {
-      const key = row.level === "function:back" ? "back" : "start";
-      const label = functionKeyLabels(
-        pad.type,
-        pad.buttonLabels,
-        pad.buttonMask,
-      )[key];
-      return text(language, `按住 ${label ?? key}`, `Hold ${label ?? key}`);
-    }
   }
+  // The function set (ADR-0075): the level names the function key held.
+  if (/^function:.+$/.test(row.level))
+    return text(language, "按住功能键", "Hold function key");
   return row.level;
 }
 

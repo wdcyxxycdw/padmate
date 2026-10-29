@@ -86,12 +86,13 @@ const api: PadmateAPI = {
   editScript: (id) => invoke("padmate:scriptEdit", id),
   captureStart: () => invoke("padmate:captureStart"),
   captureStop: (session) => invoke("padmate:captureStop", session),
-  padCaptureStart: () => invoke("padmate:padCaptureStart"),
+  padCaptureStart: (stays) => invoke("padmate:padCaptureStart", stays === true),
   padCaptureStop: () => invoke("padmate:padCaptureStop"),
   onCapture: (listener) =>
     listen<KeyboardCaptureEvent>("padmate:keyboardCapture", listener),
   getStartup: () => invoke("padmate:startupGet"),
   setStartup: (enabled) => invoke("padmate:startupSet", enabled),
+  openGameBarSettings: () => invoke("padmate:gameBarSettingsOpen"),
   onClosing: (listener) => listen<void>("padmate:closing", () => listener()),
   readyToClose: () => invoke("padmate:readyToClose"),
   exportCheatSheet: (format, content) =>

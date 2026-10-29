@@ -11,6 +11,7 @@ import { libraryHandlers } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
 import { startFailureHandlers } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
+import { systemSettingsHandlers } from "./system-settings";
 import { updateHandlers } from "./update-handlers";
 
 // The wiring between the daemon, the main process and the preload lives in
@@ -178,7 +179,9 @@ describe("Electron IPC wiring", () => {
     );
     for (const place of [
       /"render-process-gone", \(\) => \{\s*capture\.stop\("renderer-exit"\);\s*padCapture\.stop\(\);\s*rawWatch\.reset\(\);/,
-      /window\.on\("close", \(event\) => \{\s*capture\.stop\("close"\);\s*padCapture\.stop\(\);\s*rawWatch\.reset\(\);/,
+      // A close that hides the window (ADR-0077) keeps the raw watch of the
+      // wizard, which resumes once the window is back.
+      /window\.on\("close", \(event\) => \{\s*capture\.stop\("close"\);\s*padCapture\.stop\(\);[\s\S]*?hideOnClose\(\);\s*return;\s*\}\s*rawWatch\.reset\(\);/,
       /"did-start-loading", \(\) => \{\s*capture\.stop\("reload"\);\s*padCapture\.stop\(\);\s*rawWatch\.reset\(\);/,
       /capture\.stop\("disconnected"\);\s*padCapture\.disconnected\(\);\s*rawWatch\.reset\(\);/,
       /padCapture\.disconnected\(\);\s*rawWatch\.reset\(\);\s*void exitAfterSaves/,
@@ -299,6 +302,7 @@ describe("Electron IPC wiring", () => {
         }),
       ),
       ...Object.keys(appPathHandlers(async () => "")),
+      ...Object.keys(systemSettingsHandlers(async () => {})),
       ...Object.keys(
         appIconHandlers({
           thumbnail: async () => {
@@ -319,6 +323,7 @@ describe("Electron IPC wiring", () => {
     expect(main).toContain("...macroHandlers(");
     expect(main).toContain("...deviceHandlers(");
     expect(main).toContain("...startupHandlers(");
+    expect(main).toContain("...systemSettingsHandlers(");
     expect(main).toContain("...updateHandlers(");
     expect(main).toContain("...startFailureHandlers(");
     expect(main).toContain("...archiveHandlers(");

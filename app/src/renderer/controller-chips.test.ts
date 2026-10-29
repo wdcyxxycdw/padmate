@@ -10,6 +10,7 @@ import {
   segmentText,
 } from "./controller-chips";
 import { controllerLabels } from "./controller-model";
+import type { FunctionKey } from "./editor-model";
 import type { LabelDisplay, Language } from "./store";
 
 const labels = controllerLabels("xboxone");
@@ -78,12 +79,14 @@ function chips({
   display = "actions",
   language = "zh-CN",
   scriptEntry,
+  functionKey = "start",
 }: {
   profile?: Profile | null;
   registrations?: ScriptRegistration[];
   display?: LabelDisplay;
   language?: Language;
   scriptEntry?: string;
+  functionKey?: FunctionKey;
 } = {}): Record<string, ChipInfo> {
   return controllerChips({
     profile,
@@ -94,6 +97,7 @@ function chips({
     language,
     actions: [{ name: "cycleBrush", label: "循环笔刷" }],
     scriptEntry,
+    functionKey,
   });
 }
 
@@ -211,6 +215,7 @@ describe("controller chips", () => {
     expect(locked.leftstick.state).toBe("locked");
     // With the library, the target has the display name the drawer shows.
     const named = controllerChips({
+      functionKey: "start",
       profile: file,
       controls,
       labels,
@@ -243,7 +248,7 @@ describe("controller chips", () => {
     file.layers.base.east = {
       press: { type: "keys", keys: "", mode: "hold" },
     };
-    for (const display of ["actions", "keys", "names"] as const) {
+    for (const display of ["actions", "keys"] as const) {
       const result = chips({ profile: file, display });
       for (const control of ["west", "north", "east"])
         expect(
@@ -271,6 +276,7 @@ describe("controller chips", () => {
       hold: { type: "macro", file: "旧.js" },
     };
     const result = controllerChips({
+      functionKey: "start",
       profile: file,
       controls,
       labels,
@@ -310,6 +316,7 @@ describe("controller chips", () => {
       },
     };
     const result = controllerChips({
+      functionKey: "start",
       profile: file,
       controls,
       labels,
@@ -361,12 +368,6 @@ describe("controller chips", () => {
     expect(chips({ profile: raw, language: "en" }).lefttrigger.summary).toBe(
       "Half press",
     );
-    expect(chips({ profile: raw, display: "names" }).lefttrigger).toMatchObject(
-      {
-        title: "LT",
-        detail: [{ gesture: "半按", keys: "B" }],
-      },
-    );
     // The main binding still comes first when both are set.
     const both = structuredClone(raw);
     both.layers.base.lt = { press: { type: "keys", keys: "Alt" } };
@@ -409,17 +410,6 @@ describe("controller chips", () => {
       detail: [{ text: "平移画布" }],
     });
     expect(keys.guide.title).toBe("未设置");
-    const names = chips({ display: "names" });
-    expect(names.south).toMatchObject({
-      title: "A",
-      detail: [{ text: "撤销" }, { keys: "Ctrl+Z" }],
-    });
-    expect(names.leftshoulder.title).toBe("修饰键");
-    expect(names.guide).toMatchObject({
-      title: "Xbox",
-      detail: [{ text: "未设置" }],
-      state: "unbound",
-    });
   });
 
   it("counts script ownership only from base and global registrations", () => {
@@ -781,13 +771,6 @@ describe("chips for a stick that moves the pointer (MOU-01, UI-33)", () => {
     expect(result.leftstick.titleKeys).toBeUndefined();
   });
 
-  it("says 鼠标 under the control name in the name display mode", () => {
-    const result = chips({ profile: file({}), display: "names" });
-    expect(result.leftstick.title).toBe(labels.leftstick);
-    expect(result.leftstick.detail).toEqual([{ text: "鼠标" }]);
-    expect(result.leftstick.summary).toBe("鼠标");
-  });
-
   it("does not show direction keys or knob ticks the pointer does not send", () => {
     const result = chips({
       profile: file({
@@ -941,50 +924,78 @@ describe("chips for the mouse actions (MOU-05, MOU-08)", () => {
   });
 });
 
-describe("the chips of the function keys (ADR-0069)", () => {
-  it("tags View and Menu as function keys whatever the file binds on them", () => {
-    const file: Profile = {
-      ...paint,
-      layers: {
-        base: {
-          ...paint.layers.base,
-          back: { press: { type: "keys", keys: "Ctrl+V" } },
-          start: { label: "保存", press: { type: "keys", keys: "Ctrl+S" } },
-        },
+describe("the chip of the function key (ADR-0075)", () => {
+  const file: Profile = {
+    ...paint,
+    layers: {
+      base: {
+        ...paint.layers.base,
+        back: { press: { type: "keys", keys: "Ctrl+V" } },
+        start: { label: "保存", press: { type: "keys", keys: "Ctrl+S" } },
+        guide: { press: { type: "keys", keys: "F13" } },
       },
-    };
-    for (const language of ["zh-CN", "en"] as const) {
-      const result = chips({ profile: file, language });
-      for (const control of ["back", "start"]) {
-        expect(result[control], control).toEqual({
-          title: language === "en" ? "Function key" : "功能键",
-          detail: [],
-          summary:
-            language === "en"
-              ? "While held, other keys switch to another set"
-              : "按住时其他键换成另一套",
-          state: "function",
-          scriptOwned: false,
-        });
+    },
+  };
+  const tag = (language: Language): ChipInfo => ({
+    title: language === "en" ? "Function key" : "功能键",
+    detail: [],
+    summary:
+      language === "en"
+        ? "While held, other keys switch to another set"
+        : "按住时其他键换成另一套",
+    state: "function",
+    scriptOwned: false,
+  });
+
+  it("tags the function key whatever the file binds on it, and only that key", () => {
+    for (const language of ["zh-CN", "en"] as const)
+      for (const functionKey of ["start", "back", "guide"] as const) {
+        const result = chips({ profile: file, language, functionKey });
+        expect(result[functionKey], `${language} ${functionKey}`).toEqual(
+          tag(language),
+        );
+        for (const other of ["start", "back", "guide"] as const)
+          if (other !== functionKey)
+            expect(result[other].state, `${functionKey} ${other}`).toBe(
+              "bound",
+            );
       }
-    }
   });
 
-  it("tags them in every display mode, and when no profile is open", () => {
-    for (const display of ["actions", "names", "keys"] as const)
-      expect(chips({ display }).back.state).toBe("function");
+  it("shows the other two of View, Menu and the Xbox button as ordinary keys", () => {
+    const result = chips({ profile: file, functionKey: "guide" });
+    expect(result.start).toMatchObject({
+      title: "保存",
+      detail: [{ keys: "Ctrl+S" }],
+      state: "bound",
+    });
+    expect(result.back).toMatchObject({
+      title: "Ctrl+V",
+      titleKeys: { keys: "Ctrl+V" },
+      state: "bound",
+    });
+    // A key nobody bound is unset, like any other.
+    expect(chips({ functionKey: "guide" }).start.state).toBe("unbound");
+  });
+
+  it("is the same in every display mode, and when no profile is open", () => {
+    for (const display of ["actions", "keys"] as const)
+      expect(chips({ display }).start.state).toBe("function");
     expect(chips({ profile: null }).start.state).toBe("function");
+    expect(chips({ profile: null, functionKey: "back" }).back.state).toBe(
+      "function",
+    );
   });
 
-  it("does not mark a script that handles back as owning the chip", () => {
+  it("does not mark a script that handles the function key as owning the chip", () => {
     // A script's handler on it never fires (SCRIPTING §1.5).
     expect(
-      chips({ registrations: [registration("back", "global")] }).back,
+      chips({ registrations: [registration("start", "global")] }).start,
     ).toMatchObject({ state: "function", scriptOwned: false });
   });
 });
 
-describe("a control the set of a function key leaves out", () => {
+describe("a control the function set leaves out", () => {
   const file = (base: Profile["layers"]["base"]): Profile => ({
     schemaVersion: 1,
     name: "set",
@@ -1008,7 +1019,6 @@ describe("a control the set of a function key leaves out", () => {
     const shown = inheritedChips({
       own,
       normal,
-      display: "actions",
       language: "zh-CN",
     });
     // Set in the set: as it is.
@@ -1025,8 +1035,8 @@ describe("a control the set of a function key leaves out", () => {
     // Set nowhere: unset, as it was.
     expect(shown.rightshoulder).toBe(own.rightshoulder);
     expect(shown.rightshoulder.state).toBe("unbound");
-    // The function keys are tagged in every view.
-    expect(shown.back).toBe(own.back);
+    // The function key is tagged in every view.
+    expect(shown.start).toBe(own.start);
   });
 
   it("puts the note before the keycaps of a shortcut that is the title", () => {
@@ -1035,7 +1045,6 @@ describe("a control the set of a function key leaves out", () => {
     const shown = inheritedChips({
       own: chips({ profile: file({}) }),
       normal,
-      display: "actions",
       language: "en",
     });
     expect(shown.south).toMatchObject({
@@ -1049,49 +1058,6 @@ describe("a control the set of a function key leaves out", () => {
     );
   });
 
-  it("puts the note in front of the action when the title is the control's name", () => {
-    const display = "names";
-    const normal = chips({ display });
-    const shown = inheritedChips({
-      own: chips({ profile: set, display }),
-      normal,
-      display,
-      language: "zh-CN",
-    });
-    expect(shown.south.title).toBe(normal.south.title);
-    expect(shown.south.detail[0]).toEqual({
-      ...normal.south.detail[0],
-      gesture: "平时：",
-    });
-    expect(shown.south.summary).toBe("平时： 撤销 · Ctrl+Z");
-    expect(shown.south.inherited).toBe(true);
-  });
-
-  it("keeps the note and a gesture name apart, in English with a space", () => {
-    const display = "names";
-    const hold = file({
-      south: { hold: { type: "keys", keys: "Ctrl+Z", mode: "tap" } },
-    });
-    for (const [language, note, gesture] of [
-      ["en", "Normal: ", "Hold"],
-      ["zh-CN", "平时：", "长按"],
-    ] as const) {
-      const normal = chips({ profile: hold, display, language });
-      expect(normal.south.detail[0].gesture).toBe(gesture);
-      const shown = inheritedChips({
-        own: chips({ profile: file({}), display, language }),
-        normal,
-        display,
-        language,
-      });
-      expect(shown.south.detail[0]).toMatchObject({
-        gesture: note + gesture,
-        keys: "Ctrl+Z",
-      });
-      expect(shown.south.summary).toBe(`${note}${gesture} Ctrl+Z`);
-    }
-  });
-
   it("keeps a control the set only names, which owns it as in a layer", () => {
     const named = file({ west: { label: "备用" } });
     const own = chips({ profile: named });
@@ -1099,7 +1065,6 @@ describe("a control the set of a function key leaves out", () => {
     const shown = inheritedChips({
       own,
       normal: chips(),
-      display: "actions",
       language: "zh-CN",
     });
     expect(shown.west).toBe(own.west);
@@ -1117,7 +1082,6 @@ describe("a control the set of a function key leaves out", () => {
     const shown = inheritedChips({
       own,
       normal: chips(),
-      display: "actions",
       language: "zh-CN",
     });
     expect(shown.south).toBe(own.south);
@@ -1130,7 +1094,6 @@ describe("a control the set of a function key leaves out", () => {
           west: { press: { type: "profile", profile: "photo" } },
         }),
       }),
-      display: "actions",
       language: "en",
     });
     expect(locked.west).toMatchObject({

@@ -1,11 +1,17 @@
-// Function keys (MAP-27, UI-30, ADR-0069): View (back) and Menu (start) hold
-// no bindings of their own; while one is held, the other controls use its set
-// of bindings (profile.functionKeys). These are the editor's rules for it.
+// The function key (MAP-27, UI-30, ADR-0075): one of View (back), Menu (start)
+// and the Xbox button (guide), chosen in the settings, holds no bindings of
+// its own; while it is held, the other controls use the profile's function
+// set (profile.functionSet). These are the editor's rules for it.
 import { describe, expect, it } from "vitest";
 import type { ProfileDiagnostic } from "../shared/api";
 import type { Profile } from "../shared/generated/schema";
 import {
+  asFunctionKey,
   bindingAt,
+  defaultFunctionKey,
+  diagnosticSet,
+  type FunctionKey,
+  functionKeys,
   functionSetId,
   isFunctionKey,
   isLabelOnlyWarning,
@@ -14,6 +20,7 @@ import {
   setBinding,
   swapView,
   usesOnlyBase,
+  withNewFunctionSet,
 } from "./editor-model";
 
 const keys = (value: string) =>
@@ -27,12 +34,12 @@ const profile: Profile = {
   },
 };
 
-const withSets: Profile = {
+const withSet: Profile = {
   ...profile,
   common: { guide: { block: true } },
-  functionKeys: {
-    back: { south: { label: "Redo", press: keys("Ctrl+Shift+Z") } },
-    start: { "ls.cw": { press: keys("Ctrl+]") } },
+  functionSet: {
+    south: { label: "Redo", press: keys("Ctrl+Shift+Z") },
+    "ls.cw": { press: keys("Ctrl+]") },
   },
   analog: { ls: { mode: "knob" } },
 };
@@ -40,53 +47,74 @@ const withSets: Profile = {
 /** The order of the members, which a save keeps. */
 const order = (value: object) => Object.keys(value);
 
-describe("function key controls", () => {
-  it("are back and start, under their aliases too", () => {
-    for (const control of ["back", "select", "start"])
-      expect(isFunctionKey(control), control).toBe(true);
-    for (const control of ["south", "guide", "leftstick", "lt", "dpad.up"])
-      expect(isFunctionKey(control), control).toBe(false);
+describe("the function key", () => {
+  it("is Menu unless the settings choose another of the three", () => {
+    expect(defaultFunctionKey).toBe("start");
+    expect([...functionKeys].sort()).toEqual(["back", "guide", "start"]);
+    for (const key of functionKeys) expect(asFunctionKey(key)).toBe(key);
+    for (const value of [undefined, null, "", "select", "south", 3, {}])
+      expect(asFunctionKey(value), String(value)).toBe("start");
   });
 
-  it("name their set the way the daemon names its level", () => {
-    expect(functionSetId("back")).toBe("function:back");
-    expect(functionSetId("start")).toBe("function:start");
+  it("is one control, back under its alias too", () => {
+    const names: Record<FunctionKey, string[]> = {
+      start: ["start"],
+      back: ["back", "select"],
+      guide: ["guide"],
+    };
+    for (const key of functionKeys)
+      for (const control of [
+        "back",
+        "select",
+        "start",
+        "guide",
+        "south",
+        "leftstick",
+        "lt",
+        "dpad.up",
+      ])
+        expect(isFunctionKey(control, key), `${key} ${control}`).toBe(
+          names[key].includes(control),
+        );
+  });
+
+  it("names its set apart from any layer's name", () => {
+    expect(functionSetId).toBe("function:set");
+    expect(functionSetId in profile.layers).toBe(false);
   });
 });
 
-describe("the sets of a profile as key sets", () => {
-  it("are read by their level name, empty when absent", () => {
-    expect(bindingAt(withSets, "function:back", "south").label).toBe("Redo");
-    expect(bindingAt(withSets, "function:start", "south")).toEqual({});
-    expect(bindingAt(profile, "function:back", "south")).toEqual({});
+describe("the function set as a key set", () => {
+  it("is read by its ID, empty when absent", () => {
+    expect(bindingAt(withSet, functionSetId, "south").label).toBe("Redo");
+    expect(bindingAt(withSet, functionSetId, "north")).toEqual({});
+    expect(bindingAt(profile, functionSetId, "south")).toEqual({});
   });
 
-  it("are created by a binding, after the layers, and removed with the last one", () => {
-    const made = setBinding(profile, "function:back", "south", {
+  it("is created by a binding, after the layers, and removed with the last one", () => {
+    const made = setBinding(profile, functionSetId, "south", {
       press: keys("F13"),
     });
-    expect(made.functionKeys).toEqual({
-      back: { south: { press: keys("F13") } },
-    });
+    expect(made.functionSet).toEqual({ south: { press: keys("F13") } });
     expect(order(made)).toEqual([
       "schemaVersion",
       "name",
       "layers",
-      "functionKeys",
+      "functionSet",
     ]);
     // Nothing else moved, and the draft it came from is untouched.
     expect(made.layers).toEqual(profile.layers);
-    expect(profile.functionKeys).toBeUndefined();
+    expect(profile.functionSet).toBeUndefined();
 
-    const gone = setBinding(made, "function:back", "south", undefined);
+    const gone = setBinding(made, functionSetId, "south", undefined);
     expect(gone).toEqual(profile);
-    expect("functionKeys" in gone).toBe(false);
+    expect("functionSet" in gone).toBe(false);
   });
 
-  it("go after common when the profile has one", () => {
+  it("goes after common when the profile has one", () => {
     const made = setBinding(
       { ...profile, common: { guide: { block: true } }, analog: {} },
-      "function:start",
+      functionSetId,
       "north",
       { press: keys("F14") },
     );
@@ -95,103 +123,181 @@ describe("the sets of a profile as key sets", () => {
       "name",
       "layers",
       "common",
-      "functionKeys",
+      "functionSet",
       "analog",
     ]);
   });
 
-  it("keep the other set and the order of controls when one control goes", () => {
-    const two = setBinding(withSets, "function:back", "east", {
+  it("keeps the order of controls when one control goes", () => {
+    const two = setBinding(withSet, functionSetId, "east", {
       press: keys("F15"),
     });
-    expect(order(two.functionKeys?.back ?? {})).toEqual(["south", "east"]);
-    const one = setBinding(two, "function:back", "south", undefined);
-    expect(order(one.functionKeys?.back ?? {})).toEqual(["east"]);
-    expect(one.functionKeys?.start).toEqual(withSets.functionKeys?.start);
-    // The last control of one set takes only that set away.
-    const last = setBinding(withSets, "function:start", "ls.cw", undefined);
-    expect(last.functionKeys).toEqual({ back: withSets.functionKeys?.back });
+    expect(order(two.functionSet ?? {})).toEqual(["south", "ls.cw", "east"]);
+    const one = setBinding(two, functionSetId, "south", undefined);
+    expect(order(one.functionSet ?? {})).toEqual(["ls.cw", "east"]);
+  });
+
+  it("can bind back, start and guide, whichever of them the settings choose", () => {
+    const made = setBinding(profile, functionSetId, "back", {
+      press: keys("Ctrl+V"),
+    });
+    expect(made.functionSet).toEqual({ back: { press: keys("Ctrl+V") } });
+    // The same control under its alias is the same binding.
+    expect(bindingAt(made, functionSetId, "select").press).toEqual(
+      keys("Ctrl+V"),
+    );
   });
 });
 
 describe("the view of a key set", () => {
   it("is the profile itself in the normal view", () => {
-    expect(swapView(withSets, "normal")).toBe(withSets);
+    expect(swapView(withSet, "normal")).toBe(withSet);
   });
 
   it("puts the set where the editor edits, and the normal bindings in the set's place", () => {
-    const view = swapView(withSets, "back");
-    expect(view.layers.base).toEqual(withSets.functionKeys?.back);
-    expect(view.functionKeys?.back).toEqual(withSets.layers.base);
-    // The other set and everything else are what they were.
-    expect(view.functionKeys?.start).toEqual(withSets.functionKeys?.start);
-    expect(view.common).toEqual(withSets.common);
-    expect(view.analog).toEqual(withSets.analog);
-    expect(withSets.layers.base.south?.label).toBe("Undo");
+    const view = swapView(withSet, "function");
+    expect(view.layers.base).toEqual(withSet.functionSet);
+    expect(view.functionSet).toEqual(withSet.layers.base);
+    // Everything else is what it was.
+    expect(view.common).toEqual(withSet.common);
+    expect(view.analog).toEqual(withSet.analog);
+    expect(withSet.layers.base.south?.label).toBe("Undo");
   });
 
   it("shows a set that does not exist as an empty one", () => {
-    const view = swapView(profile, "start");
+    const view = swapView(profile, "function");
     expect(view.layers.base).toEqual({});
-    expect(view.functionKeys?.start).toEqual(profile.layers.base);
+    expect(view.functionSet).toEqual(profile.layers.base);
   });
 
   it("is its own inverse, key order and all", () => {
-    for (const source of [withSets, profile])
-      for (const view of ["back", "start"] as const) {
-        const back = swapView(swapView(source, view), view);
-        expect(JSON.stringify(back), view).toBe(JSON.stringify(source));
-      }
+    for (const source of [withSet, profile]) {
+      const back = swapView(swapView(source, "function"), "function");
+      expect(JSON.stringify(back)).toBe(JSON.stringify(source));
+    }
   });
 
-  it("carries an edit of the set back to functionKeys", () => {
-    const view = swapView(profile, "back");
+  it("carries an edit of the set back to functionSet", () => {
+    const view = swapView(profile, "function");
     const edited = setBinding(view, "base", "east", { press: keys("F16") });
-    const saved = swapView(edited, "back");
-    expect(saved.functionKeys).toEqual({
-      back: { east: { press: keys("F16") } },
-    });
+    const saved = swapView(edited, "function");
+    expect(saved.functionSet).toEqual({ east: { press: keys("F16") } });
     expect(saved.layers).toEqual(profile.layers);
     expect(order(saved)).toEqual([
       "schemaVersion",
       "name",
       "layers",
-      "functionKeys",
+      "functionSet",
     ]);
   });
 
-  it("leaves no empty set behind when the last binding of a set is cleared", () => {
-    const view = swapView(withSets, "start");
-    const cleared = setBinding(view, "base", "ls.cw", undefined);
-    const saved = swapView(cleared, "start");
-    expect(saved.functionKeys).toEqual({ back: withSets.functionKeys?.back });
-    const both = swapView(
-      setBinding(swapView(saved, "back"), "base", "south", undefined),
-      "back",
+  it("leaves no empty set behind when the last binding of the set is cleared", () => {
+    const view = swapView(
+      { ...profile, functionSet: { south: { press: keys("F13") } } },
+      "function",
     );
-    expect("functionKeys" in both).toBe(false);
-    expect(both.layers).toEqual(withSets.layers);
+    const cleared = setBinding(view, "base", "south", undefined);
+    const saved = swapView(cleared, "function");
+    expect("functionSet" in saved).toBe(false);
+    expect(saved.layers).toEqual(profile.layers);
   });
 
-  it("keeps the other key sets in view, for what looks at every set", () => {
-    const view = swapView(withSets, "back");
-    // The layers, common and both sets are all there, only one is renamed.
-    expect(Object.keys(view.layers)).toEqual(["base"]);
-    expect(view.functionKeys?.start).toBeDefined();
-    expect(view.functionKeys?.back).toEqual(withSets.layers.base);
+  it("edits the set an old functionKeys stands for, and writes it as functionSet", () => {
+    const old: Profile = {
+      ...profile,
+      functionKeys: { start: { east: { press: keys("F13") } } },
+    };
+    const view = swapView(old, "function");
+    expect(view.layers.base).toEqual({ east: { press: keys("F13") } });
+    expect("functionKeys" in view).toBe(false);
   });
 });
 
-describe("what a save writes of the function keys (ADR-0069)", () => {
+describe("the old functionKeys (ADR-0069) and the one set they stand for (ADR-0075)", () => {
   const old: Profile = {
+    ...profile,
+    functionKeys: {
+      back: {
+        south: { press: keys("Ctrl+Shift+Z") },
+        east: { press: keys("F14") },
+      },
+      start: { south: { press: keys("Ctrl+Y") }, west: { press: keys("F15") } },
+    },
+  };
+
+  it("are Menu's set, then View's controls that Menu's leaves out", () => {
+    const next = withNewFunctionSet(old);
+    expect(next.functionSet).toEqual({
+      south: { press: keys("Ctrl+Y") },
+      west: { press: keys("F15") },
+      east: { press: keys("F14") },
+    });
+    expect(order(next.functionSet ?? {})).toEqual(["south", "west", "east"]);
+    expect("functionKeys" in next).toBe(false);
+    // The member stands where the old one stood.
+    expect(order(next)).toEqual([
+      "schemaVersion",
+      "name",
+      "layers",
+      "functionSet",
+    ]);
+  });
+
+  it("count a control as Menu's when it is written under another name", () => {
+    const aliased = withNewFunctionSet({
+      ...profile,
+      functionKeys: {
+        back: { a: { press: keys("F1") }, b: { press: keys("F2") } },
+        start: { south: { press: keys("F3") } },
+      },
+    });
+    expect(aliased.functionSet).toEqual({
+      south: { press: keys("F3") },
+      b: { press: keys("F2") },
+    });
+  });
+
+  it("give way to functionSet when the file has both, as for the daemon", () => {
+    const both: Profile = {
+      ...old,
+      functionSet: { north: { press: keys("F16") } },
+    };
+    const next = withNewFunctionSet(both);
+    expect(next.functionSet).toEqual({ north: { press: keys("F16") } });
+    expect("functionKeys" in next).toBe(false);
+  });
+
+  it("leave no set when they have no bindings, and no change when absent", () => {
+    for (const functionKeys of [{}, { back: {}, start: {} }]) {
+      const next = withNewFunctionSet({ ...profile, functionKeys });
+      expect("functionSet" in next).toBe(false);
+      expect("functionKeys" in next).toBe(false);
+    }
+    expect(withNewFunctionSet(withSet)).toBe(withSet);
+  });
+
+  it("are saved as functionSet, without functionKeys", () => {
+    const saved = savedForm(old);
+    expect(saved.functionSet).toEqual(withNewFunctionSet(old).functionSet);
+    expect("functionKeys" in saved).toBe(false);
+    // A draft that is only opened saves to the same text as its file.
+    expect(JSON.stringify(savedForm(withNewFunctionSet(old)))).toBe(
+      JSON.stringify(saved),
+    );
+    // The draft is not changed.
+    expect(old.functionKeys).toBeDefined();
+  });
+});
+
+describe("what a save writes of the function set and of back, start and guide (ADR-0075)", () => {
+  const bound: Profile = {
     schemaVersion: 1,
-    name: "Old",
+    name: "Bound",
     layers: {
       base: {
         south: { label: "Undo", press: keys("Ctrl+Z") },
         back: { label: "Paste", press: keys("Ctrl+V") },
-        east: { press: keys("F13") },
-        select: { press: keys("Ctrl+B") },
+        guide: { press: keys("F13") },
       },
       alt: {
         start: { press: keys("Ctrl+S") },
@@ -201,81 +307,61 @@ describe("what a save writes of the function keys (ADR-0069)", () => {
     common: { back: { block: true }, guide: { block: true } },
   };
 
-  it("takes the old bindings of back and start out of every layer and common", () => {
-    const saved = savedForm(old);
-    expect(saved.layers.base).toEqual({
-      south: old.layers.base.south,
-      east: old.layers.base.east,
+  it("keeps the bindings on back, start and guide in every layer and common", () => {
+    const saved = savedForm(bound);
+    expect(saved).toBe(bound);
+    expect(saved.layers.base.back).toBeDefined();
+    expect(saved.layers.alt.start).toBeDefined();
+    expect(saved.common).toEqual({
+      back: { block: true },
+      guide: { block: true },
     });
-    expect(saved.layers.alt).toEqual({ west: old.layers.alt.west });
-    expect(saved.common).toEqual({ guide: { block: true } });
-    // The members that stay keep their order, and nothing is added.
-    expect(order(saved.layers.base)).toEqual(["south", "east"]);
-    expect(order(saved)).toEqual(order(old));
-    expect(saved.functionKeys).toBeUndefined();
-    // The draft is not changed.
-    expect(old.layers.base.back).toBeDefined();
   });
 
-  it("leaves a common with nothing else as an empty one", () => {
-    const saved = savedForm({
-      ...old,
-      common: { back: { block: true }, start: { block: true } },
-    });
-    expect(saved.common).toEqual({});
-  });
-
-  it("writes functionKeys only when a set has bindings", () => {
-    expect("functionKeys" in savedForm({ ...profile, functionKeys: {} })).toBe(
+  it("writes functionSet only when it has bindings", () => {
+    expect("functionSet" in savedForm({ ...profile, functionSet: {} })).toBe(
       false,
     );
-    expect(
-      "functionKeys" in
-        savedForm({ ...profile, functionKeys: { back: {}, start: {} } }),
-    ).toBe(false);
     const kept = savedForm({
       ...profile,
-      functionKeys: { back: {}, start: withSets.functionKeys?.start },
+      functionSet: { south: { press: keys("F13") } },
     });
-    expect(kept.functionKeys).toEqual({ start: withSets.functionKeys?.start });
+    expect(kept.functionSet).toEqual({ south: { press: keys("F13") } });
   });
 
-  it("leaves out the parts of a set still being filled in, as for a layer", () => {
+  it("leaves out the parts of the set still being filled in, as for a layer", () => {
     const saved = savedForm({
       ...profile,
-      functionKeys: {
-        back: {
-          south: { press: { type: "keys", keys: "" } },
-          east: { label: "Brush", press: { type: "keys", keys: "" } },
-          west: { press: keys("F13") },
-        },
+      functionSet: {
+        south: { press: { type: "keys", keys: "" } },
+        east: { label: "Brush", press: { type: "keys", keys: "" } },
+        west: { press: keys("F13") },
       },
     });
-    expect(saved.functionKeys).toEqual({
-      back: { east: { label: "Brush" }, west: { press: keys("F13") } },
+    expect(saved.functionSet).toEqual({
+      east: { label: "Brush" },
+      west: { press: keys("F13") },
     });
     // A set with nothing left but empty bindings goes.
     expect(
-      "functionKeys" in
+      "functionSet" in
         savedForm({
           ...profile,
-          functionKeys: {
-            start: { south: { press: { type: "keys", keys: "" } } },
-          },
+          functionSet: { south: { press: { type: "keys", keys: "" } } },
         }),
     ).toBe(false);
   });
 
   it("returns a draft with nothing to remove as it is", () => {
-    const filled: Profile = { ...withSets, schemaVersion: 1 };
+    const filled: Profile = { ...withSet, schemaVersion: 1 };
     expect(savedForm(filled)).toBe(filled);
   });
 
-  it("keeps functionKeys where the file had it", () => {
+  it("keeps functionSet where the file had it", () => {
     const placed: Profile = {
       schemaVersion: 1,
       name: "Placed",
-      functionKeys: withSets.functionKeys,
+      functionSet: withSet.functionSet,
       layers: {
         base: { back: { block: true }, south: { press: keys("F13") } },
       },
@@ -283,25 +369,85 @@ describe("what a save writes of the function keys (ADR-0069)", () => {
     expect(order(savedForm(placed))).toEqual([
       "schemaVersion",
       "name",
-      "functionKeys",
+      "functionSet",
       "layers",
     ]);
   });
 
-  it("does not count the old bindings of back and start as more than the base layer", () => {
-    const usage = layerUsage(old);
-    expect(usage.extraLayers).toEqual(["alt"]);
-    expect(usage.commonBindings).toBe(1);
-    expect(usage.blocks).toBe(1);
-    const onlyOld: Profile = {
-      ...profile,
-      common: { back: { block: true } },
+  it("writes a control the edits empty, which the parent binds, as an empty binding in the set", () => {
+    const parent = {
+      id: "base-profile",
+      profile: {
+        ...profile,
+        functionKeys: { start: { south: { press: keys("F13") } } },
+      } as Profile,
     };
-    expect(usesOnlyBase(layerUsage(onlyOld))).toBe(true);
+    const child: Profile = {
+      ...profile,
+      extends: "base-profile",
+      functionSet: { south: { press: { type: "keys", keys: "" } } },
+    };
+    expect(savedForm(child, parent).functionSet).toEqual({ south: {} });
+  });
+
+  it("does not count what a layer binds on the function key as more than the base layer", () => {
+    const only = (key: FunctionKey): Profile => ({
+      ...profile,
+      common: { [key]: { block: true } },
+    });
+    for (const key of functionKeys) {
+      expect(usesOnlyBase(layerUsage(only(key), key)), key).toBe(true);
+      for (const other of functionKeys.filter((entry) => entry !== key))
+        expect(
+          usesOnlyBase(layerUsage(only(other), key)),
+          `${key} ${other}`,
+        ).toBe(false);
+    }
+    const usage = layerUsage(bound, "start");
+    expect(usage.extraLayers).toEqual(["alt"]);
+    // back and guide are ordinary controls when Menu is the function key.
+    expect(usage.commonBindings).toBe(2);
+    expect(usage.blocks).toBe(2);
+    expect(layerUsage(bound, "back").commonBindings).toBe(1);
   });
 });
 
-describe("the label-only warning in a set", () => {
+describe("where a diagnostic points", () => {
+  it("is the base layer or the function set, and the parts after it", () => {
+    expect(diagnosticSet("/layers/base/south/tap")).toEqual({
+      view: "normal",
+      rest: ["south", "tap"],
+    });
+    expect(diagnosticSet("/functionSet/south/tap")).toEqual({
+      view: "function",
+      rest: ["south", "tap"],
+    });
+    // The old format points into one of the two sets, which is the set here.
+    expect(diagnosticSet("/functionKeys/back/south/tap")).toEqual({
+      view: "function",
+      rest: ["south", "tap"],
+    });
+    expect(diagnosticSet("/functionKeys/start/lt")).toEqual({
+      view: "function",
+      rest: ["lt"],
+    });
+  });
+
+  it("is nothing for other places", () => {
+    for (const pointer of [
+      "",
+      "/name",
+      "/layers/alt/south",
+      "/common/south",
+      "/functionKeys",
+      "/functionKeys/guide/south",
+      "/analog/ls",
+    ])
+      expect(diagnosticSet(pointer), pointer).toBeNull();
+  });
+});
+
+describe("the label-only warning in the function set", () => {
   const warning = (pointer: string): ProfileDiagnostic => ({
     severity: "warning",
     pointer,
@@ -311,19 +457,27 @@ describe("the label-only warning in a set", () => {
     col: 1,
   });
 
-  it("is dropped for a control of a set that has only its label", () => {
+  it("is dropped for a control of the set that has only its label", () => {
     const named: Profile = {
       ...profile,
-      functionKeys: { back: { east: { label: "Brush" } } },
+      functionSet: { east: { label: "Brush" } },
     };
+    expect(isLabelOnlyWarning(warning("/functionSet/east"), named)).toBe(true);
+    expect(isLabelOnlyWarning(warning("/functionSet/west"), named)).toBe(false);
+    // A warning of a file of the old format is about the same set.
     expect(isLabelOnlyWarning(warning("/functionKeys/back/east"), named)).toBe(
       true,
     );
-    expect(isLabelOnlyWarning(warning("/functionKeys/start/east"), named)).toBe(
-      false,
-    );
-    expect(isLabelOnlyWarning(warning("/functionKeys/back/west"), named)).toBe(
-      false,
+    expect(isLabelOnlyWarning(warning("/layers/base/east"), named)).toBe(false);
+  });
+
+  it("is dropped for the old format too", () => {
+    const old: Profile = {
+      ...profile,
+      functionKeys: { start: { east: { label: "Brush" } } },
+    };
+    expect(isLabelOnlyWarning(warning("/functionKeys/start/east"), old)).toBe(
+      true,
     );
   });
 });

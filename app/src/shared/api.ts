@@ -157,8 +157,8 @@ export interface RawInputEvent {
 }
 
 // Something to tell the user after a mapping is saved (devices.setMapping):
-// "noBack" and "noStart" View or Menu is not mapped (the emergency combo and
-// the function keys need them), "shadowed" SDL reads another mapping for the
+// "noBack" and "noStart" View or Menu is not mapped (the emergency combo
+// needs them), "shadowed" SDL reads another mapping for the
 // controller (the user's SDL_GAMECONTROLLERCONFIG wins), "notGamepad" SDL
 // still reads it as a joystick. device is a connection ID, when the warning
 // is about one controller.
@@ -486,7 +486,7 @@ export interface ScriptDescription {
   api: string;
   metadata: ScriptMetadata;
 }
-/** What one level (a layer, common, or a function key's set) does with a control. */
+/** What one level (a layer, common, or the function set) does with a control. */
 export interface LayerExplanation {
   layer: string;
   active: boolean;
@@ -499,14 +499,16 @@ export interface LayerExplanation {
   actions: Record<string, string>;
 }
 /**
- * A function key's set (MAP-27, ADR-0071), shaped like a layer: layer is the
- * level's name in decisions, "function:back" or "function:start"; resolution
- * also has "inactive" (the key is not held) and "fallthrough" (held, but the
- * set does not bind the control).
+ * The function set (MAP-27, ADR-0071, ADR-0075), shaped like a layer: layer is
+ * the level's name in decisions, "function:<function key>" (such as
+ * "function:start"); resolution also has "inactive" (the key is not held),
+ * "fallthrough" (held, but the set does not bind the control) and "ignored"
+ * (the control is the function key, which has no binding).
  */
 export interface FunctionSetExplanation extends LayerExplanation {
-  key: "back" | "start";
-  /** Whether the profile has a set for the key at all. */
+  /** The function key now in effect. */
+  key: "back" | "start" | "guide";
+  /** Whether the profile has a function set at all. */
   hasSet: boolean;
 }
 export interface ProfileExplanation {
@@ -514,16 +516,17 @@ export interface ProfileExplanation {
   profileId: string;
   name: string;
   declarativeOnly: boolean;
-  /** The control is itself a function key: it has no binding to explain. */
+  /** The function key now in effect (config.json functionKey), the same for every slot. */
+  functionKey: "back" | "start" | "guide";
+  /** The control is itself the function key: it has no binding to explain. */
   isFunctionKey: boolean;
   slots: {
     slot: number;
     device: number;
     layers: LayerExplanation[];
-    /** The function key held on the slot now; absent when none, and for a library profile. */
-    functionKey?: "back" | "start";
-    /** The sets of both function keys, back's first. */
-    functionSets: FunctionSetExplanation[];
+    /** The function key is held on the slot now; false for a library profile. */
+    functionHeld: boolean;
+    functionSet: FunctionSetExplanation;
   }[];
 }
 // The latency statistics of the diagnostics page (DMN-15, ADR-0071): the time
@@ -983,14 +986,24 @@ export interface PadmateAPI {
   onCapture(listener: (event: KeyboardCaptureEvent) => void): () => void;
   // Pauses the mapping while a new emergency combo is pressed on the
   // controller; input events keep coming. Main also stops it when the
-  // window loses focus, closes or reloads, or the daemon disconnects.
-  padCaptureStart(): Promise<void>;
+  // window loses focus, the session locks or sleeps, the window closes or
+  // reloads, or the daemon disconnects. With stays (the mapping wizard) the
+  // window losing focus, a lock and a sleep do not stop it: the mapping stays
+  // paused until padCaptureStop, the window closing or reloading, or the
+  // daemon disconnecting. Asking again while it is on confirms it; the window
+  // has to be in front to ask.
+  padCaptureStart(stays?: boolean): Promise<void>;
   padCaptureStop(): Promise<void>;
   // Start at sign-in (UI-19). The daemon registers its own executable and
   // arguments; the renderer passes neither. setStartup rejects with code
   // -32017 in a development build.
   getStartup(): Promise<StartupState>;
   setStartup(enabled: boolean): Promise<StartupState>;
+  // Opens the Game Bar page of Windows Settings (ms-settings:gaming-gamebar,
+  // the only address Main opens), where the user turns off "Allow your
+  // controller to open Game Bar" when the Xbox button is the function key
+  // (UI-30, ADR-0075). It takes no address.
+  openGameBarSettings(): Promise<void>;
   // Closing the window (UI-43): Main asks the renderer once, which commits
   // the field being typed in, waits for its saves and then calls
   // readyToClose. Main closes after a few seconds anyway.

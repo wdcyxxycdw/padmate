@@ -34,8 +34,6 @@ const paths = {
   lock: "M5 11h14v9H5zM8 11V8a4 4 0 0 1 8 0v3",
   sliders: "M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4",
   script: "m8 7-5 5 5 5M16 7l5 5-5 5",
-  /** A mouse with its wheel: the mouse keys of a shortcut (ADR-0062). */
-  mouse: "M12 3a6 6 0 0 1 6 6v6a6 6 0 0 1-12 0V9a6 6 0 0 1 6-6ZM12 7v3",
   /** A program's window: stands in for an app without an icon of its own (UI-42). */
   app: "M3 5h18v14H3zM3 9.5h18M6.5 7.25h.01M9.5 7.25h.01",
   more: "",

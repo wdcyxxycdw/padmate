@@ -112,15 +112,17 @@
 //
 // # Function keys
 //
-// Back and start are function keys in every profile (MAP-27, ADR-0069,
-// function_keys.go). Their edges never enter gesture recognition: they start
-// no cycle, are not buffered, interrupt nothing, send nothing and are not
-// shown to a script, so they add no delay to any key. They only decide
-// which set of bindings (profile.FunctionKeys) a later press looks up first:
-// the set of the function key pressed first of those held. The set is chosen
-// when the press arrives (Input.fn travels with a buffered edge), and the
-// release goes to what the press chose. The active function key follows the
-// physical state: CancelAll, Pause and Reload keep it, Reset clears it.
-// Their edges are decisions with ReasonFunction. Compile ignores bindings of
-// back and start in a layer or in common.
+// One of back, start and guide is the function key (MAP-27, ADR-0069,
+// ADR-0075, function_keys.go): start unless Compile is given another with
+// WithFunctionKey. Its edges never enter gesture recognition: it starts no
+// cycle, is not buffered, interrupts nothing, sends nothing and is not shown
+// to a script, so it adds no delay to any key. It only decides which set of
+// bindings (the profile's function set) a later press looks up first. The set
+// is chosen when the press arrives (Input.fn travels with a buffered edge),
+// and the release goes to what the press chose. The function key follows the
+// physical state: CancelAll, Pause and Reload keep it, Reset clears it, and so
+// does a Reload that changes the function key. Its edges are decisions with
+// ReasonFunction. Compile ignores bindings on it in a layer, in common or in
+// the set (Program.IgnoredFunctionKeyBindings); the other two of the three
+// are ordinary controls.
 package engine

@@ -99,6 +99,7 @@ type wireConfig struct {
 	Devices           map[string]DeviceSettings `json:"devices"`
 	Enabled           *bool                     `json:"enabled"`
 	Feedback          *wireConfigFeedback       `json:"feedback"`
+	FunctionKey       string                    `json:"functionKey"`
 	Output            OutputSettings            `json:"output"`
 	ReleaseOnSwitch   string                    `json:"releaseOnSwitch"`
 	RestoreLayerState *bool                     `json:"restoreLayerState"`
@@ -160,6 +161,7 @@ type wireProfile struct {
 	Extends       string            `json:"extends"`
 	Feedback      *wireFeedback     `json:"feedback"`
 	FunctionKeys  *wireFunctionKeys `json:"functionKeys"`
+	FunctionSet   *wireLayer        `json:"functionSet"`
 	Layers        wireLayers        `json:"layers"`
 	Name          string            `json:"name"`
 	SchemaVersion json.Number       `json:"schemaVersion"`

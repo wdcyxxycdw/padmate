@@ -221,7 +221,7 @@ describe("the event list (UI-20, UI-21)", () => {
       time: "14:03:09.027",
       pad: undefined,
       key: "A",
-      gesture: "按下",
+      gesture: "点按",
       where: "",
       result: "按下时没有动作，要等松开、长按或连按后才能确定",
     });
@@ -335,7 +335,7 @@ describe("the event list (UI-20, UI-21)", () => {
     ]);
   });
 
-  it("names the set of a function key by what the pad prints on it, and a release by its edge", () => {
+  it("names the set of a function key as the function key, and a release by its edge", () => {
     mount({
       status: statusOf([dualsense]),
       rows: [
@@ -357,7 +357,7 @@ describe("the event list (UI-20, UI-21)", () => {
       ],
     });
     const rows = items();
-    expect(cells(rows[1]).where).toBe("按住 Create");
+    expect(cells(rows[1]).where).toBe("按住功能键");
     expect(cells(rows[1]).key).toBe("×");
     expect(cells(rows[0])).toMatchObject({
       gesture: "松开",

@@ -18,14 +18,16 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/sys/windows"
+
 	"github.com/wdcyxxycdw/padmate/daemon/internal/installerpkg"
 )
 
 // The smoke test of the built installer (SPK-07). It installs into a folder
 // the test makes, with spaces and Chinese in its name, and touches the user's
 // real state only transiently and only where an installer must: the Settings >
-// Apps entry and its install key under HKCU, and the Start Menu shortcut, all
-// removed again, even when the test fails. The login startup value, the
+// Apps entry and its install key under HKCU, and the Start Menu and desktop
+// shortcuts, all removed again, even when the test fails. The login startup value, the
 // profiles, scripts and discovery files it uses are the test override's
 // (PADMATE_INSTALLER_TEST_ROOT, app/build/installer.nsh). Every padmated it
 // starts is a --dry-run one with a private pipe and discovery folder. It never
@@ -109,7 +111,6 @@ type smoke struct {
 	roaming, local, ipc string
 	startMenuLink       string
 	desktopLink         string
-	desktopLinkExisted  bool
 	// The installer's copy of itself, what was at its path before the test
 	// (nil when nothing was), the installers the test ran by tag, and the file
 	// the test puts at the path to see the uninstaller delete it.
@@ -143,9 +144,13 @@ func newSmoke(t *testing.T) *smoke {
 		s.env = append(s.env, kv)
 	}
 	s.startMenuLink = filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "padmate.lnk")
-	s.desktopLink = filepath.Join(os.Getenv("USERPROFILE"), "Desktop", "padmate.lnk")
-	_, err := os.Lstat(s.desktopLink)
-	s.desktopLinkExisted = err == nil
+	// $DESKTOP of the installer: the known folder, which may be moved (to
+	// OneDrive, for one).
+	desktop, err := windows.KnownFolderPath(windows.FOLDERID_Desktop, 0)
+	if err != nil {
+		desktop = filepath.Join(os.Getenv("USERPROFILE"), "Desktop")
+	}
+	s.desktopLink = filepath.Join(desktop, "padmate.lnk")
 	s.updaterCopy = filepath.Join(os.Getenv("LOCALAPPDATA"), "padmate-updater", "installer.exe")
 	if sum, err := fileHash(s.updaterCopy); err == nil {
 		s.copyBefore = &sum
@@ -255,9 +260,11 @@ func (s *smoke) requireNoRealInstall() {
 			s.t.Fatalf("HKCU\\%s exists: padmate is installed on this machine. The installer would upgrade or remove that installation; uninstall it first (this test is for a machine without one)", key)
 		}
 	}
-	// The installer overwrites this shortcut and the uninstaller deletes it.
-	if _, err := os.Lstat(s.startMenuLink); err == nil {
-		s.t.Fatalf("%s exists: the installer would overwrite it and the uninstaller delete it. Remove it first (this test is for a machine without padmate)", s.startMenuLink)
+	// The installer overwrites these shortcuts and the uninstaller deletes them.
+	for _, link := range []string{s.startMenuLink, s.desktopLink} {
+		if _, err := os.Lstat(link); err == nil {
+			s.t.Fatalf("%s exists: the installer would overwrite it and the uninstaller delete it. Remove it first (this test is for a machine without padmate)", link)
+		}
 	}
 }
 
@@ -285,8 +292,9 @@ func (s *smoke) cleanup() {
 	deleteRegistryTree(installerpkg.UninstallKey)
 	deleteRegistryTree(installerpkg.InstallKey)
 	deleteRegistryTree(`Software\padmate-installer-test`)
-	// requireNoRealInstall made sure the shortcut was not there before.
+	// requireNoRealInstall made sure the shortcuts were not there before.
 	_ = os.Remove(s.startMenuLink)
+	_ = os.Remove(s.desktopLink)
 	s.removeOwnCopy()
 }
 
@@ -693,8 +701,9 @@ func (s *smoke) checkInstalledAs(tag installerpkg.Tag, earlier, older bool) {
 	if !s.exists(s.startMenuLink) {
 		s.t.Errorf("no Start Menu shortcut %s", s.startMenuLink)
 	}
-	if !s.desktopLinkExisted && s.exists(s.desktopLink) {
-		s.t.Errorf("a desktop shortcut %s was made", s.desktopLink)
+	// createDesktopShortcut: always (ADR-0074).
+	if !s.exists(s.desktopLink) {
+		s.t.Errorf("no desktop shortcut %s", s.desktopLink)
 	}
 	if dropsCopy(s.t, tag) && s.leftCopyOf(tag) {
 		s.t.Errorf("the installer left a copy of itself, %s", s.updaterCopy)
@@ -1085,6 +1094,9 @@ func TestInstallerSmoke(t *testing.T) {
 		}
 		if s.exists(s.startMenuLink) {
 			t.Error("the Start Menu shortcut was not removed")
+		}
+		if s.exists(s.desktopLink) {
+			t.Error("the desktop shortcut was not removed")
 		}
 		if left, _ := programsBelow(s.inst); len(left) > 0 {
 			t.Errorf("programs of the removed installation still run: %v", left)

@@ -3,15 +3,12 @@ import type { ProfileAction } from "../shared/generated/schema";
 import {
   actionSteps,
   defaultWaitMs,
+  hasTextStep,
   isEmptyStep,
-  maxTextUnits,
   movedStep,
   newStep,
   stepKind,
   stepsAction,
-  textProblem,
-  textProblemText,
-  textUnits,
 } from "./sequence-model";
 
 describe("steps", () => {
@@ -33,7 +30,6 @@ describe("steps", () => {
   });
   it("start empty, except a wait, which starts at 100 ms", () => {
     expect(newStep("keys")).toEqual({ keys: "" });
-    expect(newStep("text")).toEqual({ text: "" });
     expect(newStep("wait")).toEqual({ wait: defaultWaitMs });
     expect(defaultWaitMs).toBe(100);
   });
@@ -151,55 +147,18 @@ describe("movedStep", () => {
   });
 });
 
-describe("a text", () => {
-  it("counts UTF-16 code units, an emoji as two", () => {
-    expect(textUnits("abc")).toBe(3);
-    expect(textUnits("你好")).toBe(2);
-    expect(textUnits("😀")).toBe(2);
-    expect(textUnits("a\nb")).toBe(3);
-  });
-  it("is fine from one character up to the limit", () => {
-    expect(textProblem("")).toBeNull();
-    expect(textProblem("a")).toBeNull();
-    expect(textProblem("x".repeat(maxTextUnits))).toBeNull();
-    expect(textProblem("😀".repeat(maxTextUnits / 2))).toBeNull();
-    expect(maxTextUnits).toBe(256);
-  });
-  it("is too long one unit over, however it is made", () => {
-    expect(textProblem("x".repeat(maxTextUnits + 1))).toBe("long");
-    expect(textProblem(`${"😀".repeat(maxTextUnits / 2)}x`)).toBe("long");
-  });
-  it("may have a newline and a tab", () => {
-    expect(textProblem("line\n\tindented")).toBeNull();
-  });
-  it.each([
-    ["\u0000", "NUL"],
-    ["\u0008", "backspace"],
-    ["\r", "carriage return"],
-    ["a\r\nb", "CRLF"],
-    ["\u001b[0m", "escape"],
-    ["\u007f", "DEL"],
-    ["\u0085", "C1 next line"],
-    ["\u009f", "last C1"],
-  ])("refuses a control character: %j (%s)", (text) => {
-    expect(textProblem(text)).toBe("control");
-  });
-  it("accepts the characters right outside the control ranges", () => {
-    expect(textProblem("  ¡")).toBeNull();
-    expect(textProblem(" ~")).toBeNull();
-  });
-  it("is told about in plain words, in both languages", () => {
-    expect(textProblemText("long", "zh-CN")).toBe(
-      "最多 256 个字符，表情符号占两个",
+describe("a sequence with a text step", () => {
+  it("is told by its text step, which the drawer no longer offers", () => {
+    expect(
+      hasTextStep({ type: "sequence", steps: [{ keys: "A" }, { text: "x" }] }),
+    ).toBe(true);
+    expect(
+      hasTextStep({ type: "sequence", steps: [{ keys: "A" }, { wait: 5 }] }),
+    ).toBe(false);
+    expect(hasTextStep({ type: "keys", keys: ["A", "B"], mode: "tap" })).toBe(
+      false,
     );
-    expect(textProblemText("long", "en")).toBe(
-      "At most 256 characters; an emoji counts as two",
-    );
-    expect(textProblemText("control", "zh-CN")).toBe(
-      "不能含有换行和制表符以外的控制字符",
-    );
-    expect(textProblemText("control", "en")).toBe(
-      "No control characters except a newline and a tab",
-    );
+    expect(hasTextStep({ type: "text", text: "hi" })).toBe(false);
+    expect(hasTextStep(undefined)).toBe(false);
   });
 });

@@ -42,8 +42,13 @@ type rpcExplanation struct {
 	ProfileID       string `json:"profileId"`
 	Name            string `json:"name"`
 	DeclarativeOnly bool   `json:"declarativeOnly"`
-	// IsFunctionKey is set when the control is itself a function key
-	// (MAP-27): it sends nothing and has no binding to explain.
+	// FunctionKey is the function key config.json chooses (MAP-27, ADR-0075),
+	// "back", "start" or "guide": the one for every slot, and the key the
+	// FunctionSet of each slot belongs to.
+	FunctionKey string `json:"functionKey"`
+	// IsFunctionKey is set when the control is the function key: it sends
+	// nothing, and a binding on it in a layer or in the set is ignored
+	// (Resolution "ignored"), so there is no binding to explain.
 	IsFunctionKey bool                 `json:"isFunctionKey"`
 	Slots         []rpcSlotExplanation `json:"slots"`
 }
@@ -52,26 +57,27 @@ type rpcSlotExplanation struct {
 	Index  int              `json:"slot"` // -1 when querying a library profile
 	Device input.DeviceID   `json:"device"`
 	Layers []rpcLayerResult `json:"layers"`
-	// FunctionKey is the function key held on the slot now, "back" or
-	// "start", and absent when none is; a library profile holds none.
-	FunctionKey string `json:"functionKey,omitempty"`
-	// FunctionSets is the set of each function key, back's first, always
-	// both (ADR-0071). A set wins over the layers for the control while its
-	// key is the one held and the set binds the control.
-	FunctionSets []rpcFunctionSetResult `json:"functionSets"`
+	// FunctionHeld is set while the function key is held on the slot now; a
+	// library profile holds none.
+	FunctionHeld bool `json:"functionHeld"`
+	// FunctionSet is the profile's function set for the control, always there
+	// (ADR-0071, ADR-0075). It wins over the layers for the control while the
+	// function key is held and the set binds the control.
+	FunctionSet rpcFunctionSetResult `json:"functionSet"`
 }
 
-// rpcFunctionSetResult is the result of a function key's set for the control,
+// rpcFunctionSetResult is the result of the function set for the control,
 // shaped like a layer's: Layer is the name of the level in decisions,
-// "function:back" or "function:start". Active says the key is the one held
-// now. Resolution is "inactive" while the key is not held, "fallthrough"
-// when it is held and the set does not bind the control, and otherwise
-// "binding", "blocked" or "label-only" as a layer's.
+// "function:<key>", such as "function:start". Active says the function key is
+// held now. Resolution is "inactive" while it is not held, "fallthrough" when
+// it is held and the set does not bind the control, "ignored" when the control
+// is the function key itself, and otherwise "binding", "blocked" or
+// "label-only" as a layer's.
 type rpcFunctionSetResult struct {
 	rpcLayerResult
-	// Key is the function key, "back" or "start".
+	// Key is the function key, "back", "start" or "guide".
 	Key string `json:"key"`
-	// HasSet is whether the profile has a set for the key at all.
+	// HasSet is whether the profile has a function set at all.
 	HasSet bool `json:"hasSet"`
 }
 
@@ -142,57 +148,63 @@ func explainLayerEntry(entry *rpcLayerResult, binding *profile.Binding) {
 	}
 }
 
-// explainFunctionSets lists the sets of the function keys for c, back's
-// first, and marks the one that fn, the key held now (control.Invalid for
-// none), selects. Where a held key's set binds c, no layer is selected: the
-// lookup stops at the set, and layers is changed to say so.
-func explainFunctionSets(p *profile.Profile, c control.Control, fn control.Control, layers []rpcLayerResult) []rpcFunctionSetResult {
-	sets := make([]rpcFunctionSetResult, 0, 2)
-	for _, key := range []control.Control{control.Back, control.Start} {
-		set := p.FunctionKeys.Set(key)
-		entry := rpcFunctionSetResult{Key: key.String(), HasSet: set != nil}
-		entry.Layer, entry.Actions, entry.Resolution = profile.FunctionLevel(key), map[string]string{}, "inactive"
-		entry.Active = key == fn
-		if entry.Active {
-			entry.Resolution = "fallthrough"
-		}
-		if set != nil {
-			if binding := set.Binding(c); binding != nil {
-				explainLayerEntry(&entry.rpcLayerResult, binding)
-				if entry.Active {
-					entry.Selected, entry.Resolution = true, "binding"
-					if entry.Block {
-						entry.Resolution = "blocked"
-					} else if len(entry.Actions) == 0 {
-						entry.Resolution = "label-only"
-					}
-				}
+// explainFunctionSet describes the function set of p for c, with key as the
+// function key and held saying whether it is held now. Where the held key's set
+// binds c, no layer is selected: the lookup stops at the set, and layers is
+// changed to say so. When c is the function key itself nothing is selected: its
+// bindings, in the layers and in the set, are ignored.
+func explainFunctionSet(p *profile.Profile, key, c control.Control, held bool, layers []rpcLayerResult) rpcFunctionSetResult {
+	set := p.EffectiveFunctionSet()
+	entry := rpcFunctionSetResult{Key: key.String(), HasSet: set != nil}
+	entry.Layer, entry.Actions, entry.Resolution = profile.FunctionLevel(key), map[string]string{}, "inactive"
+	entry.Active = held
+	if held {
+		entry.Resolution = "fallthrough"
+	}
+	var binding *profile.Binding
+	if set != nil {
+		binding = set.Binding(c)
+	}
+	if binding != nil {
+		explainLayerEntry(&entry.rpcLayerResult, binding)
+	}
+	if c == key {
+		// The function key has no binding that does anything.
+		for i := range layers {
+			if layers[i].Binding != "" {
+				layers[i].Selected, layers[i].Resolution = false, "ignored"
 			}
 		}
-		sets = append(sets, entry)
-	}
-	for _, s := range sets {
-		if !s.Selected {
-			continue
+		if binding != nil {
+			entry.Resolution = "ignored"
 		}
+		return entry
+	}
+	if binding != nil && held {
+		entry.Selected, entry.Resolution = true, "binding"
+		if entry.Block {
+			entry.Resolution = "blocked"
+		} else if len(entry.Actions) == 0 {
+			entry.Resolution = "label-only"
+		}
+	}
+	if entry.Selected {
 		for i := range layers {
 			if layers[i].Selected {
 				layers[i].Selected, layers[i].Resolution = false, "shadowed"
 			}
 		}
 	}
-	return sets
+	return entry
 }
 
 // explainSlot explains c on one slot, from the layers and the held function
-// key of its view (a library profile has the default layer and no key held).
-func explainSlot(p *profile.Profile, c control.Control, index int, device input.DeviceID, v engine.View) rpcSlotExplanation {
+// key of its view (a library profile has the default layer and no key held);
+// key is the function key of the config.
+func explainSlot(p *profile.Profile, key, c control.Control, index int, device input.DeviceID, v engine.View) rpcSlotExplanation {
 	layers := explainLayers(p, c, v.Layers)
-	s := rpcSlotExplanation{Index: index, Device: device, Layers: layers, FunctionSets: explainFunctionSets(p, c, v.FunctionKey, layers)}
-	if v.FunctionKey.IsFunctionKey() {
-		s.FunctionKey = v.FunctionKey.String()
-	}
-	return s
+	held := v.FunctionKey != control.Invalid
+	return rpcSlotExplanation{Index: index, Device: device, Layers: layers, FunctionHeld: held, FunctionSet: explainFunctionSet(p, key, c, held, layers)}
 }
 
 func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (any, error) {
@@ -208,7 +220,8 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 	if !ok {
 		return nil, &jrpc2.Error{Code: jrpc2.InvalidParams, Message: "unknown control"}
 	}
-	result := rpcExplanation{Control: c.String(), DeclarativeOnly: true, IsFunctionKey: c.IsFunctionKey(), Slots: []rpcSlotExplanation{}}
+	key := r.selectionConfig().FunctionKeyOrDefault()
+	result := rpcExplanation{Control: c.String(), DeclarativeOnly: true, FunctionKey: key.String(), IsFunctionKey: c == key, Slots: []rpcSlotExplanation{}}
 	if p.ID != "" {
 		if p.Device != "" {
 			return nil, &jrpc2.Error{Code: jrpc2.InvalidParams, Message: "select either a library id or a live device"}
@@ -226,7 +239,7 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 			base = "base"
 		}
 		result.ProfileID, result.Name = p.ID, doc.Name
-		result.Slots = append(result.Slots, explainSlot(doc.Profile, c, -1, 0, engine.View{Layers: engine.LayerState{Base: base}}))
+		result.Slots = append(result.Slots, explainSlot(doc.Profile, key, c, -1, 0, engine.View{Layers: engine.LayerState{Base: base}}))
 		return result, nil
 	}
 	r.profileMu.Lock()
@@ -238,7 +251,7 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 	result.ProfileID, result.Name = r.targetLocked().id, r.cfg.profile.Name
 	for _, v := range views {
 		if matchesDevice(p.Device, v.Key, v.Device) {
-			result.Slots = append(result.Slots, explainSlot(r.cfg.profile, c, int(v.Index), v.Device, v.Mapping))
+			result.Slots = append(result.Slots, explainSlot(r.cfg.profile, key, c, int(v.Index), v.Device, v.Mapping))
 		}
 	}
 	if p.Device != "" && len(result.Slots) == 0 {

@@ -1,7 +1,15 @@
 import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { type ElectronApplication, expect, test } from "@playwright/test";
-import { cleanup, fixture, launch, root } from "./helpers";
+import {
+  cleanup,
+  closeWindow,
+  discoveryPID,
+  fixture,
+  launch,
+  mainWindowVisible,
+  root,
+} from "./helpers";
 
 // The path of the Electron the tests run the application with.
 const electronPath = require("electron") as unknown as string;
@@ -46,21 +54,7 @@ test("windows with private data of their own run side by side, and a second star
 
     // A second start with the same browser data (the folder of the first):
     // it quits at once, and starts neither a window nor a daemon.
-    const child = spawn(
-      electronPath,
-      [join(root, "app", "out", "main", "index.js")],
-      { env: one.env, stdio: "ignore", windowsHide: true },
-    );
-    const exitCode = await new Promise<number | null>((done) => {
-      const timer = setTimeout(() => {
-        child.kill();
-        done(-1);
-      }, 45000);
-      child.on("exit", (code) => {
-        clearTimeout(timer);
-        done(code);
-      });
-    });
+    const exitCode = await startAgain(one.env);
     expect(exitCode).toBe(0);
 
     // The first window is brought back.
@@ -76,5 +70,67 @@ test("windows with private data of their own run side by side, and a second star
   } finally {
     await cleanup(one);
     await cleanup(two);
+  }
+});
+
+/** A second start with the data of f: it hands over to the first and quits. */
+async function startAgain(env: NodeJS.ProcessEnv): Promise<number | null> {
+  const child = spawn(
+    electronPath,
+    [join(root, "app", "out", "main", "index.js")],
+    {
+      env,
+      stdio: "ignore",
+      windowsHide: true,
+    },
+  );
+  return new Promise<number | null>((done) => {
+    const timer = setTimeout(() => {
+      child.kill();
+      done(-1);
+    }, 45000);
+    child.on("exit", (code) => {
+      clearTimeout(timer);
+      done(code);
+    });
+  });
+}
+
+// ADR-0077: closing the window hides it while the daemon is connected, so the
+// page and the controller's model stay loaded and the next start shows them
+// at once; the hidden application quits once the daemon goes away.
+// biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
+test("closing the window hides it, a second start shows the same page again, and the hidden window quits when the daemon goes away", async ({}) => {
+  test.setTimeout(120000);
+  const f = await fixture();
+  try {
+    const { app, page } = await launch(f);
+    const child = app.process();
+    // A mark on the page: a page loaded again would not have it.
+    await page.evaluate(() => {
+      (window as unknown as { kept?: boolean }).kept = true;
+    });
+    await closeWindow(app);
+    await expect.poll(() => mainWindowVisible(app)).toBe(false);
+    expect(child.exitCode).toBeNull();
+    await expect(
+      page.evaluate(async () => (await window.padmate.getConnection()).phase),
+    ).resolves.toBe("connected");
+
+    expect(await startAgain(f.env)).toBe(0);
+    await expect.poll(() => mainWindowVisible(app)).toBe(true);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { kept?: boolean }).kept === true,
+      ),
+    ).toBe(true);
+
+    // Hidden again, then the daemon ends without saying it is exiting.
+    await closeWindow(app);
+    await expect.poll(() => mainWindowVisible(app)).toBe(false);
+    process.kill(await discoveryPID(f));
+    await expect.poll(() => child.exitCode, { timeout: 20000 }).not.toBeNull();
+  } finally {
+    await cleanup(f);
   }
 });

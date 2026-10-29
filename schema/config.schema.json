@@ -48,6 +48,16 @@
       "x-go-type": "string",
       "x-go-field": "ReleaseOnSwitch"
     },
+    "functionKey": {
+      "description": "The one function key (ADR-0075, MAP-27): while it is held, the other controls use the profile's functionSet first. start (Menu, Options, Plus; the default), back (View, Create, Share, Minus) or guide (the Xbox, PS or Home button, which Windows may also react to). It is the same for every profile and every controller, and takes effect at once. The function key sends nothing and cannot be bound.",
+      "enum": [
+        "start",
+        "back",
+        "guide"
+      ],
+      "x-go-type": "string",
+      "x-go-field": "FunctionKey"
+    },
     "restoreLayerState": {
       "description": "Restore persistent layers for each device and profile; defaults to true.",
       "type": "boolean",

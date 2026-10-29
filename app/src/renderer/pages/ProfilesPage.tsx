@@ -1,9 +1,10 @@
 // 配置 page (UI-17, UI-18, PRO-16, PRO-20, PRO-28, UI-42): the profile
 // library and the apps bound to each profile, shown by their icons. The
 // fixed default comes first: every app without a binding uses it. Every
-// change is written to config.json at once. A card's menu also exports the
-// profile as a .padmate file, and 导入… adds one (or converts an AntiMicroX
-// .amgp or .xml file, PRO-21, and lists what did not come over whole).
+// change is written to config.json at once. A card's 复制 makes a whole copy
+// (ADR-0076), and its menu exports the profile as a .padmate file; 导入… adds
+// one (or converts an AntiMicroX .amgp or .xml file, PRO-21, and lists what
+// did not come over whole).
 import {
   type ReactNode,
   useEffect,
@@ -31,7 +32,6 @@ import {
   bindingConflict,
   exeLabel,
   isDefaultProfile,
-  parentName,
   profileName,
   readConfig,
   rulesFor,
@@ -581,12 +581,6 @@ export function ProfilesPage({
     const fixed = isDefaultProfile(id);
     const broken = !!entry.problem;
     const rules = rulesFor(config, id);
-    const copyItem: MenuEntry = {
-      label: t("复制", "Duplicate"),
-      icon: "copy",
-      disabled: broken,
-      onSelect: () => void copy(entry),
-    };
     const exportItem: MenuEntry = {
       label: t("导出…", "Export…"),
       icon: "export",
@@ -603,7 +597,7 @@ export function ProfilesPage({
     };
     // The fixed default is neither renamed nor deleted (PRO-28).
     const items: MenuEntry[] = fixed
-      ? [settingsItem, copyItem, exportItem]
+      ? [settingsItem, exportItem]
       : [
           settingsItem,
           {
@@ -612,7 +606,6 @@ export function ProfilesPage({
             disabled: broken,
             onSelect: () => setRenaming(entry),
           },
-          copyItem,
           exportItem,
           { kind: "separator" },
           {
@@ -623,10 +616,6 @@ export function ProfilesPage({
           },
         ];
     const nameId = `profile-card-${id}`;
-    // The profile this one is based on (PRO-19).
-    const parent = entry.extends
-      ? parentName(entry.extends, state.profiles, language)
-      : "";
     const apps = (
       <AppIcons
         rules={rules}
@@ -648,16 +637,9 @@ export function ProfilesPage({
         >
           <header className="profile-card-head">
             <div className="profile-card-title">
-              <div className="profile-card-names">
-                <h3 id={nameId} className="profile-card-name" title={name}>
-                  {name}
-                </h3>
-                {entry.extends && (
-                  <p className="profile-card-parent" title={parent}>
-                    {t(`基于「${parent}」`, `Based on ${parent}`)}
-                  </p>
-                )}
-              </div>
+              <h3 id={nameId} className="profile-card-name" title={name}>
+                {name}
+              </h3>
               {active && (
                 <span className="tag accent">{t("使用中", "In use")}</span>
               )}
@@ -678,6 +660,15 @@ export function ProfilesPage({
               {activating === id
                 ? t("正在切换…", "Switching…")
                 : t("编辑按键", "Edit keys")}
+            </button>
+            <button
+              type="button"
+              className="btn-ghost profile-card-edit"
+              // A broken profile cannot be renamed after copying it.
+              disabled={broken}
+              onClick={() => void copy(entry)}
+            >
+              {t("复制", "Duplicate")}
             </button>
             <MenuButton
               label={t(`「${name}」的更多操作`, `More for “${name}”`)}

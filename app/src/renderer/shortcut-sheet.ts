@@ -1,7 +1,7 @@
 // The shortcut table export (OUT-18): which shortcut each gamepad button
 // types, and which command to give that shortcut in the painting app. Only
 // keys actions of the base layer are listed, the only layer the GUI shows
-// (the sets of the function keys are not).
+// (the function set is not).
 import type {
   Profile,
   ProfileBinding,
@@ -12,6 +12,7 @@ import {
   BASE_LAYER,
   baseBinding,
   canonicalControl,
+  type FunctionKey,
   type Gesture,
   gestureName,
   isFunctionKey,
@@ -30,6 +31,11 @@ const tx = (language: Language, zh: string, en: string) =>
 
 export interface SheetOptions {
   language: Language;
+  /**
+   * The function key (ADR-0075): the daemon ignores what a layer binds on
+   * it, so it is no shortcut of the table.
+   */
+  functionKey: FunctionKey;
   /** A control as printed on the pad, e.g. "十字键 ←". Custom names win. */
   controlName?: (control: string) => string;
   /**
@@ -53,13 +59,16 @@ export interface ShortcutSheet {
 
 type Bindings = Record<string, ProfileBinding>;
 
-// back and start are function keys (ADR-0069): what a file binds on them is
-// ignored by the daemon, so it is not a shortcut of the table.
-function entries(layer: unknown): [string, ProfileBinding][] {
+// What a file binds on the function key is ignored by the daemon, so it is
+// not a shortcut of the table.
+function entries(
+  layer: unknown,
+  functionKey: FunctionKey,
+): [string, ProfileBinding][] {
   return Object.entries((layer ?? {}) as Bindings).filter(
     ([key, binding]) =>
       key !== "color" &&
-      !isFunctionKey(key) &&
+      !isFunctionKey(key, functionKey) &&
       !!binding &&
       typeof binding === "object",
   );
@@ -126,7 +135,10 @@ export function shortcutSheet(
   const name = options.profileName ?? profile.name;
   const rows: [string, string, string][] = [];
   let highKeys = false;
-  for (const [control, binding] of entries(profile.layers?.[BASE_LAYER]))
+  for (const [control, binding] of entries(
+    profile.layers?.[BASE_LAYER],
+    options.functionKey,
+  ))
     for (const gesture of usedGestures(binding)) {
       const action = binding[gesture];
       if (action?.type !== "keys") continue;
@@ -149,15 +161,15 @@ export function shortcutSheet(
       ]);
     }
   // The table lists the base layer only, so the other key groups and the
-  // sets of the function keys are only counted.
+  // function set are only counted.
   const hidden = [
     ...Object.entries(profile.layers ?? {})
       .filter(([id]) => id !== BASE_LAYER)
       .map(([, layer]) => layer),
     profile.common,
-    ...Object.values(profile.functionKeys ?? {}),
+    profile.functionSet,
   ]
-    .flatMap(entries)
+    .flatMap((layer) => entries(layer, options.functionKey))
     .filter(([, binding]) => Object.keys(binding).length > 0).length;
   return {
     title: t(`${name} 快捷键对照表`, `${name} shortcut table`),

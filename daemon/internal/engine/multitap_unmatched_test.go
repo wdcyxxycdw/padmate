@@ -309,21 +309,21 @@ func TestUnmatchedMultiTapDecisionUnderScript(t *testing.T) {
 	})
 }
 
-// Under a function key the window belongs to the binding that opened it: the
-// press of the key's set ends it as another control's press does, and the
-// window with no action for its count is decided first.
+// Under the function key the window belongs to the binding that opened it: the
+// press of the set ends it as another control's press does, and the window with
+// no action for its count is decided first.
 func TestUnmatchedMultiTapDecisionBeforeAFunctionKeyPress(t *testing.T) {
 	const src = `{"schemaVersion":1,"name":"fn","layers":{"base":{
  "south":{"doubleTap":{"type":"keys","keys":"F14","mode":"tap"}}}},
- "functionKeys":{"back":{"south":{"press":{"type":"keys","keys":"F15"}}}}}`
-	got, sent := unmatchedTrace(t, compileLayers(t, src), engine.Options{}, "+south@10 -south@20 +back@30 +south@40 -south@50 -back@60 wait@1000")
+ "functionSet":{"south":{"press":{"type":"keys","keys":"F15"}}}}`
+	got, sent := unmatchedTrace(t, compileLayers(t, src), engine.Options{}, "+south@10 -south@20 +start@30 +south@40 -south@50 -start@60 wait@1000")
 	want := []string{
 		"@10ms south down press unbound level=base binding=/layers/base/south",
-		"@30ms back down function",
+		"@30ms start down function",
 		"@40ms south down tap unbound level=base binding=/layers/base/south",
-		"@40ms south down press dispatch level=function:back binding=/functionKeys/back/south",
-		"@50ms south up press release level=function:back binding=/functionKeys/back/south",
-		"@60ms back up function",
+		"@40ms south down press dispatch level=function:start binding=/functionSet/south",
+		"@50ms south up press release level=function:start binding=/functionSet/south",
+		"@60ms start up function",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

@@ -213,11 +213,13 @@ export async function rpc(
 /**
  * Records chord in a shortcut field (its group, named 快捷键 or 第 N 步) the
  * way the user does, since shortcuts cannot be typed (OUT-18): 录入 starts
- * the real native capture, the chord arrives as the capture helper reports
- * it, and 停止捕获 commits it. Main hands the renderer the chord, because a
- * test must not press real keys (invariant 6). The renderer keeps only the
- * event of its own capture session, so it goes out for each session this
- * app may have started, and again until the field shows it.
+ * the real native capture, and the chord arrives as the capture helper
+ * reports it. The first key that is not a modifier ends the capture and
+ * commits it, so there is nothing to stop (ADR-0076): chord must have one.
+ * Main hands the renderer the chord, because a test must not press real keys
+ * (invariant 6). The renderer keeps only the event of its own capture
+ * session, so it goes out for each session this app may have started, and
+ * again until the field shows it.
  */
 export async function recordShortcut(
   app: ElectronApplication,
@@ -225,8 +227,8 @@ export async function recordShortcut(
   chord: string,
 ): Promise<void> {
   await field.getByRole("button", { name: /^录入/ }).click();
-  const stop = field.getByRole("button", { name: "停止捕获", exact: true });
-  await expect(stop).toBeVisible();
+  const busy = field.getByRole("button", { name: "录入中…", exact: true });
+  await expect(busy).toBeVisible();
   await expect
     .poll(async () => {
       await app.evaluate(({ BrowserWindow }, keys) => {
@@ -244,8 +246,7 @@ export async function recordShortcut(
       return field.getAttribute("data-keys");
     })
     .toBe(chord);
-  await stop.click();
-  await expect(stop).toHaveCount(0);
+  await expect(busy).toHaveCount(0);
 }
 
 export async function discoveryPID(f: Fixture): Promise<number> {
@@ -254,23 +255,44 @@ export async function discoveryPID(f: Fixture): Promise<number> {
   return value.pid as number;
 }
 
+/** Whether the main window (not the overlay) is visible; null without one. */
+export function mainWindowVisible(
+  app: ElectronApplication,
+): Promise<boolean | null> {
+  return app.evaluate(
+    ({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() !== "padmate overlay")
+        ?.isVisible() ?? null,
+  );
+}
+
+/**
+ * Closes the main window as its close button does. While the daemon is
+ * connected that only hides it (ADR-0077): the application stays.
+ */
+export async function closeWindow(app: ElectronApplication): Promise<void> {
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()
+      .find((w) => w.getTitle() !== "padmate overlay")
+      ?.close();
+  });
+}
+
 export async function closeApplication(
   app: ElectronApplication,
 ): Promise<void> {
   if (app.process().exitCode !== null) return;
-  // Playwright 1.63's Electron close path waits for an obsolete Node inspector
-  // shutdown message. Schedule the actual window close, then detach the
-  // test-owned inspector through the same transport Playwright normally uses.
+  // Closing the window only hides it (ADR-0077), so the application quits,
+  // as the tray's 退出 makes it; the quit closes the window first, which
+  // waits for the saves. Playwright 1.63's Electron close path waits for an
+  // obsolete Node inspector shutdown message. Schedule the quit, then detach
+  // the test-owned inspector through the same transport Playwright normally
+  // uses.
   const closed = app.waitForEvent("close", { timeout: 5000 });
   await app
-    .evaluate(({ BrowserWindow }) => {
-      setTimeout(
-        () =>
-          BrowserWindow.getAllWindows()
-            .find((w) => w.getTitle() !== "padmate overlay")
-            ?.close(),
-        20,
-      );
+    .evaluate(({ app: application }) => {
+      setTimeout(() => application.quit(), 20);
     })
     .catch(() => {});
   const implementation = (

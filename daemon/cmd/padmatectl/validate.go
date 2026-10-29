@@ -14,12 +14,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profilelib"
 )
 
-const validateUsage = `usage: padmatectl validate [--json | --merged] <profile.json>...
+const validateUsage = `usage: padmatectl validate [--json | --merged] [--function-key KEY] <profile.json>...
 
 Checks each profile file: its JSON syntax, the profile schema and the
 bindings. A macro that an action runs and the macros folder lacks is a
@@ -57,6 +58,10 @@ flags:
             nothing), instead of the bindings; the problems go to stderr.
             A profile written to a file of another library, or by itself,
             is read like any profile; an "extends" there is an error.
+  --function-key KEY
+            the function key (MAP-27), start, back or guide, that the
+            bindings are compiled with: the bindings on it are ignored and
+            not listed. config.json is not read; the default is start.
 `
 
 // validateJSONObject is one file in "validate --json".
@@ -82,8 +87,14 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print one JSON object per file")
 	merged := fs.Bool("merged", false, "print each profile with its parents merged in")
+	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start, back or guide")
 	if code, ok := parseFlags(fs, args, validateUsage, stdout, stderr); !ok {
 		return code
+	}
+	fn, err := parseFunctionKey(*functionKey)
+	if err != nil {
+		fmt.Fprintln(stderr, "padmatectl validate:", err)
+		return 2
 	}
 	if *asJSON && *merged {
 		fmt.Fprintln(stderr, "padmatectl validate: --json and --merged cannot be used together")
@@ -132,7 +143,7 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 		var bs []engine.BindingInfo
 		if !ds.HasErrors() {
 			var cds profile.Diagnostics
-			bs, cds = compileBindings(p)
+			bs, cds = compileBindings(p, fn)
 			ds = append(ds, cds...)
 		}
 		if ds.HasErrors() && status == 0 {
@@ -292,11 +303,11 @@ func sortDiagnostics(ds profile.Diagnostics) {
 	})
 }
 
-// compileBindings compiles p, a profile without errors, and returns its
-// bindings. When Compile fails, which it does not for a parsed profile,
-// it returns an error diagnostic at the start of the file instead.
-func compileBindings(p *profile.Profile) ([]engine.BindingInfo, profile.Diagnostics) {
-	prog, err := engine.Compile(p)
+// compileBindings compiles p, a profile without errors, with function key fn,
+// and returns its bindings. When Compile fails, which it does not for a parsed
+// profile, it returns an error diagnostic at the start of the file instead.
+func compileBindings(p *profile.Profile, fn control.Control) ([]engine.BindingInfo, profile.Diagnostics) {
+	prog, err := engine.Compile(p, engine.WithFunctionKey(fn))
 	if err != nil {
 		return nil, profile.Diagnostics{{
 			Severity: profile.SeverityError, Line: 1, Col: 1,

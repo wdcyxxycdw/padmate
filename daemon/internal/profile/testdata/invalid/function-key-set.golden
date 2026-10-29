@@ -1,10 +1,10 @@
-7:7: error: "start" is a function key (ADR-0069); a function key set cannot bind it (/functionKeys/back/start)
+7:7: error: "start" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/start)
 	> "start": {"press": {"type": "keys", "key…
-8:7: error: "select" is a function key (ADR-0069); a function key set cannot bind it (/functionKeys/back/select)
+8:7: error: "select" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/select)
 	> "select": {},
 9:7: error: a function key set has no color: it is not a layer (/functionKeys/back/color)
 	> "color": "#FF0000",
-10:7: error: "view" is a function key (ADR-0069); a function key set cannot bind it (/functionKeys/back/view)
+10:7: error: "view" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/view)
 	> "view": {},
 11:7: error: unknown control "southh"; did you mean "south"? (/functionKeys/back/southh)
 	> "southh": {},

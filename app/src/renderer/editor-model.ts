@@ -88,16 +88,9 @@ export function hasDepth(control: string): boolean {
 }
 
 /**
- * Whether a control is a tick of a virtual knob (ls.cw, ls.ccw, rs.cw,
- * rs.ccw): a press and an immediate release, so it has nothing to repeat.
- */
-export function isKnobTick(control: string): boolean {
-  return /^[lr]s\.c?cw$/.test(canonicalControl(control));
-}
-
-/**
  * A binding without minRateHz in its repeats, for a control that has no
- * depth: the daemon refuses the combination.
+ * depth: the daemon refuses the combination. The drawer writes no repeat
+ * (ADR-0076), but a file's repeat can come in with a pasted binding.
  */
 export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
   let next = binding;
@@ -111,38 +104,44 @@ export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
   return next;
 }
 /**
- * The function keys (MAP-27, ADR-0069): View (back) and Menu (start) hold no
- * bindings of their own. While one is held, the other controls use its set of
- * bindings (profile.functionKeys), and a control the set leaves out does what
- * it does otherwise.
+ * The function key (MAP-27, ADR-0075): one of View (back), Menu (start) and
+ * the Xbox button (guide), chosen in the settings (config.json functionKey)
+ * and the same for every profile and controller. It holds no bindings of its
+ * own. While it is held, the other controls use the profile's function set
+ * (profile.functionSet), and a control the set leaves out does what it does
+ * otherwise. The other two of the three are ordinary controls.
  */
-export const functionKeys = ["back", "start"] as const;
+export const functionKeys = ["start", "back", "guide"] as const;
 export type FunctionKey = (typeof functionKeys)[number];
-/** Which set of bindings the mapping page shows and edits: the usual one, or a function key's. */
-export type KeyView = "normal" | FunctionKey;
+/** The function key when config.json does not choose one: Menu. */
+export const defaultFunctionKey: FunctionKey = "start";
+/** Which set of bindings the mapping page shows and edits: the usual one, or the function set. */
+export type KeyView = "normal" | "function";
 
-/** Whether a control (or its alias) is back or start, which only switch sets. */
-export function isFunctionKey(control: string): boolean {
-  return (functionKeys as readonly string[]).includes(
-    canonicalControl(control),
-  );
+/** value when it names a function key, else the default (as the daemon reads config.json). */
+export function asFunctionKey(value: unknown): FunctionKey {
+  return (functionKeys as readonly unknown[]).includes(value)
+    ? (value as FunctionKey)
+    : defaultFunctionKey;
+}
+
+/** Whether a control (or its alias) is the function key, which only switches sets. */
+export function isFunctionKey(
+  control: string,
+  functionKey: FunctionKey,
+): boolean {
+  return canonicalControl(control) === functionKey;
 }
 
 /**
- * The ID of a function key's set as a key set, like a layer's name: the
- * level name the daemon gives its decisions.
+ * The ID of the function set as a key set, like a layer's name. It cannot be
+ * the name of a layer: a colon is not in the names the editor writes.
  */
-export function functionSetId(key: FunctionKey): string {
-  return `function:${key}`;
-}
-function functionKeyOf(id: string): FunctionKey | undefined {
-  return functionKeys.find((key) => functionSetId(key) === id);
-}
+export const functionSetId = "function:set";
 
 export function layerAt(profile: Profile, id: string): ProfileLayer {
   if (id === "common") return profile.common ?? {};
-  const key = functionKeyOf(id);
-  if (key) return profile.functionKeys?.[key] ?? {};
+  if (id === functionSetId) return profile.functionSet ?? {};
   return profile.layers[id] ?? {};
 }
 export function bindingAt(
@@ -162,48 +161,77 @@ export function bindingAt(
 }
 
 /**
- * profile with the set of function key key replaced, or removed when it has
- * nothing; functionKeys goes when no set is left. A new functionKeys goes
- * after the layers (and common), an old one stays where the file had it.
+ * profile with its function set replaced, or removed when it has nothing. A
+ * new functionSet goes after the layers (and common), an old one stays where
+ * the file had it.
  */
 function withFunctionSet(
   profile: Profile,
-  key: FunctionKey,
   set: Record<string, unknown> | undefined,
 ): Profile {
-  const old = profile.functionKeys as Record<string, unknown> | undefined;
   const keep = !!set && Object.keys(set).length > 0;
-  const sets: Record<string, unknown> = {};
-  for (const [name, value] of Object.entries(old ?? {})) {
-    if (name !== key) sets[name] = value;
-    else if (keep) sets[name] = set;
-  }
-  if (keep && !(old && key in old)) sets[key] = set;
-  const functionKeys = Object.keys(sets).length
-    ? (sets as ProfileFunctionKeys)
-    : undefined;
   const entries = Object.entries(profile);
-  if (profile.functionKeys) {
+  if (profile.functionSet) {
     return Object.fromEntries(
-      entries.flatMap(([name, value]) =>
-        name !== "functionKeys"
-          ? [[name, value]]
-          : functionKeys
-            ? [[name, functionKeys]]
-            : [],
+      entries.flatMap<[string, unknown]>(([name, value]) =>
+        name !== "functionSet" ? [[name, value]] : keep ? [[name, set]] : [],
       ),
     ) as Profile;
   }
-  if (!functionKeys) return profile;
+  if (!keep) return profile;
   const after = profile.common ? "common" : "layers";
   return Object.fromEntries(
     entries.flatMap(([name, value]) =>
       name === after
         ? [
             [name, value],
-            ["functionKeys", functionKeys],
+            ["functionSet", set],
           ]
         : [[name, value]],
+    ),
+  ) as Profile;
+}
+
+/**
+ * The one function set the old functionKeys (ADR-0069) stands for (ADR-0075):
+ * Menu's set, then View's controls that Menu's does not bind. The members are
+ * the file's own, in that order. The same rule as the daemon's
+ * Profile.EffectiveFunctionSet.
+ */
+function mergedOldSets(old: ProfileFunctionKeys): Record<string, unknown> {
+  const set: Record<string, unknown> = {};
+  const taken = new Set<string>();
+  for (const name of ["start", "back"] as const) {
+    const source = old[name] as Record<string, unknown> | undefined;
+    if (!source || typeof source !== "object") continue;
+    for (const [control, binding] of Object.entries(source))
+      if (name === "start" || !taken.has(canonicalControl(control)))
+        set[control] = binding;
+    for (const control of Object.keys(source))
+      taken.add(canonicalControl(control));
+  }
+  return set;
+}
+
+/**
+ * The profile with the old functionKeys turned into the function set it
+ * stands for (ADR-0075), where the old member stood: the editor reads and
+ * writes functionSet only, so a file of the old format is edited, and saved,
+ * as the new one. A profile that has both is left with functionSet, which is
+ * the one the daemon uses. The same profile when it has no functionKeys.
+ */
+export function withNewFunctionSet(profile: Profile): Profile {
+  const old = profile.functionKeys;
+  if (!old) return profile;
+  const set = profile.functionSet ? undefined : mergedOldSets(old);
+  const keep = !!set && Object.keys(set).length > 0;
+  return Object.fromEntries(
+    Object.entries(profile).flatMap<[string, unknown]>(([name, value]) =>
+      name !== "functionKeys"
+        ? [[name, value]]
+        : keep
+          ? [["functionSet", set]]
+          : [],
     ),
   ) as Profile;
 }
@@ -232,33 +260,62 @@ export function setBinding(
     }
   }
   if (keep && !placed) rebuilt[want] = binding;
-  const functionKey = functionKeyOf(layer);
-  if (functionKey) return withFunctionSet(next, functionKey, rebuilt);
+  if (layer === functionSetId) return withFunctionSet(next, rebuilt);
   if (layer === "common") next.common = rebuilt as ProfileLayer;
   else next.layers[layer] = rebuilt as ProfileLayer;
   return next;
 }
 
 /**
- * The profile as the mapping page edits it while a function key's set is
- * shown: that set stands where the base layer does, so the drawer, the
- * controller and the key list read and write it like any other, and the
- * normal bindings stand in the set's place (a set with nothing is absent).
- * It swaps, so it is its own inverse: edits made on the view go back with the
- * same call. The normal view is the profile itself.
+ * The profile as the mapping page edits it while the function set is shown:
+ * that set stands where the base layer does, so the drawer, the controller
+ * and the key list read and write it like any other, and the normal bindings
+ * stand in the set's place (a set with nothing is absent). It swaps, so it is
+ * its own inverse: edits made on the view go back with the same call. The
+ * normal view is the profile itself. A profile of the old format is turned
+ * into the new one first (withNewFunctionSet), so the swap is always of
+ * functionSet.
  */
 export function swapView(profile: Profile, view: KeyView): Profile {
   if (view === "normal") return profile;
-  const set = profile.functionKeys?.[view];
+  const current = withNewFunctionSet(profile);
   const swapped = {
-    ...profile,
-    layers: { ...profile.layers, base: (set ?? {}) as ProfileLayer },
+    ...current,
+    layers: {
+      ...current.layers,
+      base: (current.functionSet ?? {}) as ProfileLayer,
+    },
   };
   return withFunctionSet(
     swapped,
-    view,
-    profile.layers.base as Record<string, unknown>,
+    current.layers.base as Record<string, unknown>,
   );
+}
+
+/**
+ * Where a diagnostic's pointer is in the sets the page edits: the base layer
+ * ("normal") or the function set, and the parts after the set (the control,
+ * the gesture). A file of the old format (ADR-0069) points into
+ * functionKeys/back or functionKeys/start, which are the function set here.
+ * Null for any other place (names, stick settings, other layers).
+ */
+export function diagnosticSet(
+  pointer: string,
+): { view: KeyView; rest: string[] } | null {
+  const parts = pointer
+    .split("/")
+    .slice(1)
+    .map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"));
+  if (parts[0] === "layers" && parts[1] === "base")
+    return { view: "normal", rest: parts.slice(2) };
+  if (parts[0] === "functionSet")
+    return { view: "function", rest: parts.slice(1) };
+  if (
+    parts[0] === "functionKeys" &&
+    (parts[1] === "back" || parts[1] === "start")
+  )
+    return { view: "function", rest: parts.slice(2) };
+  return null;
 }
 
 /** JSON with object keys sorted, so equality checks ignore key order. */
@@ -307,23 +364,26 @@ function filledAction(action: ProfileAction): ProfileAction | null {
  * older format version (0) is saved at the current one (PRO-01). The four
  * feedback switches that moved to config.json (ADR-0067) are not written: the
  * daemon no longer reads them, so a save drops them, and a feedback object
- * left with nothing goes too. back and start are function keys (ADR-0069):
- * the bindings an older file has on them, in any layer or in common, no
- * longer work, so a save drops them (the daemon never rewrites a file by
- * itself), and functionKeys is written only when a set has bindings. A
- * profile based on another (PRO-19) is given that one as parent: a control the
- * edits leave with nothing, that the parent binds, is written as an empty
- * binding, which is how a profile says the key does nothing here. Left out,
- * the parent's binding would come back in the file, while the draft shows the
- * key as not set. draft is not changed.
+ * left with nothing goes too. The bindings on back, start and guide stay
+ * wherever the file has them: which of them is the function key changes in
+ * the settings (ADR-0075), and the daemon ignores the one that is. A file of
+ * the old functionKeys is saved as the functionSet it stands for, without
+ * functionKeys (the daemon never rewrites a file by itself), and functionSet
+ * is written only when it has bindings. A profile based on another (PRO-19)
+ * is given that one as parent: a control the edits leave with nothing, that
+ * the parent binds, is written as an empty binding, which is how a profile
+ * says the key does nothing here. Left out, the parent's binding would come
+ * back in the file, while the draft shows the key as not set. draft is not
+ * changed.
  */
 export function savedForm(
-  draft: Profile,
+  profile: Profile,
   parent?: { id: string; profile: Profile } | null,
 ): Profile {
+  const draft = withNewFunctionSet(profile);
   const up =
     parent && draft.extends && parent.id === draft.extends
-      ? parent.profile
+      ? withNewFunctionSet(parent.profile)
       : undefined;
   const layer = (bindings: ProfileLayer | undefined, above?: ProfileLayer) => {
     if (!bindings) return bindings;
@@ -331,10 +391,6 @@ export function savedForm(
     let changed = false;
     const next: Record<string, unknown> = {};
     for (const [control, value] of Object.entries(bindings)) {
-      if (isFunctionKey(control)) {
-        changed = true;
-        continue;
-      }
       if (!value || typeof value !== "object") {
         next[control] = value;
         continue;
@@ -379,12 +435,17 @@ export function savedForm(
     result = { ...result, layers };
   const common = layer(draft.common, up?.common);
   if (common !== draft.common) result = { ...result, common };
-  const sets = savedFunctionKeys(draft.functionKeys, up?.functionKeys, layer);
-  if (sets !== draft.functionKeys) {
+  const set = layer(draft.functionSet, up?.functionSet);
+  const emptied = !!set && Object.keys(set).length === 0;
+  if (set !== draft.functionSet || emptied) {
     // In place, so the members keep their order in the file.
     result = Object.fromEntries(
       Object.entries(result).flatMap(([key, value]) =>
-        key !== "functionKeys" ? [[key, value]] : sets ? [[key, sets]] : [],
+        key !== "functionSet"
+          ? [[key, value]]
+          : set && !emptied
+            ? [[key, set]]
+            : [],
       ),
     ) as Profile;
   }
@@ -409,43 +470,12 @@ function bindingControls(layer: ProfileLayer | undefined): Set<string> {
   for (const [key, value] of Object.entries(layer ?? {}))
     if (
       key !== "color" &&
-      !isFunctionKey(key) &&
       value &&
       typeof value === "object" &&
       Object.keys(value).length
     )
       bound.add(canonicalControl(key));
   return bound;
-}
-
-/**
- * functionKeys as a save writes it: each set cleaned like a layer (above is
- * the same set of the profile it is based on), a set with nothing left gone,
- * and the object itself gone when no set is left. The same object when
- * nothing changes.
- */
-function savedFunctionKeys(
-  sets: ProfileFunctionKeys | undefined,
-  above: ProfileFunctionKeys | undefined,
-  layer: (
-    bindings: ProfileLayer | undefined,
-    above?: ProfileLayer,
-  ) => ProfileLayer | undefined,
-): ProfileFunctionKeys | undefined {
-  if (!sets) return sets;
-  let changed = false;
-  const next: Record<string, unknown> = {};
-  for (const [key, set] of Object.entries(sets)) {
-    const cleaned = layer(
-      set as ProfileLayer,
-      (above as Record<string, ProfileLayer | undefined> | undefined)?.[key],
-    );
-    if (cleaned !== set) changed = true;
-    if (cleaned && Object.keys(cleaned).length) next[key] = cleaned;
-    else changed = true;
-  }
-  if (!Object.keys(next).length) return undefined;
-  return changed ? (next as ProfileFunctionKeys) : sets;
 }
 
 /** The members of a profile's feedback that config.json holds now (ADR-0067). */
@@ -473,23 +503,21 @@ function withoutRetiredSwitches(
 /**
  * The precision action (MOU-05): while its gesture is held, every stick of
  * the profile that moves the pointer moves at this fraction of its speed. It
- * holds no key, so it only means something on a press or a hold.
+ * holds no key, so it only means something on a press or a hold. The drawer
+ * no longer offers it (ADR-0076); a file's one still works and is named.
  */
 export type PrecisionAction = ProfileMouseAction & { op: "precision" };
 /**
  * The key hints action (HUD-03): while its gesture is held, the overlay lists
  * what the other controls of the current layer do. It holds no key and has
  * nothing to set, so like precision it only means something on a press or a
- * hold.
+ * hold. The drawer no longer offers it (ADR-0076) either.
  */
 export type HintsAction = Extract<ProfileAction, { type: "hud" }>;
 /** The jump action (MOU-08): puts the pointer somewhere. The file sets it. */
 export type JumpAction = ProfileMouseAction & { op: "jump" };
 /** The fraction the daemon uses when a precision action sets no factor. */
 export const precisionDefault = 0.3;
-/** The range of a precision factor, as a fraction and as a percentage. */
-export const precisionRange = { min: 0.05, max: 1 } as const;
-export const precisionPercentRange = { min: 5, max: 100 } as const;
 export function isPrecisionAction(
   action: ProfileAction | undefined,
 ): action is PrecisionAction {
@@ -504,14 +532,6 @@ export function isJumpAction(
   action: ProfileAction | undefined,
 ): action is JumpAction {
   return action?.type === "mouse" && action.op === "jump";
-}
-/** A new key hints action. */
-export function hintsAction(): HintsAction {
-  return { type: "hud", op: "hints" };
-}
-/** A new precision action, at the default factor. */
-export function precisionAction(): PrecisionAction {
-  return { type: "mouse", op: "precision", factor: precisionDefault };
 }
 /** The factor of a precision action as a whole percentage, e.g. 30. */
 export function precisionPercent(action: PrecisionAction): number {
@@ -528,11 +548,6 @@ export function jumpPercent(action: ProfileMouseAction): {
 } {
   return { x: desktopPercent(action.x), y: desktopPercent(action.y) };
 }
-/** Whether a gesture can hold an action: only then do precision and key hints mean something. */
-export function canHoldAction(gesture: Gesture): boolean {
-  return gesture === "press" || gesture === "hold";
-}
-
 export function actionSummary(action?: ProfileAction): string {
   if (!action) return "—";
   switch (action.type) {
@@ -689,7 +704,15 @@ export interface LayerUsage {
    */
   profileActions: number;
 }
-export function layerUsage(profile: Profile): LayerUsage {
+/**
+ * What a profile uses beyond the base layer. The function key (config.json
+ * functionKey) holds no bindings, so what a layer or common binds on it is
+ * ignored by the daemon and is not counted (ADR-0075).
+ */
+export function layerUsage(
+  profile: Profile,
+  functionKey: FunctionKey,
+): LayerUsage {
   const usage: LayerUsage = {
     extraLayers: Object.keys(profile.layers).filter((id) => id !== BASE_LAYER),
     commonBindings: 0,
@@ -710,11 +733,9 @@ export function layerUsage(profile: Profile): LayerUsage {
   ];
   for (const [id, layer] of layers)
     for (const [key, binding] of Object.entries(layer)) {
-      // back and start only switch sets: what an old file binds on them is
-      // ignored by the daemon and dropped by the next save (ADR-0069).
       if (
         key === "color" ||
-        isFunctionKey(key) ||
+        isFunctionKey(key, functionKey) ||
         typeof binding !== "object" ||
         !binding
       )
@@ -746,8 +767,10 @@ export function usesOnlyBase(usage: LayerUsage): boolean {
 type Text = { zh: string; en: string };
 const text = (language: string | undefined, value: Text) =>
   language === "en" ? value.en : value.zh;
+// The drawer calls a press and a tap alike (ADR-0076): the file's one is
+// whichever fits the other mappings of the key (settleTap).
 const gestureNames: Record<Gesture, Text> = {
-  press: { zh: "按下", en: "Press" },
+  press: { zh: "点按", en: "Tap" },
   release: { zh: "松开", en: "Release" },
   tap: { zh: "点按", en: "Tap" },
   hold: { zh: "长按", en: "Hold" },
@@ -757,6 +780,79 @@ const gestureNames: Record<Gesture, Text> = {
 };
 export function gestureName(gesture: Gesture, language?: string): string {
   return text(language, gestureNames[gesture]);
+}
+
+/**
+ * The mappings the key drawer offers (ADR-0076): 点按, 长按 and 双击. The
+ * others of the file (release, triple and quadruple tap) keep working but
+ * are not offered. A mapping is named like the gesture of the same name; the
+ * file's gesture of 点按 is a press or a tap.
+ */
+export const mappings = ["tap", "hold", "doubleTap"] as const;
+export type Mapping = (typeof mappings)[number];
+
+/** The gesture of the file that holds a mapping of the binding, if it has one. */
+export function mappingGesture(
+  binding: ProfileBinding,
+  mapping: Mapping,
+): Gesture | undefined {
+  if (mapping === "tap")
+    return binding.press ? "press" : binding.tap ? "tap" : undefined;
+  return binding[mapping] ? mapping : undefined;
+}
+
+/**
+ * The gesture a 点按 is written as: a press when it is the key's only mapping
+ * (it fires at once and holds its keys while the button is held), a tap when
+ * the key also has 长按 or 双击 (it waits for the release, so the three do not
+ * fire together).
+ */
+export function tapGestureFor(binding: ProfileBinding): "press" | "tap" {
+  return binding.hold || binding.doubleTap ? "tap" : "press";
+}
+
+/**
+ * A shortcut as the drawer writes it (ADR-0076): held while the button is
+ * held (no mode, which is hold for a press or a hold and one tap for the
+ * other gestures) and without repeat. The same action when it is anything
+ * else, a list of shortcuts included, which needs the mode "tap" it has.
+ */
+export function holdShortcut(action: ProfileAction): ProfileAction {
+  if (action.type !== "keys" || Array.isArray(action.keys)) return action;
+  if (action.mode === undefined && action.repeat === undefined) return action;
+  const { mode: _mode, repeat: _repeat, ...plain } = action;
+  return plain;
+}
+
+/** Actions a tap can run as a press can: the others need a press or a hold. */
+const tapActions: ReadonlySet<ProfileAction["type"]> = new Set([
+  "keys",
+  "sequence",
+  "macro",
+  "text",
+]);
+
+/**
+ * The binding with its 点按 written as the gesture that fits its other
+ * mappings (tapGestureFor), which the drawer calls after it adds or removes a
+ * 长按 or 双击. The action stays, as a plain shortcut when it is one, and so
+ * does the place of the gesture in the binding. The same binding when the
+ * 点按 is settled, when there is none or both a press and a tap (the drawer
+ * cannot tell which is it), and when it is an action only a press can hold.
+ */
+export function settleTap(binding: ProfileBinding): ProfileBinding {
+  if (!!binding.press === !!binding.tap) return binding;
+  const from = binding.press ? "press" : "tap";
+  const to = tapGestureFor(binding);
+  const action = binding[from];
+  if (!action || from === to) return binding;
+  if (to === "tap" && !tapActions.has(action.type)) return binding;
+  const moved = holdShortcut(action);
+  return Object.fromEntries(
+    Object.entries(binding).map(([key, value]) =>
+      key === from ? [to, moved] : [key, value],
+    ),
+  ) as ProfileBinding;
 }
 
 /**
@@ -830,8 +926,8 @@ export function missingMacroText(file: string, language?: string): string {
 
 /**
  * The daemon's "binding has no action" warning about a key of the base layer
- * (or of a function key's set) that has only its label: a key named but whose shortcut is not recorded
- * yet (a template leaves its keys so, OUT-18), or a stick click that holds
+ * (or of the function set) that has only its label: a key named but whose shortcut is not recorded
+ * yet (OUT-18), or a stick click that holds
  * the stick's display name. The controller shows such a key as not set, so
  * the editor drops the warning.
  */
@@ -845,19 +941,17 @@ export function isLabelOnlyWarning(
     diagnostic.message !== "binding has no action"
   )
     return false;
-  const base = /^\/layers\/base\/([^/]+)$/.exec(diagnostic.pointer)?.[1];
-  const inSet = /^\/functionKeys\/(back|start)\/([^/]+)$/.exec(
-    diagnostic.pointer,
-  );
-  const key = base ?? inSet?.[2];
-  if (key === undefined) return false;
-  const binding = inSet
-    ? bindingAt(
-        profile,
-        functionSetId(inSet[1] as FunctionKey),
-        canonicalControl(key),
-      )
-    : baseBinding(profile, canonicalControl(key));
+  const found = diagnosticSet(diagnostic.pointer);
+  const key = found?.rest.length === 1 ? found.rest[0] : undefined;
+  if (!found || key === undefined) return false;
+  const binding =
+    found.view === "function"
+      ? bindingAt(
+          withNewFunctionSet(profile),
+          functionSetId,
+          canonicalControl(key),
+        )
+      : baseBinding(profile, canonicalControl(key));
   return (
     !!binding.label?.trim() &&
     !binding.block &&

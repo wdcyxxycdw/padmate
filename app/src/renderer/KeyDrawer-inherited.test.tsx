@@ -16,9 +16,10 @@ import { createEditorStore, type EditorStore } from "./editor-store";
 import { KeyDrawer } from "./KeyDrawer";
 import type { Language } from "./store";
 
-// The key drawer of a profile that is based on another (PRO-19, ADR-0070):
-// what it inherits is shown as the parent's, the first edit makes it the
-// profile's own, and 恢复为继承 gives the key back to the parent.
+// The key drawer of a hand-written profile file that extends another (PRO-19,
+// ADR-0070, ADR-0076): what it takes from the parent is shown as plain
+// bindings, with no mark and no way to give a key back; the first edit makes
+// the key the profile's own.
 
 afterEach(cleanup);
 
@@ -53,7 +54,7 @@ const parentProfile: Profile = {
       "ls.down": { press: { type: "keys", keys: "S" } },
     },
   },
-  functionKeys: { back: { south: { press: { type: "keys", keys: "F1" } } } },
+  functionSet: { south: { press: { type: "keys", keys: "F1" } } },
 };
 const sketchProfile: Profile = {
   schemaVersion: 1,
@@ -78,8 +79,7 @@ async function setup(
     child?: Profile;
     parent?: Profile;
     language?: Language;
-    origins?: { pointer: string; profile: string }[];
-    view?: "back";
+    view?: "function";
   } = {},
 ) {
   const api = editorAPIFixture();
@@ -98,7 +98,7 @@ async function setup(
     id,
     text: JSON.stringify(options.parent ?? parentProfile),
     revision: "r1",
-    inherited: options.origins ?? [],
+    inherited: [],
     diagnostics: [],
   }));
   const { record } = fakeCapture(api);
@@ -126,21 +126,25 @@ async function setup(
 }
 
 const base = (editor: EditorStore) => editor.getState().draft?.layers.base;
-const note = () => screen.queryByTestId("drawer-parent");
+/** Anything in the drawer that says a key is inherited, or gives it back. */
+const inheritanceTraces = () => [
+  screen.queryByTestId("drawer-parent"),
+  ...screen.queryAllByText(/继承|Inherited/),
+];
 const actions = () => screen.getByTestId("key-actions");
 const openMenu = () => fireEvent.click(actions());
 const menuItem = (name: string) =>
   screen.queryByRole("menuitem", { name }) as HTMLButtonElement | null;
 const flush = (editor: EditorStore) => act(() => editor.getState().flush());
 
-it("says a key is inherited, and shows the parent's gestures as they are", async () => {
+it("shows the parent's gestures as the key's own, without a word about it", async () => {
   await setup("south");
-  expect(note()?.textContent).toBe("继承自 Paint");
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
   // The parent's binding, label and gestures.
   expect(
     (
       screen.getByRole("textbox", {
-        name: "在手柄图上显示为",
+        name: "功能",
       }) as HTMLInputElement
     ).value,
   ).toBe("撤销");
@@ -151,32 +155,21 @@ it("says a key is inherited, and shows the parent's gestures as they are", async
   expect(shortcutValue()).toBe("Ctrl+Z");
 });
 
-it("says it in English", async () => {
+it("says nothing of it in English either, and has no way to give the key back", async () => {
   await setup("south", { language: "en" });
-  expect(note()?.textContent).toBe("Inherited from Paint");
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
   openMenu();
   expect(menuItem("Restore inherited")).toBeNull();
 });
 
-it("says nothing of a key the profile binds itself", async () => {
-  await setup("north");
-  expect(note()).toBeNull();
-  openMenu();
-  expect(menuItem("恢复为继承")).toBeNull();
-});
-
-it("says nothing of a key neither binds", async () => {
-  await setup("west");
-  expect(note()).toBeNull();
-  openMenu();
-  expect(menuItem("恢复为继承")).toBeNull();
-});
-
-it("names the profile that wrote the key when it is the parent's own parent", async () => {
-  await setup("south", {
-    origins: [{ pointer: "/layers/base/south", profile: "default" }],
-  });
-  expect(note()?.textContent).toBe("继承自 默认");
+it("offers no way to give a key back, whoever wrote it", async () => {
+  for (const control of ["south", "east", "north", "west"]) {
+    await setup(control);
+    expect(inheritanceTraces().filter(Boolean)).toEqual([]);
+    openMenu();
+    expect(menuItem("恢复为继承")).toBeNull();
+    cleanup();
+  }
 });
 
 it("makes a key the profile's own with the first edit, taking the whole binding with it", async () => {
@@ -197,7 +190,6 @@ it("makes a key the profile's own with the first edit, taking the whole binding 
     "south",
   ]);
   expect(editor.getState().draft?.controlNames).toBeUndefined();
-  expect(note()).toBeNull();
   // It is a step that is taken back.
   expect(editor.getState().canUndo).toBe(true);
 });
@@ -216,54 +208,31 @@ it("saves the edit of an inherited key in the profile's own file", async () => {
     press: { type: "keys", keys: "E" },
   });
   expect(saved).not.toHaveProperty("controlNames");
-  expect(saved).not.toHaveProperty("functionKeys");
+  expect(saved).not.toHaveProperty("functionSet");
 });
 
-it("offers 恢复为继承 for a key the profile overrides, and the parent's binding is back", async () => {
-  const { editor } = await setup("east");
-  // Both bind east: no note, but the menu can give it back.
-  expect(note()).toBeNull();
+it("shows a key the profile overrides as its own binding", async () => {
+  await setup("east");
   expect(shortcutValue()).toBe("E");
-  openMenu();
-  const restore = menuItem("恢复为继承");
-  expect(restore).not.toBeNull();
-  expect(restore?.disabled).toBe(false);
-  fireEvent.click(restore as HTMLButtonElement);
-  // One step: the control leaves the profile's own file ...
-  expect(base(editor)).not.toHaveProperty("east");
-  expect(Object.keys(base(editor) ?? {})).toEqual(["north", "ls.down"]);
-  // ... and the key is the parent's again.
-  expect(note()?.textContent).toBe("继承自 Paint");
-  expect(shortcutValue()).toBe("Ctrl+Y");
-  // The menu no longer offers it.
-  openMenu();
-  expect(menuItem("恢复为继承")).toBeNull();
-  // And it is undone as one step.
-  act(() => {
-    editor.getState().undo();
-  });
-  expect(base(editor)?.east).toEqual({ press: { type: "keys", keys: "E" } });
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
 });
 
-it("says in English too", async () => {
-  await setup("east", { language: "en" });
-  openMenu();
-  expect(menuItem("Restore inherited")).not.toBeNull();
-});
-
-it("clears an inherited key by leaving it empty, which 恢复为继承 undoes", async () => {
+it("clears an inherited key by leaving it empty, and nothing gives it back", async () => {
   const { editor } = await setup("south");
   openMenu();
   fireEvent.click(menuItem("清空此按键…") as HTMLButtonElement);
   fireEvent.click(screen.getByRole("button", { name: "清空" }));
   // The profile says the key does nothing: an empty binding, not nothing.
   expect(base(editor)?.south).toEqual({});
-  expect(note()).toBeNull();
   expect(screen.queryByRole("button", { name: /^点按/ })).toBeNull();
   openMenu();
-  fireEvent.click(menuItem("恢复为继承") as HTMLButtonElement);
+  expect(menuItem("恢复为继承")).toBeNull();
+  // It is one step, and undone as one.
+  act(() => {
+    editor.getState().undo();
+  });
   expect(base(editor)).not.toHaveProperty("south");
-  expect(note()?.textContent).toBe("继承自 Paint");
+  expect(shortcutValue()).toBe("Ctrl+Z");
 });
 
 it("clears a key that only the profile binds by taking it out", async () => {
@@ -278,10 +247,8 @@ it("removes the last gesture of an inherited key by leaving the key empty", asyn
   const { editor } = await setup("east");
   // east is overridden; remove its only gesture: the profile still writes
   // the key, empty, so the parent's does not come back.
-  fireEvent.click(screen.getByRole("button", { name: "删除此手势" }));
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
   expect(base(editor)?.east).toEqual({});
-  openMenu();
-  expect(menuItem("恢复为继承")).not.toBeNull();
 });
 
 it("copies the settings the key has, whoever wrote them", async () => {
@@ -301,45 +268,37 @@ it("names the key as the profile does, and the parent's name stands where it has
   // Only the name is written; the binding stays the parent's.
   expect(editor.getState().draft?.controlNames).toEqual({ south: "回退" });
   expect(base(editor)).not.toHaveProperty("south");
-  expect(note()?.textContent).toBe("继承自 Paint");
 });
 
-it("shows a stick whose directions the profile takes from its parent, and the one it overrides", async () => {
-  const { editor } = await setup("leftstick");
-  // ls.up is the parent's, ls.down the profile's own: part of the stick is
-  // the profile's, so there is no single "inherited from".
-  expect(note()).toBeNull();
-  openMenu();
-  const restore = menuItem("恢复为继承");
-  expect(restore).not.toBeNull();
-  fireEvent.click(restore as HTMLButtonElement);
-  expect(base(editor)).not.toHaveProperty("ls.down");
-  expect(note()?.textContent).toBe("继承自 Paint");
+it("shows a stick whose directions come from the parent and the profile alike as plain bindings", async () => {
+  await setup("leftstick");
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
+  // A stick has no key menu to give its directions back with.
+  expect(screen.queryByTestId("key-actions")).toBeNull();
 });
 
-it("shows a stick all of whose bindings the parent wrote as inherited", async () => {
+it("shows a stick all of whose bindings the parent wrote as plain bindings", async () => {
   await setup("leftstick", {
     child: { ...sketchProfile, layers: { base: {} } },
   });
-  expect(note()?.textContent).toBe("继承自 Paint");
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
 });
 
-it("reads the set of a function key in its own view", async () => {
-  const { editor, record } = await setup("south", { view: "back" });
-  expect(note()?.textContent).toBe("继承自 Paint");
+it("reads the function set in its own view", async () => {
+  const { editor, record } = await setup("south", { view: "function" });
   expect(shortcutValue()).toBe("F1");
   await record("F2");
-  expect(editor.getState().draft?.functionKeys).toEqual({
-    back: { south: { press: { type: "keys", keys: "F2" } } },
+  expect(editor.getState().draft?.functionSet).toEqual({
+    south: { press: { type: "keys", keys: "F2" } },
   });
   // The usual bindings are not touched.
   expect(base(editor)).not.toHaveProperty("south");
 });
 
-it("has no note without a parent for the profile", async () => {
+it("has no trace of inheritance without a parent for the profile", async () => {
   const { extends: _extends, ...alone } = sketchProfile;
   await setup("south", { child: alone as Profile });
-  expect(note()).toBeNull();
+  expect(inheritanceTraces().filter(Boolean)).toEqual([]);
   expect(
     within(screen.getByTestId("mapping-editor")).queryByText(/继承/),
   ).toBeNull();
@@ -352,14 +311,10 @@ it("clears the shortcut of an inherited key: the key is the profile's own, empty
       layers: { base: { north: { press: { type: "keys", keys: "N" } } } },
     },
   });
-  expect(note()?.textContent).toBe("继承自 Paint");
   expect(shortcutValue()).toBe("Ctrl+Y");
   fireEvent.click(screen.getByRole("button", { name: "清除快捷键" }));
-  // The drawer reads the draft: the key is not set, and can be given back.
+  // The drawer reads the draft: the key is not set.
   expect(shortcutValue()).toBe("");
-  expect(note()).toBeNull();
-  openMenu();
-  expect(menuItem("恢复为继承")).not.toBeNull();
   // The file says the key does nothing here. Without that, the file would
   // have no east and the daemon would send the parent's Ctrl+Y.
   await flush(editor);

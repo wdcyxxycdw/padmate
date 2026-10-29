@@ -93,6 +93,18 @@
           "keys": "W"
         }
       },
+      "back": {
+        "press": {
+          "type": "keys",
+          "keys": "LWin+G"
+        }
+      },
+      "start": {
+        "press": {
+          "type": "keys",
+          "keys": "Esc"
+        }
+      },
       "guide": {
         "press": {
           "type": "keys",

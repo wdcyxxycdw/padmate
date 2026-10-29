@@ -65,7 +65,6 @@ import {
   setFeedbackSwitch,
   startupFailureText,
 } from "./settings-model";
-import { type TemplateId, templateText } from "./templates";
 
 export const LOG_LIMIT = 256;
 /** How long a window capture waits for a click into another app (PRO-16). */
@@ -161,15 +160,10 @@ export interface ReportOptions {
   inline?: () => boolean;
 }
 /**
- * What a new profile starts from: an empty profile (neither), a copy of a
- * library profile, or a starter template (PRO-18) in the UI language.
+ * What the controller chips show (UI-35): the action's name or its shortcut.
+ * The control's own name went away with ADR-0077.
  */
-export type NewProfileSource =
-  | { copyFrom?: undefined; template?: undefined }
-  | { copyFrom: string; template?: undefined }
-  | { copyFrom?: undefined; template: TemplateId };
-/** What the controller chips show (UI-35). */
-export type LabelDisplay = "actions" | "keys" | "names";
+export type LabelDisplay = "actions" | "keys";
 /**
  * Start at sign-in (UI-19), see PadmateState.startup; and the overlay's
  * toasts, position and opacity (HUD-05), see overlay-settings.ts.
@@ -310,10 +304,10 @@ export interface PadmateState {
   ): Promise<LibraryOutcome>;
   /** null disables mapping. The caller guards an unsaved mapping draft. */
   activateProfile(id: string | null): Promise<LibraryOutcome>;
-  /** Creates a profile from options' source; resolves to its ID. */
+  /** Creates an empty profile; resolves to its ID. */
   createProfile(
     name: string,
-    options?: NewProfileSource & ReportOptions,
+    options?: ReportOptions,
   ): Promise<LibraryOutcome<string>>;
   /**
    * Copies a profile as "<name> 副本", or "<name> 副本 2"… when that name
@@ -405,7 +399,8 @@ function savedLanguage(): Language {
 function savedLabelDisplay(): LabelDisplay {
   try {
     const value = globalThis.localStorage?.getItem("padmate.labelDisplay");
-    return value === "keys" || value === "names" ? value : "actions";
+    // "names" (before ADR-0077) shows the action names.
+    return value === "keys" ? value : "actions";
   } catch {
     return "actions";
   }
@@ -1168,11 +1163,16 @@ export function createPadmateStore(api: PadmateAPI) {
       }
     }
 
-    /** Creates a profile under a fresh ID from name; see createProfile. */
+    /**
+     * Creates a profile under a fresh ID from name: an empty one, or a copy
+     * of the library profile copyFrom (its whole folder, which the daemon
+     * copies as it is: an `extends` in it stays); see createProfile and
+     * copyProfile.
+     */
     async function create(
       op: Operation,
       name: string,
-      { copyFrom, template }: NewProfileSource = {},
+      copyFrom?: string,
     ): Promise<LibraryOutcome<string>> {
       const problem = profileNameProblem(name, get().profiles);
       if (problem)
@@ -1185,14 +1185,7 @@ export function createPadmateStore(api: PadmateAPI) {
         id = slugId(trimmed, taken);
         try {
           if (copyFrom) await api.copyProfile(copyFrom, id);
-          else
-            await api.putProfile(
-              id,
-              template
-                ? templateText(template, trimmed, get().language)
-                : blankProfileText(trimmed),
-              "",
-            );
+          else await api.putProfile(id, blankProfileText(trimmed), "");
           check(op);
           break;
         } catch (error) {
@@ -1526,7 +1519,7 @@ export function createPadmateStore(api: PadmateAPI) {
           return done;
         }),
       createProfile: (name, options) =>
-        enqueue((op) => create(op, name, options), options?.inline),
+        enqueue((op) => create(op, name), options?.inline),
       copyProfile: (id) =>
         enqueue(async (op) => {
           const { language, profiles } = get();
@@ -1536,7 +1529,7 @@ export function createPadmateStore(api: PadmateAPI) {
             language,
             profiles,
           );
-          const created = await create(op, name, { copyFrom: id });
+          const created = await create(op, name, id);
           return created.ok
             ? { ok: true, value: { id: created.value, name } }
             : created;

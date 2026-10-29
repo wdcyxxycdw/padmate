@@ -252,10 +252,10 @@ describe("scripts page helpers", () => {
     ];
     // A profile's keys stay together, in the order profiles first appear.
     expect(usedByText(uses, labels, "zh-CN")).toBe(
-      "绘画：A 点按 · LB 长按；照片：Y 按下",
+      "绘画：A 点按 · LB 长按；照片：Y 点按",
     );
     expect(usedByText(uses, labels, "en")).toBe(
-      "绘画: A Tap · LB Hold; 照片: Y Press",
+      "绘画: A Tap · LB Hold; 照片: Y Tap",
     );
     expect(usedByText([], labels, "zh-CN")).toBe("");
   });
@@ -304,15 +304,44 @@ describe("scripts page helpers", () => {
     expect(scriptActionCount("{")).toBe(0);
   });
 
-  it("counts a legacy script's actions in the sets of the function keys too", () => {
-    const text = JSON.stringify({
-      layers: { base: { south: { tap: { type: "script", name: "a" } } } },
-      functionKeys: {
-        back: { east: { press: { type: "script", name: "b" } } },
-        start: { west: { hold: { type: "script", name: "c" } } },
-      },
-    });
-    expect(scriptActionCount(text)).toBe(3);
+  it("counts a legacy script's actions in the function set too, or in the old functionKeys", () => {
+    const layers = {
+      base: { south: { tap: { type: "script", name: "a" } } },
+    };
+    expect(
+      scriptActionCount(
+        JSON.stringify({
+          layers,
+          functionSet: {
+            east: { press: { type: "script", name: "b" } },
+            west: { hold: { type: "script", name: "c" } },
+          },
+        }),
+      ),
+    ).toBe(3);
+    expect(
+      scriptActionCount(
+        JSON.stringify({
+          layers,
+          functionKeys: {
+            back: { east: { press: { type: "script", name: "b" } } },
+            start: { west: { hold: { type: "script", name: "c" } } },
+          },
+        }),
+      ),
+    ).toBe(3);
+    // The daemon ignores functionKeys where functionSet is written too.
+    expect(
+      scriptActionCount(
+        JSON.stringify({
+          layers,
+          functionSet: { east: { press: { type: "script", name: "b" } } },
+          functionKeys: {
+            start: { west: { hold: { type: "script", name: "c" } } },
+          },
+        }),
+      ),
+    ).toBe(2);
   });
 
   it("translates refusals and keeps daemon messages", () => {
@@ -547,7 +576,7 @@ describe("scripts page: list", () => {
     ).toEqual(["重命名", "删除"]);
     fireEvent.keyDown(document, { key: "Escape" });
     const missing = await card("旧");
-    expect(missing.textContent).toContain("找不到文件 · 绘画：B 按下");
+    expect(missing.textContent).toContain("找不到文件 · 绘画：B 点按");
     openMenu(missing);
     expect(
       within(screen.getByRole("menu"))

@@ -15,7 +15,6 @@ import {
   TriggerSettings,
 } from "./analog/AnalogPanels";
 import { BindingFields } from "./BindingEditor";
-import { relatedKeys } from "./controller-chips";
 import { controllerLabels, familyName } from "./controller-model";
 import {
   actionText,
@@ -32,12 +31,7 @@ import {
   withoutMinRate,
 } from "./editor-model";
 import type { EditOptions, EditorStore } from "./editor-store";
-import {
-  keyInheritance,
-  restoreInherited,
-  withInherited,
-  writeBack,
-} from "./inheritance";
+import { withInherited, writeBack } from "./inheritance";
 import {
   CommonNotice,
   ControlDiagnostics,
@@ -47,7 +41,6 @@ import {
   ScriptOwnership,
 } from "./KeyDrawerNotices";
 import { effectiveView, viewName, viewRegistrations } from "./key-view";
-import { parentName } from "./library-model";
 import type { Language, PadInput } from "./store";
 import { useCommitField } from "./ui/commit-field";
 import {
@@ -209,9 +202,7 @@ function LabelField({
   const field = useCommitField({ value, onCommit });
   return (
     <label className="field">
-      <span className="field-label">
-        {tx(language, "在手柄图上显示为", "Shown on the controller as")}
-      </span>
+      <span className="field-label">{tx(language, "功能", "Function")}</span>
       <input
         className="input drawer-label-input"
         placeholder={placeholder}
@@ -249,14 +240,16 @@ export function KeyDrawer({
 }) {
   const state = useStore(editor);
   const t = (zh: string, en: string) => tx(language, zh, en);
-  // The usual bindings, or the set of a function key (UI-30, ADR-0069): the
-  // set stands where the base layer does, so everything below reads and
-  // writes it as it would the base layer, and edit puts the draft back.
-  const view = effectiveView(state.view, info);
+  // The usual bindings, or the function set (UI-30, ADR-0075): the set
+  // stands where the base layer does, so everything below reads and writes
+  // it as it would the base layer, and edit puts the draft back.
+  const functionKey = state.functionKey;
+  const view = effectiveView(state.view, info, functionKey);
   const usual = state.draft;
-  // The profile this one is based on (PRO-19): what the profile does not bind
-  // is the parent's, shown here as it is. The edits of it go to the profile's
-  // own file (writeBack): the first one makes the key the profile's own.
+  // A hand-written file that extends another (PRO-19, ADR-0076): what the
+  // profile does not bind is the parent's, shown here as plain bindings. The
+  // edits of it go to the profile's own file (writeBack): the first one makes
+  // the key the profile's own.
   const parent = state.parent;
   const withParent = useMemo(
     () => (usual ? withInherited(usual, parent) : null),
@@ -324,6 +317,13 @@ export function KeyDrawer({
   const [copiedFor, setCopiedFor] = useState<string | null>(null);
   const [renamingFor, setRenamingFor] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<Confirmation | null>(null);
+  // The key whose mappings were cleared from the menu has none, as after the
+  // last one is deleted: it shows no empty 点按 (ADR-0076). Opening another
+  // key and coming back starts it afresh.
+  const [cleared, setCleared] = useState<string | null>(null);
+  const keyId = `${view}:${key}`;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the drawer switches key or view
+  useEffect(() => setCleared(null), [keyId]);
 
   // Opening the drawer moves focus to its heading, so keyboard users land in
   // the drawer and not on the chip list before it. Switching keys while it is
@@ -380,24 +380,6 @@ export function KeyDrawer({
     JSON.stringify(state.context) === confirm.context &&
     confirm.control === key;
   const hasSettings = Object.keys(binding).length > 0;
-  // What the profile takes from its parent for this control, and what it
-  // overrides of it (every binding key the control has).
-  const inheritance = usual
-    ? keyInheritance(usual, parent, view, relatedKeys(control))
-    : null;
-  const inheritedFrom =
-    inheritance && inheritance.inherited.length > 0 && !inheritance.own
-      ? parentName(
-          inheritance.from ?? parent?.id ?? "",
-          state.profiles,
-          language,
-        )
-      : "";
-  const restorable = !!inheritance && inheritance.overridden.length > 0;
-  const restore = () => {
-    if (usual && !locked && inheritance)
-      state.edit(restoreInherited(usual, view, inheritance.overridden));
-  };
   const profileText = t(
     `配置「${profile?.name ?? state.id}」`,
     `Profile "${profile?.name ?? state.id}"`,
@@ -432,7 +414,7 @@ export function KeyDrawer({
     language,
     view,
   );
-  // In a function key's set, a control the set does not mention does what it
+  // In the function set, a control the set does not mention does what it
   // does otherwise: say what that is (the chip shows it too).
   const otherwise = withParent ? baseBinding(withParent, key) : {};
   // Even a binding with only a label owns the key in the base layer.
@@ -458,19 +440,10 @@ export function KeyDrawer({
               .filter(Boolean)
               .join(" ")
           : "";
-  // The profile's own settings of a key give way to the parent's (PRO-19):
-  // the control goes from the profile's file. A stick has no other action.
-  const restoreItem: MenuEntry = {
-    label: t("恢复为继承", "Restore inherited"),
-    icon: "refresh",
-    disabled: locked,
-    onSelect: restore,
-  };
+  // A stick has no key menu.
   const keyMenu: MenuEntry[] =
     kind === "stick"
-      ? restorable
-        ? [restoreItem]
-        : []
+      ? []
       : [
           {
             label: t("复制此按键的设置", "Copy this key's settings"),
@@ -494,7 +467,6 @@ export function KeyDrawer({
             disabled: locked,
             onSelect: () => setRenamingFor(key),
           },
-          ...(restorable ? [restoreItem] : []),
           { kind: "separator" },
           view === "normal"
             ? {
@@ -511,7 +483,10 @@ export function KeyDrawer({
                 icon: "trash",
                 danger: true,
                 disabled: locked || !hasSettings,
-                onSelect: () => setBinding(undefined),
+                onSelect: () => {
+                  setCleared(keyId);
+                  setBinding(undefined);
+                },
               },
         ];
   const otherScopes = scripts.otherScopes.length > 0 && (
@@ -567,7 +542,7 @@ export function KeyDrawer({
             </span>
             {view !== "normal" && (
               <span className="tag" data-testid="drawer-view">
-                {viewName(view, info, language)}
+                {viewName(view, language)}
               </span>
             )}
             {scripts.owners.length > 0 && (
@@ -634,7 +609,7 @@ export function KeyDrawer({
               readOnly={state.readOnly}
               language={language}
             />
-            {/* Holding a function key, a key the set leaves out falls to the
+            {/* Holding the function key, a key the set leaves out falls to the
                 usual keys before common: if they bind it, common does not
                 apply, and the note below says what does. */}
             {kind !== "stick" && !(view !== "normal" && usualBinds) && (
@@ -647,14 +622,6 @@ export function KeyDrawer({
               />
             )}
             <ControlDiagnostics items={diagnostics} language={language} />
-            {inheritedFrom && (
-              <p className="drawer-muted" data-testid="drawer-parent">
-                {t(
-                  `继承自 ${inheritedFrom}`,
-                  `Inherited from ${inheritedFrom}`,
-                )}
-              </p>
-            )}
             {otherwiseText && (
               <p className="drawer-muted" data-testid="drawer-inherited">
                 {t("平时：", "Normal: ")}
@@ -703,7 +670,6 @@ export function KeyDrawer({
                 </fieldset>
                 <BindingFields
                   key={`${view}:${key}`}
-                  control={key}
                   value={binding}
                   onChange={setBinding}
                   timing={timing}
@@ -713,7 +679,9 @@ export function KeyDrawer({
                   disabled={locked}
                   registrations={keyScripts.visible}
                   suggestPress={
-                    keyScripts.owners.length === 0 && !state.readOnly
+                    keyScripts.owners.length === 0 &&
+                    !state.readOnly &&
+                    cleared !== keyId
                   }
                   advanced={otherScopes}
                 >
@@ -776,6 +744,7 @@ export function KeyDrawer({
                       ? confirm.payload
                       : withoutMinRate(confirm.payload)
                     : undefined;
+                if (confirm.kind === "clear") setCleared(keyId);
                 edit(setBaseBinding(profile, confirm.control, pasted));
                 setConfirm(null);
               }}
@@ -794,8 +763,8 @@ export function KeyDrawer({
                 `Replace the settings of ${confirm.label} with the copied ones.`,
               )
             : t(
-                `清空「${confirm?.label ?? ""}」的所有手势和显示文字。按键名称将保留。`,
-                `Remove every gesture and the label of ${confirm?.label ?? ""}. The key name stays.`,
+                `清空「${confirm?.label ?? ""}」的所有映射和显示文字。按键名称将保留。`,
+                `Remove every mapping and the label of ${confirm?.label ?? ""}. The key name stays.`,
               )}
         </p>
         {confirm && !confirmationValid && (

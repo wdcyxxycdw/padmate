@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -25,8 +26,15 @@ type Profile struct {
 	Script         *ScriptConfig
 	Common         *Layer
 	Layers         []*Layer
-	// FunctionKeys holds the bindings used while a function key is held
-	// (MAP-27, ADR-0069); nil when the file has no functionKeys.
+	// FunctionSet is the function set the file writes (MAP-27, ADR-0075): the
+	// bindings used while the function key is held; nil when the file has no
+	// functionSet. Unlike a function key's set of FunctionKeys it may bind back,
+	// start and guide. The engine reads EffectiveFunctionSet, not this.
+	FunctionSet *Layer
+	// FunctionKeys is the old format of the function key bindings (ADR-0069)
+	// as the file writes it; nil when the file has no functionKeys. It stays
+	// valid, and EffectiveFunctionSet merges it into the one set when
+	// there is no FunctionSet.
 	FunctionKeys *FunctionKeys
 	// Extends is the library ID of the profile this one builds on (PRO-19,
 	// ADR-0070), "" for a profile that does not. The profile is already the
@@ -37,50 +45,36 @@ type Profile struct {
 	Parents []ParentRef
 }
 
-// FunctionKeys holds the sets of bindings of the two function keys, back
-// (View, Create, Share, Minus) and start (Menu, Options, Plus). In every
-// profile these two controls are function keys (control.Control.IsFunctionKey):
-// they send nothing and cannot be bound in a layer. While one is held, the
-// other controls look their binding up in that key's set first (ARCHITECTURE
-// §7.3). A set is written like a layer, without a color, and cannot contain
-// the function keys themselves. Back and Start are nil for a key without a
-// set; their Name is FunctionLevel of their control.
+// FunctionKeys is the old format of the function key bindings (ADR-0069):
+// the sets of bindings of back (View, Create, Share, Minus) and start (Menu,
+// Options, Plus), each written like a layer without a color. Back and Start
+// are nil for a key without a set. The sets cannot bind back or start: ADR-0075
+// made the function key one control, chosen in config.json, so a profile
+// states one set (Profile.FunctionSet) and Profile.EffectiveFunctionSet folds
+// these two into it.
 type FunctionKeys struct {
 	Back, Start *Layer
 }
 
-// Set returns the set of function key c, control.Back or control.Start, or
-// nil when c has none, is not a function key, or f is nil.
-func (f *FunctionKeys) Set(c control.Control) *Layer {
-	if f == nil {
-		return nil
-	}
-	switch c {
-	case control.Back:
-		return f.Back
-	case control.Start:
-		return f.Start
-	}
-	return nil
-}
+// FunctionSetName is the name of the Layer that holds a profile's function
+// set (Profile.FunctionSet, and what EffectiveFunctionSet returns).
+const FunctionSetName = "function"
 
-// FunctionLevel returns the name that the set of function key c has as a
-// level of the lookup and in decisions (ENG-20): "function:back" or
-// "function:start", and "" when c is not a function key. The colon keeps it
-// apart from the name of a layer, which is free text, the way a script's
-// "layer:x" scope is.
+// FunctionLevel returns the name that the function set has as a level of the
+// lookup and in decisions (ENG-20) while function key c is the one: "function:back",
+// "function:start" or "function:guide", and "" when c cannot be the function
+// key (control.Control.CanBeFunctionKey). The colon keeps it apart from the
+// name of a layer, which is free text, the way a script's "layer:x" scope is.
 func FunctionLevel(c control.Control) string {
-	switch c {
-	case control.Back:
-		return "function:back"
-	case control.Start:
-		return "function:start"
+	if !c.CanBeFunctionKey() {
+		return ""
 	}
-	return ""
+	return FunctionSetName + ":" + c.String()
 }
 
-// FunctionSets returns the sets that p has, back's first, without the nil
-// ones.
+// FunctionSets returns the sets that the file writes: the two sets of the old
+// functionKeys, back's first, then functionSet, without the nil ones. Every
+// binding of EffectiveFunctionSet is in one of them.
 func (p *Profile) FunctionSets() []*Layer {
 	var sets []*Layer
 	if p.FunctionKeys != nil {
@@ -90,7 +84,41 @@ func (p *Profile) FunctionSets() []*Layer {
 			}
 		}
 	}
+	if p.FunctionSet != nil {
+		sets = append(sets, p.FunctionSet)
+	}
 	return sets
+}
+
+// EffectiveFunctionSet returns the bindings used while the function key is
+// held (ADR-0075 section 2): FunctionSet when the file writes one, else the
+// old format's start set with the back set's bindings for the controls
+// start's does not bind (start wins, because it is the default function key).
+// It is nil when the profile has neither. The bindings are the file's own, so
+// their IDs point into it, and it may hold a binding on the function key
+// itself, which the engine ignores. A merged set is a new Layer named
+// FunctionSetName; FunctionSet itself is returned as it is.
+func (p *Profile) EffectiveFunctionSet() *Layer {
+	if p.FunctionSet != nil {
+		return p.FunctionSet
+	}
+	fk := p.FunctionKeys
+	if fk == nil || fk.Start == nil && fk.Back == nil {
+		return nil
+	}
+	set := &Layer{Name: FunctionSetName}
+	if fk.Start != nil {
+		set.Bindings = append(set.Bindings, fk.Start.Bindings...)
+	}
+	if fk.Back != nil {
+		for _, b := range fk.Back.Bindings {
+			if fk.Start == nil || fk.Start.Binding(b.Control) == nil {
+				set.Bindings = append(set.Bindings, b)
+			}
+		}
+	}
+	slices.SortFunc(set.Bindings, func(a, b *Binding) int { return int(a.Control) - int(b.Control) })
+	return set
 }
 
 // CurrentScriptAPI is the script API of this release, dtsgen.HostAPI (its

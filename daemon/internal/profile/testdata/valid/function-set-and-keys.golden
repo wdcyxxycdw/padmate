@@ -1,0 +1,9 @@
+name "两种写法", schemaVersion 1
+layer base
+	south         /layers/base/south         label ""  press: keys A hold
+function key set function:start
+	east          /functionKeys/start/east   label ""  press: keys B hold
+function key set function
+	south         /functionSet/south         label ""  press: keys F1 hold
+5:3: warning: functionKeys is ignored because functionSet is also written (ADR-0075) (/functionKeys)
+	> "functionKeys": {

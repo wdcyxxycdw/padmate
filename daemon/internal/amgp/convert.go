@@ -50,8 +50,12 @@ type converter struct {
 	// heldTarget is the sets that a while-held button points at, found
 	// before the conversion.
 	heldTarget map[int]bool
-	// fn is the set that holds each function key, by control.
+	// fn is the set that View (back) and Menu (start) hold in set 1, by
+	// control: the sets that become the function set (ADR-0075).
 	fn map[string]int
+	// startBound says that a binding on start was imported, which is the
+	// default function key of padmate.
+	startBound bool
 
 	stick    [2]stickGlobal
 	trig     [2]triggerGlobal
@@ -62,7 +66,9 @@ type converter struct {
 	rank map[string]int
 }
 
-// functionKeyControls are the controls that cannot be bound (ADR-0069).
+// functionKeyControls are the center keys whose hold of a set in set 1 becomes
+// the function set (ADR-0075), with the names the report calls them. Any other
+// binding on them is an ordinary one.
 var functionKeyControls = map[string]string{"back": "View（Back）", "start": "Menu（Start）"}
 
 // Import reads the AntiMicroX profile in data and returns the text of a
@@ -187,8 +193,8 @@ func (cv *converter) prescan() {
 		set := cv.doc.sets[i]
 		forEachButton(set, func(control string, b *buttonModel) {
 			if b.setCond == "while-held" && b.setSelect > 1 && b.setSelect != i {
-				if _, fn := functionKeyControls[control]; fn {
-					return
+				if _, fn := functionKeyControls[control]; fn && i == 1 {
+					return // the function set, not a layer
 				}
 				cv.heldTarget[b.setSelect] = true
 			}
@@ -298,13 +304,15 @@ func (cv *converter) convertSet(set *setModel) map[string]*binding {
 		if why := cv.inert(control); why != "" {
 			cv.rep.approx("control.inert", at, "%s", why)
 		}
+		if control == "start" {
+			cv.startBound = true
+		}
 		out[control] = bb
 	}
 	for _, i := range sortedKeys(set.buttons) {
 		control, btn := buttonControls[i], set.buttons[i]
 		at := loc{set: set.index, control: control}
-		if name, fn := functionKeyControls[control]; fn {
-			cv.functionKey(at, set, name, btn)
+		if name, fn := functionKeyControls[control]; fn && cv.functionKey(at, set, name, btn) {
 			continue
 		}
 		add(at, control, cv.button(at, btn, kindPlain))
@@ -368,23 +376,24 @@ func (cv *converter) convertSet(set *setModel) map[string]*binding {
 	return out
 }
 
-// functionKey handles a button on back or start, the function keys.
-func (cv *converter) functionKey(at loc, set *setModel, name string, btn *buttonModel) {
+// functionKey handles a button on back or start. It reports whether the button
+// needs no binding: it holds a set of set 1, which becomes the function set
+// (ADR-0075), or it is the way back that AntiMicroX writes into that set. Any
+// other button on them is an ordinary binding.
+func (cv *converter) functionKey(at loc, set *setModel, name string, btn *buttonModel) bool {
 	// AntiMicroX writes the way back itself where a button holds a set: the
 	// same button of that set holds set 1, with no slots. Nothing is in it.
 	if set.index != 1 && btn.setCond == "while-held" && btn.setSelect == 1 && len(btn.slots) == 0 && cv.fn[at.control] == set.index {
-		return
+		return true
 	}
 	if btn.setCond == "while-held" && set.index == 1 && btn.setSelect > 1 {
 		if _, ok := cv.fn[at.control]; !ok {
 			cv.fn[at.control] = btn.setSelect
-			cv.rep.info("function.key", at, "%s 在 AntiMicroX 里按住换到 set %d；导入为“按住 %s”的一套按键（功能键）", name, btn.setSelect, name)
+			cv.rep.info("function.key", at, "%s 在 AntiMicroX 里按住换到 set %d；导入为按住功能键时的一套按键", name, btn.setSelect)
 		}
-		return
+		return true
 	}
-	if btn.setCond != "" || len(btn.slots) > 0 {
-		cv.rep.dropped("function.key", at, "%s 在 padmate 里是功能键，不能绑定；只有 set 1 里“按住”换 set 的设置能导入为按住它时的一套按键", name)
-	}
+	return false
 }
 
 // mouseDirection handles the button of a direction of a stick that moves the

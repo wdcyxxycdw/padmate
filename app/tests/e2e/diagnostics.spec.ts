@@ -58,7 +58,7 @@ test("诊断 lists a press with its action, says why an unbound one did nothing,
     await expect(south.locator(".page-act-key .visually-hidden")).toHaveText(
       "S",
     );
-    await expect(south.locator(".page-act-gesture")).toHaveText("按下");
+    await expect(south.locator(".page-act-gesture")).toHaveText("点按");
     await expect(south.locator(".page-act-where")).toHaveText("平时");
     await expect(south.locator(".page-act-time")).toHaveText(
       /^\d\d:\d\d:\d\d\.\d{3}$/,

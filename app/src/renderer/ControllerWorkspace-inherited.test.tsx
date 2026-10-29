@@ -10,8 +10,9 @@ import { createEditorStore, type EditorStore } from "./editor-store";
 import { translator } from "./i18n";
 import { createPadmateStore, type LabelDisplay, type Language } from "./store";
 
-// The mapping page of a profile that is based on another (PRO-19): the chips
-// of what it inherits, marked, beside its own.
+// The mapping page of a hand-written profile file that extends another (PRO-19,
+// ADR-0076): the chips of what it takes from the parent look like its own, with
+// no mark.
 
 vi.mock("./KeyDrawer", () => ({ KeyDrawer: () => null }));
 
@@ -43,6 +44,8 @@ const paint: Profile = {
       north: { tap: { type: "keys", keys: "B" } },
     },
   },
+  // The old format: the profile it is merged with takes it as the one set it
+  // stands for (ADR-0075).
   functionKeys: { back: { south: { tap: { type: "keys", keys: "F1" } } } },
 };
 const sketch: Profile = {
@@ -59,7 +62,6 @@ const library: ProfileEntry[] = [
 async function open(
   draft: Profile = sketch,
   options: {
-    origins?: { pointer: string; profile: string }[];
     language?: Language;
     display?: LabelDisplay;
   } = {},
@@ -76,7 +78,7 @@ async function open(
     id,
     text: JSON.stringify(paint),
     revision: "r1",
-    inherited: options.origins ?? [],
+    inherited: [],
     diagnostics: [],
   }));
   const editor = createEditorStore(api as unknown as PadmateAPI);
@@ -124,10 +126,13 @@ function Harness({
 
 const chip = (control: string) =>
   document.querySelector<HTMLElement>(`button[data-callout="${control}"]`);
+/** Anything on a chip that says its binding is inherited. */
 const marked = (control: string) =>
-  !!chip(control)?.querySelector('[data-testid="inherited-mark"]');
+  !!chip(control)?.querySelector('[data-testid="inherited-mark"]') ||
+  chip(control)?.hasAttribute("data-from-parent") ||
+  /继承|Inherited/.test(chip(control)?.getAttribute("title") ?? "");
 
-it("shows a binding of the parent like any other, with a small mark", async () => {
+it("shows a binding of the parent like any other, with no mark", async () => {
   await open();
   // south is the parent's alone.
   expect(chip("south")?.getAttribute("aria-label")).toBe("A · Ctrl+Z");
@@ -137,14 +142,11 @@ it("shows a binding of the parent like any other, with a small mark", async () =
       (key) => key.textContent,
     ),
   ).toEqual(["Ctrl", "Z"]);
-  expect(marked("south")).toBe(true);
-  expect(chip("south")?.getAttribute("title")).toContain("继承自 Paint");
-  expect(
-    chip("south")?.querySelector('[data-testid="inherited-mark"]')?.textContent,
-  ).toBe("继承");
+  expect(marked("south")).toBe(false);
+  expect(chip("south")?.getAttribute("title")).toBe("A · Ctrl+Z");
 });
 
-it("has no mark on a binding of its own, nor on one that overrides the parent's", async () => {
+it("shows a binding of its own and one that overrides the parent's the same way", async () => {
   await open({
     ...sketch,
     layers: {
@@ -154,60 +156,45 @@ it("has no mark on a binding of its own, nor on one that overrides the parent's"
       },
     },
   });
-  // east: both bind it; west: only the profile does.
+  // east: both bind it; west: only the profile does; north: only the parent.
   expect(chip("east")?.getAttribute("aria-label")).toBe("B · E");
-  expect(marked("east")).toBe(false);
   expect(chip("west")?.getAttribute("aria-label")).toBe("X · W");
-  expect(marked("west")).toBe(false);
-  expect(marked("north")).toBe(true);
+  expect(chip("north")?.getAttribute("data-state")).toBe("bound");
+  for (const control of ["east", "west", "north"])
+    expect(marked(control)).toBe(false);
   // A control neither binds is not set.
   expect(chip("dpad.left")?.getAttribute("data-state")).toBe("unbound");
-  expect(marked("dpad.left")).toBe(false);
 });
 
 it("takes the key names of the parent too", async () => {
-  await open(sketch, { display: "names" });
+  await open(sketch);
   // The parent calls the key 笔刷; the profile does not name it.
   expect(chip("north")?.getAttribute("aria-label")).toBe("Y · 笔刷");
-  expect(chip("east")?.getAttribute("aria-label")).toBe("B · B");
+  // A key nobody names shows what it does.
+  expect(chip("east")?.getAttribute("aria-label")).toBe("B · E");
 });
 
-it("names the profile that wrote the binding when it is the parent's own parent", async () => {
-  await open(sketch, {
-    origins: [{ pointer: "/layers/base/south", profile: "default" }],
-  });
-  // The library does not list default here, so it stands in by its name.
-  expect(chip("south")?.getAttribute("title")).toContain("继承自 默认");
-  expect(chip("east")?.getAttribute("title")).not.toContain("继承自");
-});
-
-it("marks nothing for a profile that is based on nothing", async () => {
+it("shows nothing for a profile that extends nothing", async () => {
   const { extends: _extends, ...alone } = sketch;
   await open(alone as Profile);
   expect(document.querySelector('[data-testid="inherited-mark"]')).toBeNull();
   expect(chip("south")?.getAttribute("data-state")).toBe("unbound");
 });
 
-it("is in English when the language is", async () => {
+it("says nothing of it in English either", async () => {
   await open(sketch, { language: "en" });
-  expect(
-    chip("south")?.querySelector('[data-testid="inherited-mark"]')?.textContent,
-  ).toBe("Inherited");
-  expect(chip("south")?.getAttribute("title")).toContain(
-    "Inherited from Paint",
-  );
+  expect(chip("south")?.getAttribute("aria-label")).toBe("A · Ctrl+Z");
+  expect(marked("south")).toBe(false);
 });
 
-it("shows the set of a function key with what it inherits, marked too", async () => {
+it("shows the function set with what it takes from the parent, unmarked too", async () => {
   const { editor } = await open();
   // Without a binding of its own, south does what it does otherwise ...
-  await act(async () => editor.getState().setView("back"));
+  await act(async () => editor.getState().setView("function"));
   expect(chip("south")?.getAttribute("aria-label")).toBe("A · F1");
-  expect(marked("south")).toBe(true);
-  // ... and a control the set leaves out is the usual chip, greyed, with no
-  // mark: the mark is about the set that is shown.
+  expect(marked("south")).toBe(false);
+  // ... and a control the set leaves out is the usual chip, greyed.
   expect(chip("east")?.getAttribute("data-inherited")).toBe("true");
-  expect(marked("east")).toBe(false);
 });
 
 it("does not copy the parent's bindings into the profile", async () => {

@@ -6,25 +6,27 @@ import {
   actionText,
   bindingAt,
   bindingDelays,
-  canHoldAction,
+  gestureName,
   hasDepth,
-  hintsAction,
+  holdShortcut,
   isFileOnlyAction,
   isHintsAction,
   isJumpAction,
-  isKnobTick,
   isLabelOnlyWarning,
   isPrecisionAction,
   isReservedShortcut,
   jumpPercent,
-  precisionAction,
+  mappingGesture,
+  mappings,
   precisionPercent,
   resolveTiming,
   savedForm,
   setBinding,
+  settleTap,
   shortText,
   stableStringify,
   stepSummary,
+  tapGestureFor,
   withoutMinRate,
 } from "./editor-model";
 
@@ -503,7 +505,7 @@ describe("label-only warning", () => {
       name: "t",
       layers: {
         base: {
-          // A key named but not recorded yet, as templates leave them.
+          // A key named but not recorded yet.
           "dpad.up": { label: "画笔" },
           leftstick: { label: "移动" },
           r3: { label: "缩放" },
@@ -584,22 +586,6 @@ describe("controls with a depth (ANA-12, ANA-15)", () => {
       expect(hasDepth(control), control).toBe(false);
   });
 
-  it("knows the ticks of a virtual knob, and nothing else", () => {
-    for (const control of ["ls.cw", "ls.ccw", "rs.cw", "rs.ccw"])
-      expect(isKnobTick(control), control).toBe(true);
-    for (const control of [
-      "ls.up",
-      "ls.active",
-      "ls.outer",
-      "lt.full",
-      "ls",
-      "south",
-      "ls.cwx",
-      "lsxcw",
-    ])
-      expect(isKnobTick(control), control).toBe(false);
-  });
-
   it("takes minRateHz out of every repeat of a binding and nothing else", () => {
     const binding = {
       label: "Undo",
@@ -650,7 +636,6 @@ describe("the key hints action (HUD-03)", () => {
 
   it("is told apart from every other action", () => {
     expect(isHintsAction(action)).toBe(true);
-    expect(isHintsAction(hintsAction())).toBe(true);
     expect(isHintsAction(undefined)).toBe(false);
     expect(isHintsAction({ type: "keys", keys: "F13" })).toBe(false);
     expect(isHintsAction({ type: "mouse", op: "precision" })).toBe(false);
@@ -660,23 +645,6 @@ describe("the key hints action (HUD-03)", () => {
 
   it("is set by the editor, so it is not file-only", () => {
     expect(isFileOnlyAction(action)).toBe(false);
-  });
-
-  it("starts with nothing to set", () => {
-    expect(hintsAction()).toEqual({ type: "hud", op: "hints" });
-  });
-
-  it("is held with the gesture, like precision: a press or a hold", () => {
-    expect(canHoldAction("press")).toBe(true);
-    expect(canHoldAction("hold")).toBe(true);
-    for (const gesture of [
-      "tap",
-      "release",
-      "doubleTap",
-      "tripleTap",
-      "quadTap",
-    ] as const)
-      expect(canHoldAction(gesture), gesture).toBe(false);
   });
 
   it("is kept as it is when a binding is saved", () => {
@@ -734,12 +702,7 @@ describe("the precision action (MOU-05)", () => {
     expect(isFileOnlyAction(action)).toBe(false);
   });
 
-  it("starts at 30% and reads its percentage", () => {
-    expect(precisionAction()).toEqual({
-      type: "mouse",
-      op: "precision",
-      factor: 0.3,
-    });
+  it("reads its percentage", () => {
     expect(precisionPercent(action)).toBe(30);
     expect(precisionPercent({ type: "mouse", op: "precision" })).toBe(30);
     for (const percent of [5, 7, 29, 57, 100])
@@ -747,19 +710,6 @@ describe("the precision action (MOU-05)", () => {
         precisionPercent({ ...action, factor: percent / 100 }),
         String(percent),
       ).toBe(percent);
-  });
-
-  it("can only be held with a press or a hold", () => {
-    expect(canHoldAction("press")).toBe(true);
-    expect(canHoldAction("hold")).toBe(true);
-    for (const gesture of [
-      "release",
-      "tap",
-      "doubleTap",
-      "tripleTap",
-      "quadTap",
-    ] as const)
-      expect(canHoldAction(gesture), gesture).toBe(false);
   });
 
   it("is saved as it is", () => {
@@ -788,5 +738,162 @@ describe("the pointer jump from the file (MOU-08)", () => {
     expect(actionText(jump, "en")).toBe("Pointer jumps to 50%, 25%");
     expect(jumpPercent(jump)).toEqual({ x: 50, y: 25 });
     expect(actionSummary(jump)).toBe("mouse jump 50%,25%");
+  });
+});
+
+describe("the three mappings of the key drawer (ADR-0076)", () => {
+  const shortcut = (keys: string): ProfileAction => ({ type: "keys", keys });
+
+  it("are Tap, Hold and Double tap, in that order", () => {
+    expect([...mappings]).toEqual(["tap", "hold", "doubleTap"]);
+    expect(mappings.map((mapping) => gestureName(mapping, "zh-CN"))).toEqual([
+      "点按",
+      "长按",
+      "双击",
+    ]);
+    expect(mappings.map((mapping) => gestureName(mapping, "en"))).toEqual([
+      "Tap",
+      "Hold",
+      "Double tap",
+    ]);
+  });
+
+  it("call a press a tap too, whichever of the two the file has", () => {
+    expect(gestureName("press", "zh-CN")).toBe("点按");
+    expect(gestureName("press", "en")).toBe("Tap");
+    expect(gestureName("tap", "zh-CN")).toBe("点按");
+    // The gestures the drawer no longer offers keep their names for lists.
+    expect(gestureName("release", "zh-CN")).toBe("松开");
+    expect(gestureName("tripleTap", "zh-CN")).toBe("三击");
+    expect(gestureName("quadTap", "en")).toBe("Quadruple tap");
+  });
+
+  it("finds the gesture of the file that holds each mapping", () => {
+    const binding = {
+      press: shortcut("A"),
+      hold: shortcut("B"),
+      doubleTap: shortcut("C"),
+    };
+    expect(mappingGesture(binding, "tap")).toBe("press");
+    expect(mappingGesture(binding, "hold")).toBe("hold");
+    expect(mappingGesture(binding, "doubleTap")).toBe("doubleTap");
+    expect(mappingGesture({ tap: shortcut("A") }, "tap")).toBe("tap");
+    expect(mappingGesture({ release: shortcut("A") }, "tap")).toBeUndefined();
+    expect(mappingGesture({}, "hold")).toBeUndefined();
+  });
+
+  it("write a tap as a press alone, and as a tap beside a hold or a double tap", () => {
+    expect(tapGestureFor({})).toBe("press");
+    expect(tapGestureFor({ press: shortcut("A") })).toBe("press");
+    expect(tapGestureFor({ hold: shortcut("B") })).toBe("tap");
+    expect(tapGestureFor({ doubleTap: shortcut("B") })).toBe("tap");
+    // What the drawer does not offer does not count.
+    expect(tapGestureFor({ release: shortcut("B") })).toBe("press");
+    expect(tapGestureFor({ tripleTap: shortcut("B") })).toBe("press");
+  });
+
+  it("move a press to a tap when a hold comes, keeping its action and its place", () => {
+    const before = {
+      label: "Undo",
+      press: shortcut("Ctrl+Z"),
+      haptic: "tick" as const,
+    };
+    const added = settleTap({ ...before, hold: shortcut("Ctrl+Y") });
+    expect(added).toEqual({
+      label: "Undo",
+      tap: shortcut("Ctrl+Z"),
+      haptic: "tick",
+      hold: shortcut("Ctrl+Y"),
+    });
+    expect(Object.keys(added)).toEqual(["label", "tap", "haptic", "hold"]);
+    // And back, when the hold goes.
+    const { hold: _hold, ...rest } = added;
+    expect(settleTap(rest)).toEqual(before);
+    expect(Object.keys(settleTap(rest))).toEqual(Object.keys(before));
+    // A double tap does the same.
+    expect(
+      settleTap({ press: shortcut("A"), doubleTap: shortcut("B") }),
+    ).toEqual({ tap: shortcut("A"), doubleTap: shortcut("B") });
+  });
+
+  it("leave a binding that is settled, or has no tap, as it is", () => {
+    for (const binding of [
+      {},
+      { press: shortcut("A") },
+      { tap: shortcut("A"), hold: shortcut("B") },
+      { hold: shortcut("B"), doubleTap: shortcut("C") },
+      // Both gestures of the file: the drawer cannot tell which is the tap.
+      { press: shortcut("A"), tap: shortcut("B"), hold: shortcut("C") },
+    ])
+      expect(settleTap(binding)).toBe(binding);
+  });
+
+  it("write the shortcut that moves as a plain one, which a tap can hold", () => {
+    // mode "hold" on a tap is an error of the daemon, and a repeat too.
+    const moved = settleTap({
+      press: {
+        type: "keys",
+        keys: "Ctrl+Z",
+        mode: "hold",
+        repeat: { style: "typematic", delayMs: 300 },
+      },
+      hold: shortcut("B"),
+    });
+    expect(moved.tap).toEqual(shortcut("Ctrl+Z"));
+    expect(moved.press).toBeUndefined();
+    // A list of shortcuts keeps the mode "tap" it needs.
+    const list: ProfileAction = { type: "keys", keys: ["A", "B"], mode: "tap" };
+    expect(settleTap({ press: list, hold: shortcut("C") }).tap).toEqual(list);
+    // A script moves as it is.
+    const script: ProfileAction = { type: "macro", file: "复制全部.ts" };
+    expect(settleTap({ press: script, doubleTap: shortcut("C") }).tap).toEqual(
+      script,
+    );
+  });
+
+  it("keep a press that a tap cannot hold: key hints and precision are held", () => {
+    for (const action of [
+      { type: "hud", op: "hints" },
+      { type: "mouse", op: "precision", factor: 0.3 },
+      { type: "layer", layer: "alt", op: "hold" },
+    ] as ProfileAction[]) {
+      const binding = { press: action, hold: shortcut("B") };
+      expect(settleTap(binding)).toBe(binding);
+    }
+  });
+
+  it("write a shortcut held with the button and without repeat", () => {
+    expect(
+      holdShortcut({
+        type: "keys",
+        keys: "Ctrl+Z",
+        mode: "tap",
+        repeat: { style: "tap", delayMs: 0, rateHz: 12 },
+      }),
+    ).toEqual(shortcut("Ctrl+Z"));
+    expect(
+      holdShortcut({
+        type: "keys",
+        keys: "Space",
+        repeat: { style: "typematic", rateHz: 20, minRateHz: 3 },
+      }),
+    ).toEqual(shortcut("Space"));
+    expect(holdShortcut({ type: "keys", keys: "Shift", mode: "hold" })).toEqual(
+      shortcut("Shift"),
+    );
+    // Nothing to take out: the same action comes back.
+    const plain = shortcut("F13");
+    expect(holdShortcut(plain)).toBe(plain);
+  });
+
+  it("leave what is not a single shortcut as it is", () => {
+    for (const action of [
+      { type: "keys", keys: ["A", "B"], mode: "tap" },
+      { type: "sequence", steps: [{ keys: "A" }, { wait: 100 }] },
+      { type: "macro", file: "复制全部.ts" },
+      { type: "text", text: "hello" },
+      { type: "hud", op: "hints" },
+    ] as ProfileAction[])
+      expect(holdShortcut(action)).toBe(action);
   });
 });

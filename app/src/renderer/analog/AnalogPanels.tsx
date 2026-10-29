@@ -469,9 +469,7 @@ function StickBody({
     >
       <fieldset className="analog-fieldset analog-section" disabled={disabled}>
         <label className="field">
-          <span className="field-label">
-            {t("在手柄图上显示为", "Shown on the controller as")}
-          </span>
+          <span className="field-label">{t("功能", "Function")}</span>
           <input
             className="input"
             placeholder={

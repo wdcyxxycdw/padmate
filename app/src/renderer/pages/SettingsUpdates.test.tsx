@@ -28,7 +28,7 @@ const section = () =>
   screen.getByRole("heading", { name: "更新" }).parentElement as HTMLElement;
 
 describe("Settings · 更新 (PKG-10)", () => {
-  it("has the switch and the button, with the privacy note beside the switch", async () => {
+  it("has the switch and the button, and no note under the switch", async () => {
     await setup();
     const card = section();
     const sw = within(card).getByRole("switch", { name: "自动检查更新" });
@@ -40,10 +40,11 @@ describe("Settings · 更新 (PKG-10)", () => {
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(false);
-    // What GitHub learns, and that nothing else is sent.
-    expect(card.textContent).toContain(
-      "每天向 GitHub 查询一次新版本。GitHub 会看到你的 IP 地址和 padmate 的版本号，padmate 不发送其他数据。",
-    );
+    // ADR-0077: the switch needs no explaining, and most users in China
+    // cannot reach GitHub anyway.
+    expect(card.textContent).not.toContain("GitHub");
+    const row = sw.closest(".row") as HTMLElement;
+    expect(row.querySelector(".row-hint")).toBeNull();
   });
 
   it("says the same in English", async () => {
@@ -58,9 +59,7 @@ describe("Settings · 更新 (PKG-10)", () => {
     expect(
       within(card).getByRole("button", { name: "Check for updates" }),
     ).toBeTruthy();
-    expect(card.textContent).toContain(
-      "padmate asks GitHub for a new version once a day. GitHub sees your IP address and padmate's version number; padmate sends nothing else.",
-    );
+    expect(card.textContent).not.toContain("GitHub");
   });
 
   it("shows the switch as Main has it, and changes it through Main", async () => {

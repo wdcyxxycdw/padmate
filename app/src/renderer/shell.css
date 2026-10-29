@@ -431,7 +431,7 @@
   padding: 8px 14px;
   border: 0;
   display: grid;
-  grid-template-columns: 110px 120px minmax(0, 1fr);
+  grid-template-columns: 150px 120px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   background: transparent;
@@ -440,7 +440,11 @@
 .bindings-list button:hover {
   background: var(--surface-2);
 }
+/* The icon of the key, then its name (ADR-0076). */
 .bindings-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
 }
 /* The mark of a binding taken from the profile this one is based on (PRO-19). */
@@ -460,7 +464,7 @@
   min-height: 44px;
   padding: 8px 14px;
   display: grid;
-  grid-template-columns: 110px 120px minmax(0, 1fr);
+  grid-template-columns: 150px 120px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   cursor: default;

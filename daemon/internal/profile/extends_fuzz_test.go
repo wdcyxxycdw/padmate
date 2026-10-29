@@ -30,6 +30,11 @@ var extendsSeeds = [][3]string{
 		`{"schemaVersion":1,"name":"P","extends":"g","layers":{"base":{}},"functionKeys":{"back":{"east":{"press":{"type":"keys","keys":"B","mode":"tap"}}},"start":{}}}`,
 		`{"schemaVersion":1,"name":"G","extends":"p","layers":{"base":{}}}`,
 	},
+	{ // the new function set against the old format, and back, in a chain
+		`{"schemaVersion":1,"name":"C","extends":"p","layers":{"base":{}},"functionSet":{"a":{"press":{"type":"keys","keys":"A","mode":"tap"}},"back":{"block":true}},"functionKeys":{"start":{"north":{}}}}`,
+		`{"schemaVersion":1,"name":"P","extends":"g","layers":{"base":{}},"functionKeys":{"back":{"south":{"press":{"type":"keys","keys":"B","mode":"tap"}}},"start":{"x":{"label":"y"}}}}`,
+		`{"schemaVersion":1,"name":"G","layers":{"base":{}},"functionSet":{"select":{"label":"s"},"guide":{"press":{"type":"keys","keys":"G"}}}}`,
+	},
 	{
 		"\xEF\xBB\xBF" + `{"schemaVersion":-0e0,"name":"C","extends":"p","common":{"lt":{"block":true}},"layers":{"base":{"a":{}}}}`,
 		`{"schemaVersion":1,"name":"P","controlNames":{"south":"Under"},"common":{"rt":{"block":true}},"feedback":{"shortMs":50},"layers":{"base":{"south":{"press":{"type":"macro","file":"a.ts"}}}}}`,

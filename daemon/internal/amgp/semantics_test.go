@@ -241,19 +241,22 @@ func TestFunctionKeySets(t *testing.T) {
 		xmlSet(1, "", xmlButton(5, "<setselect>2</setselect><setselectcondition>while-held</setselectcondition>"), xmlButton(7, "<setselect>3</setselect><setselectcondition>one-way</setselectcondition>", xmlSlot("keyboard", 'Z'))),
 		xmlSet(2, "On view", xmlButton(1, "", xmlSlot("keyboard", 'A'))))
 	p, tree, report := imported(t, doc)
-	if p.FunctionKeys == nil || p.FunctionKeys.Back == nil || p.FunctionKeys.Start != nil {
-		t.Fatalf("function keys %+v", p.FunctionKeys)
+	if p.FunctionSet == nil || p.FunctionKeys != nil {
+		t.Fatalf("function set %+v, function keys %+v", p.FunctionSet, p.FunctionKeys)
 	}
-	if !has(tree, "functionKeys", "back", "south", "press") || !has(tree, "functionKeys", "back", "east", "block") {
-		t.Errorf("function set: %v", at(t, tree, "functionKeys", "back"))
+	if !has(tree, "functionSet", "south", "press") || !has(tree, "functionSet", "east", "block") {
+		t.Errorf("function set: %v", at(t, tree, "functionSet"))
 	}
 	// The set that only holds the key is not a layer as well.
-	if has(tree, "layers", "On view") || len(p.Layers) != 1 {
+	if has(tree, "layers", "On view") || len(p.Layers) != 2 {
 		t.Errorf("layers: %v", at(t, tree, "layers"))
 	}
-	// One-way on Menu and the bindings on View and Menu are dropped.
-	if !hasCode(report, "function.key") {
+	if !hasCode(report, "function.key") || !hasCode(report, "function.set") {
 		t.Errorf("report: %v", report)
+	}
+	// A one-way on Menu is an ordinary binding of base, not a function set.
+	if !has(tree, "layers", "base", "start", "press") {
+		t.Errorf("base: %v", at(t, tree, "layers", "base"))
 	}
 }
 

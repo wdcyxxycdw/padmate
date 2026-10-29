@@ -18,7 +18,7 @@ func TestSchemaMessages(t *testing.T) {
 	for _, where := range []string{
 		schemaRoot, schemaVersionProp, schemaScript, schemaLayers, schemaLayer, schemaBinding,
 		schemaAction, schemaActionType, schemaKeysAction, schemaKeys, schemaMode, schemaSequenceStep,
-		schemaFunctionKeys, schemaFunctionSet,
+		schemaFunctionKeys, schemaFunctionSet, schemaFunctionBindings,
 	} {
 		if schemaAt(where) == nil {
 			t.Errorf("schema location %q does not exist", where)

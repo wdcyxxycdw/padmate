@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { DeviceEntry } from "../../shared/api";
 import type { Config } from "../../shared/generated/schema";
 import { sticksOf } from "../calibration-model";
+import type { FunctionKey } from "../editor-model";
 import type { Translate } from "../i18n";
 import {
   changeConfigText,
@@ -10,8 +11,10 @@ import {
 } from "../library-model";
 import { ModelLicenses } from "../ModelLicenses";
 import {
+  configuredFunctionKey,
   deviceCombo,
   isPanicFamily,
+  setFunctionKey,
   setGlobalTiming,
   setPanicCombo,
   startupDryRun,
@@ -33,6 +36,7 @@ import { MappingWizardDialog } from "./MappingWizardDialog";
 import { ComboKeys, PanicComboDialog, seconds } from "./PanicComboDialog";
 import { ResetMappingDialog } from "./ResetMappingDialog";
 import { FeedbackSection } from "./SettingsFeedback";
+import { FunctionKeyRow, GameBarDialog } from "./SettingsFunctionKey";
 import { OverlaySection } from "./SettingsOverlay";
 import { TimingSection } from "./SettingsTiming";
 import { UpdatesSection } from "./SettingsUpdates";
@@ -96,6 +100,10 @@ export function SettingsPage({
   const [comboFor, setComboFor] = useState<string | null>(null);
   // The gap as typed, while it differs from what is saved.
   const [gapText, setGapText] = useState<string | null>(null);
+  // The function key just chosen, until it is saved; and the notice about
+  // Game Bar that choosing the Xbox button brings (ADR-0075).
+  const [pendingKey, setPendingKey] = useState<FunctionKey | null>(null);
+  const [gameBar, setGameBar] = useState(false);
   const shown = saving ?? saved;
   const disabled = !editable || state.busy || !!saving;
 
@@ -222,6 +230,19 @@ export function SettingsPage({
   const combo = deviceCombo(state.status, device?.info.id);
   const family = combo && isPanicFamily(combo.family) ? combo.family : null;
   const parsed = editable ? readConfig(config) : null;
+  const functionKey = pendingKey ?? configuredFunctionKey(parsed);
+  // The choice is saved at once. The Xbox button asks the user to turn off
+  // the Game Bar's own use of it; the notice comes once the choice is saved.
+  const chooseFunctionKey = async (key: FunctionKey) => {
+    if (key === functionKey) return;
+    setPendingKey(key);
+    try {
+      const result = await write((source) => setFunctionKey(source, key));
+      if (result.ok && key === "guide") setGameBar(true);
+    } finally {
+      setPendingKey(null);
+    }
+  };
   const configured = !!family && !!parsed?.safety?.panic?.[family];
   // The dialog edits the family of the controller it was opened for. When
   // that controller goes away, or another one is selected, it closes and
@@ -366,6 +387,13 @@ export function SettingsPage({
                   <option value="en">English</option>
                 </select>
               </div>
+              <FunctionKeyRow
+                language={language}
+                value={functionKey}
+                disabled={disabled}
+                pad={device?.info.gamepad ? device.info : undefined}
+                onChange={(key) => void chooseFunctionKey(key)}
+              />
               {startup && (
                 // UI-19: the daemon's own entry; null with a daemon that
                 // has no startup.get.
@@ -611,6 +639,12 @@ export function SettingsPage({
           </section>
         </div>
       </div>
+      <GameBarDialog
+        open={gameBar}
+        language={language}
+        api={store.getState().api}
+        onClose={() => setGameBar(false)}
+      />
       {calibrating && (
         <CalibrationDialog
           open

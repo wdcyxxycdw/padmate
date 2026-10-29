@@ -8,6 +8,7 @@ import { analogControlPart } from "./control-parts";
 import {
   actionText,
   baseBinding,
+  type FunctionKey,
   type Gesture,
   gestureName,
   isFileOnlyAction,
@@ -70,26 +71,20 @@ export interface ChipInfo {
   summary: string;
   /**
    * unbound: nothing set; script: owned by a script; locked: only editable
-   * in the file; function: View or Menu, which switch sets and bind nothing.
+   * in the file; function: the function key, which switches sets and binds nothing.
    */
   state: "bound" | "unbound" | "script" | "locked" | "function";
   scriptOwned: boolean;
   /**
    * The file has nothing at all for this control (not even a label). In the
-   * set of a function key such a control does what it does otherwise.
+   * function set such a control does what it does otherwise.
    */
   empty?: boolean;
   /**
-   * Nothing is set here, in the set of a function key: the chip shows what
-   * the control does otherwise, greyed, under a note (ADR-0069).
+   * Nothing is set here, in the function set: the chip shows what the
+   * control does otherwise, greyed, under a note (ADR-0069, ADR-0075).
    */
   inherited?: boolean;
-  /**
-   * The profile takes this chip's bindings from the profile it is based on,
-   * and writes none of its own (PRO-19): the name of the profile that wrote
-   * them. The chip looks like any other and carries a small mark.
-   */
-  fromParent?: string;
   /** A gesture runs a script whose file is missing (SCR-50). */
   missing?: boolean;
 }
@@ -451,7 +446,7 @@ function describeRaw(
   };
 }
 
-/** The chip of View and Menu (UI-30): tagged, and nothing to edit. */
+/** The chip of the function key (UI-30): tagged, and nothing to edit. */
 export function functionKeyChip(language: Language): ChipInfo {
   return {
     title: tx(language, "功能键", "Function key"),
@@ -467,30 +462,27 @@ export function functionKeyChip(language: Language): ChipInfo {
 }
 
 /**
- * The chips of a function key's set: a control the set leaves out (its chip
+ * The chips of the function set: a control the set leaves out (its chip
  * is unset) shows what it does otherwise, in the unset look, with the note
  * "平时：" in front. own is the chips of the set; normal the chips of the
- * usual bindings; display is the display mode both were made with.
+ * usual bindings, both made with the same display mode.
  */
 export function inheritedChips({
   own,
   normal,
-  display,
   language,
 }: {
   own: Record<string, ChipInfo>;
   normal: Record<string, ChipInfo>;
-  display: LabelDisplay;
   language: Language;
 }): Record<string, ChipInfo> {
   const note = tx(language, "平时：", "Normal: ");
-  // A segment's parts are separated by a space when read as text, so the note
-  // alone has none at its end; in front of a gesture name it does (English).
+  // The keycaps of a title have no gesture: the note takes its place. A
+  // segment's parts are separated by a space when read as text, so the note
+  // has none at its end.
   const noted = (segment: ChipSegment): ChipSegment => ({
     ...segment,
-    gesture: segment.gesture
-      ? note + segment.gesture
-      : tx(language, "平时：", "Normal:"),
+    gesture: tx(language, "平时：", "Normal:"),
   });
   const result: Record<string, ChipInfo> = {};
   for (const [control, chip] of Object.entries(own)) {
@@ -507,24 +499,10 @@ export function inheritedChips({
       result[control] = chip;
       continue;
     }
-    // With the control's name as the title, the note goes before the action.
-    const inDetail = display === "names" && usual.detail.length > 0;
-    const detail = inDetail
-      ? [noted(usual.detail[0]), ...usual.detail.slice(1)]
-      : usual.detail;
-    // What the usual chip takes from the profile's parent is about the usual
-    // bindings, not about this set.
-    const { fromParent: _fromParent, ...rest } = usual;
     result[control] = {
-      ...rest,
-      title: inDetail ? usual.title : note + usual.title,
-      ...(usual.titleKeys && !inDetail
-        ? { titleKeys: noted(usual.titleKeys) }
-        : {}),
-      detail,
-      summary: inDetail
-        ? detail.map((segment) => segmentText(segment, language)).join(" · ")
-        : usual.summary,
+      ...usual,
+      title: note + usual.title,
+      ...(usual.titleKeys ? { titleKeys: noted(usual.titleKeys) } : {}),
       state: "unbound",
       inherited: true,
     };
@@ -543,7 +521,7 @@ export function controllerChips({
   profiles = [],
   missing = [],
   scriptEntry,
-  fromParent,
+  functionKey,
 }: {
   profile: Profile | null;
   controls: string[];
@@ -559,11 +537,10 @@ export function controllerChips({
   /** Entry file of the profile's script, named when a script owns a control. */
   scriptEntry?: string;
   /**
-   * The name of the profile a chip's binding keys are inherited from (the
-   * profile writes none of them), or undefined (PRO-19). Asked for every chip
-   * that holds bindings, with its binding keys.
+   * The function key (config.json functionKey), whose chip is the tag and
+   * holds no bindings; the other two of back, start and guide are ordinary.
    */
-  fromParent?: (keys: string[]) => string | undefined;
+  functionKey: FunctionKey;
 }): Record<string, ChipInfo> {
   const unset = tx(language, "未设置", "Not set");
   const entry = scriptEntry?.split(/[\\/]/).pop();
@@ -573,8 +550,8 @@ export function controllerChips({
   const names: ActionNames = { actions, profiles, missing };
   const result: Record<string, ChipInfo> = {};
   for (const control of controls) {
-    // View and Menu switch sets and hold no bindings (ADR-0069).
-    if (isFunctionKey(control)) {
+    // The function key switches sets and holds no bindings (ADR-0075).
+    if (isFunctionKey(control, functionKey)) {
       result[control] = functionKeyChip(language);
       continue;
     }
@@ -625,23 +602,13 @@ export function controllerChips({
           }
         : main) ?? describeRaw(profile, control, language, names);
     const blocked = binding.block ? tx(language, "已屏蔽", "Blocked") : "";
-    const inheritedFrom = fromParent?.(keys);
     const ownerTitle =
       owners.find((owner) => owner.label)?.label ??
       tx(language, "脚本", "Script");
     let title: string;
     let titleKeys: ChipSegment | undefined;
     let detail: ChipSegment[];
-    if (display === "names") {
-      title = name;
-      detail = description
-        ? [
-            ...(label ? [{ text: label }] : []),
-            description.segment,
-            ...description.extras,
-          ]
-        : [{ text: blocked || (scriptOwned ? owned : unset) }];
-    } else if (!description) {
+    if (!description) {
       title = blocked
         ? (label ?? renamed ?? blocked)
         : scriptOwned
@@ -699,7 +666,6 @@ export function controllerChips({
             ? "script"
             : "unbound",
       scriptOwned,
-      ...(inheritedFrom ? { fromParent: inheritedFrom } : {}),
       ...(bindings.every((related) => Object.keys(related).length === 0)
         ? { empty: true }
         : {}),

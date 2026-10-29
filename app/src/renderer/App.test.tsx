@@ -1139,6 +1139,8 @@ describe("settings page", () => {
     await waitFor(() =>
       expect(app.api.padCaptureStart).toHaveBeenCalledTimes(1),
     );
+    // Not a capture that stays: Main ends it when the window loses the front.
+    expect(app.api.padCaptureStart).toHaveBeenCalledWith();
     const save = within(dialog).getByRole("button", { name: "保存" });
     const restore = within(dialog).getByRole("button", { name: "恢复默认" });
     // Nothing recorded or changed, and nothing set to restore.
@@ -1801,6 +1803,281 @@ describe("settings page", () => {
   });
 });
 
+describe("the function key setting (UI-30, ADR-0075)", () => {
+  const row = () => screen.getByTestId("function-key-setting");
+  const group = (name: string | RegExp = /^(功能键|Function key)$/) =>
+    within(row()).getByRole("radiogroup", { name });
+  const radios = () => within(group()).getAllByRole("radio");
+  /** The key that is chosen, by its name in the file. */
+  const chosen = () =>
+    radios()
+      .find((radio) => radio.getAttribute("aria-checked") === "true")
+      ?.getAttribute("data-value");
+  const config = (functionKey?: unknown) => ({
+    text: JSON.stringify({
+      schemaVersion: 0,
+      ...(functionKey === undefined ? {} : { functionKey }),
+    }),
+    revision: "rev",
+  });
+  const sent = (app: ReturnType<typeof setup>, n = 0) =>
+    JSON.parse(vi.mocked(app.api.putConfig).mock.calls[n]?.[0] as string);
+  const dialog = () => screen.queryByRole("dialog", { name: /Game Bar/ });
+  const choose = (value: string) =>
+    fireEvent.click(
+      group().querySelector(`[data-value="${value}"]`) as HTMLElement,
+    );
+
+  it("is a row of 通用 named 功能键, with the three keys as the controller shows them, Menu by default", async () => {
+    setup({ snapshot: withType("xboxone") });
+    await openPage("设置");
+    const general = screen.getByRole("heading", { name: "通用", level: 2 })
+      .parentElement as HTMLElement;
+    expect(general.contains(row())).toBe(true);
+    // The icon and the name the controller prints, not a text that says where.
+    expect(radios().map((radio) => radio.textContent)).toEqual([
+      "Menu",
+      "View",
+      "Xbox",
+    ]);
+    expect(radios().map((radio) => radio.getAttribute("data-value"))).toEqual([
+      "start",
+      "back",
+      "guide",
+    ]);
+    for (const radio of radios())
+      expect(radio.querySelector(".control-icon")).not.toBeNull();
+    expect(chosen()).toBe("start");
+    expect(
+      radios().every((radio) => !(radio as HTMLButtonElement).disabled),
+    ).toBe(true);
+    // A name and a choice, with no helper text.
+    expect(row().querySelector(".row-hint")).toBeNull();
+    expect(within(row()).queryByRole("combobox")).toBeNull();
+  });
+
+  it("names the keys as the connected controller does, and as an Xbox controller does without one", async () => {
+    // The controller of the fixtures is a Switch Pro controller.
+    setup();
+    await openPage("设置");
+    expect(radios().map((radio) => radio.textContent)).toEqual([
+      "+",
+      "−",
+      "Home",
+    ]);
+    cleanup();
+    setup({ snapshot: { ...status, devices: [], slots: [], combos: [] } });
+    fireEvent.click(await screen.findByRole("button", { name: "设置" }));
+    expect(radios().map((radio) => radio.textContent)).toEqual([
+      "Menu",
+      "View",
+      "Xbox",
+    ]);
+  });
+
+  it("is in English with the UI, and is moved by the arrow keys", async () => {
+    const app = setup({ snapshot: withType("xboxone") });
+    await openPage("设置");
+    fireEvent.change(screen.getByRole("combobox", { name: "语言" }), {
+      target: { value: "en" },
+    });
+    expect(group("Function key")).toBeTruthy();
+    expect(radios().map((radio) => radio.textContent)).toEqual([
+      "Menu",
+      "View",
+      "Xbox",
+    ]);
+    fireEvent.keyDown(radios()[0], { key: "ArrowRight" });
+    await waitFor(() => expect(app.api.putConfig).toHaveBeenCalledTimes(1));
+    expect(sent(app).functionKey).toBe("back");
+  });
+
+  it("shows the key the file chooses, and Menu for anything else", async () => {
+    setup({ config: config("guide") });
+    await openPage("设置");
+    expect(chosen()).toBe("guide");
+    cleanup();
+    setup({ config: config("back") });
+    await openPage("设置");
+    expect(chosen()).toBe("back");
+    cleanup();
+    setup({ config: config("select") });
+    await openPage("设置");
+    expect(chosen()).toBe("start");
+  });
+
+  it("writes the choice at once, only that member, with the revision it read", async () => {
+    const app = setup({
+      config: {
+        text: JSON.stringify({ schemaVersion: 0, timing: { holdMs: 300 } }),
+        revision: "rev-1",
+      },
+    });
+    await openPage("设置");
+    choose("back");
+    await waitFor(() => expect(app.api.putConfig).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(app.api.putConfig).mock.calls[0][1]).toBe("rev-1");
+    expect(sent(app)).toEqual({
+      schemaVersion: 0,
+      timing: { holdMs: 300 },
+      functionKey: "back",
+    });
+    await screen.findByText("已自动保存");
+    // The choice is made, and no notice comes with View.
+    expect(dialog()).toBeNull();
+  });
+
+  it("removes the member when Menu is chosen again, which is the default", async () => {
+    const app = setup({ config: config("back") });
+    await openPage("设置");
+    choose("start");
+    await waitFor(() => expect(app.api.putConfig).toHaveBeenCalledTimes(1));
+    expect(sent(app)).toEqual({ schemaVersion: 0 });
+  });
+
+  it("shows the choice while it is saved, and the saved one when the save fails", async () => {
+    const app = setup();
+    vi.mocked(app.api.putConfig).mockRejectedValueOnce(
+      new Error("config changed outside padmate"),
+    );
+    await openPage("设置");
+    choose("guide");
+    expect(chosen()).toBe("guide");
+    await screen.findByText("未保存，请重试");
+    expect(chosen()).toBe("start");
+    // Nothing is chosen, so there is nothing to warn about.
+    expect(dialog()).toBeNull();
+  });
+
+  it("asks the user, in a dialog, to turn off the Game Bar's own use of the Xbox button", async () => {
+    const app = setup();
+    await openPage("设置");
+    choose("guide");
+    const open = await screen.findByRole("dialog", {
+      name: "关闭 Xbox Game Bar 的手柄按钮",
+    });
+    expect(sent(app).functionKey).toBe("guide");
+    expect(open.textContent).toContain("Xbox Game Bar 也会打开");
+    expect(open.textContent).toContain("padmate 无法阻止");
+    expect(open.textContent).toContain("Windows 设置 → 游戏 → Game Bar");
+    expect(open.textContent).toContain("允许控制器打开 Game Bar");
+    expect(open.textContent).toContain(
+      "使用控制器上的此按钮打开 Xbox Game Bar",
+    );
+    expect(open.textContent).toContain("Steam");
+    expect(
+      within(open).getByRole("button", { name: "打开 Windows 设置" }),
+    ).toBeTruthy();
+    expect(within(open).getByRole("button", { name: "知道了" })).toBeTruthy();
+    // It is a modal dialog: the page is behind it.
+    expect((open as HTMLDialogElement).open).toBe(true);
+  });
+
+  it("closes with 知道了, and the choice stays", async () => {
+    const app = setup();
+    await openPage("设置");
+    choose("guide");
+    await screen.findByRole("dialog", {
+      name: "关闭 Xbox Game Bar 的手柄按钮",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "知道了" }));
+    await waitFor(() => expect(dialog()).toBeNull());
+    expect(app.api.openGameBarSettings).not.toHaveBeenCalled();
+    expect(app.api.putConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens Windows Settings with 打开 Windows 设置, then closes", async () => {
+    const app = setup();
+    await openPage("设置");
+    choose("guide");
+    await screen.findByRole("dialog", {
+      name: "关闭 Xbox Game Bar 的手柄按钮",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "打开 Windows 设置" }));
+    await waitFor(() => expect(dialog()).toBeNull());
+    // The window asks with no address: Main opens the one page it knows.
+    expect(app.api.openGameBarSettings).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(app.api.openGameBarSettings).mock.calls[0]).toEqual([]);
+    expect(app.api.putConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays open and says so when Windows Settings cannot be opened", async () => {
+    const app = setup();
+    vi.mocked(app.api.openGameBarSettings).mockRejectedValueOnce(
+      new Error("refused"),
+    );
+    await openPage("设置");
+    choose("guide");
+    const open = await screen.findByRole("dialog", {
+      name: "关闭 Xbox Game Bar 的手柄按钮",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "打开 Windows 设置" }));
+    expect((await within(open).findByRole("alert")).textContent).toBe(
+      "无法打开 Windows 设置。",
+    );
+    expect(dialog()).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "知道了" }));
+    await waitFor(() => expect(dialog()).toBeNull());
+  });
+
+  it("is in English too", async () => {
+    setup();
+    await openPage("设置");
+    fireEvent.change(screen.getByRole("combobox", { name: "语言" }), {
+      target: { value: "en" },
+    });
+    choose("guide");
+    const open = await screen.findByRole("dialog", {
+      name: "Turn off the Game Bar button",
+    });
+    expect(open.textContent).toContain(
+      "Windows also opens the Xbox Game Bar when the Xbox button is pressed",
+    );
+    expect(open.textContent).toContain("Settings → Gaming → Game Bar");
+    expect(open.textContent).toContain(
+      "Allow your controller to open Game Bar",
+    );
+    expect(open.textContent).toContain("Open Xbox Game Bar using this button");
+    expect(
+      within(open).getByRole("button", { name: "Open Windows Settings" }),
+    ).toBeTruthy();
+    expect(within(open).getByRole("button", { name: "Got it" })).toBeTruthy();
+  });
+
+  it("does not ask when the file already has the Xbox button, and cannot be changed without a configuration", async () => {
+    setup({ config: config("guide") });
+    await openPage("设置");
+    expect(dialog()).toBeNull();
+    cleanup();
+    setup({ config: new Error("no profile library") });
+    await openPage("设置");
+    expect(
+      radios().every((radio) => (radio as HTMLButtonElement).disabled),
+    ).toBe(true);
+  });
+
+  it("is named on the mapping page after the key the file chooses", async () => {
+    setup({
+      config: config("back"),
+      snapshot: withType("xboxone"),
+      profile: {
+        schemaVersion: 1,
+        name: "Paint",
+        layers: { base: {} },
+      },
+    });
+    const group = await screen.findByRole("radiogroup", {
+      name: "编辑的按键",
+    });
+    expect(
+      within(group)
+        .getAllByRole("radio")
+        .map((radio) => radio.textContent),
+    ).toEqual(["平时", "按住功能键"]);
+    expect(screen.getByRole("group", { name: /Test controller/ })).toBeTruthy();
+  });
+});
+
 describe("start at sign-in (UI-19)", () => {
   const canStart: StartupState = {
     available: true,
@@ -1974,12 +2251,12 @@ describe("profiles in the shell", () => {
     fireEvent.click(screen.getByRole("button", { name: "关闭配置设置" }));
   }
 
-  it("names what 配置设置… holds, 基于 among them", async () => {
+  it("names what 配置设置… holds, 基于 no longer among them (ADR-0076)", async () => {
     setup({ profiles: library });
     const menu = await openMenu();
-    expect(within(menu).getByTestId("profile-settings").textContent).toContain(
-      "名称、基于、判定时间",
-    );
+    const text = within(menu).getByTestId("profile-settings").textContent;
+    expect(text).toContain("名称、判定时间");
+    expect(text).not.toContain("基于");
   });
 
   it("keeps a taken or empty name out of the draft in 配置设置 (F2)", async () => {
@@ -2211,11 +2488,11 @@ describe("profiles in the shell", () => {
     const [id, text, revision] =
       vi.mocked(app.api.putProfile).mock.calls[0] ?? [];
     expect([id, revision]).toEqual(["krita", ""]);
-    // An empty library starts from the template for the connected pad.
-    expect(JSON.parse(text as string)).toMatchObject({
+    // Only a name is asked for, and the profile is blank (ADR-0076).
+    expect(JSON.parse(text as string)).toEqual({
       schemaVersion: 1,
       name: "Krita",
-      layers: { base: { south: { label: "自由变换" } } },
+      layers: { base: {} },
     });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
@@ -2923,6 +3200,23 @@ describe("shortcut table", () => {
     );
     return menu;
   }
+
+  it("chooses what the keys show: the action name or the shortcut (ADR-0077)", async () => {
+    // A choice saved before 按键名称 went away shows the action names.
+    localStorage.setItem("padmate.labelDisplay", "names");
+    setup({ profile: paint });
+    const menu = await openMore();
+    expect(menu.textContent).toContain("按键名称显示");
+    expect(menu.textContent).not.toContain("手柄图上显示");
+    const choices = within(menu).getAllByRole("menuitemradio");
+    expect(choices.map((choice) => choice.textContent)).toEqual([
+      "动作名称",
+      "快捷键",
+    ]);
+    expect(choices[0].getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(choices[1]);
+    expect(localStorage.getItem("padmate.labelDisplay")).toBe("keys");
+  });
 
   it("offers no automatic shortcuts (G5)", async () => {
     setup({ profile: paint });

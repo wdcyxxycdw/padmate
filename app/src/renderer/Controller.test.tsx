@@ -61,8 +61,8 @@ describe("3D controller component", () => {
     const buttons = container.querySelectorAll<HTMLButtonElement>(
       "button[data-callout]",
     );
-    // View and Menu are tagged, not buttons (ADR-0069).
-    expect(buttons).toHaveLength(15);
+    // The function key (Menu by default) is tagged, not a button (ADR-0075).
+    expect(buttons).toHaveLength(16);
     expect(container.querySelectorAll("[data-callout]")).toHaveLength(17);
     const controls = [
       "south",
@@ -143,7 +143,7 @@ describe("3D controller component", () => {
     expect(screen.getByRole("list", { name: "手柄按键状态" })).toBeDefined();
   });
 
-  it("tags View and Menu as function keys that cannot be opened", () => {
+  it("tags the function key that cannot be opened, whichever of View, Menu and the Xbox button it is", () => {
     const select = vi.fn();
     const menu = vi.fn();
     const { container } = render(
@@ -152,6 +152,7 @@ describe("3D controller component", () => {
         t={translator("en")}
         onSelectControl={select}
         onMenuControl={menu}
+        functionKey="back"
         chips={{
           back: {
             title: "Function key",
@@ -179,6 +180,31 @@ describe("3D controller component", () => {
     expect(menu).not.toHaveBeenCalled();
     // The pad's own name for it stays on the badge and in the layout.
     expect(container.querySelector('button[data-callout="back"]')).toBeNull();
+    // The other two are ordinary controls.
+    for (const control of ["start", "guide"])
+      expect(
+        container.querySelector(`button[data-callout="${control}"]`),
+        control,
+      ).not.toBeNull();
+  });
+
+  it("tags the function key without a chip given for it, Menu until it is told another", () => {
+    const tagged = (container: HTMLElement) =>
+      [
+        ...container.querySelectorAll<HTMLElement>('[data-state="function"]'),
+      ].map((node) => node.dataset.callout);
+    const { container, rerender } = render(
+      <Controller info={info} t={translator("en")} />,
+    );
+    expect(tagged(container)).toEqual(["start"]);
+    rerender(
+      <Controller info={info} t={translator("en")} functionKey="guide" />,
+    );
+    expect(tagged(container)).toEqual(["guide"]);
+    rerender(
+      <Controller info={info} t={translator("en")} functionKey="back" />,
+    );
+    expect(tagged(container)).toEqual(["back"]);
   });
 
   it("marks a chip that shows what a control does otherwise", () => {
@@ -208,48 +234,6 @@ describe("3D controller component", () => {
       'button[data-callout="east"]',
     ) as HTMLElement;
     expect(other.dataset.inherited).toBeUndefined();
-  });
-
-  it("marks a chip whose binding the profile takes from the one it is based on (PRO-19)", () => {
-    const { container, rerender } = render(
-      <Controller
-        info={info}
-        t={translator("en")}
-        language="en"
-        chips={{
-          south: chip({ title: "Ctrl+Z", fromParent: "Paint" }),
-          east: chip({ title: "Ctrl+Y" }),
-        }}
-      />,
-    );
-    const south = container.querySelector<HTMLElement>(
-      'button[data-callout="south"]',
-    ) as HTMLElement;
-    const mark = within(south).getByTestId("inherited-mark");
-    expect(mark.textContent).toBe("Inherited");
-    expect(south.dataset.fromParent).toBe("true");
-    // The chip is a bound chip as any other, whose tooltip says from whom.
-    expect(south.dataset.state).toBe("bound");
-    expect(south.getAttribute("aria-label")).toBe("A · Ctrl+Z");
-    expect(south.title).toBe("A · Ctrl+Z\nInherited from Paint");
-    const east = container.querySelector<HTMLElement>(
-      'button[data-callout="east"]',
-    ) as HTMLElement;
-    expect(within(east).queryByTestId("inherited-mark")).toBeNull();
-    expect(east.dataset.fromParent).toBeUndefined();
-    rerender(
-      <Controller
-        info={info}
-        t={translator("zh-CN")}
-        language="zh-CN"
-        chips={{ south: chip({ title: "Ctrl+Z", fromParent: "Paint" }) }}
-      />,
-    );
-    const zh = container.querySelector<HTMLElement>(
-      'button[data-callout="south"]',
-    ) as HTMLElement;
-    expect(within(zh).getByTestId("inherited-mark").textContent).toBe("继承");
-    expect(zh.title).toContain("继承自 Paint");
   });
 
   it("selects a right-clicked chip and asks for its menu instead of the browser's", () => {

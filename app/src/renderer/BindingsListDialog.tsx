@@ -3,23 +3,25 @@ import { useStore } from "zustand";
 import type { DeviceInfo } from "../shared/api";
 import type { ProfileBinding } from "../shared/generated/schema";
 import { calloutFor } from "./ControllerWorkspace";
+import { ControlIcon, controlIcon } from "./control-icon";
 import { listControlName } from "./control-names";
 import {
   controllerLabels,
-  functionKeyLabels,
-  functionKeysOf,
+  familyName,
+  padHasFunctionKey,
 } from "./controller-model";
 import {
   actionText,
   canonicalControl,
   gestureName,
+  isFunctionKey,
   savedForm,
   swapView,
   usedGestures,
 } from "./editor-model";
 import type { EditorStore } from "./editor-store";
-import { keyInheritance, withInherited } from "./inheritance";
-import { effectiveView, viewName } from "./key-view";
+import { withInherited } from "./inheritance";
+import { effectiveView, functionKeyName, viewName } from "./key-view";
 import { defaultProfileName, isDefaultProfile } from "./library-model";
 import { missingMacros } from "./macro-context";
 import type { Language } from "./store";
@@ -32,9 +34,9 @@ const tx = (language: Language, zh: string, en: string) =>
 export { listControlName };
 
 /**
- * UI-08: every binding of the edited layer in one list, or of the set of the
- * function key the page shows (UI-30); View and Menu are listed as function
- * keys, which there is nothing to open on.
+ * UI-08: every binding of the edited layer in one list, or of the function
+ * set when the page shows it (UI-30); the function key is listed as such, and
+ * there is nothing to open on it.
  */
 export function BindingsListDialog({
   open,
@@ -53,12 +55,14 @@ export function BindingsListDialog({
 }) {
   const draft = useStore(editor, (value) => value.draft);
   const pad = info ?? { type: "" };
+  const functionKey = useStore(editor, (value) => value.functionKey);
   const view = effectiveView(
     useStore(editor, (value) => value.view),
     pad,
+    functionKey,
   );
-  // The profile this one is based on (PRO-19): what it takes from it is in
-  // the list too.
+  // The profile a hand-written file extends (PRO-19, ADR-0076): what it takes
+  // from it is in the list too, as the profile's own.
   const parent = useStore(editor, (value) => value.parent);
   // The list shows what is saved: a shortcut cleared in the drawer is not in
   // it, though the draft keeps its empty card (UI-43).
@@ -90,19 +94,20 @@ export function BindingsListDialog({
   const labels = info
     ? controllerLabels(info.type, info.buttonLabels, info.buttonMask)
     : {};
-  const names = functionKeyLabels(
-    pad.type,
-    info?.buttonLabels,
-    info?.buttonMask,
-  );
+  const family = familyName(pad.type);
+  const fixedName = functionKeyName(functionKey, pad);
   const functionKeyHint = tx(
     language,
     "按住时其他键换成另一套",
     "While held, other keys switch to another set",
   );
+  // What a set binds on the function key is ignored (ADR-0075): not listed.
   const rows = Object.entries(shown.layers.base).filter(
     ([key, binding]) =>
-      key !== "color" && typeof binding === "object" && binding,
+      key !== "color" &&
+      !isFunctionKey(key, functionKey) &&
+      typeof binding === "object" &&
+      binding,
   ) as [string, ProfileBinding][];
   return (
     <Dialog
@@ -110,7 +115,7 @@ export function BindingsListDialog({
       title={tx(language, "所有按键", "All keys")}
       subtitle={[
         isDefaultProfile(id) ? defaultProfileName(language) : profile.name,
-        ...(view === "normal" ? [] : [viewName(view, pad, language)]),
+        ...(view === "normal" ? [] : [viewName(view, language)]),
       ].join(" · ")}
       closeLabel={tx(language, "关闭按键列表", "Close key list")}
       onClose={onClose}
@@ -148,14 +153,9 @@ export function BindingsListDialog({
                 }}
               >
                 <span className="bindings-control">
+                  <ControlIcon icon={controlIcon(key, family, labels)} />
                   {effective.controlNames?.[key] ??
                     listControlName(key, labels, language)}
-                  {keyInheritance(profile, parent, view, [key]).inherited
-                    .length > 0 && (
-                    <span className="tag" data-testid="inherited-mark">
-                      {tx(language, "继承", "Inherited")}
-                    </span>
-                  )}
                 </span>
                 <span className="bindings-label">{binding.label ?? ""}</span>
                 <span className="bindings-actions">
@@ -190,21 +190,28 @@ export function BindingsListDialog({
             </li>
           );
         })}
-        {functionKeysOf(pad.type, info?.buttonMask).map((key) => (
-          <li key={key}>
+        {padHasFunctionKey(functionKey, pad.type, info?.buttonMask) && (
+          <li>
             <div
               className="bindings-fixed"
               data-testid="function-key-row"
               title={functionKeyHint}
             >
-              <span className="bindings-control">{names[key]}</span>
+              <span className="bindings-control">
+                <ControlIcon
+                  icon={controlIcon(functionKey, family, {
+                    [functionKey]: fixedName,
+                  })}
+                />
+                {fixedName}
+              </span>
               <span className="bindings-label">
                 {tx(language, "功能键", "Function key")}
               </span>
               <span className="bindings-actions">{functionKeyHint}</span>
             </div>
           </li>
-        ))}
+        )}
       </ul>
     </Dialog>
   );

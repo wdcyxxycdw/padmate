@@ -12,6 +12,7 @@ import {
   defaultProfileName,
   isDefaultProfile,
   profileName,
+  readConfig,
   sortProfilesByName,
 } from "./library-model";
 import { Onboarding } from "./Onboarding";
@@ -25,6 +26,7 @@ import { ProfilesPage } from "./pages/ProfilesPage";
 import { ScriptsPage } from "./pages/ScriptsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { StartFailure } from "./StartFailure";
+import { configuredFunctionKey } from "./settings-model";
 import { useSheetExport } from "./sheet-export";
 import {
   activeProfileId,
@@ -279,7 +281,7 @@ function ProfileMenu({
         {
           label: tx(language, "配置设置…", "Profile settings…"),
           icon: "sliders",
-          hint: tx(language, "名称、基于、判定时间", "Name, based on, timing"),
+          hint: tx(language, "名称、判定时间", "Name, timing"),
           disabled: !draft,
           testId: "profile-settings",
           onSelect: onSettings,
@@ -337,7 +339,7 @@ function MoreMenu({
         items={[
           {
             kind: "section",
-            label: tx(language, "手柄图上显示", "Show on controller"),
+            label: tx(language, "按键名称显示", "Key labels"),
           },
           {
             kind: "radio",
@@ -350,12 +352,6 @@ function MoreMenu({
             label: tx(language, "快捷键", "Shortcuts"),
             checked: display === "keys",
             onSelect: () => state.setLabelDisplay("keys"),
-          },
-          {
-            kind: "radio",
-            label: tx(language, "按键名称", "Control names"),
-            checked: display === "names",
-            onSelect: () => state.setLabelDisplay("names"),
           },
           { kind: "separator" },
           {
@@ -524,6 +520,13 @@ export function App({ store }: { store: PadmateStore }) {
       editor.getState().setGlobalTiming({});
     }
   }, [editor, state.config]);
+  // The function key the settings choose (UI-30, ADR-0075): the mapping
+  // page names it and does not edit its own bindings.
+  useEffect(() => {
+    editor
+      .getState()
+      .setFunctionKey(configuredFunctionKey(readConfig(state.config)));
+  }, [editor, state.config]);
   const globalTiming = useMemo(() => {
     try {
       return (JSON.parse(state.config?.text ?? "{}") as Config).timing ?? {};
@@ -624,16 +627,6 @@ export function App({ store }: { store: PadmateStore }) {
     const outcome = await store.getState().activateProfile(id);
     if (outcome.ok && openMapping) store.getState().setPage("overview");
     return outcome.ok;
-  };
-  // Copying the current profile copies the file: save the edits first.
-  const createFromMapping = {
-    ...state,
-    createProfile: async (
-      ...args: Parameters<ShellState["createProfile"]>
-    ): ReturnType<ShellState["createProfile"]> => {
-      await editor.getState().flush();
-      return store.getState().createProfile(...args);
-    },
   };
   // Closing 配置设置 of a card saves its edits first; one that cannot be
   // saved is said, as the mapping page's switch is (the dialog has no notice).
@@ -929,7 +922,7 @@ export function App({ store }: { store: PadmateStore }) {
       />
       <NewProfileDialog
         open={newProfile}
-        state={createFromMapping}
+        state={state}
         onClose={() => setNewProfile(false)}
         // Made from the mapping page: its keys are edited next, right here.
         onCreated={(id) => void activate(id)}

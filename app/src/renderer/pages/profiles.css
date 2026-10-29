@@ -257,10 +257,6 @@ button.app-icon-button[aria-expanded="true"] {
   flex-direction: column;
   gap: 16px;
 }
-.field-hint {
-  color: var(--text-4);
-  font-size: 12px;
-}
 .btn.btn-danger {
   border-color: rgba(255, 138, 128, 0.35);
   background: var(--red-bg);
@@ -371,23 +367,6 @@ button.app-icon-button[aria-expanded="true"] {
   color: var(--text-4);
   font-size: 11.5px;
   white-space: nowrap;
-}
-
-/* The name of a profile card and, under it, the profile it is based on
-   (PRO-19). */
-.profile-card-names {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.profile-card-parent {
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-4);
-  font-size: 11.5px;
 }
 
 /* The report of an AntiMicroX import (PRO-21). */

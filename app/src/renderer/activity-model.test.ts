@@ -590,34 +590,28 @@ describe("the result of a row", () => {
 });
 
 describe("where and how a row is named", () => {
-  const xbox = { type: "xboxone" };
   it("names the level", () => {
-    const where = (fields: Record<string, unknown>, pad = xbox) =>
-      rowWhere(row(fields), pad, "zh-CN");
+    const where = (fields: Record<string, unknown>) =>
+      rowWhere(row(fields), "zh-CN");
     expect(where({ reason: "dispatch", level: "base" })).toBe("平时");
     expect(where({ reason: "dispatch", level: "tools" })).toBe("tools");
     expect(where({ reason: "dispatch", level: "common" })).toBe("共用");
-    expect(where({ reason: "dispatch", level: "function:back" })).toBe(
-      "按住 View",
-    );
-    expect(where({ reason: "dispatch", level: "function:start" })).toBe(
-      "按住 Menu",
-    );
-    expect(
-      where({ reason: "dispatch", level: "function:back" }, { type: "ps5" }),
-    ).toBe("按住 Create");
+    // The level names the function key held (ADR-0075), whichever of the three
+    // it is; the row says so without the name the pad prints on it (ADR-0076).
+    for (const key of ["back", "start", "guide"])
+      expect(where({ reason: "dispatch", level: `function:${key}` })).toBe(
+        "按住功能键",
+      );
+    // Only a level of a control is a function key's.
+    expect(where({ reason: "dispatch", level: "function:" })).toBe("function:");
     expect(where({ reason: "script", level: "" })).toBe("脚本");
     expect(where({ reason: "unbound", level: "" })).toBe("");
     expect(
-      rowWhere(
-        row({ reason: "dispatch", level: "function:start" }),
-        xbox,
-        "en",
-      ),
-    ).toBe("Hold Menu");
-    expect(
-      rowWhere(row({ reason: "dispatch", level: "common" }), xbox, "en"),
-    ).toBe("Shared");
+      rowWhere(row({ reason: "dispatch", level: "function:start" }), "en"),
+    ).toBe("Hold function key");
+    expect(rowWhere(row({ reason: "dispatch", level: "common" }), "en")).toBe(
+      "Shared",
+    );
   });
 
   it("shows the release a script took as the script's, on the release", () => {
@@ -630,7 +624,7 @@ describe("where and how a row is named", () => {
     });
     expect(rowGesture(consumed, "zh-CN")).toBe("松开");
     expect(rowSentence(consumed, "zh-CN")).toBe("脚本处理了这个键");
-    expect(rowWhere(consumed, xbox, "zh-CN")).toBe("脚本");
+    expect(rowWhere(consumed, "zh-CN")).toBe("脚本");
     // It is not a waiting press, nor a failure: the filter does not keep it.
     expect(noAction(consumed)).toBe(false);
   });
@@ -638,7 +632,7 @@ describe("where and how a row is named", () => {
   it("names the gesture, a release by its edge", () => {
     const gesture = (fields: Record<string, unknown>) =>
       rowGesture(row({ reason: "dispatch", ...fields }), "zh-CN");
-    expect(gesture({ gesture: "press" })).toBe("按下");
+    expect(gesture({ gesture: "press" })).toBe("点按");
     expect(gesture({ gesture: "tap" })).toBe("点按");
     expect(gesture({ gesture: "doubleTap" })).toBe("双击");
     expect(gesture({ gesture: "hold" })).toBe("长按");

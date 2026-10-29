@@ -55,18 +55,15 @@ func TestIPCImportAmgp(t *testing.T) {
 	if imported.ID != "from-a-pad" || imported.Name != "From a pad" || imported.Applied {
 		t.Fatalf("%+v", imported)
 	}
-	// The report says what was dropped: View is a function key.
+	// The report says what it did. View is an ordinary control since ADR-0075,
+	// so its key is imported and nothing is dropped.
 	if len(imported.Report) == 0 || imported.Report[len(imported.Report)-1].Message == "" {
 		t.Fatalf("report %+v", imported.Report)
 	}
-	dropped := 0
 	for _, l := range imported.Report {
-		if l.Severity == amgp.SeverityDropped && l.Control == "back" {
-			dropped++
+		if l.Severity == amgp.SeverityDropped {
+			t.Errorf("a dropped line in the report: %+v", l)
 		}
-	}
-	if dropped != 1 {
-		t.Errorf("report %+v", imported.Report)
 	}
 	// The profile is in the library, as the importer made it, and loads.
 	text, err := os.ReadFile(filepath.Join(dir, "profiles", "from-a-pad", "profile.json"))
@@ -74,7 +71,7 @@ func TestIPCImportAmgp(t *testing.T) {
 		t.Fatal(err)
 	}
 	p, ds := profile.Parse(text)
-	if err := ds.Err(); err != nil || p.Name != "From a pad" || len(p.Layers) != 1 || len(p.Layers[0].Bindings) != 1 {
+	if err := ds.Err(); err != nil || p.Name != "From a pad" || len(p.Layers) != 1 || len(p.Layers[0].Bindings) != 2 {
 		t.Fatalf("%v %+v", err, p)
 	}
 	if e := waitLibraryEvent(ctx, t, events, "saved", "from-a-pad"); e["revision"] != imported.Revision || e["applied"] != false {
