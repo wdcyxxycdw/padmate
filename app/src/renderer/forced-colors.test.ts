@@ -116,6 +116,21 @@ const required: [string, string, string][] = [
     '.stage-chip[data-active="true"]',
     "pressed control: border color",
   ],
+  [
+    "controller-3d.css",
+    ".stage-glyph[data-icon] > svg",
+    "a d-pad icon's lit arm was only a colour",
+  ],
+  [
+    "drawer.css",
+    ".drawer-glyph[data-icon] > svg",
+    "a d-pad icon's lit arm was only a colour",
+  ],
+  [
+    "workspace.css",
+    '.control-icon[data-kind="art"] > svg',
+    "a d-pad icon's lit arm was only a colour",
+  ],
   ["analog/analog-editor.css", ".analog-bar", "bar edge"],
   ["analog/analog-editor.css", ".analog-bar-fill", "bar fill"],
   ["analog/analog-editor.css", ".analog-bar-mark", "press and release marks"],

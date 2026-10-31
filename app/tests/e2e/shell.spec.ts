@@ -340,7 +340,8 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     const calloutButtons = page.locator("button[data-callout]");
     // The function key, Menu unless the settings say otherwise, is a tag and
     // not a button; View and the Xbox button are ordinary buttons (UI-30).
-    await expect(calloutButtons).toHaveCount(16);
+    // Each stick is two buttons, its movement and its press (UI-39).
+    await expect(calloutButtons).toHaveCount(18);
     await expect(page.locator("[data-callout='start']")).toHaveCount(1);
     await expect(page.locator("button[data-callout='start']")).toHaveCount(0);
     for (const control of [
@@ -355,7 +356,9 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       "back",
       "guide",
       "leftstick",
+      "leftstick.press",
       "rightstick",
+      "rightstick.press",
       "leftshoulder",
       "rightshoulder",
       "lefttrigger",
@@ -364,10 +367,10 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       const button = page.locator(`button[data-callout="${control}"]`);
       await button.click();
       await expect(button).toHaveAttribute("aria-pressed", "true");
-      await expect(page.locator(`g[data-line="${control}"]`)).toHaveAttribute(
-        "data-selected",
-        "true",
-      );
+      // Both cells of a stick share its one leader.
+      await expect(
+        page.locator(`g[data-line="${control.replace(".press", "")}"]`),
+      ).toHaveAttribute("data-selected", "true");
       await expect(
         page.locator('button[data-callout][aria-pressed="true"]'),
       ).toHaveCount(1);

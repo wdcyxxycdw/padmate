@@ -102,24 +102,24 @@ describe("key preview (UI-44)", () => {
   it("draws the control as the pad shows it and names it for screen readers (G6)", () => {
     const { store, line } = setup();
     press(store, "tap D");
-    // Not "A → D": the A button is a green A on a disc.
+    // Not "A → D": the A button is its icon, a green A (ADR-0079 §7).
     const icon = line().querySelector(".control-icon") as HTMLElement;
-    expect(icon.dataset.kind).toBe("face");
-    expect(icon.dataset.label).toBe("A");
+    const art = (element: Element | null) =>
+      element?.querySelector("svg")?.getAttribute("data-pad-icon");
+    expect(icon.dataset.kind).toBe("art");
+    expect(art(icon)).toBe("kenney/xbox_button_a");
     expect(icon.dataset.face).toBe("green");
     expect(icon.getAttribute("aria-hidden")).toBe("true");
     const name = line().querySelector(".visually-hidden");
     expect(name?.textContent).toBe("A");
     expect(line().textContent).toBe("A → D");
     press(store, "hold Shift", { control: "dpad.left" });
-    expect(
-      (line().querySelector(".control-icon") as HTMLElement).dataset.kind,
-    ).toBe("dpad");
+    expect(art(line().querySelector(".control-icon"))).toBe(
+      "kenney/xbox_dpad_left",
+    );
     expect(line().textContent).toBe("← → Shift");
     press(store, "tap Ctrl+Z", { control: "rt" });
-    expect(
-      line().querySelector(".control-icon")?.getAttribute("data-label"),
-    ).toBe("RT");
+    expect(art(line().querySelector(".control-icon"))).toBe("kenney/xbox_rt");
   });
 
   it("names a script action and leaves out other actions", () => {

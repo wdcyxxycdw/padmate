@@ -175,7 +175,11 @@ function pointerParts(pointer: string) {
     .map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"));
 }
 
-/** Binding keys in the edited (base) group that belong to a drawer. */
+/**
+ * Binding keys in the edited (base) group that belong to a drawer. A stick's
+ * own binding (its click) is the press drawer's, a button; the stick drawer
+ * is its movement.
+ */
 function ownsKey(
   key: string,
   bindingKey: string,
@@ -183,7 +187,7 @@ function ownsKey(
   control: string,
 ) {
   const canonical = canonicalControl(key);
-  if (canonical === bindingKey) return true;
+  if (canonical === bindingKey) return kind !== "stick";
   if (kind === "stick") {
     const group = control === "leftstick" ? "ls" : "rs";
     const axis = control === "leftstick" ? "left" : "right";
@@ -234,13 +238,15 @@ export function controlDiagnostics(
             ? tx(language, "摇杆设置", "Stick settings")
             : kind === "trigger"
               ? tx(language, "扳机设置", "Trigger settings")
-              : tx(language, "十字键设置", "D-pad settings"),
+              : tx(language, "十字键", "D-pad"),
       });
       continue;
     }
+    // The key name of a stick is its press's.
     if (
       bits[0] === "controlNames" &&
       bits[1] &&
+      kind !== "stick" &&
       canonicalControl(bits[1]) === bindingKey
     ) {
       result.push({

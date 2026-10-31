@@ -15,7 +15,6 @@ import { MacroContext } from "../macro-context";
 import type { Language, PadInput } from "../store";
 import {
   type AnalogPanelProps,
-  DpadSettings,
   StickPanel,
   TriggerSettings,
 } from "./AnalogPanels";
@@ -61,6 +60,31 @@ vi.mock("../BindingEditor", async () => {
               onChange({ ...value, press: { type: "keys", keys: "F20" } }),
           },
           "stub: send F20",
+        ),
+      ),
+    // A knob step's one shortcut (ADR-0079 §8): writes a press of F20.
+    SingleShortcutField: ({
+      value,
+      onChange,
+    }: {
+      value: Record<string, unknown>;
+      onChange: (value: Record<string, unknown>) => void;
+    }) =>
+      createElement(
+        "div",
+        { "data-testid": "single-shortcut" },
+        createElement(
+          "output",
+          { "data-testid": "binding-value" },
+          JSON.stringify(value),
+        ),
+        createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => onChange({ press: { type: "keys", keys: "F20" } }),
+          },
+          "stub: shortcut F20",
         ),
       ),
   };
@@ -162,6 +186,12 @@ const shownDirections = () =>
   [...document.querySelectorAll<HTMLElement>(".analog-cell")].map(
     (element) => element.dataset.direction,
   );
+/** Opens the stick panel's advanced section and returns it. */
+const stickAdvanced = () => {
+  const advanced = screen.getByTestId("stick-advanced") as HTMLDetailsElement;
+  advanced.open = true;
+  return advanced;
+};
 const registration = (
   id: number,
   control: string,
@@ -220,8 +250,9 @@ describe("stick panel", () => {
     fireEvent.change(screen.getByRole("slider", { name: "推到底" }), {
       target: { value: "90" },
     });
+    // The file had the engine's standard mode: the first edit wrote fourWay.
     expect(draft().analog?.ls).toEqual({
-      mode: "standard",
+      mode: "fourWay",
       deadzone: 0,
       saturation: 0.9,
     });
@@ -239,43 +270,173 @@ describe("stick panel", () => {
     );
   });
 
-  it("switches direction modes, including diagonals only under advanced", () => {
-    render(<Harness />);
+  it("offers exactly four directions, knob and mouse, in English too", () => {
+    for (const [language, names] of [
+      ["zh-CN", ["四方向", "旋钮", "鼠标"]],
+      ["en", ["4 directions", "Knob", "Mouse"]],
+    ] as const) {
+      const { unmount } = render(<Harness language={language} />);
+      const mode = screen.getByRole("radiogroup", {
+        name: language === "en" ? "Direction mode" : "方向模式",
+      });
+      expect(
+        within(mode)
+          .getAllByRole("radio")
+          .map((radio) => radio.textContent),
+      ).toEqual(names);
+      unmount();
+    }
+  });
+
+  it("shows a stick without a mode, or in standard, as four directions and writes nothing on opening", () => {
+    const bare: Profile = { ...layered, analog: {} };
+    for (const initial of [layered, bare]) {
+      const { unmount } = render(<Harness initial={initial} />);
+      const mode = screen.getByRole("radiogroup", { name: "方向模式" });
+      expect(
+        within(mode)
+          .getByRole("radio", { name: "四方向" })
+          .getAttribute("aria-checked"),
+      ).toBe("true");
+      for (const name of ["旋钮", "鼠标"])
+        expect(
+          within(mode)
+            .getByRole("radio", { name })
+            .getAttribute("aria-checked"),
+        ).toBe("false");
+      // None of the removed modes is a choice, here or under advanced.
+      for (const name of ["4 方向", "8 方向", "只取 1 个方向", "只有斜向"])
+        expect(within(mode).queryByRole("radio", { name })).toBeNull();
+      expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
+      expect(draft()).toEqual(initial);
+      unmount();
+    }
+  });
+
+  it("switches between four directions, knob and mouse", () => {
+    render(<Harness initial={{ ...layered, analog: {} }} />);
     const mode = screen.getByRole("radiogroup", { name: "方向模式" });
-    expect(
-      within(mode)
-        .getByRole("radio", { name: "4 方向" })
-        .getAttribute("aria-checked"),
-    ).toBe("true");
-    expect(within(mode).queryByRole("radio", { name: "只有斜向" })).toBeNull();
-    expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
-    fireEvent.click(within(mode).getByRole("radio", { name: "8 方向" }));
-    expect(draft().analog?.ls?.mode).toBe("eightWay");
-    expect(shownDirections()).toHaveLength(8);
-    expect(screen.getByText(/斜推时发送单独的斜向按键/)).toBeDefined();
-    fireEvent.click(within(mode).getByRole("radio", { name: "只取 1 个方向" }));
+    fireEvent.click(within(mode).getByRole("radio", { name: "旋钮" }));
+    expect(draft().analog?.ls?.mode).toBe("knob");
+    fireEvent.click(within(mode).getByRole("radio", { name: "鼠标" }));
+    expect(draft().analog?.ls?.mode).toBe("mouse");
+    fireEvent.click(within(mode).getByRole("radio", { name: "四方向" }));
     expect(draft().analog?.ls?.mode).toBe("fourWay");
-    const advanced = screen.getByTestId("stick-advanced") as HTMLDetailsElement;
-    expect(advanced.open).toBe(false);
-    advanced.open = true;
-    fireEvent.click(within(advanced).getByRole("switch", { name: "只有斜向" }));
-    expect(draft().analog?.ls?.mode).toBe("fourWayDiagonal");
     expect(
       within(mode)
-        .getByRole("radio", { name: "只有斜向" })
+        .getByRole("radio", { name: "四方向" })
         .getAttribute("aria-checked"),
     ).toBe("true");
-    expect(shownDirections()).toEqual([
-      "upleft",
-      "upright",
-      "downleft",
-      "downright",
-    ]);
-    // The cardinal binding is kept but this mode does not send it.
-    expect(screen.getByText(/也设置了按键，但当前模式不会发送/)).toBeDefined();
-    expect(draft().layers.base["ls.right"]).toEqual(
-      layered.layers.base["ls.right"],
-    );
+    expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
+    // The caption says what four directions mean.
+    expect(screen.getByText(/只按下最接近的一个方向/)).toBeDefined();
+  });
+
+  it("writes four directions at the first choice of a stick without a mode", () => {
+    render(<Harness initial={{ ...layered, analog: {} }} />);
+    fireEvent.click(screen.getByRole("radio", { name: "四方向" }));
+    expect(draft().analog?.ls).toEqual({ mode: "fourWay" });
+  });
+
+  it.each([
+    ["eightWay", /斜推时发送单独的斜向按键/],
+    ["fourWayDiagonal", /只发送 4 个斜向的按键/],
+  ] as const)(
+    "opens a file in %s without crashing, with no mode selected, and a choice replaces it",
+    (stored, caption) => {
+      const file: Profile = {
+        ...layered,
+        analog: { ls: { mode: stored, diagonalWidth: 30 } },
+        layers: {
+          ...layered.layers,
+          base: {
+            ...layered.layers.base,
+            "ls.upleft": { press: { type: "keys", keys: "Q" } },
+          },
+        },
+      };
+      render(<Harness initial={file} />);
+      const mode = screen.getByRole("radiogroup", { name: "方向模式" });
+      const radios = within(mode).getAllByRole("radio");
+      expect(radios.map((radio) => radio.textContent)).toEqual([
+        "四方向",
+        "旋钮",
+        "鼠标",
+      ]);
+      for (const radio of radios)
+        expect(radio.getAttribute("aria-checked")).toBe("false");
+      // The group can still be reached with the keyboard.
+      expect(radios[0].tabIndex).toBe(0);
+      // The old mode is told, and the diagonal key is not called unused: this
+      // mode sends it.
+      expect(screen.getByText(caption)).toBeDefined();
+      expect(screen.queryByText(/也设置了按键/)).toBeNull();
+      expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
+      expect(draft()).toEqual(file);
+      // An edit of a key keeps the old mode; only a choice replaces it.
+      fireEvent.click(cell("up"));
+      fireEvent.click(screen.getByRole("button", { name: "stub: send F20" }));
+      expect(draft().analog?.ls?.mode).toBe(stored);
+      fireEvent.click(within(mode).getByRole("radio", { name: "四方向" }));
+      expect(draft().analog?.ls).toEqual({
+        mode: "fourWay",
+        diagonalWidth: 30,
+      });
+      expect(draft().layers.base["ls.upleft"]).toEqual(
+        file.layers.base["ls.upleft"],
+      );
+      expect(screen.queryByText(caption)).toBeNull();
+    },
+  );
+
+  it("does not talk about a diagonal key the mode does not send", () => {
+    const file: Profile = {
+      ...layered,
+      analog: { ls: { mode: "fourWay" } },
+      layers: {
+        base: { "ls.upleft": { press: { type: "keys", keys: "Q" } } },
+      },
+    };
+    render(<Harness initial={file} />);
+    // The key stays in the file, and nothing says it is not sent.
+    expect(screen.queryByText(/也设置了按键/)).toBeNull();
+    expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
+  });
+
+  it("offers no setting for diagonals, in any mode", () => {
+    for (const mode of [
+      undefined,
+      "standard",
+      "fourWay",
+      "eightWay",
+      "fourWayDiagonal",
+      "knob",
+      "mouse",
+    ] as const) {
+      const { unmount } = render(
+        <Harness initial={{ ...layered, analog: { ls: { mode } } }} />,
+      );
+      const advanced = stickAdvanced();
+      expect(
+        within(advanced).queryByRole("spinbutton", { name: "斜向扇区宽度" }),
+        String(mode),
+      ).toBeNull();
+      expect(
+        within(advanced).queryByRole("switch", { name: "只有斜向" }),
+        String(mode),
+      ).toBeNull();
+      expect(
+        within(advanced).queryByRole("radiogroup", {
+          name: "斜向未设置按键时",
+        }),
+        String(mode),
+      ).toBeNull();
+      expect(
+        advanced.querySelector("summary")?.textContent,
+        String(mode),
+      ).not.toContain("斜向");
+      unmount();
+    }
   });
 
   it("edits a direction in the base key set from the grid", () => {
@@ -388,10 +549,118 @@ describe("stick panel", () => {
     render(<Harness initial={eight} />);
     fireEvent.click(screen.getByRole("button", { name: "方向键" }));
     const dialog = screen.getByRole("dialog", { name: "改为方向键？" });
-    expect(dialog.textContent).toContain("方向模式将改为“4 方向”");
+    expect(dialog.textContent).toContain("方向模式将改为“四方向”");
     fireEvent.click(within(dialog).getByRole("button", { name: "替换" }));
-    expect(draft().analog?.ls?.mode).toBe("standard");
+    expect(draft().analog?.ls?.mode).toBe("fourWay");
   });
+
+  it("applies a preset to a stick without a mode at once and writes four directions", () => {
+    // It shows as four directions already: the preset changes no mode.
+    for (const analog of [{}, { ls: { mode: "standard" as const } }]) {
+      const empty: Profile = { ...layered, analog, layers: { base: {} } };
+      const { unmount } = render(<Harness initial={empty} />);
+      fireEvent.click(screen.getByRole("button", { name: "方向键" }));
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(draft().analog?.ls).toEqual({ mode: "fourWay" });
+      expect(draft().layers.base["ls.up"]?.press).toEqual({
+        type: "keys",
+        keys: "Up",
+        mode: "hold",
+      });
+      unmount();
+    }
+  });
+
+  it("asks before a preset replaces keys of a stick without a mode, without naming a mode change", () => {
+    render(<Harness initial={{ ...layered, analog: {} }} />);
+    fireEvent.click(screen.getByRole("button", { name: "WASD" }));
+    const dialog = screen.getByRole("dialog", { name: "改为 WASD？" });
+    expect(dialog.textContent).toContain("将替换已有的 1 个方向设置");
+    expect(dialog.textContent).not.toContain("方向模式将改为");
+    fireEvent.click(within(dialog).getByRole("button", { name: "替换" }));
+    expect(draft().analog?.ls).toEqual({ mode: "fourWay" });
+  });
+
+  it("writes four directions with the first edit a stick without a mode saves, whatever it is", () => {
+    const edits: [string, () => void][] = [
+      [
+        "a sensitivity",
+        () =>
+          commit(screen.getByRole("spinbutton", { name: "死区" }), {
+            target: { value: "20" },
+          }),
+      ],
+      [
+        "a direction key",
+        () => {
+          fireEvent.click(cell("up"));
+          fireEvent.click(
+            screen.getByRole("button", { name: "stub: send F20" }),
+          );
+        },
+      ],
+      [
+        "a hysteresis under advanced",
+        () =>
+          commit(
+            within(stickAdvanced()).getByRole("spinbutton", {
+              name: "角度滞回",
+            }),
+            { target: { value: "5" } },
+          ),
+      ],
+      [
+        "a push key under advanced",
+        () => {
+          const advanced = stickAdvanced();
+          fireEvent.click(
+            advanced.querySelector(
+              '.analog-row[data-control="ls.outer"]',
+            ) as HTMLElement,
+          );
+          fireEvent.click(
+            screen.getByRole("button", { name: "stub: send F20" }),
+          );
+        },
+      ],
+    ];
+    for (const [name, edit] of edits) {
+      for (const analog of [{}, { ls: { mode: "standard" as const } }]) {
+        const { unmount } = render(
+          <Harness initial={{ ...layered, analog }} />,
+        );
+        edit();
+        expect(draft().analog?.ls?.mode, name).toBe("fourWay");
+        // The right stick is not this drawer's.
+        expect(draft().analog?.rs, name).toBeUndefined();
+        unmount();
+      }
+    }
+  });
+
+  it("leaves the raw axis threshold, which belongs to the whole profile, without a mode", () => {
+    render(<Harness initial={{ ...layered, analog: {} }} />);
+    commit(
+      within(stickAdvanced()).getByRole("spinbutton", { name: "原始轴阈值" }),
+      { target: { value: "50" } },
+    );
+    expect(draft().analog).toEqual({ axisThreshold: 0.5 });
+  });
+
+  it.each(["fourWay", "knob", "mouse", "eightWay", "fourWayDiagonal"] as const)(
+    "keeps %s when an edit is saved",
+    (mode) => {
+      render(
+        <Harness
+          initial={{ ...layered, analog: { ls: { mode, deadzone: 0.3 } } }}
+        />,
+      );
+      commit(screen.getByRole("spinbutton", { name: "死区" }), {
+        target: { value: "20" },
+      });
+      expect(draft().analog?.ls).toEqual({ mode, deadzone: 0.2 });
+    },
+  );
 
   it("highlights the directions the stick presses right now", () => {
     const { rerender } = render(
@@ -415,11 +684,10 @@ describe("stick panel", () => {
     expect(cell("right").dataset.active).toBe("true");
     expect(cell("down").dataset.active).toBe("false");
     expect(screen.getByTestId("stick-readout").textContent).toContain("右上");
+    // The click of the stick is the press cell's: no row for it here.
     expect(
-      document
-        .querySelector('.analog-row[data-control="leftstick"]')
-        ?.getAttribute("data-active"),
-    ).toBe("true");
+      document.querySelector('.analog-row[data-control="leftstick"]'),
+    ).toBeNull();
     // Inside the 60% dead zone nothing is pressed.
     rerender(<Harness input={{ buttons: {}, axes: { leftx: axis(0.5) } }} />);
     expect(cell("right").dataset.active).toBe("false");
@@ -467,13 +735,6 @@ describe("stick panel", () => {
     );
     expect(cell("up").dataset.unset).toBeUndefined();
     expect(cell("left").dataset.unset).toBe("true");
-    expect(
-      within(
-        document.querySelector(
-          '.analog-row[data-control="leftstick"]',
-        ) as HTMLElement,
-      ).getByTestId("analog-script-ownership"),
-    ).toBeDefined();
     fireEvent.click(cell("up"));
     expect(screen.getByText(/此处也由脚本处理：Brush direction/)).toBeDefined();
     expect(screen.getByText(/此处也由脚本处理/).textContent).not.toContain(
@@ -485,42 +746,17 @@ describe("stick panel", () => {
     );
   });
 
-  it("suggests the label a stick shows, and no example without one", () => {
-    const { unmount } = render(<Harness />);
-    const label = () => screen.getByRole("textbox", { name: "功能" });
-    expect(label().getAttribute("placeholder")).toBe("方向键");
-    unmount();
-    render(
-      <Harness
-        initial={{ schemaVersion: 1, name: "A", layers: { base: {} } }}
-      />,
-    );
-    expect(label().getAttribute("placeholder")).toBeNull();
-  });
-
-  it("edits the stick click and the label shown on the controller", () => {
+  it("leaves the stick click and its label to the press cell's drawer", () => {
     render(<Harness />);
-    commit(screen.getByRole("textbox", { name: "功能" }), {
-      target: { value: "平移画布" },
-    });
-    expect(draft().layers.base.leftstick).toEqual({ label: "平移画布" });
-    const click = screen.getByRole("button", { name: /按下摇杆/ });
-    expect(click.textContent).toContain("未设置");
-    fireEvent.click(click);
-    const card = screen.getByRole("region", { name: "按下摇杆" });
-    fireEvent.click(
-      within(card).getByRole("button", { name: "stub: send F20" }),
-    );
-    expect(draft().layers.base.leftstick).toEqual({
-      label: "平移画布",
-      press: { type: "keys", keys: "F20" },
-    });
-    // The row names the card and collapses it.
-    expect(within(card).queryByRole("button", { name: "清除" })).toBeNull();
-    expect(click.getAttribute("aria-expanded")).toBe("true");
-    fireEvent.click(click);
-    expect(screen.queryByRole("region", { name: "按下摇杆" })).toBeNull();
-    expect(draft().layers.alt.leftstick).toEqual({ block: true });
+    // The movement drawer has no function field (it edited the click's
+    // label) and no row for the click.
+    expect(screen.queryByRole("textbox", { name: "功能" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /按下摇杆/ })).toBeNull();
+    const before = structuredClone(draft().layers);
+    // Editing the movement does not touch the click.
+    fireEvent.click(screen.getByRole("radio", { name: "旋钮" }));
+    expect(draft().layers).toEqual(before);
+    expect(draft().analog?.ls?.mode).toBe("knob");
   });
 
   it("clears a direction's keys but keeps its display name", () => {
@@ -654,8 +890,9 @@ describe("stick panel", () => {
         screen.getByRole("dialog", { name: "Paste parameters?" }),
       ).getByRole("button", { name: "Paste" }),
     );
+    // The copied parameters carry the four directions the first edit wrote.
     expect(draft().analog?.rs).toEqual({
-      mode: "standard",
+      mode: "fourWay",
       deadzone: 0.4,
       saturation: 0.95,
     });
@@ -668,7 +905,8 @@ describe("stick panel", () => {
         screen.getByRole("dialog", { name: "Reset parameters?" }),
       ).getByRole("button", { name: "Reset" }),
     );
-    expect(draft().analog?.rs).toEqual({});
+    // Reset leaves the default, which the drawer shows as four directions.
+    expect(draft().analog?.rs).toEqual({ mode: "fourWay" });
     expect(draft().layers).toEqual(layered.layers);
   });
 
@@ -714,10 +952,7 @@ describe("stick panel", () => {
       expect(isDisabled(screen.getByRole("spinbutton", { name }))).toBe(true);
       expect(isDisabled(screen.getByRole("slider", { name }))).toBe(true);
     }
-    expect(isDisabled(screen.getByRole("textbox", { name: "功能" }))).toBe(
-      true,
-    );
-    expect(isDisabled(screen.getByRole("radio", { name: "8 方向" }))).toBe(
+    expect(isDisabled(screen.getByRole("radio", { name: "四方向" }))).toBe(
       true,
     );
     expect(isDisabled(screen.getByRole("button", { name: "方向键" }))).toBe(
@@ -732,14 +967,6 @@ describe("stick panel", () => {
     expect(fields.dataset.disabled).toBe("true");
     expect(fields.dataset.suggestPress).toBe("false");
     expect(within(card).queryByRole("button", { name: "清除" })).toBeNull();
-    const click = screen.getByRole("button", { name: /按下摇杆/ });
-    expect(isDisabled(click)).toBe(false);
-    fireEvent.click(click);
-    expect(
-      within(screen.getByRole("region", { name: "按下摇杆" })).getByTestId(
-        "binding-fields",
-      ).dataset.suggestPress,
-    ).toBe("false");
     // Advanced: the rows open, the fields are disabled.
     const advanced = screen.getByTestId("stick-advanced") as HTMLDetailsElement;
     advanced.open = true;
@@ -747,9 +974,6 @@ describe("stick panel", () => {
       expect(
         isDisabled(within(advanced).getByRole("spinbutton", { name })),
       ).toBe(true);
-    expect(
-      isDisabled(within(advanced).getByRole("switch", { name: "只有斜向" })),
-    ).toBe(true);
     const rawUp = advanced.querySelector<HTMLButtonElement>(
       '.analog-row[data-control="lefty-"]',
     ) as HTMLButtonElement;
@@ -1368,193 +1592,12 @@ describe("trigger settings", () => {
   });
 });
 
-describe("d-pad settings", () => {
-  it("changes the mode and the fold rule with plain labels", () => {
-    render(<Harness panel={DpadSettings} control="dpad.up" />);
-    const mode = screen.getByRole("radiogroup", { name: "十字键模式" });
-    expect(
-      within(mode)
-        .getByRole("radio", { name: "独立按钮" })
-        .getAttribute("aria-checked"),
-    ).toBe("true");
-    expect(screen.queryByRole("radiogroup", { name: "斜按时" })).toBeNull();
-    fireEvent.click(within(mode).getByRole("radio", { name: "4 方向" }));
-    fireEvent.click(
-      within(screen.getByRole("radiogroup", { name: "斜按时" })).getByRole(
-        "radio",
-        { name: "按固定规则" },
-      ),
-    );
-    expect(draft().analog?.dpad).toEqual({
-      mode: "fourWay",
-      fold: "clockwise",
-    });
-    expect(screen.getByText(/↑→ 取 →/)).toBeDefined();
-    expectOthersKept(draft());
-  });
-
-  it("binds diagonals in eight-way mode and highlights the pressed one", () => {
-    render(
-      <Harness
-        panel={DpadSettings}
-        control="dpad.left"
-        input={{ buttons: { "dpad.up": true, "dpad.left": true }, axes: {} }}
-      />,
-    );
-    expect(shownDirections()).toEqual([]);
-    fireEvent.click(screen.getByRole("radio", { name: "8 方向" }));
-    expect(draft().analog?.dpad).toEqual({ mode: "eightWay" });
-    expect(shownDirections()).toEqual([
-      "upleft",
-      "upright",
-      "downleft",
-      "downright",
-    ]);
-    expect(cell("upleft").dataset.active).toBe("true");
-    expect(cell("upright").dataset.active).toBe("false");
-    fireEvent.click(cell("downright"));
-    fireEvent.click(screen.getByRole("button", { name: "stub: send F20" }));
-    expect(draft().layers.base["dpad.downright"]?.press).toEqual({
-      type: "keys",
-      keys: "F20",
-    });
-    fireEvent.click(screen.getByRole("radio", { name: "独立按钮" }));
-    expect(shownDirections()).toEqual([]);
-    expectOthersKept(draft());
-  });
-
-  it("sets the four directions to a preset after confirming", () => {
-    const fourWay: Profile = {
-      ...layered,
-      analog: {
-        ...layered.analog,
-        dpad: { mode: "fourWay", fold: "clockwise" },
-      },
-      layers: {
-        ...layered.layers,
-        base: {
-          ...layered.layers.base,
-          "dpad.up": { label: "Zoom", press: { type: "keys", keys: "F21" } },
-        },
-      },
-    };
-    render(
-      <Harness panel={DpadSettings} control="dpad.up" initial={fourWay} />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "方向键" }));
-    const dialog = screen.getByRole("dialog", { name: "改为方向键？" });
-    expect(dialog.textContent).toContain("将替换已有的 1 个方向设置");
-    expect(dialog.textContent).toContain("十字键模式将改为“独立按钮”");
-    expect(draft()).toEqual(fourWay);
-    fireEvent.click(within(dialog).getByRole("button", { name: "替换" }));
-    const next = draft();
-    expect(next.analog?.dpad).toEqual({ mode: "buttons", fold: "clockwise" });
-    expect(next.analog?.ls).toEqual(layered.analog?.ls);
-    expect(
-      (["dpad.up", "dpad.right", "dpad.down", "dpad.left"] as const).map(
-        (key) => next.layers.base[key]?.press,
-      ),
-    ).toEqual(
-      ["Up", "Right", "Down", "Left"].map((keys) => ({
-        type: "keys",
-        keys,
-        mode: "hold",
-      })),
-    );
-    expect(next.layers.base["dpad.up"]?.label).toBe("Zoom");
-    expectOthersKept(next);
-  });
-
-  it("applies a d-pad preset at once when nothing would be replaced", () => {
-    render(<Harness panel={DpadSettings} control="dpad.left" language="en" />);
-    fireEvent.click(screen.getByRole("button", { name: "WASD" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(draft().analog?.dpad).toEqual({ mode: "buttons" });
-    expect(draft().layers.base["dpad.left"]?.press).toEqual({
-      type: "keys",
-      keys: "KeyA",
-      mode: "hold",
-    });
-  });
-
-  it("copies, resets and pastes only d-pad parameters", () => {
-    const { unmount } = render(<Harness />);
-    fireEvent.click(screen.getByTestId("analog-params"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "复制参数" }));
-    unmount();
-    const custom: Profile = {
-      ...layered,
-      analog: { dpad: { mode: "fourWay", fold: "clockwise" } },
-    };
-    render(<Harness panel={DpadSettings} control="dpad.up" initial={custom} />);
-    fireEvent.click(screen.getByTestId("analog-params"));
-    // Stick parameters do not paste onto the d-pad.
-    expect(
-      screen.getByRole("menuitem", { name: "粘贴参数…" }).matches(":disabled"),
-    ).toBe(true);
-    fireEvent.click(screen.getByRole("menuitem", { name: "复制参数" }));
-    expect(screen.getByText("已复制十字键的参数")).toBeDefined();
-    fireEvent.click(screen.getByTestId("analog-params"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "恢复默认参数…" }));
-    fireEvent.click(
-      within(screen.getByRole("dialog", { name: "恢复默认参数？" })).getByRole(
-        "button",
-        { name: "恢复默认" },
-      ),
-    );
-    expect(draft().analog?.dpad).toEqual({});
-    expect(
-      within(screen.getByRole("radiogroup", { name: "十字键模式" }))
-        .getByRole("radio", { name: "独立按钮" })
-        .getAttribute("aria-checked"),
-    ).toBe("true");
-    fireEvent.click(screen.getByTestId("analog-params"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "粘贴参数…" }));
-    fireEvent.click(
-      within(screen.getByRole("dialog", { name: "粘贴参数？" })).getByRole(
-        "button",
-        { name: "粘贴" },
-      ),
-    );
-    expect(draft().analog?.dpad).toEqual({
-      mode: "fourWay",
-      fold: "clockwise",
-    });
-    expect(draft().layers).toEqual(layered.layers);
-  });
-
-  it("keeps a read-only d-pad's diagonals readable", () => {
-    render(
-      <Harness
-        panel={DpadSettings}
-        control="dpad.up"
-        disabled
-        initial={{ ...layered, analog: { dpad: { mode: "eightWay" } } }}
-      />,
-    );
-    expect(
-      screen.getByRole("radio", { name: "独立按钮" }).matches(":disabled"),
-    ).toBe(true);
-    expect(
-      screen.getByRole("button", { name: "方向键" }).matches(":disabled"),
-    ).toBe(true);
-    expect(cell("upleft").matches(":disabled")).toBe(false);
-    fireEvent.click(cell("upleft"));
-    const card = screen.getByRole("region", { name: "↖ 左上斜按" });
-    expect(within(card).getByTestId("binding-fields").dataset.disabled).toBe(
-      "true",
-    );
-    expect(within(card).queryByRole("button", { name: "清除" })).toBeNull();
-  });
-});
-
 describe("wording", () => {
   it("never mentions key groups or layers in any panel", async () => {
     for (const language of ["zh-CN", "en"] as const) {
       for (const [panel, control] of [
         [StickPanel, "leftstick"],
         [TriggerSettings, "lefttrigger"],
-        [DpadSettings, "dpad.up"],
       ] as const) {
         const { container, unmount } = render(
           <Harness panel={panel} control={control} language={language} />,
@@ -1571,16 +1614,6 @@ describe("wording", () => {
       }
     }
     render(<Harness />);
-    fireEvent.click(screen.getByRole("button", { name: "方向键" }));
-    expect(screen.getByRole("dialog").textContent).not.toContain("层");
-    cleanup();
-    render(
-      <Harness
-        panel={DpadSettings}
-        control="dpad.up"
-        initial={{ ...layered, analog: { dpad: { mode: "eightWay" } } }}
-      />,
-    );
     fireEvent.click(screen.getByRole("button", { name: "方向键" }));
     expect(screen.getByRole("dialog").textContent).not.toContain("层");
   });
@@ -1742,9 +1775,9 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
         }}
       />,
     );
-    fireEvent.click(modeRadio("4 方向"));
+    fireEvent.click(modeRadio("四方向"));
     // Like the step: the file keeps it, the knob section is gone.
-    expect(draft().analog?.ls).toEqual({ mode: "standard", knobTick: true });
+    expect(draft().analog?.ls).toEqual({ mode: "fourWay", knobTick: true });
     expect(screen.queryByRole("switch", { name: "刻度震动" })).toBeNull();
     fireEvent.click(modeRadio("旋钮"));
     expect(
@@ -1786,11 +1819,11 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
     render(<Harness initial={knobFile("rs")} control="rightstick" />);
     expect(row("rs.cw")).toBeDefined();
     fireEvent.click(row("rs.cw"));
+    // One shortcut and nothing else: not the mappings of a key (ADR-0079 §8).
+    const cw = screen.getByRole("region", { name: "顺时针一格" });
+    expect(within(cw).queryByTestId("binding-fields")).toBeNull();
     fireEvent.click(
-      within(screen.getByRole("region", { name: "顺时针一格" })).getByRole(
-        "button",
-        { name: "stub: send F20" },
-      ),
+      within(cw).getByRole("button", { name: "stub: shortcut F20" }),
     );
     expect(draft().layers.base["rs.cw"]?.press).toEqual({
       type: "keys",
@@ -1802,7 +1835,7 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
     fireEvent.click(
       within(screen.getByRole("region", { name: "逆时针一格" })).getByRole(
         "button",
-        { name: "stub: send F20" },
+        { name: "stub: shortcut F20" },
       ),
     );
     expect(draft().layers.base["rs.ccw"]?.press).toEqual({
@@ -1817,14 +1850,11 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
   it("hides the settings that are only for directions", () => {
     const { unmount } = render(<Harness initial={knobFile()} />);
     const advanced = openAdvanced();
-    for (const name of ["角度滞回", "方向切换延迟", "斜向扇区宽度"])
+    for (const name of ["角度滞回", "方向切换延迟"])
       expect(
         within(advanced).queryByRole("spinbutton", { name }),
         name,
       ).toBeNull();
-    expect(
-      within(advanced).queryByRole("switch", { name: "只有斜向" }),
-    ).toBeNull();
     // What a knob still uses stays: the trigger point, the rings, raw axes.
     expect(
       within(advanced).getByRole("spinbutton", { name: "触发幅度" }),
@@ -1844,32 +1874,22 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
         within(standard).getByRole("spinbutton", { name }),
         name,
       ).toBeDefined();
-    expect(
-      within(standard).getByRole("switch", { name: "只有斜向" }),
-    ).toBeDefined();
   });
 
-  it("says which direction keys the knob leaves unused", () => {
+  it("does not talk about the direction keys a knob does not send", () => {
     const file = knobFile();
     file.layers.base["ls.up"] = { press: { type: "keys", keys: "Up" } };
     file.layers.base["ls.upright"] = { press: { type: "keys", keys: "Q" } };
     render(<Harness initial={file} />);
-    expect(
-      screen.getByText("↑ → ↗ 也设置了按键，但旋钮不会发送。"),
-    ).toBeDefined();
-    cleanup();
-    const clean = knobFile();
-    delete clean.layers.base["ls.right"];
-    render(<Harness initial={clean} />);
     expect(screen.queryByText(/也设置了按键/)).toBeNull();
   });
 
-  it("keeps the ticks in the file when the knob is left, and says they are unused", () => {
+  it("keeps the ticks in the file when the knob is left", () => {
     render(<Harness initial={knobFile()} />);
     fireEvent.click(row("ls.cw"));
     expect(screen.getByRole("region", { name: "顺时针一格" })).toBeDefined();
-    fireEvent.click(modeRadio("4 方向"));
-    expect(draft().analog?.ls?.mode).toBe("standard");
+    fireEvent.click(modeRadio("四方向"));
+    expect(draft().analog?.ls?.mode).toBe("fourWay");
     // The ticks stay in the file, inert; their card closes with their rows.
     expect(draft().layers.base["ls.cw"]).toEqual(
       knobFile().layers.base["ls.cw"],
@@ -1882,13 +1902,10 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
       document.querySelector('.analog-row[data-control="ls.cw"]'),
     ).toBeNull();
     expect(shownDirections()).toEqual(["up", "right", "down", "left"]);
-    expect(
-      screen.getByText("旋钮的按键也设置了，但当前模式不会发送。"),
-    ).toBeDefined();
+    expect(screen.queryByText(/旋钮的按键也设置了/)).toBeNull();
     // Back to the knob: they are there again.
     fireEvent.click(modeRadio("旋钮"));
     expect(row("ls.cw").textContent).toContain("]");
-    expect(screen.queryByText(/旋钮的按键也设置了/)).toBeNull();
   });
 
   it("shows the angle of a knob and no direction", () => {
@@ -1986,7 +2003,11 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
       const field = screen.getByRole("spinbutton", { name: "重推的位置" });
       expect((field as HTMLInputElement).value).toBe("90");
       commit(field, { target: { value: "80" } });
-      expect(draft().analog?.ls).toEqual({ outerThreshold: 0.8 });
+      // The first edit also wrote the mode the drawer shows.
+      expect(draft().analog?.ls).toEqual({
+        mode: "fourWay",
+        outerThreshold: 0.8,
+      });
       commit(field, { target: { value: "0" } });
       expect(draft().analog?.ls?.outerThreshold).toBe(0);
       commit(field, { target: { value: "120" } });
@@ -2190,7 +2211,10 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
           .getAttribute("aria-checked"),
       ).toBe("true");
       fireEvent.click(within(group).getByRole("radio", { name: "二次" }));
-      expect(draft().analog?.ls).toEqual({ curve: "quadratic" });
+      expect(draft().analog?.ls).toEqual({
+        mode: "fourWay",
+        curve: "quadratic",
+      });
       fireEvent.click(within(group).getByRole("radio", { name: "三次" }));
       expect(draft().analog?.ls?.curve).toBe("cubic");
       fireEvent.click(within(group).getByRole("radio", { name: "线性" }));
@@ -2281,8 +2305,8 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
     expect(document.querySelector(".analog-mode + .analog-caption")).toBeNull();
     expectOthersKept(draft());
     // The other modes are one click away.
-    fireEvent.click(modeRadio("4 方向"));
-    expect(draft().analog?.ls).toEqual({ mode: "standard" });
+    fireEvent.click(modeRadio("四方向"));
+    expect(draft().analog?.ls).toEqual({ mode: "fourWay" });
     expect(screen.queryByRole("spinbutton", { name: "速度" })).toBeNull();
   });
 
@@ -2296,8 +2320,8 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
     expect(
       document.querySelector('.analog-row[data-control="ls.cw"]'),
     ).toBeNull();
-    // The stick click keeps its row.
-    expect(screen.getByRole("button", { name: /按下摇杆/ })).toBeDefined();
+    // The click is not here: it is the press cell's, whatever the mode.
+    expect(screen.queryByRole("button", { name: /按下摇杆/ })).toBeNull();
   });
 
   it("sets the speed in px/s from the field, from 50 to 10000", () => {
@@ -2444,19 +2468,11 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
   it("hides the settings that are only for directions, and keeps the trigger point, rings and raw axes", () => {
     render(<Harness initial={mouseFile()} />);
     const advanced = openAdvanced();
-    for (const name of ["角度滞回", "方向切换延迟", "斜向扇区宽度"])
+    for (const name of ["角度滞回", "方向切换延迟"])
       expect(
         within(advanced).queryByRole("spinbutton", { name }),
         name,
       ).toBeNull();
-    expect(
-      within(advanced).queryByRole("switch", { name: "只有斜向" }),
-    ).toBeNull();
-    expect(
-      within(advanced).queryByRole("radiogroup", {
-        name: "斜向未设置按键时",
-      }),
-    ).toBeNull();
     // The trigger point stays for the push and ring controls; the pointer
     // does not wait for it.
     expect(
@@ -2486,9 +2502,6 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
         within(advanced).getByRole("spinbutton", { name }),
         name,
       ).toBeDefined();
-    expect(
-      within(advanced).getByRole("switch", { name: "只有斜向" }),
-    ).toBeDefined();
     expect(row("ls.active").textContent).toContain("和方向同时触发");
     expect(
       within(advanced).getByText("推出死区后，达到此幅度才按下方向。"),
@@ -2511,21 +2524,11 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
     expect(draft().analog?.ls).toEqual({ mode: "mouse" });
   });
 
-  it("says which direction and knob keys the pointer leaves unused", () => {
+  it("does not talk about the direction and knob keys the pointer does not send", () => {
     const file = mouseFile();
     file.layers.base["ls.up"] = { press: { type: "keys", keys: "Up" } };
     file.layers.base["ls.cw"] = { press: { type: "keys", keys: "]" } };
     render(<Harness initial={file} />);
-    expect(
-      screen.getByText("↑ → 也设置了按键，但鼠标模式不会发送。"),
-    ).toBeDefined();
-    expect(
-      screen.getByText("旋钮的按键也设置了，但当前模式不会发送。"),
-    ).toBeDefined();
-    cleanup();
-    const clean = mouseFile();
-    delete clean.layers.base["ls.right"];
-    render(<Harness initial={clean} />);
     expect(screen.queryByText(/也设置了按键/)).toBeNull();
     expect(screen.queryByText(/旋钮的按键也设置了/)).toBeNull();
   });
@@ -2605,6 +2608,36 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
       mouseSmoothingMs: 40,
     });
     expect(speed().value).toBe("700");
+  });
+
+  it("keeps each stick's name when parameters are copied, pasted or reset (ADR-0079 §8)", () => {
+    const file = mouseFile("ls", { mouseSpeed: 700, label: "移动画布" });
+    file.analog = { ...file.analog, rs: { label: "缩放", mode: "knob" } };
+    const { rerender } = render(<Harness initial={file} />);
+    fireEvent.click(screen.getByTestId("analog-params"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "复制参数" }));
+    rerender(<Harness initial={file} control="rightstick" />);
+    fireEvent.click(screen.getByTestId("analog-params"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "粘贴参数…" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: "粘贴参数？" })).getByRole(
+        "button",
+        { name: "粘贴" },
+      ),
+    );
+    // The left stick's parameters, the right stick's own name.
+    expect(draft().analog?.rs).toEqual({
+      mode: "mouse",
+      mouseSpeed: 700,
+      label: "缩放",
+    });
+    fireEvent.click(screen.getByTestId("analog-params"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "恢复默认参数…" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(
+      within(dialog).getAllByRole("button").at(-1) as HTMLButtonElement,
+    );
+    expect(draft().analog?.rs?.label).toBe("缩放");
   });
 
   it("reads a read-only pointer stick but does not edit it", () => {

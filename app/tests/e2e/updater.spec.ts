@@ -38,10 +38,11 @@ const run = promisify(execFile);
 // updater rightly refuses a stand-in that nobody signed.
 //
 // It works for any version of the build, a release or a test build such as
-// 0.0.0-m28b.1: what depends on the version is derived from it. A version with
-// a prerelease part looks twice (among the prereleases, then at the releases),
-// so the feed is asked for latest.yml twice (looks()), and the installer of an
-// update "installed long ago" is named 0.0.0-0, the lowest version there is.
+// 0.0.0-m28b.1: what depends on the version is derived from it. Every build
+// looks once, at latest.yml (ADR-0078: the download site holds releases only,
+// and one channel file), so the feed is asked for latest.yml once (looks()),
+// and the installer of an update "installed long ago" is named 0.0.0-0, the
+// lowest version there is.
 const packagedApp = process.env.PADMATE_TEST_PACKAGED_APP;
 const skipReason =
   "set PADMATE_TEST_PACKAGED_APP to an installed or unpacked padmate.exe";
@@ -60,14 +61,8 @@ const sha512 = (data: Buffer) =>
 /** The installer of an update that was installed long ago, older than any build. */
 const OLD_INSTALLER = "padmate-v0.0.0-0-windows-amd64-setup.exe";
 
-/**
- * The requests of a check made by the application of this version, plus what
- * follows them: a version with a prerelease part looks twice (UpdateController.find).
- */
-const looks = (version: string, ...then: string[]): string[] => [
-  ...Array<string>(version.includes("-") ? 2 : 1).fill("GET /latest.yml"),
-  ...then,
-];
+/** The requests of a check: one look at latest.yml, plus what follows it. */
+const looks = (...then: string[]): string[] => ["GET /latest.yml", ...then];
 
 /** latest.yml and the installer of a release, served on a loopback port. */
 class Feed {
@@ -387,9 +382,9 @@ test("a version on offer is checked, downloaded and verified, and the install is
       version: "99.0.0",
       dialog: "available",
     });
-    // The feed was asked for latest.yml, and for nothing else; what GitHub
-    // would see is the address and padmate's name and version.
-    expect(feed.paths()).toEqual(looks(version));
+    // The feed was asked for latest.yml, and for nothing else; what the
+    // download site would see is the address and padmate's name and version.
+    expect(feed.paths()).toEqual(looks());
     expect(feed.hits[0].headers["user-agent"]).toBe(`padmate/${version}`);
     expect(feed.hits[0].headers["x-user-staging-id"]).toBe(SHARED_STAGING_ID);
 
@@ -402,7 +397,7 @@ test("a version on offer is checked, downloaded and verified, and the install is
     await page.screenshot({ path: info.outputPath("updater-downloaded.png") });
     const downloaded = join(pendingDir(browser), feed.fileName);
     expect(sha512(await readFile(downloaded))).toBe(sha512(feed.installer));
-    expect(feed.paths()).toEqual(looks(version, `GET /${feed.fileName}`));
+    expect(feed.paths()).toEqual(looks(`GET /${feed.fileName}`));
 
     // 重启并安装: recorded; the application goes on, and the file is not run.
     await done.getByRole("button", { name: "重启并安装" }).click();
@@ -494,13 +489,14 @@ test("a tampered installer is refused, a version that is installed is up to date
     await current.getByRole("button", { name: "确定" }).click();
     await expect(current).toHaveCount(0);
 
-    // A feed that answers 404 (a private repository does): the button says so.
+    // A feed without latest.yml (a bucket that has none answers 404): the
+    // button says so, and gives 手动下载.
     feed.mode = "missing";
     await page.getByRole("button", { name: "检查更新", exact: true }).click();
     const unreachable = page.getByRole("dialog", { name: "无法检查更新" });
     await expect(unreachable).toBeVisible({ timeout: 30000 });
     await expect(
-      unreachable.getByRole("button", { name: "查看发布页" }),
+      unreachable.getByRole("button", { name: "手动下载" }),
     ).toBeVisible();
     await page.screenshot({ path: info.outputPath("updater-unreachable.png") });
     expect(await state(page)).toMatchObject({
@@ -575,15 +571,13 @@ test("the automatic check comes 30 seconds after the start, offers a version, an
       settings: { autoCheck: true, lastCheck: 0 },
     });
     const { page, browser } = started;
-    // A release candidate looks twice (among the prereleases, then at the
-    // releases), so the feed may be asked more than once.
     await expect
       .poll(() => missing.paths().length, {
         timeout: 60000,
         intervals: [1000],
       })
       .toBeGreaterThan(0);
-    expect(new Set(missing.paths())).toEqual(new Set(["GET /latest.yml"]));
+    expect(missing.paths()).toEqual(looks());
     await expect
       .poll(async () => (await state(page)).errorCode, { timeout: 15000 })
       .toMatch(/^ERR_/);
@@ -609,11 +603,11 @@ test("the automatic check comes 30 seconds after the start, offers a version, an
     started = await start(exe, offered, {
       settings: { autoCheck: true, lastCheck: 0 },
     });
-    const { page, version } = started;
+    const { page } = started;
     await expect(page.getByRole("dialog", { name: "有新版本" })).toBeVisible({
       timeout: 60000,
     });
-    expect(offered.paths()).toEqual(looks(version));
+    expect(offered.paths()).toEqual(looks());
   } finally {
     await finish(exe, started);
     await offered.stop();

@@ -116,8 +116,8 @@
 .profile-card-title .tag {
   flex: none;
 }
-.profile-card-edit {
-  height: 30px;
+/* The card's two icon buttons: .icon-btn.bare sets the size. */
+.icon-btn.profile-card-edit {
   color: var(--text);
 }
 .profile-card-problem {

@@ -11,16 +11,21 @@ executableName: padmate
 copyright: Copyright (c) 2026 padmate contributors
 directories:
   output: ../dist/installer
-# The source of the automatic update (PKG-10, ADR-0073). With --publish never
+# The source of the automatic update (PKG-10, ADR-0078): the download site,
+# which holds latest.yml and the installers in its root. With --publish never
 # this only makes electron-builder write resources\app-update.yml and
-# latest.yml next to the installer; nothing is uploaded from here (release.yml
-# does that). owner and repo are also constants in src/main/update-config.ts,
-# which TestElectronBuilderConfig pins equal. A repository that is private
-# cannot be read by the installed application: it then only fails to check.
+# latest.yml next to the installer; nothing is uploaded from here, and the
+# generic provider never uploads (publishing to the site is a task of its own:
+# task release:r2). The url is also a constant in src/main/update-config.ts
+# and in daemon/internal/installerpkg, which the tests pin equal; it ends in a
+# slash, as latest.yml names the installer by a relative path.
+# The channel is written down: without it electron-builder takes the channel
+# from the prerelease part of the version, so 1.0.3-rc.1 would write rc.yml
+# and bake in channel rc. The site holds latest.yml only.
 publish:
-  - provider: github
-    owner: wdcyxxycdw
-    repo: padmate
+  - provider: generic
+    url: https://padmate.download/
+    channel: latest
 # The Electron runtime that npm installed, not a second download.
 electronDist: node_modules/electron/dist
 # Only the languages the UI has (zh-CN and en-US).

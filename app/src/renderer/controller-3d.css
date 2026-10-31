@@ -184,6 +184,7 @@
   --chip-h: 48px;
   --chip-w: clamp(150px, 17cqw, 196px);
   --pitch: 58px;
+  --cell-gap: 0px;
   --corner-gap: 14px;
   --corner-shift: 24px;
   --top-w: clamp(120px, 13cqw, 140px);
@@ -216,7 +217,8 @@
     background-color 120ms ease;
 }
 .stage-chip[data-placement="left"],
-.stage-chip[data-side="left"] {
+.stage-chip[data-side="left"],
+.stage-chip[data-column="left"] {
   flex-direction: row-reverse;
   padding: 0 9px 0 10px;
   text-align: right;
@@ -269,6 +271,49 @@
   );
 }
 
+/*
+ * A stick is one callout of two stacked cells (movement above, press below;
+ * each a .stage-chip button) that is --span slots tall: its first slot is
+ * --slot, the chips after it in the column start --span slots further down.
+ * One cell holds one line (the title), as the cell is about half a chip tall.
+ */
+.stage-stick {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cell-gap);
+  width: var(--chip-w);
+  height: calc(var(--chip-h) + (var(--span) - 1) * var(--pitch));
+  top: calc(50% + (var(--slot) + (var(--span) - 1) / 2 - 4) * var(--pitch));
+  transform: translateY(-50%);
+}
+.stage-stick[data-placement="left"] {
+  left: var(--side-x);
+}
+.stage-stick[data-placement="right"] {
+  right: var(--side-x);
+}
+.stage-stick > .stage-chip {
+  position: relative;
+  flex: 1 1 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
+}
+/* The two cells read as one button split in two: no gap, one shared edge
+   (the press cell overlaps the movement cell's bottom border), square inner
+   corners. The cell that is hovered, selected or lit sits on top (after the
+   chip states, below), so its border is not hidden under the other cell's. */
+.stage-stick > .stage-chip:first-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.stage-stick > .stage-chip:last-child {
+  margin-top: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 /* Chip contents. */
 .stage-glyph {
   flex: none;
@@ -315,6 +360,21 @@
 .stage-glyph[data-face="pink"] {
   --face: #f09ad6;
 }
+/* A control's icon (ADR-0079 §7) is its own badge, without the disc. Its
+   artwork leaves a margin of its own, so it is drawn a little larger than the
+   box, which keeps the chip's layout. White paint is currentColor. */
+.stage-glyph[data-icon] {
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  --pad-icon-highlight: var(--accent);
+}
+.stage-glyph[data-icon] > svg {
+  flex: none;
+  width: 116%;
+  height: 116%;
+  margin: -8%;
+}
 .stage-chip-text {
   flex: 1;
   min-width: 0;
@@ -324,7 +384,8 @@
   gap: 4px;
 }
 .stage-chip[data-placement="left"] .stage-chip-text,
-.stage-chip[data-side="left"] .stage-chip-text {
+.stage-chip[data-side="left"] .stage-chip-text,
+.stage-chip[data-column="left"] .stage-chip-text {
   align-items: flex-end;
 }
 /*
@@ -349,6 +410,10 @@
   color: var(--text-3);
   font-size: 11px;
   line-height: 1;
+}
+/* A cell of a stick is about half a chip tall: its title only. */
+.stage-stick .stage-chip-detail {
+  display: none;
 }
 .stage-chip :is(.keycaps, .keycaps-chord) {
   display: inline;
@@ -472,6 +537,21 @@
   box-shadow: none;
   color: #0f1013;
 }
+/* A selected or lit icon takes the accent (a face button keeps its colour);
+   the d-pad's lit arm turns light so that it still shows. */
+.stage-chip[aria-pressed="true"] .stage-glyph[data-icon],
+.stage-chip[data-active="true"] .stage-glyph[data-icon] {
+  background: none;
+  color: var(--face, var(--accent));
+  --pad-icon-highlight: var(--text);
+}
+/* A stick cell in one of the states above sits over the other cell. */
+.stage-stick > .stage-chip:hover,
+.stage-stick > .stage-chip:focus-visible,
+.stage-stick > .stage-chip[aria-pressed="true"],
+.stage-stick > .stage-chip[data-active="true"] {
+  z-index: 1;
+}
 
 /* Compact: one line. */
 @container stage (width < 860px) or (height < 600px) {
@@ -479,6 +559,7 @@
     --chip-h: 32px;
     --chip-w: clamp(96px, 16cqw, 124px);
     --pitch: 40px;
+    --cell-gap: 0px;
     --corner-gap: 8px;
     --corner-shift: 16px;
     --top-w: clamp(88px, 14cqw, 112px);
@@ -495,7 +576,8 @@
     color: #c9ced6;
   }
   .stage-chip[data-placement="left"],
-  .stage-chip[data-side="left"] {
+  .stage-chip[data-side="left"],
+  .stage-chip[data-column="left"] {
     padding: 0 4px 0 8px;
   }
   .stage-glyph {
@@ -546,6 +628,7 @@
     --chip-h: 30px;
     --chip-w: 30px;
     --pitch: 36px;
+    --cell-gap: 0px;
     --corner-gap: 4px;
     --corner-shift: 10px;
     --top-w: 30px;
@@ -557,7 +640,8 @@
   }
   .stage-chip,
   .stage-chip[data-placement="left"],
-  .stage-chip[data-side="left"] {
+  .stage-chip[data-side="left"],
+  .stage-chip[data-column="left"] {
     justify-content: center;
     gap: 0;
     padding: 0;
@@ -636,6 +720,13 @@
 @media (forced-colors: active) {
   .stage-chip[data-active="true"] {
     border-width: 3px;
+  }
+  /* The lit arm of a d-pad icon is only a colour (ADR-0079 §7): keep the
+     icon's two colours, in system colours. */
+  .stage-glyph[data-icon] > svg {
+    forced-color-adjust: none;
+    color: CanvasText;
+    --pad-icon-highlight: Highlight;
   }
   .stage-chip[aria-pressed="true"] {
     outline: 2px solid Highlight;

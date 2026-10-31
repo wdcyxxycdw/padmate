@@ -7,7 +7,7 @@ import { LogRing } from "./log-ring";
 import { runtimeOptions } from "./runtime";
 import { cleanStalePending } from "./update-cleanup";
 import {
-  isReleasePageURL,
+  isManualDownloadURL,
   updaterCacheRoot,
   updaterTestHome,
 } from "./update-config";
@@ -61,9 +61,10 @@ export async function createUpdates(host: {
     settings,
     currentVersion: app.getVersion(),
     supported,
-    // Only the pages of releases (update-config.ts) are ever opened.
+    // Only the download site (update-config.ts) is ever opened.
     openExternal: (url) => {
-      if (!isReleasePageURL(url)) throw new Error("Not a release page");
+      if (!isManualDownloadURL(url))
+        throw new Error("Not the download address");
       return shell.openExternal(url);
     },
     // The install ends with the application quitting: the window finishes

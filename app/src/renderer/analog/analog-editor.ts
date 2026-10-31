@@ -32,7 +32,7 @@ export const diagonalDirections = [
 export type Cardinal = (typeof cardinalDirections)[number];
 export type Diagonal = (typeof diagonalDirections)[number];
 export type Direction = Cardinal | Diagonal;
-export const stickDefaults: Required<ProfileStick> = {
+export const stickDefaults: Required<Omit<ProfileStick, "label">> = {
   mode: "standard",
   deadzone: 0.15,
   saturation: 0.95,
@@ -143,6 +143,31 @@ export function directionControls(
   );
 }
 
+/**
+ * The mode the stick drawer shows as selected. It offers fourWay, knob and
+ * mouse only. A stick without a mode (the engine's default, `standard`)
+ * reads as fourWay, and the first edit writes it (`settleStickMode`). The
+ * modes the drawer no longer offers, eightWay and fourWayDiagonal, stay what
+ * they are, so none of the offered ones matches and none is selected.
+ */
+export function shownStickMode(
+  mode: ProfileStick["mode"] = stickDefaults.mode,
+): NonNullable<ProfileStick["mode"]> {
+  return mode === "standard" ? "fourWay" : mode;
+}
+
+/**
+ * Writes fourWay as the mode of a stick that has none or is in standard, which
+ * the drawer shows as fourWay; any other mode is kept (the same object comes
+ * back). The stick drawer applies it to every edit it saves, so opening the
+ * drawer alone rewrites nothing.
+ */
+export function settleStickMode(profile: Profile, group: "ls" | "rs"): Profile {
+  const stick = profile.analog?.[group];
+  if (stick?.mode !== undefined && stick.mode !== "standard") return profile;
+  return setAnalogSettings(profile, group, { ...stick, mode: "fourWay" });
+}
+
 export function setAnalogSettings<K extends AnalogGroup>(
   profile: Profile,
   group: K,
@@ -152,6 +177,44 @@ export function setAnalogSettings<K extends AnalogGroup>(
     ...profile,
     analog: { ...profile.analog, [group]: { ...settings } },
   };
+}
+
+/**
+ * The name of a stick's movement on its controller label (analog.ls.label,
+ * ADR-0079 §8), or undefined when it has none and the label is generated.
+ */
+export function stickLabel(
+  profile: Profile | null | undefined,
+  group: "ls" | "rs",
+): string | undefined {
+  return profile?.analog?.[group]?.label?.trim() || undefined;
+}
+
+/**
+ * Names a stick's movement, or takes the name away (""). It is not a setting
+ * of how the stick behaves, so it writes no mode (see settleStickMode).
+ */
+export function setStickLabel(
+  profile: Profile,
+  group: "ls" | "rs",
+  label: string,
+): Profile {
+  const { label: _old, ...stick } = profile.analog?.[group] ?? {};
+  const name = label.trim();
+  return setAnalogSettings(
+    profile,
+    group,
+    name ? { ...stick, label: name } : stick,
+  );
+}
+
+/**
+ * A stick's parameters without its name: what the parameter menu copies,
+ * pastes and resets. The name stays with the stick it belongs to.
+ */
+export function stickParameters(stick: ProfileStick = {}): ProfileStick {
+  const { label: _label, ...parameters } = stick;
+  return parameters;
 }
 
 /** Sets the profile-wide raw half-axis threshold. */
@@ -329,19 +392,6 @@ export function combinedDirection(directions: Direction[]): Direction | null {
       ),
     ) ?? null
   );
-}
-
-/** Pressed d-pad buttons as the directions an eight-way d-pad reports. */
-export function dpadDirections(
-  buttons: Record<string, boolean> = {},
-  mode: string = dpadDefaults.mode,
-): Direction[] {
-  const pressed = cardinalDirections.filter(
-    (direction) => buttons[`dpad.${direction}`],
-  );
-  if (mode !== "eightWay") return pressed;
-  const diagonal = combinedDirection(pressed);
-  return diagonal ? [diagonal] : pressed;
 }
 
 export interface AnalogIssue {

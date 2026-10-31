@@ -107,16 +107,23 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
     ).toBeVisible();
     await check("dialog: 改为 WASD？");
     await closeDialog(page);
+    // The press of the stick is a drawer of its own, an ordinary key's.
+    await chip(page, "leftstick.press").click();
+    await expect(page.getByTestId("mapping-editor")).toHaveAttribute(
+      "data-control",
+      "leftstick.press",
+    );
+    await check("drawer: leftstick.press");
     await openControl(page, "south");
     // Sequence, mappings, the menus of the key.
     await page.getByTestId("add-step").click();
-    await check("drawer: menu of 添加下一步");
+    await check("drawer: menu of 增加动作序列");
     await page.getByRole("menuitem", { name: "等待" }).click();
     await page.getByTestId("add-step").click();
     await page.getByRole("menuitem", { name: "快捷键" }).click();
     await check("drawer: a sequence of a shortcut, a wait and a shortcut");
     await page.getByTestId("add-gesture").click();
-    await check("drawer: menu of 添加映射");
+    await check("drawer: menu of 添加其他动作");
     await page.keyboard.press("Escape");
     await page.getByTestId("key-actions").click();
     await check("drawer: the menu of the key");

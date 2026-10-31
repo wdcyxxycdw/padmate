@@ -1,4 +1,4 @@
-// ENG-18, ENG-17: the user documents name the buttons of the app. This test
+// ENG-17: the user documents name the buttons of the app. This test
 // keeps the two from drifting apart. Every name in the table of
 // app/tests/docs/names.ts must still be a pair of strings of the app, a
 // Chinese one and an English one that sit next to each other in the source

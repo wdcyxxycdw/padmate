@@ -160,4 +160,10 @@ it("opens the drawer's key menu or parameter menu from a chip's right-click", as
   expect(screen.queryByRole("menu")).toBeNull();
   fireEvent.contextMenu(chip("leftstick"));
   expect(await screen.findByRole("menu", { name: "参数操作" })).toBeDefined();
+  // The press of the stick is a key: the right click opens its key actions.
+  fireEvent.keyDown(document, { key: "Escape" });
+  fireEvent.contextMenu(chip("leftstick.press"));
+  expect(chip("leftstick.press").getAttribute("aria-pressed")).toBe("true");
+  expect(chip("leftstick").getAttribute("aria-pressed")).toBe("false");
+  expect(await screen.findByRole("menu", { name: "按键操作" })).toBeDefined();
 });

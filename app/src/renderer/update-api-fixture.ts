@@ -29,7 +29,7 @@ export function updateApi(initial: UpdateState = supportedUpdateState) {
     installUpdate: vi.fn(async () => ({ dryRun: false })),
     dismissUpdate: vi.fn(async () => state),
     setAutoUpdate: vi.fn(async () => state),
-    openReleasePage: vi.fn(async () => {}),
+    openManualDownload: vi.fn(async () => {}),
   };
   return {
     api,

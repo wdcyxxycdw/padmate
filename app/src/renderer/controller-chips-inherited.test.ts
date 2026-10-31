@@ -47,8 +47,12 @@ describe("relatedKeys", () => {
       "lefttrigger+",
       "lefttrigger-",
     ]);
+    // A stick is two chips: its movement, and its press.
     expect(relatedKeys("leftstick")).toContain("ls.up");
-    expect(relatedKeys("leftstick")[0]).toBe("leftstick");
+    expect(relatedKeys("leftstick")).toContain("leftx+");
+    expect(relatedKeys("leftstick")).not.toContain("leftstick");
+    expect(relatedKeys("leftstick.press")).toEqual(["leftstick"]);
+    expect(relatedKeys("rightstick.press")).toEqual(["rightstick"]);
   });
 });
 
@@ -88,6 +92,51 @@ describe("a chip", () => {
     expect(result.south.inherited).toBe(true);
     expect(result.south.state).toBe("unbound");
     expect("fromParent" in result.south).toBe(false);
+  });
+  it("is that of each cell of a stick, where the function set leaves it out", () => {
+    const usual: Profile = {
+      ...profile,
+      layers: {
+        base: {
+          "ls.up": { press: { type: "keys", keys: "W" } },
+          leftstick: { press: { type: "keys", keys: "Tab" } },
+        },
+      },
+    };
+    const own = controllerChips({
+      // The set binds the press of the right stick and nothing else.
+      profile: {
+        ...profile,
+        layers: {
+          base: { rightstick: { press: { type: "keys", keys: "F5" } } },
+        },
+      },
+      controls,
+      labels,
+      registrations: [],
+      display: "actions",
+      language: "zh-CN",
+      functionKey: "start",
+    });
+    const result = inheritedChips({
+      own,
+      normal: chips("actions", usual),
+      language: "zh-CN",
+    });
+    expect(result.leftstick).toMatchObject({
+      inherited: true,
+      state: "unbound",
+      title: "平时：方向键",
+    });
+    expect(result["leftstick.press"]).toMatchObject({
+      inherited: true,
+      state: "unbound",
+    });
+    expect(result["leftstick.press"].title).toMatch(/^平时：/);
+    // A set that binds the press of the right stick owns that cell only.
+    expect(result["rightstick.press"].inherited).toBeUndefined();
+    expect(result["rightstick.press"].state).toBe("bound");
+    expect(result.rightstick.inherited).toBeUndefined();
   });
 });
 

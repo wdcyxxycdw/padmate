@@ -12,7 +12,7 @@ export type UpdateApi = Pick<
   | "installUpdate"
   | "dismissUpdate"
   | "setAutoUpdate"
-  | "openReleasePage"
+  | "openManualDownload"
 >;
 
 /**

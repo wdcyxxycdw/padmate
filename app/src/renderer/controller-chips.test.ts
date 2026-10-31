@@ -155,27 +155,103 @@ describe("controller chips", () => {
     expect(result.misc1.state).toBe("locked");
   });
 
-  it("shows stick directions as separate keycaps under the stick label", () => {
+  it("shows stick directions as separate keycaps on the stick's movement cell", () => {
     const result = chips();
+    // The label of the stick binding names the press cell, not the movement.
     expect(result.leftstick).toMatchObject({
-      title: "平移画布",
+      title: "方向键",
       detail: [{ chords: ["Up", "Down", "Left", "Right"] }],
       summary: "↑ ↓ ← →",
       state: "bound",
     });
-    const unlabeled = structuredClone(paint);
-    delete unlabeled.layers.base.leftstick;
-    unlabeled.layers.base.l3 = { press: { type: "keys", keys: "Tab" } };
-    expect(chips({ profile: unlabeled }).leftstick).toMatchObject({
-      title: "方向键",
-      detail: [
-        { chords: ["Up", "Down", "Left", "Right"] },
-        { gesture: "按下摇杆", keys: "Tab" },
-      ],
-    });
-    expect(chips({ language: "en", profile: unlabeled }).leftstick.title).toBe(
-      "Direction keys",
+    expect(chips({ language: "en" }).leftstick.title).toBe("Direction keys");
+  });
+
+  it("titles the stick's movement with its name, and leaves the press its own (ADR-0079 §8)", () => {
+    const named = { ...paint, analog: { ls: { label: "  平移画布 " } } };
+    const result = chips({ profile: named });
+    expect(result.leftstick.title).toBe("平移画布");
+    expect(result["leftstick.press"].title).toBe(
+      chips()["leftstick.press"].title,
     );
+    expect(result.rightstick.title).toBe(chips().rightstick.title);
+  });
+
+  it("gives the stick's press its own chip, like a button's", () => {
+    const result = chips();
+    // A label alone does nothing yet.
+    expect(result["leftstick.press"]).toMatchObject({
+      title: "平移画布",
+      detail: [{ text: "未设置" }],
+      state: "unbound",
+    });
+    const pressed = structuredClone(paint);
+    pressed.layers.base.l3 = { press: { type: "keys", keys: "Tab" } };
+    delete pressed.layers.base.leftstick;
+    expect(chips({ profile: pressed })["leftstick.press"]).toMatchObject({
+      title: "Tab",
+      titleKeys: { keys: "Tab" },
+      detail: [],
+      state: "bound",
+    });
+    // The movement cell does not list the click any more.
+    expect(chips({ profile: pressed }).leftstick.detail).toEqual([
+      { chords: ["Up", "Down", "Left", "Right"] },
+    ]);
+    // Labeled, it is titled by the label and then shows what it does.
+    delete pressed.layers.base.l3;
+    pressed.layers.base.leftstick = {
+      label: "吸管",
+      press: { type: "keys", keys: "Alt" },
+    };
+    expect(chips({ profile: pressed })["leftstick.press"]).toMatchObject({
+      title: "吸管",
+      detail: [{ keys: "Alt" }],
+    });
+    // The other stick has its own, and an unset one reads like an unset key.
+    expect(chips()["rightstick.press"]).toMatchObject({
+      title: "未设置",
+      state: "unbound",
+    });
+    expect(chips({ language: "en" })["rightstick.press"].title).toBe("Not set");
+  });
+
+  it("names the press cell after the stick's key name", () => {
+    const renamed = structuredClone(paint);
+    renamed.controlNames = { leftstick: "笔刷大小" };
+    renamed.layers.base.leftstick = { press: { type: "keys", keys: "Tab" } };
+    expect(chips({ profile: renamed })["leftstick.press"]).toMatchObject({
+      title: "笔刷大小",
+      detail: [{ keys: "Tab" }],
+    });
+    // The movement is not what that name is for.
+    expect(chips({ profile: renamed }).leftstick.title).toBe("方向键");
+  });
+
+  it("keeps a stick's movement and press apart in state, lock and script ownership", () => {
+    const file = structuredClone(paint);
+    file.layers.base["ls.left"] = {
+      press: { type: "profile", profile: "photo" },
+    };
+    const locked = chips({ profile: file });
+    expect(locked.leftstick.state).toBe("locked");
+    expect(locked["leftstick.press"].state).not.toBe("locked");
+    const blocked = structuredClone(paint);
+    blocked.layers.base.leftstick = { block: true };
+    expect(chips({ profile: blocked })["leftstick.press"]).toMatchObject({
+      title: "已屏蔽",
+      state: "locked",
+    });
+    expect(chips({ profile: blocked }).leftstick.state).toBe("bound");
+    const owned = chips({
+      registrations: [registration("leftstick")],
+      scriptEntry: "scripts/main.ts",
+    });
+    expect(owned["leftstick.press"].scriptOwned).toBe(true);
+    expect(owned.leftstick.scriptOwned).toBe(false);
+    const moved = chips({ registrations: [registration("ls.up")] });
+    expect(moved.leftstick.scriptOwned).toBe(true);
+    expect(moved["leftstick.press"].scriptOwned).toBe(false);
   });
 
   it("marks unset, blocked, layer-action and profile-switch controls", () => {
@@ -229,7 +305,7 @@ describe("controller chips", () => {
     ]);
     expect(named.misc1.title).toBe("切换到「Photo」");
     // A label alone does nothing yet.
-    expect(locked.rightstick).toMatchObject({
+    expect(locked["rightstick.press"]).toMatchObject({
       title: "备用",
       detail: [{ text: "未设置" }],
       state: "unbound",
@@ -407,8 +483,9 @@ describe("controller chips", () => {
     expect(keys.leftstick).toMatchObject({
       title: "↑ ↓ ← →",
       titleKeys: { chords: ["Up", "Down", "Left", "Right"] },
-      detail: [{ text: "平移画布" }],
+      detail: [],
     });
+    expect(keys["leftstick.press"].title).toBe("平移画布");
     expect(keys.guide.title).toBe("未设置");
   });
 
@@ -637,10 +714,14 @@ describe("chips for the rings, the knob and the second stage (UI-28)", () => {
       { rs: { mode: "knob" } },
     );
     const result = chips({ profile: knob });
+    // The click is the press cell's.
     expect(result.rightstick.detail).toEqual([
       { chords: ["]", "["], divider: "/" },
-      { keys: "Tab", gesture: "按下摇杆" },
     ]);
+    expect(result["rightstick.press"]).toMatchObject({
+      title: "笔刷大小",
+      detail: [{ keys: "Tab" }],
+    });
     // Without the knob mode, the same file is a stick with directions, and
     // the ticks it holds are not shown.
     const plain = structuredClone(knob);
@@ -660,7 +741,7 @@ describe("chips for the rings, the knob and the second stage (UI-28)", () => {
     expect(result.detail[0]).toMatchObject({ macro: true });
   });
 
-  it("lists the rings after the directions and the click", () => {
+  it("lists the rings after the directions", () => {
     const rings = file({
       "ls.up": key("Up"),
       "ls.outer": { press: { type: "keys", keys: "Shift", mode: "hold" } },
@@ -786,7 +867,7 @@ describe("chips for a stick that moves the pointer (MOU-01, UI-33)", () => {
     expect(chips({ profile: plain }).leftstick.title).toBe("方向键");
   });
 
-  it("lists the stick click and the rings after it", () => {
+  it("lists the rings after the pointer, and the click on the press cell", () => {
     const result = chips({
       profile: file({
         leftstick: key("Tab"),
@@ -796,20 +877,27 @@ describe("chips for a stick that moves the pointer (MOU-01, UI-33)", () => {
     });
     expect(result.leftstick.title).toBe("鼠标");
     expect(result.leftstick.detail).toEqual([
-      { keys: "Tab", gesture: "按下摇杆" },
       { gesture: "轻推", keys: "F2" },
       { gesture: "重推", keys: "Shift", hold: true },
     ]);
+    expect(result["leftstick.press"]).toMatchObject({
+      title: "Tab",
+      state: "bound",
+    });
   });
 
-  it("keeps the label of the stick when it has one", () => {
+  it("leaves the label of the stick binding to the press cell", () => {
     const result = chips({
       profile: file({ leftstick: { label: "移动鼠标" } }),
     });
     expect(result.leftstick).toMatchObject({
-      title: "移动鼠标",
-      detail: [{ text: "鼠标" }],
+      title: "鼠标",
+      detail: [],
       state: "bound",
+    });
+    expect(result["leftstick.press"]).toMatchObject({
+      title: "移动鼠标",
+      state: "unbound",
     });
   });
 

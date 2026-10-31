@@ -209,7 +209,7 @@ export function editorAPIFixture() {
     setAutoUpdate: vi.fn(
       async (_enabled: boolean): Promise<UpdateState> => initialUpdateState,
     ),
-    openReleasePage: vi.fn(async () => {}),
+    openManualDownload: vi.fn(async () => {}),
     onUpdateState: vi.fn((_listener: (state: UpdateState) => void) => () => {}),
     // A profile that is based on nothing: its own text. A test of
     // inheritance replaces it.

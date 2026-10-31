@@ -305,6 +305,14 @@
           "x-go-type": "*bool",
           "x-go-field": "KnobTick"
         },
+        "label": {
+          "description": "What the editor calls the stick's movement on its controller label (the press of the stick is labelled by the label of its leftstick or rightstick binding). The daemon does not use it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "x-go-type": "*string",
+          "x-go-field": "Label"
+        },
         "curve": {
           "description": "Response curve of the push depth. It shapes the rate of a repeat that sets minRateHz (a repeat on ls.up, ls.active, ls.outer and the like) and, in mode mouse, the pointer speed (mouseSpeed times the curve of the depth). The depth of a repeat is 0 at directionThreshold and 1 at full travel; the depth of the pointer is 0 at the edge of the deadzone and 1 at saturation (directionThreshold does not matter to it). Linear uses the depth as it is, quadratic squares it, cubic cubes it. No threshold moves, and script values are not changed.",
           "enum": [

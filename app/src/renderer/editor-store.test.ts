@@ -708,7 +708,7 @@ describe("review fixes (UI-43)", () => {
       .edit(withNorth(store, { type: "keys", keys: "F13", mode: "hold" }));
     await store.getState().flush();
     expect(onDisk().layers.base.north?.press).toMatchObject({ keys: "F13" });
-    // 添加下一步: the new step is empty, and the sequence taps.
+    // 增加动作序列: the new step is empty, and the sequence taps.
     store
       .getState()
       .edit(withNorth(store, { type: "keys", keys: ["F13", ""], mode: "tap" }));

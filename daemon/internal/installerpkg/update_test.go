@@ -2,6 +2,7 @@ package installerpkg
 
 import (
 	"context"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -64,8 +65,31 @@ func FuzzMainBundleRequires(f *testing.F) {
 	})
 }
 
+// The update source of the application (ADR-0078): the download site, in the
+// form electron-builder writes into resources\app-update.yml.
+const goodUpdateConfig = "provider: generic\nurl: https://padmate.download/\nchannel: latest\nupdaterCacheDirName: padmate-updater\n"
+
+// The source of the builds up to v1.0.2: GitHub (ADR-0073).
+const formerUpdateConfig = "provider: github\nowner: wdcyxxycdw\nrepo: padmate\nupdaterCacheDirName: padmate-updater\n"
+
+func TestUpdateSourceConstants(t *testing.T) {
+	u, err := url.Parse(UpdateURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// electron-updater resolves the relative names in latest.yml against the
+	// address, so it ends with a slash; it is the address the Worker serves.
+	if u.Scheme != "https" || u.Host != "padmate.download" || u.Path != "/" || u.RawQuery != "" || u.Fragment != "" || u.User != nil || UpdateURL != "https://padmate.download/" {
+		t.Errorf("UpdateURL is %q, want https://padmate.download/", UpdateURL)
+	}
+	// A prerelease build would otherwise write rc.yml and `channel: rc`.
+	if UpdateChannel != "latest" {
+		t.Errorf("UpdateChannel is %q, want latest", UpdateChannel)
+	}
+}
+
 func TestCheckUpdateConfig(t *testing.T) {
-	good := "provider: github\nowner: wdcyxxycdw\nrepo: padmate\nupdaterCacheDirName: padmate-updater\n"
+	good := goodUpdateConfig
 	if got := CheckUpdateConfig([]byte(good)); len(got) != 0 {
 		t.Errorf("the file electron-builder writes: %v", got)
 	}
@@ -74,13 +98,27 @@ func TestCheckUpdateConfig(t *testing.T) {
 		t.Errorf("with publisherName: %v", got)
 	}
 	for name, c := range map[string]struct{ text, want string }{
-		"empty":           {"", "provider"},
-		"another source":  {strings.Replace(good, "github", "generic", 1), "provider"},
-		"no owner":        {strings.Replace(good, "owner: wdcyxxycdw\n", "", 1), "owner"},
-		"an empty repo":   {strings.Replace(good, "repo: padmate", "repo: ", 1), "repo"},
-		"another folder":  {strings.Replace(good, "padmate-updater", "other-updater", 1), "updaterCacheDirName"},
-		"no folder":       {strings.Replace(good, "updaterCacheDirName: padmate-updater\n", "", 1), "updaterCacheDirName"},
-		"a quoted source": {strings.Replace(good, "github", `"github"`, 1), ""},
+		"empty":                 {"", "provider"},
+		"the former source":     {formerUpdateConfig, "provider"},
+		"another source":        {strings.Replace(good, "generic", "s3", 1), "provider"},
+		"no url":                {strings.Replace(good, "url: https://padmate.download/\n", "", 1), "url"},
+		"an empty url":          {strings.Replace(good, "https://padmate.download/", "", 1), "url"},
+		"http":                  {strings.Replace(good, "https://", "http://", 1), "url"},
+		"another host":          {strings.Replace(good, "padmate.download", "example.com", 1), "url"},
+		"a subdomain":           {strings.Replace(good, "padmate.download", "www.padmate.download", 1), "url"},
+		"no trailing slash":     {strings.Replace(good, "download/", "download", 1), "url"},
+		"a path":                {strings.Replace(good, "download/", "download/files/", 1), "url"},
+		"a query":               {strings.Replace(good, "download/", "download/?x=1", 1), "url"},
+		"the channel rc":        {strings.Replace(good, "channel: latest", "channel: rc", 1), "channel"},
+		"no channel":            {strings.Replace(good, "channel: latest\n", "", 1), "channel"},
+		"an empty channel":      {strings.Replace(good, "channel: latest", "channel: ", 1), "channel"},
+		"another folder":        {strings.Replace(good, "padmate-updater", "other-updater", 1), "updaterCacheDirName"},
+		"no folder":             {strings.Replace(good, "updaterCacheDirName: padmate-updater\n", "", 1), "updaterCacheDirName"},
+		"quoted values":         {"provider: \"generic\"\nurl: 'https://padmate.download/'\nchannel: \"latest\"\nupdaterCacheDirName: padmate-updater\n", ""},
+		"CRLF":                  {strings.ReplaceAll(good, "\n", "\r\n"), ""},
+		"the keys in any order": {"updaterCacheDirName: padmate-updater\nchannel: latest\nurl: https://padmate.download/\nprovider: generic\n", ""},
+		// Only a key that starts the line counts: the entries of a list do not.
+		"a url inside a list": {strings.Replace(good, "url: https://padmate.download/\n", "publisherName:\n  - url: https://padmate.download/\n", 1), "url"},
 	} {
 		got := strings.Join(CheckUpdateConfig([]byte(c.text)), "\n")
 		if c.want == "" {
@@ -95,10 +133,52 @@ func TestCheckUpdateConfig(t *testing.T) {
 	}
 }
 
+// A tree of an earlier build (the first installer of an upgrade test) may still
+// have the source of its time: the builds up to v1.0.2 read GitHub. Everything
+// else is held to the rule of the current build.
+func TestCheckEarlierUpdateConfig(t *testing.T) {
+	for name, text := range map[string]string{
+		"the current source":        goodUpdateConfig,
+		"the former source":         formerUpdateConfig,
+		"the former source, signed": formerUpdateConfig + "publisherName:\n  - CN=padmate\n",
+		"the former source, quoted": strings.Replace(formerUpdateConfig, "github", `"github"`, 1),
+	} {
+		if got := CheckEarlierUpdateConfig([]byte(text)); len(got) != 0 {
+			t.Errorf("%s: %v", name, got)
+		}
+	}
+	for name, c := range map[string]struct{ text, want string }{
+		"empty":                             {"", "provider"},
+		"another source":                    {strings.Replace(formerUpdateConfig, "github", "s3", 1), "provider"},
+		"the former source, no owner":       {strings.Replace(formerUpdateConfig, "owner: wdcyxxycdw\n", "", 1), "owner"},
+		"the former source, no repo":        {strings.Replace(formerUpdateConfig, "repo: padmate\n", "", 1), "repo"},
+		"the former source, another folder": {strings.Replace(formerUpdateConfig, "padmate-updater", "other", 1), "updaterCacheDirName"},
+		"the current source, another host":  {strings.Replace(goodUpdateConfig, "padmate.download", "example.com", 1), "url"},
+		"the current source, channel rc":    {strings.Replace(goodUpdateConfig, "channel: latest", "channel: rc", 1), "channel"},
+		"the current source, no folder":     {strings.Replace(goodUpdateConfig, "updaterCacheDirName: padmate-updater\n", "", 1), "updaterCacheDirName"},
+	} {
+		got := strings.Join(CheckEarlierUpdateConfig([]byte(c.text)), "\n")
+		if !strings.Contains(got, c.want) {
+			t.Errorf("%s: %q does not name %q", name, got, c.want)
+		}
+	}
+	// The check of the current build still refuses the former source.
+	if got := CheckUpdateConfig([]byte(formerUpdateConfig)); len(got) == 0 {
+		t.Error("a current build may not read GitHub")
+	}
+}
+
 func FuzzCheckUpdateConfig(f *testing.F) {
-	f.Add([]byte("provider: github\nowner: a\nrepo: b\nupdaterCacheDirName: padmate-updater\n"))
+	f.Add([]byte(goodUpdateConfig))
+	f.Add([]byte(formerUpdateConfig))
 	f.Add([]byte("\x00\xff:\n: \n"))
-	f.Fuzz(func(t *testing.T, data []byte) { _ = CheckUpdateConfig(data) })
+	f.Fuzz(func(t *testing.T, data []byte) {
+		strict, earlier := CheckUpdateConfig(data), CheckEarlierUpdateConfig(data)
+		// What the check of the current build accepts, the one of an earlier build accepts.
+		if len(strict) == 0 && len(earlier) != 0 {
+			t.Fatalf("%q passes the current check and fails the earlier one: %v", data, earlier)
+		}
+	})
 }
 
 // CheckTree reads the update parts of an installation: the main process in
@@ -128,7 +208,7 @@ func TestCheckTreeReadsTheUpdateParts(t *testing.T) {
 		}
 		return root
 	}
-	good := "provider: github\nowner: o\nrepo: r\nupdaterCacheDirName: padmate-updater\n"
+	good := goodUpdateConfig
 	problems := func(root string) string {
 		return strings.Join(CheckTree(context.Background(), TreeOptions{Root: root, Tag: tag}), "\n")
 	}
@@ -150,7 +230,7 @@ func TestCheckTreeReadsTheUpdateParts(t *testing.T) {
 		t.Errorf("a missing app-update.yml was not reported:\n%s", got)
 	}
 
-	got = problems(build(`require("fs")`, strings.Replace(good, "github", "generic", 1)))
+	got = problems(build(`require("fs")`, formerUpdateConfig))
 	if !strings.Contains(got, "resources/app-update.yml: provider") {
 		t.Errorf("another update source was not reported:\n%s", got)
 	}
@@ -196,7 +276,7 @@ func TestCheckTreeOfAReleaseBeforeTheUpdate(t *testing.T) {
 		t.Errorf("a bare require was not reported for a release before the update:\n%s", got)
 	}
 	// And a file that is there is still read.
-	if err := os.WriteFile(filepath.Join(root, "resources", "app-update.yml"), []byte("provider: generic\nowner: o\nrepo: r\nupdaterCacheDirName: padmate-updater\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "resources", "app-update.yml"), []byte(formerUpdateConfig), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if got := problems(root, true); !strings.Contains(got, "resources/app-update.yml: provider") {

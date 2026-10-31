@@ -37,6 +37,21 @@
   line-height: 1;
   white-space: nowrap;
 }
+/* A control's icon (ADR-0079 §7) is its own badge, without the disc, and is
+   drawn a little larger than the box: its artwork leaves a margin. An svg
+   that has only a viewBox has no size of its own. */
+.drawer-glyph[data-icon] {
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  --pad-icon-highlight: var(--accent);
+}
+.drawer-glyph > svg {
+  flex: none;
+  width: 46px;
+  height: 46px;
+}
 .drawer-glyph[data-shape="square"] {
   border-radius: 10px;
 }
@@ -836,6 +851,12 @@
 
 /* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
+  /* The lit arm of a d-pad icon is only a colour (ADR-0079 §7). */
+  .drawer-glyph[data-icon] > svg {
+    forced-color-adjust: none;
+    color: CanvasText;
+    --pad-icon-highlight: Highlight;
+  }
   .drawer-shortcut[data-active="true"] .drawer-capture,
   .drawer-step[data-active="true"] .drawer-step-row {
     outline: 2px solid Highlight;

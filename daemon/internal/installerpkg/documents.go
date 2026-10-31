@@ -15,7 +15,6 @@ import (
 // in the development repository, like the READMEs of the examples, which are
 // notes for developing them (docs/build-installer.md, "安装包带哪些文档").
 var UserDocuments = []string{
-	"docs/quickstart.md", "docs/quickstart.en.md",
 	"docs/known-limitations.md", "docs/known-limitations.en.md",
 	"docs/troubleshooting-input.md", "docs/troubleshooting-input.en.md",
 }

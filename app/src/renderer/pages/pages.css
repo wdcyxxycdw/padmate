@@ -720,6 +720,11 @@
   width: 40px;
   height: 40px;
 }
+.wizard-prompt .control-icon[data-kind="art"] {
+  width: 44px;
+  height: 44px;
+  margin: -2px;
+}
 .wizard-prompt-text {
   flex: 1;
   min-width: 0;

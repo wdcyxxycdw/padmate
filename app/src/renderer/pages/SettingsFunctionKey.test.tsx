@@ -65,24 +65,24 @@ describe("the keys to choose from", () => {
     ]);
   });
 
-  it("are drawn with the icon of the key preview: the symbol printed on the key, not a word (ADR-0077)", () => {
+  it("are drawn with the icon of the key preview: the symbol printed on the key, not a word (ADR-0077, ADR-0079 §7)", () => {
     const [menu, view, xbox] = functionKeyChoices({ type: "xboxone" });
-    expect(menu.icon).toEqual({ kind: "glyph", glyph: "menu" });
-    expect(view.icon).toEqual({ kind: "glyph", glyph: "view" });
-    expect(xbox.icon).toEqual({ kind: "glyph", glyph: "xbox" });
+    expect(menu.icon).toEqual({ kind: "art", name: "kenney/xbox_button_menu" });
+    expect(view.icon).toEqual({ kind: "art", name: "kenney/xbox_button_view" });
+    expect(xbox.icon).toEqual({ kind: "art", name: "kenney/xbox_guide" });
     expect(functionKeyChoices({ type: "ps5" }).map(({ icon }) => icon)).toEqual(
       [
-        { kind: "glyph", glyph: "menu" },
-        { kind: "glyph", glyph: "share" },
-        { kind: "glyph", glyph: "home" },
+        { kind: "art", name: "kenney/playstation5_button_options" },
+        { kind: "art", name: "kenney/playstation5_button_create" },
+        { kind: "art", name: "kenney/switch_button_home" },
       ],
     );
     expect(
       functionKeyChoices({ type: "switchpro" }).map(({ icon }) => icon),
     ).toEqual([
-      { kind: "glyph", glyph: "plus" },
-      { kind: "glyph", glyph: "minus" },
-      { kind: "glyph", glyph: "home" },
+      { kind: "art", name: "kenney/switch_button_plus" },
+      { kind: "art", name: "kenney/switch_button_minus" },
+      { kind: "art", name: "kenney/switch_button_home" },
     ]);
   });
 });
@@ -122,7 +122,7 @@ describe("the row of the setting", () => {
     for (const radio of radios()) {
       const icon = radio.querySelector(".control-icon");
       expect(icon?.getAttribute("aria-hidden")).toBe("true");
-      expect(icon?.getAttribute("data-kind")).toBe("glyph");
+      expect(icon?.getAttribute("data-kind")).toBe("art");
       expect(icon?.hasAttribute("data-label")).toBe(false);
     }
     expect(radios().map((radio) => radio.getAttribute("aria-checked"))).toEqual(

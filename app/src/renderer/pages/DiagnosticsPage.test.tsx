@@ -228,7 +228,7 @@ describe("the event list (UI-20, UI-21)", () => {
     // The key is drawn as the pad shows it; the name is read out only.
     expect(
       rows[0].querySelector(".control-icon")?.getAttribute("data-kind"),
-    ).toBe("face");
+    ).toBe("art");
     expect(rows[0].querySelector("time")?.getAttribute("datetime")).toMatch(
       /^2026-10-2[345]T/,
     );

@@ -1,0 +1,12 @@
+# The Worker of https://padmate.download/ (ADR-0078): the address itself
+# redirects to the newest installer; everything else on the site is R2.
+# Deploy by hand from this folder: npx wrangler@4.151.1 deploy
+#
+# The route is exactly the path /, not /*: /latest.yml, the installers and the
+# .sha256 files must reach R2 without this Worker, and the application's
+# updates read them.
+name = "padmate-download-root"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+routes = [{ pattern = "padmate.download/", zone_id = "b16bea1fc71bd289258d6e0abc088061" }]

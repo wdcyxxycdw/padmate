@@ -123,7 +123,7 @@ const api: PadmateAPI = {
   installUpdate: () => invoke("padmate:updateInstall"),
   dismissUpdate: (choice) => invoke("padmate:updateDismiss", choice),
   setAutoUpdate: (enabled) => invoke("padmate:updateAuto", enabled),
-  openReleasePage: () => invoke("padmate:updateReleasePage"),
+  openManualDownload: () => invoke("padmate:updateManualDownload"),
   onUpdateState: (listener) =>
     listen<UpdateState>("padmate:updateState", listener),
 };

@@ -54,7 +54,6 @@ export function guidePairs(): DocPair[] {
 export function userDocPairs(): DocPair[] {
   return [
     { zh: "README.md", en: "README.en.md" },
-    { zh: "docs/quickstart.md", en: "docs/quickstart.en.md" },
     { zh: "docs/known-limitations.md", en: "docs/known-limitations.en.md" },
     {
       zh: "docs/troubleshooting-input.md",

@@ -11,7 +11,7 @@ function fixture() {
     install: vi.fn(async () => ({ dryRun: false })),
     dismiss: vi.fn(async () => state),
     setAutoCheck: vi.fn(async () => state),
-    openReleasePage: vi.fn(async () => {}),
+    openManualDownload: vi.fn(async () => {}),
   };
   return { state, target, handlers: updateHandlers(target) };
 }
@@ -30,7 +30,7 @@ describe("update handlers (PKG-10)", () => {
       updateInstall: 0,
       updateDismiss: 1,
       updateAuto: 1,
-      updateReleasePage: 0,
+      updateManualDownload: 0,
     });
   });
 
@@ -42,12 +42,12 @@ describe("update handlers (PKG-10)", () => {
     await expect(handlers.updateInstall.run()).resolves.toEqual({
       dryRun: false,
     });
-    await handlers.updateReleasePage.run();
+    await handlers.updateManualDownload.run();
     // A press of the button is a manual check.
     expect(target.check).toHaveBeenCalledExactlyOnceWith(true);
     expect(target.download).toHaveBeenCalledOnce();
     expect(target.install).toHaveBeenCalledOnce();
-    expect(target.openReleasePage).toHaveBeenCalledWith();
+    expect(target.openManualDownload).toHaveBeenCalledWith();
   });
 
   it("passes the choice of the dialog and the switch, checked", async () => {
@@ -81,9 +81,9 @@ describe("update handlers (PKG-10)", () => {
     },
   );
 
-  it("takes no address: the release page is opened without arguments", () => {
+  it("takes no address: the download site is opened without arguments", () => {
     const { handlers } = fixture();
-    expect(handlers.updateReleasePage.count).toBe(0);
-    expect(handlers.updateReleasePage.run.length).toBe(0);
+    expect(handlers.updateManualDownload.count).toBe(0);
+    expect(handlers.updateManualDownload.run.length).toBe(0);
   });
 });

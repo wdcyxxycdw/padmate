@@ -835,7 +835,9 @@ describe("profile cards", () => {
       name: "编辑按键",
     }) as HTMLButtonElement;
     expect(edit.disabled).toBe(true);
+    // The tooltip says why; the name stays the label.
     expect(edit.title).toBe("配置文件有错误，无法打开");
+    expect(edit.getAttribute("aria-label")).toBe("编辑按键");
     openCardMenu("Photo");
     const item = (name: string) =>
       screen.getByRole("menuitem", { name }) as HTMLButtonElement;
@@ -1556,12 +1558,18 @@ describe("profile operations", () => {
   it("has the copy button beside 编辑按键 and none in the card's menu, in English too", async () => {
     await setup({ config: baseConfig, language: "en" });
     const card = cardOf("Photo");
-    expect(
-      within(card)
-        .getAllByRole("button")
-        .map((button) => button.textContent)
-        .slice(0, 2),
-    ).toEqual(["Edit keys", "Duplicate"]);
+    const [edit, copy] = within(card).getAllByRole("button");
+    // Both are icon buttons: the name is the label and the tooltip.
+    for (const [button, name] of [
+      [edit, "Edit keys"],
+      [copy, "Duplicate"],
+    ] as const) {
+      expect(button.getAttribute("aria-label")).toBe(name);
+      expect(button.getAttribute("title")).toBe(name);
+      expect(button.textContent).toBe("");
+      expect(button.className).toContain("icon-btn");
+      expect(button.querySelector("svg.ui-icon")).not.toBeNull();
+    }
     fireEvent.click(
       within(card).getByRole("button", { name: "More for “Photo”" }),
     );
@@ -1791,6 +1799,54 @@ describe("profile operations", () => {
     await waitFor(() => expect(openMapping).toHaveBeenCalledTimes(2));
     expect(editKeys).toHaveBeenCalledWith("photo");
     expect(api.activateProfile).toHaveBeenCalledWith("photo");
+  });
+
+  it("gives the two card buttons their names as icons, in Chinese", async () => {
+    await setup({ config: baseConfig });
+    const card = cardOf("Photo");
+    const edit = within(card).getByRole("button", { name: "编辑按键" });
+    const copy = within(card).getByRole("button", { name: "复制" });
+    expect(edit.title).toBe("编辑按键");
+    expect(copy.title).toBe("复制");
+    expect(edit.textContent).toBe("");
+    expect(copy.textContent).toBe("");
+    expect(edit.getAttribute("aria-busy")).toBeNull();
+  });
+
+  it("names the card's edit button 正在切换… and marks it busy while the card switches", async () => {
+    const { api, daemon, user } = await setup({ config: baseConfig });
+    let finish = () => {};
+    api.activateProfile.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () => {
+            daemon.active = "photo";
+            resolve({ profileId: "photo", generation: 2 });
+          };
+        }),
+    );
+    const photo = cardOf("Photo");
+    await user.click(within(photo).getByRole("button", { name: "编辑按键" }));
+    const busy = await within(photo).findByRole("button", {
+      name: "正在切换…",
+    });
+    expect(busy.title).toBe("正在切换…");
+    expect(busy.getAttribute("aria-busy")).toBe("true");
+    expect(busy.textContent).toBe("");
+    // No card opens its keys meanwhile, and only this one is busy.
+    const paint = within(cardOf("Paint")).getByRole("button", {
+      name: "编辑按键",
+    }) as HTMLButtonElement;
+    expect(paint.disabled).toBe(true);
+    expect(paint.getAttribute("aria-busy")).toBeNull();
+    finish();
+    await waitFor(() =>
+      expect(
+        within(photo)
+          .getByRole("button", { name: "编辑按键" })
+          .getAttribute("aria-busy"),
+      ).toBeNull(),
+    );
   });
 
   it("renames and deletes the profile in use without asking about edits", async () => {

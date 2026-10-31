@@ -88,6 +88,17 @@ tasks:
     cmds:
       - go test -count=1 -v -timeout 30m -run '^TestInstaller(Smoke|Wizard)$' ./internal/installersmoke
 
+  release:r2:
+    desc: "Publish VERSION=vX.Y.Z (a stable tag) to the download site https://padmate.download/ (Cloudflare R2, ADR-0078): the installer and its .sha256 of dist/installer, then latest.yml last, then read the site back. Run task package:installer first. The upload is wrangler (pinned) with the login of this machine; no credential is read from the repository. Refuses a prerelease, an installer that is on the site already, and a version that is not newer than the site's latest.yml. Windows; flags after --: --dry-run prints the plan and does nothing, --force skips the order check only, --dist DIR reads another folder"
+    dir: app
+    platforms: [windows]
+    preconditions:
+      # The public code mirror has no documentation to pack (docs/build-installer.md).
+      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
+        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
+    cmds:
+      - node scripts/publish-r2.mjs --version "{{.VERSION}}" {{.CLI_ARGS}}
+
   test:sign:
     desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (PKG-09, opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
     platforms: [windows]

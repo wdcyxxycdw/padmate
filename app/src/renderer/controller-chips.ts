@@ -4,6 +4,7 @@ import type {
   ProfileAction,
   ProfileBinding,
 } from "../shared/generated/schema";
+import { calloutOf, isStickPress, stickPress } from "./control-callout";
 import { analogControlPart } from "./control-parts";
 import {
   actionText,
@@ -99,13 +100,18 @@ const stickKeys = [
   "active",
 ];
 
-/** Profile binding key for a callout control. */
+/** Profile binding key for a callout control (or the press cell of a stick). */
 export function bindingKey(control: string): string {
   return control === "lefttrigger"
     ? "lt"
     : control === "righttrigger"
       ? "rt"
-      : control;
+      : calloutOf(control);
+}
+
+/** Whether a control is the movement of a stick (not its press cell). */
+function isStickMovement(control: string): boolean {
+  return control === "leftstick" || control === "rightstick";
 }
 
 /** The rings of a stick (ANA-10) and the second stage of a trigger (ANA-14). */
@@ -131,13 +137,17 @@ function rawKeys(control: string): string[] {
   return [];
 }
 
-/** Binding keys whose bindings and script registrations belong to a chip. */
+/**
+ * Binding keys whose bindings and script registrations belong to a chip. A
+ * stick is two chips: its press cell has the stick's own binding (L3/R3) and
+ * nothing else; its movement has the directions, rings, ticks and raw axes.
+ */
 export function relatedKeys(control: string): string[] {
+  if (isStickPress(control)) return [bindingKey(control)];
   const key = bindingKey(control);
-  if (control === "leftstick" || control === "rightstick") {
+  if (isStickMovement(control)) {
     const group = control === "leftstick" ? "ls" : "rs";
     return [
-      key,
       ...stickKeys.map((direction) => `${group}.${direction}`),
       ...stageKeys(control),
       `${group}.cw`,
@@ -335,16 +345,8 @@ function describeStick(
   names: ActionNames,
 ): Description | undefined {
   const group = control === "leftstick" ? "ls" : "rs";
-  const click = describeBinding(
-    baseBinding(profile, control),
-    language,
-    names,
-    tx(language, "按下摇杆", "Click"),
-  );
-  const clickSegments = click ? [click.segment, ...click.extras] : [];
-  const stages = stageSegments(profile, control, language, names);
-  const extras = [...clickSegments, ...stages];
-  const clickOnly = click && { ...click, extras: [...click.extras, ...stages] };
+  // The click is the press cell's (its own chip): this is the movement only.
+  const extras = stageSegments(profile, control, language, names);
   // A stick that moves the pointer sends no key (MOU-01): the chip says so,
   // and direction keys or ticks left in the file are not its summary.
   if (profile.analog?.[group]?.mode === "mouse") {
@@ -362,7 +364,8 @@ function describeStick(
     const ticks = [`${group}.cw`, `${group}.ccw`].flatMap((key) =>
       primary(baseBinding(profile, key)),
     );
-    if (!ticks.length) return clickOnly;
+    // Nothing to name: the rings and raw axes lead (describeRaw).
+    if (!ticks.length) return undefined;
     const chords = ticks.flatMap((action) =>
       action.type === "keys" && !Array.isArray(action.keys)
         ? [action.keys]
@@ -386,7 +389,7 @@ function describeStick(
     (direction) =>
       usedGestures(baseBinding(profile, `${group}.${direction}`)).length > 0,
   );
-  if (!bound) return clickOnly;
+  if (!bound) return undefined;
   const primaries = directions.flatMap(primary);
   const chords = primaries.flatMap((action) =>
     action.type === "keys" && !Array.isArray(action.keys) ? [action.keys] : [],
@@ -549,16 +552,23 @@ export function controllerChips({
     : tx(language, "由脚本接管", "Handled by a script");
   const names: ActionNames = { actions, profiles, missing };
   const result: Record<string, ChipInfo> = {};
-  for (const control of controls) {
+  // A stick has a chip for its movement and one for its press.
+  const chipControls = controls.flatMap((control) =>
+    isStickMovement(control) ? [control, stickPress(control)] : [control],
+  );
+  for (const control of chipControls) {
     // The function key switches sets and holds no bindings (ADR-0075).
     if (isFunctionKey(control, functionKey)) {
       result[control] = functionKeyChip(language);
       continue;
     }
+    const movement = isStickMovement(control);
     const key = bindingKey(control);
     const keys = relatedKeys(control);
-    const physical = labels[control] ?? control;
-    const renamed = profile?.controlNames?.[key]?.trim() || undefined;
+    const physical = labels[control] ?? labels[calloutOf(control)] ?? control;
+    // The key name is the press cell's (the stick binding's), not the movement's.
+    const renamed =
+      (!movement && profile?.controlNames?.[key]?.trim()) || undefined;
     const name = renamed ?? physical;
     // registrationsFor keeps only the base layer and global registrations.
     const owners = keys.flatMap(
@@ -576,8 +586,14 @@ export function controllerChips({
       continue;
     }
     const bindings = keys.map((related) => baseBinding(profile, related));
-    const binding = bindings[0];
-    const label = binding.label?.trim() || undefined;
+    // The movement of a stick has no binding of its own to label or block;
+    // its name is the stick's (analog.ls.label, ADR-0079 §8).
+    const binding: ProfileBinding = movement ? {} : bindings[0];
+    const label = movement
+      ? profile.analog?.[
+          control === "leftstick" ? "ls" : "rs"
+        ]?.label?.trim() || undefined
+      : binding.label?.trim() || undefined;
     // Blocks, layer actions and profile switches are only editable in the file.
     const locked = bindings.some(
       (related) =>
@@ -586,10 +602,9 @@ export function controllerChips({
           isFileOnlyAction(related[gesture]),
         ),
     );
-    const main =
-      control === "leftstick" || control === "rightstick"
-        ? describeStick(profile, control, language, names)
-        : describeBinding(binding, language, names);
+    const main = movement
+      ? describeStick(profile, control, language, names)
+      : describeBinding(binding, language, names);
     // A trigger's second stage follows its first (ANA-14).
     const description =
       (main && (control === "lefttrigger" || control === "righttrigger")

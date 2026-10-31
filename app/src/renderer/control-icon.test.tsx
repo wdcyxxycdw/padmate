@@ -14,240 +14,141 @@ const icon = (control: string, type: string, buttonMask?: number) =>
   );
 
 describe("control icons of the key preview (UI-44)", () => {
-  it("draws face buttons the way each family prints them", () => {
-    // Xbox: coloured letters.
+  it("draws a control the icon sets have with its icon (ADR-0079 §7)", () => {
+    // The table of which icon is in pad-icon.test.tsx; here, that it is used.
     expect(icon("south", "xboxone")).toEqual({
-      kind: "face",
-      text: "A",
-      color: "green",
-    });
-    expect(icon("east", "xbox360")).toEqual({
-      kind: "face",
-      text: "B",
-      color: "red",
-    });
-    expect(icon("west", "xboxone")).toMatchObject({ text: "X", color: "blue" });
-    expect(icon("north", "xboxone")).toMatchObject({
-      text: "Y",
-      color: "yellow",
-    });
-    // PlayStation: the four symbols, drawn.
-    expect(icon("south", "ps5")).toEqual({
-      kind: "symbol",
-      shape: "cross",
-      color: "blue",
-    });
-    expect(icon("east", "ps4")).toEqual({
-      kind: "symbol",
-      shape: "circle",
-      color: "red",
+      kind: "art",
+      name: "kenney/xbox_button_a",
+      face: "green",
     });
     expect(icon("west", "ps5")).toEqual({
-      kind: "symbol",
-      shape: "square",
-      color: "pink",
+      kind: "art",
+      name: "kenney/playstation_button_square",
+      face: "pink",
     });
-    expect(icon("north", "ps3")).toEqual({
-      kind: "symbol",
-      shape: "triangle",
-      color: "green",
+    expect(icon("south", "switchpro")).toEqual({
+      kind: "art",
+      name: "kenney/switch_button_b",
     });
-    // Nintendo: the letters where Nintendo puts them, one colour.
-    expect(icon("south", "switchpro")).toEqual({ kind: "face", text: "B" });
-    expect(icon("east", "switchpro")).toEqual({ kind: "face", text: "A" });
-    // A single Joy-Con held sideways, or a pad without letters: where the
-    // button is among the four.
-    expect(icon("west", "joyconleft", 0xf)).toEqual({
-      kind: "position",
-      position: "west",
+    expect(icon("dpad.up", "xboxone")).toEqual({
+      kind: "art",
+      name: "kenney/xbox_dpad_up",
     });
-    expect(icon("north", "unknown")).toEqual({
-      kind: "position",
-      position: "north",
+    expect(icon("leftstick", "xboxone")).toEqual({
+      kind: "art",
+      name: "kenney/xbox_stick_l_press",
+    });
+    expect(icon("ls.active", "xboxone")).toEqual({
+      kind: "art",
+      name: "promptfont/analog-l-lrud",
+    });
+    expect(icon("rt", "ps5")).toEqual({
+      kind: "art",
+      name: "kenney/playstation_trigger_r2",
+    });
+    expect(icon("back", "xboxone")).toEqual({
+      kind: "art",
+      name: "kenney/xbox_button_view",
     });
   });
 
-  it("draws the D-pad as a cross with the pressed arm lit", () => {
-    expect(icon("dpad.up", "xboxone")).toEqual({
-      kind: "dpad",
-      arms: ["up"],
-    });
+  it("keeps padmate's own drawing, or the name, where the icon sets have none", () => {
+    // The diagonals of the D-pad: the cross with two arms lit.
     expect(icon("dpad.downleft", "ps5")).toEqual({
       kind: "dpad",
       arms: ["down", "left"],
     });
-  });
-
-  it("draws sticks as a circle, with an arrow for a direction", () => {
-    expect(icon("leftstick", "xboxone")).toEqual({ kind: "stick", side: "L" });
-    expect(icon("rightstick", "ps5")).toEqual({ kind: "stick", side: "R" });
-    expect(icon("ls.up", "xboxone")).toEqual({
-      kind: "stick",
-      side: "L",
-      direction: "up",
-    });
+    // A stick's diagonals and push stages: the stick, with an arrow if any.
     expect(icon("rs.downright", "xboxone")).toEqual({
       kind: "stick",
       side: "R",
       direction: "downright",
     });
-    expect(icon("ls.active", "xboxone")).toEqual({
+    expect(icon("ls.inner", "ps5")).toEqual({
       kind: "stick",
       side: "L",
-      direction: "active",
+      direction: "inner",
     });
-    // A ring or knob tick is the stick, pushed, with no arrow to draw.
-    expect(icon("rs.cw", "xboxone")).toEqual({
-      kind: "stick",
-      side: "R",
-      direction: "cw",
+    // Capture: a Nintendo pad's, or a left Joy-Con's held sideways.
+    expect(icon("misc1", "switchpro")).toEqual({
+      kind: "glyph",
+      glyph: "capture",
     });
-    // Raw half axes: y grows downwards.
-    expect(icon("lefty-", "xboxone")).toEqual({
-      kind: "stick",
-      side: "L",
-      direction: "up",
+    expect(icon("guide", "joyconleft", 0xf)).toEqual({
+      kind: "glyph",
+      glyph: "capture",
     });
-    expect(icon("rightx+", "xboxone")).toEqual({
-      kind: "stick",
-      side: "R",
-      direction: "right",
-    });
-  });
-
-  it("puts shoulders, triggers and system buttons on badges", () => {
-    expect(icon("leftshoulder", "xboxone")).toEqual({
-      kind: "badge",
-      text: "LB",
-    });
-    expect(icon("rt", "ps5")).toEqual({ kind: "badge", text: "R2" });
-    expect(icon("lt", "switchpro")).toEqual({ kind: "badge", text: "ZL" });
-    expect(icon("lefttrigger+", "xboxone")).toEqual({
-      kind: "badge",
-      text: "LT",
-    });
-    expect(icon("rightshoulder", "joyconright", 0xf)).toEqual({
-      kind: "badge",
-      text: "SR",
-    });
-    // The back buttons and the extra buttons have names of their own, as
-    // the tray names them, never padmate's position names.
-    expect(icon("paddle1", "xboxone")).toEqual({
-      kind: "badge",
-      text: "背键 1",
-    });
-    expect(icon("paddle4", "ps5")).toEqual({ kind: "badge", text: "左 Fn" });
-    expect(icon("misc1", "ps5")).toEqual({ kind: "badge", text: "Mute" });
+    // The extra buttons and a Joy-Con pair's side buttons have names of
+    // their own, as the tray names them, never padmate's position names.
     expect(icon("misc2", "xboxone")).toEqual({
       kind: "badge",
       text: "附加键 2",
     });
-    // A single Joy-Con held upright reports SL and SR as paddles.
-    expect(icon("paddle2", "joyconleft", 2)).toEqual({
+    expect(icon("paddle1", "joyconpair")).toEqual({
       kind: "badge",
-      text: "SL",
+      text: "右 SR",
     });
-    expect(icon("paddle1", "joyconright", 2)).toEqual({
-      kind: "badge",
-      text: "SR",
-    });
-    // A control nobody names keeps its name.
-    expect(icon("bogus", "xboxone")).toEqual({ kind: "badge", text: "bogus" });
-  });
-
-  it("draws the system buttons with the symbol printed on them, not a word", () => {
-    const glyph = (control: string, type: string, buttonMask?: number) => {
-      const spec = icon(control, type, buttonMask);
-      return spec.kind === "glyph" ? spec.glyph : spec;
-    };
-    // Xbox One and Series: View, Menu, the Xbox button and Share.
-    expect(glyph("back", "xboxone")).toBe("view");
-    expect(glyph("start", "xboxone")).toBe("menu");
-    expect(glyph("guide", "xboxone")).toBe("xbox");
-    expect(glyph("misc1", "xboxone")).toBe("upload");
-    // Xbox 360: the arrows of Back and Start.
-    expect(glyph("back", "xbox360")).toBe("back");
-    expect(glyph("start", "xbox360")).toBe("start");
-    // PlayStation: Create and Share, Options, the PS button; Select is a bar.
-    expect(glyph("back", "ps5")).toBe("share");
-    expect(glyph("back", "ps4")).toBe("share");
-    expect(glyph("back", "ps3")).toBe("select");
-    expect(glyph("start", "ps5")).toBe("menu");
-    expect(glyph("start", "ps3")).toBe("start");
-    expect(glyph("guide", "ps5")).toBe("home");
-    // Nintendo: −, +, Home and Capture.
-    expect(glyph("back", "switchpro")).toBe("minus");
-    expect(glyph("start", "switchpro")).toBe("plus");
-    expect(glyph("guide", "switchpro")).toBe("home");
-    expect(glyph("misc1", "switchpro")).toBe("capture");
-    // A single Joy-Con held sideways: − or +, and Capture or Home.
-    expect(glyph("start", "joyconleft", 0xf)).toBe("minus");
-    expect(glyph("guide", "joyconleft", 0xf)).toBe("capture");
-    expect(glyph("start", "joyconright", 0xf)).toBe("plus");
-    expect(glyph("guide", "joyconright", 0xf)).toBe("home");
-    // Any other pad: Back, Start and Home.
-    expect(glyph("back", "unknown")).toBe("back");
-    expect(glyph("start", "unknown")).toBe("start");
-    expect(glyph("guide", "unknown")).toBe("home");
-    // A name SDL reports that has no symbol here stays a word.
+    // A name SDL reports that neither set prints stays a word; so does a
+    // trigger's, and a control nobody names keeps its own.
     expect(controlIcon("start", "generic", { start: "Plus Menu" })).toEqual({
       kind: "badge",
       text: "Plus Menu",
     });
+    expect(controlIcon("lt", "generic", { lefttrigger: "TL" })).toEqual({
+      kind: "badge",
+      text: "TL",
+    });
+    expect(icon("bogus", "xboxone")).toEqual({ kind: "badge", text: "bogus" });
   });
 
-  it("draws a symbol on a disc, without text", () => {
-    const { container } = render(
-      <>
-        <ControlIcon icon={icon("start", "xboxone")} />
-        <ControlIcon icon={icon("back", "xboxone")} />
-      </>,
-    );
-    const [menu, view] = [...container.querySelectorAll(".control-icon")];
-    expect(menu.getAttribute("data-kind")).toBe("glyph");
-    expect(menu.getAttribute("data-glyph")).toBe("menu");
-    expect(menu.hasAttribute("data-label")).toBe(false);
-    expect(menu.querySelector("svg .control-icon-disc")).not.toBeNull();
-    expect(menu.querySelectorAll("svg .control-icon-glyph")).not.toHaveLength(
-      0,
-    );
-    expect(view.getAttribute("data-glyph")).toBe("view");
-    expect(container.textContent).toBe("");
-    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}|rgb/i);
-  });
-
-  it("draws inline SVG in theme colours, hidden from screen readers and without text", () => {
+  it("draws an icon in theme colours, hidden from screen readers and without text", () => {
     const { container } = render(
       <>
         <ControlIcon icon={icon("south", "xboxone")} />
-        <ControlIcon icon={icon("west", "ps5")} />
-        <ControlIcon icon={icon("dpad.left", "xboxone")} />
-        <ControlIcon icon={icon("ls.right", "xboxone")} />
-        <ControlIcon icon={icon("north", "joyconleft", 0xf)} />
-        <ControlIcon icon={icon("leftshoulder", "xboxone")} />
+        <ControlIcon icon={icon("dpad.left", "ps4")} />
+      </>,
+    );
+    const [face, dpad] = [...container.querySelectorAll(".control-icon")];
+    expect(face.getAttribute("data-kind")).toBe("art");
+    expect(face.getAttribute("data-face")).toBe("green");
+    expect(face.getAttribute("aria-hidden")).toBe("true");
+    expect(face.querySelector("svg")?.getAttribute("data-pad-icon")).toBe(
+      "kenney/xbox_button_a",
+    );
+    expect(dpad.hasAttribute("data-face")).toBe(false);
+    expect(dpad.querySelector("svg")?.getAttribute("data-pad-icon")).toBe(
+      "kenney/playstation_dpad_left",
+    );
+    expect(container.textContent).toBe("");
+    // Colours come from the theme: no fixed colour in the markup.
+    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}\b|rgb/i);
+  });
+
+  it("draws its own shapes in theme colours, letters from CSS, without text", () => {
+    const { container } = render(
+      <>
+        <ControlIcon icon={icon("dpad.upright", "xboxone")} />
+        <ControlIcon icon={icon("ls.upleft", "xboxone")} />
+        <ControlIcon icon={icon("misc1", "switchpro")} />
+        <ControlIcon icon={icon("misc2", "xboxone")} />
       </>,
     );
     const icons = [...container.querySelectorAll(".control-icon")];
-    expect(icons).toHaveLength(6);
+    expect(icons).toHaveLength(4);
     for (const element of icons)
       expect(element.getAttribute("aria-hidden")).toBe("true");
-    const [face, symbol, dpad, stick, position, badge] = icons;
-    expect(face.getAttribute("data-face")).toBe("green");
-    expect(face.getAttribute("data-label")).toBe("A");
-    expect(face.querySelector("svg circle")).not.toBeNull();
-    expect(symbol.getAttribute("data-face")).toBe("pink");
-    expect(symbol.querySelector("svg rect")).not.toBeNull();
-    // The lit arm and the others.
-    expect(dpad.querySelectorAll('[data-lit="true"]')).toHaveLength(1);
-    expect(dpad.querySelectorAll('[data-lit="false"]')).toHaveLength(3);
+    const [dpad, stick, capture, badge] = icons;
+    // The lit arms and the others.
+    expect(dpad.querySelectorAll('[data-lit="true"]')).toHaveLength(2);
+    expect(dpad.querySelectorAll('[data-lit="false"]')).toHaveLength(2);
     expect(stick.getAttribute("data-label")).toBe("L");
     expect(stick.querySelectorAll(".control-icon-arrow")).toHaveLength(1);
-    expect(position.querySelectorAll('[data-lit="true"]')).toHaveLength(1);
-    expect(badge.getAttribute("data-label")).toBe("LB");
+    expect(capture.getAttribute("data-glyph")).toBe("capture");
+    expect(capture.querySelector("svg .control-icon-disc")).not.toBeNull();
+    expect(badge.getAttribute("data-label")).toBe("附加键 2");
     expect(badge.querySelector("svg")).toBeNull();
     // Letters come from CSS, so the line's text is only the spoken name.
     expect(container.textContent).toBe("");
-    // Colours come from the theme: no fixed colour in the markup.
-    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}|rgb/i);
+    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}\b|rgb/i);
   });
 });

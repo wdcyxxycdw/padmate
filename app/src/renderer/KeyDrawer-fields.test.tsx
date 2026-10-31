@@ -57,9 +57,9 @@ function commit(field: Element, init: { target: { value: string } }) {
   fireEvent.blur(field);
 }
 
-/** 添加下一步: opens the menu and picks the kind of the new step. */
+/** 增加动作序列: opens the menu and picks the kind of the new step. */
 function addStep(kind: "快捷键" | "等待" = "快捷键") {
-  fireEvent.click(screen.getByRole("button", { name: "添加下一步" }));
+  fireEvent.click(screen.getByRole("button", { name: "增加动作序列" }));
   fireEvent.click(screen.getByRole("menuitem", { name: kind }));
 }
 
@@ -468,7 +468,7 @@ it("moves focus to the previous step when a step is removed", () => {
   );
 });
 
-it("moves focus to 添加映射 when a mapping card is removed", () => {
+it("moves focus to 添加其他动作 when a mapping card is removed", () => {
   captureAPI();
   render(
     <Draft

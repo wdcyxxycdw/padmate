@@ -19,6 +19,7 @@ import type {
 import type { Profile } from "../shared/generated/schema";
 import { fakeCapture, shortcutValue } from "./capture-fixture";
 import { editorAPIFixture } from "./editor-api-fixture";
+import { baseBinding } from "./editor-model";
 import { createEditorStore, type EditorStore } from "./editor-store";
 import { KeyDrawer } from "./KeyDrawer";
 import { controlDiagnostics } from "./KeyDrawerNotices";
@@ -240,7 +241,7 @@ it("edits the label shown on the controller and drops it when emptied", async ()
 it("adds a mapping from the menu as a draft and removes it again", async () => {
   const { editor, record } = await setup();
   fireEvent.click(screen.getByTestId("add-gesture"));
-  const menu = screen.getByRole("menu", { name: "添加映射" });
+  const menu = screen.getByRole("menu", { name: "添加其他动作" });
   expect(within(menu).queryByRole("menuitem", { name: /^点按/ })).toBeNull();
   fireEvent.click(within(menu).getByRole("menuitem", { name: /^长按/ }));
   // The new mapping opens alone and is not in the draft until it is set.
@@ -766,7 +767,7 @@ it("does not suggest a mapping for a key the script owns", async () => {
   expect(screen.getByTestId("script-ownership").textContent).toBe("S");
   expect(screen.getByText("此按键的输入先由脚本处理。")).toBeDefined();
   expect(screen.queryByRole("group", { name: "快捷键" })).toBeNull();
-  // Only 添加映射 is there, with no sentence about it.
+  // Only 添加其他动作 is there, with no sentence about it.
   expect(screen.queryByRole("button", { name: /^点按/ })).toBeNull();
   expect(screen.getByTestId("add-gesture")).toBeDefined();
   expect(document.querySelector(".drawer-empty")).toBeNull();
@@ -990,10 +991,205 @@ it("edits trigger gestures on lt with trigger settings in their own section", as
 it("names d-pad directions and sticks in the header", async () => {
   const { rerender } = await setup(paint, "dpad.left");
   expect(screen.getByRole("heading", { name: "十字键 ←" })).toBeDefined();
-  expect(screen.getByText("十字键设置")).toBeDefined();
+  // The D-pad has no settings of its own: its four directions are keys.
+  expect(screen.queryByText("十字键设置")).toBeNull();
+  // A stick is two drawers: its movement, and its press (a key like any other).
   rerender("leftstick");
-  expect(screen.getByRole("heading", { name: "左摇杆" })).toBeDefined();
+  expect(screen.getByRole("heading", { name: "左摇杆 旋转" })).toBeDefined();
   expect(screen.queryByRole("button", { name: "按键操作" })).toBeNull();
+  rerender("leftstick.press");
+  expect(screen.getByRole("heading", { name: "左摇杆 点按" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "按键操作" })).toBeDefined();
+  rerender("rightstick.press");
+  expect(screen.getByRole("heading", { name: "右摇杆 点按" })).toBeDefined();
+  rerender("rightstick");
+  expect(screen.getByRole("heading", { name: "右摇杆 旋转" })).toBeDefined();
+});
+
+it("shows the control's icon in the header, or its name where there is none (ADR-0079 §7)", async () => {
+  const { rerender } = await setup(paint, "north");
+  const glyph = () =>
+    document.querySelector(".drawer-header .drawer-glyph") as HTMLElement;
+  const art = () =>
+    glyph().querySelector("svg")?.getAttribute("data-pad-icon") ?? null;
+  // Y in its printed colour.
+  expect(art()).toBe("kenney/xbox_button_y");
+  expect(glyph().getAttribute("aria-hidden")).toBe("true");
+  expect(glyph().dataset.icon).toBe("true");
+  expect(glyph().style.color).not.toBe("");
+  rerender("dpad.left");
+  expect(art()).toBe("kenney/xbox_dpad_left");
+  rerender("lt");
+  expect(art()).toBe("kenney/xbox_lt");
+  // A stick's two drawers: the stick turning, and its click.
+  rerender("leftstick");
+  expect(art()).toBe("promptfont/analog-l-cl");
+  rerender("rightstick.press");
+  expect(art()).toBe("kenney/xbox_stick_r_press");
+  rerender("back");
+  expect(art()).toBe("kenney/xbox_button_view");
+  // A button the icon sets do not draw keeps its printed name.
+  rerender("misc2");
+  expect(art()).toBeNull();
+  expect(glyph().dataset.icon).toBeUndefined();
+  expect(glyph().textContent).toBe("附加键 2");
+});
+
+it("names the stick's drawers in English", async () => {
+  const { rerender } = await setup(paint, "leftstick", "en");
+  expect(
+    screen.getByRole("heading", { name: "Left stick · Move" }),
+  ).toBeDefined();
+  rerender("leftstick.press");
+  expect(
+    screen.getByRole("heading", { name: "Left stick · Press" }),
+  ).toBeDefined();
+});
+
+it("edits the stick's press as an ordinary key: label, mappings, key name and menu", async () => {
+  const { editor, record } = await setup(
+    {
+      ...paint,
+      controlNames: { leftstick: "吸管" },
+      layers: {
+        base: {
+          ...paint.layers.base,
+          // The alias is the same key.
+          l3: { label: "取色", press: { type: "keys", keys: "Alt" } },
+        },
+      },
+    },
+    "leftstick.press",
+  );
+  // The key name is what the chip and the drawer are called.
+  expect(screen.getByRole("heading", { name: "吸管" })).toBeDefined();
+  const label = screen.getByRole("textbox", { name: "功能" });
+  expect((label as HTMLInputElement).value).toBe("取色");
+  expect(shortcutValue()).toBe("Alt");
+  // The movement's settings are not here.
+  expect(screen.queryByRole("region", { name: "摇杆设置" })).toBeNull();
+  expect(screen.queryByText("方向模式")).toBeNull();
+  commit(label, { target: { value: "吸色" } });
+  const click = () =>
+    baseBinding(editor.getState().draft as Profile, "leftstick");
+  expect(click().label).toBe("吸色");
+  await record("F6");
+  expect(click().press).toEqual({ type: "keys", keys: "F6" });
+  // Renaming the key writes the name of the stick binding.
+  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
+  const name = screen.getByRole("textbox", { name: "按键名称" });
+  commit(name, { target: { value: "画笔大小" } });
+  expect(editor.getState().draft?.controlNames?.leftstick).toBe("画笔大小");
+  // The key menu is there, as for any key.
+  fireEvent.click(screen.getByTestId("key-actions"));
+  const menu = await screen.findByRole("menu", { name: "按键操作" });
+  expect(
+    within(menu)
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent),
+  ).toEqual(["复制此按键的设置", "粘贴…", "重命名按键…", "清空此按键…"]);
+});
+
+it("starts the stick's press afresh after the key was cleared and the other cell was visited", async () => {
+  const cards = () =>
+    [...document.querySelectorAll(".drawer-gesture-head")].map(
+      (head) => head.querySelector(".drawer-gesture-name")?.textContent,
+    );
+  const { editor, rerender } = await setup(
+    {
+      ...paint,
+      layers: {
+        base: {
+          ...paint.layers.base,
+          leftstick: { press: { type: "keys", keys: "Alt" } },
+        },
+      },
+    },
+    "leftstick.press",
+  );
+  expect(cards()).toEqual(["点按"]);
+  fireEvent.click(screen.getByRole("button", { name: "按键操作" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "清空此按键…" }));
+  fireEvent.click(screen.getByRole("button", { name: "清空" }));
+  expect(base(editor)?.leftstick).toBeUndefined();
+  // The cleared key has no empty 点按 ...
+  expect(cards()).toEqual([]);
+  // ... and visiting the stick's other cell and coming back starts it afresh,
+  // as opening any other key would: both cells edit the same binding.
+  rerender("leftstick");
+  rerender("leftstick.press");
+  expect(cards()).toEqual(["点按"]);
+});
+
+it("has no press row or rename in the stick's movement drawer, and its 功能 names the movement", async () => {
+  const { editor } = await setup(
+    {
+      ...paint,
+      controlNames: { leftstick: "吸管" },
+      layers: {
+        base: {
+          "ls.up": { press: { type: "keys", keys: "W" } },
+          leftstick: { label: "取色", press: { type: "keys", keys: "Alt" } },
+        },
+      },
+    },
+    "leftstick",
+  );
+  expect(screen.queryByText("按下摇杆")).toBeNull();
+  expect(screen.queryByRole("button", { name: "重命名此按键" })).toBeNull();
+  // 功能 is the movement's name (analog.ls.label, ADR-0079 §8), not the
+  // click's label; empty, it shows what the label is called without one.
+  const name = screen.getByRole("textbox", {
+    name: "功能",
+  }) as HTMLInputElement;
+  expect(name.value).toBe("");
+  expect(name.placeholder).toBe("方向键");
+  commit(name, { target: { value: "  画笔大小 " } });
+  const draft = () => editor.getState().draft;
+  expect(draft()?.analog?.ls).toEqual({ label: "画笔大小" });
+  // A name is not a setting of the stick: no mode is written with it, and
+  // the click keeps its own label.
+  expect(base(editor)?.leftstick?.label).toBe("取色");
+  commit(name, { target: { value: "" } });
+  expect(draft()?.analog?.ls).toEqual({});
+  // The key name of the click is not the movement's title.
+  expect(screen.getByRole("heading", { name: "左摇杆 旋转" })).toBeDefined();
+  expect(screen.getByRole("region", { name: "摇杆设置" })).toBeDefined();
+  expect(
+    document.querySelector('.analog-row[data-control="leftstick"]'),
+  ).toBeNull();
+});
+
+it("keeps what the stick drawers show apart: the script tag, the notice and the problems", async () => {
+  const problem = (pointer: string, message: string) => ({
+    severity: "error" as const,
+    pointer,
+    offset: 1,
+    line: 1,
+    col: 1,
+    message,
+  });
+  const diagnostics = [
+    problem("/layers/base/leftstick/press/keys", "bad click"),
+    problem("/controlNames/leftstick", "bad name"),
+    problem("/layers/base/ls.outer/press/keys", "bad ring"),
+    problem("/analog/ls/deadzone", "bad deadzone"),
+  ];
+  const shown = () =>
+    screen
+      .queryAllByTestId("control-diagnostic")
+      .map((item) => item.textContent);
+  const { editor, rerender } = await setup(paint, "leftstick");
+  act(() => editor.setState({ diagnostics }));
+  expect(shown()).toEqual([
+    "错误 · 重推 点按：bad ring",
+    "错误 · 摇杆设置：bad deadzone",
+  ]);
+  rerender("leftstick.press");
+  expect(shown()).toEqual([
+    "错误 · 点按：bad click",
+    "错误 · 按键名称：bad name",
+  ]);
 });
 
 it("shows why the profile did not load instead of the not-a-library text", async () => {
@@ -1296,6 +1492,23 @@ it("counts the second stage's script with the trigger's (ANA-14)", async () => {
   expect(
     full?.querySelector('[data-testid="analog-script-ownership"]'),
   ).not.toBeNull();
+});
+
+it("tags each stick drawer with the script of its own keys", async () => {
+  const { editor, rerender } = await setup(paint, "leftstick");
+  act(() =>
+    editor.setState({
+      registrations: [registration(1, "ls.up"), registration(2, "rs.up")],
+    }),
+  );
+  // The direction is the movement's: the press is not script-handled.
+  expect(document.querySelector(".drawer-script-chip")).not.toBeNull();
+  rerender("leftstick.press");
+  expect(document.querySelector(".drawer-script-chip")).toBeNull();
+  act(() => editor.setState({ registrations: [registration(3, "leftstick")] }));
+  expect(document.querySelector(".drawer-script-chip")).not.toBeNull();
+  rerender("leftstick");
+  expect(document.querySelector(".drawer-script-chip")).toBeNull();
 });
 
 it("lists the validation results of the second stage and the rings with their drawer", async () => {

@@ -200,6 +200,7 @@ export function BindingsListDialog({
               <span className="bindings-control">
                 <ControlIcon
                   icon={controlIcon(functionKey, family, {
+                    ...labels,
                     [functionKey]: fixedName,
                   })}
                 />

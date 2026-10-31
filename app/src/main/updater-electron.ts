@@ -2,11 +2,9 @@ import { mkdirSync } from "node:fs";
 import { NsisUpdater, type ProgressInfo } from "electron-updater";
 import type { LogRing } from "./log-ring";
 import {
-  isNoReleaseError,
-  NO_RELEASE_CODE,
   redirectUpdaterHome,
-  UPDATE_OWNER,
-  UPDATE_REPO,
+  UPDATE_CHANNEL,
+  UPDATE_URL,
 } from "./update-config";
 import type { UpdaterLike } from "./update-controller";
 
@@ -34,10 +32,15 @@ export interface ElectronUpdaterOptions {
 const SHARED_STAGING_ID = "00000000-0000-0000-0000-000000000000";
 
 /**
- * The installed application's updater (PKG-10, ADR-0073): the releases of the
- * repository in update-config.ts, a silent NSIS install, and nothing happens
- * unless the person says so (UpdateController decides). GitHub sees the
- * address and a User-Agent of padmate and its version; no other data is sent.
+ * The installed application's updater (PKG-10, ADR-0078): latest.yml and the
+ * installer of the download site in update-config.ts, a silent NSIS install,
+ * and nothing happens unless the person says so (UpdateController decides).
+ * The site sees the address and a User-Agent of padmate and its version; no
+ * other data is sent.
+ *
+ * The provider, the address and the channel are given here, not read from
+ * resources\app-update.yml, which supplies only the folder of the downloads.
+ * The test mode differs in the address alone: its own feed on this machine.
  */
 export function createElectronUpdater(
   options: ElectronUpdaterOptions,
@@ -50,11 +53,11 @@ export function createElectronUpdater(
       recursive: true,
     });
   }
-  const updater = new NsisUpdater(
-    options.packagedTest && options.feed
-      ? { provider: "generic", url: options.feed }
-      : { provider: "github", owner: UPDATE_OWNER, repo: UPDATE_REPO },
-  );
+  const updater = new NsisUpdater({
+    provider: "generic",
+    url: options.packagedTest && options.feed ? options.feed : UPDATE_URL,
+    channel: UPDATE_CHANNEL,
+  });
   updater.logger = options.log;
   // Nothing downloads or installs by itself. autoInstallOnAppQuit would run
   // the installer when the window is closed, which stops the mapping while
@@ -76,20 +79,8 @@ export function createElectronUpdater(
   });
 
   return {
-    async check(allowPrerelease) {
-      updater.allowPrerelease = allowPrerelease;
-      let result: Awaited<ReturnType<typeof updater.checkForUpdates>>;
-      try {
-        result = await updater.checkForUpdates();
-      } catch (error) {
-        // Only the look at the releases can find there are none; for a
-        // look among the prereleases the same text is a failure.
-        if (!allowPrerelease && isNoReleaseError(error))
-          throw Object.assign(new Error("No release is published"), {
-            code: NO_RELEASE_CODE,
-          });
-        throw error;
-      }
+    async check() {
+      const result = await updater.checkForUpdates();
       // null: the updater is inactive (the application is not installed).
       if (!result) throw new Error("The updater is not active");
       return result.isUpdateAvailable ? result.updateInfo.version : null;

@@ -1,5 +1,8 @@
 # What electron-builder 26.17.0 really writes for the nsis target with the
 # github provider: no size, no blockMapSize (measured on a build, PKG-10).
+# The generic provider of the download site (ADR-0078) goes through the same
+# createUpdateInfo and writes the same shape (read in app-builder-lib 26.17.0,
+# not measured again): only the github provider rewrites the url of the entry.
 version: 0.0.0-m28b.1
 files:
   - url: padmate-v0.0.0-m28b.1-windows-amd64-setup.exe

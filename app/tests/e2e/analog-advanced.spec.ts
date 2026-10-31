@@ -127,6 +127,11 @@ test("a knob is set up with its step and ticks, and turning the stick sends a ti
 
     await panel.locator('.analog-row[data-control="rs.cw"]').click();
     const cw = panel.getByRole("region", { name: "顺时针一格", exact: true });
+    // A step is one shortcut: no mappings, sequence or script (ADR-0079 §8).
+    for (const name of ["添加其他动作", "增加动作序列", "脚本"])
+      await expect(cw.getByRole("button", { name, exact: true })).toHaveCount(
+        0,
+      );
     await recordShortcut(
       app,
       cw.getByRole("group", { name: "快捷键", exact: true }),
@@ -151,6 +156,21 @@ test("a knob is set up with its step and ticks, and turning the stick sends a ti
     );
     // The rest of the file was left as it was.
     expect((await onDisk(live)).layers.base["ls.right"].press.keys).toBe("F18");
+    // 功能 names the movement: in analog.rs.label, and on its label.
+    const name = page
+      .getByTestId("mapping-editor")
+      .getByRole("textbox", { name: "功能", exact: true });
+    await name.fill("画笔大小");
+    await name.press("Enter");
+    await expectOnDisk(
+      page,
+      live,
+      (file) => file.analog?.rs?.label,
+      "画笔大小",
+    );
+    await expect(
+      page.locator('button[data-callout="rightstick"] .stage-chip-title'),
+    ).toHaveText("画笔大小");
     await expect(page.getByTestId("editor-notice")).toHaveCount(0);
 
     // Turning the stick a quarter turn sends one clockwise tick.
@@ -197,6 +217,12 @@ test("the rings are bound and set, and the hard push sends its key", async ({}, 
     const live = client;
     await openControl(page, "leftstick");
     const panel = page.getByRole("region", { name: "摇杆设置", exact: true });
+    // The file has the engine's standard mode: the drawer shows it as 四方向,
+    // and opening it writes nothing.
+    await expect(
+      panel.getByRole("radio", { name: "四方向", exact: true }),
+    ).toHaveAttribute("aria-checked", "true");
+    expect((await onDisk(live)).analog.ls.mode).toBe("standard");
     await panel.getByTestId("stick-advanced").locator("summary").click();
 
     await panel.locator('.analog-row[data-control="ls.outer"]').click();
@@ -232,9 +258,9 @@ test("the rings are bound and set, and the hard push sends its key", async ({}, 
       ],
       ["F23", "F24", 0.8],
     );
-    // The setting of the dead zone and the directions is as it was.
+    // The first edit wrote the mode the drawer shows; the dead zone is as it was.
     expect((await onDisk(live)).analog.ls).toMatchObject({
-      mode: "standard",
+      mode: "fourWay",
       deadzone: 0.6,
     });
 

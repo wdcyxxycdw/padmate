@@ -62,8 +62,9 @@ describe("3D controller component", () => {
       "button[data-callout]",
     );
     // The function key (Menu by default) is tagged, not a button (ADR-0075).
-    expect(buttons).toHaveLength(16);
-    expect(container.querySelectorAll("[data-callout]")).toHaveLength(17);
+    // Each stick is two buttons, its movement and its press.
+    expect(buttons).toHaveLength(18);
+    expect(container.querySelectorAll("[data-callout]")).toHaveLength(19);
     const controls = [
       "south",
       "east",
@@ -73,6 +74,10 @@ describe("3D controller component", () => {
       "dpad.down",
       "dpad.left",
       "dpad.right",
+      "leftstick",
+      "leftstick.press",
+      "rightstick",
+      "rightstick.press",
     ];
     for (const control of controls) {
       const button = container.querySelector<HTMLButtonElement>(
@@ -390,6 +395,13 @@ describe("3D controller component", () => {
         title: "Pan",
         detail: [{ chords: ["Up", "Down", "Left", "Right"] }],
       }),
+      "leftstick.press": chip({
+        title: "Eyedropper",
+        detail: [{ keys: "Alt" }],
+        scriptOwned: true,
+        state: "script",
+      }),
+      "rightstick.press": chip({ title: "Locked", state: "locked" }),
       guide: chip({ title: "Not set", state: "unbound" }),
       back: chip({ title: "Blocked", state: "locked" }),
       lefttrigger: chip({
@@ -425,7 +437,18 @@ describe("3D controller component", () => {
     expect(
       button("B · E").querySelector(".stage-chip-title kbd")?.textContent,
     ).toBe("E");
-    expect(button("LS · Pan").querySelectorAll("kbd")).toHaveLength(4);
+    expect(button("LS Move · Pan").querySelectorAll("kbd")).toHaveLength(4);
+    // A stick's press is its own button, with its own state and marks.
+    const press = button("LS Press · Eyedropper");
+    expect(press.getAttribute("data-callout")).toBe("leftstick.press");
+    expect(press.getAttribute("data-state")).toBe("script");
+    expect(within(press).getByTestId("script-ownership").textContent).toBe("S");
+    expect(
+      within(button("LS Move · Pan")).queryByTestId("script-ownership"),
+    ).toBeNull();
+    const locked = button("RS Press · Locked");
+    expect(locked.querySelector(".stage-chip-lock")).not.toBeNull();
+    expect(locked.title).toContain("Only editable in the file");
     expect(button("Xbox · Not set").getAttribute("data-state")).toBe("unbound");
     const back = button("View · Blocked");
     expect(back.querySelector(".stage-chip-lock")).not.toBeNull();
@@ -469,12 +492,12 @@ describe("3D controller component", () => {
     const parts = (element: Element | null) =>
       [...(element?.children ?? [])].map((child) => child.textContent);
     expect(
-      parts(button("RS · Knob").querySelector(".stage-chip-detail")),
+      parts(button("RS Move · Knob").querySelector(".stage-chip-detail")),
     ).toEqual(["]", "/", "["]);
     expect(
-      button("RS · Knob").querySelectorAll(".stage-chip-detail kbd"),
+      button("RS Move · Knob").querySelectorAll(".stage-chip-detail kbd"),
     ).toHaveLength(2);
-    const title = button("LS · ] / [").querySelector(".stage-chip-title");
+    const title = button("LS Move · ] / [").querySelector(".stage-chip-title");
     expect(parts(title)).toEqual(["]", "/", "["]);
     expect(title?.querySelectorAll("kbd")).toHaveLength(2);
     expect(
@@ -497,7 +520,18 @@ describe("3D controller component", () => {
     expect(placement("rightshoulder")).toEqual(["top", "right"]);
     expect(placement("guide")).toEqual(["top", null]);
     expect(placement("dpad.left")).toEqual(["left", null]);
-    expect(placement("rightstick")).toEqual(["right", null]);
+    // A stick is one chip of two cells, which sits in its column.
+    const stick = (control: string) =>
+      container.querySelector<HTMLElement>(`[data-callout-group="${control}"]`);
+    expect(stick("rightstick")?.getAttribute("data-placement")).toBe("right");
+    expect(stick("leftstick")?.getAttribute("data-placement")).toBe("left");
+    expect(stick("rightstick")?.style.getPropertyValue("--span")).toBe("2");
+    expect(stick("rightstick")?.style.getPropertyValue("--slot")).toBe("6");
+    for (const control of ["leftstick", "leftstick.press"])
+      expect(
+        stick("leftstick")?.querySelector(`[data-callout="${control}"]`),
+        control,
+      ).not.toBeNull();
     expect(container.querySelector(".controller-heading")).toBeNull();
     expect(container.querySelector(".controller-hint")?.textContent).toBe(
       "点击标签即可编辑对应按键 · 按下手柄按键时，对应标签会亮起",
@@ -513,6 +547,44 @@ describe("3D controller component", () => {
         .querySelector('[data-callout="south"] .stage-glyph')
         ?.getAttribute("data-face"),
     ).toBe("ps-blue");
+  });
+
+  it("draws each chip's control with its icon (ADR-0079 §7)", () => {
+    const { container, rerender } = render(
+      <Controller info={info} t={translator("zh-CN")} />,
+    );
+    const glyph = (control: string) =>
+      container.querySelector<HTMLElement>(
+        `[data-callout="${control}"] .stage-glyph`,
+      );
+    const art = (control: string) =>
+      glyph(control)?.querySelector("svg")?.getAttribute("data-pad-icon");
+    expect(art("south")).toBe("kenney/xbox_button_a");
+    expect(glyph("south")?.dataset.icon).toBe("true");
+    expect(glyph("south")?.dataset.face).toBe("green");
+    expect(glyph("south")?.textContent).toBe("");
+    expect(art("leftshoulder")).toBe("kenney/xbox_lb");
+    expect(art("righttrigger")).toBe("kenney/xbox_rt");
+    expect(art("dpad.up")).toBe("kenney/xbox_dpad_up");
+    expect(art("back")).toBe("kenney/xbox_button_view");
+    expect(art("guide")).toBe("kenney/xbox_guide");
+    // A stick's two cells: the stick turning both ways, and its click.
+    expect(art("leftstick")).toBe("promptfont/analog-l-cl");
+    expect(art("leftstick.press")).toBe("kenney/xbox_stick_l_press");
+    expect(art("rightstick")).toBe("promptfont/analog-r-cl");
+    rerender(
+      <Controller info={{ ...info, type: "ps5" }} t={translator("en")} />,
+    );
+    expect(art("south")).toBe("kenney/playstation_button_cross");
+    expect(art("touchpad")).toBe("kenney/playstation5_touchpad");
+    expect(art("rightstick.press")).toBe("kenney/playstation_stick_r_press");
+    rerender(
+      <Controller info={{ ...info, type: "switchpro" }} t={translator("en")} />,
+    );
+    expect(art("east")).toBe("kenney/switch_button_a");
+    expect(art("lefttrigger")).toBe("kenney/switch_button_zl");
+    expect(art("start")).toBe("kenney/switch_button_plus");
+    expect(art("leftstick.press")).toBe("kenney/switch_stick_l_press");
   });
 
   it("keeps chip lines inline so a shortcut that does not fit ends in an ellipsis", () => {
@@ -577,13 +649,15 @@ describe("3D controller component", () => {
       container
         .querySelector(`button[data-callout="${control}"]`)
         ?.getAttribute("data-active");
-    // Drift stays dark; a real push lights the chip like a pressed button.
+    // Drift stays dark; a real push lights the movement cell, and only it.
     expect(active("leftstick")).toBe("false");
     expect(active("rightstick")).toBe("true");
+    expect(active("rightstick.press")).toBe("false");
     // The chip shows no percentage for a stick; that is the trigger's.
     expect(
       container.querySelector('[data-callout="rightstick"] .stage-chip-pct'),
     ).toBeNull();
+    // The click lights the press cell, not the movement.
     rerender(
       <Controller
         info={info}
@@ -591,10 +665,123 @@ describe("3D controller component", () => {
         input={{ buttons: { leftstick: true }, axes: {} }}
       />,
     );
-    expect(active("leftstick")).toBe("true");
+    expect(active("leftstick.press")).toBe("true");
+    expect(active("leftstick")).toBe("false");
     expect(active("rightstick")).toBe("false");
+    expect(active("rightstick.press")).toBe("false");
     rerender(<Controller info={info} t={translator("en")} />);
     expect(active("leftstick")).toBe("false");
+    expect(active("leftstick.press")).toBe("false");
+  });
+
+  it("names the two cells of a stick, and selects them apart", () => {
+    const select = vi.fn();
+    const menu = vi.fn();
+    const { container, rerender } = render(
+      <Controller
+        info={info}
+        t={translator("en")}
+        language="en"
+        onSelectControl={select}
+        onMenuControl={menu}
+        selectedControl="leftstick.press"
+        chips={{
+          leftstick: chip({ title: "Direction keys" }),
+          "leftstick.press": chip({ title: "Not set", state: "unbound" }),
+        }}
+      />,
+    );
+    const move = screen.getByRole("button", {
+      name: "LS Move · Direction keys",
+    });
+    const press = screen.getByRole("button", { name: "LS Press · Not set" });
+    expect(move.getAttribute("aria-pressed")).toBe("false");
+    expect(press.getAttribute("aria-pressed")).toBe("true");
+    expect(move.getAttribute("data-callout")).toBe("leftstick");
+    expect(press.getAttribute("data-callout")).toBe("leftstick.press");
+    expect(press.getAttribute("data-state")).toBe("unbound");
+    // The top cell is the movement, the bottom the press.
+    expect(move.nextElementSibling).toBe(press);
+    // Without chip data they are still named after the stick.
+    expect(screen.getByRole("button", { name: "RS Move · RS" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "RS Press · RS" })).toBeDefined();
+    // A click selects the cell, a right click selects it and asks for its menu.
+    fireEvent.click(move);
+    expect(select).toHaveBeenLastCalledWith("leftstick");
+    expect(menu).not.toHaveBeenCalled();
+    expect(fireEvent.contextMenu(press)).toBe(false);
+    expect(select).toHaveBeenLastCalledWith("leftstick.press");
+    expect(menu).toHaveBeenCalledWith("leftstick.press");
+    // Only one of the 18 buttons is pressed at a time.
+    expect(
+      container.querySelectorAll('button[aria-pressed="true"]'),
+    ).toHaveLength(1);
+    rerender(
+      <Controller
+        info={info}
+        t={translator("zh-CN")}
+        language="zh-CN"
+        selectedControl="leftstick"
+        chips={{ leftstick: chip({ title: "方向键" }) }}
+      />,
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "LS 旋转 · 方向键" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(screen.getByRole("button", { name: "LS 点按 · LS" })).toBeDefined();
+  });
+
+  it("calls the click L3 on a PlayStation pad", () => {
+    render(
+      <Controller
+        info={{ ...info, type: "ps5" }}
+        t={translator("zh-CN")}
+        language="zh-CN"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "LS 旋转 · L3" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "L3 点按 · L3" })).toBeDefined();
+  });
+
+  it("leaves the stick's leader to both cells, dashed only when both are unset", () => {
+    vi.stubGlobal("WebGL2RenderingContext", class {});
+    const update = vi.fn();
+    vi.spyOn(scenes, "createControllerScene").mockReturnValue({
+      update,
+      dispose: vi.fn(),
+    });
+    const unset = (title: string) => chip({ title, state: "unbound" });
+    const { rerender } = render(
+      <Controller
+        info={info}
+        t={translator("en")}
+        selectedControl="leftstick.press"
+        chips={{
+          leftstick: unset("Not set"),
+          "leftstick.press": chip({ title: "Tab" }),
+        }}
+      />,
+    );
+    // One cell is set: the leader is solid. Either cell selects the leader.
+    expect(update).toHaveBeenLastCalledWith(undefined, "leftstick", []);
+    rerender(
+      <Controller
+        info={info}
+        t={translator("en")}
+        selectedControl="rightstick"
+        chips={{
+          leftstick: unset("Not set"),
+          "leftstick.press": unset("Not set"),
+          rightstick: unset("Not set"),
+          "rightstick.press": chip({ title: "Tab" }),
+        }}
+      />,
+    );
+    expect(update).toHaveBeenLastCalledWith(undefined, "rightstick", [
+      "leftstick",
+    ]);
   });
 
   it("passes unset controls to the scene so their leaders are dashed", () => {

@@ -88,12 +88,19 @@ describe("how electron-updater is held (PKG-10, ADR-0073)", () => {
     expect(adapter).not.toMatch(/\.channel\s*=/);
     expect(adapter).not.toContain("forceDevUpdateConfig");
     expect(adapter).not.toContain("setFeedURL");
-    expect(adapter).toContain(
-      '{ provider: "github", owner: UPDATE_OWNER, repo: UPDATE_REPO }',
+    // One source for both modes, given by code and not read from
+    // app-update.yml: the download site, and the channel written down
+    // (electron-builder would name it after the prerelease part of the version).
+    expect(adapter).toMatch(
+      /new NsisUpdater\(\{\s*provider: "generic",\s*url: options\.packagedTest && options\.feed \? options\.feed : UPDATE_URL,\s*channel: UPDATE_CHANNEL,\s*\}\);/,
     );
+    // No look among the prereleases, and nothing of the GitHub provider.
+    expect(adapter).not.toContain("allowPrerelease");
+    expect(adapter).not.toContain('provider: "github"');
+    expect(adapter).not.toMatch(/\bcheck\(\w+\)/);
   });
 
-  it("sends GitHub the address and padmate's name and version, and nothing that tells one person from another", () => {
+  it("sends the download site the address and padmate's name and version, and nothing that tells one person from another", () => {
     const adapter = source("./updater-electron.ts");
     // biome-ignore lint/suspicious/noTemplateCurlyInString: the text of the source file
     expect(adapter).toContain('"User-Agent": `padmate/${options.version}`');
@@ -114,7 +121,7 @@ describe("how electron-updater is held (PKG-10, ADR-0073)", () => {
       "src/main/runtime-options.ts",
     ]);
     expect(adapter).toMatch(
-      /options\.packagedTest && options\.feed\s*\? \{ provider: "generic", url: options\.feed \}/,
+      /options\.packagedTest && options\.feed \? options\.feed : UPDATE_URL/,
     );
     expect(adapter).not.toMatch(/process\.env\.PADMATE/);
   });
@@ -135,9 +142,9 @@ describe("how the update code is wired into Main", () => {
     expect(wiring).toContain("rearm: () => host.closeGuard.rearm(),");
   });
 
-  it("opens only release pages, through the controller; the window opens none", () => {
+  it("opens only the download site, through the controller; the window opens none", () => {
     expect(wiring).toMatch(
-      /openExternal: \(url\) => \{\s*if \(!isReleasePageURL\(url\)\) throw new Error\("Not a release page"\);\s*return shell\.openExternal\(url\);/,
+      /openExternal: \(url\) => \{\s*if \(!isManualDownloadURL\(url\)\)\s*throw new Error\("Not the download address"\);\s*return shell\.openExternal\(url\);/,
     );
     // The other place that opens an address is the one Windows Settings page
     // of the Xbox button's notice (system-settings.ts, UI-30): the handler
@@ -197,7 +204,7 @@ describe("the channels of the window's side of the update", () => {
       'installUpdate: () => invoke("padmate:updateInstall"),',
       'dismissUpdate: (choice) => invoke("padmate:updateDismiss", choice),',
       'setAutoUpdate: (enabled) => invoke("padmate:updateAuto", enabled),',
-      'openReleasePage: () => invoke("padmate:updateReleasePage"),',
+      'openManualDownload: () => invoke("padmate:updateManualDownload"),',
       'listen<UpdateState>("padmate:updateState", listener),',
     ])
       expect(preload).toContain(channel);
@@ -215,7 +222,7 @@ describe("the channels of the window's side of the update", () => {
         install: unused,
         dismiss: unused,
         setAutoCheck: unused,
-        openReleasePage: async () => {},
+        openManualDownload: async () => {},
       }),
     );
     expect(names).toHaveLength(7);
@@ -231,7 +238,7 @@ describe("the channels of the window's side of the update", () => {
       "installUpdate(): Promise<UpdateInstallResult>;",
       "dismissUpdate(choice: UpdateDismissal): Promise<UpdateState>;",
       "setAutoUpdate(enabled: boolean): Promise<UpdateState>;",
-      "openReleasePage(): Promise<void>;",
+      "openManualDownload(): Promise<void>;",
       "onUpdateState(listener: (state: UpdateState) => void): () => void;",
     ])
       expect(api).toContain(signature);

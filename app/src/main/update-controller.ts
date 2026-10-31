@@ -9,9 +9,7 @@ import {
   CHECK_INTERVAL_MS,
   compareVersions,
   FIRST_CHECK_MS,
-  hasPrerelease,
-  NO_RELEASE_CODE,
-  releasePageURL,
+  UPDATE_URL,
   validVersion,
 } from "./update-config";
 import type { UpdateSettings } from "./update-settings";
@@ -25,11 +23,10 @@ export const CHECK_TIMEOUT_MS = 90_000;
  */
 export interface UpdaterLike {
   /**
-   * Looks for a version above the running one. allowPrerelease looks among
-   * the prereleases too. Resolves the version found, null when there is
-   * none, and rejects when it could not look.
+   * Looks for a version above the running one, once. Resolves the version
+   * found, null when there is none, and rejects when it could not look.
    */
-  check(allowPrerelease: boolean): Promise<string | null>;
+  check(): Promise<string | null>;
   /** Downloads and verifies the version the last check found. */
   download(onProgress: (percent: number) => void): Promise<void>;
   /**
@@ -70,7 +67,7 @@ export interface UpdateControllerDeps {
   currentVersion: string;
   /** False in a development build: nothing is checked. */
   supported: boolean;
-  /** Opens an address in the browser; the controller only passes it ones it built. */
+  /** Opens an address in the browser; the controller only passes it the download site's. */
   openExternal: (url: string) => Promise<void> | void;
   /**
    * Lets the window finish its saves before the application quits: the
@@ -195,7 +192,7 @@ export class UpdateController {
     let found: string | null = null;
     let failure: unknown;
     try {
-      found = await this.find();
+      found = await this.ask();
     } catch (error) {
       failure = error;
     }
@@ -223,62 +220,14 @@ export class UpdateController {
   }
 
   /**
-   * The version to offer, or null. electron-updater follows the channel of
-   * the running version, so a release candidate (1.0.0-rc.1) is shown the
-   * newer candidates and never the release (1.0.0) with them: it looks among
-   * the prereleases and then at the releases, and offers the higher of the
-   * two. (One that only looked at the releases when it found no candidate
-   * would be walked through rc.2 first, and one that skipped rc.2 would
-   * never be offered 1.0.0.)
-   *
-   * The second look failing is a failed check, as the first one failing is,
-   * with two exceptions: a version found by the other look is still
-   * offered, and "the repository has no release yet" (NO_RELEASE_CODE: only
-   * candidates are published until 1.0.0) is "nothing newer".
+   * The one look of a check: a checked version above the running one, or
+   * null. The download site holds releases only, and one latest.yml that
+   * every build reads (ADR-0078): a release candidate (1.0.3-rc.1) is not
+   * shown newer candidates, and is offered the release when that is higher,
+   * which is the same look as for a release. A site without latest.yml is a
+   * failure of the check, not "nothing newer".
    */
-  private async find(): Promise<string | null> {
-    const { currentVersion } = this.deps;
-    if (!hasPrerelease(currentVersion)) return this.ask(false);
-    let among: string | null = null;
-    let amongError: unknown;
-    try {
-      among = await this.ask(true);
-    } catch (error) {
-      amongError = error;
-    }
-    let release: string | null = null;
-    let releaseError: unknown;
-    try {
-      release = await this.ask(false);
-    } catch (error) {
-      if (codeOf(error) !== NO_RELEASE_CODE) releaseError = error;
-    }
-    if (release !== null) {
-      if (among === null || compareVersions(release, among) >= 0)
-        return release;
-      // The candidate is ahead of the release (1.1.0-rc.1 against 1.0.0).
-      // electron-updater downloads what its last look found, and that was
-      // the release: look among the prereleases again.
-      return this.askAgain(among);
-    }
-    if (among !== null) return among;
-    if (amongError !== undefined) throw amongError;
-    if (releaseError !== undefined) throw releaseError;
-    return null;
-  }
-
-  /** The look among the prereleases once more, which has to say the same. */
-  private async askAgain(expected: string): Promise<string> {
-    const again = await this.ask(true);
-    if (again !== expected)
-      throw Object.assign(new Error("The check changed its answer"), {
-        code: "ERR_UPDATE_CHANGED",
-      });
-    return expected;
-  }
-
-  /** One look: a checked version above the running one, or null. */
-  private async ask(allowPrerelease: boolean): Promise<string | null> {
+  private async ask(): Promise<string | null> {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(
@@ -293,10 +242,7 @@ export class UpdateController {
     });
     let answer: string | null;
     try {
-      answer = await Promise.race([
-        this.deps.updater.check(allowPrerelease),
-        timeout,
-      ]);
+      answer = await Promise.race([this.deps.updater.check(), timeout]);
     } finally {
       clearTimeout(timer);
     }
@@ -414,9 +360,13 @@ export class UpdateController {
     return this.getState();
   }
 
-  /** The page of the version, or of all releases; the address is built here. */
-  async openReleasePage(): Promise<void> {
-    await this.deps.openExternal(releasePageURL(this.version));
+  /**
+   * 手动下载: the download site, which starts the download of the newest
+   * installer in the browser. The address is the constant, whatever the feed
+   * said.
+   */
+  async openManualDownload(): Promise<void> {
+    await this.deps.openExternal(UPDATE_URL);
   }
 
   private async persist(

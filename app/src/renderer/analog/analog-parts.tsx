@@ -15,7 +15,7 @@ import type {
   ProfileTiming,
   ProfileTrigger,
 } from "../../shared/generated/schema";
-import { BindingFields } from "../BindingEditor";
+import { BindingFields, SingleShortcutField } from "../BindingEditor";
 import {
   actionText,
   isFileOnlyAction,
@@ -429,7 +429,7 @@ export interface BindingEditorProps {
 }
 
 /**
- * The expanded editor of one direction, stage or stick click. Under a row
+ * The expanded editor of one direction, stage or tick. Under a row
  * (`compact`) the row already names it and collapses it, so no header.
  * `disabled` (a read-only profile) keeps the gesture cards expandable for
  * reading and disables only what edits the binding.
@@ -563,7 +563,48 @@ export function BindingCard({
   );
 }
 
-/** A full-width row that opens one binding, e.g. 按下摇杆. */
+/**
+ * The expanded editor of a knob step (ADR-0079 §8): one shortcut, sent once
+ * per step. The row above names it and collapses it.
+ */
+export function TickCard({
+  id,
+  title,
+  control,
+  binding,
+  onChange,
+  language,
+  disabled = false,
+}: {
+  id: string;
+  title: string;
+  control: string;
+  binding: ProfileBinding;
+  onChange: (binding: ProfileBinding | undefined) => void;
+  language: Language;
+  disabled?: boolean;
+}) {
+  return (
+    <section
+      id={id}
+      className="analog-card"
+      aria-label={title}
+      data-control={control}
+    >
+      <div className="analog-card-body">
+        <SingleShortcutField
+          key={control}
+          value={binding}
+          onChange={onChange}
+          language={language}
+          disabled={disabled}
+        />
+      </div>
+    </section>
+  );
+}
+
+/** A full-width row that opens one binding, e.g. 朝任意方向推动. */
 export function BindingRow({
   title,
   hint,

@@ -11,7 +11,6 @@ import type { ProfileEntry, ScriptRegistration } from "../../shared/api";
 import type {
   Profile,
   ProfileBinding,
-  ProfileDpad,
   ProfileStick,
   ProfileTiming,
   ProfileTrigger,
@@ -20,7 +19,6 @@ import { axisPosition } from "../controller-model";
 import { baseBinding, canonicalControl, setBaseBinding } from "../editor-model";
 import type { EditOptions } from "../editor-store";
 import type { Language, PadInput } from "../store";
-import { useCommitField } from "../ui/commit-field";
 import { Disclosure, Segmented, Switch } from "../ui/controls";
 import { Keycaps } from "../ui/Keycaps";
 import {
@@ -32,8 +30,6 @@ import {
   combinedDirection,
   convertToFullPull,
   type Direction,
-  dpadDefaults,
-  dpadDirections,
   fromPercent,
   fullControl,
   knobControls,
@@ -47,7 +43,11 @@ import {
   type StickReading,
   setAnalogSettings,
   setAxisThreshold,
+  settleStickMode,
+  shownStickMode,
   stickDefaults,
+  stickLabel,
+  stickParameters,
   stickReading,
   toPercent,
   triggerDefaults,
@@ -66,6 +66,7 @@ import {
   SettingField,
   SettingRow,
   SliderField,
+  TickCard,
   tx,
 } from "./analog-parts";
 import {
@@ -84,7 +85,10 @@ import "./analog-editor.css";
  */
 export interface AnalogPanelProps {
   profile: Profile;
-  /** Callout control: leftstick, rightstick, lefttrigger, righttrigger or dpad.* */
+  /**
+   * Callout control: leftstick or rightstick (the movement; the press is a
+   * key drawer of its own), lefttrigger, righttrigger or dpad.*
+   */
   control: string;
   onChange: (profile: Profile, options?: EditOptions) => void;
   input?: PadInput;
@@ -114,7 +118,6 @@ export interface AnalogPanelProps {
 }
 
 type StickMode = NonNullable<ProfileStick["mode"]>;
-type DpadMode = NonNullable<ProfileDpad["mode"]>;
 
 const diagonalGrid: Direction[] = [
   "upleft",
@@ -122,12 +125,6 @@ const diagonalGrid: Direction[] = [
   "downleft",
   "downright",
 ];
-/** Grid order: the cardinals as in the design, then the corners spatially. */
-function gridDirections(mode: string): Direction[] {
-  if (mode === "fourWayDiagonal") return diagonalGrid;
-  if (mode === "eightWay") return [...cardinalDirections, ...diagonalGrid];
-  return [...cardinalDirections];
-}
 const allDirections: Direction[] = [...cardinalDirections, ...diagonalGrid];
 
 /** The response curves a stick or trigger offers (ANA-13). */
@@ -245,7 +242,10 @@ function useParamsMenu(host: RefObject<HTMLElement | null>, menuRequest = 0) {
   };
 }
 
-/** Whole drawer body for a stick: settings, directions and the stick click. */
+/**
+ * Whole drawer body for a stick's movement: settings and directions. The
+ * click of the stick is its own drawer, an ordinary key (leftstick.press).
+ */
 export function StickPanel(props: AnalogPanelProps) {
   const group = analogGroup(props.control);
   if (group !== "ls" && group !== "rs") return null;
@@ -273,7 +273,6 @@ function StickBody({
     group === "ls"
       ? t("左摇杆", "the left stick")
       : t("右摇杆", "the right stick");
-  const clickControl = `${side}stick`;
   const activeControl = `${group}.active`;
   const rawControls: string[] = rawStickControls(group);
   const directionControlsAll = allDirections.map(
@@ -291,6 +290,9 @@ function StickBody({
   ];
   const stored = profile.analog?.[group];
   const stick = { ...stickDefaults, ...stored };
+  // A stick without a mode shows as four directions, the offered mode it
+  // acts like; the first edit saved from here writes it (see emit).
+  const shown = shownStickMode(stick.mode);
   const knob = stick.mode === "knob";
   // The stick moves the pointer (MOU-01): no directions and no ticks.
   const mouse = stick.mode === "mouse";
@@ -309,21 +311,23 @@ function StickBody({
   }, [control]);
   const [preset, setPreset] = useState<AnalogPreset | null>(null);
 
+  // Every edit this drawer saves goes through here: the first one also writes
+  // the mode the drawer shows (four directions), so that what the stick does
+  // is what the drawer says. Opening the drawer writes nothing.
+  const emit = (next: Profile, options?: EditOptions) =>
+    onChange(settleStickMode(next, group), options);
   const update = (patch: ProfileStick, options?: EditOptions) =>
-    onChange(
-      setAnalogSettings(profile, group, { ...stored, ...patch }),
-      options,
-    );
+    emit(setAnalogSettings(profile, group, { ...stored, ...patch }), options);
   // The tick of a knob step (HUD-10): off leaves no key in the file.
   const setKnobTick = (on: boolean) => {
     const next: ProfileStick = { ...stored };
     if (on) next.knobTick = true;
     else delete next.knobTick;
-    onChange(setAnalogSettings(profile, group, next));
+    emit(setAnalogSettings(profile, group, next));
   };
   const bindingFor = (key: string) => baseBinding(profile, key);
   const setBinding = (key: string) => (binding: ProfileBinding | undefined) =>
-    onChange(setBaseBinding(profile, key, binding));
+    emit(setBaseBinding(profile, key, binding));
   const toggle = (key: string) => setExpanded(expanded === key ? null : key);
   const expandedDirection = allDirections.find(
     (direction) => `${group}.${direction}` === expanded,
@@ -342,12 +346,12 @@ function StickBody({
   const reading = stickReading(x, y, stick, (direction) =>
     isBound(bindingFor(`${group}.${direction}`)),
   );
-  const directions = directional ? gridDirections(stick.mode) : [];
-  const hidden = allDirections.filter(
-    (direction) =>
-      !directions.includes(direction) &&
-      isBound(bindingFor(`${group}.${direction}`)),
-  );
+  // Only the four directions are edited here. A file in a mode the drawer no
+  // longer offers keeps its other keys, and they are not called unused when
+  // the mode does send them.
+  const directions: readonly Direction[] = directional
+    ? cardinalDirections
+    : [];
   const raw = rawThreshold(profile);
   const rawValue: Record<string, number> = {
     [`${side}x+`]: x,
@@ -388,35 +392,28 @@ function StickBody({
             : t("未到触发幅度", "below trigger point");
   const percent = Math.round(reading.magnitude * 100);
 
-  // The pointer mode has none: its settings below say what it does.
+  // The pointer mode has none: its settings below say what it does. The two
+  // modes the drawer no longer offers say what the file has, as none of the
+  // choices is selected then.
   const modeCaption: Partial<Record<StickMode, string>> = {
-    standard: t(
-      "斜推时，相邻的两个方向键同时按下。",
-      "Pushing diagonally presses both neighboring directions.",
-    ),
-    eightWay: t(
-      "斜推时发送单独的斜向按键，共 8 个方向。",
-      "Diagonals send their own keys, for eight directions in all.",
-    ),
     fourWay: t(
       "只按下最接近的一个方向，斜推时也不会同时按下两个方向。",
       "Only the nearest direction is pressed, even on diagonals.",
     ),
+    eightWay: t(
+      "文件里是 8 方向：斜推时发送单独的斜向按键。选上面的一项会替换它。",
+      "This file uses 8 directions: diagonals send their own keys. Choosing an option above replaces it.",
+    ),
     fourWayDiagonal: t(
-      "仅有 4 个斜向，推向哪个角即按下对应的斜向。",
-      "Only the four diagonals: the nearest corner is pressed.",
+      "文件里是只有斜向：只发送 4 个斜向的按键，下面上下左右的按键不会发送。选上面的一项会替换它。",
+      "This file uses diagonals only: just the four diagonal keys are sent, not the up, right, down and left keys below. Choosing an option above replaces it.",
     ),
     knob: t(
       "当作旋钮：每转过设定的角度发一次顺时针或逆时针按键，不发方向键。",
       "Used as a knob: each turn of the set angle sends one clockwise or counter-clockwise key, and no direction keys.",
     ),
   };
-  const gridTitle =
-    stick.mode === "eightWay"
-      ? t("8 个方向的按键", "Keys for 8 directions")
-      : stick.mode === "fourWayDiagonal"
-        ? t("4 个斜向的按键", "Keys for the 4 diagonals")
-        : t("4 个方向的按键", "Keys for 4 directions");
+  const gridTitle = t("4 个方向的按键", "Keys for 4 directions");
   const directionTitle = (direction: Direction) =>
     `${directionArrow[direction]} ${t(
       `向${directionName(direction, language)}推`,
@@ -442,23 +439,12 @@ function StickBody({
   const changes = presetChanges(profile, group);
   const askPreset = (next: AnalogPreset) => {
     if (disabled) return;
-    if (!changes.length && stick.mode === presetMode(group))
-      onChange(applyAnalogPreset(profile, group, next));
+    if (!changes.length && shown === presetMode(group))
+      emit(applyAnalogPreset(profile, group, next));
     else setPreset(next);
   };
   const hasRaw = rawControls.some((key) => isBound(bindingFor(key)));
-  const hasTicks = tickControls.some((key) => isBound(bindingFor(key)));
   const curve = usesDepthRate(profile, group);
-  const clickBinding = bindingFor(clickControl);
-  const label = useCommitField({
-    value: clickBinding.label ?? "",
-    onCommit: (text) => {
-      const next = { ...clickBinding };
-      if (text) next.label = text;
-      else delete next.label;
-      onChange(setBaseBinding(profile, clickControl, next));
-    },
-  });
 
   return (
     <section
@@ -468,47 +454,20 @@ function StickBody({
       data-group={group}
     >
       <fieldset className="analog-fieldset analog-section" disabled={disabled}>
-        <label className="field">
-          <span className="field-label">{t("功能", "Function")}</span>
-          <input
-            className="input"
-            placeholder={
-              cardinalDirections.some((direction) =>
-                isBound(bindingFor(`${group}.${direction}`)),
-              )
-                ? t("方向键", "Direction keys")
-                : undefined
-            }
-            {...label.props}
-          />
-        </label>
-      </fieldset>
-
-      <fieldset className="analog-fieldset analog-section" disabled={disabled}>
         <span className="field-label">{t("方向模式", "Direction mode")}</span>
         <Segmented<StickMode>
           label={t("方向模式", "Direction mode")}
           className="analog-mode"
-          value={stick.mode}
+          value={shown}
           onChange={setMode}
           options={[
-            { value: "standard", label: t("4 方向", "4-way") },
-            { value: "eightWay", label: t("8 方向", "8-way") },
-            { value: "fourWay", label: t("只取 1 个方向", "One at a time") },
-            ...(stick.mode === "fourWayDiagonal"
-              ? [
-                  {
-                    value: "fourWayDiagonal" as const,
-                    label: t("只有斜向", "Diagonals"),
-                  },
-                ]
-              : []),
-            { value: "knob" as const, label: t("旋钮", "Knob") },
-            { value: "mouse" as const, label: t("鼠标", "Mouse") },
+            { value: "fourWay", label: t("四方向", "4 directions") },
+            { value: "knob", label: t("旋钮", "Knob") },
+            { value: "mouse", label: t("鼠标", "Mouse") },
           ]}
         />
-        {modeCaption[stick.mode] && (
-          <p className="analog-caption">{modeCaption[stick.mode]}</p>
+        {modeCaption[shown] && (
+          <p className="analog-caption">{modeCaption[shown]}</p>
         )}
       </fieldset>
 
@@ -613,18 +572,20 @@ function StickBody({
                   profiles={profiles}
                   onToggle={() => toggle(key)}
                 />
-                {expanded === key && card(key, title)}
+                {expanded === key && (
+                  <TickCard
+                    id={cardId}
+                    title={title}
+                    control={key}
+                    binding={bindingFor(key)}
+                    onChange={setBinding(key)}
+                    language={language}
+                    disabled={disabled}
+                  />
+                )}
               </div>
             );
           })}
-          {hidden.length > 0 && (
-            <p className="analog-caption">
-              {t(
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} 也设置了按键，但旋钮不会发送。`,
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} also have keys, but a knob does not send them.`,
-              )}
-            </p>
-          )}
         </div>
       ) : mouse ? (
         <div className="analog-section">
@@ -667,22 +628,6 @@ function StickBody({
               onCommit={(mouseSmoothingMs) => update({ mouseSmoothingMs })}
             />
           </fieldset>
-          {hidden.length > 0 && (
-            <p className="analog-caption">
-              {t(
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} 也设置了按键，但鼠标模式不会发送。`,
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} also have keys, but the mouse mode does not send them.`,
-              )}
-            </p>
-          )}
-          {hasTicks && (
-            <p className="analog-caption">
-              {t(
-                "旋钮的按键也设置了，但当前模式不会发送。",
-                "Knob keys are also set, but this mode does not send them.",
-              )}
-            </p>
-          )}
         </div>
       ) : (
         <div className="analog-section">
@@ -708,53 +653,16 @@ function StickBody({
             label={gridTitle}
             onToggle={toggle}
           />
-          {hidden.length > 0 && (
-            <p className="analog-caption">
-              {t(
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} 也设置了按键，但当前模式不会发送。`,
-                `${hidden.map((direction) => directionArrow[direction]).join(" ")} also have keys, but this mode does not send them.`,
-              )}
-            </p>
-          )}
-          {hasTicks && (
-            <p className="analog-caption">
-              {t(
-                "旋钮的按键也设置了，但当前模式不会发送。",
-                "Knob keys are also set, but this mode does not send them.",
-              )}
-            </p>
-          )}
           {expandedDirection &&
             card(expanded as string, directionTitle(expandedDirection), false)}
         </div>
       )}
 
-      <div className="analog-section">
-        <BindingRow
-          title={t("按下摇杆", "Click the stick")}
-          control={clickControl}
-          binding={clickBinding}
-          expanded={expanded === clickControl}
-          cardId={cardId}
-          active={!!input?.buttons[clickControl]}
-          registrations={registrations}
-          language={language}
-          actions={actions}
-          profiles={profiles}
-          onToggle={() => toggle(clickControl)}
-        />
-        {expanded === clickControl &&
-          card(clickControl, t("按下摇杆", "Click the stick"))}
-      </div>
-
       <Disclosure
         title={t("高级", "Advanced")}
         summary={
           directional
-            ? t(
-                "触发幅度 · 斜向角度 · 防抖",
-                "Trigger point · diagonals · debounce",
-              )
+            ? t("触发幅度 · 防抖", "Trigger point · debounce")
             : t("触发幅度", "Trigger point")
         }
         defaultOpen={
@@ -776,16 +684,24 @@ function StickBody({
             <ParamsMenu
               kind="stick"
               name={stickName}
-              settings={stored}
+              // The stick's name is not a parameter: it is not copied, and a
+              // paste or a reset keeps it.
+              settings={stickParameters(stored)}
               language={language}
               testId="analog-params"
               disabled={disabled}
               openRequest={params.request}
-              onReplace={(settings) =>
-                onChange(
-                  setAnalogSettings(profile, group, settings as ProfileStick),
-                )
-              }
+              onReplace={(settings) => {
+                const name = stickLabel(profile, group);
+                const next = stickParameters(settings as ProfileStick);
+                emit(
+                  setAnalogSettings(
+                    profile,
+                    group,
+                    name ? { ...next, label: name } : next,
+                  ),
+                );
+              }}
             />
           </div>
           <fieldset
@@ -814,21 +730,6 @@ function StickBody({
                 update({ directionThreshold: fromPercent(value) })
               }
             />
-            {(stick.mode === "standard" || stick.mode === "eightWay") && (
-              <SettingField
-                language={language}
-                label={t("斜向扇区宽度", "Diagonal width")}
-                hint={t(
-                  "斜向所占的角度，越大越容易推出斜向。",
-                  "The angle a diagonal covers; wider is easier to hit.",
-                )}
-                value={stick.diagonalWidth}
-                min={0.1}
-                max={90}
-                unit="°"
-                onCommit={(diagonalWidth) => update({ diagonalWidth })}
-              />
-            )}
             {directional && (
               <SettingField
                 language={language}
@@ -870,44 +771,6 @@ function StickBody({
                   value={stick.curve}
                   onChange={(next) => update({ curve: next })}
                   options={curveOptions(language)}
-                />
-              </SettingRow>
-            )}
-            {stick.mode === "eightWay" && (
-              <SettingRow
-                stacked
-                label={t("斜向未设置按键时", "When a diagonal has no keys")}
-              >
-                <Segmented<"none" | "cardinals">
-                  small
-                  className="analog-mode"
-                  label={t("斜向未设置按键时", "When a diagonal has no keys")}
-                  value={stick.diagonalFallback}
-                  onChange={(diagonalFallback) => update({ diagonalFallback })}
-                  options={[
-                    { value: "none", label: t("不发送", "Send nothing") },
-                    {
-                      value: "cardinals",
-                      label: t("按相邻两个方向", "Both neighbors"),
-                    },
-                  ]}
-                />
-              </SettingRow>
-            )}
-            {directional && (
-              <SettingRow
-                label={t("只有斜向", "Diagonals only")}
-                hint={t(
-                  "仅使用 4 个斜向，推向哪个角即按下对应的斜向。",
-                  "Use only the four diagonals.",
-                )}
-              >
-                <Switch
-                  label={t("只有斜向", "Diagonals only")}
-                  checked={stick.mode === "fourWayDiagonal"}
-                  onChange={(on) =>
-                    setMode(on ? "fourWayDiagonal" : "standard")
-                  }
                 />
               </SettingRow>
             )}
@@ -1029,7 +892,7 @@ function StickBody({
         onClose={() => setPreset(null)}
         onConfirm={() => {
           if (preset && !disabled)
-            onChange(applyAnalogPreset(profile, group, preset));
+            emit(applyAnalogPreset(profile, group, preset));
         }}
       >
         {preset && (
@@ -1037,7 +900,7 @@ function StickBody({
             group={group}
             preset={preset}
             changes={changes}
-            modeChanges={stick.mode !== presetMode(group)}
+            modeChanges={shown !== presetMode(group)}
             script={!!profile.script}
             raw={hasRaw}
             language={language}
@@ -1202,8 +1065,8 @@ function PresetSummary({
                 "The d-pad mode becomes Buttons; diagonal settings are kept but not sent.",
               )
             : t(
-                "方向模式将改为“4 方向”，斜向的设置保留，但不再发送。",
-                "The direction mode becomes 4-way; diagonal settings are kept but not sent.",
+                "方向模式将改为“四方向”，斜向的设置保留，但不再发送。",
+                "The direction mode becomes 4 directions; diagonal settings are kept but not sent.",
               )}
         </p>
       )}
@@ -1237,7 +1100,7 @@ function StickVisual({
 }: {
   x: number;
   y: number;
-  settings: Required<ProfileStick>;
+  settings: typeof stickDefaults;
   reading: StickReading;
   label: string;
 }) {
@@ -1635,234 +1498,6 @@ function TriggerBody({
             `The keys of ${name} become Full pull, and the Half press keys become the keys of ${name}. Press and release return to their defaults.`,
           )}
         </p>
-      </ConfirmDialog>
-    </section>
-  );
-}
-
-/** D-pad mode settings, embedded under the drawer's 十字键设置. */
-export function DpadSettings(props: AnalogPanelProps) {
-  if (analogGroup(props.control) !== "dpad") return null;
-  return <DpadBody {...props} />;
-}
-
-function DpadBody({
-  profile,
-  control,
-  onChange,
-  input,
-  language,
-  timing,
-  registrations,
-  profiles,
-  actions,
-  disabled = false,
-}: AnalogPanelProps) {
-  const t = (zh: string, en: string) => tx(language, zh, en);
-  const stored = profile.analog?.dpad;
-  const dpad = { ...dpadDefaults, ...stored };
-  const diagonals = diagonalGrid.map((direction) => `dpad.${direction}`);
-  const cardId = useId();
-  const host = useRef<HTMLElement>(null);
-  const params = useParamsMenu(host);
-  const [expanded, setExpanded] = useState<string | null>(() =>
-    focusTarget(control, "dpad", diagonals),
-  );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Follow only a new drawer target.
-  useEffect(() => {
-    const target = focusTarget(control, "dpad", diagonals);
-    if (target) setExpanded(target);
-  }, [control]);
-  const [preset, setPreset] = useState<AnalogPreset | null>(null);
-  const update = (patch: ProfileDpad) =>
-    onChange(setAnalogSettings(profile, "dpad", { ...stored, ...patch }));
-  const changes = presetChanges(profile, "dpad");
-  const askPreset = (next: AnalogPreset) => {
-    if (disabled) return;
-    if (!changes.length && dpad.mode === presetMode("dpad"))
-      onChange(applyAnalogPreset(profile, "dpad", next));
-    else setPreset(next);
-  };
-  const captions: Record<DpadMode, string> = {
-    buttons: t(
-      "上下左右为 4 个独立按键，同时按下两个时分别发送。",
-      "Four independent buttons; pressing two sends both.",
-    ),
-    fourWay: t(
-      "同时按下两个相邻方向时，只取其中一个方向。",
-      "Two neighboring directions count as one of them.",
-    ),
-    eightWay: t(
-      "同时按下两个相邻方向时视为斜向，斜向单独设置按键。",
-      "Two neighboring directions make a diagonal with its own keys.",
-    ),
-  };
-  // Only the fixed rule needs words; 保留先按下的 says what it does.
-  const foldCaption =
-    dpad.fold === "clockwise" &&
-    t(
-      "↑→ 取 →，↓→ 取 →，↓← 取 ←，↑← 取 ↑（与 AntiMicroX 相同）。",
-      "↑→ gives →, ↓→ gives →, ↓← gives ←, ↑← gives ↑ (as in AntiMicroX).",
-    );
-  const expandedDirection = diagonalGrid.find(
-    (direction) => `dpad.${direction}` === expanded,
-  );
-  return (
-    <section
-      className="analog-panel"
-      ref={host}
-      aria-label={t("十字键设置", "D-pad settings")}
-      data-group="dpad"
-    >
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: Right click is a shortcut; the 参数操作 button opens the same menu. */}
-      <div className="analog-section" onContextMenu={params.onContextMenu}>
-        <fieldset className="analog-fieldset" disabled={disabled}>
-          <Segmented<DpadMode>
-            label={t("十字键模式", "D-pad mode")}
-            className="analog-mode"
-            value={dpad.mode}
-            onChange={(mode) => {
-              update({ mode });
-              if (mode !== "eightWay") setExpanded(null);
-            }}
-            options={[
-              { value: "buttons", label: t("独立按钮", "Buttons") },
-              { value: "fourWay", label: t("4 方向", "4-way") },
-              { value: "eightWay", label: t("8 方向", "8-way") },
-            ]}
-          />
-        </fieldset>
-        <p className="analog-caption">{captions[dpad.mode]}</p>
-      </div>
-      {dpad.mode === "fourWay" && (
-        <fieldset
-          className="analog-fieldset analog-section"
-          disabled={disabled}
-        >
-          <span className="field-label">{t("斜按时", "On a diagonal")}</span>
-          <Segmented<NonNullable<ProfileDpad["fold"]>>
-            label={t("斜按时", "On a diagonal")}
-            className="analog-mode"
-            value={dpad.fold}
-            onChange={(fold) => update({ fold })}
-            options={[
-              {
-                value: "keepFirst",
-                label: t("保留先按下的", "Keep the first"),
-              },
-              { value: "clockwise", label: t("按固定规则", "Fixed rule") },
-            ]}
-          />
-          {foldCaption && <p className="analog-caption">{foldCaption}</p>}
-        </fieldset>
-      )}
-      <div className="analog-section">
-        <div className="analog-section-head">
-          <span className="field-label">{t("上下左右", "Directions")}</span>
-          <PresetButtons
-            language={language}
-            disabled={disabled}
-            onPreset={askPreset}
-          />
-        </div>
-        <p className="analog-caption">
-          {t(
-            "将四个方向一次改为方向键或 WASD。",
-            "Set all four directions to the arrow keys or WASD at once.",
-          )}
-        </p>
-      </div>
-      {dpad.mode === "eightWay" && (
-        <div className="analog-section">
-          <span className="field-label">
-            {t("斜向的按键", "Keys for the diagonals")}
-          </span>
-          <DirectionGrid
-            group="dpad"
-            directions={diagonalGrid}
-            bindingFor={(key) => baseBinding(profile, key)}
-            active={dpadDirections(input?.buttons, "eightWay")}
-            expanded={expanded}
-            cardId={cardId}
-            registrations={registrations}
-            language={language}
-            actions={actions}
-            profiles={profiles}
-            label={t("斜向的按键", "Keys for the diagonals")}
-            onToggle={(key) => setExpanded(expanded === key ? null : key)}
-          />
-          {expandedDirection && expanded && (
-            <BindingCard
-              id={cardId}
-              title={`${directionArrow[expandedDirection]} ${t(
-                `${directionName(expandedDirection, language)}斜按`,
-                `${directionName(expandedDirection, language)} diagonal`,
-              )}`}
-              control={expanded}
-              binding={baseBinding(profile, expanded)}
-              onChange={(binding) =>
-                onChange(setBaseBinding(profile, expanded, binding))
-              }
-              onClose={() => setExpanded(null)}
-              registrations={registrations}
-              timing={timing}
-              profiles={profiles}
-              actions={actions}
-              language={language}
-              disabled={disabled}
-            />
-          )}
-        </div>
-      )}
-      <div className="analog-params-row">
-        <span className="analog-caption">
-          {t(
-            "复制、粘贴或恢复十字键的参数",
-            "Copy, paste or reset the d-pad's parameters",
-          )}
-        </span>
-        <ParamsMenu
-          kind="dpad"
-          name={t("十字键", "the d-pad")}
-          settings={stored}
-          language={language}
-          testId="analog-params"
-          disabled={disabled}
-          openRequest={params.request}
-          onReplace={(settings) =>
-            onChange(
-              setAnalogSettings(profile, "dpad", settings as ProfileDpad),
-            )
-          }
-        />
-      </div>
-      <ConfirmDialog
-        open={preset !== null && !disabled}
-        title={
-          preset === "wasd"
-            ? t("改为 WASD？", "Use WASD?")
-            : t("改为方向键？", "Use the arrow keys?")
-        }
-        confirmLabel={t("替换", "Replace")}
-        language={language}
-        onClose={() => setPreset(null)}
-        onConfirm={() => {
-          if (preset) onChange(applyAnalogPreset(profile, "dpad", preset));
-        }}
-      >
-        {preset && (
-          <PresetSummary
-            group="dpad"
-            preset={preset}
-            changes={changes}
-            modeChanges={dpad.mode !== presetMode("dpad")}
-            script={!!profile.script}
-            raw={false}
-            language={language}
-            actions={actions}
-            profiles={profiles}
-          />
-        )}
       </ConfirmDialog>
     </section>
   );

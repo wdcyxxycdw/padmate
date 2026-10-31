@@ -49,8 +49,8 @@ function commit(field: Element, value: string) {
   fireEvent.blur(field);
 }
 
-/** 添加下一步: opens the menu and picks the kind of the new step. */
-function addStep(kind: string, add = "添加下一步") {
+/** 增加动作序列: opens the menu and picks the kind of the new step. */
+function addStep(kind: string, add = "增加动作序列") {
   fireEvent.click(screen.getByRole("button", { name: add }));
   fireEvent.click(screen.getByRole("menuitem", { name: kind }));
 }
@@ -75,8 +75,8 @@ const withText: ProfileBinding = {
 it("offers a shortcut and a wait as the next step, and no text", () => {
   captureAPI();
   render(<Draft initial={{ press: { type: "keys", keys: "F13" } }} />);
-  fireEvent.click(screen.getByRole("button", { name: "添加下一步" }));
-  const menu = screen.getByRole("menu", { name: "添加下一步" });
+  fireEvent.click(screen.getByRole("button", { name: "增加动作序列" }));
+  const menu = screen.getByRole("menu", { name: "增加动作序列" });
   expect(
     within(menu)
       .getAllByRole("menuitem")
@@ -89,7 +89,7 @@ it("names the next steps in English", () => {
   render(
     <Draft language="en" initial={{ press: { type: "keys", keys: "F13" } }} />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Add a next step" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add action sequence" }));
   expect(
     screen.getAllByRole("menuitem").map((item) => item.textContent),
   ).toEqual(["Shortcut", "Wait"]);
@@ -330,7 +330,7 @@ it("stops offering a next step at 64", () => {
   const steps = Array.from({ length: 64 }, (_, i) => ({ wait: i + 1 }));
   render(<Draft initial={{ press: { type: "sequence", steps } }} />);
   expect(
-    (screen.getByRole("button", { name: "添加下一步" }) as HTMLButtonElement)
+    (screen.getByRole("button", { name: "增加动作序列" }) as HTMLButtonElement)
       .disabled,
   ).toBe(true);
 });
@@ -348,7 +348,7 @@ it("offers no way to type a text, and shows a text action of the file as no type
   for (const radio of types.getAllByRole("radio"))
     expect(radio.getAttribute("aria-checked")).toBe("false");
   expect(screen.queryByRole("textbox", { name: "输入的文字" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "添加下一步" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "增加动作序列" })).toBeNull();
   expect(screen.getByRole("button", { name: /^长按/ }).textContent).toContain(
     "签名 😀",
   );
@@ -370,7 +370,7 @@ it("shows a sequence with a text step of the file as no type, and a shortcut rep
     expect(radio.getAttribute("aria-checked")).toBe("false");
   // No rows to edit, but the card still reads the sequence as it is.
   expect(screen.queryByRole("group", { name: "第 1 步" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "添加下一步" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "增加动作序列" })).toBeNull();
   const press = screen.getByRole("button", { name: /^点按/ });
   expect(press.textContent).toContain("100 ms");
   expect(press.textContent).toContain("你好");

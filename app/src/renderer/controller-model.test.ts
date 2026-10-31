@@ -10,6 +10,7 @@ import {
   padHasFunctionKey,
   stickActiveThreshold,
   stickDeflection,
+  stickPush,
   triggerValue,
 } from "./controller-model";
 
@@ -157,6 +158,25 @@ describe("controller presentation", () => {
     expect(controlStrength("rightstick", undefined)).toBe(0);
     expect(triggerValue(-5)).toBe(0);
     expect(triggerValue(Number.NaN)).toBe(0);
+  });
+
+  it("measures a stick's push apart from its click", () => {
+    const clicked = { buttons: { leftstick: true }, axes: {} };
+    // The click is the press cell's lamp, not the movement's.
+    expect(stickPush("leftstick", clicked)).toBe(0);
+    expect(controlStrength("leftstick", clicked)).toBe(1);
+    const drift = stickActiveThreshold * 32767 * 0.9;
+    expect(
+      stickPush("leftstick", { buttons: {}, axes: { lefty: drift } }),
+    ).toBe(0);
+    const push = stickActiveThreshold * 32767 * 1.1;
+    expect(
+      stickPush("rightstick", { buttons: {}, axes: { righty: push } }),
+    ).toBeCloseTo(stickActiveThreshold * 1.1, 4);
+    expect(
+      stickPush("leftstick", { buttons: {}, axes: { righty: 32767 } }),
+    ).toBe(0);
+    expect(stickPush("leftstick", undefined)).toBe(0);
   });
 });
 

@@ -900,7 +900,7 @@ function KeysFields({
         )
       )}
       <MenuButton
-        label={t("添加下一步", "Add a next step")}
+        label={t("增加动作序列", "Add action sequence")}
         className="btn-ghost drawer-link"
         testId="add-step"
         align="start"
@@ -911,9 +911,71 @@ function KeysFields({
         }))}
       >
         <Icon name="plus" size={13} stroke={2.2} />
-        {t("添加下一步", "Add a next step")}
+        {t("增加动作序列", "Add action sequence")}
       </MenuButton>
     </div>
+  );
+}
+
+/**
+ * One shortcut and nothing else (ADR-0079 §8): the binding of a knob step,
+ * which sends its key once per step, so it has no tap, hold or double tap,
+ * no sequence and no script. It writes `{press: {type: "keys", keys}}`,
+ * keeping the binding's label and haptic. A binding the file set otherwise
+ * is named, and capturing a shortcut replaces it.
+ */
+export function SingleShortcutField({
+  value,
+  onChange,
+  language,
+  disabled = false,
+}: {
+  value: ProfileBinding;
+  onChange: (binding: ProfileBinding | undefined) => void;
+  language: Language;
+  disabled?: boolean;
+}) {
+  const t = (zh: string, en: string) => editorText(language, zh, en);
+  const gestures = usedGestures(value);
+  const press = value.press;
+  const single =
+    gestures.length === 1 &&
+    press?.type === "keys" &&
+    typeof press.keys === "string" &&
+    !value.block;
+  const other = !single && (gestures.length > 0 || !!value.block);
+  // What stays when the shortcut changes: the label and the haptic.
+  const kept: ProfileBinding = {
+    ...(value.label === undefined ? {} : { label: value.label }),
+    ...(value.haptic === undefined ? {} : { haptic: value.haptic }),
+  };
+  const commit = (keys: string) =>
+    onChange(
+      keys
+        ? { ...kept, press: { type: "keys", keys } }
+        : Object.keys(kept).length
+          ? kept
+          : undefined,
+    );
+  return (
+    <fieldset className="drawer-fieldset" disabled={disabled}>
+      {other && (
+        <p className="drawer-muted" data-testid="single-shortcut-other">
+          {t(
+            "配置文件里这一格是别的设置，录入快捷键会替换它。",
+            "The profile file sets something else here. Capturing a shortcut replaces it.",
+          )}
+        </p>
+      )}
+      <ShortcutField
+        variant="full"
+        label={t("快捷键", "Shortcut")}
+        language={language}
+        value={single ? (press.keys as string) : ""}
+        physical={false}
+        onChange={commit}
+      />
+    </fieldset>
   );
 }
 
@@ -1226,7 +1288,7 @@ export function ActionFields({
   );
 }
 
-/** What each mapping does, as the menu of 添加映射 says. */
+/** What each mapping does, as the menu of 添加其他动作 says. */
 const mappingHints: Record<Mapping, [string, string]> = {
   tap: ["按一下", "Press once"],
   hold: ["按住一段时间后触发", "Press and keep holding"],
@@ -1283,7 +1345,7 @@ export interface BindingFieldsProps {
  * The file's gesture of 点按 is a press when it is the only mapping and a tap
  * when the key also has 长按 or 双击: adding or removing one of those moves it
  * (settleTap). A mapping is deleted for good, the last one too; the key then
- * has none, and only 添加映射 is left. A key with nothing at all opens with an
+ * has none, and only 添加其他动作 is left. A key with nothing at all opens with an
  * empty 点按, ready to record, until that is deleted.
  */
 export function BindingFields({
@@ -1334,7 +1396,7 @@ export function BindingFields({
   const list = useRef<HTMLElement>(null);
   const refocusAdd = useRef(false);
   // A removed mapping card took the focused button with it: move focus to
-  // 添加映射 (or the first remaining card) once the change is rendered.
+  // 添加其他动作 (or the first remaining card) once the change is rendered.
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs after a removal renders
   useEffect(() => {
     if (!refocusAdd.current) return;
@@ -1406,14 +1468,14 @@ export function BindingFields({
         <div className="drawer-section-head">
           <span className="field-label">{t("映射", "Mappings")}</span>
           <MenuButton
-            label={t("添加映射", "Add mapping")}
+            label={t("添加其他动作", "Add another action")}
             testId="add-gesture"
             className="btn-ghost drawer-add"
             disabled={disabled || blocked || menu.length === 0}
             items={menu}
           >
             <Icon name="plus" size={13} stroke={2.2} />
-            {t("添加映射", "Add mapping")}
+            {t("添加其他动作", "Add another action")}
           </MenuButton>
         </div>
         {blocked && shown.length === 0 && (
@@ -1654,7 +1716,7 @@ export function BindingFields({
                   onClick={() => {
                     const next: ProfileBinding = { ...value };
                     delete next.block;
-                    // This button goes away; 添加映射 is the next step.
+                    // This button goes away; 添加其他动作 is the next step.
                     refocusAdd.current = true;
                     onChange(next);
                   }}

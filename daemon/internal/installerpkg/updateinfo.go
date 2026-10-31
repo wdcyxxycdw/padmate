@@ -14,8 +14,12 @@ import (
 )
 
 // UpdateFile is the file electron-builder writes for electron-updater next to
-// the installer (provider github: always latest.yml, even for a release
-// candidate) and that the release uploads (PKG-10).
+// the installer (always latest.yml, even for a release candidate, because the
+// publish block pins channel: latest, UpdateChannel) and that a release
+// uploads to the download site, last, after the installer and its .sha256
+// (PKG-10, ADR-0078). It is the contract with the Worker that redirects the
+// address of the site to the installer it names (its path), and with the
+// application that reads it.
 const UpdateFile = "latest.yml"
 
 // UpdateInfo is what latest.yml says about the release.
@@ -33,7 +37,10 @@ type UpdateInfoFile struct {
 	SHA512 string
 	// Size is the size in bytes, or negative when the entry has none:
 	// electron-builder 26.17.0 writes no size for the nsis target (measured on
-	// a build, PKG-10), only a differential package adds one.
+	// a build with the github provider, PKG-10; the generic provider goes
+	// through the same createUpdateInfo, which gives the same shape and only
+	// rewrites the url of the files entry for github), only a differential
+	// package adds one.
 	Size int64
 }
 

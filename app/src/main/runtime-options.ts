@@ -145,7 +145,8 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
       ? "secondary"
       : "primary";
   // The update feed is the test mode's alone: the real application reads
-  // its updates from the repository of update-config.ts and nothing else.
+  // its updates from the download site of update-config.ts (UPDATE_URL) and
+  // nothing else.
   const updateFeed = packagedTest
     ? loopbackFeed(env.PADMATE_UI_TEST_UPDATE_URL)
     : undefined;

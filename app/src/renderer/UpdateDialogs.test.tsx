@@ -42,7 +42,7 @@ describe("the update dialogs (PKG-10, ADR-0073)", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("offer a version with 下载, 以后再说 and 跳过这个版本, and the release page", async () => {
+  it("offer a version with 下载, 以后再说 and 跳过这个版本, and no link", async () => {
     const { api } = await show("available", {
       phase: "available",
       version: "1.0.1",
@@ -58,8 +58,11 @@ describe("the update dialogs (PKG-10, ADR-0073)", () => {
         screen.getByRole("button", { name: "以后再说" }),
       ),
     );
-    fireEvent.click(screen.getByRole("button", { name: "查看发布页" }));
-    expect(api.openReleasePage).toHaveBeenCalledExactlyOnceWith();
+    // The download site has no page to read about the version: a link next
+    // to 下载 would only start the same download in the browser.
+    expect(dialog.querySelector(".update-link")).toBeNull();
+    expect(screen.queryByRole("button", { name: "手动下载" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "查看发布页" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "下载" }));
     expect(api.downloadUpdate).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: "以后再说" }));
@@ -75,9 +78,10 @@ describe("the update dialogs (PKG-10, ADR-0073)", () => {
     });
     expect(dialog.textContent).toContain("padmate 1.0.1 is ready to download.");
     expect(buttons()).toEqual(["Skip this version", "Later", "Download"]);
+    expect(dialog.querySelector(".update-link")).toBeNull();
     expect(
-      screen.getByRole("button", { name: "View release page" }),
-    ).toBeTruthy();
+      screen.queryByRole("button", { name: "Download manually" }),
+    ).toBeNull();
   });
 
   it("treat Esc and × as 以后再说", async () => {
@@ -176,33 +180,63 @@ describe("the update dialogs (PKG-10, ADR-0073)", () => {
   });
 
   it.each([
-    ["checkFailed", "无法检查更新", ["确定"]],
-    ["downloadFailed", "无法下载更新", ["确定"]],
-    ["installFailed", "无法安装更新", ["确定"]],
+    [
+      "checkFailed",
+      "无法检查更新",
+      "请检查网络连接后再试，或手动下载最新版本。",
+    ],
+    [
+      "downloadFailed",
+      "无法下载更新",
+      "下载没有完成，或文件没有通过校验。可以稍后再试，或手动下载。",
+    ],
+    [
+      "installFailed",
+      "无法安装更新",
+      "安装程序没有启动，padmate 仍在运行。可以稍后再试，或手动下载。",
+    ],
   ] as const)(
-    "tell that %s, and give the release page",
-    async (kind, title, labels) => {
+    "tell that %s, and give 手动下载",
+    async (kind, title, message) => {
       const { api } = await show(kind);
       const dialog = await screen.findByRole("dialog", { name: title });
-      expect(buttons()).toEqual([...labels]);
-      // Never the raw code or a message of the feed.
-      expect(dialog.textContent).not.toMatch(/ERR_|Error|undefined/);
-      fireEvent.click(screen.getByRole("button", { name: "查看发布页" }));
-      expect(api.openReleasePage).toHaveBeenCalledOnce();
+      expect(buttons()).toEqual(["确定"]);
+      expect(dialog.textContent).toContain(message);
+      // Never the raw code or a message of the feed, and no page of releases.
+      expect(dialog.textContent).not.toMatch(/ERR_|Error|undefined|发布页/);
+      fireEvent.click(screen.getByRole("button", { name: "手动下载" }));
+      expect(api.openManualDownload).toHaveBeenCalledExactlyOnceWith();
+      expect(screen.queryByRole("button", { name: "查看发布页" })).toBeNull();
     },
   );
 
-  it("say the failures in English", async () => {
-    await show("checkFailed", {}, "en");
-    expect(
-      await screen.findByRole("dialog", {
-        name: "Could not check for updates",
-      }),
-    ).toBeTruthy();
+  it.each([
+    [
+      "checkFailed",
+      "Could not check for updates",
+      "Check your connection and try again, or download the latest version by hand.",
+    ],
+    [
+      "downloadFailed",
+      "Could not download the update",
+      "The download did not finish, or the file failed its check. Try again later, or download it by hand.",
+    ],
+    [
+      "installFailed",
+      "Could not install the update",
+      "The installer did not start, and padmate is still running. Try again later, or download it by hand.",
+    ],
+  ] as const)("say %s in English", async (kind, title, message) => {
+    const { api } = await show(kind, {}, "en");
+    const dialog = await screen.findByRole("dialog", { name: title });
     expect(buttons()).toEqual(["OK"]);
+    expect(dialog.textContent).toContain(message);
+    expect(dialog.textContent).not.toMatch(/release page/i);
+    fireEvent.click(screen.getByRole("button", { name: "Download manually" }));
+    expect(api.openManualDownload).toHaveBeenCalledOnce();
     expect(
-      screen.getByRole("button", { name: "View release page" }),
-    ).toBeTruthy();
+      screen.queryByRole("button", { name: "View release page" }),
+    ).toBeNull();
   });
 
   it("follow the state Main pushes, one dialog at a time", async () => {

@@ -10,11 +10,13 @@ import type { DeviceInfo } from "../shared/api";
 import type { Profile, ProfileBinding } from "../shared/generated/schema";
 import {
   type AnalogPanelProps,
-  DpadSettings,
   StickPanel,
   TriggerSettings,
 } from "./analog/AnalogPanels";
+import { setStickLabel, stickLabel } from "./analog/analog-editor";
 import { BindingFields } from "./BindingEditor";
+import { calloutOf, isStickPress } from "./control-callout";
+import { relatedKeys } from "./controller-chips";
 import { controllerLabels, familyName } from "./controller-model";
 import {
   actionText,
@@ -41,6 +43,7 @@ import {
   ScriptOwnership,
 } from "./KeyDrawerNotices";
 import { effectiveView, viewName, viewRegistrations } from "./key-view";
+import { PadIcon, padIcon, stickMoveIcon } from "./pad-icon";
 import type { Language, PadInput } from "./store";
 import { useCommitField } from "./ui/commit-field";
 import {
@@ -56,7 +59,10 @@ import "./drawer.css";
 const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
-/** Kind of control the drawer edits; sticks and triggers embed analog panels. */
+/**
+ * Kind of control the drawer edits; sticks and triggers embed analog panels.
+ * "stick" is a stick's movement; its press (leftstick.press) is a button.
+ */
 export function controlKind(control: string): ControlKind {
   if (control === "leftstick" || control === "rightstick") return "stick";
   if (control === "lefttrigger" || control === "righttrigger") return "trigger";
@@ -68,7 +74,8 @@ export function controlKind(control: string): ControlKind {
 export function drawerBindingKey(control: string): string {
   if (control === "lefttrigger") return "lt";
   if (control === "righttrigger") return "rt";
-  return canonicalControl(control);
+  // The press of a stick edits the stick's own binding (L3/R3).
+  return canonicalControl(calloutOf(control));
 }
 
 const faceColors: Record<string, Record<string, string>> = {
@@ -105,6 +112,7 @@ function KeyTitle({
   title,
   name,
   placeholder,
+  renamable = true,
   disabled,
   editing,
   onEditing,
@@ -114,6 +122,8 @@ function KeyTitle({
   title: string;
   name: string;
   placeholder: string;
+  /** False for a stick's movement: the key name belongs to its press. */
+  renamable?: boolean;
   disabled: boolean;
   editing: boolean;
   onEditing: (editing: boolean) => void;
@@ -171,17 +181,19 @@ function KeyTitle({
       <h2 className="drawer-title" title={title} tabIndex={-1}>
         {title}
       </h2>
-      <button
-        ref={pencil}
-        type="button"
-        className="icon-btn bare drawer-pencil"
-        aria-label={tx(language, "重命名此按键", "Rename this key")}
-        title={tx(language, "重命名此按键", "Rename this key")}
-        disabled={disabled}
-        onClick={() => onEditing(true)}
-      >
-        <Icon name="edit" size={13} stroke={2} />
-      </button>
+      {renamable && (
+        <button
+          ref={pencil}
+          type="button"
+          className="icon-btn bare drawer-pencil"
+          aria-label={tx(language, "重命名此按键", "Rename this key")}
+          title={tx(language, "重命名此按键", "Rename this key")}
+          disabled={disabled}
+          onClick={() => onEditing(true)}
+        >
+          <Icon name="edit" size={13} stroke={2} />
+        </button>
+      )}
     </div>
   );
 }
@@ -210,6 +222,15 @@ function LabelField({
       />
     </label>
   );
+}
+
+/** What a stick's movement is called on its label without a name of its own. */
+function stickModeName(mode: string | undefined, language: Language): string {
+  return mode === "knob"
+    ? tx(language, "旋钮", "Knob")
+    : mode === "mouse"
+      ? tx(language, "鼠标", "Mouse")
+      : tx(language, "方向键", "Direction keys");
 }
 
 /** Drawer that edits one control of the profile draft (UI-39, ADR-0045). */
@@ -274,16 +295,22 @@ export function KeyDrawer({
     info.buttonLabels,
     info.buttonMask,
   );
-  const glyph = labels[control] ?? control;
-  const defaultTitle =
-    kind === "dpad"
-      ? t(`十字键 ${glyph}`, `D-pad ${glyph}`)
-      : kind === "stick"
-        ? control === "leftstick"
-          ? t("左摇杆", "Left stick")
-          : t("右摇杆", "Right stick")
+  const glyph = labels[calloutOf(control)] ?? calloutOf(control);
+  // A stick has two drawers: its movement ("stick") and its press (a button).
+  const press = isStickPress(control);
+  const stickName =
+    calloutOf(control) === "leftstick"
+      ? t("左摇杆", "Left stick")
+      : t("右摇杆", "Right stick");
+  const defaultTitle = press
+    ? t(`${stickName} 点按`, `${stickName} · Press`)
+    : kind === "stick"
+      ? t(`${stickName} 旋转`, `${stickName} · Move`)
+      : kind === "dpad"
+        ? t(`十字键 ${glyph}`, `D-pad ${glyph}`)
         : t(`${glyph} 键`, `${glyph} key`);
-  const name = profile?.controlNames?.[key] ?? "";
+  // The key name of a stick is its press's (controlNames.leftstick).
+  const name = kind === "stick" ? "" : (profile?.controlNames?.[key] ?? "");
   const title = name || defaultTitle;
   const locked = !profile || !!state.readOnly || state.busy;
   const binding: ProfileBinding = profile ? baseBinding(profile, key) : {};
@@ -293,7 +320,12 @@ export function KeyDrawer({
   // The key's own registrations: only these delay its gestures. lt/rt, the
   // second stage (lt.full) and the raw half press (lefttrigger+) are separate
   // controls in the engine.
-  const keyScripts = registrationsFor(registrations, key);
+  // A stick's movement has none of its own: its directions, rings, ticks and
+  // raw axes are the keys it reports (the binding is its press's).
+  const keyScripts =
+    kind === "stick"
+      ? { visible: [], owners: [], otherScopes: [] }
+      : registrationsFor(registrations, key);
   // What the drawer reports as script handling, the second stage and the
   // half press included.
   const stages =
@@ -302,7 +334,11 @@ export function KeyDrawer({
           registrationsFor(registrations, `${key}.full`),
           registrationsFor(registrations, `${control}+`),
         ]
-      : [];
+      : kind === "stick"
+        ? relatedKeys(control).map((related) =>
+            registrationsFor(registrations, related),
+          )
+        : [];
   const scripts = stages.length
     ? {
         visible: [...keyScripts.visible, ...stages.flatMap((s) => s.visible)],
@@ -319,9 +355,10 @@ export function KeyDrawer({
   const [confirm, setConfirm] = useState<Confirmation | null>(null);
   // The key whose mappings were cleared from the menu has none, as after the
   // last one is deleted: it shows no empty 点按 (ADR-0076). Opening another
-  // key and coming back starts it afresh.
+  // key and coming back starts it afresh. A stick's two cells edit the same
+  // binding but are two selections, so this follows the selection.
   const [cleared, setCleared] = useState<string | null>(null);
-  const keyId = `${view}:${key}`;
+  const keyId = `${view}:${control}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the drawer switches key or view
   useEffect(() => setCleared(null), [keyId]);
 
@@ -384,10 +421,21 @@ export function KeyDrawer({
     `配置「${profile?.name ?? state.id}」`,
     `Profile "${profile?.name ?? state.id}"`,
   );
+  const stickGroup = calloutOf(control) === "leftstick" ? "ls" : "rs";
   const glyphColor =
     kind === "button"
       ? faceColors[familyName(info.type)]?.[canonicalControl(control)]
       : undefined;
+  // The header shows the control's icon (ADR-0079 §7), or its printed name
+  // where the icon sets have none. The press of a stick is its click.
+  const art =
+    kind === "stick"
+      ? stickMoveIcon(calloutOf(control) === "leftstick" ? "l" : "r")
+      : padIcon(
+          press ? calloutOf(control) : canonicalControl(control),
+          familyName(info.type),
+          labels,
+        );
 
   // The analog panels disable their own editing controls, so direction and
   // stage cards still open in a read-only profile.
@@ -452,7 +500,7 @@ export function KeyDrawer({
             onSelect: () => {
               keyClipboard = structuredClone(binding);
               setClipboard(keyClipboard);
-              setCopiedFor(key);
+              setCopiedFor(control);
             },
           },
           {
@@ -465,7 +513,7 @@ export function KeyDrawer({
             label: t("重命名按键…", "Rename key…"),
             icon: "edit",
             disabled: locked,
-            onSelect: () => setRenamingFor(key),
+            onSelect: () => setRenamingFor(control),
           },
           { kind: "separator" },
           view === "normal"
@@ -507,32 +555,47 @@ export function KeyDrawer({
       aria-label={t("按键编辑", "Key editor")}
     >
       <header className="drawer-header">
-        <span
-          className="drawer-glyph"
-          data-shape={
-            kind === "stick" ||
-            ["south", "east", "west", "north"].includes(
-              canonicalControl(control),
-            )
-              ? "round"
-              : "square"
-          }
-          data-size={
-            glyph.length > 3 ? "small" : glyph.length > 2 ? "medium" : undefined
-          }
-          style={glyphColor ? ({ color: glyphColor } as CSSProperties) : {}}
-          aria-hidden="true"
-        >
-          {glyph}
-        </span>
+        {art ? (
+          <span
+            className="drawer-glyph"
+            data-icon="true"
+            style={glyphColor ? ({ color: glyphColor } as CSSProperties) : {}}
+            aria-hidden="true"
+          >
+            <PadIcon name={art.name} />
+          </span>
+        ) : (
+          <span
+            className="drawer-glyph"
+            data-shape={
+              ["south", "east", "west", "north"].includes(
+                canonicalControl(control),
+              )
+                ? "round"
+                : "square"
+            }
+            data-size={
+              glyph.length > 3
+                ? "small"
+                : glyph.length > 2
+                  ? "medium"
+                  : undefined
+            }
+            style={glyphColor ? ({ color: glyphColor } as CSSProperties) : {}}
+            aria-hidden="true"
+          >
+            {glyph}
+          </span>
+        )}
         <div className="drawer-heading">
           <KeyTitle
             title={title}
             name={name}
             placeholder={defaultTitle}
             disabled={locked}
-            editing={renamingFor === key && !locked}
-            onEditing={(editing) => setRenamingFor(editing ? key : null)}
+            renamable={kind !== "stick"}
+            editing={renamingFor === control && !locked}
+            onEditing={(editing) => setRenamingFor(editing ? control : null)}
             onRename={rename}
             language={language}
           />
@@ -573,7 +636,7 @@ export function KeyDrawer({
         </button>
       </header>
       <div className="drawer-body">
-        {copiedFor === key && (
+        {copiedFor === control && (
           <p className="drawer-status" role="status">
             <Icon name="check" size={14} stroke={2} />
             {t(
@@ -628,13 +691,31 @@ export function KeyDrawer({
                 {otherwiseText}
               </p>
             )}
-            {kind === "stick" && panelProps ? (
-              // The direction cards edit the shown set: a new view, new cards.
-              <StickPanel
-                key={view}
-                {...panelProps}
-                menuRequest={menuRequest}
-              />
+            {kind === "stick" && panelProps && profile ? (
+              <>
+                {/* The name of the movement on its label (ADR-0079 §8): the
+                    stick's, in analog, not a binding's. */}
+                <fieldset className="drawer-fieldset" disabled={locked}>
+                  <LabelField
+                    key={`${view}:${key}`}
+                    value={stickLabel(profile, stickGroup) ?? ""}
+                    language={language}
+                    placeholder={stickModeName(
+                      profile.analog?.[stickGroup]?.mode,
+                      language,
+                    )}
+                    onCommit={(label) =>
+                      edit(setStickLabel(profile, stickGroup, label))
+                    }
+                  />
+                </fieldset>
+                {/* The direction cards edit the shown set: a new view, new cards. */}
+                <StickPanel
+                  key={view}
+                  {...panelProps}
+                  menuRequest={menuRequest}
+                />
+              </>
             ) : (
               <>
                 <ScriptOwnership
@@ -692,16 +773,6 @@ export function KeyDrawer({
                         summary={t("按下深度", "Press depth")}
                       >
                         <TriggerSettings {...panelProps} />
-                      </Disclosure>
-                    </div>
-                  )}
-                  {panelProps && kind === "dpad" && (
-                    <div className="drawer-extra">
-                      <Disclosure
-                        title={t("十字键设置", "D-pad settings")}
-                        summary={t("方向与斜向", "Directions and diagonals")}
-                      >
-                        <DpadSettings {...panelProps} />
                       </Disclosure>
                     </div>
                   )}

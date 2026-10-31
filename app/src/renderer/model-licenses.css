@@ -52,3 +52,20 @@
   color: var(--text-3);
   font-size: 12px;
 }
+.page-licenses-text summary {
+  color: var(--text-2);
+  cursor: pointer;
+}
+.page-licenses-text pre {
+  max-height: 240px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid #23262d;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-3);
+  font: 11px / 1.5 var(--mono);
+  white-space: pre-wrap;
+  user-select: text;
+}

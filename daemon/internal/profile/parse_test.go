@@ -534,6 +534,8 @@ func TestParseM15AnalogErrors(t *testing.T) {
 		{"knobStepDeg above 180", `{"ls":{"mode":"knob","knobStepDeg":181}}`, "/analog/ls/knobStepDeg", ""},
 		{"knobStepDeg fractional", `{"ls":{"mode":"knob","knobStepDeg":22.5}}`, "/analog/ls/knobStepDeg", ""},
 		{"unknown mode", `{"ls":{"mode":"dial"}}`, "/analog/ls/mode", ""},
+		{"empty stick label", `{"ls":{"label":""}}`, "/analog/ls/label", ""},
+		{"stick label over 80", `{"rs":{"label":"` + strings.Repeat("x", 81) + `"}}`, "/analog/rs/label", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p, ds := Parse([]byte(`{"schemaVersion":1,"name":"bad","analog":` + tc.analog + `,"layers":{"base":{}}}`))
@@ -547,6 +549,18 @@ func TestParseM15AnalogErrors(t *testing.T) {
 			}
 			t.Errorf("no error at %s containing %q in %v", tc.pointer, tc.message, ds)
 		})
+	}
+}
+
+// TestParseStickLabel checks the name of a stick's movement (analog.ls.label,
+// ADR-0079): an optional string the editor shows and the engine ignores.
+func TestParseStickLabel(t *testing.T) {
+	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"named","analog":{"ls":{"label":"画笔大小","mode":"knob"},"rs":{"label":"缩放"}},"layers":{"base":{}}}`))
+	if p == nil || len(ds) != 0 {
+		t.Fatalf("Parse: %v", ds)
+	}
+	if p.Analog.LS.Mode != "knob" {
+		t.Errorf("ls mode = %q, want knob", p.Analog.LS.Mode)
 	}
 }
 

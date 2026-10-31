@@ -17,7 +17,7 @@
   font-size: 12.5px;
   text-align: right;
 }
-/* The link to the release page: it opens the browser, so it looks like a link. */
+/* The link to the manual download: it opens the browser, so it looks like a link. */
 .update-link {
   align-self: flex-start;
   padding: 0;

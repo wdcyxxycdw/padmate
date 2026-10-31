@@ -263,6 +263,16 @@ export function stickDeflection(input: PadInput | undefined, side: string) {
 }
 
 /**
+ * How far a stick (leftstick or rightstick) is pushed, 0–1, and 0 while it
+ * rests: below the threshold a drifting cap does not count. The click is not
+ * part of it.
+ */
+export function stickPush(control: string, input?: PadInput): number {
+  const { length } = stickDeflection(input, control.slice(0, -5));
+  return length >= stickActiveThreshold ? length : 0;
+}
+
+/**
  * How strongly a control is in use, 0–1, for its chip and its place on the
  * model: a trigger's pull, a stick's push once past the rest threshold, and 1
  * for a pressed button (a clicked stick counts as pressed).
@@ -270,9 +280,7 @@ export function stickDeflection(input: PadInput | undefined, side: string) {
 export function controlStrength(control: string, input?: PadInput): number {
   if (control.endsWith("trigger")) return triggerValue(input?.axes[control]);
   if (input?.buttons[control]) return 1;
-  if (control === "leftstick" || control === "rightstick") {
-    const { length } = stickDeflection(input, control.slice(0, -5));
-    return length >= stickActiveThreshold ? length : 0;
-  }
+  if (control === "leftstick" || control === "rightstick")
+    return stickPush(control, input);
   return 0;
 }

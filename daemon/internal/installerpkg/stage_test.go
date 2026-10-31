@@ -18,7 +18,7 @@ func TestStagedName(t *testing.T) {
 		"examples/profiles/basic.json":     "resources/examples/profiles/basic.json",
 		"licenses/go/x@v1/LICENSE":         "resources/licenses/go/x@v1/LICENSE",
 		"schema/profile.schema.json":       "resources/schema/profile.schema.json",
-		"docs/quickstart.en.md":            "resources/docs/quickstart.en.md",
+		"docs/known-limitations.en.md":     "resources/docs/known-limitations.en.md",
 		"licenses/THIRD-PARTY.txt":         "resources/licenses/THIRD-PARTY.txt",
 		"licenses/SDL3-LICENSE.txt":        "resources/licenses/SDL3-LICENSE.txt",
 		"examples/scripts/tabmate/main.ts": "resources/examples/scripts/tabmate/main.ts",

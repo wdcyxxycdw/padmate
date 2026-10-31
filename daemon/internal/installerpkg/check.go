@@ -57,7 +57,9 @@ type TreeOptions struct {
 	// functions of padmated.exe and padmatectl.exe are then not compared with
 	// the goldens of this source (PKG-11), which a release between the two may
 	// have changed, and its documents are not checked (v1.0.0 and earlier
-	// installed all of docs/). The rest of the PE check still applies.
+	// installed all of docs/). Its resources\app-update.yml may also name the
+	// source of its time, GitHub up to v1.0.2 (CheckEarlierUpdateConfig). The
+	// rest of the PE check still applies.
 	EarlierBuild bool
 	// NoUpdateConfig leaves out resources\app-update.yml, which a release
 	// from before the automatic update (PKG-10) does not have: the first
@@ -111,10 +113,11 @@ func CheckTree(ctx context.Context, opts TreeOptions) []string {
 			}
 		}
 	}
-	// The source of the automatic update and the folder the installer cleans.
+	// The source of the automatic update (the download site) and the folder the
+	// installer cleans.
 	updateFile := path("resources/app-update.yml")
 	if _, err := os.Stat(updateFile); !opts.NoUpdateConfig || err == nil {
-		for _, p := range updateConfigProblems(updateFile) {
+		for _, p := range updateConfigProblems(updateFile, opts.EarlierBuild) {
 			add("%s", p)
 		}
 	}

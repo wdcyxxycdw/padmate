@@ -11,6 +11,7 @@ import {
   stepInfo,
 } from "./mapping-model";
 import { DEFAULT_STEPS } from "./mapwizard";
+import { padIcons } from "./pad-icon";
 
 const config = (devices: Config["devices"]): Config =>
   ({ schemaVersion: 0, devices }) as Config;
@@ -45,7 +46,10 @@ describe("what each prompt of the wizard shows", () => {
         expect(info.name, `${step.id} ${language}`).toBeTruthy();
         expect(info.prompt).toBeTruthy();
         expect(info.hint).toBeTruthy();
-        expect(info.icon.kind).toBeTruthy();
+        // Every picture is a vendored icon (ADR-0079 §7).
+        expect(info.icon.kind).toBe("art");
+        if (info.icon.kind === "art")
+          expect(padIcons, step.id).toHaveProperty([info.icon.name]);
       }
     expect(() => stepInfo("nope", "en")).toThrow();
   });
@@ -55,7 +59,7 @@ describe("what each prompt of the wizard shows", () => {
       name: "A",
       prompt: "按下 A 键",
       hint: "右侧四个键中下面的那个，按一下再松开",
-      icon: { kind: "face", text: "A", color: "green" },
+      icon: { kind: "art", name: "kenney/xbox_button_a", face: "green" },
     });
     expect(stepInfo("y", "en")).toMatchObject({
       name: "Y",
@@ -68,36 +72,43 @@ describe("what each prompt of the wizard shows", () => {
     expect(stepInfo("ls-left", "zh-CN")).toMatchObject({
       name: "左摇杆向左",
       prompt: "把左摇杆推到最左，再放回中间",
-      icon: { kind: "stick", side: "L", direction: "left" },
+      icon: { kind: "art", name: "kenney/xbox_stick_l_left" },
     });
     expect(stepInfo("rs-down", "en")).toMatchObject({
       prompt: "Push the right stick all the way down, then back to the middle",
-      icon: { kind: "stick", side: "R", direction: "down" },
+      icon: { kind: "art", name: "kenney/xbox_stick_r_down" },
     });
     expect(stepInfo("ls-click", "en").icon).toEqual({
-      kind: "stick",
-      side: "L",
+      kind: "art",
+      name: "kenney/xbox_stick_l_press",
     });
   });
 
   it("draws the d-pad direction, the shoulders and the middle buttons", () => {
     expect(stepInfo("dpleft", "en").icon).toEqual({
-      kind: "dpad",
-      arms: ["left"],
+      kind: "art",
+      name: "kenney/xbox_dpad_left",
     });
-    expect(stepInfo("lt", "en").icon).toEqual({ kind: "badge", text: "LT" });
+    expect(stepInfo("lt", "en").icon).toEqual({
+      kind: "art",
+      name: "kenney/xbox_lt",
+    });
+    expect(stepInfo("rb", "en").icon).toEqual({
+      kind: "art",
+      name: "kenney/xbox_rb",
+    });
     // The middle buttons carry the symbol printed on them (ADR-0077).
     expect(stepInfo("view", "zh-CN")).toMatchObject({
       name: "View（返回键）",
-      icon: { kind: "glyph", glyph: "view" },
+      icon: { kind: "art", name: "kenney/xbox_button_view" },
     });
     expect(stepInfo("menu", "en").icon).toEqual({
-      kind: "glyph",
-      glyph: "menu",
+      kind: "art",
+      name: "kenney/xbox_button_menu",
     });
     expect(stepInfo("home", "en").icon).toEqual({
-      kind: "glyph",
-      glyph: "home",
+      kind: "art",
+      name: "kenney/switch_button_home",
     });
     // Home may be missing: it can be skipped.
     expect(stepInfo("home", "zh-CN").hint).toContain("跳过");

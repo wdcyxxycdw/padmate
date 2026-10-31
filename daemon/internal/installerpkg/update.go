@@ -101,12 +101,30 @@ func mainBundleProblems(bundle []byte, err error) []string {
 	return []string{fmt.Sprintf("resources/app.asar: %s requires %s, which the installed application does not have (it has no node_modules); bundle it in electron.vite.config.ts", MainBundle, strings.Join(quoted, ", "))}
 }
 
-// CheckUpdateConfig checks the text of resources\app-update.yml, which
-// electron-builder writes from the publish block of electron-builder.yml: the
-// source is GitHub with an owner and a repository, and the cache folder is
-// the one the installer deletes. publisherName is there only in a signed
-// build (PKG-09) and is not required here.
-func CheckUpdateConfig(data []byte) []string {
+// UpdateURL is the address the application reads its updates from (ADR-0078):
+// the download site, where latest.yml, the installers and their .sha256 files
+// sit at the root of the bucket. It ends with a slash, because electron-updater
+// resolves the relative names in latest.yml against it. It is written three
+// times and a test pins them equal: here, as UPDATE_URL in app/src/main/
+// update-config.ts, and as the url of the publish block of app/
+// electron-builder.yml (which becomes resources\app-update.yml).
+const UpdateURL = "https://padmate.download/"
+
+// UpdateChannel is the channel of the update source: electron-updater asks for
+// latest.yml. It is explicit everywhere (UPDATE_CHANNEL, the publish block,
+// resources\app-update.yml) because electron-builder takes the channel of a
+// prerelease build from its version for any provider but GitHub, so a
+// v1.0.3-rc.1 build would write rc.yml and `channel: rc`, which the download
+// site does not hold.
+const UpdateChannel = "latest"
+
+// formerUpdateSource is the provider of the builds up to v1.0.2, which read
+// the releases of the repository on GitHub (ADR-0073).
+const formerUpdateSource = "github"
+
+// updateConfigValues reads the keys that start a line of resources\app-update.yml:
+// a flat `key: value` file, with the list of publisherName below its key.
+func updateConfigValues(data []byte) map[string]string {
 	values := map[string]string{}
 	for _, line := range strings.Split(string(data), "\n") {
 		key, value, ok := strings.Cut(strings.TrimRight(line, "\r"), ":")
@@ -116,29 +134,83 @@ func CheckUpdateConfig(data []byte) []string {
 		}
 		values[key] = strings.Trim(strings.TrimSpace(value), `"'`)
 	}
+	return values
+}
+
+// downloadSiteProblems checks the update source of this source tree: the
+// generic provider at UpdateURL with the channel UpdateChannel.
+func downloadSiteProblems(values map[string]string) []string {
 	var problems []string
-	if values["provider"] != "github" {
-		problems = append(problems, fmt.Sprintf("provider is %q, want github", values["provider"]))
+	if values["provider"] != "generic" {
+		problems = append(problems, fmt.Sprintf("provider is %q, want generic (the download site, ADR-0078)", values["provider"]))
 	}
+	if got := values["url"]; got != UpdateURL {
+		problems = append(problems, fmt.Sprintf("url is %q, want %q", got, UpdateURL))
+	}
+	if got := values["channel"]; got != UpdateChannel {
+		problems = append(problems, fmt.Sprintf("channel is %q, want %q (without it electron-builder takes the channel of a prerelease build from its version)", got, UpdateChannel))
+	}
+	return problems
+}
+
+// formerSourceProblems checks the update source of a build up to v1.0.2:
+// GitHub with an owner and a repository.
+func formerSourceProblems(values map[string]string) []string {
+	var problems []string
 	for _, key := range []string{"owner", "repo"} {
 		if values[key] == "" {
 			problems = append(problems, key+" is missing")
 		}
 	}
-	if got := values["updaterCacheDirName"]; got != UpdaterCacheDir {
-		problems = append(problems, fmt.Sprintf("updaterCacheDirName is %q, want %q (the folder build/installer.nsh deletes)", got, UpdaterCacheDir))
-	}
 	return problems
 }
 
-// updateConfigProblems reads resources\app-update.yml of the tree at root.
-func updateConfigProblems(file string) []string {
+// cacheDirProblems checks the folder electron-updater downloads to, which the
+// installer deletes with a full uninstall.
+func cacheDirProblems(values map[string]string) []string {
+	if got := values["updaterCacheDirName"]; got != UpdaterCacheDir {
+		return []string{fmt.Sprintf("updaterCacheDirName is %q, want %q (the folder build/installer.nsh deletes)", got, UpdaterCacheDir)}
+	}
+	return nil
+}
+
+// CheckUpdateConfig checks the text of resources\app-update.yml, which
+// electron-builder writes from the publish block of electron-builder.yml: the
+// source is the download site (the generic provider, UpdateURL, UpdateChannel),
+// and the cache folder is the one the installer deletes. publisherName is there
+// only in a signed build (PKG-09) and is not required here.
+func CheckUpdateConfig(data []byte) []string {
+	values := updateConfigValues(data)
+	return append(downloadSiteProblems(values), cacheDirProblems(values)...)
+}
+
+// CheckEarlierUpdateConfig is CheckUpdateConfig for a tree of an earlier build
+// (TreeOptions.EarlierBuild), which may still have the source of its time: the
+// builds up to v1.0.2 read GitHub. The first installer (INSTALLER) of the
+// migration test (`task test:installer INSTALLER=<v1.0.2 installer>
+// UPGRADE=<new>`) is such a build.
+// Anything else is held to the rule of the current build.
+func CheckEarlierUpdateConfig(data []byte) []string {
+	values := updateConfigValues(data)
+	if values["provider"] == formerUpdateSource {
+		return append(formerSourceProblems(values), cacheDirProblems(values)...)
+	}
+	return append(downloadSiteProblems(values), cacheDirProblems(values)...)
+}
+
+// updateConfigProblems reads resources\app-update.yml of the tree at root;
+// earlier is TreeOptions.EarlierBuild.
+func updateConfigProblems(file string, earlier bool) []string {
 	data, err := os.ReadFile(file)
 	if err != nil {
 		return []string{fmt.Sprintf("resources/app-update.yml: %v", err)}
 	}
+	check := CheckUpdateConfig
+	if earlier {
+		check = CheckEarlierUpdateConfig
+	}
 	var problems []string
-	for _, p := range CheckUpdateConfig(data) {
+	for _, p := range check(data) {
 		problems = append(problems, "resources/app-update.yml: "+p)
 	}
 	return problems

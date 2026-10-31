@@ -1,6 +1,6 @@
 // ENG-17: the user documents come in two languages, and the two must say the
-// same thing in the same shape. For each pair (README, the quick start, the
-// guide chapters, the known limitations, the input troubleshooting) this
+// same thing in the same shape. For each pair (README, the guide chapters,
+// the known limitations, the input troubleshooting) this
 // checks that the files match one for one, that they have the same blocks
 // (headings, list items, table rows, paragraphs, code), the same code and the
 // same links, the same inline code and the same numbers, that the English file
@@ -9,7 +9,7 @@
 // every name of the app that they quote with “…” is a name of the table in
 // app/tests/docs/names.ts, in the same order in both. The sections that a
 // document sends the reader to must still have their heading.
-// quickstart-docs.test.ts checks that the table is still true of the app.
+// doc-names.test.ts checks that the table is still true of the app.
 import { describe, expect, it } from "vitest";
 import {
   blockKinds,
@@ -388,17 +388,6 @@ docs("links of the user documents", () => {
   });
 });
 
-docs("the quick start", () => {
-  it("points to a section the limitations page has", () => {
-    expect(read("docs/quickstart.md")).toContain("“绘画软件”一节");
-    expect(read("docs/quickstart.en.md")).toContain("“Painting apps”");
-    expect(headings(read("docs/known-limitations.md"))).toContain("绘画软件");
-    expect(headings(read("docs/known-limitations.en.md"))).toContain(
-      "Painting apps",
-    );
-  });
-});
-
 describe("the reader of the documents", () => {
   const sample = [
     "# Title",
@@ -465,8 +454,8 @@ describe("the reader of the documents", () => {
   });
 
   it("resolves a link from the folder of the file", () => {
-    expect(resolveLink("docs/guide/01.md", "../quickstart.md")).toBe(
-      "docs/quickstart.md",
+    expect(resolveLink("docs/guide/01.md", "../known-limitations.md")).toBe(
+      "docs/known-limitations.md",
     );
     expect(resolveLink("README.md", "docs/guide/00-index.md")).toBe(
       "docs/guide/00-index.md",

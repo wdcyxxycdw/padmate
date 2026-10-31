@@ -181,6 +181,7 @@ describe("the key drawer", () => {
     "west",
     "lefttrigger",
     "leftstick",
+    "leftstick.press",
     "dpad.up",
     "leftshoulder",
     "guide",
@@ -819,13 +820,6 @@ describe("the other confirm dialogs of the editors", () => {
     fireEvent.click(within(drawer).getByRole("button", { name: "WASD" }));
     await dialogNamed("改为 WASD？");
     await clean("stick preset");
-  });
-  it("改为 WASD？ of the d-pad", async () => {
-    renderApp(withConfirmable);
-    const drawer = await openDrawer("dpad.up");
-    fireEvent.click(within(drawer).getByRole("button", { name: "WASD" }));
-    await dialogNamed("改为 WASD？");
-    await clean("d-pad preset");
   });
   it("清除此设置？ of a direction that switches profiles", async () => {
     renderApp(withConfirmable);

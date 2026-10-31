@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { DeviceInfo } from "../shared/api";
+import { calloutOf, stickPress } from "./control-callout";
 import { type Callout, controllerCallouts } from "./controller-callouts";
 import {
   type ChipInfo,
@@ -19,6 +20,7 @@ import {
   controllerLabels,
   controlStrength,
   familyName,
+  stickPush,
   triggerValue,
 } from "./controller-model";
 import { createControllerScene } from "./controller-scene";
@@ -29,6 +31,7 @@ import {
   isFunctionKey,
 } from "./editor-model";
 import type { Translate } from "./i18n";
+import { PadIcon, type PadIconSpec, padIcon, stickMoveIcon } from "./pad-icon";
 import type { Language, PadInput } from "./store";
 import { Icon } from "./ui/Icon";
 import { Keycaps } from "./ui/Keycaps";
@@ -120,16 +123,33 @@ function systemGlyph(
   );
 }
 
-/** The physical control's badge: its printed label, face color and shape. */
+/**
+ * The physical control's badge: its icon (ADR-0079 §7, pad-icon.tsx) in the
+ * printed face color, or where the icon sets have none its printed label.
+ */
 function Glyph({
   control,
   label,
+  labels,
   family,
 }: {
   control: string;
   label: string;
+  labels: Record<string, string>;
   family: ControllerFamily;
 }) {
+  const art = padIcon(control, family, labels);
+  if (art)
+    return (
+      <span
+        className="stage-glyph"
+        data-icon="true"
+        data-face={faceColors[family]?.[label]}
+        aria-hidden="true"
+      >
+        <PadIcon name={art.name} />
+      </span>
+    );
   const icon = systemGlyph(control, label, family);
   return (
     <span
@@ -193,9 +213,77 @@ function Segment({
   );
 }
 
+/** The tooltip lines of a chip: what it does, and why it cannot be edited. */
+function chipNotes(chip: ChipInfo, language: Language): string[] {
+  return [
+    chip.summary,
+    // A script-only chip already says so on its second line.
+    chip.scriptOwned && chip.state !== "script"
+      ? tx(language, "由脚本接管", "Handled by a script")
+      : "",
+    chip.state === "locked"
+      ? tx(language, "只能在配置文件中修改", "Only editable in the file")
+      : "",
+  ].filter(Boolean);
+}
+
+/** What a chip button holds: badge, title and keys, then the marks. */
+function ChipBody({
+  glyph,
+  chip,
+  language,
+  percent,
+}: {
+  glyph: ReactNode;
+  chip: ChipInfo;
+  language: Language;
+  /** A trigger's pull, 0–1, shown as a percentage while it is pulled. */
+  percent?: number;
+}) {
+  return (
+    <>
+      {glyph}
+      <span className="stage-chip-text">
+        <span className="stage-chip-title">
+          {chip.titleKeys ? (
+            <Segment segment={chip.titleKeys} language={language} />
+          ) : (
+            chip.title
+          )}
+        </span>
+        {chip.detail.length > 0 && (
+          <span className="stage-chip-detail">
+            {chip.detail.map((segment, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Segments are positional parts of one line.
+              <Fragment key={index}>
+                {index > 0 && <span className="stage-sep">·</span>}
+                <Segment segment={segment} language={language} />
+              </Fragment>
+            ))}
+          </span>
+        )}
+      </span>
+      {percent !== undefined && percent > 0 && (
+        <span className="stage-chip-pct">{Math.round(percent * 100)}%</span>
+      )}
+      {chip.state === "locked" && (
+        <span className="stage-chip-lock">
+          <Icon name="lock" size={12} stroke={2} />
+        </span>
+      )}
+      {chip.scriptOwned && (
+        <span className="stage-chip-script" data-testid="script-ownership">
+          S
+        </span>
+      )}
+    </>
+  );
+}
+
 function Chip({
   callout,
   chip,
+  labels,
   family,
   strength,
   selected,
@@ -205,6 +293,7 @@ function Chip({
 }: {
   callout: Callout;
   chip: ChipInfo;
+  labels: Record<string, string>;
   family: ControllerFamily;
   strength: number;
   selected: boolean;
@@ -213,18 +302,8 @@ function Chip({
   onMenu?: (control: string) => void;
 }) {
   const trigger = callout.control.endsWith("trigger");
-  const locked = chip.state === "locked";
   const name = `${callout.label} · ${chip.title}`;
-  const notes = [
-    chip.summary,
-    // A script-only chip already says so on its second line.
-    chip.scriptOwned && chip.state !== "script"
-      ? tx(language, "由脚本接管", "Handled by a script")
-      : "",
-    locked
-      ? tx(language, "只能在配置文件中修改", "Only editable in the file")
-      : "",
-  ].filter(Boolean);
+  const notes = chipNotes(chip, language);
   const position = {
     "data-callout": callout.control,
     "data-placement": callout.placement,
@@ -250,6 +329,7 @@ function Chip({
         <Glyph
           control={callout.control}
           label={callout.label}
+          labels={labels}
           family={family}
         />
         <span className="stage-chip-text">
@@ -275,41 +355,135 @@ function Chip({
         onMenu?.(callout.control);
       }}
     >
-      <Glyph control={callout.control} label={callout.label} family={family} />
-      <span className="stage-chip-text">
-        <span className="stage-chip-title">
-          {chip.titleKeys ? (
-            <Segment segment={chip.titleKeys} language={language} />
-          ) : (
-            chip.title
-          )}
-        </span>
-        {chip.detail.length > 0 && (
-          <span className="stage-chip-detail">
-            {chip.detail.map((segment, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Segments are positional parts of one line.
-              <Fragment key={index}>
-                {index > 0 && <span className="stage-sep">·</span>}
-                <Segment segment={segment} language={language} />
-              </Fragment>
-            ))}
-          </span>
-        )}
-      </span>
-      {trigger && strength > 0 && (
-        <span className="stage-chip-pct">{Math.round(strength * 100)}%</span>
-      )}
-      {locked && (
-        <span className="stage-chip-lock">
-          <Icon name="lock" size={12} stroke={2} />
-        </span>
-      )}
-      {chip.scriptOwned && (
-        <span className="stage-chip-script" data-testid="script-ownership">
-          S
-        </span>
-      )}
+      <ChipBody
+        glyph={
+          <Glyph
+            control={callout.control}
+            label={callout.label}
+            labels={labels}
+            family={family}
+          />
+        }
+        chip={chip}
+        language={language}
+        percent={trigger ? strength : undefined}
+      />
     </button>
+  );
+}
+
+/**
+ * A stick: one callout (one leader to the cap on the model) of two cells, two
+ * slots tall. The top cell is its movement (id leftstick), the bottom its
+ * press (leftstick.press). Each is a button with its own state, lamp, badges,
+ * drawer and context menu.
+ */
+function StickChip({
+  callout,
+  move,
+  press,
+  labels,
+  family,
+  input,
+  selectedControl,
+  language,
+  onSelect,
+  onMenu,
+}: {
+  callout: Callout;
+  move: ChipInfo;
+  press: ChipInfo;
+  labels: Record<string, string>;
+  family: ControllerFamily;
+  input?: PadInput;
+  selectedControl?: string;
+  language: Language;
+  onSelect?: (control: string) => void;
+  onMenu?: (control: string) => void;
+}) {
+  const cells: {
+    part: "move" | "press";
+    control: string;
+    prefix: string;
+    word: string;
+    icon?: PadIconSpec;
+    chip: ChipInfo;
+    lit: boolean;
+  }[] = [
+    {
+      part: "move",
+      control: callout.control,
+      prefix: callout.control === "leftstick" ? "LS" : "RS",
+      word: tx(language, "旋转", "Move"),
+      // The stick turning both ways, and its click (ADR-0079 §7).
+      icon: stickMoveIcon(callout.control === "leftstick" ? "l" : "r"),
+      chip: move,
+      // Pushed past drift; the click is the other cell's.
+      lit: stickPush(callout.control, input) > 0,
+    },
+    {
+      part: "press",
+      control: stickPress(callout.control),
+      // The click is printed L3 / R3 on a PlayStation pad.
+      prefix: callout.label,
+      word: tx(language, "点按", "Press"),
+      icon: padIcon(callout.control, family, labels),
+      chip: press,
+      lit: !!input?.buttons[callout.control],
+    },
+  ];
+  return (
+    <div
+      className="stage-stick"
+      data-callout-group={callout.control}
+      data-placement={callout.placement}
+      style={
+        {
+          "--slot": callout.slot ?? 0,
+          "--span": callout.span ?? 2,
+        } as CSSProperties
+      }
+    >
+      {cells.map((cell) => {
+        const name = `${cell.prefix} ${cell.word} · ${cell.chip.title}`;
+        const notes = chipNotes(cell.chip, language);
+        return (
+          <button
+            key={cell.control}
+            type="button"
+            className="stage-chip stage-cell"
+            data-callout={cell.control}
+            data-cell={cell.part}
+            data-column={callout.placement}
+            data-state={cell.chip.state}
+            data-active={cell.lit}
+            data-missing={cell.chip.missing || undefined}
+            data-inherited={cell.chip.inherited || undefined}
+            aria-label={name}
+            aria-pressed={selectedControl === cell.control}
+            title={notes.length ? `${name}\n${notes.join(" · ")}` : name}
+            onClick={() => onSelect?.(cell.control)}
+            onContextMenu={(event) => {
+              // The movement opens the stick's parameter menu, the press the
+              // key's actions: the drawer of the selected cell decides.
+              event.preventDefault();
+              onSelect?.(cell.control);
+              onMenu?.(cell.control);
+            }}
+          >
+            <ChipBody
+              glyph={
+                <span className="stage-glyph" data-icon="true">
+                  {cell.icon && <PadIcon name={cell.icon.name} />}
+                </span>
+              }
+              chip={cell.chip}
+              language={language}
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -342,13 +516,21 @@ export function Controller({
   );
   const family = familyName(info.type);
   const layout = controllerCallouts(info);
+  // The leader of a stick belongs to both its cells.
+  const selectedCallout = selectedControl && calloutOf(selectedControl);
   // Leaders of unset controls are dashed; the scene reads this on each frame.
+  // A stick's is dashed only when both its cells are unset.
   const unbound = layout
-    .filter((callout) => chips?.[callout.control]?.state === "unbound")
+    .filter((callout) =>
+      callout.span
+        ? chips?.[callout.control]?.state === "unbound" &&
+          chips?.[stickPress(callout.control)]?.state === "unbound"
+        : chips?.[callout.control]?.state === "unbound",
+    )
     .map((callout) => callout.control)
     .join(" ");
-  const latest = useRef({ input, selectedControl, unbound });
-  latest.current = { input, selectedControl, unbound };
+  const latest = useRef({ input, selectedCallout, unbound });
+  latest.current = { input, selectedCallout, unbound };
   const instructions = tx(
     language,
     "点击标签即可编辑对应按键 · 按下手柄按键时，对应标签会亮起",
@@ -383,7 +565,7 @@ export function Controller({
         callouts.current ?? undefined,
         {
           input: current.input,
-          selected: current.selectedControl,
+          selected: current.selectedCallout,
           unbound: current.unbound ? current.unbound.split(" ") : [],
         },
       );
@@ -398,10 +580,10 @@ export function Controller({
   useEffect(() => {
     scene.current?.update(
       input,
-      selectedControl,
+      selectedCallout,
       unbound ? unbound.split(" ") : [],
     );
-  }, [input, selectedControl, unbound]);
+  }, [input, selectedCallout, unbound]);
   return (
     <fieldset
       className="controller-3d"
@@ -418,6 +600,33 @@ export function Controller({
         />
         <div className="controller-labels">
           {layout.map((callout) => {
+            // Controls without chip data still get a chip named after them.
+            const plain = (title: string): ChipInfo => ({
+              title,
+              detail: [],
+              summary: "",
+              state: "bound",
+              scriptOwned: false,
+            });
+            // A stick is two cells in one chip.
+            if (callout.span)
+              return (
+                <StickChip
+                  key={callout.control}
+                  callout={callout}
+                  move={chips?.[callout.control] ?? plain(callout.label)}
+                  press={
+                    chips?.[stickPress(callout.control)] ?? plain(callout.label)
+                  }
+                  labels={labels}
+                  family={family}
+                  input={input}
+                  selectedControl={selectedControl}
+                  language={language}
+                  onSelect={onSelectControl}
+                  onMenu={onMenuControl}
+                />
+              );
             // The same strength lights the control on the model (a pushed
             // stick counts once past the rest threshold).
             const strength = controlStrength(callout.control, input);
@@ -429,14 +638,9 @@ export function Controller({
                   chips?.[callout.control] ??
                   (isFunctionKey(callout.control, functionKey)
                     ? functionKeyChip(language)
-                    : {
-                        title: callout.label,
-                        detail: [],
-                        summary: "",
-                        state: "bound",
-                        scriptOwned: false,
-                      })
+                    : plain(callout.label))
                 }
+                labels={labels}
                 family={family}
                 strength={strength}
                 selected={selectedControl === callout.control}

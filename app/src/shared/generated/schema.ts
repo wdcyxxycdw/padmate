@@ -401,6 +401,7 @@ export type ProfileStick = {
   "hysteresisDeg"?: number;
   "knobStepDeg"?: number;
   "knobTick"?: boolean;
+  "label"?: string;
   "mode"?: "standard" | "eightWay" | "fourWay" | "fourWayDiagonal" | "knob" | "mouse";
   "mouseSmoothingMs"?: number;
   "mouseSpeed"?: number;

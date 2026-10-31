@@ -398,6 +398,11 @@ it("locates diagnostics on the chip whose drawer edits them", () => {
     ["/layers/base/rt.full/tap", "righttrigger"],
     ["/layers/base/rs.cw/press", "rightstick"],
     ["/layers/base/ls.outer/press", "leftstick"],
+    // The stick's own binding is its click: the press cell.
+    ["/layers/base/leftstick/press", "leftstick.press"],
+    ["/layers/base/l3/hold", "leftstick.press"],
+    ["/layers/base/rightstick/label", "rightstick.press"],
+    ["/controlNames/leftstick", "leftstick.press"],
     ["/layers/base/ls.up/hold", "leftstick"],
     ["/layers/base/rs.active", "rightstick"],
     // Raw axes and half presses belong to the stick and trigger drawers.
@@ -464,7 +469,7 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(zh("/feedback/lowBattery")).toBe("界面中未显示的部分");
   expect(zh("/feedback/strength")).toBe("界面中未显示的部分");
   expect(zh("/analog/axisThreshold")).toBe("原始轴阈值");
-  expect(zh("/analog/dpad/mode")).toBe("十字键设置");
+  expect(zh("/analog/dpad/mode")).toBe("十字键");
   expect(zh("/analog/ls/deadzone")).toBe("左摇杆 · 摇杆设置");
   expect(zh("/analog/rt/press")).toBe("RT 键 · 扳机设置");
   expect(zh("/layers/base/south/press")).toBe("撤销键 · 点按");
@@ -473,6 +478,10 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(zh("/layers/base/east/label")).toBe("B 键 · 显示文字");
   expect(zh("/layers/base/south/haptic")).toBe("撤销键 · 触感");
   expect(zh("/layers/base/ls.up/hold")).toBe("左摇杆 · ↑ 长按");
+  // The click of a stick is its press cell, named like its drawer.
+  expect(zh("/layers/base/leftstick/hold")).toBe("左摇杆 点按 · 长按");
+  expect(zh("/layers/base/rightstick/press")).toBe("右摇杆 点按 · 点按");
+  expect(zh("/controlNames/leftstick")).toBe("左摇杆 点按 · 按键名称");
   expect(zh("/layers/base/ls.active")).toBe("左摇杆 · 任意方向");
   expect(zh("/layers/base/leftx+/press")).toBe("左摇杆 · 原始轴向右 点按");
   expect(zh("/layers/base/lefttrigger+")).toBe("LT 键 · 半按");
@@ -488,6 +497,9 @@ it("describes where each diagnostic is in the words of the editor", () => {
     "In a part of the file the editor does not show",
   );
   expect(en("/layers/base/righty+/hold")).toBe("Right stick · Raw down Hold");
+  expect(en("/layers/base/leftstick/haptic")).toBe(
+    "Left stick · Press · Haptic",
+  );
   expect(en("/controlNames/south")).toBe("A key · Key name");
   expect(en("/layers/base/south/haptic")).toBe("A key · Haptic");
   expect(en("/common/south")).toBe(
@@ -565,6 +577,45 @@ it("opens the drawer's menu once for a right-clicked chip", async () => {
   expect(
     container.querySelectorAll('button[data-callout][aria-pressed="true"]'),
   ).toHaveLength(1);
+});
+
+it("opens a stick's movement and its press as two drawers", async () => {
+  const editor = await editorFor({
+    ...paint,
+    controlNames: { leftstick: "吸管" },
+  });
+  const select = vi.fn();
+  const { container } = render(<Harness editor={editor} onSelect={select} />);
+  const cell = (control: string) => {
+    const button = container.querySelector<HTMLElement>(
+      `button[data-callout="${control}"]`,
+    );
+    if (!button) throw new Error(`Missing cell ${control}`);
+    return button;
+  };
+  // Named after the key name, which belongs to the press.
+  expect(cell("leftstick.press").getAttribute("aria-label")).toBe(
+    "LS 点按 · 未设置",
+  );
+  fireEvent.click(cell("leftstick.press"));
+  expect(select).toHaveBeenLastCalledWith("leftstick.press");
+  expect(
+    within(screen.getByRole("complementary")).getByText("leftstick.press"),
+  ).toBeDefined();
+  expect(cell("leftstick.press").getAttribute("aria-pressed")).toBe("true");
+  expect(cell("leftstick").getAttribute("aria-pressed")).toBe("false");
+  // Switching to the movement keeps the one drawer, on the stick.
+  fireEvent.click(cell("leftstick"));
+  expect(
+    within(screen.getByRole("complementary")).getByText("leftstick"),
+  ).toBeDefined();
+  expect(cell("leftstick.press").getAttribute("aria-pressed")).toBe("false");
+  // The leader of the stick is selected for either cell.
+  expect(container.querySelectorAll("[data-callout-group]")).toHaveLength(2);
+  // Closing puts focus back on the cell that was open.
+  fireEvent.click(cell("leftstick.press"));
+  fireEvent.click(screen.getByRole("button", { name: "关闭按键编辑" }));
+  expect(document.activeElement).toBe(cell("leftstick.press"));
 });
 
 it("passes the way to the scripts page through to the drawer", async () => {

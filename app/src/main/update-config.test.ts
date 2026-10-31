@@ -4,15 +4,10 @@ import {
   CHECK_INTERVAL_MS,
   compareVersions,
   FIRST_CHECK_MS,
-  hasPrerelease,
-  isNoReleaseError,
-  isReleasePageURL,
-  NO_RELEASE_CODE,
-  RELEASES_URL,
+  isManualDownloadURL,
   redirectUpdaterHome,
-  releasePageURL,
-  UPDATE_OWNER,
-  UPDATE_REPO,
+  UPDATE_CHANNEL,
+  UPDATE_URL,
   UPDATER_CACHE_DIR,
   updaterCacheRoot,
   updaterTestHome,
@@ -22,16 +17,35 @@ import {
 const text = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("the update source (PKG-10)", () => {
-  it("is the repository electron-builder.yml publishes to", () => {
+describe("the update source (PKG-10, ADR-0078)", () => {
+  it("is the download site electron-builder.yml publishes to", () => {
     const config = text("../../electron-builder.yml");
     expect(config).toMatch(/^publish:\s*$/m);
-    expect(config).toMatch(/^\s+- provider: github$/m);
-    expect(config).toContain(`owner: ${UPDATE_OWNER}`);
-    expect(config).toContain(`repo: ${UPDATE_REPO}`);
-    expect(RELEASES_URL).toBe(
-      `https://github.com/${UPDATE_OWNER}/${UPDATE_REPO}/releases`,
-    );
+    expect(config).toMatch(/^\s+- provider: generic$/m);
+    const lines = config.split("\n").map((line) => line.trim());
+    expect(lines).toContain(`url: ${UPDATE_URL}`);
+    expect(lines).toContain(`channel: ${UPDATE_CHANNEL}`);
+    // One source, and not the repository the code lives in.
+    expect(config.match(/^\s+- provider:/gm)).toHaveLength(1);
+    expect(config).not.toMatch(/^\s+owner:/m);
+  });
+
+  it("is an https address of the download site that ends in a slash", () => {
+    // latest.yml names the installer by a relative path, which electron-updater
+    // resolves against this address: without the slash the file is not found.
+    const url = new URL(UPDATE_URL);
+    expect(url.protocol).toBe("https:");
+    expect(url.host).toBe("padmate.download");
+    expect(UPDATE_URL.endsWith("/")).toBe(true);
+    expect(url.pathname).toBe("/");
+    expect(url.search).toBe("");
+    expect(url.hash).toBe("");
+  });
+
+  it("reads the channel latest, which is the file latest.yml", () => {
+    // electron-builder would otherwise derive the channel from the prerelease
+    // part of the version (rc.yml for 1.0.3-rc.1), a file the site never has.
+    expect(UPDATE_CHANNEL).toBe("latest");
   });
 
   it("keeps downloads in the folder the installer cleans up", () => {
@@ -85,25 +99,30 @@ describe("the downloads of the installed application's test mode", () => {
   });
 });
 
-describe("the addresses Main opens", () => {
-  it("are the release pages releasePageURL builds, and no others", () => {
-    expect(isReleasePageURL(RELEASES_URL)).toBe(true);
-    expect(isReleasePageURL(releasePageURL("1.0.1"))).toBe(true);
-    expect(isReleasePageURL(releasePageURL("1.0.0-rc.2"))).toBe(true);
+describe("the address Main opens", () => {
+  it("is the download site and no other", () => {
+    expect(UPDATE_URL).toBe("https://padmate.download/");
+    expect(isManualDownloadURL(UPDATE_URL)).toBe(true);
     for (const url of [
       "",
-      "https://github.com/wdcyxxycdw/padmate/releases/download/v1.0.1/a.exe",
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.1/../../x",
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.1?x=1",
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/1.0.1",
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v",
-      "https://github.com/wdcyxxycdw/padmate/releases-evil",
-      "https://github.com/wdcyxxycdw/other/releases",
-      "http://github.com/wdcyxxycdw/padmate/releases",
+      "https://padmate.download",
+      "https://padmate.download/ ",
+      "https://padmate.download/?x=1",
+      "https://padmate.download/#x",
+      "https://padmate.download/latest.yml",
+      "https://padmate.download/padmate-v1.0.3-windows-amd64-setup.exe",
+      "https://padmate.download:8443/",
+      "https://padmate.download.evil.example/",
+      "https://evil.example/padmate.download/",
+      "https://user@padmate.download/",
+      "http://padmate.download/",
+      "HTTPS://PADMATE.DOWNLOAD/",
+      "https://github.com/wdcyxxycdw/padmate/releases",
+      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.1",
       "file:///C:/Windows/System32/calc.exe",
       "javascript:alert(1)",
     ])
-      expect(isReleasePageURL(url), url).toBe(false);
+      expect(isManualDownloadURL(url), url).toBe(false);
   });
 });
 
@@ -136,12 +155,6 @@ describe("version text from the feed", () => {
   ])("refuses %j", (version) => {
     expect(validVersion(version)).toBeNull();
   });
-
-  it("tells a prerelease from a release", () => {
-    expect(hasPrerelease("1.0.0-rc.2")).toBe(true);
-    expect(hasPrerelease("1.0.0")).toBe(false);
-    expect(hasPrerelease("not a version")).toBe(false);
-  });
 });
 
 describe("version order (semver)", () => {
@@ -168,63 +181,5 @@ describe("version order (semver)", () => {
   it("treats a text that is not a version as older than any version", () => {
     expect(compareVersions("junk", "0.0.1")).toBeLessThan(0);
     expect(compareVersions("0.0.1", "junk")).toBeGreaterThan(0);
-  });
-});
-
-describe("the release page", () => {
-  it("is built from the constants and a checked version", () => {
-    expect(releasePageURL("1.0.1")).toBe(
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.1",
-    );
-    expect(releasePageURL("1.0.0-rc.2")).toBe(
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.0-rc.2",
-    );
-  });
-
-  it("falls back to the list of releases for a version it does not trust", () => {
-    for (const version of [
-      "",
-      "1.0.0/../../evil",
-      "1.0.0?x=1",
-      "javascript:alert(1)",
-      "1.0.0#x",
-      undefined,
-    ])
-      expect(releasePageURL(version)).toBe(RELEASES_URL);
-  });
-});
-
-describe("a look that has no release to read", () => {
-  const wrapped = (status: string) =>
-    new Error(
-      `Cannot parse releases feed: Error: Unable to find latest version on GitHub (https://github.com/o/r/releases/latest), please ensure a production release exists: HttpError: ${status}\nHeaders: {}\n    at createHttpError`,
-    );
-
-  it("is told by the text electron-updater gives for a 404 on the latest release", () => {
-    expect(NO_RELEASE_CODE).toBe("ERR_UPDATE_NO_RELEASE");
-    expect(isNoReleaseError(wrapped("404 Not Found"))).toBe(true);
-    // The error before electron-updater wraps it a second time.
-    expect(
-      isNoReleaseError(
-        new Error(
-          "Unable to find latest version on GitHub (u), please ensure a production release exists: HttpError: 404 Not Found",
-        ),
-      ),
-    ).toBe(true);
-  });
-
-  it("is not told by any other failure", () => {
-    expect(isNoReleaseError(wrapped("503 Service Unavailable"))).toBe(false);
-    expect(isNoReleaseError(wrapped("4041 Odd"))).toBe(false);
-    // A 404 mentioned elsewhere in the text, as a header value is.
-    expect(
-      isNoReleaseError(
-        new Error(
-          "HttpError: 503 Unavailable\nHeaders: { x: 'HttpError: 404' }",
-        ),
-      ),
-    ).toBe(false);
-    for (const value of [undefined, null, "404", 404, {}, new Error("x")])
-      expect(isNoReleaseError(value)).toBe(false);
   });
 });

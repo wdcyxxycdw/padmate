@@ -5,16 +5,27 @@ import { join } from "node:path";
 // them; the window never names a URL or a folder.
 
 /**
- * The repository the releases are read from. The same two names are in
- * electron-builder.yml's publish block (TestElectronBuilderConfig pins them
- * equal), which becomes resources\app-update.yml. Changing the source of the
- * updates means changing both.
+ * The download site the updates are read from (ADR-0078): latest.yml and the
+ * installers sit in its root. It ends in a slash, because latest.yml names the
+ * installer by a relative path that is resolved against it. The same address
+ * is in electron-builder.yml's publish block (which becomes
+ * resources\app-update.yml) and in Go's installerpkg.UpdateURL; the tests of
+ * both pin them equal (TestElectronBuilderPublishesToTheUpdateSource).
+ * Changing the source of the updates means changing all three.
+ *
+ * It is also the one address Main opens in the browser (isManualDownloadURL):
+ * the site has no page, and a browser that opens it downloads the newest
+ * installer.
  */
-export const UPDATE_OWNER = "wdcyxxycdw";
-export const UPDATE_REPO = "padmate";
+export const UPDATE_URL = "https://padmate.download/";
 
-/** The page that lists the releases; the fallback of releasePageURL. */
-export const RELEASES_URL = `https://github.com/${UPDATE_OWNER}/${UPDATE_REPO}/releases`;
+/**
+ * The channel file the site holds: latest.yml. It is written down, as
+ * electron-builder would otherwise name the channel after the prerelease part
+ * of the version (rc.yml for 1.0.3-rc.1), which the site never has. Only
+ * releases are published there.
+ */
+export const UPDATE_CHANNEL = "latest";
 
 /**
  * The folder of %LOCALAPPDATA% where electron-updater keeps what it
@@ -91,11 +102,6 @@ export function validVersion(version: unknown): string | null {
   return parseVersion(version) ? version : null;
 }
 
-/** Whether the version has a prerelease part, as 1.0.0-rc.1 has. */
-export function hasPrerelease(version: string): boolean {
-  return (parseVersion(version)?.pre.length ?? 0) > 0;
-}
-
 /**
  * Semantic version order. Negative when a is older than b. A text that is not
  * a version is older than every version.
@@ -127,49 +133,10 @@ export function compareVersions(a: string, b: string): number {
 }
 
 /**
- * The code of a look that found no release to read: the repository is
- * public and has releases, and none of them is a production release (only
- * release candidates are published until 1.0.0). UpdateController takes it
- * for "nothing newer" in its second look, and for no other error.
+ * Whether the address is the one Main opens in the browser: the download site
+ * itself, as the constant spells it. The only address Main opens for the
+ * update; nothing the feed says is put into it.
  */
-export const NO_RELEASE_CODE = "ERR_UPDATE_NO_RELEASE";
-
-// electron-updater 6.8.9 gives one error code for every reason the look at
-// the latest release failed, and the HTTP status only in the text of the
-// error that it wraps (github-channels.test.ts drives its GitHub provider
-// and pins this text).
-const noReleasePattern =
-  /please ensure a production release exists: HttpError: 404\b/;
-
-/**
- * Whether the error is GitHub saying the repository has no production
- * release: the 404 of the request for the latest release, after the list of
- * releases was read. A repository that cannot be read at all fails at the
- * list, a network or server failure has another status: both are failures.
- */
-export function isNoReleaseError(error: unknown): boolean {
-  const message = (error as { message?: unknown } | null)?.message;
-  return typeof message === "string" && noReleasePattern.test(message);
-}
-
-/**
- * The page of a release, built from the constants and a version that was
- * checked; the page of all releases for anything else. Nothing the feed says
- * is put into the address.
- */
-export function releasePageURL(version?: string): string {
-  const checked = validVersion(version);
-  return checked ? `${RELEASES_URL}/tag/v${checked}` : RELEASES_URL;
-}
-
-/**
- * Whether the address is one of the release pages releasePageURL builds: the
- * list of releases, or the page of one tag. The only addresses Main opens.
- */
-export function isReleasePageURL(url: string): boolean {
-  if (url === RELEASES_URL) return true;
-  const prefix = `${RELEASES_URL}/tag/v`;
-  return (
-    url.startsWith(prefix) && validVersion(url.slice(prefix.length)) !== null
-  );
+export function isManualDownloadURL(url: string): boolean {
+  return url === UPDATE_URL;
 }

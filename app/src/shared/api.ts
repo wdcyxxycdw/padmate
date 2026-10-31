@@ -1059,9 +1059,10 @@ export interface PadmateAPI {
   dismissUpdate(choice: UpdateDismissal): Promise<UpdateState>;
   // 自动检查更新.
   setAutoUpdate(enabled: boolean): Promise<UpdateState>;
-  // Opens the page of the offered version on GitHub, or the list of
-  // releases; Main builds the address from its constants.
-  openReleasePage(): Promise<void>;
+  // 手动下载: opens the download site in the browser, which downloads the
+  // newest installer. Main owns the address (update-config.ts); the window
+  // passes nothing.
+  openManualDownload(): Promise<void>;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
 }
 

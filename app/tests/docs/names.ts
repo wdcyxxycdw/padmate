@@ -16,11 +16,6 @@ export type Source = "renderer" | "installer";
 export type Name = readonly [zh: string, en: string, source?: Source];
 
 export const names: Name[] = [
-  // First run.
-  ["连接手柄", "Connect your controller"],
-  ["进入主页", "Go to the main page"],
-  ["连接一个手柄", "Connect a controller"],
-  ["不连接手柄，直接进入", "Continue without a controller"],
   // Pages and the status bar.
   ["映射", "Mapping"],
   ["配置", "Profiles"],
@@ -36,9 +31,8 @@ export const names: Name[] = [
   ["按下", "Press"],
   ["录入快捷键", "Capture shortcut"],
   ["请按下快捷键…", "Press a shortcut…"],
-  ["清除快捷键", "Clear shortcut"],
-  ["添加映射", "Add mapping"],
-  ["添加下一步", "Add a next step"],
+  ["添加其他动作", "Add another action"],
+  ["增加动作序列", "Add action sequence"],
   ["快捷键", "Shortcut"],
   ["等待", "Wait"],
   // The function key.
@@ -50,13 +44,10 @@ export const names: Name[] = [
   ["按键操作", "Key actions"],
   ["清除这一套里的设置", "Clear in this set"],
   // A profile for a painting app.
-  ["新建配置…", "New profile…"],
   ["名称", "Name"],
   ["新建", "Create"],
   ["更多", "More"],
   ["导出快捷键对照表…", "Export shortcut table…"],
-  ["图片（PNG）", "Image (PNG)"],
-  ["导出", "Export"],
   ["编辑按键", "Edit keys"],
   ["添加软件", "Add app"],
   ["点选窗口…", "Pick a window…"],
@@ -96,7 +87,6 @@ export const names: Name[] = [
   ["映射", "Mappings"],
   ["摇杆设置", "Stick settings"],
   ["扳机设置", "Trigger settings"],
-  ["十字键设置", "D-pad settings"],
   ["关闭按键编辑", "Close key editor"],
   ["复制此按键的设置", "Copy this key's settings"],
   ["粘贴…", "Paste…"],
@@ -163,23 +153,17 @@ export const names: Name[] = [
   ["朝任意方向推动", "Push in any direction"],
   ["按到底", "Full pull"],
   ["方向模式", "Direction mode"],
-  ["4 方向", "4-way"],
-  ["8 方向", "8-way"],
-  ["只取 1 个方向", "One at a time"],
+  ["四方向", "4 directions"],
   ["方向键", "Arrow keys"],
   ["灵敏度", "Sensitivity"],
   ["本手柄已单独调校", "Calibrated for this controller"],
-  ["按下摇杆", "Click the stick"],
+  ["旋转", "Move"],
+  ["点按", "Press"],
   ["触发幅度", "Trigger point"],
-  ["斜向扇区宽度", "Diagonal width"],
   ["角度滞回", "Angle hysteresis"],
   ["线性", "Linear"],
   ["二次", "Quadratic"],
   ["三次", "Cubic"],
-  ["斜向未设置按键时", "When a diagonal has no keys"],
-  ["不发送", "Send nothing"],
-  ["按相邻两个方向", "Both neighbors"],
-  ["只有斜向", "Diagonals only"],
   ["其他输入", "Other inputs"],
   ["重推的位置", "Hard push from"],
   ["原始轴", "Raw axes"],
@@ -199,12 +183,6 @@ export const names: Name[] = [
   ["按到底：按下", "Full pull: press"],
   ["按到底：松开", "Full pull: release"],
   ["半按", "Half press"],
-  ["十字键模式", "D-pad mode"],
-  ["独立按钮", "Buttons"],
-  ["斜按时", "On a diagonal"],
-  ["保留先按下的", "Keep the first"],
-  ["按固定规则", "Fixed rule"],
-  ["斜向的按键", "Keys for the diagonals"],
   // Guide 8: scripts
   ["重新加载", "Reload"],
   ["新建", "New"],
@@ -294,7 +272,7 @@ export const names: Name[] = [
   ["无法检查更新", "Could not check for updates"],
   ["手动检查", "Manual check"],
   ["有新版本", "A new version is available"],
-  ["查看发布页", "View release page"],
+  ["手动下载", "Download manually"],
   ["隐藏", "Hide"],
   ["以后再说", "Later"],
   ["跳过这个版本", "Skip this version"],
@@ -306,7 +284,7 @@ export const names: Name[] = [
   ["灯光", "Lights"],
   ["改用按到底", "Use full pull"],
   ["最近使用", "Recent"],
-  // Quick start
+  // FAQ.
   ["该手柄无法震动或闪灯", "This controller cannot rumble or flash."],
   // The question of the uninstaller (app/build/installer.nsh).
   ["是否保留配置和脚本？", "Keep your profiles and scripts?", "installer"],
@@ -334,12 +312,6 @@ export interface External {
 
 export const external: External[] = [
   {
-    zh: "绘画",
-    en: "Painting",
-    reason:
-      "the example name of a profile that the reader types; the app proposes no name",
-  },
-  {
     zh: "Windows 已保护你的电脑",
     en: "Windows protected your PC",
     reason: "text of the SmartScreen window of Windows",
@@ -353,21 +325,6 @@ export const external: External[] = [
     zh: "仍要运行",
     en: "Run anyway",
     reason: "button of the SmartScreen window of Windows",
-  },
-  {
-    zh: "安装",
-    en: "Install",
-    reason: "button of the installer wizard (NSIS), not text of the app",
-  },
-  {
-    zh: "运行 padmate",
-    en: "Run padmate",
-    reason: "check box of the last page of the installer wizard (NSIS)",
-  },
-  {
-    zh: "已连接：手柄名称",
-    en: "Connected:",
-    reason: "the app writes the name of the controller after the colon",
   },
   {
     zh: "应用",
@@ -419,11 +376,6 @@ export const external: External[] = [
     zh: "忽略 F13–F24",
     en: "Ignore high function keys",
     reason: "option in Krita, not in padmate",
-  },
-  {
-    zh: "Markdown",
-    en: "Markdown",
-    reason: "name of a file format, the same in both languages",
   },
   {
     zh: "WASD",
@@ -486,12 +438,6 @@ export const external: External[] = [
     zh: "Steam 正在运行",
     en: "Steam is running",
     reason: "built by the app with the name of the software that runs",
-  },
-  {
-    zh: "出了问题怎么办",
-    en: "When something goes wrong",
-    reason: "heading of a section of the quick start",
-    heading: "docs/quickstart.md",
   },
   {
     zh: "绘画软件",

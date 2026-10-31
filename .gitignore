@@ -19,6 +19,8 @@ app/test-results/
 app/playwright-report/
 *.tsbuildinfo
 npm-debug.log*
+# wrangler's scratch folder, made by a hand deploy of app/scripts/download-worker
+.wrangler/
 
 # Editors / OS
 .vscode/*

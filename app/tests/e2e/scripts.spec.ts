@@ -164,11 +164,13 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
       await expect(preview).toHaveText("S → 复制全部");
       // One drawing of the control (UI-44) and one of the script (SCR-50).
       // The fake pad is a standard one: its face keys are drawn by position,
-      // with the pressed one lit.
+      // with the pressed one lit (ADR-0079 §7).
       const control = preview.locator(".control-icon");
       await expect(control).toHaveCount(1);
-      await expect(control).toHaveAttribute("data-kind", "position");
-      await expect(control.locator('[data-lit="true"]')).toHaveCount(1);
+      await expect(control).toHaveAttribute("data-kind", "art");
+      await expect(
+        control.locator('svg[data-pad-icon="kenney/switch_buttons_down"]'),
+      ).toHaveCount(1);
       await expect(preview.locator("svg.key-preview-icon")).toHaveCount(1);
     });
     await page.getByRole("button", { name: "脚本", exact: true }).click();

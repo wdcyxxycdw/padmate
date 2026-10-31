@@ -1798,6 +1798,14 @@ describe("settings page", () => {
     expect(dialog.textContent).toContain("MIT");
     expect(dialog.textContent).toContain("CC BY 4.0");
     expect(dialog.textContent).toContain("Rusfort");
+    // The button icons (ADR-0079 §7): Kenney's under CC0, PromptFont's under
+    // the OFL, whose text goes with them.
+    expect(dialog.textContent).toContain("Kenney");
+    expect(dialog.textContent).toContain("CC0");
+    expect(dialog.textContent).toContain("PromptFont");
+    expect(
+      dialog.querySelector(".page-licenses-text pre")?.textContent,
+    ).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/);
     fireEvent.click(screen.getByRole("button", { name: "关闭关于与许可" }));
     expect(screen.queryByRole("dialog")).toBeNull();
   });

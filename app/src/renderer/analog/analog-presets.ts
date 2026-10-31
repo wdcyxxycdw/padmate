@@ -38,9 +38,13 @@ export function presetChanges(
     );
 }
 
-/** The direction mode a preset switches to. */
+/**
+ * The direction mode a preset switches to: a stick sends one direction at a
+ * time (the only direction mode the drawer offers) and a d-pad
+ * presses its four buttons on their own.
+ */
 export function presetMode(group: DirectionGroup) {
-  return group === "dpad" ? "buttons" : "standard";
+  return group === "dpad" ? "buttons" : "fourWay";
 }
 
 // Only the four cardinal bindings of the edited key set are replaced; their

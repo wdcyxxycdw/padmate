@@ -20,24 +20,44 @@ func tsConstant(t *testing.T, file, name string) string {
 	return m[1]
 }
 
-// The update source is written twice, in the publish block of
-// electron-builder.yml (which becomes resources\app-update.yml) and as the
-// constants Main builds the release page from. They must not drift apart
-// (PKG-10, ADR-0073).
+// The update source is written three times: as the constants UPDATE_URL and
+// UPDATE_CHANNEL that Main hands to electron-updater (and opens for a manual
+// download), in the publish block of electron-builder.yml (which becomes
+// resources\app-update.yml), and here as UpdateURL and UpdateChannel, which
+// CheckTree demands of a built tree. They must not drift apart (PKG-10,
+// ADR-0078).
 func TestElectronBuilderPublishesToTheUpdateSource(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
-	owner := tsConstant(t, "src/main/update-config.ts", "UPDATE_OWNER")
-	repo := tsConstant(t, "src/main/update-config.ts", "UPDATE_REPO")
+	url := tsConstant(t, "src/main/update-config.ts", "UPDATE_URL")
+	channel := tsConstant(t, "src/main/update-config.ts", "UPDATE_CHANNEL")
+	if url != UpdateURL {
+		t.Errorf("update-config.ts UPDATE_URL is %q, the Go constant UpdateURL %q", url, UpdateURL)
+	}
+	if channel != UpdateChannel {
+		t.Errorf("update-config.ts UPDATE_CHANNEL is %q, the Go constant UpdateChannel %q", channel, UpdateChannel)
+	}
 
 	m := regexp.MustCompile(`(?m)^publish:\s*\n((?:[ \t]+.*\n|\s*\n)+)`).FindStringSubmatch(config)
 	if m == nil {
 		t.Fatal("electron-builder.yml has no top-level publish: block")
 	}
 	block := m[1]
-	for _, want := range []string{"- provider: github", "owner: " + owner, "repo: " + repo} {
-		if !strings.Contains(block, want) {
-			t.Errorf("the publish block lacks %q:\n%s", want, block)
+	// Whole lines: `channel: latest` must not pass for `channel: latest-rc`. The
+	// explicit channel is the point: for the generic provider electron-builder
+	// takes the channel of a prerelease build from its version (v1.0.3-rc.1
+	// would write rc.yml and `channel: rc`), and R2 holds latest.yml only.
+	lines := map[string]bool{}
+	for _, line := range strings.Split(block, "\n") {
+		line = strings.TrimSpace(strings.TrimRight(line, "\r"))
+		lines[strings.TrimSpace(strings.TrimPrefix(line, "- "))] = true
+	}
+	for _, want := range []string{"provider: generic", "url: " + url, "channel: " + channel} {
+		if !lines[want] {
+			t.Errorf("the publish block lacks the line %q:\n%s", want, block)
 		}
+	}
+	if !strings.Contains(block, "- provider: generic") {
+		t.Errorf("the publish block does not start the source with `- provider: generic`:\n%s", block)
 	}
 	if n := strings.Count(block, "- provider:"); n != 1 {
 		t.Errorf("the publish block has %d sources, want the one the application reads", n)

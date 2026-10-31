@@ -17,7 +17,7 @@ import {
   disposeAsset,
   type ModelInfo,
 } from "./controller-asset";
-import { calloutEdge } from "./controller-callouts";
+import { calloutBox, calloutEdge } from "./controller-callouts";
 import { stickActiveThreshold } from "./controller-model";
 import { controllerModels, modelShell } from "./controller-models";
 import {
@@ -416,9 +416,7 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
         front: SVGElement[] = [];
       for (const callout of model.callouts) {
         const control = model.controls.get(callout.control);
-        const chip = host.querySelector<HTMLElement>(
-          `[data-callout="${callout.control}"]`,
-        );
+        const chip = calloutBox(host, callout.control);
         if (!control || !chip) continue;
         const rect = chip.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) continue;

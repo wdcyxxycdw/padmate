@@ -40,8 +40,8 @@ describe("Settings · 更新 (PKG-10)", () => {
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(false);
-    // ADR-0077: the switch needs no explaining, and most users in China
-    // cannot reach GitHub anyway.
+    // ADR-0077: the switch needs no explaining, and the page names no host
+    // (the user guide says where a check goes, ADR-0078).
     expect(card.textContent).not.toContain("GitHub");
     const row = sw.closest(".row") as HTMLElement;
     expect(row.querySelector(".row-hint")).toBeNull();

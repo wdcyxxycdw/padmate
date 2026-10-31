@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { EventEmitter } from "node:events";
 import {
   mkdirSync,
   mkdtempSync,
@@ -33,7 +34,25 @@ const quitFails = () => {
 };
 let version = "99.0.0";
 let missing = false;
+// What app.getVersion() says: the running application's version.
+let appVersion = "1.0.0";
 const hits: Array<{ path: string; headers: IncomingHttpHeaders }> = [];
+// The requests that were not for the server on this machine. None goes out:
+// the faked net.request refuses them, so that a test of the real application's
+// address never reaches the network.
+const strangers: Array<Record<string, unknown>> = [];
+
+/** What net.request returns for an address that is not this machine: it fails at once. */
+class RefusedRequest extends EventEmitter {
+  write() {}
+  end() {
+    queueMicrotask(() =>
+      this.emit("error", new Error("refused: tests never reach the network")),
+    );
+  }
+  abort() {}
+  setHeader() {}
+}
 let server: Server;
 let feed: string;
 let work: string;
@@ -53,15 +72,19 @@ beforeAll(async () => {
   mkdirSync(userData, { recursive: true });
   const resources = join(work, "resources");
   mkdirSync(resources, { recursive: true });
+  // What electron-builder bakes in. The adapter takes the provider, the
+  // address and the channel from update-config.ts, not from this file, so that
+  // what a build was packed with cannot send an installed application
+  // somewhere else; the folder of the downloads is what it supplies.
   writeFileSync(
     join(resources, "app-update.yml"),
-    "provider: github\nowner: o\nrepo: r\nupdaterCacheDirName: padmate-updater\n",
+    "provider: generic\nurl: https://padmate.download/\nchannel: latest\nupdaterCacheDirName: padmate-updater\n",
   );
   (process as { resourcesPath?: string }).resourcesPath = resources;
   const fakeElectron = {
     app: {
       isPackaged: true,
-      getVersion: () => "1.0.0",
+      getVersion: () => appVersion,
       getName: () => "padmate",
       getAppPath: () => work,
       getPath: (key: string) => join(work, key),
@@ -73,6 +96,10 @@ beforeAll(async () => {
     net: {
       request: (options: Record<string, unknown>) => {
         const { session: _session, redirect: _redirect, ...rest } = options;
+        if (rest.hostname !== "127.0.0.1") {
+          strangers.push(rest);
+          return new RefusedRequest();
+        }
         return require("node:http").request(rest);
       },
     },
@@ -119,11 +146,14 @@ afterAll(async () => {
   rmSync(work, { recursive: true, force: true });
 });
 
-async function updater(log = new LogRing()): Promise<UpdaterLike> {
+async function updater(
+  log = new LogRing(),
+  options: { packagedTest?: boolean } = {},
+): Promise<UpdaterLike> {
   const { createElectronUpdater } = await import("./updater-electron");
   return createElectronUpdater({
     version: "1.0.0",
-    packagedTest: true,
+    packagedTest: options.packagedTest ?? true,
     feed,
     userData,
     log,
@@ -143,15 +173,15 @@ describe("the installed application's updater, in its test mode (PKG-10)", () =>
     );
     expect(process.env.LOCALAPPDATA).not.toBe(real);
 
-    await expect(target.check(false)).resolves.toBe("99.0.0");
+    await expect(target.check()).resolves.toBe("99.0.0");
     const progress: number[] = [];
     await target.download((percent) => progress.push(percent));
     expect(readdirSync(pending()).sort()).toEqual([name(), "update-info.json"]);
     expect(progress.at(-1)).toBe(100);
 
-    // GitHub, as the real application's requests would reach it, sees the
-    // address and padmate's name and version; the installation-specific id
-    // electron-updater makes is the same for everyone.
+    // The download site, as the real application's requests would reach it,
+    // sees the address and padmate's name and version; the
+    // installation-specific id electron-updater makes is the same for everyone.
     for (const hit of hits) {
       expect(hit.headers["user-agent"]).toBe("padmate/1.0.0");
       expect(hit.headers["x-user-staging-id"]).toBe(
@@ -173,9 +203,9 @@ describe("the installed application's updater, in its test mode (PKG-10)", () =>
   it("is not offered the version it has, nor an older one", async () => {
     const target = await updater();
     version = "1.0.0";
-    await expect(target.check(false)).resolves.toBeNull();
+    await expect(target.check()).resolves.toBeNull();
     version = "0.9.0";
-    await expect(target.check(false)).resolves.toBeNull();
+    await expect(target.check()).resolves.toBeNull();
     version = "99.0.0";
   });
 
@@ -185,7 +215,7 @@ describe("the installed application's updater, in its test mode (PKG-10)", () =>
     const good = body;
     body = Buffer.alloc(installer.length, "X");
     try {
-      await target.check(false);
+      await target.check();
       await expect(target.download(() => {})).rejects.toMatchObject({
         code: "ERR_CHECKSUM_MISMATCH",
       });
@@ -199,11 +229,61 @@ describe("the installed application's updater, in its test mode (PKG-10)", () =>
     const target = await updater();
     missing = true;
     try {
-      await expect(target.check(false)).rejects.toMatchObject({
+      await expect(target.check()).rejects.toMatchObject({
         code: "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND",
       });
     } finally {
       missing = false;
     }
+  });
+
+  it("looks once, with no argument, whatever version is running", async () => {
+    // A release candidate reads the same latest.yml as everybody (release
+    // candidates are not published to the download site), and is offered the
+    // release when it is higher: one request, not one among the prereleases
+    // and one among the releases.
+    appVersion = "1.0.3-rc.1";
+    hits.length = 0;
+    try {
+      const target = await updater();
+      expect(target.check.length).toBe(0);
+      await expect(target.check()).resolves.toBe("99.0.0");
+      expect(hits.map((hit) => hit.path)).toEqual(["/latest.yml"]);
+      // The release candidate is not offered a candidate that is lower than it.
+      version = "1.0.3-rc.0";
+      await expect(target.check()).resolves.toBeNull();
+      expect(hits.map((hit) => hit.path)).toEqual([
+        "/latest.yml",
+        "/latest.yml",
+      ]);
+    } finally {
+      appVersion = "1.0.0";
+      version = "99.0.0";
+    }
+  });
+});
+
+describe("the installed application's updater, in the real application (PKG-10, ADR-0078)", () => {
+  it("asks the download site for latest.yml, and the test feed is not read", async () => {
+    // The real application's address, without the network: net.request
+    // refuses every request that is not for this machine.
+    strangers.length = 0;
+    hits.length = 0;
+    const target = await updater(new LogRing(), { packagedTest: false });
+    await expect(target.check()).rejects.toThrow("refused");
+    expect(hits).toEqual([]);
+    expect(strangers).toHaveLength(1);
+    const [request] = strangers;
+    expect(request).toMatchObject({
+      protocol: "https:",
+      hostname: "padmate.download",
+    });
+    // The time in the query keeps a cache from answering for the day.
+    expect(request.path).toMatch(/^\/latest\.yml\?noCache=[0-9a-v]+$/);
+    // Only the address and padmate's name and version go with it.
+    expect(request.headers).toMatchObject({
+      "User-Agent": "padmate/1.0.0",
+      "x-user-staging-id": "00000000-0000-0000-0000-000000000000",
+    });
   });
 });

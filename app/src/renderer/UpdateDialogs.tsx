@@ -16,7 +16,9 @@ const tx = (language: Language, zh: string, en: string) =>
  * dialog); this only draws it and sends back the choice. Closing a dialog
  * (Esc, ×) is 以后再说: for an offer it forgets it, for the others it only
  * acknowledges. The install cannot be closed. Release notes are never shown:
- * they are text from the network, and the release page has them.
+ * the download site has none (ADR-0078). A failure gives 手动下载, a link that
+ * opens the download site in the browser (Main owns the address); the offer
+ * has no link, as it would start the same download next to 下载.
  */
 export function UpdateDialogs({
   api,
@@ -47,13 +49,13 @@ export function UpdateDialogs({
   }, [kind]);
 
   const later = () => run(api.dismissUpdate("later"));
-  const releasePage = (
+  const manualDownload = (
     <button
       type="button"
       className="update-link"
-      onClick={() => run(api.openReleasePage())}
+      onClick={() => run(api.openManualDownload())}
     >
-      {t("查看发布页", "View release page")}
+      {t("手动下载", "Download manually")}
     </button>
   );
   const version = state.version;
@@ -63,12 +65,12 @@ export function UpdateDialogs({
     </button>
   );
 
-  // How something that the person started ended: the words, and the page of
-  // the release to go on by hand.
+  // How something that the person started ended: the words, and the link to
+  // go on by hand.
   const failure = (text: string) => (
     <>
       <p className="dialog-text">{text}</p>
-      {releasePage}
+      {manualDownload}
     </>
   );
   const done = (
@@ -87,15 +89,12 @@ export function UpdateDialogs({
     case "available":
       title = t("有新版本", "A new version is available");
       body = (
-        <>
-          <p className="dialog-text">
-            {t(
-              `padmate ${version} 可以更新了。`,
-              `padmate ${version} is ready to download.`,
-            )}
-          </p>
-          {releasePage}
-        </>
+        <p className="dialog-text">
+          {t(
+            `padmate ${version} 可以更新了。`,
+            `padmate ${version} is ready to download.`,
+          )}
+        </p>
       );
       footer = (
         <>
@@ -202,8 +201,8 @@ export function UpdateDialogs({
       title = t("无法检查更新", "Could not check for updates");
       body = failure(
         t(
-          "请检查网络连接后再试，或到发布页查看最新版本。",
-          "Check your connection and try again, or look for the latest version on the release page.",
+          "请检查网络连接后再试，或手动下载最新版本。",
+          "Check your connection and try again, or download the latest version by hand.",
         ),
       );
       footer = done;
@@ -212,8 +211,8 @@ export function UpdateDialogs({
       title = t("无法下载更新", "Could not download the update");
       body = failure(
         t(
-          "下载没有完成，或文件没有通过校验。可以稍后再试，或到发布页手动下载。",
-          "The download did not finish, or the file failed its check. Try again later, or download it from the release page.",
+          "下载没有完成，或文件没有通过校验。可以稍后再试，或手动下载。",
+          "The download did not finish, or the file failed its check. Try again later, or download it by hand.",
         ),
       );
       footer = done;
@@ -222,8 +221,8 @@ export function UpdateDialogs({
       title = t("无法安装更新", "Could not install the update");
       body = failure(
         t(
-          "安装程序没有启动，padmate 仍在运行。可以稍后再试，或到发布页手动下载。",
-          "The installer did not start, and padmate is still running. Try again later, or download it from the release page.",
+          "安装程序没有启动，padmate 仍在运行。可以稍后再试，或手动下载。",
+          "The installer did not start, and padmate is still running. Try again later, or download it by hand.",
         ),
       );
       footer = done;

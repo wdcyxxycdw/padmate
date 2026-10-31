@@ -1,10 +1,11 @@
 // 配置 page (UI-17, UI-18, PRO-16, PRO-20, PRO-28, UI-42): the profile
 // library and the apps bound to each profile, shown by their icons. The
 // fixed default comes first: every app without a binding uses it. Every
-// change is written to config.json at once. A card's 复制 makes a whole copy
-// (ADR-0076), and its menu exports the profile as a .padmate file; 导入… adds
-// one (or converts an AntiMicroX .amgp or .xml file, PRO-21, and lists what
-// did not come over whole).
+// change is written to config.json at once. A card's 编辑按键 and 复制 are
+// icon buttons, named by aria-label and title. 复制 makes a whole copy
+// (ADR-0076), and the card's menu exports the profile as a .padmate file;
+// 导入… adds one (or converts an AntiMicroX .amgp or .xml file, PRO-21, and
+// lists what did not come over whole).
 import {
   type ReactNode,
   useEffect,
@@ -581,6 +582,11 @@ export function ProfilesPage({
     const fixed = isDefaultProfile(id);
     const broken = !!entry.problem;
     const rules = rulesFor(config, id);
+    // While this card activates, its edit button says so.
+    const switching = activating === id;
+    const editName = switching
+      ? t("正在切换…", "Switching…")
+      : t("编辑按键", "Edit keys");
     const exportItem: MenuEntry = {
       label: t("导出…", "Export…"),
       icon: "export",
@@ -646,29 +652,32 @@ export function ProfilesPage({
             </div>
             <button
               type="button"
-              className="btn-ghost profile-card-edit"
+              className="icon-btn bare profile-card-edit"
+              // The icon has no text: the name is the label and the tooltip.
+              aria-label={editName}
+              aria-busy={switching || undefined}
               // A profile with errors cannot be activated; one that is
               // active already still opens.
               disabled={!!activating || (broken && !active)}
               title={
                 broken && !active
                   ? t("配置文件有错误，无法打开", "The profile file has errors")
-                  : undefined
+                  : editName
               }
               onClick={() => void editKeys(entry)}
             >
-              {activating === id
-                ? t("正在切换…", "Switching…")
-                : t("编辑按键", "Edit keys")}
+              <Icon name="edit" size={14} stroke={2} />
             </button>
             <button
               type="button"
-              className="btn-ghost profile-card-edit"
+              className="icon-btn bare profile-card-edit"
+              aria-label={t("复制", "Duplicate")}
+              title={t("复制", "Duplicate")}
               // A broken profile cannot be renamed after copying it.
               disabled={broken}
               onClick={() => void copy(entry)}
             >
-              {t("复制", "Duplicate")}
+              <Icon name="copy" size={14} stroke={2} />
             </button>
             <MenuButton
               label={t(`「${name}」的更多操作`, `More for “${name}”`)}

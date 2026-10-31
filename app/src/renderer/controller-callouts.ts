@@ -13,7 +13,9 @@ export type ModelInfo = Pick<
 /**
  * Where one controller chip sits on the stage (UI-39).
  *
- * - `left`/`right`: the side columns. `slot` 2–6 counts from the top.
+ * - `left`/`right`: the side columns. `slot` 2–7 counts from the top. A
+ *   stick is two cells in one chip and takes two slots (`span`); `slot` is
+ *   the first of them.
  * - `top` with a `side`: the shoulder corner above that column, `slot` 0–1.
  * - `top` without a side: the row above the controller, `offset` chip widths
  *   from the center. A `raised` chip sits a little higher than the rest.
@@ -27,6 +29,8 @@ export interface Callout {
   placement: "left" | "right" | "top" | "bottom";
   side?: "left" | "right";
   slot?: number;
+  /** How many slots a chip of a side column is tall; 1 when absent. */
+  span?: number;
   offset?: number;
   raised?: boolean;
 }
@@ -65,14 +69,34 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
     ? ["dpad.up", "dpad.left", "dpad.right", "dpad.down", "leftstick"]
     : ["leftstick", "dpad.up", "dpad.left", "dpad.right", "dpad.down"];
   const right = ["north", "east", "west", "south", "rightstick"];
-  left.forEach((control, index) => {
-    add(control, "left", { slot: index + 2 });
-  });
-  right.forEach((control, index) => {
-    add(control, "right", { slot: index + 2 });
-  });
+  // A stick holds its movement and its press (two cells), so it is two slots
+  // tall: the chips after it move down by one.
+  const column = (controls: string[], placement: "left" | "right") => {
+    let slot = 2;
+    for (const control of controls) {
+      const span = control.endsWith("stick") ? 2 : 1;
+      add(control, placement, span > 1 ? { slot, span } : { slot });
+      slot += span;
+    }
+  };
+  column(left, "left");
+  column(right, "right");
   if (ps) add("guide", "bottom", { offset: 0 });
   return callouts;
+}
+
+/**
+ * The element a leader line starts from: the chip of a control, or for a stick
+ * the box around its two cells (its leader is one, whichever cell it serves).
+ */
+export function calloutBox(
+  host: ParentNode,
+  control: string,
+): HTMLElement | null {
+  return (
+    host.querySelector<HTMLElement>(`[data-callout-group="${control}"]`) ??
+    host.querySelector<HTMLElement>(`[data-callout="${control}"]`)
+  );
 }
 
 /** The side of a chip that faces the controller. */

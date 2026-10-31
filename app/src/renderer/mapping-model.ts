@@ -6,6 +6,7 @@ import type { DeviceEntry, MappingResult } from "../shared/api";
 import type { Config } from "../shared/generated/schema";
 import type { ControlIconSpec } from "./control-icon";
 import { EXCURSION, type RawKind, type WizardInput } from "./mapwizard";
+import type { PadFace } from "./pad-icon";
 import type { Language } from "./store";
 
 const tx = (language: Language, zh: string, en: string) =>
@@ -44,8 +45,12 @@ export interface StepInfo {
 
 type StepText = [name: string, prompt: string, hint: string];
 
-const face = (text: string, color: "green" | "red" | "blue" | "yellow") =>
-  ({ kind: "face", text, color }) as const;
+// The wizard asks for the controls of the Xbox layout (SDL's standard), so
+// its pictures are the Kenney Xbox icons (ADR-0079 §7); Home is the house.
+const art = (name: string, face?: PadFace): ControlIconSpec =>
+  face
+    ? { kind: "art", name: `kenney/${name}`, face }
+    : { kind: "art", name: `kenney/${name}` };
 
 const pressHint = [
   "按一下，再松开",
@@ -85,7 +90,7 @@ const stickPush = (
     direction
   ];
   return {
-    icon: { kind: "stick", side, direction },
+    icon: art(`xbox_stick_${side === "L" ? "l" : "r"}_${direction}`),
     zh: [
       `${zhSide}摇杆向${zhWay}`,
       `把${zhSide}摇杆推到${zhFar}，再放回中间`,
@@ -103,7 +108,7 @@ const dpad = (
   arm: "up" | "down" | "left" | "right",
   zhWay: string,
 ): StepDefinition => ({
-  icon: { kind: "dpad", arms: [arm] },
+  icon: art(`xbox_dpad_${arm}`),
   zh: [`十字键${zhWay}`, `按下十字键的${zhWay}`, pressHint[0]],
   en: [`D-pad ${arm}`, `Press D-pad ${arm}`, pressHint[1]],
 });
@@ -113,13 +118,13 @@ const shoulder = (
   zhSide: string,
   enSide: string,
 ): StepDefinition => ({
-  icon: { kind: "badge", text: label },
+  icon: art(`xbox_${label.toLowerCase()}`),
   zh: [label, `按下 ${label} 键`, `${zhSide}肩键`],
   en: [label, `Press ${label}`, `The ${enSide} shoulder button`],
 });
 
 const trigger = (label: string): StepDefinition => ({
-  icon: { kind: "badge", text: label },
+  icon: art(`xbox_${label.toLowerCase()}`),
   zh: [label, `压下 ${label} 扳机，再松开`, "压到底再松手"],
   en: [label, `Pull ${label}, then let go`, "Pull it all the way, then let go"],
 });
@@ -130,28 +135,28 @@ const stepDefinitions: Record<string, StepDefinition> = {
     "按下 A 键",
     "Press A",
     "A",
-    face("A", "green"),
+    art("xbox_button_a", "green"),
   ),
   b: facePosition(
     ["右边", "right"],
     "按下 B 键",
     "Press B",
     "B",
-    face("B", "red"),
+    art("xbox_button_b", "red"),
   ),
   x: facePosition(
     ["左边", "left"],
     "按下 X 键",
     "Press X",
     "X",
-    face("X", "blue"),
+    art("xbox_button_x", "blue"),
   ),
   y: facePosition(
     ["上面", "top"],
     "按下 Y 键",
     "Press Y",
     "Y",
-    face("Y", "yellow"),
+    art("xbox_button_y", "yellow"),
   ),
   dpup: dpad("up", "上"),
   dpdown: dpad("down", "下"),
@@ -162,7 +167,7 @@ const stepDefinitions: Record<string, StepDefinition> = {
   "ls-up": stickPush("L", "up"),
   "ls-down": stickPush("L", "down"),
   "ls-click": {
-    icon: { kind: "stick", side: "L" },
+    icon: art("xbox_stick_l_press"),
     zh: ["左摇杆按下", "按下左摇杆", "把摇杆往下按，再松开"],
     en: [
       "Left stick click",
@@ -175,7 +180,7 @@ const stepDefinitions: Record<string, StepDefinition> = {
   "rs-up": stickPush("R", "up"),
   "rs-down": stickPush("R", "down"),
   "rs-click": {
-    icon: { kind: "stick", side: "R" },
+    icon: art("xbox_stick_r_press"),
     zh: ["右摇杆按下", "按下右摇杆", "把摇杆往下按，再松开"],
     en: [
       "Right stick click",
@@ -188,7 +193,7 @@ const stepDefinitions: Record<string, StepDefinition> = {
   lt: trigger("LT"),
   rt: trigger("RT"),
   view: {
-    icon: { kind: "glyph", glyph: "view" },
+    icon: art("xbox_button_view"),
     zh: [
       "View（返回键）",
       "按下 View 键",
@@ -201,7 +206,7 @@ const stepDefinitions: Record<string, StepDefinition> = {
     ],
   },
   menu: {
-    icon: { kind: "glyph", glyph: "menu" },
+    icon: art("xbox_button_menu"),
     zh: [
       "Menu（开始键）",
       "按下 Menu 键",
@@ -214,7 +219,7 @@ const stepDefinitions: Record<string, StepDefinition> = {
     ],
   },
   home: {
-    icon: { kind: "glyph", glyph: "home" },
+    icon: art("switch_button_home"),
     zh: [
       "Home（主页键）",
       "按下 Home 键",

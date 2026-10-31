@@ -14,7 +14,7 @@ export interface UpdateHandlerTarget {
   install(): Promise<UpdateInstallResult>;
   dismiss(choice: UpdateDismissal): Promise<UpdateState>;
   setAutoCheck(enabled: boolean): Promise<UpdateState>;
-  openReleasePage(): Promise<void>;
+  openManualDownload(): Promise<void>;
 }
 
 function validateDismissal(value: unknown): UpdateDismissal {
@@ -24,9 +24,9 @@ function validateDismissal(value: unknown): UpdateDismissal {
 }
 
 // The window's side of the automatic update (PKG-10). It sends no version, no
-// address and no file: the release page is opened with no argument (Main
-// builds the address from constants and the version it checked itself), and
-// the only things the window chooses are the two buttons and the switch.
+// address and no file: the download site is opened with no argument (Main
+// owns the address, update-config.ts), and the only things the window chooses
+// are the two buttons and the switch.
 export function updateHandlers(
   target: UpdateHandlerTarget,
 ): Record<string, EditorHandler> {
@@ -44,6 +44,6 @@ export function updateHandlers(
       count: 1,
       run: (enabled) => target.setAutoCheck(validateToggle(enabled)),
     },
-    updateReleasePage: { count: 0, run: () => target.openReleasePage() },
+    updateManualDownload: { count: 0, run: () => target.openManualDownload() },
   };
 }

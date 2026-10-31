@@ -4,7 +4,7 @@ import type { DeviceInfo, ProfileDiagnostic } from "../shared/api";
 import type { Profile } from "../shared/generated/schema";
 import { Controller } from "./Controller";
 import { calibrationStick } from "./calibration-model";
-import { calloutFor } from "./control-callout";
+import { calloutFor, isStickPress } from "./control-callout";
 import { analogControlPart } from "./control-parts";
 import {
   bindingKey,
@@ -117,7 +117,7 @@ const analogSettings: Record<string, [string, string]> = {
   rs: ["摇杆设置", "Stick settings"],
   lt: ["扳机设置", "Trigger settings"],
   rt: ["扳机设置", "Trigger settings"],
-  dpad: ["十字键设置", "D-pad settings"],
+  dpad: ["十字键", "D-pad"],
 };
 
 const bindingFields: Record<string, [string, string]> = {
@@ -191,7 +191,7 @@ export function describeDiagnostic(
     return tx(language, "原始轴阈值", "Raw axis threshold");
   // One setting for the whole D-pad, not for the direction that opens it.
   if (bits[0] === "analog" && bits[1] === "dpad")
-    return tx(language, "十字键设置", "D-pad settings");
+    return tx(language, "十字键", "D-pad");
   const control = diagnosticControl(diagnostic);
   if (!control)
     return tx(
@@ -200,12 +200,21 @@ export function describeDiagnostic(
       "In a part of the file the editor does not show",
     );
   const label = labels[control] ?? control;
-  const name =
-    profile?.controlNames?.[bindingKey(control)]?.trim() ||
-    (control === "leftstick"
+  const stick =
+    control === "leftstick" || control === "leftstick.press"
       ? tx(language, "左摇杆", "Left stick")
-      : control === "rightstick"
-        ? tx(language, "右摇杆", "Right stick")
+      : tx(language, "右摇杆", "Right stick");
+  // The key name of a stick is its press's: the movement keeps the stick's.
+  const renamed =
+    control === "leftstick" || control === "rightstick"
+      ? undefined
+      : profile?.controlNames?.[bindingKey(control)]?.trim();
+  const name =
+    renamed ||
+    (isStickPress(control)
+      ? tx(language, `${stick} 点按`, `${stick} · Press`)
+      : control === "leftstick" || control === "rightstick"
+        ? stick
         : control.startsWith("dpad.")
           ? tx(language, `十字键 ${label}`, `D-pad ${label}`)
           : tx(language, `${label} 键`, `${label} key`));

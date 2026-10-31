@@ -158,7 +158,7 @@ func TestPackageTasksRefuseInTheMirror(t *testing.T) {
 		t.Fatal(err)
 	}
 	taskfile := strings.ReplaceAll(string(data), "\r\n", "\n")
-	for _, name := range []string{"package:zip", "package:installer", "app:installer", "test:installer", "test:sign"} {
+	for _, name := range []string{"package:zip", "package:installer", "app:installer", "test:installer", "test:sign", "release:r2"} {
 		m := regexp.MustCompile(`(?ms)^  ` + regexp.QuoteMeta(name) + `:\n(.*?)(?:^  \S|\z)`).FindStringSubmatch(taskfile)
 		if m == nil {
 			t.Fatalf("Taskfile.yml has no task %s", name)

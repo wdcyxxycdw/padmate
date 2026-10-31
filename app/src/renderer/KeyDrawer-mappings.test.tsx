@@ -57,7 +57,7 @@ const cards = () =>
 const addButton = () => screen.getByTestId("add-gesture") as HTMLButtonElement;
 const menuItems = () =>
   screen.getAllByRole("menuitem").map((item) => item.textContent);
-/** 添加映射: opens the menu and picks the mapping. */
+/** 添加其他动作: opens the menu and picks the mapping. */
 function add(mapping: string | RegExp) {
   fireEvent.click(addButton());
   fireEvent.click(screen.getByRole("menuitem", { name: mapping }));
@@ -70,7 +70,7 @@ const open = (name: RegExp) => {
 const keys = (text: string) => ({ type: "keys", keys: text }) as const;
 
 describe("the mappings on offer", () => {
-  it("are 点按, 长按 and 双击, and no other, in the menu of 添加映射", () => {
+  it("are 点按, 长按 and 双击, and no other, in the menu of 添加其他动作", () => {
     captureAPI();
     render(<Draft initial={{ press: keys("F13") }} />);
     expect(screen.getByText("映射")).toBeDefined();
@@ -96,7 +96,9 @@ describe("the mappings on offer", () => {
   it("are Tap, Hold and Double tap in English", () => {
     captureAPI();
     render(<Draft language="en" initial={{ tap: keys("F13") }} />);
-    expect(screen.getByRole("button", { name: "Add mapping" })).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Add another action" }),
+    ).toBeDefined();
     fireEvent.click(addButton());
     expect(
       screen.getAllByRole("menuitem").map((item) => item.textContent),
@@ -319,7 +321,7 @@ describe("a tap that is a press or a tap", () => {
 });
 
 describe("deleting a mapping", () => {
-  it("deletes the last one for good: the key has none, and only 添加映射 is left", () => {
+  it("deletes the last one for good: the key has none, and only 添加其他动作 is left", () => {
     captureAPI();
     render(<Draft initial={{ press: keys("F13") }} />);
     fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
@@ -595,7 +597,7 @@ describe("a shortcut the drawer writes", () => {
   it("is a list that taps while it has several steps", () => {
     captureAPI();
     render(<Draft initial={{ press: keys("F13") }} />);
-    fireEvent.click(screen.getByRole("button", { name: "添加下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "增加动作序列" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "快捷键" }));
     expect(draft().press).toEqual({
       type: "keys",

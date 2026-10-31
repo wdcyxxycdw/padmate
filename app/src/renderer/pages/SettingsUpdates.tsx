@@ -10,8 +10,8 @@ const tx = (language: Language, zh: string, en: string) =>
  * Settings · 更新 (PKG-10, ADR-0073): 自动检查更新 and 检查更新. The switch is
  * the window's own setting (Main keeps it in updates.json), so it works
  * without the mapping service and is not gated on config.json. It has no note
- * (ADR-0077): the switch needs none, and most users in China cannot reach
- * GitHub anyway; the user guide says what a check sends.
+ * (ADR-0077): the switch needs none; a check goes to the download site
+ * (padmate.download, ADR-0078), and the user guide says what a check sends.
  *
  * What a check finds is told by the dialogs (UpdateDialogs), not here: this
  * only starts one, and says in a line what is already on its way.

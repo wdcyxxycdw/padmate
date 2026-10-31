@@ -242,3 +242,47 @@ func TestCheckTreeEarlierBuildAndNoUpdateConfigCompose(t *testing.T) {
 		}
 	}
 }
+
+// The builds up to v1.0.2 read GitHub (ADR-0073), this source reads the download
+// site (ADR-0078). The first installer (INSTALLER) of an upgrade test (`task
+// test:installer INSTALLER=<v1.0.2 installer> UPGRADE=<new>`, the migration
+// test) may be such a build: EarlierBuild lets its app-update.yml be the former
+// source as well,
+// and nothing else. A tree of this source is held to the current source.
+func TestCheckTreeEarlierBuildMayHaveTheFormerUpdateSource(t *testing.T) {
+	tiny := tinyExe(t)
+	tag := mustTag("v1.0.2")
+	root := filepath.Join(t.TempDir(), "win-unpacked")
+	putFile(t, tiny, filepath.Join(root, "padmate.exe"), false)
+	putFile(t, tiny, filepath.Join(root, "resources", "bin", "padmated.exe"), false)
+	putFile(t, tiny, filepath.Join(root, "resources", "bin", "padmatectl.exe"), false)
+	update := filepath.Join(root, "resources", "app-update.yml")
+	const reported = "resources/app-update.yml: "
+	for _, c := range []struct {
+		name              string
+		text              string
+		earlier, noUpdate bool
+		want              bool // whether the file is reported
+	}{
+		{"this source, a current tree", goodUpdateConfig, false, false, false},
+		{"this source, an earlier tree", goodUpdateConfig, true, false, false},
+		{"GitHub, a current tree", formerUpdateConfig, false, false, true},
+		{"GitHub, an earlier tree", formerUpdateConfig, true, false, false},
+		{"GitHub, before the update only", formerUpdateConfig, false, true, true},
+		{"GitHub, both options", formerUpdateConfig, true, true, false},
+		{"another source, an earlier tree", strings.Replace(formerUpdateConfig, "github", "s3", 1), true, false, true},
+		{"the download site with a wrong address, an earlier tree", strings.Replace(goodUpdateConfig, "padmate.download", "example.com", 1), true, false, true},
+		{"GitHub without a repository, an earlier tree", strings.Replace(formerUpdateConfig, "repo: padmate\n", "", 1), true, false, true},
+	} {
+		if err := os.MkdirAll(filepath.Dir(update), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(update, []byte(c.text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		got := joined(CheckTree(context.Background(), TreeOptions{Root: root, Tag: tag, EarlierBuild: c.earlier, NoUpdateConfig: c.noUpdate}))
+		if has := strings.Contains(got, reported); has != c.want {
+			t.Errorf("%s: app-update.yml is reported=%v, want %v:\n%s", c.name, has, c.want, got)
+		}
+	}
+}

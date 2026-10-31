@@ -700,7 +700,7 @@ test("menus near the bottom of the drawer open inside the visible drawer", async
     await page.locator('.analog-cell[data-direction="up"]').click();
     const card = page.locator(".analog-card").first();
     await card.getByTestId("add-gesture").click();
-    const menu = page.getByRole("menu", { name: "添加映射" });
+    const menu = page.getByRole("menu", { name: "添加其他动作" });
     await expect(menu).toBeVisible();
     const body = await page.locator(".drawer-body").boundingBox();
     const items = await menu

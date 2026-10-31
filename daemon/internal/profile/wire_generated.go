@@ -199,6 +199,7 @@ type wireStick struct {
 	HysteresisDeg      *float64 `json:"hysteresisDeg"`
 	KnobStepDeg        *int     `json:"knobStepDeg"`
 	KnobTick           *bool    `json:"knobTick"`
+	Label              *string  `json:"label"`
 	Mode               *string  `json:"mode"`
 	MouseSmoothingMs   *int     `json:"mouseSmoothingMs"`
 	MouseSpeed         *int     `json:"mouseSpeed"`

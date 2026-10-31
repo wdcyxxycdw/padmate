@@ -1,6 +1,6 @@
 // A control's name as the UI lists it (UI-08, SCR-50): the key list and the
 // scripts page name every control the daemon can report the same way.
-import { calloutFor } from "./control-callout";
+import { calloutFor, calloutOf } from "./control-callout";
 import { analogControlPart } from "./control-parts";
 import { rawKeyName } from "./controller-chips";
 import { canonicalControl } from "./editor-model";
@@ -32,7 +32,10 @@ export function listControlName(
 ): string {
   const key = canonicalControl(control);
   const callout = calloutFor(key);
-  const name = labels[callout] ?? callout;
+  // A stick's press is named like the stick: LS, or L3 on a PlayStation pad;
+  // with no labels it is the stick's id, never the press cell's selection id.
+  const name =
+    labels[callout] ?? labels[calloutOf(callout)] ?? calloutOf(callout);
   const part = analogControlPart(key, language);
   if (part) return `${name} ${part}`;
   const direction = /^(ls|rs|dpad)\.(\w+)$/.exec(key);

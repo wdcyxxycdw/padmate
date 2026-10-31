@@ -73,7 +73,7 @@ func TestCheckSignedFile(t *testing.T) {
 
 // signedAppUpdate is the resources/app-update.yml of a signed build, naming the
 // publisher of the fixture.
-const signedAppUpdate = "provider: github\nowner: wdcyxxycdw\nrepo: padmate\nupdaterCacheDirName: padmate-updater\npublisherName:\n  - CN=padmate fixture, O=padmate contributors, C=JP\n"
+const signedAppUpdate = goodUpdateConfig + "publisherName:\n  - CN=padmate fixture, O=padmate contributors, C=JP\n"
 
 // tree lays out an installation of 1 KB files; signedNames get the signature.
 // resources/app-update.yml is the one a signed build has, naming the publisher
@@ -165,11 +165,11 @@ func TestCheckSignaturesReadsPublisherName(t *testing.T) {
 		text string
 		want string // "" for a pass
 	}{
-		"a list with the common name": {"owner: x\nrepo: y\nprovider: github\npublisherName:\n  - padmate fixture\nupdaterCacheDirName: padmate-updater\n", ""},
+		"a list with the common name": {"url: https://padmate.download/\nchannel: latest\nprovider: generic\npublisherName:\n  - padmate fixture\nupdaterCacheDirName: padmate-updater\n", ""},
 		"a distinguished name":        {"publisherName:\n  - CN=padmate fixture, O=padmate contributors, C=JP\n", ""},
 		"a scalar":                    {"publisherName: 'padmate fixture'\n", ""},
-		"CRLF":                        {"provider: github\r\npublisherName:\r\n  - padmate fixture\r\n", ""},
-		"not there":                   {"owner: x\nrepo: y\nprovider: github\nupdaterCacheDirName: padmate-updater\n", "has no publisherName"},
+		"CRLF":                        {"provider: generic\r\npublisherName:\r\n  - padmate fixture\r\n", ""},
+		"not there":                   {goodUpdateConfig, "has no publisherName"},
 		"empty":                       {"publisherName:\nupdaterCacheDirName: x\n", "has no publisherName"},
 		"another publisher":           {"publisherName:\n  - someone else\n", `publisherName "someone else" does not name the installer's signer`},
 		"in a later key":              {"publisherName:\n  - someone else\nlater:\n  - padmate fixture\n", "does not name the installer's signer"},
@@ -235,7 +235,7 @@ func TestPublisherNames(t *testing.T) {
 // not need publisherName (an unsigned build verifies); -signed is the check
 // that needs it, and both read the very same text.
 func TestAppUpdateYMLOfUnsignedAndSignedBuilds(t *testing.T) {
-	unsigned := "provider: github\nowner: wdcyxxycdw\nrepo: padmate\nupdaterCacheDirName: padmate-updater\n"
+	unsigned := goodUpdateConfig
 	signed := unsigned + "publisherName:\n  - CN=padmate fixture, O=padmate contributors, C=JP\n"
 	opts := SignOptions{Subject: "padmate fixture", Verify: verdict(authenticode.Valid)}
 	for _, c := range []struct {
@@ -250,7 +250,7 @@ func TestAppUpdateYMLOfUnsignedAndSignedBuilds(t *testing.T) {
 		if err := os.WriteFile(update, []byte(c.text), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		if got := joined(updateConfigProblems(update)); (got == "") != c.treeOK {
+		if got := joined(updateConfigProblems(update, false)); (got == "") != c.treeOK {
 			t.Errorf("%s: the update source check says %q, want ok=%v", c.name, got, c.treeOK)
 		}
 		got := joined(CheckSignatures(root, installer, opts))

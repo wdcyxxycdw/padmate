@@ -5,12 +5,13 @@ import {
   analogIssues,
   combinedDirection,
   directionControls,
-  dpadDirections,
   fromPercent,
   rawStickControls,
   setAnalogSettings,
   setAxisThreshold,
   setControlBinding,
+  settleStickMode,
+  shownStickMode,
   stickMagnitude,
   stickReading,
   toPercent,
@@ -218,16 +219,66 @@ describe("live stick reading", () => {
     expect(stickReading(0, 0).sector).toBeNull();
   });
 
-  it("names combined directions and d-pad diagonals", () => {
+  it("names combined directions", () => {
     expect(combinedDirection(["up", "right"])).toBe("upright");
     expect(combinedDirection(["down", "left"])).toBe("downleft");
     expect(combinedDirection(["up", "down"])).toBeNull();
+  });
+});
+
+describe("the modes the stick drawer offers", () => {
+  it("shows an omitted or standard mode as four directions, the others as they are", () => {
+    expect(shownStickMode(undefined)).toBe("fourWay");
+    expect(shownStickMode("standard")).toBe("fourWay");
+    expect(shownStickMode("fourWay")).toBe("fourWay");
+    expect(shownStickMode("knob")).toBe("knob");
+    expect(shownStickMode("mouse")).toBe("mouse");
+    // The removed modes stay what they are: the drawer selects none of them.
+    expect(shownStickMode("eightWay")).toBe("eightWay");
+    expect(shownStickMode("fourWayDiagonal")).toBe("fourWayDiagonal");
+  });
+
+  it("writes fourWay for a stick without a mode or in standard, and touches nothing else", () => {
+    const source = profile();
+    const settled = settleStickMode(
+      setAnalogSettings(source, "ls", { deadzone: 0.3 }),
+      "ls",
+    );
+    expect(settled.analog?.ls).toEqual({ deadzone: 0.3, mode: "fourWay" });
+    // No analog block at all: the stick gets one.
+    expect(settleStickMode(source, "rs").analog?.rs).toEqual({
+      mode: "fourWay",
+    });
     expect(
-      dpadDirections({ "dpad.up": true, "dpad.left": true }, "eightWay"),
-    ).toEqual(["upleft"]);
+      settleStickMode(
+        setAnalogSettings(source, "ls", { mode: "standard", mouseSpeed: 90 }),
+        "ls",
+      ).analog?.ls,
+    ).toEqual({ mode: "fourWay", mouseSpeed: 90 });
+    expect(settled.layers).toEqual(source.layers);
+    expect(settled.script).toEqual(source.script);
+    // The other stick is not this stick's.
     expect(
-      dpadDirections({ "dpad.up": true, "dpad.left": true }, "buttons"),
-    ).toEqual(["up", "left"]);
+      settleStickMode(setAnalogSettings(source, "rs", { deadzone: 0.2 }), "ls")
+        .analog?.rs,
+    ).toEqual({ deadzone: 0.2 });
+  });
+
+  it.each(["fourWay", "knob", "mouse", "eightWay", "fourWayDiagonal"] as const)(
+    "keeps %s as it is",
+    (mode) => {
+      const source = setAnalogSettings(profile(), "ls", {
+        mode,
+        deadzone: 0.3,
+      });
+      expect(settleStickMode(source, "ls")).toBe(source);
+    },
+  );
+
+  it("makes the arrow and WASD presets four directions", () => {
+    expect(presetMode("ls")).toBe("fourWay");
+    expect(presetMode("rs")).toBe("fourWay");
+    expect(presetMode("dpad")).toBe("buttons");
   });
 });
 

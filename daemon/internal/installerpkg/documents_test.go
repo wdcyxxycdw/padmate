@@ -17,8 +17,6 @@ func TestShipsFile(t *testing.T) {
 	for name, want := range map[string]bool{
 		"docs/guide/00-index.md":                 true,
 		"docs/guide/08-scripts.en.md":            true,
-		"docs/quickstart.md":                     true,
-		"docs/quickstart.en.md":                  true,
 		"docs/known-limitations.en.md":           true,
 		"docs/troubleshooting-input.md":          true,
 		"docs/SCRIPTING.md":                      false,
@@ -122,9 +120,9 @@ func TestMissingUserDocuments(t *testing.T) {
 	if got := missingUserDocuments(staged); len(got) != 0 {
 		t.Errorf("missingUserDocuments = %q, want none", got)
 	}
-	delete(staged, "docs/quickstart.en.md")
+	delete(staged, "docs/known-limitations.en.md")
 	delete(staged, userGuideIndex)
-	if got := strings.Join(missingUserDocuments(staged), ","); got != userGuideIndex+",docs/quickstart.en.md" {
+	if got := strings.Join(missingUserDocuments(staged), ","); got != userGuideIndex+",docs/known-limitations.en.md" {
 		t.Errorf("missingUserDocuments = %q", got)
 	}
 }

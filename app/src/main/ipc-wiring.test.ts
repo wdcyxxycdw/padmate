@@ -273,7 +273,7 @@ describe("Electron IPC wiring", () => {
           setAutoCheck: async () => {
             throw new Error("unused");
           },
-          openReleasePage: async () => {},
+          openManualDownload: async () => {},
         }),
       ),
       ...Object.keys(

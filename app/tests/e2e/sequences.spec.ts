@@ -45,7 +45,7 @@ function chords(client: FixtureClient): string[] {
 }
 
 async function addStep(page: Page, kind: "快捷键" | "等待") {
-  await page.getByRole("button", { name: "添加下一步" }).click();
+  await page.getByRole("button", { name: "增加动作序列" }).click();
   await page.getByRole("menuitem", { name: kind, exact: true }).click();
 }
 

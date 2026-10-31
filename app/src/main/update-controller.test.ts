@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UpdateState } from "../shared/update";
-import {
-  CHECK_INTERVAL_MS,
-  FIRST_CHECK_MS,
-  NO_RELEASE_CODE,
-  RELEASES_URL,
-} from "./update-config";
+import { CHECK_INTERVAL_MS, FIRST_CHECK_MS, UPDATE_URL } from "./update-config";
 import {
   CHECK_TIMEOUT_MS,
   inertUpdater,
@@ -28,7 +23,6 @@ afterEach(() => {
 /** An updater that answers from a script, and notes how it was asked. */
 function fakeUpdater() {
   const calls: string[] = [];
-  const checks: boolean[] = [];
   const answers: Array<string | null | Error | "hang"> = [];
   let download: (progress: (percent: number) => void) => Promise<void> =
     async () => {};
@@ -36,9 +30,8 @@ function fakeUpdater() {
   let installThrows: unknown;
   let errorListener: ((error: unknown) => void) | undefined;
   const updater: UpdaterLike = {
-    check: async (allowPrerelease) => {
-      calls.push(`check:${allowPrerelease}`);
-      checks.push(allowPrerelease);
+    check: async () => {
+      calls.push("check");
       const answer = answers.shift();
       if (answer === "hang") return new Promise<string | null>(() => {});
       if (answer instanceof Error) throw answer;
@@ -60,7 +53,6 @@ function fakeUpdater() {
   return {
     updater,
     calls,
-    checks,
     answers,
     onDownload: (fn: typeof download) => {
       download = fn;
@@ -104,7 +96,7 @@ function setup(
   const controller = new UpdateController({
     // Looks the fake up at each call, so that a test may replace a method.
     updater: {
-      check: (allowPrerelease) => fake.updater.check(allowPrerelease),
+      check: () => fake.updater.check(),
       download: (progress) => fake.updater.download(progress),
       quitAndInstall: (silent, force) => {
         guard.push("quitAndInstall");
@@ -157,14 +149,14 @@ describe("the update controller: when it checks (PKG-10)", () => {
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS - 1);
     expect(t.calls).toEqual([]);
     await vi.advanceTimersByTimeAsync(1);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
   });
 
   it("checks 30 seconds after the start when the last check is a day old", async () => {
     const t = setup({ settings: { lastCheck: START - CHECK_INTERVAL_MS } });
     t.controller.start();
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
   });
 
   it("waits for the day to be over when the last check is younger", async () => {
@@ -173,7 +165,7 @@ describe("the update controller: when it checks (PKG-10)", () => {
     await vi.advanceTimersByTimeAsync(19 * HOUR - 1);
     expect(t.calls).toEqual([]);
     await vi.advanceTimersByTimeAsync(1);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
   });
 
   it("goes on checking every 24 hours while the window is open", async () => {
@@ -210,10 +202,10 @@ describe("the update controller: when it checks (PKG-10)", () => {
     expect(t.writes).toEqual([{ autoCheck: true }]);
     expect(t.controller.getState().autoCheck).toBe(true);
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
     await t.controller.setAutoCheck(false);
     await vi.advanceTimersByTimeAsync(3 * CHECK_INTERVAL_MS);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
     expect(t.controller.getState().autoCheck).toBe(false);
   });
 
@@ -232,7 +224,7 @@ describe("the update controller: when it checks (PKG-10)", () => {
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
     expect(t.controller.getState().phase).toBe("available");
     await vi.advanceTimersByTimeAsync(3 * CHECK_INTERVAL_MS);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
   });
 });
 
@@ -245,18 +237,18 @@ describe("the update controller: the daily timer while something is in hand", ()
     expect(t.controller.getState().phase).toBe("available");
     // The day is over and the offer is still open: the timer skips its check.
     await vi.advanceTimersByTimeAsync(CHECK_INTERVAL_MS);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
     // The person lets the offer go a little later. The next check is a day
     // after the skipped one; it is not the 30 seconds after it that a timer
     // computed from the old check time would give.
     await vi.advanceTimersByTimeAsync(31_000);
     await t.controller.dismiss("later");
     await vi.advanceTimersByTimeAsync(HOUR);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
     await vi.advanceTimersByTimeAsync(CHECK_INTERVAL_MS - HOUR - 31_000 - 1);
-    expect(t.calls).toEqual(["check:false"]);
+    expect(t.calls).toEqual(["check"]);
     await vi.advanceTimersByTimeAsync(1);
-    expect(t.calls).toEqual(["check:false", "check:false"]);
+    expect(t.calls).toEqual(["check", "check"]);
   });
 
   it("does not set a timer every 30 seconds for as long as a download waits for the person", async () => {
@@ -413,224 +405,92 @@ describe("the update controller: what a check finds", () => {
   });
 });
 
-describe("the update controller: release candidates reach the release (ADR-0073)", () => {
-  // The look that finds no release to read: updater-electron.ts gives it this
-  // code (isNoReleaseError), the one error of a look that means "nothing
-  // newer" rather than "could not look".
-  const noRelease = () =>
-    Object.assign(new Error("no release"), { code: NO_RELEASE_CODE });
+describe("the update controller: one look per check, release candidates too (ADR-0078)", () => {
+  // The download site holds releases only, and every build reads the same
+  // latest.yml: a release candidate is offered the release when it is higher,
+  // and never a newer candidate.
+  const missing = () =>
+    Object.assign(new Error("no latest.yml"), {
+      code: "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND",
+    });
 
-  it("looks among prereleases first, then at the release when there is nothing newer", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push(null, "1.0.0");
+  it("looks once, and offers the release to a release candidate", async () => {
+    const t = setup({ version: "1.0.3-rc.1" });
+    t.answers.push("1.0.3");
     expect(await t.controller.check(true)).toMatchObject({
       phase: "available",
-      version: "1.0.0",
-    });
-    expect(t.checks).toEqual([true, false]);
-  });
-
-  it("looks at the release also when a newer prerelease is there, and offers the release", async () => {
-    // electron-updater follows the channel of the running version: with
-    // 1.0.0 published, an rc.1 would be walked through rc.2 first, and one
-    // that skipped rc.2 would never be offered 1.0.0.
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push("1.0.0-rc.2", "1.0.0");
-    expect(await t.controller.check(true)).toMatchObject({
-      phase: "available",
-      version: "1.0.0",
-    });
-    expect(t.checks).toEqual([true, false]);
-  });
-
-  it("offers the release to a candidate that skipped the newest candidate, in an automatic check", async () => {
-    const t = setup({
-      version: "1.0.0-rc.1",
-      settings: { skippedVersion: "1.0.0-rc.2" },
-    });
-    t.answers.push("1.0.0-rc.2", "1.0.0");
-    t.controller.start();
-    await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(t.checks).toEqual([true, false]);
-    expect(t.controller.getState()).toMatchObject({
-      phase: "available",
-      version: "1.0.0",
+      version: "1.0.3",
       dialog: "available",
     });
+    expect(t.calls).toEqual(["check"]);
   });
 
-  it("offers the newest candidate when no release is newer, and stays silent for a skipped one", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push("1.0.0-rc.2", null);
+  it("is up to date when the release is below the candidate, or nothing is found", async () => {
+    const t = setup({ version: "1.0.3-rc.1" });
+    // 1.0.3-rc.1 is ahead of 1.0.2; the controller holds this line itself.
+    t.answers.push("1.0.2");
     expect(await t.controller.check(true)).toMatchObject({
-      phase: "available",
-      version: "1.0.0-rc.2",
-    });
-    expect(t.checks).toEqual([true, false]);
-    await t.controller.dismiss("skip");
-    t.answers.push("1.0.0-rc.2", null);
-    t.controller.start();
-    await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(t.controller.getState()).toMatchObject({
       phase: "idle",
-      dialog: "none",
+      dialog: "upToDate",
+      errorCode: "",
     });
+    await t.controller.dismiss("later");
+    t.answers.push(null);
+    expect(await t.controller.check(true)).toMatchObject({
+      phase: "idle",
+      dialog: "upToDate",
+    });
+    expect(t.calls).toEqual(["check", "check"]);
   });
 
-  it("offers the newest candidate when the look at the releases fails, whatever the reason", async () => {
-    for (const second of [noRelease(), new Error("network down")]) {
-      const t = setup({ version: "1.0.0-rc.1" });
-      t.answers.push("1.0.0-rc.2", second);
+  it("is one failed check when the look fails, whoever the application is", async () => {
+    for (const version of ["1.0.2", "1.0.3-rc.1"]) {
+      const t = setup({ version });
+      t.answers.push(missing());
       expect(await t.controller.check(true)).toMatchObject({
-        phase: "available",
-        version: "1.0.0-rc.2",
-        errorCode: "",
+        phase: "idle",
+        dialog: "checkFailed",
+        errorCode: "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND",
+        version: "",
       });
-      expect(t.checks).toEqual([true, false]);
+      expect(t.calls).toEqual(["check"]);
     }
   });
 
-  it("looks among the prereleases again when the release found is older than the candidate", async () => {
-    // 1.1.0-rc.1 is ahead of the release 1.0.0: electron-updater downloads
-    // what its last look found, and that was 1.0.0.
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push("1.1.0-rc.1", "1.0.0", "1.1.0-rc.1");
-    expect(await t.controller.check(true)).toMatchObject({
-      phase: "available",
-      version: "1.1.0-rc.1",
-    });
-    expect(t.checks).toEqual([true, false, true]);
-  });
-
-  it("fails when the second look among the prereleases does not give the same answer", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push("1.1.0-rc.1", "1.0.0", "1.1.0-rc.2");
-    expect(await t.controller.check(true)).toMatchObject({
-      phase: "idle",
-      dialog: "checkFailed",
-      errorCode: "ERR_UPDATE_CHANGED",
-    });
-    expect(t.controller.getState().version).toBe("");
-  });
-
-  it("is up to date when neither look finds anything", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push(null, null);
-    expect(await t.controller.check(true)).toMatchObject({
-      dialog: "upToDate",
-    });
-    expect(t.checks).toEqual([true, false]);
-  });
-
-  it("still looks at the release when the look among prereleases fails", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push(new Error("no feed entry"), "1.0.0");
-    expect(await t.controller.check(true)).toMatchObject({
-      version: "1.0.0",
-    });
-    expect(t.checks).toEqual([true, false]);
-  });
-
-  it("fails with the first error when both looks fail or the second finds nothing", async () => {
-    const t = setup({ version: "1.0.0-rc.1" });
-    t.answers.push(
-      Object.assign(new Error("first"), { code: "ERR_FIRST" }),
-      Object.assign(new Error("second"), { code: "ERR_SECOND" }),
-    );
-    expect(await t.controller.check(true)).toMatchObject({
-      dialog: "checkFailed",
-      errorCode: "ERR_FIRST",
-    });
-    await t.controller.dismiss("later");
-    t.answers.push(
-      Object.assign(new Error("first"), { code: "ERR_FIRST" }),
-      null,
-    );
-    expect(await t.controller.check(true)).toMatchObject({
-      dialog: "checkFailed",
-      errorCode: "ERR_FIRST",
-    });
-    await t.controller.dismiss("later");
-    // No release to read does not say the first look was fine.
-    t.answers.push(
-      Object.assign(new Error("first"), { code: "ERR_FIRST" }),
-      noRelease(),
-    );
-    expect(await t.controller.check(true)).toMatchObject({
-      dialog: "checkFailed",
-      errorCode: "ERR_FIRST",
-    });
-  });
-
-  it("is up to date, not failed, when the look among prereleases found nothing and there is no release yet", async () => {
-    // Only release candidates are published until 1.0.0: the second look
-    // fails (GitHub has no release for it to read), while the first one
-    // answered.
-    const t = setup({ version: "1.0.0-rc.2" });
-    t.answers.push(null, noRelease());
-    expect(await t.controller.check(true)).toMatchObject({
-      phase: "idle",
-      dialog: "upToDate",
-      errorCode: "",
-    });
-    expect(t.checks).toEqual([true, false]);
-    // The check reached out, so the next one is a day away.
-    expect(t.writes.at(-1)).toEqual({ lastCheck: START });
-  });
-
-  it("says nothing of that either in an automatic check", async () => {
-    const t = setup({ version: "1.0.0-rc.2" });
-    t.answers.push(null, noRelease());
+  it("is silent about that failure in an automatic check, and asks again in a day", async () => {
+    const t = setup({ version: "1.0.3-rc.1" });
+    t.answers.push(missing());
     t.controller.start();
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(t.checks).toEqual([true, false]);
+    expect(t.calls).toEqual(["check"]);
     expect(t.controller.getState()).toMatchObject({
       phase: "idle",
       dialog: "none",
-      errorCode: "",
+      errorCode: "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND",
     });
+    expect(t.states.every((state) => state.dialog === "none")).toBe(true);
+    expect(t.writes.at(-1)).toEqual({ lastCheck: START + FIRST_CHECK_MS });
   });
 
-  it("does not call a failed look at the releases nothing newer", async () => {
-    // The first look answered; the second one could not look (a network
-    // failure, a server error): the check did not finish, and a release may
-    // be out there.
-    const t = setup({ version: "1.0.0-rc.2" });
-    t.answers.push(
-      null,
-      Object.assign(new Error("bad gateway"), { code: "ERR_SECOND" }),
-    );
-    expect(await t.controller.check(true)).toMatchObject({
-      phase: "idle",
-      dialog: "checkFailed",
-      errorCode: "ERR_SECOND",
+  it("is silent about a skipped release in an automatic check, and tells the person who asks", async () => {
+    const t = setup({
+      version: "1.0.3-rc.1",
+      settings: { skippedVersion: "1.0.3" },
     });
-    // An automatic check is silent about it, and asks again in a day.
-    const quiet = setup({ version: "1.0.0-rc.2" });
-    quiet.answers.push(null, new Error("bad gateway"));
-    quiet.controller.start();
+    t.answers.push("1.0.3", "1.0.3");
+    t.controller.start();
     await vi.advanceTimersByTimeAsync(FIRST_CHECK_MS);
-    expect(quiet.controller.getState()).toMatchObject({
+    expect(t.calls).toEqual(["check"]);
+    expect(t.controller.getState()).toMatchObject({
       phase: "idle",
       dialog: "none",
     });
-    expect(quiet.writes.at(-1)).toEqual({ lastCheck: START + FIRST_CHECK_MS });
-  });
-
-  it("looks only at releases for a release", async () => {
-    const t = setup({ version: "1.0.0" });
-    t.answers.push(null);
-    await t.controller.check(true);
-    expect(t.checks).toEqual([false]);
-  });
-
-  it("does not take a no-release answer for nothing newer when the application is a release", async () => {
-    const t = setup({ version: "1.0.0" });
-    t.answers.push(noRelease());
     expect(await t.controller.check(true)).toMatchObject({
-      dialog: "checkFailed",
-      errorCode: NO_RELEASE_CODE,
+      phase: "available",
+      version: "1.0.3",
+      dialog: "available",
     });
+    expect(t.calls).toEqual(["check", "check"]);
   });
 });
 
@@ -665,7 +525,7 @@ describe("the update controller: 以后再说 and 跳过这个版本", () => {
     // speak of it.
     t.controller.start();
     await vi.advanceTimersByTimeAsync(CHECK_INTERVAL_MS);
-    expect(t.calls).toEqual(["check:false", "check:false"]);
+    expect(t.calls).toEqual(["check", "check"]);
     expect(t.controller.getState()).toMatchObject({
       phase: "idle",
       dialog: "none",
@@ -984,31 +844,27 @@ describe("the update controller: the install (PKG-10, ADR-0073)", () => {
   });
 });
 
-describe("the update controller: the release page", () => {
-  it("opens the page of the version on offer, built from the constants", async () => {
+describe("the update controller: the manual download", () => {
+  it("opens the download site, whether a version is on offer or not", async () => {
     const t = setup();
-    t.answers.push("1.0.1");
+    t.answers.push("1.0.1", new Error("offline"));
     await t.controller.check(true);
-    await t.controller.openReleasePage();
-    expect(t.opened).toEqual([
-      "https://github.com/wdcyxxycdw/padmate/releases/tag/v1.0.1",
-    ]);
+    expect(t.controller.getState().phase).toBe("available");
+    await t.controller.openManualDownload();
+    expect(t.opened).toEqual(["https://padmate.download/"]);
+    await t.controller.dismiss("later");
+    await t.controller.check(true);
+    expect(t.controller.getState().dialog).toBe("checkFailed");
+    await t.controller.openManualDownload();
+    expect(t.opened).toEqual([UPDATE_URL, UPDATE_URL]);
   });
 
-  it("opens the list of releases when there is no version", async () => {
-    const t = setup();
-    t.answers.push(new Error("offline"));
-    await t.controller.check(true);
-    await t.controller.openReleasePage();
-    expect(t.opened).toEqual([RELEASES_URL]);
-  });
-
-  it("opens only what the constants build, whatever the feed said", async () => {
+  it("opens only the constant, whatever the feed said", async () => {
     const t = setup();
     t.answers.push("1.0.1?x=1");
     await t.controller.check(true);
-    await t.controller.openReleasePage();
-    expect(t.opened).toEqual([RELEASES_URL]);
+    await t.controller.openManualDownload();
+    expect(t.opened).toEqual([UPDATE_URL]);
   });
 });
 
@@ -1047,7 +903,7 @@ describe("the update controller: state pushed to the window", () => {
 
 describe("the updater of a build that cannot update", () => {
   it("fails every call, so that nothing reaches the network", async () => {
-    await expect(inertUpdater.check(false)).rejects.toThrow("cannot update");
+    await expect(inertUpdater.check()).rejects.toThrow("cannot update");
     await expect(inertUpdater.download(() => {})).rejects.toThrow(
       "cannot update",
     );

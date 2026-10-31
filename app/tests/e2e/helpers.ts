@@ -493,7 +493,11 @@ export async function expectPageFits(page: Page): Promise<void> {
     .toEqual([]);
 }
 
-/** The chips and the heading of the mapping page do not overlap, and no name is cut off. */
+/**
+ * The chips and the heading of the mapping page do not overlap, and no name is
+ * cut off. The two cells of a stick (leftstick and leftstick.press) are one
+ * button split in two and share their 1 px edge; nothing else may touch.
+ */
 export async function expectEditorLabelsFit(page: Page): Promise<void> {
   const overlaps = await page
     .locator("button[data-callout], .controller-heading, .controller-tools")
@@ -502,16 +506,20 @@ export async function expectEditorLabelsFit(page: Page): Promise<void> {
         id: element.getAttribute("data-callout") || element.className,
         rect: element.getBoundingClientRect().toJSON(),
       }));
+      const cellsOfOneStick = (a: { id: string }, b: { id: string }) =>
+        b.id === `${a.id}.press` || a.id === `${b.id}.press`;
       return bounds.flatMap((a, i) =>
         bounds
           .slice(i + 1)
-          .filter(
-            (b) =>
-              Math.min(a.rect.right, b.rect.right) >
-                Math.max(a.rect.left, b.rect.left) &&
-              Math.min(a.rect.bottom, b.rect.bottom) >
-                Math.max(a.rect.top, b.rect.top),
-          )
+          .filter((b) => {
+            const across =
+              Math.min(a.rect.right, b.rect.right) -
+              Math.max(a.rect.left, b.rect.left);
+            const down =
+              Math.min(a.rect.bottom, b.rect.bottom) -
+              Math.max(a.rect.top, b.rect.top);
+            return across > 0 && down > (cellsOfOneStick(a, b) ? 1.01 : 0);
+          })
           .map((b) => ({ first: a, second: b })),
       );
     });

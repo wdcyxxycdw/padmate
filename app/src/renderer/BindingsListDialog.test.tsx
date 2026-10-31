@@ -77,18 +77,24 @@ function Harness({
       <button type="button" onClick={() => setOpen(true)}>
         列表
       </button>
-      {["south", "leftstick", "lefttrigger", "righttrigger", "dpad.up"].map(
-        (control) => (
-          <button
-            type="button"
-            key={control}
-            data-callout={control}
-            aria-pressed={selected === control}
-          >
-            {control}
-          </button>
-        ),
-      )}
+      {[
+        "south",
+        "leftstick",
+        "leftstick.press",
+        "rightstick.press",
+        "lefttrigger",
+        "righttrigger",
+        "dpad.up",
+      ].map((control) => (
+        <button
+          type="button"
+          key={control}
+          data-callout={control}
+          aria-pressed={selected === control}
+        >
+          {control}
+        </button>
+      ))}
       {drawer && selected && (
         <aside data-testid="mapping-editor">
           <h2 className="drawer-title" tabIndex={-1}>
@@ -133,6 +139,16 @@ it("names stick directions, raw axes and half presses", () => {
   expect(listControlName("a", labels, "zh-CN")).toBe("A");
 });
 
+it("names a stick's press like the stick, and never by its selection id", () => {
+  // With no controller there are no labels: the stick's own name stands, not
+  // "leftstick.press" (the press cell's selection id).
+  expect(listControlName("l3", {}, "zh-CN")).toBe("leftstick");
+  expect(listControlName("rightstick", {}, "en")).toBe("rightstick");
+  expect(listControlName("ls.up", {}, "zh-CN")).toBe("leftstick ↑");
+  const labels = controllerLabels("playstation");
+  expect(listControlName("l3", labels, "zh-CN")).toBe(labels.leftstick);
+});
+
 it("names the fixed default by its ID (PRO-28)", async () => {
   const editor = await editorFor({ ...profile, name: "Stored" }, "default");
   render(<Harness editor={editor} onSelect={vi.fn()} />);
@@ -168,6 +184,42 @@ it("opens the stick or trigger chip for keys inside them", async () => {
     // Focus goes to the chip the row opened, not back to the list button.
     expect(document.activeElement?.getAttribute("data-callout")).toBe(callout);
   }
+});
+
+it("opens the press cell for a stick's own key, in either name", async () => {
+  const editor = await editorFor({
+    ...profile,
+    layers: {
+      base: {
+        ...profile.layers.base,
+        l3: keys("Tab"),
+        rightstick: keys("Shift"),
+      },
+    },
+  });
+  const onSelect = vi.fn();
+  render(<Harness editor={editor} onSelect={onSelect} />);
+  const click = (name: string) => {
+    fireEvent.click(screen.getByRole("button", { name: "列表" }));
+    const row = screen
+      .getAllByRole("button")
+      .find(
+        (button) =>
+          button.querySelector(".bindings-control")?.textContent === name,
+      );
+    if (!row) throw new Error(`No row named ${name}`);
+    fireEvent.click(row);
+  };
+  // Named like the stick, as before; the direction rows still open the movement.
+  click("LS");
+  expect(onSelect).toHaveBeenLastCalledWith("leftstick.press");
+  expect(document.activeElement?.getAttribute("data-callout")).toBe(
+    "leftstick.press",
+  );
+  click("RS");
+  expect(onSelect).toHaveBeenLastCalledWith("rightstick.press");
+  click("LS ↑");
+  expect(onSelect).toHaveBeenLastCalledWith("leftstick");
 });
 
 it("returns focus to the list button when closed without a choice", async () => {
@@ -446,6 +498,31 @@ it("names the function key as the pad prints it, in English too", async () => {
   expect(names("ps5")[0][0]).toBe("PS");
 });
 
+it("draws the function key with the icon of the connected pad's generation (ADR-0079 §7)", async () => {
+  const editor = await editorFor(withSet);
+  const icon = (type: string) => {
+    cleanup();
+    render(
+      <BindingsListDialog
+        open
+        editor={editor}
+        info={{ ...info, type }}
+        language="en"
+        onClose={() => {}}
+        onSelect={() => {}}
+      />,
+    );
+    return screen
+      .getByTestId("function-key-row")
+      .querySelector("svg[data-pad-icon]")
+      ?.getAttribute("data-pad-icon");
+  };
+  // Options on a DualShock 4 is not a DualSense's: the row reads the pad's
+  // other names (its back is Share), as the chips do.
+  expect(icon("ps4")).toBe("kenney/playstation4_button_options");
+  expect(icon("ps5")).toBe("kenney/playstation5_button_options");
+});
+
 it("lists Menu for a single Joy-Con held sideways, and nothing for View, which it lacks", async () => {
   const editor = await editorFor(withSet);
   const show = () => {
@@ -531,18 +608,25 @@ it("shows the icon of each key before its name, as the key preview does (ADR-007
       // Drawn, not read: a screen reader gets the name.
       expect(icon?.classList.contains("control-icon")).toBe(true);
       expect(icon?.getAttribute("aria-hidden")).toBe("true");
-      return [control?.textContent, icon?.getAttribute("data-kind")];
+      // A vendored icon by its name (ADR-0079 §7), else padmate's shape.
+      return [
+        control?.textContent,
+        icon
+          ?.querySelector("svg[data-pad-icon]")
+          ?.getAttribute("data-pad-icon") ?? icon?.getAttribute("data-kind"),
+      ];
     }),
   );
   expect(kinds).toEqual({
-    A: "face",
-    "LS ↑": "stick",
-    "LS 原始轴向右": "stick",
-    "LT 半按": "badge",
-    RT: "badge",
+    A: "kenney/xbox_button_a",
+    "LS ↑": "kenney/xbox_stick_l_up",
+    "LS 原始轴向右": "kenney/xbox_stick_l_right",
+    "LT 半按": "kenney/xbox_lt",
+    RT: "kenney/xbox_rt",
+    // The icon sets have no diagonal: padmate's cross with two arms lit.
     "十字键 ↖": "dpad",
     // The function key, which cannot be opened, is listed the same way,
     // with the symbol printed on it (ADR-0077).
-    Menu: "glyph",
+    Menu: "kenney/xbox_button_menu",
   });
 });
