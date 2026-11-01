@@ -1,0 +1,1 @@
+{ "schemaVersion": 0, "functionKey": "back", "feedback": { "rumble": false }, "safety": { "panic": { "standard": { "buttons": ["back", "south"], "holdMs": 1500 } } } }

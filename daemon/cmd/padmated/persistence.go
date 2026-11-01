@@ -49,6 +49,7 @@ func (r *liveRun) startPersistence() {
 				flush(true)
 				return
 			case <-tick.C:
+				r.rememberControllers()
 				flush(false)
 			}
 		}

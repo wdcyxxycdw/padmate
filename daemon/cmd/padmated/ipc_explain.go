@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"slices"
+	"time"
 
 	"github.com/creachadair/jrpc2"
 
@@ -42,21 +44,40 @@ type rpcExplanation struct {
 	ProfileID       string `json:"profileId"`
 	Name            string `json:"name"`
 	DeclarativeOnly bool   `json:"declarativeOnly"`
-	// FunctionKey is the function key config.json chooses (ADR-0012),
-	// "back" or "start": the one for every slot, and the key the
-	// FunctionSet of each slot belongs to.
-	FunctionKey string `json:"functionKey"`
-	// IsFunctionKey is set when the control is the function key: it sends
-	// nothing, and a binding on it in a layer or in the set is ignored
-	// (Resolution "ignored"), so there is no binding to explain.
+	// FunctionKey and IsFunctionKey are those of the first entry of Slots,
+	// for a reader that has one controller in mind: since ADR-0017 the
+	// function key is a setting of each controller, so each entry of Slots
+	// has its own.
+	FunctionKey   string               `json:"functionKey"`
 	IsFunctionKey bool                 `json:"isFunctionKey"`
 	Slots         []rpcSlotExplanation `json:"slots"`
+}
+
+// withTopLevelKey sets the top-level function key from the first entry.
+func (e rpcExplanation) withTopLevelKey() rpcExplanation {
+	if len(e.Slots) > 0 {
+		e.FunctionKey, e.IsFunctionKey = e.Slots[0].FunctionKey, e.Slots[0].IsFunctionKey
+	}
+	return e
 }
 
 type rpcSlotExplanation struct {
 	Index  int              `json:"slot"` // -1 when querying a library profile
 	Device input.DeviceID   `json:"device"`
 	Layers []rpcLayerResult `json:"layers"`
+	// FunctionKey is the function key of the controller in the slot (ADR-0012,
+	// ADR-0017): "back", "start" or a paddle, the key FunctionSet belongs to.
+	// For a library profile, which has no controller, it is the function key
+	// of the controllers the daemon knows that have it (Controllers), or the
+	// default if it knows none.
+	FunctionKey string `json:"functionKey"`
+	// IsFunctionKey is set when the control is the function key: it sends
+	// nothing, and a binding on it in a layer or in the set is ignored
+	// (Resolution "ignored"), so there is no binding to explain.
+	IsFunctionKey bool `json:"isFunctionKey"`
+	// Controllers are the DeviceKeys of the known controllers whose function
+	// key is FunctionKey, for a library profile; it is left out for a slot.
+	Controllers []string `json:"controllers,omitempty"`
 	// FunctionHeld is set while the function key is held on the slot now; a
 	// library profile holds none.
 	FunctionHeld bool `json:"functionHeld"`
@@ -204,7 +225,8 @@ func explainFunctionSet(p *profile.Profile, key, c control.Control, held bool, l
 func explainSlot(p *profile.Profile, key, c control.Control, index int, device input.DeviceID, v engine.View) rpcSlotExplanation {
 	layers := explainLayers(p, c, v.Layers)
 	held := v.FunctionKey != control.Invalid
-	return rpcSlotExplanation{Index: index, Device: device, Layers: layers, FunctionHeld: held, FunctionSet: explainFunctionSet(p, key, c, held, layers)}
+	return rpcSlotExplanation{Index: index, Device: device, Layers: layers, FunctionHeld: held, FunctionKey: key.String(), IsFunctionKey: c == key,
+		FunctionSet: explainFunctionSet(p, key, c, held, layers)}
 }
 
 func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (any, error) {
@@ -220,8 +242,7 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 	if !ok {
 		return nil, &jrpc2.Error{Code: jrpc2.InvalidParams, Message: "unknown control"}
 	}
-	key := r.selectionConfig().FunctionKeyOrDefault()
-	result := rpcExplanation{Control: c.String(), DeclarativeOnly: true, FunctionKey: key.String(), IsFunctionKey: c == key, Slots: []rpcSlotExplanation{}}
+	result := rpcExplanation{Control: c.String(), DeclarativeOnly: true, Slots: []rpcSlotExplanation{}}
 	if p.ID != "" {
 		if p.Device != "" {
 			return nil, &jrpc2.Error{Code: jrpc2.InvalidParams, Message: "select either a library id or a live device"}
@@ -239,8 +260,12 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 			base = "base"
 		}
 		result.ProfileID, result.Name = p.ID, doc.Name
-		result.Slots = append(result.Slots, explainSlot(doc.Profile, key, c, -1, 0, engine.View{Layers: engine.LayerState{Base: base}}))
-		return result, nil
+		for _, group := range r.functionKeyGroups(ctx) {
+			s := explainSlot(doc.Profile, group.key, c, -1, 0, engine.View{Layers: engine.LayerState{Base: base}})
+			s.Controllers = group.controllers
+			result.Slots = append(result.Slots, s)
+		}
+		return result.withTopLevelKey(), nil
 	}
 	r.profileMu.Lock()
 	defer r.profileMu.Unlock()
@@ -251,11 +276,46 @@ func (r *liveRun) rpcExplainProfile(ctx context.Context, req *jrpc2.Request) (an
 	result.ProfileID, result.Name = r.targetLocked().id, r.cfg.profile.Name
 	for _, v := range views {
 		if matchesDevice(p.Device, v.Key, v.Device) {
+			// The function key the slot runs: its controller's.
+			key := v.Mapping.ProgramFunctionKey
+			if !key.CanBeFunctionKey() {
+				key = control.DefaultFunctionKey
+			}
 			result.Slots = append(result.Slots, explainSlot(r.cfg.profile, key, c, int(v.Index), v.Device, v.Mapping))
 		}
 	}
 	if p.Device != "" && len(result.Slots) == 0 {
 		return nil, &jrpc2.Error{Code: -32004, Message: "device has no available mapping slot"}
 	}
-	return result, nil
+	return result.withTopLevelKey(), nil
+}
+
+// functionKeyGroup is a function key and the known controllers that have it.
+type functionKeyGroup struct {
+	key         control.Control
+	controllers []string
+}
+
+// functionKeyGroups lists the distinct function keys of the controllers the
+// daemon knows (pads.list: connected first, then the ones seen before), each
+// with its controllers, in the order of the first one that has it. It always
+// has an entry: with no controller known, the function key of a controller with
+// the standard layout and no settings of its own.
+func (r *liveRun) functionKeyGroups(ctx context.Context) []functionKeyGroup {
+	cfg := r.selectionConfig()
+	vertical := r.verticalJoyCons()
+	var groups []functionKeyGroup
+	for _, p := range r.knownPads(ctx, cfg, time.Now()) {
+		fk := cfg.PadSettings(p.key, p.family(vertical)).FunctionKey
+		i := slices.IndexFunc(groups, func(g functionKeyGroup) bool { return g.key == fk })
+		if i < 0 {
+			groups = append(groups, functionKeyGroup{key: fk})
+			i = len(groups) - 1
+		}
+		groups[i].controllers = append(groups[i].controllers, p.key)
+	}
+	if len(groups) == 0 {
+		groups = []functionKeyGroup{{key: padFunctionKey(cfg, "", input.DeviceInfo{}, false)}}
+	}
+	return groups
 }

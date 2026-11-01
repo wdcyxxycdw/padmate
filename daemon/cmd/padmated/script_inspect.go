@@ -31,7 +31,7 @@ func (r *scriptRuntime) rememberError(err error) {
 	// A failure episode lasts until forgetErrors clears the errors (lastError,
 	// macroErrors): its first error buzzes once.
 	if !failing && r.def.errorCue != nil && r.pad.Connected && r.pad.Info.ID != 0 {
-		r.def.errorCue(r.index, r.pad.Info.ID)
+		r.def.errorCue(r.index, r.pad.Info.ID, r.pad.Key)
 	}
 }
 

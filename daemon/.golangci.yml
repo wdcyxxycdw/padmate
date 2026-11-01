@@ -30,6 +30,7 @@ linters:
             - "**/internal/engine/**"
             - "**/internal/haptic/**"
             - "**/internal/keys/**"
+            - "**/internal/padfamily/**"
             - "**/internal/profile/**"
             - "**/internal/sdlmapping/**"
             - "**/internal/mapwizard/**"
@@ -177,7 +178,7 @@ linters:
       - common-false-positives
       - std-error-handling
     rules:
-      - path-except: (^|/)internal/(amgp|control|engine|haptic|keys|profile|watch)/
+      - path-except: (^|/)internal/(amgp|control|engine|haptic|keys|padfamily|profile|watch)/
         linters:
           - forbidigo
         text: take time from clock\.Clock

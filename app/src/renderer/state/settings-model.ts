@@ -1,28 +1,21 @@
-// Pure helpers for the global settings: config.json's timing,
-// emergency combos and function key, and start at sign-in. Config helpers take a parsed
-// config.json and return a new object, or null when the change alters
-// nothing; they never mutate their input and keep members they do not know.
+// Pure helpers for the global settings: config.json's timing and the
+// Joy-Con 2 switch, and start at sign-in. (The function key, feedback switches
+// and emergency combo are settings of each controller, pads-model.ts.) Config
+// helpers take a parsed config.json and return a new object, or null when the
+// change alters nothing; they never mutate their input and keep members they
+// do not know.
 
 import {
   type DeviceBattery,
-  type DeviceCombo,
   LibraryErrorCode,
   type StartupState,
-  type StatusResult,
 } from "../../shared/api";
 import type {
   Config,
-  ConfigCombo,
-  ConfigFeedback,
   ConfigJoycon2,
-  ConfigSafety,
   ConfigTiming,
 } from "../../shared/generated/schema";
-import {
-  asFunctionKey,
-  defaultFunctionKey,
-  type FunctionKey,
-} from "../editor/editor-model";
+import type { PadSwitches } from "../../shared/pads";
 
 /** The largest timing value config.schema.json accepts, in ms. */
 export const TIMING_MAX_MS = 60000;
@@ -31,19 +24,6 @@ export const COMBO_HOLDS = [1000, 1500, 2000, 3000, 5000] as const;
 /** How many buttons a recorded combo may have. */
 export const COMBO_MIN_BUTTONS = 2;
 export const COMBO_MAX_BUTTONS = 4;
-
-export type PanicFamily = keyof NonNullable<ConfigSafety["panic"]>;
-const FAMILIES: readonly string[] = [
-  "standard",
-  "joyconLeft",
-  "joyconRight",
-  "joyconLeftVertical",
-  "joyconRightVertical",
-] satisfies PanicFamily[];
-
-export function isPanicFamily(value: string): value is PanicFamily {
-  return FAMILIES.includes(value);
-}
 
 /**
  * A millisecond field's text: a whole number from 0 to TIMING_MAX_MS, null
@@ -89,70 +69,17 @@ export function setGlobalTiming(
 }
 
 /**
- * The function key config.json chooses (ADR-0012): Menu unless it says
- * View or the Xbox button. Anything else it holds reads as Menu, as the
- * daemon reads it.
- */
-export function configuredFunctionKey(config: Config | null): FunctionKey {
-  return asFunctionKey(config?.functionKey);
-}
-
-/**
- * Chooses the function key. The file only says what is not the default:
- * choosing Menu removes the member. Null when the file already says it.
- */
-export function setFunctionKey(
-  config: Config,
-  key: FunctionKey,
-): Config | null {
-  const written: unknown = config.functionKey;
-  if (key === defaultFunctionKey) {
-    if (written === undefined) return null;
-    const { functionKey: _previous, ...rest } = config;
-    return rest;
-  }
-  if (written === key) return null;
-  return { ...config, functionKey: key };
-}
-
-/**
- * The feedback switches of config.json (ADR-0015), in the order the
- * Settings page shows them: 震动, 灯光, 暂停提示, 低电提醒.
+ * The feedback switches (ADR-0015), in the order the Controllers page shows
+ * them: 震动, 灯光, 暂停提示, 低电提醒. Each controller has its own
+ * (ADR-0017).
  */
 export const FEEDBACK_SWITCHES = [
   "rumble",
   "led",
   "pause",
   "lowBattery",
-] as const satisfies readonly (keyof ConfigFeedback)[];
+] as const satisfies readonly (keyof PadSwitches)[];
 export type FeedbackSwitch = (typeof FEEDBACK_SWITCHES)[number];
-
-/** Whether a switch is on: it is, unless config.feedback says false. */
-export function feedbackSwitchOn(
-  config: Config | null,
-  key: FeedbackSwitch,
-): boolean {
-  return config?.feedback?.[key] !== false;
-}
-
-/**
- * Turns a feedback switch on or off. The file only says false: turning one on
- * removes its member, and the object goes with its last one. Null when the
- * file already says it (a member written as true is on, and goes).
- */
-export function setFeedbackSwitch(
-  config: Config,
-  key: FeedbackSwitch,
-  on: boolean,
-): Config | null {
-  const written = config.feedback?.[key];
-  if (on ? written === undefined : written === false) return null;
-  const feedback: ConfigFeedback = { ...config.feedback };
-  if (on) delete feedback[key];
-  else feedback[key] = false;
-  const { feedback: _previous, ...rest } = config;
-  return Object.keys(feedback).length ? { ...config, feedback } : rest;
-}
 
 /**
  * Whether a remembered Joy-Con 2 connects by itself when its SYNC button is
@@ -178,43 +105,6 @@ export function setJoyCon2AutoConnect(
   else joycon2.autoConnect = false;
   const { joycon2: _previous, ...rest } = config;
   return Object.keys(joycon2).length ? { ...config, joycon2 } : rest;
-}
-
-/** Sets config.safety.panic[family], or with null removes it. */
-export function setPanicCombo(
-  config: Config,
-  family: PanicFamily,
-  combo: ConfigCombo | null,
-): Config | null {
-  const panic = { ...config.safety?.panic };
-  if (combo === null) {
-    if (!(family in panic)) return null;
-    delete panic[family];
-  } else {
-    const old = panic[family];
-    if (
-      old &&
-      old.holdMs === combo.holdMs &&
-      old.buttons.length === combo.buttons.length &&
-      old.buttons.every((button, i) => button === combo.buttons[i])
-    )
-      return null;
-    panic[family] = { buttons: [...combo.buttons], holdMs: combo.holdMs };
-  }
-  const { panic: _panic, ...safetyRest } = config.safety ?? {};
-  const safety: ConfigSafety = Object.keys(panic).length
-    ? { ...config.safety, panic }
-    : safetyRest;
-  const { safety: _safety, ...rest } = config;
-  return Object.keys(safety).length ? { ...config, safety } : rest;
-}
-
-/** The emergency combo the daemon reports for device, if any. */
-export function deviceCombo(
-  status: StatusResult | null,
-  device: number | undefined,
-): DeviceCombo | undefined {
-  return status?.combos?.find((combo) => combo.device === device);
 }
 
 /** Why a recorded combo cannot be saved, or null when it can. */

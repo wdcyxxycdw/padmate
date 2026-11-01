@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 0,
+  "devices": {
+    "030000005e040000130b000000000000/s:XB1": {
+      "ignored": false,
+      "functionKey": "start",
+      "feedback": {
+        "rumble": true,
+        "led": false
+      }
+    },
+    "030000004c050000e60c000000000000/s:PS1": {
+      "functionKey": "back",
+      "feedback": {
+        "rumble": false,
+        "led": false
+      }
+    }
+  }
+}

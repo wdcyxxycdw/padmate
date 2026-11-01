@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { DeviceEntry } from "../../../shared/api";
 import type { Config } from "../../../shared/generated/schema";
-import type { FunctionKey } from "../../editor/editor-model";
 import type { Translate } from "../../i18n";
 import {
   changeConfigText,
@@ -9,14 +8,9 @@ import {
   readConfig,
 } from "../../state/library-model";
 import {
-  configuredFunctionKey,
-  deviceCombo,
-  isPanicFamily,
   joyCon2AutoConnect,
-  setFunctionKey,
   setGlobalTiming,
   setJoyCon2AutoConnect,
-  setPanicCombo,
   startupDryRun,
 } from "../../state/settings-model";
 import {
@@ -35,10 +29,7 @@ import { CalibrationDialog, CalibrationSection } from "./CalibrationDialog";
 import { sticksOf } from "./calibration-model";
 import { MappingWizardDialog } from "./MappingWizardDialog";
 import { ModelLicenses } from "./ModelLicenses";
-import { ComboKeys, PanicComboDialog, seconds } from "./PanicComboDialog";
 import { ResetMappingDialog } from "./ResetMappingDialog";
-import { FeedbackSection } from "./SettingsFeedback";
-import { FunctionKeyRow } from "./SettingsFunctionKey";
 import { JoyCon2Section } from "./SettingsJoyCon2";
 import { OverlaySection } from "./SettingsOverlay";
 import { TimingSection } from "./SettingsTiming";
@@ -69,18 +60,21 @@ export function SettingsPage({
   store,
   onShowLogs,
   onShowDiagnostics,
+  onShowPads,
   focusEntry = null,
   onEntryFocused,
 }: {
   state: ShellState;
-  /** For the controller's input while a new emergency combo is recorded. */
+  /** For the Joy-Con 2 and update sections, which call the API themselves. */
   store: PadmateStore;
   /** Opens the logs view (a view inside Settings, not a rail page). */
   onShowLogs: () => void;
   /** Opens the diagnostics view, the same kind of view (ADR-0016). */
   onShowDiagnostics: () => void;
+  /** Opens the controllers view: their function key, feedback and emergency pause (ADR-0017). */
+  onShowPads: () => void;
   /** Move focus to this view's button after returning from the view. */
-  focusEntry?: "logs" | "diagnostics" | null;
+  focusEntry?: "logs" | "diagnostics" | "pads" | null;
   onEntryFocused?: () => void;
   /** Kept for the shell's page contract; this page uses inline text. */
   t?: Translate;
@@ -92,6 +86,7 @@ export function SettingsPage({
   const gapHintId = useId();
   const logsButton = useRef<HTMLButtonElement>(null);
   const diagnosticsButton = useRef<HTMLButtonElement>(null);
+  const padsButton = useRef<HTMLButtonElement>(null);
   const config = state.config;
   const editable = !!config && !config.problem;
   const saved = readBasicSettings(config);
@@ -99,12 +94,8 @@ export function SettingsPage({
   const [savedFrom, setSavedFrom] = useState<string | null>(null);
   const [released, setReleased] = useState(false);
   const [startupBusy, setStartupBusy] = useState(false);
-  // The controller and family the combo dialog was opened for.
-  const [comboFor, setComboFor] = useState<string | null>(null);
   // The gap as typed, while it differs from what is saved.
   const [gapText, setGapText] = useState<string | null>(null);
-  // The function key just chosen, until it is saved.
-  const [pendingKey, setPendingKey] = useState<FunctionKey | null>(null);
   const shown = saving ?? saved;
   const disabled = !editable || state.busy || !!saving;
 
@@ -133,7 +124,12 @@ export function SettingsPage({
 
   useEffect(() => {
     if (!focusEntry) return;
-    (focusEntry === "logs" ? logsButton : diagnosticsButton).current?.focus();
+    (focusEntry === "logs"
+      ? logsButton
+      : focusEntry === "pads"
+        ? padsButton
+        : diagnosticsButton
+    ).current?.focus();
     onEntryFocused?.();
   }, [focusEntry, onEntryFocused]);
 
@@ -223,34 +219,7 @@ export function SettingsPage({
     }
   };
 
-  const device =
-    state.status?.devices.find(
-      (entry) => entry.info.id === state.selectedDevice,
-    ) ?? state.status?.devices[0];
-  // The daemon's own combo for the controller, by its family.
-  const combo = deviceCombo(state.status, device?.info.id);
-  const family = combo && isPanicFamily(combo.family) ? combo.family : null;
   const parsed = editable ? readConfig(config) : null;
-  const functionKey = pendingKey ?? configuredFunctionKey(parsed);
-  // The choice is saved at once.
-  const chooseFunctionKey = async (key: FunctionKey) => {
-    if (key === functionKey) return;
-    setPendingKey(key);
-    try {
-      await write((source) => setFunctionKey(source, key));
-    } finally {
-      setPendingKey(null);
-    }
-  };
-  const configured = !!family && !!parsed?.safety?.panic?.[family];
-  // The dialog edits the family of the controller it was opened for. When
-  // that controller goes away, or another one is selected, it closes and
-  // does not come back by itself.
-  const comboKey = device && family ? `${device.info.id}:${family}` : null;
-  const comboOpen = comboFor !== null && comboFor === comboKey;
-  useEffect(() => {
-    if (comboFor !== null && comboFor !== comboKey) setComboFor(null);
-  }, [comboFor, comboKey]);
   // Every controller, and joystick that SDL does not know, and the one
   // whose calibration is open. When that controller goes away the dialog
   // closes and does not come back.
@@ -386,13 +355,28 @@ export function SettingsPage({
                   <option value="en">English</option>
                 </select>
               </div>
-              <FunctionKeyRow
-                language={language}
-                value={functionKey}
-                disabled={disabled}
-                pad={device?.info.gamepad ? device.info : undefined}
-                onChange={(key) => void chooseFunctionKey(key)}
-              />
+              <div className="row">
+                <div className="row-text">
+                  <span className="row-title">
+                    {t("手柄设置", "Controllers")}
+                  </span>
+                  <span className="row-hint">
+                    {t(
+                      "功能键、反馈和紧急暂停",
+                      "Function key, feedback and emergency pause",
+                    )}
+                  </span>
+                </div>
+                <button
+                  ref={padsButton}
+                  type="button"
+                  className="btn"
+                  aria-label={t("打开手柄设置", "Open controller settings")}
+                  onClick={onShowPads}
+                >
+                  {t("打开", "Open")}
+                </button>
+              </div>
               {startup && (
                 // The daemon's own entry; null with a daemon that
                 // has no startup.get.
@@ -430,52 +414,9 @@ export function SettingsPage({
             onChange={state.setOverlay}
           />
 
-          <FeedbackSection
-            language={language}
-            settings={shown}
-            disabled={disabled}
-            onChange={save}
-          />
-
           <section className="page-section">
             <h2 className="section-title">{t("安全", "Safety")}</h2>
             <div className="card">
-              <div className="row">
-                <div className="row-text">
-                  <span className="row-title">
-                    {t("紧急暂停", "Emergency pause")}
-                  </span>
-                  <span className="row-hint">
-                    {combo
-                      ? t(
-                          `按住 ${seconds(combo.holdMs, language)}：松开所有按键并暂停`,
-                          `Hold ${seconds(combo.holdMs, language)} to release all keys and pause`,
-                        )
-                      : t(
-                          "连接手柄后可查看和修改",
-                          "Connect a controller to see or change it",
-                        )}
-                  </span>
-                </div>
-                <div className="page-row-control">
-                  {combo && (
-                    <ComboKeys
-                      device={device}
-                      buttons={combo.buttons}
-                      family={combo.family}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    className="btn"
-                    aria-label={t("修改紧急暂停", "Change emergency pause")}
-                    disabled={!comboKey || disabled}
-                    onClick={() => setComboFor(comboKey)}
-                  >
-                    {t("修改", "Change")}
-                  </button>
-                </div>
-              </div>
               <div className="row">
                 <div className="row-text">
                   <span className="row-title">
@@ -679,21 +620,6 @@ export function SettingsPage({
         refresh={() => state.refresh()}
         onClose={() => setRestoreFor(null)}
       />
-      {device && combo && family && (
-        <PanicComboDialog
-          open={comboOpen}
-          language={language}
-          store={store}
-          device={device}
-          combo={combo}
-          configured={configured}
-          busy={disabled}
-          onSave={(next, options) =>
-            write((source) => setPanicCombo(source, family, next), options)
-          }
-          onClose={() => setComboFor(null)}
-        />
-      )}
     </>
   );
 }

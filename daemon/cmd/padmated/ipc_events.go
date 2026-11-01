@@ -33,6 +33,7 @@ func (r *liveRun) publishInput(e input.Event) {
 		// A Joy-Con 2 gamepad came, went or became a pair: the status of
 		// the backend may have changed (ipc_joycon2.go).
 		r.joyCon2Kick()
+		r.markPadsDirty()
 	}
 	if !r.events.Listening("input") {
 		return

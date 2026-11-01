@@ -1,0 +1,2 @@
+{{xbox}} standard
+{{joyconR}} joyconRight

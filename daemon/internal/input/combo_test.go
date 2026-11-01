@@ -451,3 +451,32 @@ func TestComboWatchForgetsHeldMembersOnRemap(t *testing.T) {
 		t.Error("the combo does not arm once both are pressed after the remap")
 	}
 }
+
+// TestComboWatchRepickOnlyWhatChanged: Repick leaves a device whose combo is
+// the same as it was, a hold under way included, and disarms the one whose combo
+// changed (ADR-0017: the combo is a setting of each controller, so changing one
+// controller's does not disturb another's hold).
+func TestComboWatchRepickOnlyWhatChanged(t *testing.T) {
+	standard := input.Combo{Buttons: []string{"back", "start"}, Hold: time.Second}
+	joycon := input.Combo{Buttons: []string{"leftshoulder", "rightshoulder"}, Hold: time.Second}
+	pick := func(info input.DeviceInfo) input.Combo {
+		if info.Type == "joyconleft" {
+			return joycon
+		}
+		return standard
+	}
+	w := input.NewComboWatch(pick)
+	// Both hold their combo; 1 (standard) is due at 1100, 2 (the Joy-Con) at 1200.
+	runComboScript(t, w, "add@0 2add:joyconleft@0 +back@0 +start@100 2+leftshoulder@100 2+rightshoulder@200 due@1100")
+	// Only the Joy-Con's combo changes (a longer hold, another member).
+	joycon = input.Combo{Buttons: []string{"leftshoulder", "rightshoulder"}, Hold: 3 * time.Second}
+	w.Repick()
+	// 1's hold went on and fires on time; 2's was disarmed and must be pressed
+	// again, and then waits the new hold.
+	runComboScript(t, w, "due@1100 fire@1100>1@1100 2+leftshoulder@1250 2+rightshoulder@1300 due@4300 fire@4300>2@4300")
+	// A Repick that changes nothing at all disarms nothing.
+	w = input.NewComboWatch(pick)
+	runComboScript(t, w, "add@0 +back@0 +start@100 due@1100")
+	w.Repick()
+	runComboScript(t, w, "due@1100 fire@1100>1@1100")
+}

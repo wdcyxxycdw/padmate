@@ -13,6 +13,7 @@ import type { Profile } from "../../shared/generated/schema";
 import { controllerLabels } from "../controller/controller-model";
 import { createEditorStore, type EditorStore } from "../editor/editor-store";
 import { editorAPIFixture } from "../testing/editor-api-fixture";
+import { sdlPads } from "../testing/sdl-pads";
 import { BindingsListDialog, listControlName } from "./BindingsListDialog";
 
 afterEach(cleanup);
@@ -532,28 +533,37 @@ it("draws the function key with the icon of the connected pad's generation (ADR-
   expect(icon("ps5")).toBe("kenney/playstation5_button_options");
 });
 
-it("lists Menu for a single Joy-Con held sideways, and nothing for View, which it lacks", async () => {
+it("lists the function key of a single Joy-Con held sideways by the name it prints, ZR or R, and nothing for a key it lacks", async () => {
   const editor = await editorFor(withSet);
-  const show = () => {
+  const show = (pad: DeviceInfo) => {
     cleanup();
     render(
       <BindingsListDialog
         open
         editor={editor}
-        info={{ ...info, type: "joyconleft", buttonMask: 0xf }}
+        info={pad}
         language="zh-CN"
         onClose={() => {}}
         onSelect={() => {}}
       />,
     );
   };
-  show();
+  const right: DeviceInfo = {
+    ...info,
+    ...sdlPads.joyConRightSideways,
+  };
+  act(() => editor.getState().setFunctionKey("paddle3"));
+  show(right);
   expect(rowsOf().slice(-1)).toEqual([
-    ["−", "功能键", "按住时其他键换成另一套", "fixed"],
+    ["ZR", "功能键", "按住时其他键换成另一套", "fixed"],
   ]);
   expect(rowsOf().filter((row) => row[3] === "fixed")).toHaveLength(1);
-  act(() => editor.getState().setFunctionKey("back"));
-  show();
+  act(() => editor.getState().setFunctionKey("paddle1"));
+  show(right);
+  expect(rowsOf().slice(-1)[0][0]).toBe("R");
+  // The key of a controller it is not: Menu is not a key of this Joy-Con.
+  act(() => editor.getState().setFunctionKey("start"));
+  show(right);
   expect(rowsOf().filter((row) => row[3] === "fixed")).toHaveLength(0);
 });
 

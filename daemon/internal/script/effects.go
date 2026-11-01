@@ -34,10 +34,11 @@ const (
 // cuts the pulses of a layer. A script's effects are all stopped when its
 // runtime stops being the active one (Cancel), so none outlives the script.
 type Effects interface {
-	// Switches reports whether the global rumble switch (with a strength above 0
-	// in the profile that the slot runs) and the global led switch are on
-	// (ADR-0015). A script's calls reach the gamepad only through them.
-	Switches(slot uint8) (rumble, led bool)
+	// Switches reports whether the rumble switch (with a strength above 0 in
+	// the profile that the slot runs) and the led switch of the controller with
+	// the canonical DeviceKey key (PadState.Key) are on (ADR-0015, ADR-0017). A
+	// script's calls reach the gamepad only through them.
+	Switches(slot uint8, key string) (rumble, led bool)
 	// Rumble plays steps on the gamepad as the script's rumble, in place of the
 	// one it played before.
 	Rumble(slot uint8, dev input.DeviceID, steps []haptic.Step)
@@ -189,7 +190,7 @@ func (h *Host) effectsAvailable(feature Feature) bool {
 		return false
 	}
 	caps := h.padState.Info.Capabilities.HapticCaps()
-	rumble, led := sink.Switches(h.base.owner.Slot)
+	rumble, led := sink.Switches(h.base.owner.Slot, h.padState.Key)
 	if feature == FeatureLED {
 		return caps.LED && led
 	}
@@ -308,7 +309,7 @@ func (h *Host) rumbleChannel(name string, ch *rumbleLevel, a, b, ms uint16, stop
 		}
 		return
 	}
-	rumble, _ := sink.Switches(h.base.owner.Slot)
+	rumble, _ := sink.Switches(h.base.owner.Slot, h.padState.Key)
 	if !rumble || !can(h.padState.Info.Capabilities.HapticCaps()) || !h.allowEffect(name) {
 		return
 	}
@@ -343,7 +344,7 @@ func (h *Host) padHaptic(call goja.FunctionCall) goja.Value {
 	if !ok {
 		return goja.Undefined()
 	}
-	if rumble, _ := sink.Switches(h.base.owner.Slot); !rumble || !h.padState.Info.Capabilities.HapticCaps().Rumble || !h.allowEffect("pad.haptic") {
+	if rumble, _ := sink.Switches(h.base.owner.Slot, h.padState.Key); !rumble || !h.padState.Info.Capabilities.HapticCaps().Rumble || !h.allowEffect("pad.haptic") {
 		return goja.Undefined()
 	}
 	h.bindEffectDevice(sink, dev)
@@ -382,7 +383,7 @@ func (h *Host) padSetLed(call goja.FunctionCall) goja.Value {
 		}
 		return goja.Undefined()
 	}
-	if _, led := sink.Switches(h.base.owner.Slot); !led || !h.padState.Info.Capabilities.HapticCaps().LED || !h.allowEffect("pad.setLed") {
+	if _, led := sink.Switches(h.base.owner.Slot, h.padState.Key); !led || !h.padState.Info.Capabilities.HapticCaps().LED || !h.allowEffect("pad.setLed") {
 		return goja.Undefined()
 	}
 	h.bindEffectDevice(sink, dev)

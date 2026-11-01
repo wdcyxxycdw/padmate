@@ -31,6 +31,15 @@
       },
       "x-go-type": "map[string]DeviceMemory"
     },
+    "controllers": {
+      "description": "Controllers that have been connected, by canonical DeviceKey: what the controller settings page lists, since config.json holds only settings. Machine state, written by the daemon; at most 64, the least recently seen dropped first.",
+      "type": "object",
+      "maxProperties": 64,
+      "additionalProperties": {
+        "$ref": "#/$defs/controller"
+      },
+      "x-go-type": "map[string]KnownController"
+    },
     "joycon2": {
       "description": "Joy-Con 2 controllers that padmate remembers and connects to without the pairing window. Machine state, written by the daemon.",
       "type": "array",
@@ -62,6 +71,44 @@
         }
       },
       "x-go-name": "DeviceMemory"
+    },
+    "controller": {
+      "title": "Known controller",
+      "description": "What the daemon last saw of a controller that was connected.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name SDL gave the controller.",
+          "type": "string",
+          "maxLength": 256,
+          "x-go-type": "string"
+        },
+        "type": {
+          "description": "SDL's gamepad type as a short string, such as xboxone, ps5 or joyconleft (input.TypeName).",
+          "type": "string",
+          "maxLength": 32,
+          "x-go-type": "string"
+        },
+        "buttonMask": {
+          "description": "The buttons SDL's mapping gives it (DeviceInfo.buttonMask), one bit per SDL gamepad button; 0 or left out when not known. A single Joy-Con's grip follows from it.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-go-type": "int"
+        },
+        "lastSeen": {
+          "description": "When it was last connected, in milliseconds since the Unix epoch; 0 or left out when not known.",
+          "type": "integer",
+          "minimum": 0,
+          "x-go-type": "int"
+        }
+      },
+      "x-go-name": "KnownController"
     },
     "joycon2Controller": {
       "title": "Remembered Joy-Con 2",

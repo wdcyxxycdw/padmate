@@ -10,6 +10,7 @@ import { installedAppHandlers } from "./installed-apps";
 import { joyCon2Handlers } from "./joycon2-handlers";
 import { libraryHandlers } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
+import { padHandlers } from "./pad-handlers";
 import { startFailureHandlers } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
 import { LanguageFile, languageHandlers } from "./ui-language";
@@ -262,6 +263,38 @@ describe("Electron IPC wiring", () => {
     expect(main.match(/hud\.joyCon2Up\(false\)/g)).toHaveLength(2);
   });
 
+  it("reads and writes the settings of each controller through three fixed methods, from the Controllers page to pads.list, pads.set and pads.migrate", () => {
+    // Renderer -> preload -> Main's handler table, which checks the key and
+    // the settings -> the daemon's methods, which the UI bridge lets through.
+    const api = source("../shared/api.ts");
+    for (const signature of [
+      "listPads(): Promise<PadsListResult>;",
+      "setPad(params: PadsSetParams): Promise<PadsSetResult>;",
+      "migratePads(): Promise<PadsMigrateResult>;",
+    ])
+      expect(api).toContain(signature);
+    const preload = source("../preload/index.ts");
+    for (const channel of [
+      'listPads: () => invoke("padmate:padsList"),',
+      'setPad: (params) => invoke("padmate:padsSet", params),',
+      'migratePads: () => invoke("padmate:padsMigrate"),',
+    ])
+      expect(preload).toContain(channel);
+    const handlers = source("./pad-handlers.ts");
+    for (const method of ["pads.list", "pads.set", "pads.migrate"])
+      expect(handlers).toContain(`"${method}"`);
+    expect(handlers).toContain("validatePadsSet(params)");
+    const bridge = source("../../../daemon/cmd/padmatectl/ui_bridge.go");
+    expect(bridge).toContain('"pads.list", "pads.set", "pads.migrate"');
+    // The daemon has the methods the bridge lets through.
+    const daemon = source("../../../daemon/cmd/padmated/ipc_pads.go");
+    for (const method of ["pads.list", "pads.set", "pads.migrate"])
+      expect(daemon).toContain(`methods["${method}"]`);
+    // The page refreshes the list from the events it already has (a device
+    // came or went, config.json changed), not from a topic of its own.
+    expect(source("../renderer/state/store.ts")).toContain("refreshPads");
+  });
+
   it("imports an AntiMicroX profile as data through one fixed method", () => {
     // Main reads the chosen file; the daemon is given its bytes, never a path.
     const handlers = source("./archive-handlers.ts");
@@ -331,6 +364,7 @@ describe("Electron IPC wiring", () => {
           async () => {},
         ),
       ),
+      ...Object.keys(padHandlers(() => undefined)),
       ...Object.keys(startupHandlers(() => undefined)),
       ...Object.keys(
         updateHandlers({
@@ -402,6 +436,7 @@ describe("Electron IPC wiring", () => {
     expect(main).toContain("...macroHandlers(");
     expect(main).toContain("...deviceHandlers(");
     expect(main).toContain("...joyCon2Handlers(");
+    expect(main).toContain("...padHandlers(");
     expect(main).toContain("...startupHandlers(");
     expect(main).toContain("...updateHandlers(");
     expect(main).toContain("...startFailureHandlers(");

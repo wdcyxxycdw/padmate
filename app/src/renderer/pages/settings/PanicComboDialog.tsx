@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { DeviceCombo, DeviceEntry } from "../../../shared/api";
 import type { ConfigCombo } from "../../../shared/generated/schema";
 import { controllerLabels } from "../../controller/controller-model";
+import type { PadNames } from "../../editor/key-view";
 import { failureText, type LibraryOutcome } from "../../state/library-model";
 import {
   COMBO_HOLDS,
@@ -30,23 +31,23 @@ const verticalLabels: Record<string, Record<string, string>> = {
 };
 
 /**
- * The buttons of a combo with the labels printed on device; family is the
- * combo's, which tells a vertical Joy-Con.
+ * The buttons of a combo with the labels printed on the pad (a connected
+ * controller, or what is known of one that was); family is the combo's, which
+ * tells a vertical Joy-Con.
  */
 export function comboKeys(
-  device: DeviceEntry | undefined,
+  pad: PadNames | undefined,
   buttons: string[],
   family = "",
 ) {
   const labels = controllerLabels(
-    device?.info.type ?? "xboxone",
-    device?.info.buttonLabels,
-    device?.info.buttonMask,
+    pad?.type ?? "xboxone",
+    pad?.buttonLabels,
+    pad?.buttonMask,
   );
   const vertical = verticalLabels[family];
   const single =
-    !vertical &&
-    (device?.info.type === "joyconleft" || device?.info.type === "joyconright");
+    !vertical && (pad?.type === "joyconleft" || pad?.type === "joyconright");
   return buttons.map((button) => ({
     button,
     label:
@@ -61,15 +62,15 @@ export function comboKeys(
 
 /** A combo as keycaps joined with "+". */
 export function ComboKeys({
-  device,
+  pad,
   buttons,
   family,
 }: {
-  device: DeviceEntry | undefined;
+  pad: PadNames | undefined;
   buttons: string[];
   family?: string;
 }) {
-  const keys = comboKeys(device, buttons, family);
+  const keys = comboKeys(pad, buttons, family);
   return (
     <span
       className="page-combo"
@@ -90,7 +91,8 @@ export function ComboKeys({
  * Records a new emergency combo on the controller. While it is
  * open the mapping is paused for the capture, and input still comes: the
  * buttons held together, once all are released, are the new combo. It
- * edits the family of device's combo only.
+ * edits the combo of device alone (ADR-0017), and listens to its buttons
+ * alone.
  */
 export function PanicComboDialog({
   open,
@@ -108,12 +110,12 @@ export function PanicComboDialog({
   store: PadmateStore;
   device: DeviceEntry;
   combo: DeviceCombo;
-  /** config.json sets this family, so 恢复默认 can remove it. */
+  /** The controller has a combo of its own, or the retired global one applies, so 恢复默认 has something to take away. */
   configured: boolean;
   /** Settings cannot be written now. */
   busy: boolean;
   /**
-   * Writes the combo, or with null removes the family's entry. The dialog
+   * Writes the combo, or with null takes the controller's own away. The dialog
    * shows a failure itself while it is open (options.inline).
    */
   onSave: (
@@ -272,7 +274,7 @@ export function PanicComboDialog({
       }
     >
       <div className="combo-record" data-testid="combo-record">
-        <ComboKeys device={device} buttons={shown} family={combo.family} />
+        <ComboKeys pad={device.info} buttons={shown} family={combo.family} />
         <p
           className="combo-record-note"
           role={problem || failure ? "alert" : undefined}

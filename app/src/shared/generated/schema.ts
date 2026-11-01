@@ -434,8 +434,8 @@ export type Config = {
   "defaultProfile"?: never;
   "devices"?: Record<string, ConfigDevice>;
   "enabled"?: boolean;
-  "feedback"?: ConfigFeedback;
-  "functionKey"?: "start" | "back" | "guide";
+  "feedback"?: never;
+  "functionKey"?: never;
   "ignore"?: never;
   "joycon2"?: ConfigJoycon2;
   "onUnmatched"?: never;
@@ -443,7 +443,7 @@ export type Config = {
   "releaseOnSwitch"?: "profileChange" | "always" | "never";
   "restoreLayerState"?: boolean;
   "rules"?: Array<ConfigRule>;
-  "safety"?: ConfigSafety;
+  "safety"?: never;
   "schemaVersion": 0;
   "timing"?: ConfigTiming;
 };
@@ -460,8 +460,11 @@ export type ConfigCombo = {
 
 export type ConfigDevice = {
   "calibration"?: ConfigCalibration;
+  "feedback"?: ConfigFeedback;
+  "functionKey"?: "start" | "back" | "paddle1" | "paddle2" | "paddle3" | "paddle4";
   "ignored"?: boolean;
   "mapping"?: string;
+  "panic"?: ConfigCombo;
 };
 
 export type ConfigFeedback = {
@@ -510,11 +513,19 @@ export type ConfigTiming = {
 };
 
 export type State = {
+  "controllers"?: Record<string, StateController>;
   "devices"?: Record<string, StateDevice>;
   "joycon2"?: Array<StateJoycon2Controller>;
   "lastProfile"?: string;
   "lastProfileSet"?: boolean;
   "schemaVersion": 0;
+};
+
+export type StateController = {
+  "buttonMask"?: number;
+  "lastSeen"?: number;
+  "name": string;
+  "type": string;
 };
 
 export type StateDevice = {

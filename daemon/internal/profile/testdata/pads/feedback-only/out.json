@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 0,
+  "output": {
+    "eventGapMs": 0
+  },
+  "devices": {
+    "030000004c050000e60c000000000000/s:PS1": {
+      "ignored": true,
+      "calibration": {
+        "rs": {
+          "saturation": 0.9
+        }
+      },
+      "feedback": {
+        "pause": false,
+        "lowBattery": false
+      }
+    },
+    "030000005e040000130b000000000000/s:XB1": {
+      "feedback": {
+        "pause": false,
+        "lowBattery": false
+      }
+    }
+  }
+}

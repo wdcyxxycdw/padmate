@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
@@ -18,13 +19,18 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-const traceUsage = `usage: padmatectl trace --profile FILE --input FILE [--json] [--function-key KEY]
+const traceUsage = `usage: padmatectl trace --profile FILE --input FILE [--json] [--function-key KEY] [--config FILE]
 
 Replays one recorded gamepad trace without injecting keys and prints the
 timeline from raw input through gesture decisions to keyboard output.
---json prints one JSON object per timeline item. --function-key (start
-or back; default start) is the function key the profile is compiled
-with, as config.json's functionKey is for padmated: trace does not read it.`
+--json prints one JSON object per timeline item.
+
+The function key is a setting of each controller, as in padmated: the one the
+controller of the trace has, which follows from its added event (a single
+Joy-Con has a paddle, a pair back, other controllers start) and from the
+devices.<DeviceKey>.functionKey of the config.json that --config names, if any.
+--function-key (start, back or paddle1 to paddle4) overrides it for the whole
+trace. Without --config trace reads no config.json.`
 
 type traceItem struct {
 	T        json.Number     `json:"t"`
@@ -98,13 +104,39 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	profilePath := fs.String("profile", "", "profile to load")
 	inputPath := fs.String("input", "", "recorded input trace")
 	asJSON := fs.Bool("json", false, "print JSON timeline items")
-	functionKey := fs.String("function-key", "start", "the function key the profile is compiled with: start or back")
+	functionKey := fs.String("function-key", "", "force this function key for the controller: start, back or paddle1 to paddle4")
+	configPath := fs.String("config", "", "config.json whose settings of each controller the trace follows")
 	if code, ok := parseFlags(fs, args, traceUsage+"\n", stdout, stderr); !ok {
 		return code
 	}
-	fn, err := parseFunctionKey(*functionKey)
-	if err != nil {
-		fmt.Fprintln(stderr, "padmatectl trace:", err)
+	fn := control.Invalid // the controller's own
+	if *functionKey != "" {
+		var err error
+		if fn, err = parseFunctionKey(*functionKey); err != nil {
+			fmt.Fprintln(stderr, "padmatectl trace:", err)
+			return 2
+		}
+	}
+	var settings *profile.Config
+	if fn == control.Invalid {
+		settings = profile.DefaultConfig()
+		if *configPath != "" {
+			text, err := os.ReadFile(*configPath)
+			if err != nil {
+				fmt.Fprintln(stderr, "padmatectl trace:", profile.ReadError(*configPath, err))
+				return 2
+			}
+			cfg, ds := profile.ParseConfig(text)
+			for _, d := range ds {
+				fmt.Fprintf(stderr, "padmatectl trace: %s: %s\n", *configPath, diagnosticLine(d))
+			}
+			if cfg == nil {
+				return 1
+			}
+			settings = cfg
+		}
+	} else if *configPath != "" {
+		fmt.Fprintln(stderr, "padmatectl trace: --config and --function-key cannot be used together")
 		return 2
 	}
 	if *profilePath == "" || *inputPath == "" || fs.NArg() != 0 {
@@ -184,7 +216,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	// No event gap: trace reads no config.json, so each command's
 	// keys are one send line, as with output.eventGapMs 0.
 	arb := output.NewArbiter(clk, sender, output.ArbiterOptions{MinPress: time.Duration(timing.TapPressMs) * time.Millisecond, MinGap: time.Duration(timing.TapGapMs) * time.Millisecond})
-	s, err := slot.New(slot.Config{Gen: 1, Program: prog, Arbiter: arb, Clock: clk,
+	sc := slot.Config{Gen: 1, Program: prog, Arbiter: arb, Clock: clk,
 		Trace: func(d engine.Decision) { w.write(d.T, "decision", "", d) },
 		OnEvent: func(ev input.Event) {
 			if ev.Kind != input.ButtonDown && ev.Kind != input.ButtonUp && ev.Kind != input.AxisMotion {
@@ -201,7 +233,13 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 			}
 			w.write(clk.Now(), "input", v, engine.Decision{})
 		},
-	})
+	}
+	if settings != nil {
+		sc.FunctionKey = func(key string, info input.DeviceInfo) control.Control {
+			return settings.PadSettings(key, input.FamilyOf(info, false)).FunctionKey
+		}
+	}
+	s, err := slot.New(sc)
 	if err != nil {
 		fmt.Fprintln(stderr, "padmatectl trace:", err)
 		return 1

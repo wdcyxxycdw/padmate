@@ -290,19 +290,44 @@ export function controllerLabels(
 }
 
 /**
- * Which of the two keys a function key can be (back, start) a pad has
- * (ADR-0012). A single Joy-Con held sideways has no back, only − or
- * +. A pad without the function key has no function key: its other keys work
- * as usual.
+ * Which buttons a controller can have for its function key, the default
+ * first (ADR-0012, ADR-0017); the daemon's padfamily.Family.FunctionKeys has
+ * the same table (pads.list sends the options it has for a controller, the
+ * mapping page works from the controller alone).
+ *
+ * - A single Joy-Con held sideways: the big trigger on its side, ZR on the
+ *   right one (paddle3) or ZL on the left one (paddle4), or the shoulder
+ *   button above it, R (paddle1) or L (paddle2).
+ * - A single Joy-Con held upright: the one of − and + it has, − on the left
+ *   one (back), + on the right one (start).
+ * - A pair of Joy-Cons: − (back) or + (start), − the default.
+ * - Every other controller: Menu (start) or View (back), Menu the default.
  */
 export function padFunctionKeys(
   type: string,
   buttonMask?: number,
 ): FunctionKey[] {
-  return isSidewaysJoyCon(type, buttonMask) ? ["start"] : ["start", "back"];
+  if (type === "joyconpair") return ["back", "start"];
+  if (type === "joyconleft")
+    return isSidewaysJoyCon(type, buttonMask)
+      ? ["paddle4", "paddle2"]
+      : ["back"];
+  if (type === "joyconright")
+    return isSidewaysJoyCon(type, buttonMask)
+      ? ["paddle3", "paddle1"]
+      : ["start"];
+  return ["start", "back"];
 }
 
-/** Whether the pad has the function key. */
+/** The function key a controller has until a setting chooses another. */
+export function defaultPadFunctionKey(
+  type: string,
+  buttonMask?: number,
+): FunctionKey {
+  return padFunctionKeys(type, buttonMask)[0] ?? "start";
+}
+
+/** Whether the button can be the function key of the pad. */
 export function padHasFunctionKey(
   key: FunctionKey,
   type: string,
@@ -313,8 +338,8 @@ export function padHasFunctionKey(
 
 /**
  * What the pad prints on the function key, e.g. Menu on an Xbox pad, Options
- * on a DualSense, + on a Switch pad; View, Create or − for the other of the
- * two.
+ * on a DualSense, + on a Switch pad, View, Create or − for the other of the
+ * two, ZR or R on a right Joy-Con held sideways.
  */
 export function functionKeyLabel(
   key: FunctionKey,

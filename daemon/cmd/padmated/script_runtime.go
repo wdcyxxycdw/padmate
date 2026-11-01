@@ -51,8 +51,9 @@ type scriptDefinition struct {
 	// its presets.
 	feedback profile.Feedback
 	// errorCue, when set, is called on the slot goroutine when the script of the
-	// slot starts failing, with the gamepad the slot has: the error buzz.
-	errorCue func(slot uint8, dev input.DeviceID)
+	// slot starts failing, with the gamepad the slot has and its DeviceKey: the
+	// error buzz.
+	errorCue func(slot uint8, dev input.DeviceID, key string)
 }
 
 // scriptSpec is a snapshot of a scriptDefinition: what a runtime builds.

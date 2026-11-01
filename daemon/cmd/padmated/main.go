@@ -40,6 +40,7 @@ import (
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/autostart"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/logging"
@@ -585,10 +586,18 @@ func replayDryRun(ctx context.Context, opts options, p *profile.Profile, prog *e
 		Feedback: func(f engine.Feedback) { pr.feedback(0, f) },
 	}
 	if st := opts.settings; st != nil {
-		// The feedback switches of config.json (ADR-0015) shape the
-		// printed haptics and feedback states as they do the live ones.
-		sw := st.Feedback
-		sc.Switches = func() profile.FeedbackSwitches { return sw }
+		// The feedback switches (ADR-0015) and the function key of the
+		// controller of config.json (ADR-0017) shape the printed haptics,
+		// feedback states and decisions as they do the live ones. A trace is
+		// read without the grip hint, so a single Joy-Con is judged by its
+		// buttons, or held sideways.
+		sc.Switches = func(key string) profile.FeedbackSwitches {
+			sw, _ := st.PadFeedback(key)
+			return sw
+		}
+		sc.FunctionKey = func(key string, info input.DeviceInfo) control.Control {
+			return padFunctionKey(st, key, info, false)
+		}
 	}
 	s, err := slot.New(sc)
 	if err != nil {
@@ -701,9 +710,10 @@ func parseProfileIn(lib *profilelib.Library, id, path string, data []byte, stder
 	if cfg != nil {
 		p = cfg.WithDefaults(p)
 	}
-	// The function key is config.json's (ADR-0012); without settings it is the
-	// default, start.
-	prog, err = engine.Compile(p, engine.WithFunctionKey(cfg.FunctionKeyOrDefault()))
+	// The Program has the default function key, start (ADR-0012); each slot runs
+	// the variant with the function key of its controller (ADR-0017,
+	// Program.ForFunctionKey), which config.json chooses.
+	prog, err = engine.Compile(p)
 	if err != nil {
 		fmt.Fprintf(stderr, "padmated: %s: cannot compile the profile: %v\n", path, err) // not reached for a parsed profile
 		return nil, nil, ds, err

@@ -22,6 +22,12 @@ import type {
 } from "../../shared/api";
 import type { JoyCon2Status } from "../../shared/joycon2";
 import type { OverlayPrefs } from "../../shared/overlay";
+import type {
+  PadsListResult,
+  PadsMigrateResult,
+  PadsSetParams,
+  PadsSetResult,
+} from "../../shared/pads";
 import {
   initialUpdateState,
   type UpdateDismissal,
@@ -173,6 +179,26 @@ export function editorAPIFixture() {
     forgetJoyCon2: vi.fn(
       async (_serial: string): Promise<JoyCon2Status> => joyCon2Unavailable,
     ),
+    // The settings of each controller: no controller has been connected, and
+    // a test that changes a setting gives the answers itself.
+    listPads: vi.fn(
+      async (): Promise<PadsListResult> => ({
+        revision: "r1",
+        legacy: {
+          any: false,
+          functionKey: false,
+          feedback: false,
+          panic: false,
+        },
+        pads: [],
+      }),
+    ),
+    setPad: vi.fn(async (_params: PadsSetParams): Promise<PadsSetResult> => {
+      throw new Error("setPad is not set up");
+    }),
+    migratePads: vi.fn(async (): Promise<PadsMigrateResult> => {
+      throw new Error("migratePads is not set up");
+    }),
     listMacros: vi.fn(
       async (): Promise<MacroList> => ({ macros: [], missing: [], legacy: [] }),
     ),

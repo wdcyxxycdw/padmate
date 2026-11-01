@@ -243,6 +243,8 @@ tasks:
       - go test -run '^$' -fuzz '^FuzzParse$' -fuzztime {{.FUZZTIME}} ./internal/sdlmapping
       - go test -run '^$' -fuzz '^FuzzDetector$' -fuzztime {{.FUZZTIME}} ./internal/mapwizard
       - go test -run '^$' -fuzz '^FuzzSetDeviceMappings$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzSetPadSettings$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzFromGUID$' -fuzztime {{.FUZZTIME}} ./internal/padfamily
       - go test -run '^$' -fuzz '^FuzzDiscovery$' -fuzztime {{.FUZZTIME}} ./internal/ipc
       - go test -run '^$' -fuzz '^FuzzHello$' -fuzztime {{.FUZZTIME}} ./internal/ipc
       - go test -run '^$' -fuzz '^FuzzFromMessage$' -fuzztime {{.FUZZTIME}} ./internal/winsession

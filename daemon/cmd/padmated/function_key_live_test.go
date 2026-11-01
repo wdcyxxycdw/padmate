@@ -25,19 +25,32 @@ const functionKeyLiveProfile = `{"schemaVersion":1,"name":"first","layers":{"bas
 	"start":{"press":{"type":"keys","keys":"F6"}},
 	"guide":{"press":{"type":"keys","keys":"F7"}}}}`
 
-// functionKey returns the function key of the profile that runs.
+// functionKey returns the function key that slot 0 runs: the one of its
+// controller (ADR-0017).
 func (tl *testLive) functionKey() control.Control {
-	tl.profileMu.Lock()
-	defer tl.profileMu.Unlock()
-	return tl.cfg.prog.FunctionKey()
+	ctx, cancel := context.WithTimeout(context.Background(), liveWait)
+	defer cancel()
+	views, err := tl.sup.Inspect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range views {
+		if v.Index == 0 {
+			return v.Mapping.ProgramFunctionKey
+		}
+	}
+	panic("no slot 0")
 }
 
-// TestConfigPutAppliesFunctionKeyLive: config.json's functionKey applies on
-// config.put without a restart (ADR-0012). The running profile is compiled
-// again and every slot reloaded, as for a profile switch: the keys held through
-// the old function set are released before config.put returns (invariant 1), a
-// function key that is held is forgotten, and the presses after it use the new
-// function key. A config that does not change the key leaves the profile alone.
+// TestConfigPutAppliesFunctionKeyLive: config.json's functionKey, the retired
+// top-level one that a controller with the standard layout follows, applies on
+// config.put without a restart (ADR-0012, ADR-0017). The slot of the controller
+// switches to the Program with the new function key, as it does for any
+// setting of a controller: the keys held through the old function set are
+// released before config.put returns (invariant 1), a function key that is held
+// is forgotten, and the presses after it use the new function key. The profile
+// is not reloaded for it, and a config that does not change the key leaves the
+// slot alone.
 // guide, which an old config.json may still choose, reads as start, and sends
 // nothing whichever key is the function key.
 func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
@@ -87,14 +100,14 @@ func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	if !saved.Applied || saved.RestartRequired || saved.Problem != "" {
 		t.Fatalf("function key not applied live: %+v", saved)
 	}
-	// The reload released both keys, before config.put returned.
+	// The slot let go of both keys, before config.put returned.
 	out := tl.stdout.String()
-	at := strings.LastIndex(out, "profile reloaded: release all")
+	at := strings.LastIndex(out, " cancel ")
 	if at < 0 || !strings.Contains(out[at:], " -F1") || !strings.Contains(out[at:], " -Space") {
 		t.Fatalf("held keys not released by the function key change:\n%s", out)
 	}
-	if got := tl.profileTarget.Load(); got.gen == gen || got.id != "first" {
-		t.Fatalf("profile not reloaded: %+v, was generation %d", got, gen)
+	if got := tl.profileTarget.Load(); got.gen != gen || got.id != "first" {
+		t.Fatalf("the profile was reloaded for a function key: %+v, was generation %d", got, gen)
 	}
 	if got := tl.functionKey(); got != control.Back {
 		t.Fatalf("the function key after config.put is %s, want back", got)

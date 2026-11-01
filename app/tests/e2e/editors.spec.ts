@@ -796,9 +796,10 @@ test("触感 in the key drawer is saved, and a press of the key plays it once on
   }
 });
 
-// ADR-0015: the four switches of Settings · 反馈 are saved as
-// config.json's feedback, and the daemon follows them as soon as the file is
-// saved, with no reload of the profile. The fake input daemon has no motors or
+// ADR-0015, ADR-0017: the four switches of a controller in Settings → 手柄设置
+// are saved as its feedback in config.json (devices.<DeviceKey>.feedback), and
+// the daemon follows them as soon as the file is saved, with no reload of the
+// profile. The fake input daemon has no motors or
 // lights: fake.effects lists the ambient state it was asked for, with the pulse
 // and the color of the pause, and the mode the player lights show (playerMode);
 // a low battery (fake.battery) is a play call of the Alert class.
@@ -817,7 +818,7 @@ interface FakeFeedback {
 }
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("the 反馈 switches in Settings are saved, and the fake controller follows them", async ({}, info) => {
+test("the 反馈 switches of a controller in 手柄设置 are saved, and the fake controller follows them", async ({}, info) => {
   test.setTimeout(120000);
   const f = await editorFixture();
   let app: ElectronApplication | undefined;
@@ -828,10 +829,14 @@ test("the 反馈 switches in Settings are saved, and the fake controller follows
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const connected = client;
-    // config.json of the fixture's data directory: the switches live there.
+    // config.json of the fixture's data directory: the switches live there,
+    // under the key of the controller.
     const configFile = join(f.path, "data", "config.json");
+    const key = (
+      (await connected.call("pads.list")) as { pads: { key: string }[] }
+    ).pads[0].key;
     const feedback = async () =>
-      JSON.parse(await readFile(configFile, "utf8")).feedback;
+      JSON.parse(await readFile(configFile, "utf8")).devices?.[key]?.feedback;
     const asked = async () =>
       ((await connected.call("fake.effects")) as FakeFeedback).effects.filter(
         (call) => call.kind === "feedback",
@@ -852,9 +857,12 @@ test("the 反馈 switches in Settings are saved, and the fake controller follows
     };
 
     await page.getByRole("button", { name: "设置", exact: true }).click();
-    const section = page.getByTestId("feedback-settings");
+    await page.getByRole("button", { name: "打开手柄设置" }).click();
+    const section = page.getByRole("region", {
+      name: "padmate IPC fake gamepad",
+    });
     await expect(section).toBeVisible();
-    await expect(section.getByRole("heading", { name: "反馈" })).toBeVisible();
+    await expect(section.getByText("反馈", { exact: true })).toBeVisible();
     const toggle = (name: string) =>
       section.getByRole("switch", { name, exact: true });
     for (const name of ["震动", "灯光", "暂停提示", "低电提醒"])
@@ -933,9 +941,9 @@ test("the 反馈 switches in Settings are saved, and the fake controller follows
 
     // All four on again: config.json has no feedback, and the profile was not
     // touched at all (it was never saved by these switches).
-    expect(JSON.parse(await readFile(configFile, "utf8"))).not.toHaveProperty(
-      "feedback",
-    );
+    const config = JSON.parse(await readFile(configFile, "utf8"));
+    expect(config).not.toHaveProperty("feedback");
+    expect(config.devices?.[key]).toBeUndefined();
     expect(JSON.stringify(await onDisk(connected))).toBe(profileBefore);
     // The mapping's 配置设置 has no switch any more.
     await page.getByRole("button", { name: "映射", exact: true }).click();

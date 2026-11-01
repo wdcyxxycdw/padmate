@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 0,
+  "devices": {
+    "{{xbox}}": { "functionKey": "back" }
+  }
+}

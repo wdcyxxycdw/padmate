@@ -141,12 +141,27 @@ type Config struct {
 	// called on the slot's goroutine and must not block or call back into the
 	// Slot.
 	OnHaptic func(input.DeviceID, engine.Haptic)
-	// Switches, when set, returns the global feedback switches
-	// (ADR-0015) the engine reads at each feedback state and haptic
-	// (engine.Options.Switches). It is called on the slot's goroutine, must not
-	// block, and returns what the last committed config.json says; nil means
-	// every switch on.
-	Switches func() profile.FeedbackSwitches
+	// Switches, when set, returns the feedback switches (ADR-0015,
+	// ADR-0017) of the controller with the canonical DeviceKey key that the
+	// engine reads at each feedback state and haptic (engine.Options.Switches);
+	// key is the slot's controller, "" while it has none. It is called on the
+	// slot's goroutine, must not block, and returns what the last committed
+	// config.json says; nil means every switch on.
+	Switches func(key string) profile.FeedbackSwitches
+	// FunctionKey, when set, returns the function key (ADR-0012, ADR-0017) of
+	// the controller with the canonical DeviceKey key and DeviceInfo info, the
+	// zero DeviceInfo and "" while the slot has none. The slot runs the Program
+	// of Config.Program that has this function key (engine.Program.ForFunctionKey):
+	// it asks when it gets or loses a controller, at each Reload and at
+	// RefreshFunctionKey, on its own goroutine, so it must not block and must be
+	// safe for concurrent use. It returns what the last committed config.json
+	// says. Nil means the function key of Config.Program for every controller.
+	FunctionKey func(key string, info input.DeviceInfo) control.Control
+	// OnFunctionKey, when set, is called on the slot's goroutine each time the
+	// slot has switched to a Program with another function key, after it let go
+	// of its keys, with the DeviceKey of its controller ("" if none) and the new
+	// Program. It must not block or call back into the Slot.
+	OnFunctionKey func(key string, prog *engine.Program)
 	// OnEvent, when set, receives every event Handle gets, and each
 	// ComboHeld of Replay, at the clock's Now, before the decisions and
 	// key commands the event causes. It must not call back into the Slot.
@@ -172,11 +187,17 @@ type Config struct {
 // is not safe for concurrent use: one goroutine owns it, and the Arbiter
 // unless that is a RemoteArbiter.
 type Slot struct {
-	index              uint8
-	gen                uint32
-	clk                clock.Clock
-	arb                Arbiter
-	marker             inputMarker // arb, if it can mark
+	index  uint8
+	gen    uint32
+	clk    clock.Clock
+	arb    Arbiter
+	marker inputMarker // arb, if it can mark
+	// base is the Program of the profile (Config.Program, then each Reload's);
+	// prog is the one the engine runs: base, or its variant with the function
+	// key of the slot's controller.
+	base, prog         *engine.Program
+	functionKey        func(string, input.DeviceInfo) control.Control
+	onFunctionKey      func(string, *engine.Program)
 	eng                *engine.Engine
 	state              State
 	info               *input.DeviceInfo
@@ -235,14 +256,19 @@ func New(cfg Config) (*Slot, error) {
 		reported: map[string]bool{}, script: cfg.Script,
 		analog: cfg.Program.Analog(), calibration: cfg.Calibration, power: cfg.Power,
 		profileKey: cfg.ProfileKey, layerMemory: cfg.LayerMemory,
+		base: cfg.Program, prog: cfg.Program, functionKey: cfg.FunctionKey, onFunctionKey: cfg.OnFunctionKey,
 	}
+	s.prog = s.programFor(cfg.Program) // a slot without a controller: the function key of none
 	s.marker, _ = cfg.Arbiter.(inputMarker)
 	s.scriptEnabled = s.scriptConfigured()
 	s.scriptNeeded = s.scriptNeededNow()
 	if w, ok := s.script.(scriptResyncWaiter); ok && w.WaitForInitialResync() {
 		s.scriptDisconnected = true
 	}
-	opts := engine.Options{Trace: cfg.Trace, Feedback: cfg.Feedback, Script: s.invokeAction, Switches: cfg.Switches}
+	opts := engine.Options{Trace: cfg.Trace, Feedback: cfg.Feedback, Script: s.invokeAction}
+	if cfg.Switches != nil {
+		opts.Switches = func() profile.FeedbackSwitches { return cfg.Switches(s.deviceKey) }
+	}
 	if cfg.ProfileSwitch != nil {
 		opts.Profile = func(id string) { s.keep(cfg.ProfileSwitch(s.gen, id)) }
 	}
@@ -275,7 +301,7 @@ func New(cfg Config) (*Slot, error) {
 	if cfg.OnHaptic != nil {
 		opts.Haptic = func(h engine.Haptic) { cfg.OnHaptic(s.device, h) }
 	}
-	s.eng = engine.New(cfg.Program, (*engineOutput)(s), opts)
+	s.eng = engine.New(s.prog, (*engineOutput)(s), opts)
 	s.connectGestures()
 	if cfg.Paused {
 		// Every control is up: the pause ends no cycle and decides nothing.
@@ -362,6 +388,10 @@ func (s *Slot) handleInput(ev input.Event, now clock.Time) {
 			copied := *ev.Info
 			s.info = &copied
 		}
+		// Before the layers come back: the Program of this controller's function
+		// key. Nothing of the controller is held yet; whatever the slot's
+		// owners hold from before is let go (switchProgram).
+		s.applyFunctionKey(now, true)
 		s.restoreLayers()
 		s.applyCalibration(now)
 		s.updatePad(now)
@@ -382,6 +412,7 @@ func (s *Slot) handleInput(ev input.Event, now clock.Time) {
 		s.device = 0
 		s.deviceKey = ""
 		s.info = nil
+		s.applyFunctionKey(now, true)
 		s.applyCalibration(now)
 		s.updatePad(now)
 	case input.ButtonDown, input.ButtonUp:
@@ -661,12 +692,15 @@ func (s *Slot) Reload(prog *engine.Program, gen uint32) error {
 		}
 	}
 	s.cancelScriptHeld()
+	s.base = prog
+	prog = s.programFor(prog)
 	wasNeeded := s.scriptNeeded
 	s.scriptEnabled = s.scriptConfigured()
 	s.scriptNeeded = s.scriptNeededNow()
 	s.connectGestures()
 	now := s.clk.Now()
 	s.eng.Reload(now, prog)
+	s.prog = prog
 	s.syncCalibration(now)
 	s.updatePad(now)
 	s.connectGestures()

@@ -1,10 +1,19 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { type ElectronApplication, expect, test } from "@playwright/test";
+import {
+  type ElectronApplication,
+  expect,
+  type Page,
+  test,
+} from "@playwright/test";
 import type { StatusResult } from "../../src/shared/api";
+import type { PadsListResult } from "../../src/shared/pads";
 import { cleanup, fixture, launch, rpc } from "./helpers";
 
 test.use({ actionTimeout: 15000 });
+
+/** The name of the fake controller. */
+const FAKE_PAD = "padmate IPC fake gamepad";
 
 // config.json's timing and emergency combo apply without a restart.
 // The window is in front, so a press is only previewed (output.preview).
@@ -89,8 +98,10 @@ test("触发长按时间 saved in Settings applies to the next long press at onc
   }
 });
 
+// The emergency pause is a setting of each controller (ADR-0017): Settings →
+// 手柄设置 lists the controller, and the combo is saved under its key.
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("紧急暂停 records a new combo pressed on the controller", async ({}, info) => {
+test("紧急暂停 of a controller records a new combo pressed on it", async ({}, info) => {
   const f = await fixture();
   const data = join(f.path, "data");
   let app: ElectronApplication | undefined;
@@ -99,7 +110,11 @@ test("紧急暂停 records a new combo pressed on the controller", async ({}, in
     app = launched.app;
     const page = launched.page;
     await page.getByRole("button", { name: "设置", exact: true }).click();
-    await page.getByRole("button", { name: "修改紧急暂停" }).click();
+    await page.getByRole("button", { name: "打开手柄设置" }).click();
+    const key = ((await rpc(f, "pads.list")) as PadsListResult).pads[0].key;
+    await page
+      .getByRole("button", { name: `修改紧急暂停 ${FAKE_PAD}` })
+      .click();
     const dialog = page.getByRole("dialog", { name: "修改紧急暂停" });
     await expect(dialog).toContainText("按住新的组合键，然后松开");
     // The mapping pauses for the recording; input still comes.
@@ -126,8 +141,8 @@ test("紧急暂停 records a new combo pressed on the controller", async ({}, in
       .toEqual({
         schemaVersion: 0,
         enabled: false,
-        safety: {
-          panic: { standard: { buttons: ["west", "east"], holdMs: 3000 } },
+        devices: {
+          [key]: { panic: { buttons: ["west", "east"], holdMs: 3000 } },
         },
       });
     const status = (await rpc(f, "status.get")) as StatusResult;
@@ -140,7 +155,143 @@ test("紧急暂停 records a new combo pressed on the controller", async ({}, in
         holdMs: 3000,
       },
     ]);
-    await expect(page.getByText("按住 3 秒：松开所有按键并暂停")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: FAKE_PAD })
+        .getByText("按住 3 秒：松开所有按键并暂停"),
+    ).toBeVisible();
+  } finally {
+    await cleanup(f, app);
+  }
+});
+
+/** Settings → 手柄设置: the section of the fake controller. */
+async function openFakePad(page: Page) {
+  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("button", { name: "打开手柄设置" }).click();
+  const section = page.getByRole("region", { name: FAKE_PAD });
+  await expect(section).toBeVisible();
+  return section;
+}
+
+const configOf = async (data: string) =>
+  JSON.parse(await readFile(join(data, "config.json"), "utf8"));
+
+// ADR-0017: the function key and the feedback switches are saved under the
+// key of the controller, not at the top of config.json.
+// biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
+test("手柄设置 saves the function key and the feedback switches of the controller", async ({}, info) => {
+  const f = await fixture();
+  const data = join(f.path, "data");
+  await writeFile(
+    join(data, "config.json"),
+    JSON.stringify({ schemaVersion: 0, enabled: false }),
+  );
+  let app: ElectronApplication | undefined;
+  try {
+    const launched = await launch(f);
+    app = launched.app;
+    const page = launched.page;
+    await page.getByRole("button", { name: "设置", exact: true }).click();
+    // Not rows of Settings any more.
+    await expect(page.getByTestId("function-key-setting")).toHaveCount(0);
+    await expect(page.getByTestId("feedback-settings")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "修改紧急暂停" }),
+    ).toHaveCount(0);
+    const section = await openFakePad(page);
+    const key = ((await rpc(f, "pads.list")) as PadsListResult).pads[0].key;
+    const choice = section.getByRole("radiogroup", { name: /^功能键/ });
+    // The fake pad has the standard layout: Start by default, or Back, each
+    // an icon and the name it prints.
+    await expect(choice.getByRole("radio")).toHaveText([
+      "Start（默认）",
+      "Back",
+    ]);
+    await expect(choice.getByRole("radio").first()).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await page.screenshot({ path: info.outputPath("settings-pads.png") });
+
+    await choice.getByRole("radio", { name: "Back" }).click();
+    await expect
+      .poll(async () => (await configOf(data)).devices?.[key]?.functionKey)
+      .toBe("back");
+    expect((await configOf(data)).functionKey).toBeUndefined();
+    // The default again: the member goes, and the entry of the controller with it.
+    await choice.getByRole("radio", { name: "Start（默认）" }).click();
+    await expect
+      .poll(async () => (await configOf(data)).devices)
+      .toBeUndefined();
+
+    await section.getByRole("switch", { name: "灯光" }).click();
+    await expect
+      .poll(async () => (await configOf(data)).devices?.[key]?.feedback)
+      .toEqual({ led: false });
+    await expect(section.getByRole("switch", { name: "灯光" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    await section.getByRole("switch", { name: "灯光" }).click();
+    await expect
+      .poll(async () => (await configOf(data)).devices)
+      .toBeUndefined();
+    expect((await configOf(data)).feedback).toBeUndefined();
+  } finally {
+    await cleanup(f, app);
+  }
+});
+
+// A file of v1.0.x has the three settings at the top. Opening the page
+// changes nothing; the first change folds them into the controllers.
+// biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
+test("手柄设置 folds the retired global settings into the controllers with its first change, not before", async ({}, info) => {
+  const f = await fixture();
+  const data = join(f.path, "data");
+  await writeFile(
+    join(data, "config.json"),
+    JSON.stringify({
+      schemaVersion: 0,
+      enabled: false,
+      functionKey: "back",
+      feedback: { rumble: false },
+    }),
+  );
+  let app: ElectronApplication | undefined;
+  try {
+    const launched = await launch(f);
+    app = launched.app;
+    const page = launched.page;
+    const section = await openFakePad(page);
+    const key = ((await rpc(f, "pads.list")) as PadsListResult).pads[0].key;
+    // What the global settings say applies to the controller.
+    await expect(section.getByRole("radio", { name: "Back" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(section.getByRole("switch", { name: "震动" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    await page.waitForTimeout(500);
+    expect(await configOf(data)).toMatchObject({
+      functionKey: "back",
+      feedback: { rumble: false },
+    });
+    await page.screenshot({
+      path: info.outputPath("settings-pads-legacy.png"),
+    });
+
+    await section.getByRole("switch", { name: "灯光" }).click();
+    await expect
+      .poll(async () => (await configOf(data)).devices?.[key]?.feedback)
+      .toEqual({ rumble: false, led: false });
+    const after = await configOf(data);
+    expect(after.devices[key].functionKey).toBe("back");
+    expect(after.functionKey).toBeUndefined();
+    expect(after.feedback).toBeUndefined();
+    expect(after.safety).toBeUndefined();
   } finally {
     await cleanup(f, app);
   }
@@ -209,8 +360,6 @@ interface FakeEffects {
     player?: { index: number; ms: number }[];
   }[];
 }
-
-const FAKE_PAD = "padmate IPC fake gamepad";
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
 test("识别 buzzes and flashes the fake controller, for about two seconds", async ({}, info) => {

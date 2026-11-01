@@ -23,6 +23,7 @@ import type {
 import { App } from "../App";
 import { createPadmateStore } from "../state/store";
 import { editorAPIFixture } from "./editor-api-fixture";
+import { padsOfDevices } from "./pads-fixture";
 
 /**
  * Every rule that can be decided without layout. jsdom has no layout, so the
@@ -294,6 +295,7 @@ export function renderApp({
     diagnostics: [],
   }));
   fixture.listMacros.mockImplementation(async () => macros);
+  fixture.listPads.mockImplementation(async () => padsOfDevices(devices));
   const api = {
     ...fixture,
     getConnection: vi.fn(async () => connection),

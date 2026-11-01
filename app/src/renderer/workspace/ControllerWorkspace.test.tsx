@@ -797,21 +797,34 @@ describe("the function key", () => {
     ).toEqual(["Normal", "Hold function key"]);
   });
 
-  it("has no switch on a single Joy-Con held sideways when View is the function key, which it lacks", async () => {
+  it("is ZL or L on a single Joy-Con held sideways, with the tag on its chip and a switch to its set", async () => {
     const editor = await editorFor(withSet);
+    act(() => editor.getState().setFunctionKey("paddle4"));
     const { container } = render(workspace(editor, joyCon));
     expect(switchOptions()).toEqual([
       ["平时", "true"],
       ["按住功能键", "false"],
     ]);
-    // Nor does it have a chip for it.
-    expect(chip(container, "back")).toBeNull();
-    expect(chip(container, "start")?.dataset.state).toBe("function");
-    // With View as the function key the pad has none: no switch to show.
-    act(() => editor.getState().setFunctionKey("back"));
-    expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
-    // Menu is an ordinary key then, with nothing set.
+    // ZL is the function key: its chip is the tag, and L is an ordinary key.
+    expect(chip(container, "paddle4")?.dataset.state).toBe("function");
+    expect(chip(container, "paddle2")?.dataset.state).toBe("unbound");
     expect(chip(container, "start")?.dataset.state).toBe("unbound");
+    // The other of its two keys, L, can be the function key instead.
+    act(() => editor.getState().setFunctionKey("paddle2"));
+    expect(chip(container, "paddle2")?.dataset.state).toBe("function");
+    expect(chip(container, "paddle4")?.dataset.state).toBe("unbound");
+    expect(switchOptions()[1][0]).toBe("按住功能键");
+  });
+
+  it("has no switch on a Joy-Con when the function key is a button it lacks", async () => {
+    const editor = await editorFor(withSet);
+    const { container } = render(workspace(editor, joyCon));
+    // No View or Menu on a Joy-Con held sideways: nothing to hold, no switch.
+    expect(chip(container, "back")).toBeNull();
+    act(() => editor.getState().setFunctionKey("start"));
+    expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
+    act(() => editor.getState().setFunctionKey("paddle2"));
+    expect(screen.getByRole("radiogroup", { name: "编辑的按键" })).toBeTruthy();
   });
 
   it("shows the set it switches to, and what a control does otherwise where the set leaves it out", async () => {

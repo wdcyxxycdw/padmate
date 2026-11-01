@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"reflect"
 	"slices"
@@ -86,6 +87,11 @@ func decodeState(data []byte) (profile.State, error) {
 		return profile.State{}, err
 	}
 	for key := range state.Devices {
+		if _, err := input.ParseDeviceKey(key); err != nil {
+			return profile.State{}, err
+		}
+	}
+	for key := range state.Controllers {
 		if _, err := input.ParseDeviceKey(key); err != nil {
 			return profile.State{}, err
 		}
@@ -269,6 +275,54 @@ func (m *Memory) ForgetJoyCon2(serial string) bool {
 	m.state.JoyCon2 = slices.Delete(slices.Clone(m.state.JoyCon2), i, i+1)
 	m.version++
 	return true
+}
+
+// MaxControllers is how many known controllers state.json keeps (the
+// schema's maxProperties); remembering one more drops the one seen least
+// recently.
+const MaxControllers = 64
+
+// Controllers returns the controllers that have been connected, by DeviceKey.
+func (m *Memory) Controllers() map[string]profile.KnownController {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return maps.Clone(m.state.Controllers)
+}
+
+// RememberController keeps what the daemon sees of the connected controller
+// with DeviceKey key (ADR-0017): the settings page lists the controllers
+// that have been connected. A button mask of 0 (not known) keeps the one
+// remembered. It takes the lock for a moment and does no I/O, so it may run on
+// a goroutine of the router; the persistence worker writes it.
+func (m *Memory) RememberController(key string, c profile.KnownController) {
+	if key == "" {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	old, had := m.state.Controllers[key]
+	if c.ButtonMask == 0 {
+		c.ButtonMask = old.ButtonMask
+	}
+	if had && old == c {
+		return
+	}
+	next := maps.Clone(m.state.Controllers)
+	if next == nil {
+		next = make(map[string]profile.KnownController)
+	}
+	next[key] = c
+	for len(next) > MaxControllers {
+		oldest, first := "", true
+		for k, v := range next {
+			if k != key && (first || v.LastSeen < next[oldest].LastSeen || v.LastSeen == next[oldest].LastSeen && k < oldest) {
+				oldest, first = k, false
+			}
+		}
+		delete(next, oldest)
+	}
+	m.state.Controllers = next
+	m.version++
 }
 
 func (m *Memory) Flush(l *Library) error {

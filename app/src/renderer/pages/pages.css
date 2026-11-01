@@ -144,6 +144,34 @@
   font-size: 12px;
   white-space: nowrap;
 }
+/* Settings → 手柄设置 (ADR-0017): a controller's name with its tags, the
+   small heading of its feedback switches, and the fold of the controllers
+   that are not connected. */
+.pad-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 8px 4px;
+}
+.pad-heading .section-title {
+  margin: 0;
+}
+.row.pad-subhead {
+  min-height: 40px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.pad-subhead .row-title {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.pad-others {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding-top: 8px;
+}
 /* What a controller's row says about it, under its name (the identify
    note); the same size as a hint, which the rows otherwise do without. */
 .row-note {

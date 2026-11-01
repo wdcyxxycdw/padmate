@@ -103,24 +103,33 @@ export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
   return next;
 }
 /**
- * The function key (ADR-0012): View (back) or Menu (start), chosen in
- * the settings (config.json functionKey) and the same for every profile and
- * controller. It holds no bindings of its own. While it is held, the other
- * controls use the profile's function set (profile.functionSet), and a control
- * the set leaves out does what it does otherwise. The other of the two is an
- * ordinary control.
+ * The function key (ADR-0012, ADR-0017): one button of the controller, chosen
+ * for each controller in Settings → Controllers (config.json
+ * devices.<DeviceKey>.functionKey) and the same for every profile. It holds no
+ * bindings of its own. While it is held, the other controls use the profile's
+ * function set (profile.functionSet), and a control the set leaves out does
+ * what it does otherwise. Which buttons a controller can have for it depends
+ * on its family: Menu or View on a pad with the standard layout, + or − on a
+ * pair of Joy-Cons, ZR or R on a right Joy-Con held sideways (paddle3,
+ * paddle1), ZL or L on a left one (paddle4, paddle2).
  */
-export const functionKeys = ["start", "back"] as const;
+export const functionKeys = [
+  "start",
+  "back",
+  "paddle1",
+  "paddle2",
+  "paddle3",
+  "paddle4",
+] as const;
 export type FunctionKey = (typeof functionKeys)[number];
-/** The function key when config.json does not choose one: Menu. */
+/** The function key of a controller with the standard layout: Menu. */
 export const defaultFunctionKey: FunctionKey = "start";
 /** Which set of bindings the mapping page shows and edits: the usual one, or the function set. */
 export type KeyView = "normal" | "function";
 
 /**
- * value when it names a function key, else the default (as the daemon reads
- * config.json): the Xbox button, which an older config.json may choose, is
- * Menu.
+ * value when it names a function key, else the default: the Xbox button,
+ * which an older config.json may choose, is Menu.
  */
 export function asFunctionKey(value: unknown): FunctionKey {
   return (functionKeys as readonly unknown[]).includes(value)

@@ -4,6 +4,7 @@ import {
   axisPosition,
   controllerLabels,
   controlStrength,
+  defaultPadFunctionKey,
   faceLabels,
   familyName,
   functionKeyLabel,
@@ -199,18 +200,62 @@ describe("the function key of a controller (ADR-0012)", () => {
     expect(functionKeyLabel("start", type)).toBe(start);
   });
 
-  it("has both on a controller, and no View on a single Joy-Con held sideways", () => {
-    // Held sideways it reports face buttons (buttonMask bit 0), as the
-    // labels decide it.
-    expect(padFunctionKeys("joyconleft", 1)).toEqual(["start"]);
-    expect(padFunctionKeys("joyconright", 0xf)).toEqual(["start"]);
-    expect(padHasFunctionKey("back", "joyconleft", 1)).toBe(false);
-    expect(padHasFunctionKey("start", "joyconleft", 1)).toBe(true);
-    expect(functionKeyLabel("start", "joyconleft", {}, 1)).toBe("−");
-    expect(functionKeyLabel("start", "joyconright", {}, 0xf)).toBe("+");
-    // Held upright it has − or + as the Back and Start buttons of a pad.
-    expect(padFunctionKeys("joyconleft", 2).sort()).toEqual(["back", "start"]);
-    expect(padFunctionKeys("xboxone").sort()).toEqual(["back", "start"]);
+  it("is Menu or View on a controller with the standard layout", () => {
+    const { xboxSeries, ps5 } = sdlPads;
+    expect(padFunctionKeys("xboxone")).toEqual(["start", "back"]);
+    expect(padFunctionKeys(ps5.type, ps5.buttonMask)).toEqual([
+      "start",
+      "back",
+    ]);
+    expect(defaultPadFunctionKey(xboxSeries.type, xboxSeries.buttonMask)).toBe(
+      "start",
+    );
+    expect(padHasFunctionKey("back", "xboxone")).toBe(true);
+    expect(padHasFunctionKey("paddle3", "xboxone")).toBe(false);
+  });
+
+  it("is − or + on a pair of Joy-Cons, − the default", () => {
+    const { type, buttonMask } = sdlPads.joyConPair;
+    expect(padFunctionKeys(type, buttonMask)).toEqual(["back", "start"]);
+    expect(defaultPadFunctionKey(type, buttonMask)).toBe("back");
+    expect(functionKeyLabel("back", type, {}, buttonMask)).toBe("−");
+    expect(functionKeyLabel("start", type, {}, buttonMask)).toBe("+");
+  });
+
+  it("is the shoulder buttons of a single Joy-Con held sideways, ZR or ZL the default", () => {
+    const left = sdlPads.joyConLeftSideways;
+    const right = sdlPads.joyConRightSideways;
+    expect(padFunctionKeys(right.type, right.buttonMask)).toEqual([
+      "paddle3",
+      "paddle1",
+    ]);
+    expect(padFunctionKeys(left.type, left.buttonMask)).toEqual([
+      "paddle4",
+      "paddle2",
+    ]);
+    expect(defaultPadFunctionKey(right.type, right.buttonMask)).toBe("paddle3");
+    expect(padHasFunctionKey("start", left.type, left.buttonMask)).toBe(false);
+    expect(padHasFunctionKey("paddle2", left.type, left.buttonMask)).toBe(true);
+    // And named as a Joy-Con prints them.
+    const name = (
+      key: "paddle1" | "paddle2" | "paddle3" | "paddle4",
+      pad: typeof left,
+    ) => functionKeyLabel(key, pad.type, {}, pad.buttonMask);
+    expect(name("paddle3", right)).toBe("ZR");
+    expect(name("paddle1", right)).toBe("R");
+    expect(name("paddle4", left)).toBe("ZL");
+    expect(name("paddle2", left)).toBe("L");
+  });
+
+  it("is the one of − and + a single Joy-Con held upright has", () => {
+    const left = sdlPads.joyConLeftUpright;
+    const right = sdlPads.joyConRightUpright;
+    expect(padFunctionKeys(left.type, left.buttonMask)).toEqual(["back"]);
+    expect(padFunctionKeys(right.type, right.buttonMask)).toEqual(["start"]);
+    expect(functionKeyLabel("back", left.type, {}, left.buttonMask)).toBe("−");
+    expect(functionKeyLabel("start", right.type, {}, right.buttonMask)).toBe(
+      "+",
+    );
   });
 
   it("takes the names the controller reports", () => {

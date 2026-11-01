@@ -85,14 +85,20 @@ func NewComboWatch(pick func(DeviceInfo) Combo) *ComboWatch {
 
 // Repick gives every device the combo pick returns for it now, with the
 // Info it got before: padmated calls it after config.json changed the
-// combos. It is conservative: it forgets which members are held
-// and disarms every combo, also one whose members stay the same, so a
-// combo fires only after all its members have been pressed again; a hold
-// under way never fires early or with the old members.
+// combos, which are the settings of each controller (ADR-0017). A device whose
+// combo is the same, the same members and the same hold, is left as it is, hold
+// under way included, so changing one controller's combo disturbs no other. A
+// device whose combo changed is conservative: it forgets which members are held
+// and is disarmed, so its combo fires only after all its new members have been
+// pressed again; a hold under way never fires early or with the old members.
 func (w *ComboWatch) Repick() {
 	for id, p := range w.pads {
+		next := w.newPad(p.info)
+		if slices.Equal(next.members, p.members) && next.hold == p.hold {
+			continue
+		}
 		w.disarm(p)
-		w.pads[id] = w.newPad(p.info)
+		w.pads[id] = next
 	}
 }
 

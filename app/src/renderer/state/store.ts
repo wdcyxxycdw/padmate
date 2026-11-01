@@ -24,6 +24,7 @@ import type {
 } from "../../shared/api";
 import { LibraryErrorCode } from "../../shared/api";
 import type { Config } from "../../shared/generated/schema";
+import type { PadsListResult } from "../../shared/pads";
 import {
   type ActivityRow,
   appendActivity,
@@ -60,13 +61,8 @@ import {
   saveOverlaySettings,
   validOverlayChange,
 } from "./overlay-settings";
-import {
-  FEEDBACK_SWITCHES,
-  feedbackSwitchOn,
-  identifyFailureText,
-  setFeedbackSwitch,
-  startupFailureText,
-} from "./settings-model";
+import { type PadChange, padSetParams } from "./pads-model";
+import { identifyFailureText, startupFailureText } from "./settings-model";
 
 export const LOG_LIMIT = 256;
 /** How long a window capture waits for a click into another app. */
@@ -74,13 +70,17 @@ export const CAPTURE_TIMEOUT_MS = 30_000;
 /** apps.recent keeps at most this many; live updates keep the same bound. */
 export const RECENT_APPS_LIMIT = 12;
 export type Language = UILanguage;
-/** "logs" and "diagnostics" are views inside Settings, not navigation rail items. */
+/**
+ * "logs", "diagnostics" and "pads" (Settings → Controllers) are views inside
+ * Settings, not navigation rail items.
+ */
 export type Page =
   | "overview"
   | "profiles"
   | "scripts"
   | "logs"
   | "diagnostics"
+  | "pads"
   | "settings";
 /** The transient autosave state of library writes; seq changes each time. */
 export interface LibrarySave {
@@ -131,14 +131,6 @@ export interface BasicSettings {
   sendToOwnWindow: boolean;
   /** output.eventGapMs: whole milliseconds between key events. */
   eventGapMs: number;
-  /**
-   * The feedback switches (ADR-0015): config.json's feedback.rumble,
-   * led, pause and lowBattery. Each is on unless the file says false.
-   */
-  rumble: boolean;
-  led: boolean;
-  pause: boolean;
-  lowBattery: boolean;
 }
 /** The largest output.eventGapMs the schema accepts. */
 export const EVENT_GAP_MAX_MS = 50;
@@ -266,6 +258,13 @@ export interface PadmateState {
    * with a daemon that has no startup.get.
    */
   startup: StartupState | null;
+  /**
+   * The controllers that have been connected, with the function key, feedback
+   * switches and emergency combo of each (ADR-0017): pads.list, read on
+   * connect and again whenever a controller comes or goes or config.json
+   * changes. null until it answers, and when the daemon cannot say.
+   */
+  pads: PadsListResult | null;
   start(): () => void;
   /** Reads status, scripts, config.json and the profile list again. */
   refresh(): Promise<void>;
@@ -273,6 +272,23 @@ export interface PadmateState {
   refreshLibrary(): Promise<void>;
   /** Reads start at sign-in again, e.g. when Settings opens. */
   refreshStartup(): Promise<void>;
+  /** Reads the controllers (pads.list) again. */
+  refreshPads(): Promise<void>;
+  /** Reads them again once the burst of changes that asked for it is over. */
+  scheduleRefreshPads(): void;
+  /**
+   * Makes one change to one controller's settings. While the retired global
+   * function key, feedback or emergency combo are still in config.json, the
+   * first change folds them into the controllers first (pads.migrate), so no
+   * controller changes behaviour. Queued with the other library writes; a
+   * failure is the shell's alert unless options.inline says the caller shows
+   * it.
+   */
+  setPadSettings(
+    key: string,
+    change: PadChange,
+    options?: ReportOptions,
+  ): Promise<LibraryOutcome>;
   /**
    * Turns start at sign-in on or off; only an explicit click calls it.
    * Resolves to "" once saved, else to the failure, which the shell's
@@ -468,10 +484,6 @@ function noteRecent(apps: RecentApp[], app: RecentApp): RecentApp[] {
 const BASIC_SETTINGS_DEFAULT: BasicSettings = {
   sendToOwnWindow: false,
   eventGapMs: 0,
-  rumble: true,
-  led: true,
-  pause: true,
-  lowBattery: true,
 };
 
 export function readBasicSettings(
@@ -482,10 +494,6 @@ export function readBasicSettings(
     return {
       sendToOwnWindow: value.output?.sendToOwnWindow === true,
       eventGapMs: eventGapValue(value.output?.eventGapMs) ?? 0,
-      rumble: feedbackSwitchOn(value, "rumble"),
-      led: feedbackSwitchOn(value, "led"),
-      pause: feedbackSwitchOn(value, "pause"),
-      lowBattery: feedbackSwitchOn(value, "lowBattery"),
     };
   } catch {
     return { ...BASIC_SETTINGS_DEFAULT };
@@ -503,6 +511,8 @@ export function createPadmateStore(
   let profilesSequence = 0;
   let recentSequence = 0;
   let startupSequence = 0;
+  let padsSequence = 0;
+  let padsScheduled = false;
   let saveSequence = 0;
   // Counts presses for the key preview; it never goes back, so a press
   // after keyPreview was cleared is still news.
@@ -608,6 +618,32 @@ export function createPadmateStore(
             profilesError: errorInfo(error).message,
           });
       }
+    }
+
+    async function loadPads() {
+      if (get().connection.phase !== "connected") return;
+      const epoch = connectionEpoch;
+      const sequence = ++padsSequence;
+      try {
+        const pads = await api.listPads();
+        if (epoch === connectionEpoch && sequence === padsSequence)
+          set({ pads });
+      } catch {
+        // The list stays as it was (or absent): the mapping page names the
+        // function key of the kind of controller, and the page of the
+        // controllers says it cannot read them.
+      }
+    }
+
+    // The store changes in bursts (a new connection brings the status and
+    // config.json in one go): the list is read once for the burst.
+    function schedulePads() {
+      if (padsScheduled) return;
+      padsScheduled = true;
+      queueMicrotask(() => {
+        padsScheduled = false;
+        void loadPads();
+      });
     }
 
     async function loadStartup() {
@@ -735,6 +771,7 @@ export function createPadmateStore(
           recentApps: [],
           configRepair: null,
           startup: null,
+          pads: null,
         });
       } else {
         if (previous !== "connected")
@@ -1391,6 +1428,7 @@ export function createPadmateStore(
       onboardingDone: savedOnboarding(),
       configRepair: null,
       startup: null,
+      pads: null,
       start() {
         const currentLifetime = ++lifetime;
         const initialEpoch = connectionEpoch;
@@ -1458,6 +1496,51 @@ export function createPadmateStore(
         }
       },
       refreshStartup: loadStartup,
+      refreshPads: loadPads,
+      scheduleRefreshPads: schedulePads,
+      setPadSettings: (key, change, options) =>
+        enqueue(async (op) => {
+          const list = get().pads;
+          const found = list?.pads.find((pad) => pad.key === key);
+          if (!list || !found) return failed("error");
+          // A change that alters nothing does not touch the file, and does not
+          // fold the retired members either.
+          if (!padSetParams(found, change)) return done;
+          op.saving();
+          let pad = found;
+          if (list.legacy.any) {
+            const migrated = await api.migratePads();
+            check(op);
+            ++padsSequence;
+            set({
+              pads: {
+                revision: migrated.revision,
+                legacy: migrated.legacy,
+                pads: migrated.pads,
+              },
+            });
+            const folded = migrated.pads.find((entry) => entry.key === key);
+            if (!folded) return failed("error");
+            pad = folded;
+          }
+          const params = padSetParams(pad, change);
+          if (!params) return done;
+          const saved = await api.setPad(params);
+          check(op);
+          ++padsSequence;
+          const current = get().pads;
+          if (current)
+            set({
+              pads: {
+                ...current,
+                revision: saved.revision,
+                pads: current.pads.map((entry) =>
+                  entry.key === key ? saved.pad : entry,
+                ),
+              },
+            });
+          return done;
+        }, options?.inline),
       async setStartup(enabled, options) {
         const epoch = connectionEpoch;
         const sequence = ++startupSequence;
@@ -1541,12 +1624,6 @@ export function createPadmateStore(
               if (settings.eventGapMs !== undefined)
                 output.eventGapMs = settings.eventGapMs;
               next = { ...next, output };
-            }
-            // A switch goes in feedback only when it is off.
-            for (const key of FEEDBACK_SWITCHES) {
-              const on = settings[key];
-              if (on !== undefined)
-                next = setFeedbackSwitch(next, key, on) ?? next;
             }
             return next === source ? null : next;
           }),
@@ -1717,6 +1794,24 @@ export function createPadmateStore(
           set({ dismissedConflicts: [...dismissed, name] });
       },
     };
+  });
+  // The controller list follows the devices and config.json: when a controller
+  // comes or goes, or the file is written (by this window or the daemon).
+  const deviceKeys = (value: PadmateState) =>
+    (value.status?.devices ?? [])
+      .map((entry) => `${entry.info.id}:${entry.key}`)
+      .join("|");
+  store.subscribe((state, previous) => {
+    if (state.connection.phase !== "connected") return;
+    // Input events and activity change the state many times a second: only a
+    // new connection, a new revision of config.json or another set of
+    // controllers is read again.
+    const changed =
+      state.connection !== previous.connection ||
+      state.config?.revision !== previous.config?.revision ||
+      (state.status?.devices !== previous.status?.devices &&
+        deviceKeys(state) !== deviceKeys(previous));
+    if (changed) state.scheduleRefreshPads();
   });
   return store;
 }

@@ -44,7 +44,7 @@ func TestSwitchesReachEverySlot(t *testing.T) {
 	var mu sync.Mutex
 	var haptics, states []string
 	h := start(t, opts{
-		slots: 2, program: prog, switches: sw.get,
+		slots: 2, program: prog, switches: func(string) profile.FeedbackSwitches { return sw.get() },
 		onHaptic: func(slot uint8, id input.DeviceID, x engine.Haptic) {
 			mu.Lock()
 			defer mu.Unlock()

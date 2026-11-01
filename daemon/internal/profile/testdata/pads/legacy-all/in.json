@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 0,
+  "enabled": true,
+  "functionKey": "back",
+  "rules": [
+    { "exe": "csp.exe", "profile": "csp" }
+  ],
+  "feedback": { "rumble": false },
+  "safety": {
+    "panic": {
+      "standard": { "buttons": ["back", "south"], "holdMs": 1500 },
+      "joyconLeft": { "buttons": ["leftshoulder", "rightshoulder"], "holdMs": 3000 }
+    }
+  },
+  "devices": {
+    "{{xbox}}": { "calibration": { "ls": { "deadzone": 0.2 } } }
+  }
+}

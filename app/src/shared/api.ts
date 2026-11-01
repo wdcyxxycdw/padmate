@@ -1,6 +1,13 @@
 import type { JoyCon2Status } from "./joycon2";
 import type { KeyHint, OverlayPrefs } from "./overlay";
 import type {
+  PadFunctionKeyName,
+  PadsListResult,
+  PadsMigrateResult,
+  PadsSetParams,
+  PadsSetResult,
+} from "./pads";
+import type {
   UpdateDismissal,
   UpdateInstallResult,
   UpdateState,
@@ -519,8 +526,8 @@ export interface LayerExplanation {
  * (the control is the function key, which has no binding).
  */
 export interface FunctionSetExplanation extends LayerExplanation {
-  /** The function key now in effect. */
-  key: "back" | "start";
+  /** The function key now in effect on the slot's controller (ADR-0017). */
+  key: PadFunctionKeyName;
   /** Whether the profile has a function set at all. */
   hasSet: boolean;
 }
@@ -529,8 +536,8 @@ export interface ProfileExplanation {
   profileId: string;
   name: string;
   declarativeOnly: boolean;
-  /** The function key now in effect (config.json functionKey), the same for every slot. */
-  functionKey: "back" | "start";
+  /** The function key now in effect on the first slot's controller (ADR-0017). */
+  functionKey: PadFunctionKeyName;
   /** The control is itself the function key: it has no binding to explain. */
   isFunctionKey: boolean;
   slots: {
@@ -913,6 +920,20 @@ export interface PadmateAPI {
   pairJoyCon2(): Promise<JoyCon2Status>;
   cancelJoyCon2Pair(): Promise<JoyCon2Status>;
   forgetJoyCon2(serial: string): Promise<JoyCon2Status>;
+  // The settings of each controller (ADR-0017): the function key, the
+  // feedback switches and the emergency combo are devices.<DeviceKey> members
+  // of config.json. listPads is pads.list: the controllers that have been
+  // connected, connected ones first, with each setting as stored and as it
+  // applies. setPad is pads.set: a member that is absent stays, null takes the
+  // controller's own value away, a value sets it; it rejects with code -32602
+  // for a function key the controller cannot have and -32004 for a controller
+  // it does not know. migratePads is pads.migrate: it folds the retired global
+  // functionKey, feedback and safety.panic into the controllers and takes them
+  // out of config.json. Each change reaches the window as
+  // profile.changed {kind:"config"}.
+  listPads(): Promise<PadsListResult>;
+  setPad(params: PadsSetParams): Promise<PadsSetResult>;
+  migratePads(): Promise<PadsMigrateResult>;
   pause(): Promise<EngineControlResult>;
   resume(): Promise<EngineControlResult>;
   releaseAll(): Promise<EngineControlResult>;

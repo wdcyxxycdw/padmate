@@ -182,6 +182,15 @@
 ### 功能键
 - 功能键（`Program.fnKey`，`back` 或 `start`）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
 
+- **每只手柄的设置（ADR-0017）**：手柄的功能键、反馈开关和紧急组合是 `devices.<DeviceKey>` 的成员；顶层的 `functionKey`、`feedback`、`safety.panic` 已退役，但仍然会读。不先把它们折进各只手柄（`pads.migrate`、`profile.MigratePadSettings`），就不要从文件里去掉它们（`withoutRetired`、手写的改写），否则某只手柄的行为会悄悄变。退役的 `functionKey` 只用于标准布局的手柄：文件里没写时的默认 `start`，不能把一对 Joy-Con 从它的 `back` 上挪走。
+- 单只 Joy-Con 的族按它报告的按键判断（有 `south`、没有 `rightstick` 是横握），和界面的 `isSidewaysJoyCon`、`padlabel.sideways` 一致；按键未知时才看竖握提示。键的 GUID 看不出握法，所以 config 检查接受两种握法的功能键（`padfamily.PossibleFunctionKeys`），只有运行时的族才收窄。当前族不接受的功能键直接跳过，绝不是错误。
+- DeviceKey 含 `/`（`…/s:SERIAL`、`…/p:PATH`）：在诊断的 JSON Pointer 里写成 `~1`。拼指针用 `childPointer`，不要自己拼接键。
+- `liveDevices` 有意从已提交的配置里拷贝按手柄的成员；运行时要读的 `DeviceSettings` 新成员必须加在那里，立即生效的 `Config` 新字段要加进 `liveSettings`，并在 `startupFields` 里清掉，否则 `configNeedsRestart` 每改一次就报需要重启。
+
+- **运行时的功能键是 slot 的，不是 profile 的（ADR-0017）。** `cfg.prog` 和 `Supervisor.Reload` 的 Program 带的是*默认*功能键（`start`）；slot 运行的是 `Program.ForFunctionKey(自己手柄的键)`。所以别用 `prog.FunctionKey()` 判断某只手柄的行为（问 slot 的 `View.ProgramFunctionKey` 或 `PadSettings`），别拿 config.json 的功能键去编译 profile，并记住不同变体的 `IgnoredFunctionKeyBindings` 和 `Bindings()` 不一样。没有手柄的 slot 用 key `""` 去问，得到的是标准布局加退役的顶层 `functionKey`，`onFunctionKey` 对它什么也不说。
+- **功能键切换是不换代的引擎 `Reload`（`Slot.switchProgram`）。** 手柄来去（`DeviceAdded`、`DeviceRemoved`）时，层状态既不在它之前保存、也不在它里面恢复（由调用方恢复；先保存会把记忆覆盖成新引擎的默认层）；由 `RefreshFunctionKey` 触发时则在前后保存和恢复。Program 没变时必须什么也不做：任何配置变化后 `RefreshFunctionKeys` 都会在每个 slot 上运行，多余的一次 `Reload` 会松开别的手柄按着的键。
+- **`ComboWatch.Repick` 不动组合没变的设备。** 别“简化”成全部重新解除待发：改一只手柄的组合会取消另一只手柄正在进行的长按。padmated 的 `ComboFor` 用 `input.KeyOf(info)`（N 为 0）认手柄，所以两只没有序列号的相同手柄共用第一只的设置。
+
 ### 序列、决策与 Fuzz
 - 取消序列要先标序列再取消点按和文字（`cancelQueued`：先 `endSeq`），否则多发一步。`TapSequence`（KeySpec 数组）不排队、与别的 owner 并行，黄金输出依赖这点；`Sequence` 等之前的结束，`engineOutput.TypeText` 要经 `Sequence`。序列里的等待从上一步物理抬起算，不叠加 `gap`。
 

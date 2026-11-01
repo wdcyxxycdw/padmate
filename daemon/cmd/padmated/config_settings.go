@@ -42,12 +42,16 @@ func (r *liveRun) selectionConfig() *profile.Config {
 	return profile.DefaultConfig()
 }
 
-// feedbackSwitches returns the global feedback switches (ADR-0015) of
-// the effective config, which the slots' engines, the effect queue's callers,
-// the scripts' effects and the low-battery alert read at each use. The result
-// is an immutable copy.
-func (r *liveRun) feedbackSwitches() profile.FeedbackSwitches {
-	return r.selectionConfig().Feedback
+// feedbackSwitchesFor returns the feedback switches (ADR-0015, ADR-0017) of
+// the controller with DeviceKey string key in the effective config: its own
+// settings, then the retired top-level feedback, then all on. The slots'
+// engines, the effect queue's callers, the scripts' effects and the
+// low-battery alert read it at each use for their own controller, so a switch of
+// one controller never reaches another. The result is a copy. A key of ""
+// (a slot without a controller) has the top-level switches.
+func (r *liveRun) feedbackSwitchesFor(key string) profile.FeedbackSwitches {
+	sw, _ := r.selectionConfig().PadFeedback(key)
+	return sw
 }
 
 // liveSettings is the effective config after committing next: the fields
@@ -66,13 +70,15 @@ func liveSettings(startup, next *profile.Config) *profile.Config {
 	c.FunctionKey = next.FunctionKeyOrDefault()
 	c.Enabled, c.ReleaseOnSwitch, c.Rules = next.Enabled, next.ReleaseOnSwitch, next.Rules
 	c.Output, c.Feedback, c.JoyCon2 = next.Output, next.Feedback, next.JoyCon2
+	c.Legacy = next.Legacy
 	c.Devices = liveDevices(startup.Devices, next.Devices)
 	return &c
 }
 
-// liveDevices is the devices of startup with the calibration and the mapping
-// of next: a device's ignored flag is startup's, its calibration and its
-// mapping next's (both apply at once).
+// liveDevices is the devices of startup with the calibration, the mapping and
+// the settings of the controller of next (function key, feedback switches,
+// emergency combo: ADR-0017): a device's ignored flag is startup's, the rest
+// next's (all apply at once).
 func liveDevices(startup, next map[string]profile.DeviceSettings) map[string]profile.DeviceSettings {
 	var out map[string]profile.DeviceSettings
 	set := func(key string, d profile.DeviceSettings) {
@@ -82,15 +88,17 @@ func liveDevices(startup, next map[string]profile.DeviceSettings) map[string]pro
 		out[key] = d
 	}
 	for key, d := range startup {
-		d.Calibration, d.Mapping = nil, next[key].Mapping
+		n := next[key]
+		d.Calibration, d.Mapping = nil, n.Mapping
+		d.FunctionKey, d.Feedback, d.Panic = n.FunctionKey, n.Feedback, n.Panic
 		if cal := next[key].Calibration; !cal.IsEmpty() {
 			d.Calibration = cal
 		}
 		set(key, d)
 	}
 	for key, d := range next {
-		if _, ok := startup[key]; !ok && (!d.Calibration.IsEmpty() || d.Mapping != "") {
-			set(key, profile.DeviceSettings{Calibration: d.Calibration, Mapping: d.Mapping})
+		if _, ok := startup[key]; !ok && (!d.Calibration.IsEmpty() || d.Mapping != "" || d.FunctionKey != "" || d.Feedback != nil || d.Panic != nil) {
+			set(key, profile.DeviceSettings{Calibration: d.Calibration, Mapping: d.Mapping, FunctionKey: d.FunctionKey, Feedback: d.Feedback, Panic: d.Panic})
 		}
 	}
 	return out
@@ -104,6 +112,7 @@ func startupFields(c *profile.Config) profile.Config {
 	s := *c
 	s.Timing, s.Safety = profile.Timing{}, profile.SafetySettings{}
 	s.FunctionKey = control.Invalid
+	s.Legacy = profile.LegacyPad{}
 	s.Enabled, s.ReleaseOnSwitch, s.Rules = false, "", nil
 	s.Output = profile.OutputSettings{}
 	s.Feedback = profile.FeedbackSwitches{}
@@ -153,38 +162,38 @@ func configuredCombo(settings *profile.Config) func(input.DeviceInfo, bool) inpu
 	}
 }
 
-// comboFamily names the config.json safety.panic family of a gamepad
-// (ARCHITECTURE §10.4): a single Joy-Con by its side and grip, every other
-// gamepad, a pair of Joy-Cons too, standard.
-func comboFamily(info input.DeviceInfo, vertical bool) string {
-	family := "standard"
-	switch info.Type {
-	case "joyconleft":
-		family = "joyconLeft"
-	case "joyconright":
-		family = "joyconRight"
-	}
-	if family != "standard" && vertical {
-		family += "Vertical"
-	}
-	return family
-}
-
-// effectiveCombo returns the family of a gamepad and the emergency combo
-// settings give it: its family's entry, or input.DefaultCombo. A gamepad
-// known to lack a button of its family's entry, such as a standard pad
-// without the paddles another pad recorded, keeps input.DefaultCombo, so
-// it still has an emergency pause; so does an entry with guide, which
-// padmate never uses (profile.PanicCombo.Usable). T-input (through ComboFor) and
-// status.get both use it, so the UI shows the combo that fires. settings
-// may be nil.
+// effectiveCombo returns the family of a gamepad (the name of the config.json
+// safety.panic family that covers it) and the emergency combo settings give
+// it (ADR-0017): that of the controller's own entry in devices, else the
+// retired safety.panic entry of its family, else input.DefaultCombo. A
+// gamepad known to lack a button of that combo, such as a standard pad
+// without the paddles another pad recorded, keeps input.DefaultCombo, so it
+// still has an emergency pause; so does an entry with guide, which padmate
+// never uses (profile.PanicCombo.Usable, which Config.PadSettings applies).
+// T-input (through ComboFor) and status.get both use it, so the UI shows the
+// combo that fires. settings may be nil. The controller is told by the
+// DeviceKey its info makes (input.KeyOf), whose number N for identical pads is
+// 0: ComboFor is not told which of them it is.
 func effectiveCombo(settings *profile.Config, info input.DeviceInfo, vertical bool) (string, input.Combo) {
-	family := comboFamily(info, vertical)
+	family := input.FamilyOf(info, vertical)
 	if settings != nil {
-		combo, ok := settings.Safety.Panic[family]
-		if ok && combo.Usable() && !slices.ContainsFunc(combo.Buttons, func(b string) bool { return !info.MayHaveButton(b) }) {
-			return family, input.Combo{Buttons: slices.Clone(combo.Buttons), Hold: time.Duration(combo.HoldMs) * time.Millisecond}
+		s := settings.PadSettings(input.KeyOf(&info).String(), family)
+		if s.PanicSource != profile.SourceDefault && !slices.ContainsFunc(s.Panic.Buttons, func(b string) bool { return !info.MayHaveButton(b) }) {
+			return family.PanicFamily(), input.Combo{Buttons: slices.Clone(s.Panic.Buttons), Hold: time.Duration(s.Panic.HoldMs) * time.Millisecond}
 		}
 	}
-	return family, input.DefaultCombo(info, vertical)
+	return family.PanicFamily(), input.DefaultCombo(info, vertical)
+}
+
+// padFunctionKey is the FunctionKey of the Supervisor's Config: the function
+// key the effective config gives the controller with DeviceKey key and
+// DeviceInfo info (ADR-0017). The grip of a single Joy-Con is judged by its
+// buttons, else by the hint SDL reads.
+func (r *liveRun) padFunctionKey(key string, info input.DeviceInfo) control.Control {
+	return padFunctionKey(r.selectionConfig(), key, info, r.verticalJoyCons())
+}
+
+// padFunctionKey is the function key settings give the controller key.
+func padFunctionKey(settings *profile.Config, key string, info input.DeviceInfo, vertical bool) control.Control {
+	return settings.PadSettings(key, input.FamilyOf(info, vertical)).FunctionKey
 }

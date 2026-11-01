@@ -3,7 +3,9 @@ package profile
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -41,4 +43,38 @@ func FuzzState(f *testing.F) {
 			t.Fatalf("cannot roundtrip: %s %v", raw, ds)
 		}
 	})
+}
+
+// TestStateControllers: state.json keeps the controllers that have been
+// connected (ADR-0017) by DeviceKey.
+func TestStateControllers(t *testing.T) {
+	s, ds := ParseState([]byte(`{"schemaVersion":0,"controllers":{"k":{"name":"Xbox","type":"xboxone","buttonMask":4294967295,"lastSeen":1730000000000},"j":{"name":"","type":"unknown"}}}`))
+	if ds.HasErrors() || len(s.Controllers) != 2 || s.Controllers["k"].ButtonMask != 4294967295 || s.Controllers["k"].LastSeen != 1730000000000 {
+		t.Fatalf("%+v %v", s, ds)
+	}
+	for _, doc := range []string{
+		`{"schemaVersion":0,"controllers":[]}`,
+		`{"schemaVersion":0,"controllers":{"k":{"type":"x"}}}`,
+		`{"schemaVersion":0,"controllers":{"k":{"name":"x"}}}`,
+		`{"schemaVersion":0,"controllers":{"k":{"name":"x","type":"y","buttonMask":-1}}}`,
+		`{"schemaVersion":0,"controllers":{"k":{"name":"x","type":"y","buttonMask":4294967296}}}`,
+		`{"schemaVersion":0,"controllers":{"k":{"name":"x","type":"y","lastSeen":-1}}}`,
+		`{"schemaVersion":0,"controllers":{"k":{"name":"x","type":"y","extra":1}}}`,
+	} {
+		if _, ds := ParseState([]byte(doc)); !ds.HasErrors() {
+			t.Errorf("accepted %s", doc)
+		}
+	}
+	var many strings.Builder
+	many.WriteString(`{"schemaVersion":0,"controllers":{`)
+	for i := range 65 {
+		if i > 0 {
+			many.WriteByte(',')
+		}
+		fmt.Fprintf(&many, `"k%d":{"name":"x","type":"y"}`, i)
+	}
+	many.WriteString(`}}`)
+	if _, ds := ParseState([]byte(many.String())); !ds.HasErrors() {
+		t.Error("accepted 65 controllers")
+	}
 }

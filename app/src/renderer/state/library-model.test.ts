@@ -253,7 +253,7 @@ describe("config.json documents", () => {
       "future",
     ]);
     // View stays, in its place.
-    const back = config({ functionKey: "back", enabled: true });
+    const back = legacy({ functionKey: "back", enabled: true });
     expect(withoutRetired(back)).toBe(back);
     const both = legacy({ ignore: [], functionKey: "back", enabled: true });
     expect(Object.keys(withoutRetired(both))).toEqual([
@@ -261,6 +261,27 @@ describe("config.json documents", () => {
       "functionKey",
       "enabled",
     ]);
+  });
+
+  it("keeps the retired global function key, feedback and emergency combo until pads.migrate folds them into the controllers (ADR-0017)", () => {
+    // They are the settings of every controller that has none of its own:
+    // dropping them from a write would change how a controller behaves.
+    const old = legacy({
+      functionKey: "back",
+      feedback: { rumble: false, lowBattery: false },
+      safety: {
+        panic: { standard: { buttons: ["south", "east"], holdMs: 1000 } },
+      },
+      devices: { "k/p:x": { ignored: true } },
+      enabled: true,
+    });
+    expect(withoutRetired(old)).toBe(old);
+    // Any other change writes them back as they were, in their places.
+    const text = changeConfigText(JSON.stringify(old), (value) =>
+      setSwitching(value, false),
+    );
+    expect(JSON.parse(text ?? "{}")).toEqual({ ...old, enabled: false });
+    expect(Object.keys(JSON.parse(text ?? "{}"))).toEqual(Object.keys(old));
   });
 
   it("drops an emergency combo with the Xbox button from every write (ADR-0012)", () => {
@@ -296,7 +317,7 @@ describe("config.json documents", () => {
       },
     });
     expect(withoutRetired(only)).toEqual({ schemaVersion: 0 });
-    const kept = config({
+    const kept = legacy({
       safety: {
         panic: { standard: { buttons: ["back", "start"], holdMs: 900 } },
       },

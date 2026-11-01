@@ -67,7 +67,7 @@ func TestScriptEffectsSwitches(t *testing.T) {
 		fb := profile.DefaultFeedback()
 		tc.change(&fb)
 		sink, _, _ := effectRig(t, fb, tc.off...)
-		if rumble, led := sink.Switches(0); rumble != tc.rumble || led != tc.led {
+		if rumble, led := sink.Switches(0, ""); rumble != tc.rumble || led != tc.led {
 			t.Errorf("%s: Switches = %v, %v; want %v, %v", name, rumble, led, tc.rumble, tc.led)
 		}
 	}
@@ -77,15 +77,15 @@ func TestScriptEffectsSwitches(t *testing.T) {
 // change of config.json applies to a running script at once.
 func TestScriptEffectsSwitchesFollowTheConfig(t *testing.T) {
 	sink, r, _ := effectRig(t, profile.DefaultFeedback())
-	if rumble, led := sink.Switches(0); !rumble || !led {
+	if rumble, led := sink.Switches(0, ""); !rumble || !led {
 		t.Fatalf("Switches = %v, %v; want both on", rumble, led)
 	}
 	r.selection.Store(settingsOff("rumble", "led"))
-	if rumble, led := sink.Switches(0); rumble || led {
+	if rumble, led := sink.Switches(0, ""); rumble || led {
 		t.Errorf("after both went off: Switches = %v, %v", rumble, led)
 	}
 	r.selection.Store(settingsOff("led"))
-	if rumble, led := sink.Switches(0); !rumble || led {
+	if rumble, led := sink.Switches(0, ""); !rumble || led {
 		t.Errorf("rumble back on: Switches = %v, %v", rumble, led)
 	}
 }
@@ -138,7 +138,7 @@ func TestScriptErrorCue(t *testing.T) {
 		fb := profile.DefaultFeedback()
 		tc.change(&fb)
 		_, r, rec := effectRig(t, fb, tc.off...)
-		r.scriptErrorCue(0, tc.dev)
+		r.scriptErrorCue(0, tc.dev, "")
 		// A marker, so that "nothing" can be told from "not yet".
 		r.effects.postEffect(input.Effect{Device: 99, Class: haptic.Event, Preset: haptic.Tick})
 		got := rec.waitCalls(t, 1)
@@ -195,7 +195,7 @@ func TestScriptDefinitionFollowsTheProfileFeedback(t *testing.T) {
 func TestScriptFailureEpisodeBuzzesOnce(t *testing.T) {
 	var cues []string
 	def := newScriptDefinition(filepath.Join(t.TempDir(), "profile.json"), nil, false)
-	def.errorCue = func(slot uint8, dev input.DeviceID) { cues = append(cues, fmt.Sprintf("%d/%d", slot, dev)) }
+	def.errorCue = func(slot uint8, dev input.DeviceID, _ string) { cues = append(cues, fmt.Sprintf("%d/%d", slot, dev)) }
 	r := &scriptRuntime{def: def, index: 3}
 	r.pad = script.PadState{Connected: true, Info: input.DeviceInfo{ID: 5}}
 	macroFailure := &script.MacroError{File: "a.ts", Err: errors.New("macro failed")}
@@ -262,7 +262,7 @@ on("south", "press", () => { throw new Error("boom"); });
 	def := newScriptDefinition(filepath.Join(dir, "profile.json"), &profile.ScriptConfig{Entry: "main.ts", API: profile.CurrentScriptAPI}, true)
 	def.macros = []string{"出错.ts"}
 	var cues int
-	def.errorCue = func(uint8, input.DeviceID) { cues++ }
+	def.errorCue = func(uint8, input.DeviceID, string) { cues++ }
 	r, err := newScriptRuntime(def, 0, 1, clk, arb)
 	if err != nil {
 		t.Fatal(err)
@@ -327,7 +327,7 @@ on("south", "press", () => { throw new Error("boom"); });
 	def := newScriptDefinition(filepath.Join(dir, "profile.json"), &profile.ScriptConfig{Entry: "main.ts", API: profile.CurrentScriptAPI}, true)
 	def.macros = []string{"出错.ts"}
 	var cues int
-	def.errorCue = func(uint8, input.DeviceID) { cues++ }
+	def.errorCue = func(uint8, input.DeviceID, string) { cues++ }
 	r, err := newScriptRuntime(def, 0, 1, clk, arb)
 	if err != nil {
 		t.Fatal(err)
@@ -380,7 +380,7 @@ on("south", "press", () => { throw new Error("boom"); });
 	arb := output.NewArbiter(clk, simtest.NewRecorder(clk), output.ArbiterOptions{})
 	def := newScriptDefinition(filepath.Join(dir, "profile.json"), &profile.ScriptConfig{Entry: "main.ts", API: profile.CurrentScriptAPI}, true)
 	var cues int
-	def.errorCue = func(uint8, input.DeviceID) { cues++ }
+	def.errorCue = func(uint8, input.DeviceID, string) { cues++ }
 	r, err := newScriptRuntime(def, 0, 1, clk, arb)
 	if err != nil {
 		t.Fatal(err)
@@ -447,7 +447,7 @@ on("south", "press", () => { throw new Error("boom"); });
 	arb := output.NewArbiter(clk, simtest.NewRecorder(clk), output.ArbiterOptions{})
 	def := newScriptDefinition(filepath.Join(dir, "profile.json"), &profile.ScriptConfig{Entry: "main.ts", API: profile.CurrentScriptAPI}, false)
 	var cues int
-	def.errorCue = func(uint8, input.DeviceID) { cues++ }
+	def.errorCue = func(uint8, input.DeviceID, string) { cues++ }
 	r, err := newScriptRuntime(def, 0, 1, clk, arb)
 	if err != nil {
 		t.Fatal(err)
@@ -504,7 +504,7 @@ func (e *recordedEffects) take() []string {
 	return calls
 }
 
-func (*recordedEffects) Switches(uint8) (rumble, led bool) { return true, true }
+func (*recordedEffects) Switches(uint8, string) (rumble, led bool) { return true, true }
 func (e *recordedEffects) Rumble(slot uint8, dev input.DeviceID, steps []haptic.Step) {
 	e.add("rumble %d/%d %v", slot, dev, steps)
 }

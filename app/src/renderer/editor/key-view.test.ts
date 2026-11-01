@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScriptRegistration } from "../../shared/api";
+import { sdlPads } from "../testing/sdl-pads";
 import type { FunctionKey } from "./editor-model";
 import {
   effectiveView,
@@ -19,13 +20,25 @@ describe("the key set the page shows", () => {
   });
 
   it("is the usual one when the pad has no such function key", () => {
-    // A single Joy-Con held sideways has no View, only Menu.
-    expect(effectiveView("function", pad("joyconleft", 0xf), "back")).toBe(
+    // A single Joy-Con held sideways has ZL and L, not Menu or View.
+    const { type, buttonMask } = sdlPads.joyConLeftSideways;
+    expect(effectiveView("function", pad(type, buttonMask), "back")).toBe(
       "normal",
     );
-    expect(effectiveView("function", pad("joyconleft", 0xf), "start")).toBe(
+    expect(effectiveView("function", pad(type, buttonMask), "paddle4")).toBe(
       "function",
     );
+    expect(effectiveView("function", pad(type, buttonMask), "paddle1")).toBe(
+      "normal",
+    );
+  });
+
+  it("is the function set for the ZR or R of a right Joy-Con held sideways", () => {
+    const { type, buttonMask } = sdlPads.joyConRightSideways;
+    for (const key of ["paddle3", "paddle1"] as const)
+      expect(effectiveView("function", pad(type, buttonMask), key)).toBe(
+        "function",
+      );
   });
 });
 
@@ -60,16 +73,26 @@ describe("naming the key sets", () => {
   });
 
   it("has only the usual view on a pad without the function key, so there is nothing to switch", () => {
+    const { type, buttonMask } = sdlPads.joyConRightSideways;
     expect(
-      viewOptions(pad("joyconright", 1), "zh-CN", "back").map(
+      viewOptions(pad(type, buttonMask), "zh-CN", "back").map(
         (option) => option.value,
       ),
     ).toEqual(["normal"]);
     expect(
-      viewOptions(pad("joyconright", 1), "en", "start").map(
+      viewOptions(pad(type, buttonMask), "en", "paddle3").map(
         (option) => option.label,
       ),
     ).toEqual(["Normal", "Hold function key"]);
+  });
+
+  it("names the function key of a Joy-Con as it prints it: ZR, R, ZL, L", () => {
+    const right = sdlPads.joyConRightSideways;
+    const left = sdlPads.joyConLeftSideways;
+    expect(functionKeyName("paddle3", right)).toBe("ZR");
+    expect(functionKeyName("paddle1", right)).toBe("R");
+    expect(functionKeyName("paddle4", left)).toBe("ZL");
+    expect(functionKeyName("paddle2", left)).toBe("L");
   });
 
   it("names one view for a sentence", () => {

@@ -59,9 +59,11 @@ flags:
             A profile written to a file of another library, or by itself,
             is read like any profile; an "extends" there is an error.
   --function-key KEY
-            the function key, start or back, that the
+            the function key, start, back or paddle1 to paddle4 (the
+            paddles are what a single Joy-Con held sideways has), that the
             bindings are compiled with: the bindings on it are ignored and
-            not listed. config.json is not read; the default is start.
+            not listed. The function key is a setting of each controller;
+            config.json is not read, and the default is start.
 `
 
 // validateJSONObject is one file in "validate --json".
@@ -87,7 +89,7 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print one JSON object per file")
 	merged := fs.Bool("merged", false, "print each profile with its parents merged in")
-	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start or back")
+	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start, back or paddle1 to paddle4")
 	if code, ok := parseFlags(fs, args, validateUsage, stdout, stderr); !ok {
 		return code
 	}

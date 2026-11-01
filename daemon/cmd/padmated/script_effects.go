@@ -28,20 +28,20 @@ func (d *scriptDefinition) feedbackSettings() profile.Feedback {
 	return d.feedback
 }
 
-// scriptEffects is the script.Effects of a live padmated: the switches are the
-// global ones of config.json (ADR-0015), and the requests go to the effect
-// queue, which never blocks.
+// scriptEffects is the script.Effects of a live padmated: the switches are those
+// of the controller in config.json (ADR-0015, ADR-0017), and the requests go to
+// the effect queue, which never blocks.
 type scriptEffects struct{ run *liveRun }
 
 var _ script.Effects = scriptEffects{}
 
-// Switches reports the global rumble switch, which needs a strength above 0 in
-// the profile that runs (0 is off for everything padmate makes by itself), and
-// the global led switch. It reads both at each call, so host.has and the
-// effect calls follow a change of config.json at once.
-func (e scriptEffects) Switches(uint8) (rumble, led bool) {
+// Switches reports the rumble switch of the controller key, which needs a
+// strength above 0 in the profile that runs (0 is off for everything padmate
+// makes by itself), and its led switch. It reads both at each call, so
+// host.has and the effect calls follow a change of config.json at once.
+func (e scriptEffects) Switches(_ uint8, key string) (rumble, led bool) {
 	fb := e.run.scriptDef.feedbackSettings()
-	sw := e.run.feedbackSwitches()
+	sw := e.run.feedbackSwitchesFor(key)
 	return sw.Rumble && fb.Strength > 0, sw.LED
 }
 
@@ -77,11 +77,11 @@ func (e scriptEffects) Cancel(_ uint8, dev input.DeviceID) {
 // the "error" preset in the Alert class, which is a warning
 // the daemon raises and so outranks the layer's pulses, and which a stop of the
 // script's own class, when its runtime is released for the failure, does not
-// end. The global rumble switch silences it, and so does a strength of 0 in
-// the profile.
-func (r *liveRun) scriptErrorCue(slot uint8, dev input.DeviceID) {
+// end. The rumble switch of the controller key silences it, and so does a
+// strength of 0 in the profile.
+func (r *liveRun) scriptErrorCue(slot uint8, dev input.DeviceID, key string) {
 	fb := r.scriptDef.feedbackSettings()
-	if dev == 0 || !r.feedbackSwitches().Rumble || fb.Strength <= 0 {
+	if dev == 0 || !r.feedbackSwitchesFor(key).Rumble || fb.Strength <= 0 {
 		return
 	}
 	r.log.Debug("script failed; error cue", "slot", slot, "id", dev)

@@ -6,8 +6,8 @@ import { Segmented } from "../ui/controls";
 
 /**
  * The switch at the top of the mapping page (ADR-0012): the usual
- * bindings, or the function set that applies while the function key (Menu
- * unless the settings say otherwise) is held. The page edits the one chosen;
+ * bindings, or the function set that applies while the function key of the
+ * controller (Menu unless its settings say otherwise) is held. The page edits the one chosen;
  * the choice is not saved in the profile. A pad without the function key has
  * no set to switch to, so it has no switch.
  */

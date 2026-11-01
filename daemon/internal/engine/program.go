@@ -6,6 +6,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
@@ -38,8 +39,8 @@ type Program struct {
 	// Response curves, indexed by curveLS, curveRS, curveLT, curveRT.
 	curves [4]curveKind
 
-	// fnKey is the function key of this Program (ADR-0012): back or
-	// start, never control.Invalid. fnSet is the profile's function
+	// fnKey is the function key of this Program (ADR-0012, ADR-0017): back,
+	// start or a paddle, never control.Invalid. fnSet is the profile's function
 	// set, nil when it has none, and fnLevel the name that set has in lookups
 	// and decisions, profile.FunctionLevel(fnKey).
 	fnKey   control.Control
@@ -48,6 +49,9 @@ type Program struct {
 	// fnIgnored are the IDs of the bindings that sit on the function key in a
 	// layer, in common or in the function set: Compile leaves them out.
 	fnIgnored []string
+	// variants are this Program and the others compiled from the same profile
+	// with another function key (ForFunctionKey), shared by all of them.
+	variants *programVariants
 }
 
 // CompileOption changes how Compile compiles a profile.
@@ -55,17 +59,63 @@ type CompileOption func(*compileOptions)
 
 type compileOptions struct{ functionKey control.Control }
 
-// WithFunctionKey makes c the function key of the Program (ADR-0012): back or
-// start, the one control that sends nothing, cannot be bound and selects the
-// function set while it is held. Any other control, guide too, and without
-// this option, means control.DefaultFunctionKey (start). The key comes from
-// config.json, which this pure package does not read, so the caller passes it.
+// WithFunctionKey makes c the function key of the Program (ADR-0012,
+// ADR-0017): back, start or a paddle, the one control that sends nothing,
+// cannot be bound and selects the function set while it is held. Any other
+// control (control.Control.CanBeFunctionKey), guide too, and without this
+// option, means control.DefaultFunctionKey (start). The key is the setting of
+// a controller in config.json, which this pure package does not read, so the
+// caller passes it; a slot with a controller whose key differs from the
+// Program's runs ForFunctionKey.
 func WithFunctionKey(c control.Control) CompileOption {
 	return func(o *compileOptions) { o.functionKey = c }
 }
 
 // FunctionKey returns the function key the Program was compiled with.
 func (p *Program) FunctionKey() control.Control { return p.fnKey }
+
+// programVariants caches the Programs of one profile by function key. The
+// Program of a controller whose function key is not the compiled one is made
+// once, when the controller is attached or its key changes, never on the path
+// of an input event, and shared by every slot that needs it.
+type programVariants struct {
+	mu    sync.Mutex
+	byKey map[control.Control]*Program
+}
+
+// ForFunctionKey returns the Program of the same profile with c as its
+// function key (ADR-0017): p itself when c is its key, else the one compiled
+// for c, which is made on the first request and kept (every later request, from
+// any goroutine, returns the same one). A c that cannot be a function key
+// means control.DefaultFunctionKey, as for WithFunctionKey. Programs of one
+// profile differ only in the function key: the bindings on it, which the
+// Program leaves out, and the name of the function set's level. It returns
+// an error only for a profile Compile refuses, which does not happen for the
+// one p was compiled from.
+func (p *Program) ForFunctionKey(c control.Control) (*Program, error) {
+	if !c.CanBeFunctionKey() {
+		c = control.DefaultFunctionKey
+	}
+	if c == p.fnKey {
+		return p, nil
+	}
+	v := p.variants
+	if v == nil {
+		return nil, errors.New("engine: the Program was not made by Compile")
+	}
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if q := v.byKey[c]; q != nil {
+		return q, nil
+	}
+	q, err := Compile(p.prof, WithFunctionKey(c))
+	if err != nil {
+		return nil, err
+	}
+	q.variants = v
+	v.byKey[c] = q
+	return q, nil
+}
 
 // IgnoredFunctionKeyBindings returns the IDs (JSON Pointers) of the bindings
 // that Compile left out because they sit on the function key: in a layer, in
@@ -314,6 +364,7 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 	if prog.fnSet != nil {
 		prog.addBindingInfo(prog.fnSet, prog.fnLevel)
 	}
+	prog.variants = &programVariants{byKey: map[control.Control]*Program{fnKey: prog}}
 	return prog, nil
 }
 

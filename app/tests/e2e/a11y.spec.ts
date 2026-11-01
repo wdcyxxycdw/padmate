@@ -54,6 +54,14 @@ const settings = async (page: Page) => {
     page.getByRole("heading", { name: "设置", level: 1 }),
   ).toBeVisible();
 };
+/** Settings → 手柄设置 (ADR-0017), a view inside Settings. */
+const controllers = async (page: Page) => {
+  await settings(page);
+  await page.getByRole("button", { name: "打开手柄设置" }).click();
+  await expect(
+    page.getByRole("heading", { name: "手柄设置", level: 1 }),
+  ).toBeVisible();
+};
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
 test("axe finds nothing in the real window, state by state", async ({}, info) => {
@@ -222,9 +230,6 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
     await page.getByRole("button", { name: "关于与许可", exact: true }).click();
     await check("dialog: 关于与许可");
     await closeDialog(page);
-    await page.getByRole("button", { name: "修改紧急暂停" }).click();
-    await check("dialog: 修改紧急暂停");
-    await closeDialog(page);
     await page
       .getByRole("button", { name: /^调校 / })
       .first()
@@ -254,6 +259,16 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
       page.getByRole("heading", { name: "日志", level: 1 }),
     ).toBeVisible();
     await check("logs");
+    await page.getByRole("button", { name: "返回设置" }).click();
+    // The controllers: their function key, feedback and emergency pause.
+    await page.getByRole("button", { name: "打开手柄设置" }).click();
+    await expect(
+      page.getByRole("heading", { name: "手柄设置", level: 1 }),
+    ).toBeVisible();
+    await check("controllers");
+    await page.getByRole("button", { name: /^修改紧急暂停 / }).click();
+    await check("dialog: 修改紧急暂停");
+    await closeDialog(page);
     await page.getByRole("button", { name: "返回设置" }).click();
 
     // The same in English: the strings are other, the layout is too.
@@ -506,21 +521,28 @@ test("the keyboard reaches every control, never gets stuck, and shows where it i
 
     // A dialog keeps the focus inside, Esc closes it and the focus goes back
     // to what opened it.
-    const dialogs: [string, () => Promise<Locator>, string | RegExp][] = [
+    const dialogs: [
+      string,
+      () => Promise<Locator>,
+      string | RegExp,
+      () => Promise<void>,
+    ][] = [
       [
         "关于与许可",
         async () =>
           page.getByRole("button", { name: "关于与许可", exact: true }),
         "关于与许可",
+        () => settings(page),
       ],
       [
         "修改紧急暂停",
-        async () => page.getByRole("button", { name: "修改紧急暂停" }),
+        async () => page.getByRole("button", { name: /^修改紧急暂停 / }),
         "修改紧急暂停",
+        () => controllers(page),
       ],
     ];
-    await settings(page);
-    for (const [label, opener, title] of dialogs) {
+    for (const [label, opener, title, reach] of dialogs) {
+      await reach();
       const trigger = await opener();
       await trigger.focus();
       await trigger.press("Enter");
@@ -703,6 +725,7 @@ test("every page can be used at 150% and 200% zoom, in the smallest window too",
             .click();
         },
       ],
+      ["controllers", () => controllers(page)],
     ];
     for (const [width, height] of [
       [850, 620],
@@ -720,8 +743,8 @@ test("every page can be used at 150% and 200% zoom, in the smallest window too",
             .toEqual([]);
         }
         // Dialogs scroll their own body: the ends of the dialog stay in view.
-        await nav(page, "设置").click();
-        await page.getByRole("button", { name: "修改紧急暂停" }).click();
+        await controllers(page);
+        await page.getByRole("button", { name: /^修改紧急暂停 / }).click();
         await expect
           .poll(() => unreachableControls(page), {
             message: `修改紧急暂停 at ${factor * 100}% in ${width}x${height}`,

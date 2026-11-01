@@ -570,8 +570,8 @@ export function controllerChips({
   /** Entry file of the profile's script, named when a script owns a control. */
   scriptEntry?: string;
   /**
-   * The function key (config.json functionKey), whose chip is the tag and
-   * holds no bindings; the other of back and start is ordinary.
+   * The function key of the controller (ADR-0017), whose chip is the tag and
+   * holds no bindings; every other button is ordinary.
    */
   functionKey: FunctionKey;
 }): Record<string, ChipInfo> {

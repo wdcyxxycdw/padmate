@@ -166,6 +166,13 @@ export function configText(config: Config, bom = false): string {
  * whose family keeps its built-in combo. The daemon still loads a file with
  * them and ignores them; the UI drops them from every document it writes.
  * Returns config itself when it has none.
+ *
+ * It does not drop the global functionKey, feedback and safety.panic that
+ * ADR-0017 moved to the controllers: the daemon still reads them for every
+ * controller that has no setting of its own, so they stay until pads.migrate
+ * folds them into the controllers and takes them out. (The two that it does
+ * drop above change nothing: the daemon reads guide as Menu and gives a
+ * family with such a combo its built-in one.)
  */
 export function withoutRetired(config: Config): Config {
   const legacy = config as Config & Record<string, unknown>;
@@ -174,7 +181,10 @@ export function withoutRetired(config: Config): Config {
     (rule) => !(isRule(rule) && rule.profile === null),
   );
   const guide = legacy.functionKey === "guide";
-  const panic = config.safety?.panic ?? {};
+  // functionKey, feedback and safety are retired members that the schema types
+  // as never (ADR-0017): read them as the file has them.
+  const safety = legacy.safety as { panic?: object } | undefined;
+  const panic = safety?.panic ?? {};
   const guideCombos = Object.keys(panic).filter((family) => {
     const buttons = (panic as Record<string, { buttons?: unknown }>)[family]
       ?.buttons;

@@ -94,9 +94,6 @@ function bridge() {
   };
 }
 
-/** The four feedback switches at their default: on. */
-const allOn = { rumble: true, led: true, pause: true, lowBattery: true };
-
 describe("live renderer state", () => {
   it("keeps input per device and clears held state on removal and disconnect", async () => {
     const b = bridge();
@@ -384,12 +381,14 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("never writes restoreLayerState and keeps every other global setting", async () => {
+  it("never writes restoreLayerState and keeps every other global setting, the retired function key, feedback and emergency combo too (ADR-0017)", async () => {
     const b = bridge();
     const kept = {
       schemaVersion: 0,
+      functionKey: "back",
       restoreLayerState: false,
       timing: { holdMs: 300 },
+      feedback: { rumble: false },
       safety: {
         panic: { standard: { buttons: ["back", "start"], holdMs: 3000 } },
       },
@@ -408,7 +407,6 @@ describe("live renderer state", () => {
     expect(readBasicSettings(store.getState().config)).toEqual({
       sendToOwnWindow: true,
       eventGapMs: 0,
-      ...allOn,
     });
     await store.getState().saveSettings({ sendToOwnWindow: false });
     expect(JSON.parse(b.api.putConfig.mock.calls[0]?.[0] as string)).toEqual({
@@ -456,19 +454,17 @@ describe("live renderer state", () => {
     expect(readBasicSettings(null)).toEqual({
       sendToOwnWindow: false,
       eventGapMs: 0,
-      ...allOn,
     });
     expect(readBasicSettings({ text: "not json", revision: "rev" })).toEqual({
       sendToOwnWindow: false,
       eventGapMs: 0,
-      ...allOn,
     });
     expect(
       readBasicSettings({
         text: '{"schemaVersion":0,"enabled":false,"output":{"sendToOwnWindow":true,"eventGapMs":10}}',
         revision: "rev",
       }),
-    ).toEqual({ sendToOwnWindow: true, eventGapMs: 10, ...allOn });
+    ).toEqual({ sendToOwnWindow: true, eventGapMs: 10 });
     // A value the schema rejects reads as the default.
     for (const gap of ["10", 51, -1, 2.5])
       expect(
@@ -480,90 +476,6 @@ describe("live renderer state", () => {
           revision: "rev",
         }).eventGapMs,
       ).toBe(0);
-  });
-
-  it("reads the feedback switches: on unless the file says false", () => {
-    const read = (feedback: unknown) =>
-      readBasicSettings({
-        text: JSON.stringify({ schemaVersion: 0, feedback }),
-        revision: "rev",
-      });
-    expect(read(undefined)).toMatchObject(allOn);
-    expect(read({})).toMatchObject(allOn);
-    expect(read({ rumble: false })).toMatchObject({ ...allOn, rumble: false });
-    expect(read({ led: false, lowBattery: false })).toMatchObject({
-      ...allOn,
-      led: false,
-      lowBattery: false,
-    });
-    expect(read({ pause: true })).toMatchObject(allOn);
-    // A value the schema rejects reads as on.
-    expect(read({ rumble: "no", led: 0, pause: null })).toMatchObject(allOn);
-  });
-
-  it("saves one feedback switch alone, touching nothing else", async () => {
-    const b = bridge();
-    b.api.getConfig.mockResolvedValueOnce({
-      text: '{"schemaVersion":0,"enabled":false,"timing":{"holdMs":300}}',
-      revision: "rev",
-      diagnostics: [],
-    });
-    const store = createPadmateStore(b.api);
-    const stop = store.getState().start();
-    await vi.waitFor(() => expect(store.getState().config).not.toBeNull());
-    await store.getState().saveSettings({ rumble: false });
-    const [text, revision] = b.api.putConfig.mock.calls[0] ?? [];
-    expect(revision).toBe("rev");
-    // No output member appears: the page wrote a switch, not the key gap.
-    expect(JSON.parse(text as string)).toEqual({
-      schemaVersion: 0,
-      enabled: false,
-      timing: { holdMs: 300 },
-      feedback: { rumble: false },
-    });
-    expect(store.getState().settingsSaved).toBe(true);
-    await store.getState().saveSettings({ lowBattery: false, led: false });
-    expect(JSON.parse(b.api.putConfig.mock.calls[1]?.[0] as string)).toEqual({
-      schemaVersion: 0,
-      enabled: false,
-      timing: { holdMs: 300 },
-      feedback: { rumble: false, led: false, lowBattery: false },
-    });
-    // On again: the member goes, and the object with its last one.
-    await store
-      .getState()
-      .saveSettings({ rumble: true, led: true, lowBattery: true });
-    expect(JSON.parse(b.api.putConfig.mock.calls[2]?.[0] as string)).toEqual({
-      schemaVersion: 0,
-      enabled: false,
-      timing: { holdMs: 300 },
-    });
-    stop();
-  });
-
-  it("saves a feedback switch over what changed elsewhere after a conflict", async () => {
-    const b = bridge();
-    const store = createPadmateStore(b.api);
-    const stop = store.getState().start();
-    await vi.waitFor(() => expect(store.getState().config).not.toBeNull());
-    b.api.putConfig.mockRejectedValueOnce({
-      message: "revision conflict",
-      code: -32009,
-    });
-    b.api.getConfig.mockResolvedValueOnce({
-      text: '{"schemaVersion":0,"feedback":{"led":false},"output":{"eventGapMs":5}}',
-      revision: "elsewhere",
-      diagnostics: [],
-    });
-    await store.getState().saveSettings({ pause: false });
-    expect(b.api.putConfig).toHaveBeenCalledTimes(2);
-    expect(b.api.putConfig.mock.calls[1]?.[1]).toBe("elsewhere");
-    expect(JSON.parse(b.api.putConfig.mock.calls[1]?.[0] as string)).toEqual({
-      schemaVersion: 0,
-      feedback: { led: false, pause: false },
-      output: { eventGapMs: 5 },
-    });
-    stop();
   });
 
   it("saves the key gap alone and keeps the other output fields", async () => {

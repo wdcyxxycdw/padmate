@@ -412,6 +412,9 @@ type liveRun struct {
 	// joy is the Joy-Con 2 part: the status watcher and the tray's pairing
 	// window (ipc_joycon2.go).
 	joy joyCon2Run
+	// padsDirty says that a controller came or changed and state.json does not
+	// list it yet (rememberControllers).
+	padsDirty atomic.Bool
 
 	once sync.Once
 	code int
@@ -656,9 +659,12 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	// The stick calibration of each controller applies at once: a
 	// slot asks for it through the effective config.
 	scfg.Calibration = r.deviceCalibration
-	// The feedback switches (ADR-0015) are global and apply at once, as
-	// the stick calibration does: the engines read the effective config.
-	scfg.Switches = r.feedbackSwitches
+	// The feedback switches (ADR-0015) and the function key (ADR-0012) are
+	// settings of each controller (ADR-0017) and apply at once, as the stick
+	// calibration does: the engines and the slots read the effective config for
+	// their own controller.
+	scfg.Switches = r.feedbackSwitchesFor
+	scfg.FunctionKey, scfg.OnFunctionKey = r.padFunctionKey, r.onFunctionKey
 	pr := r.pr
 	if pr != nil {
 		scfg.Trace, scfg.OnEvent, scfg.OnReload, scfg.OnPause = pr.decision, pr.slotEvent, pr.reload, pr.pause

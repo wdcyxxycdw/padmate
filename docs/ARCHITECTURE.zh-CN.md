@@ -53,7 +53,7 @@ Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`
 
 `daemon/internal/` 的包。“纯包”不导入 `x/sys/windows`、`input`、`output`、`script`、`latency`，不记日志，不读真实时间（不变量 2）。
 
-- **纯逻辑包**：`keys`、`control`、`profile`（`Resolve` 合并父配置，读文件的函数由调用者给）、`engine`、`clock`、`haptic`、`sdlmapping`、`mapwizard`（界面用 TypeScript 实现同一套，`testdata/vectors.json` 共用）、`amgp`、`kblayout`、`watch`、`padlabel`、`input/jc2`（Joy-Con 2 的协议：广播、命令白名单、回复、报告、摇杆校准、控件映射、静默看门狗；只导入标准库，所以能在 Linux 上构建和测试，§5.3.1、§7.1.1）。`Level` / `Registry` 返回的 binding 不经 `Compile`，必须先过 `engine.CheckBinding`，否则松开后才执行的手势按住的键没人松开（§7.7）。
+- **纯逻辑包**：`keys`、`control`、`profile`（`Resolve` 合并父配置，读文件的函数由调用者给）、`engine`、`clock`、`haptic`、`sdlmapping`、`mapwizard`（界面用 TypeScript 实现同一套，`testdata/vectors.json` 共用）、`amgp`、`kblayout`、`watch`、`padlabel`、`padfamily`（手柄的族：各自的功能键和内置紧急组合，ADR-0017）、`input/jc2`（Joy-Con 2 的协议：广播、命令白名单、回复、报告、摇杆校准、控件映射、静默看门狗；只导入标准库，所以能在 Linux 上构建和测试，§5.3.1、§7.1.1）。`Level` / `Registry` 返回的 binding 不经 `Compile`，必须先过 `engine.CheckBinding`，否则松开后才执行的手势按住的键没人松开（§7.7）。
 - **与 Windows 和 SDL 打交道的包**：`output`（Arbiter、MenuMask、`Loop`、布局 Resolver 跨平台；SendInput 在 `_windows.go`，§8）、`input`（T-input、SDL 后端、Joy-Con 2 的 hub、虚拟手柄、设备身份、事件 JSON 行；引擎不导入它）、`input/jc2win`（蓝牙 LE 上 Joy-Con 2 的 Windows Runtime 传输，§5.3.1；`doc.go` 跨平台，其余是 `_windows.go`）、`sdlpin`、`winhook`、`winfocus`（§9）、`winsession`、`keycapture`、`ownwindow`、`instance`、`autostart`、`emergency`、`diagnostics`、`tray`、`ipc`（§11）、`profilelib`（§10.1）、`trace`、`logging`、`latency`（§13，叶子包，纯包不能导入）。`injecttest`、`winsessiontest` 是测试工具。
 - **编排**：`slot`（串起 engine、脚本和 Arbiter）、`supervisor`（设备与 slot 对应、router、重启、重载）、`script`、`simtest`（只有 `_test.go` 能导入，§14）。
 
@@ -126,6 +126,7 @@ Switch Pro 协议的 USB 接收器在手柄关机后不报告断开。只有 pad
 
 - `Handle(ev)` 处理事件。`DeviceRemoved` 先 `ReleaseAll`，再 `engine.Reset`，State 清零并关闭脚本。`SetPaused(on)` 暂停时先 `engine.Pause` 再释放同 slot 号任意代数的 owner，恢复时什么也不发；`ReleaseAll`、`Reset`、`Reload`、设备移除都保持暂停。
 - `Reload(prog, gen)`：`engine.Reload`，释放同 slot 号任意代数的 owner；State 不变。
+- **手柄自己的功能键和开关**（ADR-0017）。`Config.Program` 是用默认功能键编译一次的 profile；slot 运行其中带有自己手柄功能键的变体（`engine.Program.ForFunctionKey`：第一次要才编译，之后由所有 slot 经这个 Program 共用）。slot 在创建时、得到或失去手柄时、每次 `Reload` 和 `RefreshFunctionKey` 时，在自己的 goroutine 上向 `Config.FunctionKey(key, info)` 要功能键。键与运行中的不同才切换（相同则什么也不做，按着的功能键仍按着）；切换是同一份 profile、不换代的引擎 `Reload`：按着的控件作废，Arbiter 释放该 slot 的所有 owner（不变量 1 的 `ReleaseAll`），按着的功能键被忘掉（§7.9）。`Config.Switches(key)` 对反馈开关也是如此：`Options.Switches` 每次读的是 slot 自己手柄的那组。
 - **脚本接线**：暂停、`DeviceRemoved`、`Reset` 关闭脚本 runtime；恢复、`DeviceAdded`、Resync 只排队让 worker 重建，不在 slot loop 里 setup。脚本手势经 `GestureResolver` 交给同一个引擎识别器，不建第二套计时器。
 - **冷启动输入屏障**：没有有效 Host 时，最多暂存 128 个按钮或轴边沿，脚本就绪后按原顺序回放。冷启动失败或溢出就释放整批，不用空注册表回落声明式动作。
 
@@ -144,6 +145,7 @@ router 给每个已连接的手柄记一份 `slot.State`，把已分配手柄的
   - 新连接：有空 slot 就暂代下标最小的，成为 home；没有空 slot 而有 home 是它的暂代 slot，就收回；否则排队尾。手柄离开：队首手柄立即接手（先收到 `DeviceAdded` 副本，再收到 Resync）。
   - 确认：暂代手柄在启用的 slot 上的第一个 `ButtonDown` 让分配生效；轴事件、Resync 带来的按着的按钮、禁用 slot 上的按下都不算。
   - 暂代期间可被拿走：home 的 key 连上时收回；排队手柄的 `ButtonDown` 接管最早的暂代 slot。
+- **按手柄设置**（ADR-0017）。`Config.FunctionKey`、`Config.Switches(key)` 和 `Config.Calibration(key)` 都是在 slot 自己的 goroutine 上为 slot 自己的手柄去问，返回最近一次提交的 config.json 的内容；`OnFunctionKey` 报告某个 slot 换了功能键。`RefreshFunctionKeys(ctx)` 和 `RefreshCalibration`、`RefreshFeedback` 一样是类似 Sync 的屏障，在每个 slot 已送达的边沿之后运行 `Slot.RefreshFunctionKey`：手柄功能键没变的 slot 什么也不做，变了的只松开自己的键，不影响别的 slot。没有手柄的 slot 用 key `""` 去问，得到的是标准布局、没有自己设置的手柄的功能键。
 - **隔离。** 各 slot 有自己的引擎、State、runner、边沿通道，按下的键带自己的 `Owner.Slot`，释放时只释放自己的。一个 slot 卡住、panic 或被禁用，不耽误也不释放别的 slot。
 - **`Sync(ctx)` 是屏障**：返回时 Sync 之前送进 `Events` 的事件都已由 slot 处理，引起的命令已在 Output 上执行。**`Reload(ctx, prog)`** 让每个 slot 换上 `prog`：落后的 slot 先用旧程序追上，所以 Reload 之前送进的事件用旧程序，之后的用新程序；每个键抬起一次，重载取消的控件要松开再按才工作；不能在 slot 的 goroutine 上调用（死锁）。`UpdateScriptParams` 是只改 `script.params` 时的轻量版本：全部 slot 准备成功后才提交，不换 runtime，不释放按键。
 - **关闭顺序。** 取消 `Run` 的 ctx 或关闭 `Events`：`Run` 关闭每个边沿通道，slot loop 处理完排队的边沿、经 Output 释放后结束，`Run` 等它们都结束才返回。调用者再 `Output.Stop`，最后关 `input.Source`；`Run` 从不调 `Output.Stop`。
@@ -169,7 +171,7 @@ router 给每个已连接的手柄记一份 `slot.State`，把已分配手柄的
 
 **紧急组合**（`input.ComboWatch`，T-input 上检测）。
 
-- 按每个设备的 `DeviceAdded` 选组合（`DefaultCombo`，§10.4），自己用位掩码记成员，不查 SDL。T-input 在事件送进通道之前让它看到每个事件，所以被丢的按钮事件它也看得到。
+- 按每个设备的 `DeviceAdded` 选组合（`ComboFor`，padmated 的实现是取该手柄自己设置里的组合，没有则 `DefaultCombo`，§10.4；ADR-0017），自己用位掩码记成员，不查 SDL。T-input 在事件送进通道之前让它看到每个事件，所以被丢的按钮事件它也看得到。
 - 所有成员都按着时开始计时，按住 `ComboHold` = 2 s 触发一次并锁存，松开一个成员再按才重新计时。成员自己的绑定照常工作，触发时被暂停取消。
 - 触发时先调 `OnCombo`，再把 `ComboHeld` 事件送进通道（进 backlog，不丢）。padmated 的 `OnCombo` 调 `output.Loop.Block(true)`：不经 slot loop、不等 T-output，slot 卡住或 `Events` 满时也立即释放。
 - router 收到任何手柄的 `ComboHeld`（含排队的、被过滤的）就切换暂停；没有 slot 收到这个事件。
@@ -247,7 +249,7 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 ### 5.19 `padmatectl trace`
 
-`padmatectl trace --profile FILE --input FILE [--json]` 在虚拟时钟上重放录制的事件，不注入键盘，不读 config.json（功能键由 `--function-key` 给，默认 `start`）。
+`padmatectl trace --profile FILE --input FILE [--json]` 在虚拟时钟上重放录制的事件，不注入键盘，除非给了 `--config FILE`，否则不读 config.json。功能键是 trace 里那只手柄的（ADR-0017）：由它的 added 事件所属家族的默认值给出（横握的单只 Joy-Con 是一个背键，一对是 `back`，其他手柄是 `start`），或取 `--config` 文件里的 `devices.<DeviceKey>.functionKey`；`--function-key`（`start`、`back` 或 `paddle1` 到 `paddle4`）对整条 trace 强制指定一个。
 
 ## 6. 一次按键的数据流
 
@@ -329,7 +331,7 @@ Switch 2 的 Joy-Con，由 padmate 自己经蓝牙 LE 读取（§5.3.1，[手柄
 - **CancelAll**：结束所有按压周期；清除 toggle、连发、序列、待定手势、缓冲、多击窗口、锁存和所有 overlay（base 不变）；之后由 Arbiter 释放按键。控件在引擎看来仍按着：松开无输出，扳机要先回到释放阈值以下才能再按。
 - **层状态持久化**：`PersistentLayers` 给出 base、已 toggle 的层和 cycle 序号（不含 hold 层），`RestoreLayers` 只在取消/复位边界执行，不产生按键。`slot.LayerMemory` 按（设备，profile）在内存保存：切换配置和断连在复位前保存，正常退出在 ReleaseAll 前冻结；磁盘上是 state.json（§10.1）。
 
-**反馈接缝**（`LayerChange`、`Feedback`）：引擎发布当前 base、overlays、颜色、切层脉冲和暂停状态；时长和强度在 profile 顶层 `feedback`。三个全局开关在 config.json 的 `feedback`（`rumble`、`led`、`pause`，默认开），经 `Options.Switches` 读（nil 为全开，在 slot 的 goroutine 上调用，不阻塞）；`pause` 关掉时暂停/恢复不给脉冲、不显示 `pausedColor`。`Feedback.Mode` 是层脉冲次数：声明了循环按循环位置，否则按层名排序，base 为 1。实机经 `Source.SetFeedback`（T-input）到效果混音器（`internal/haptic`，§5）。
+**反馈接缝**（`LayerChange`、`Feedback`）：引擎发布当前 base、overlays、颜色、切层脉冲和暂停状态；时长和强度在 profile 顶层 `feedback`。开关（`rumble`、`led`、`pause`，默认开）是每只手柄自己的设置（ADR-0017：`devices.<DeviceKey>.feedback`，没有则取退役的顶层 `feedback`），经 `Options.Switches` 读，slot 把它绑在自己手柄的 DeviceKey 上（nil 为全开，在 slot 的 goroutine 上调用，不阻塞），所以一只手柄的开关不会影响另一只；`pause` 关掉时暂停/恢复不给脉冲、不显示 `pausedColor`。`Feedback.Mode` 是层脉冲次数：声明了循环按循环位置，否则按层名排序，base 为 1。实机经 `Source.SetFeedback`（T-input）到效果混音器（`internal/haptic`，§5）。
 
 **触感接缝**：`Options.Haptic` 按值传递，零分配；`Binding.Haptic` 是预设（0 为无）。`runAction` 是声明式手势的唯一分发点：决策之后、动作之前调一次 `playHaptic`，同一周期同一时刻的两个手势只响一次；连发、`block` 绑定、脚本接管的手势、暂停中、`strength` 为 0 或全局震动关着时不响。旋钮刻度在派发时响（绑定没有 `haptic` 且该摇杆 `knobTick` 时用 `haptic.Tick`）。下游经 `effectQueue.postEffect`（永不阻塞，§5）。
 
@@ -418,9 +420,11 @@ Switch 2 的 Joy-Con，由 padmate 自己经蓝牙 LE 读取（§5.3.1，[手柄
 
 ### 7.9 功能键
 
-任何时候只有一个功能键，像笔记本的 Fn：自己不发键，按住时其他控件先用 profile 的 `functionSet`，没设的照常用平时的绑定。它是 `back` 或 `start`，默认 `start`，由 config.json 的 `functionKey` 选（§10.3），对所有配置和手柄一样。实现在 `engine/function_keys.go`，设计见 [ADR：映射模型](adr/0012-mapping-model.zh-CN.md)。
+任何时候只有一个功能键，像笔记本的 Fn：自己不发键，按住时其他控件先用 profile 的 `functionSet`，没设的照常用平时的绑定。自 ADR-0017 起它是每只手柄自己的设置（§10.4），对所有配置一样：`start` 或 `back`，横握的单只 Joy-Con 则是它的某个背键；标准布局的手柄默认 `start`，除非自己另选。实现在 `engine/function_keys.go`，设计见 [ADR：映射模型](adr/0012-mapping-model.zh-CN.md)。
 
-- **编译选项**：`engine.Compile(p, engine.WithFunctionKey(c))`。引擎不读 config.json，padmated 把 `functionKey` 传进每次编译；非法值按 `start`。
+**按手柄设置（ADR-0017）。** config.json 里有每只手柄自己的功能键 `devices.<DeviceKey>.functionKey`（§10.4），`Config.PadSettings` 按手柄家族解析。运行时按 slot 而不是按 profile 跟随它：padmated 每份 profile 只用默认功能键（`start`）编译一次，每个 slot 运行这个 Program 里带有自己手柄功能键的变体（`Program.ForFunctionKey`，第一次有 slot 要时才编译，之后共用；slot 在得到或失去手柄、每次重载和 `Supervisor.RefreshFunctionKeys` 时向 `Config.FunctionKey` 要，§5.6、§5.8）。背键可以做功能键（`control.CanBeFunctionKey`：back、start、paddle1 到 paddle4）；退役的顶层 `functionKey`（back 或 start）仍是标准布局、自己没设的手柄的功能键。改一只手柄的功能键（`pads.set`、config.json、Joy-Con 并成一对、slot 换了别的手柄）只是对那个 slot 做引擎 `Reload`，如下面所说先取消按着的、释放它的 owner；profile 不重载，别的 slot 不受影响。
+
+- **编译选项**：`engine.Compile(p, engine.WithFunctionKey(c))` 和 `Program.ForFunctionKey(c)`。引擎不读 config.json；padmated 用默认值编译，各 slot 去要变体；不能做功能键的 `c` 按 `start`。`View.ProgramFunctionKey` 是引擎运行的 Program 的功能键（`profiles.explain` 按 slot 显示）。
 - **功能键自己不能绑定**：写在功能键上的绑定照常解析、保留在文件里，但 `Compile` 忽略它们；功能键换了它们又生效。老文件里 `back`、`start` 上的绑定从没被读过，可能不合法：格式冻结，有效的 profile 永远有效，所以它们的错误降为警告并从模型拿掉；`functionSet` 里的不合法照常是错误。
 - **`guide` 永不映射**（[ADR：映射模型](adr/0012-mapping-model.zh-CN.md)）：它不是功能键（`CanBeFunctionKey` 为假，`WithFunctionKey(Guide)` 按 `start` 编译）；`profile.Parse` 把它上面的每条绑定从模型拿掉并给警告（其中的错误降为警告）；手工构造的 profile 里有的，`Compile` 跳过；`lookupWith` 对它什么也不找（`control.Control.Unmappable`），所以 registry 的层也绑不上它。`stepButton` 里它的边沿只更新物理状态就返回，和功能键一样：不开始周期、不进缓冲、不打断待定手势，不给 `Button`、`ButtonObserver` 和脚本处理器；决策是 `unbound` 和 `end`。脚本宿主像拒绝未知控件一样拒绝它（`scriptControl`），`pad.isDown` 读成没按。
 - **一套绑定**：`Profile.EffectiveFunctionSet()` 是引擎读的那一套：有顶层 `functionSet` 就用它，否则由旧格式 `functionKeys` 合成；两者都写时用 `functionSet` 并警告。
@@ -610,6 +614,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 **state.json**
 
 - 内容：`lastProfile`、`lastProfileSet` 和每设备每配置的层状态（`devices[DeviceKey].profiles[id]`：`base`、`toggled`、`cycles`）。`lastProfileSet:true` 加空 `lastProfile` 表示上次已禁用。
+- `controllers`：连接过的手柄，按规范 DeviceKey 索引：`{name, type, buttonMask?, lastSeen?}`（SDL 给的名字和简短的手柄类型、`DeviceInfo.ButtonMask`、自 Unix 纪元起的毫秒数），最多 64 个，最久没见的先丢。设置页列的就是它（config.json 里只有设置），它是机器状态，只有守护进程写。路由器的 `OnInput` 回调在手柄加入或重新映射时把它标脏；持久化 worker 随后向路由器要设备列表（`Supervisor.Devices`，只有它知道 DeviceKey），在每 500 ms 一次的刷新之前调 `Memory.RememberController`（持锁写 map，无 I/O）。没有这个成员的文件表示一只也没列。
 - `joycon2`：记住的 Joy-Con 2（蓝牙 LE），`{addr, serial, side}` 数组（`addr` 为大写 `AA:BB:CC:DD:EE:FF`，`side` 为 `L` 或 `R`，最多 64 个，旧的在前）。这是机器状态，不是设置，只有守护进程写。配对窗口连上一只手柄时在 T-input 上调 `Memory.RememberJoyCon2`（持锁写 map，无 I/O），`joycon2.forget` 调 `Memory.ForgetJoyCon2`，由下面的后台刷新写文件。没有这个成员的文件表示一只也没记。
 - `profilelib.Memory` 在内存合并，后台每 500 ms 刷新；退出在 output 停止后最后刷新，最多等 1 s。校验后写临时文件、Sync、rename。
 
@@ -704,7 +709,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 **analog**：`ls`/`rs`（`mode`：`standard`、`eightWay`、`fourWay`、`fourWayDiagonal`、`knob`、`mouse`，及死区、阈值、旋钮、鼠标速度等）、`dpad`、`lt`/`rt`（`press`、`release`、`fullPress`、`fullRelease`、`curve`）、`axisThreshold`。取值范围见 schema，默认值见 §7.6。主要校验：`fullRelease` 不得大于 `fullPress`，写了 `fullPress` 时须大于 `press`（没写则不查，旧文件仍可加载）；`minRateHz` 不得大于有效 `rateHz`，且只能用在摇杆方向、`active`、内外圈、半轴、扳机；`precision`、`hints` 写在 press/hold 以外的手势是错误。控件键还有 `ls.inner ls.outer ls.cw ls.ccw rs.* lt.full rt.full`。
 
 **反馈开关**：profile `feedback` 里的 `rumble`、`led`、`pause`、`lowBattery` 已弃用：仍通过校验、无警告，但不再读取。这四个开关在 config.json 的 `feedback`（§10.4），界面写 profile 时去掉它们。
-四个开关（默认 true）的作用：`rumble` 管全部震动（层切换和暂停脉冲、绑定触感、低电、脚本与出错震动；识别手柄不看开关）；`led` 管层颜色、暂停色、低电闪灯和脚本颜色，关掉时释放已设的颜色、玩家灯还给 SDL；`pause` 管暂停恢复的脉冲和 `pausedColor`，且只通过 `rumble`/`led` 起作用；`lowBattery` 管托盘、浮层和手柄自己的低电提醒（放电 ≤ 25 % 提醒一次，充电、插线或 ≥ 60 % 重新布防，阈值固定）。profile `feedback.strength` 为 0 时一切自发震动不发。提交 config.json 不重载配置：`applyLiveSettings` 调 `Supervisor.RefreshFeedback` 让每个 slot 重发层和暂停状态，开关由开变关时停掉仍在进行的震动和脚本颜色。脚本的震动和灯光经 `internal/script/effects.go` 的 `Effects` 接口，能力和开关都满足才有 `host.has("rumble")`/`host.has("led")`；Host 在 `ReleaseAll`、`Suspend`、`Dispose` 时取消脚本占用的效果。
+四个开关（默认 true）的作用：`rumble` 管全部震动（层切换和暂停脉冲、绑定触感、低电、脚本与出错震动；识别手柄不看开关）；`led` 管层颜色、暂停色、低电闪灯和脚本颜色，关掉时释放已设的颜色、玩家灯还给 SDL；`pause` 管暂停恢复的脉冲和 `pausedColor`，且只通过 `rumble`/`led` 起作用；`lowBattery` 管托盘、浮层和手柄自己的低电提醒（放电 ≤ 25 % 提醒一次，充电、插线或 ≥ 60 % 重新布防，阈值固定）。profile `feedback.strength` 为 0 时一切自发震动不发。开关是每只手柄自己的（ADR-0017；引擎、脚本的 `Effects.Switches(slot, key)`、出错震动和低电跟踪器各自按自己手柄的 `DeviceKey` 去取）。提交 config.json 不重载配置：已连接手柄的解析后开关有变化时，`applyLiveSettings` 调 `Supervisor.RefreshFeedback` 让每个 slot 重发层和暂停状态，开关由开变关时停掉那只手柄仍在进行的震动和脚本颜色；没有已连接手柄的开关变了就什么也不问。脚本的震动和灯光经 `internal/script/effects.go` 的 `Effects` 接口，能力和开关都满足才有 `host.has("rumble")`/`host.has("led")`；Host 在 `ReleaseAll`、`Suspend`、`Dispose` 时取消脚本占用的效果。
 
 
 **功能键的两种写法**
@@ -741,18 +746,18 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
   "schemaVersion": 0,
   "enabled": true,
   "releaseOnSwitch": "profileChange",
-  "functionKey": "start",
   "restoreLayerState": true,
   "rules": [
     { "exe": "C:\\Program Files\\Paint\\paint.exe", "profile": "paint", "device": "any", "enabled": true },
     { "exe": "krita.exe", "profile": "paint", "enabled": false }
   ],
   "output": { "eventGapMs": 0, "sendToOwnWindow": false },
-  "feedback": { "lowBattery": false },
-  "safety": { "panic": { "standard": { "buttons": ["back", "start"], "holdMs": 2000 } } },
   "devices": {
     "<deviceKey>": {
       "ignored": false,
+      "functionKey": "back",
+      "feedback": { "rumble": false },
+      "panic": { "buttons": ["back", "start"], "holdMs": 2000 },
       "mapping": "<GUID>,*,a:b0,b:b1,leftx:a0,lefty:a1,back:b6,start:b7,platform:Windows",
       "calibration": { "ls": { "deadzone": 0.22, "saturation": 0.90 }, "rs": { "deadzone": 0.18 } }
     }
@@ -760,11 +765,30 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 }
 ```
 
-顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`joycon2.autoConnect`（默认 true：记住的 Joy-Con 2 在按住 SYNC 时自动连接；立即生效，不必重启）、`safety.panic`（含 `guide` 的组合带警告加载但不用，这一类手柄保留内置组合，`PanicCombo.Usable`；界面每次写都去掉）、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
+顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`joycon2.autoConnect`（默认 true：记住的 Joy-Con 2 在按住 SYNC 时自动连接；立即生效，不必重启）、`devices`（每只手柄的设置，见下）。`functionKey`、`feedback`、`safety.panic` 三个成员随 ADR-0017 搬进了 `devices`，**已退役**：守护进程仍然读它们（`Config.FunctionKey`、`Feedback`、`Safety`，`Config.Legacy` 说明文件里有哪几个），作为自己没设值的手柄的取值（解析规则见下），`pads.migrate` 把它们折进各只手柄并去掉；不再往里写新东西。它们原来的含义不变：`functionKey` 是 `start`（默认）或 `back`，退役的 `guide` 仍合 schema，按 `start` 读；`feedback` 四个开关，默认 true；含 `guide` 的 `safety.panic` 组合带警告加载但不用，这一类手柄保留内置组合（`PanicCombo.Usable`）。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
 
 **规则**（自动选择，§9）：首条已启用的匹配规则胜出，没有匹配的用 `default`。`exe` 是文件名或完整路径，不区分大小写，`/` 与 `\` 等价，不读标题、不支持通配符。`device` 只接受 `"any"`。
 
-**即时生效**：`enabled`、`releaseOnSwitch`、`rules`、`timing`、`safety`、`output.*`、`functionKey`、`calibration`、`feedback`、`devices.*.mapping` 保存后即时生效（`applyLiveSettings`）；设备 `ignored` 和 `restoreLayerState` 在启动时读取，变了报 `restartRequired`。`functionKey` 变了会用新值重新编译当前配置，各 slot 走 `Supervisor.Reload`（先释放所有按着的输出）。
+**即时生效**：`enabled`、`releaseOnSwitch`、`rules`、`timing`、`safety`、`output.*`、`functionKey`、`calibration`、`feedback`、`devices.*.mapping` 保存后即时生效（`applyLiveSettings`）；设备 `ignored` 和 `restoreLayerState` 在启动时读取，变了报 `restartRequired`。功能键变了（某只手柄的，或退役的顶层那个）不重载配置：`applyLiveSettings` 调 `Supervisor.RefreshFunctionKeys`，只有手柄功能键变了的 slot 才换 Program，并先释放自己按着的输出（§7.9）。组合变了调 `RepickCombos`，只让组合变了的手柄解除待发（`ComboWatch.Repick`）；三类设置都没动的改动不做这些事。
+
+**每只手柄的设置**（ADR-0017）。一只手柄就是一个 `DeviceKey`；一对 Joy-Con 是它自己的一只手柄，有自己的键。`devices.<DeviceKey>` 除了 `ignored`、`mapping`、`calibration`，还可以有：
+
+- `functionKey`：`start`、`back` 或 `paddle1` 到 `paddle4`。手柄能用哪几个取决于它的**族**（`internal/padfamily`；`input.FamilyOf(info, vertical)` 由 `DeviceInfo.Type` 和 `ButtonMask` 得出族，`padfamily.FromGUID` 只凭键得出）：
+
+  | 族 | 功能键（默认的在前） | 理由 |
+  |---|---|---|
+  | 标准布局（Xbox、PlayStation、Switch Pro、GameCube、未知） | `start`（Menu、Options、+）、`back`（View、Create、Share、−） | 和以前一样 |
+  | 单只 Joy-Con 横握，左 | `paddle4`（ZL）、`paddle2`（L） | SDL 把横握 Joy-Con 的 L、ZL 映射为 paddle2、paddle4，R、ZR 映射为 paddle1、paddle3（§7.1；`inputtest.JoyConLeft`）；Joy-Con 2 驱动一样（`jc2.horizontalL`，§7.1.1） |
+  | 单只 Joy-Con 横握，右 | `paddle3`（ZR）、`paddle1`（R） | 同上 |
+  | 单只 Joy-Con 竖握，左 | 只有 `back`（−） | 它有 − 没有 +；其余是肩键 |
+  | 单只 Joy-Con 竖握，右 | 只有 `start`（+） | 同上 |
+  | 一对 Joy-Con | `back`（−）、`start`（+） | 标准按键 |
+
+  `guide` 永远不是。手柄的任何握法都不可能有的值，在键的 GUID 能断定时是 config 错误（`padfamily.PossibleFunctionKeys`：GUID 里的厂商和产品号说明它是 Joy-Con，两种握法的值都算；其他 GUID 是标准布局；没有这些号的键什么值都收），所以 `RepairConfig` 只去掉这一个成员。*当前*的族不接受的值（握法变了）不是错误：跳过它，用默认值。横握是默认握法；竖握提示，或者 `ButtonMask` 没有 `south` 或有 `rightstick`，就按竖握。
+- `feedback`：退役的顶层对象里那四个开关（`rumble`、`led`、`pause`、`lowBattery`；不写 false 就是开；没写的开关表示没设）。
+- `panic`：紧急组合 `{buttons, holdMs}`，形状同退役的 `safety.panic` 的一项（2 到 8 个规范的物理按键，`holdMs` 500 到 60000；含 `guide` 或含手柄没有的键的组合不用，用这一族的内置组合）。
+
+**解析**（`Config.PadSettings(key, family)`，纯函数；族是 Unknown 时由键的 GUID 得出）：三项设置各取第一个适用的。（1）手柄自己的 `devices.<key>` 成员。（2）退役的顶层成员，在适用的地方：`functionKey` 只用于标准布局的手柄（Standard 或 Unknown；Joy-Con，包括一对，有各自的默认值），`feedback` 用于所有手柄，逐个开关，`safety.panic` 取手柄所在族的那一项（一对也是 `standard`），可用才取。（3）这一族的默认：它的第一个功能键、开关全开、内置组合（见下）。`PadSettings` 还说明每项设置来自哪里（`device`、`legacy`、`default`）。`Config.Materialized(key, family)` 返回把退役成员给这只手柄的值写进去的条目，只写和这一族默认不同的；不带退役成员再解析一次，结果相同，`MigratePadSettings` 依赖这一点。
 
 **每设备调校**：`devices.<DeviceKey>.calibration.ls/rs` 有可选 `deadzone`、`saturation`（0–1），覆盖 profile 同名值（顺序见 §7.5），扳机不调校。两个成员都给时 `saturation` 必须大于 `deadzone`；只给一个时叠加后的一对在运行时检查，不成立就忽略这根摇杆并记 warn。
 
@@ -773,7 +797,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 - `devices.<DeviceKey>.mapping` 是一个 SDL 映射字符串（1–2048 字符），写法 `GUID,*,a:b0,…,platform:Windows`：GUID 是手柄的，名字写 `*`，不写 `type:`（它改 `DeviceInfo.Type`，紧急组合的族按它选）。
 - SDL 按 GUID 应用映射，所以**同一 GUID 的所有 DeviceKey 必须是同一份映射**；`devices.setMapping` 一起写进所有这样的键。绑定不同的两份映射后者报错（`Equivalent`）。有错的映射在修复时被单独去掉。
 
-**默认紧急组合**（`input.DefaultCombo`），默认按住 2000 ms：
+**默认紧急组合**（`input.DefaultCombo`、`padfamily.Family.DefaultPanic`），默认按住 2000 ms：
 
 | 族 | 组合 |
 |---|---|
@@ -800,7 +824,7 @@ schema 用 draft 2020-12，只用 VS Code 和 Monaco 支持的关键字（不用
 
 - 每条诊断一行 `path:line:col: severity: message (pointer)`，pointer 为根时省略；没有诊断的文件打印 `path: ok`。
 - `--json`：每个文件一行 `{"file", "ok", "diagnostics"}`，`ok` 表示没有错误。
-- `--function-key KEY`（`start` 或 `back`，默认 `start`）：编译用的功能键，代替 config.json 的 `functionKey`（validate 不读 config.json）；别的值退出码 2。
+- `--function-key KEY`（`start`、`back` 或 `paddle1` 到 `paddle4`，默认 `start`）：编译用的功能键，代替手柄的设置（validate 不读 config.json）；别的值退出码 2。
 - **退出码**：没有文件有错误为 0（允许警告）；有文件有错误为 1；用法错误或有文件读不了为 2（优先于 1）。读不了的文件报到 stderr，其余照常检查。
 - 没有错误的文件接着用 `engine.Compile` 编译，在诊断行后每个绑定打印一行附加延迟：`  <pointer> ["label"]: press +0 ms`；有触感的加 `, haptic tick`；无动作的是 `no action`。pointer 里的控件名与文件一致；label 用 `strconv.Quote`，没有时省略。功能键的一套排在 common 之后。
 - `--json` 的对象对无错误的文件多一个 `bindings` 数组，每项 `{"id","control","label","gesture","haptic","addedLatencyMs"}`（control 是标准名；label、gesture、haptic 没有时省略）；有错误的文件没有这个字段。
@@ -917,6 +941,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `profiles.copy/delete/history/restore/export/import/importAmgp/folder` | 复制、永久删除、旧版本、导出导入（base64）、AntiMicroX 导入 |
 | `apps.recent` | 最近的前台程序（最多 12 个，不含 padmate 和系统程序） |
 | `config.get/put/repairSeen` | config.json 读写，确认修复提示 |
+| `pads.list` / `pads.set` / `pads.migrate` | 每只手柄的设置（ADR-0017）：连接过的手柄及其功能键、反馈开关、紧急组合（存的和解析出来的）/ 写一只手柄的设置 / 把退役的全局成员折进各只手柄 |
 | `startup.get/set` | 登录时启动（只接受 `enabled`，命令总是本进程的可执行文件和 `startupArgs`） |
 | `script.status/reload/describe/registrations/logs/init/import/path/detach` | 脚本 |
 | `macros.list/create/import/rename/delete/path` | 脚本库的宏，不带配置 ID |
@@ -932,6 +957,8 @@ JSON-RPC 标准码（如 -32602）之外：
 - **`profiles.put {id,text,revision}`**：revision 必填，空串只允许创建；不匹配 -32009。校验后在写锁内写临时文件、Sync、rename，替换前存快照。活动配置同步应用（即使 `--watch=false`），返回 `{revision,applied,problem?}`：脚本参数检查失败时文件已保存但保留旧运行时并返回 `problem`。改固定默认配置的 name 返回 -32018。父配置不在库里、成环或有错误时 InvalidParams。
 - **`profiles.delete {id,revision}`**：永久删除，不保留副本。写锁内先 rename 成隐藏的 `.tmp-<id>-*` 再删，所以要么整个离开库要么不变；删不干净仍算成功。拒绝：活动配置 -32012；被规则（含禁用的）或启动参数选中 -32013；链接等 -32015；`default` -32018。删除前先刷新 state.json。被别的配置基于时先把它们写成完整内容（§10.1），返回 `flattened`；写不成 -32023。
 - **`profiles.export/import`**：守护进程只收发字节，不接受路径，选文件和读写文件在 Electron 主进程。`import {data,name?,replace?,macros?}`：`name` 与 `replace` 不能同给；`-32020` 的 `reason`：`format`、`version`、`entry`、`limit`、`encoding`、`profile`；名称占用 -32021，脚本冲突 -32022。
+- **`profiles.explain`**（`ipc_explain.go`）自 ADR-0017 起按手柄回答：`slots` 的每一项有自己的 `functionKey`（该 slot 的 Program 的功能键，即 `View.ProgramFunctionKey`）、`isFunctionKey` 和 `functionSet`。库里的 profile（`id`）没有手柄，所以守护进程已知的手柄（`pads.list`）里每个不同的功能键各一项（`slot` 为 -1），`controllers` 列出用它的 DeviceKey；一只都不认识时给默认键的一项。顶层的 `functionKey` 和 `isFunctionKey` 取第一项的。
+- **`pads.*`**（`ipc_pads.go`）：`pads.list` 返回 `{revision, legacy:{any,functionKey,feedback,panic}, pads:[…]}`，`revision` 是读取列表时 config.json 的版本（有错的文件先修复，同 `config.get`）。pad 是每一只连着的、在 state.json 的 `controllers` 里的、或在 `devices` 里有条目的手柄：连着的在前，按连接顺序，其余按 `lastSeen` 从新到旧。成员：`key`、`name`、`type`、`buttonMask`、`known`（守护进程见过它；只有 config.json 提到的为 false：`name` 为空，`type` 为 `unknown`，族由键的 GUID 得出）、`connected`、`device`（连接 ID）、`ignored`、`lastSeen`、`family`（`standard`、`joyconLeft`、`joyconRight`、`joyconLeftVertical`、`joyconRightVertical`、`joyconPair`、`unknown`），以及三项设置：`functionKey {default, options:[{control,label}], stored?, effective, source}`（`options` 是这一族的，默认的在前；`label` 是手柄上印的名字：“ZR”、“Menu”、“−”）、`feedback {stored?, effective:{rumble,led,pause,lowBattery}, source}`（`source` 取各开关中最强的）和 `panic {default, stored?, effective, source}`（`effective` 是 T-input 检测的组合：手柄缺所配组合中的某个键时是内置组合）。`pads.set {key, revision?, functionKey?, feedback?, panic?}` 写一只手柄的条目：没出现的成员不变，`null` 拿掉手柄自己的值（退役的顶层成员或这一族的默认重新生效），其他值就是设置；给了 `revision` 就必须是 config.json 当前的（-32009）。返回 `{revision, applied, problem?, restartRequired?, pad}`。`key` 不是规范 DeviceKey、手柄所在族不接受的功能键、不认识的开关或组合成员、校验不过的组合是 -32602；既没连着、也不在 state.json 和 config.json 里的键是 -32004。它按字节位置改文本（`profile.SetPadSettings`：其余成员保留字节和位置，结果按界面写文件的方式缩进，没有成员的条目删掉），经 `config.put` 的路径提交（`commitConfigLocked`），所以随后有 `profile.changed {kind:"config"}`。`pads.migrate {revision?}` 把退役的顶层 `functionKey`、`feedback`、`safety.panic` 折进每只已知手柄的条目（`profile.MigratePadSettings`：只写和这一族默认不同的，所以每只手柄的行为不变）并去掉它们；文件里没有这些时返回 `changed:false`。从 state.json 开始列手柄以来没连过的手柄，此后用它这一族的默认。三个方法都在 bridge 白名单里。守护进程运行用的有效配置（`liveSettings`）带着按手柄的成员，但运行时还不读它们（§7.9）。
 - **`joycon2.*`**（`ipc_joycon2.go`、`ipc_fake_joycon2.go`）：结果是 `{available, unavailable?, autoConnect, windowOpen, windowEndsAt?, windowLeftMs?, scanning, known:[{addr,serial,side,connected}], links:[{addr,serial?,side,player,firmware?,paramsRequest?,intervalMs?,latency?,timeoutMs?,state,device?,known}]}`。连接的 `state` 为 `connecting`、`connected`、`dormant`（静默；它不在任何手柄里）或 `closing`；`paramsRequest` 是吞吐优先连接参数请求的结果（`accepted`、`unavailable (Windows 10)` 或 `failed: <原因>`），`intervalMs`（数字，如 15 或 11.25）、`latency`（连接事件数）和 `timeoutMs` 是当前的连接参数，由传输每 2 s 读一次：未知时不出现（链路建立之前，以及 Windows 10 上始终，它读不到），且只有 `intervalMs` 出现时 `latency` 和 `timeoutMs` 才有意义（延迟为 0 时不出现）；`device` 是 `devices.list` 和 `joycon2.disconnect` 用的连接 ID。没有这个后端的输入对 `joycon2.status` 答 `available:false`，其余方法 -32027；不认识的 serial 或连接 ID 是 -32004；`seconds` 不在 1–600、缺 `serial` 或 `id`、多余成员是 -32602。后端没有变化回调，所以由一个监视 goroutine 在手柄来去、方法之后、手柄被记住时、窗口开着或有连接正在建立或关闭时每 250 ms、其余时候每 2 s 读一次状态，不同就发 `joycon2.changed`（剩余时间不算变化）。假输入有模拟的后端：不扫描、不写 state.json、不出手柄；`joycon2.pair` 开窗口，`fake.joycon2 {side?}` 是用户按住 SYNC（只在窗口开着时连上并记住 `FAKEJC2L0001`、`FAKEJC2R0001`……，连接 ID 从 1001 起），窗口到时自己关。托盘只在输入有这个后端时显示“连接新的 Joy-Con 2”，点击打开 30 s 窗口并给出通知（§5）。界面“设置”里的 Joy-Con 2 一栏（`SettingsJoyCon2.tsx`）是 `joycon2.status`、`joycon2.pair {seconds:30}`、`joycon2.cancelPair` 和 `joycon2.forget` 的客户端：Main 的处理函数（`joycon2-handlers.ts`）不从渲染进程接收方法名或地址，并检查序列号；话题 `joycon2.changed` 只在这一栏挂载期间、且 `joycon2.status` 说 `available` 之后，才在唯一的那条订阅上（`HudSubscription.joyCon2Up`）；`available` 为 false 时这一栏也不显示。`joycon2.disconnect` 在 bridge 的白名单里，界面不用它。Joy-Con 2 的连接状态和电量不在这个状态里：它们像任何手柄一样在 `devices.list` 里，“设置”的手柄行显示它们。
 - **`devices.rawInfo`**：手柄要求前必须已在捕获状态（`capture.start`），否则 -32026（向导要用户按会被映射成按键的按钮，必须先暂停）。要求按连接记，断连时放掉，最后一个放掉才 `RawStop`；原始事件作为 `input.raw` 只发给要求过该手柄且订阅了话题的连接。向导流程：订阅 `input.raw`、`capture.start`、`devices.rawInfo`，结束时 `rawInfo {watch:false}` 和 `capture.stop`。
 - **`macros.*`**（`ipc_macros.go`、`profilelib/macro.go`）：全部在库写锁内经 `os.Root`。`rename` 同时按字节位置改写所有引用，任何一个写失败就全部改回；`delete` 先清掉引用再删文件；整库已有 64 个宏时新建返回 InvalidParams。库模式下 `watch.DirWatcher` 监视库文件夹顶层脚本。CLI：`padmatectl macro list|new|import|rename|delete`。

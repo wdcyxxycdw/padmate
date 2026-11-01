@@ -10,8 +10,8 @@ import {
 import {
   controllerLabels,
   familyName,
+  isSidewaysJoyCon,
   padHasControl,
-  padHasFunctionKey,
 } from "./controller-model";
 
 /**
@@ -102,8 +102,8 @@ export function controllerCallouts(
   // columns, then the row below.
   add("lefttrigger", "top", { side: "left", slot: 0 });
   add("leftshoulder", "top", { side: "left", slot: 1 });
-  // A single Joy-Con held sideways has no back, only start (ADR-0012).
-  if (padHasFunctionKey("back", info.type, info.buttonMask))
+  // A single Joy-Con held sideways has no back, only start.
+  if (!isSidewaysJoyCon(info.type, info.buttonMask))
     add("back", "top", { offset: -1 });
   // The touchpad takes the top center. The Xbox, PS or Home button has no
   // chip: padmate never maps it (ADR-0012).

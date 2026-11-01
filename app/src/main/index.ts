@@ -58,6 +58,7 @@ import { OverlayPreferences } from "./overlay-prefs";
 import { OverlayToaster } from "./overlay-toasts";
 import { electronOverlayHost } from "./overlay-window";
 import { PadCapture } from "./pad-capture";
+import { padHandlers } from "./pad-handlers";
 import { RawWatch } from "./raw-watch";
 import { createDaemonManager, runtimeOptions } from "./runtime";
 import {
@@ -471,6 +472,9 @@ function registerHandlers(update: UpdateController): void {
       (method, params) => manager?.call(method, params),
       rawWatch,
     ),
+    // The controllers of Settings → Controllers: each one's function key,
+    // feedback switches and emergency combo (ADR-0017).
+    ...padHandlers((method, params) => manager?.call(method, params)),
     // The Joy-Con 2 section of Settings; joycon2.changed is on the one
     // subscription while that section is up.
     ...joyCon2Handlers(

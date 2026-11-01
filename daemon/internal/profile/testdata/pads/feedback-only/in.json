@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 0,
+  "feedback": { "lowBattery": false, "pause": false },
+  "output": { "eventGapMs": 0 },
+  "devices": {
+    "{{ps}}": { "ignored": true, "calibration": { "rs": { "saturation": 0.9 } } }
+  }
+}

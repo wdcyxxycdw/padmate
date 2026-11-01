@@ -13,14 +13,18 @@ type View struct {
 	// control order. It is nil when the hints are off and not nil, possibly
 	// empty, when they are on.
 	Hints []Hint
-	// FunctionKey is the function key (control.Back or control.Start) while
-	// it is held and a press looks its control up in the function set first (ActiveFunctionKey), control.Invalid when it is not
+	// FunctionKey is the function key (control.Back, control.Start or a
+	// paddle) while it is held and a press looks its control up in the
+	// function set first (ActiveFunctionKey), control.Invalid when it is not
 	// held (profiles.explain, ADR-0016).
 	FunctionKey control.Control
+	// ProgramFunctionKey is the function key of the Program the engine runs,
+	// held or not: the controller of the slot has this one (ADR-0017).
+	ProgramFunctionKey control.Control
 }
 
 func (e *Engine) View() View {
-	v := View{Profile: e.prog.prof.Name, Layers: e.LayerState(), FunctionKey: e.fnActive}
+	v := View{Profile: e.prog.prof.Name, Layers: e.LayerState(), FunctionKey: e.fnActive, ProgramFunctionKey: e.prog.fnKey}
 	name := v.Layers.Base
 	if n := len(v.Layers.Overlays); n > 0 {
 		name = v.Layers.Overlays[n-1]

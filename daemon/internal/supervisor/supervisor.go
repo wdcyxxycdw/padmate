@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
@@ -88,13 +89,30 @@ type Config struct {
 	// be safe for concurrent use; it returns what the last committed
 	// config.json says. Nil means no gamepad is calibrated.
 	Calibration func(key string) *profile.Calibration
-	// Switches returns the global feedback switches (ADR-0015) of every
-	// slot's engine (engine.Options.Switches). It is called on the slots'
-	// goroutines, concurrently, so it must not block and must be safe for
-	// concurrent use; it returns what the last committed config.json says. A
-	// change is applied to the haptics at once and to the layer and pause
-	// state by RefreshFeedback. Nil means every switch on.
-	Switches func() profile.FeedbackSwitches
+	// Switches returns the feedback switches (ADR-0015, ADR-0017) of the
+	// controller with the canonical DeviceKey string key, which every slot's
+	// engine reads for its own controller (engine.Options.Switches); key is ""
+	// for a slot without one. It is called on the slots' goroutines,
+	// concurrently, so it must not block and must be safe for concurrent use;
+	// it returns what the last committed config.json says. A change is applied
+	// to the haptics at once and to the layer and pause state by
+	// RefreshFeedback. Nil means every switch on.
+	Switches func(key string) profile.FeedbackSwitches
+	// FunctionKey returns the function key (ADR-0012, ADR-0017) of the
+	// controller with DeviceKey string key and DeviceInfo info, the zero info
+	// and "" for a slot without a controller. A slot runs the Program of the
+	// profile that has the function key of its controller (engine.Program.ForFunctionKey):
+	// it asks when it gets or loses a controller, at each Reload and at
+	// RefreshFunctionKeys, on its own goroutine, so it must not block and must be
+	// safe for concurrent use. It returns what the last committed config.json
+	// says. Nil means Program's function key for every controller.
+	FunctionKey func(key string, info input.DeviceInfo) control.Control
+	// OnFunctionKey, when set, is called on a slot's goroutine each time the
+	// slot switched to a Program with another function key, with its index, the
+	// DeviceKey of its controller ("" if none) and the Program (padmated's log).
+	// The slot has let go of its keys then. It must not block or call the
+	// Supervisor.
+	OnFunctionKey func(slot uint8, key string, prog *engine.Program)
 	// EdgeBuffer is each slot's edge channel capacity; 0 means 256.
 	EdgeBuffer int
 	// Lock locks each slot loop goroutine to its OS thread

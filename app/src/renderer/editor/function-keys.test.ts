@@ -1,5 +1,6 @@
-// The function key (ADR-0012): View (back) or Menu (start),
-// chosen in the settings, holds no bindings of its own; while it is held, the
+// The function key (ADR-0012, ADR-0017): one button of the controller,
+// chosen in the settings of each controller, holds no bindings of its own;
+// while it is held, the
 // other controls use the profile's function set (profile.functionSet). The
 // Xbox button (guide) is never mapped. These are the editor's rules for them.
 import { describe, expect, it } from "vitest";
@@ -47,9 +48,17 @@ const withSet: Profile = {
 const order = (value: object) => Object.keys(value);
 
 describe("the function key", () => {
-  it("is Menu unless the settings choose View, and Menu for the Xbox button of an older file", () => {
+  it("is Menu unless the settings choose another button, and Menu for the Xbox button of an older file", () => {
     expect(defaultFunctionKey).toBe("start");
-    expect([...functionKeys].sort()).toEqual(["back", "start"]);
+    // A Joy-Con held sideways has ZR, R, ZL and L for it: the four paddles.
+    expect([...functionKeys].sort()).toEqual([
+      "back",
+      "paddle1",
+      "paddle2",
+      "paddle3",
+      "paddle4",
+      "start",
+    ]);
     for (const key of functionKeys) expect(asFunctionKey(key)).toBe(key);
     for (const value of [
       undefined,
@@ -68,6 +77,10 @@ describe("the function key", () => {
     const names: Record<FunctionKey, string[]> = {
       start: ["start"],
       back: ["back", "select"],
+      paddle1: ["paddle1"],
+      paddle2: ["paddle2"],
+      paddle3: ["paddle3"],
+      paddle4: ["paddle4"],
     };
     for (const key of functionKeys)
       for (const control of [
@@ -79,6 +92,10 @@ describe("the function key", () => {
         "leftstick",
         "lt",
         "dpad.up",
+        "paddle1",
+        "paddle2",
+        "paddle3",
+        "paddle4",
       ])
         expect(isFunctionKey(control, key), `${key} ${control}`).toBe(
           names[key].includes(control),

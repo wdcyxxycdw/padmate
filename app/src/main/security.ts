@@ -5,6 +5,8 @@ import {
   type MacroNameKind,
   maxMacroName,
 } from "../shared/macro-names";
+import type { PadSwitches, PadsSetParams } from "../shared/pads";
+import { isPadFunctionKey } from "../shared/pads-parse";
 
 export function contentSecurityPolicy(development: boolean): string {
   return [
@@ -397,4 +399,75 @@ export function validateConfigBackup(value: unknown): string {
   )
     throw new Error("Invalid backup name");
   return value;
+}
+
+const PAD_SWITCHES = ["rumble", "led", "pause", "lowBattery"] as const;
+
+/**
+ * The parameters of pads.set (ADR-0017), cut down to what the daemon takes:
+ * one controller's key, and any of its three settings, each a value or null
+ * to take the controller's own value away. A member the call does not name is
+ * not sent, so it stays. The daemon checks the function key against the
+ * controller's family and the combo against its rules; this keeps the shapes
+ * and sizes in bounds.
+ */
+export function validatePadsSet(value: unknown): PadsSetParams {
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Invalid controller settings");
+  const given = value as Record<string, unknown>;
+  const params: PadsSetParams = { key: validateDeviceKey(given.key) };
+  if (given.revision !== undefined) {
+    if (typeof given.revision !== "string" || given.revision.length > 128)
+      throw new Error("Invalid revision");
+    params.revision = given.revision;
+  }
+  if (given.functionKey !== undefined) {
+    if (given.functionKey !== null && !isPadFunctionKey(given.functionKey))
+      throw new Error("Invalid function key");
+    params.functionKey = given.functionKey;
+  }
+  if (given.feedback !== undefined) {
+    if (given.feedback === null) params.feedback = null;
+    else {
+      const switches = given.feedback;
+      if (
+        typeof switches !== "object" ||
+        Array.isArray(switches) ||
+        Object.keys(switches).some(
+          (name) => !(PAD_SWITCHES as readonly string[]).includes(name),
+        ) ||
+        Object.values(switches).some((on) => typeof on !== "boolean")
+      )
+        throw new Error("Invalid feedback switches");
+      params.feedback = { ...(switches as Partial<PadSwitches>) };
+    }
+  }
+  if (given.panic !== undefined) {
+    if (given.panic === null) params.panic = null;
+    else {
+      const combo = given.panic as Record<string, unknown>;
+      if (
+        typeof combo !== "object" ||
+        Array.isArray(combo) ||
+        !Array.isArray(combo.buttons) ||
+        combo.buttons.length < 1 ||
+        combo.buttons.length > 8 ||
+        combo.buttons.some(
+          (button) =>
+            typeof button !== "string" ||
+            !/^[a-z][a-z0-9.]{0,31}$/.test(button),
+        ) ||
+        typeof combo.holdMs !== "number" ||
+        !Number.isInteger(combo.holdMs) ||
+        combo.holdMs < 0 ||
+        combo.holdMs > 600000
+      )
+        throw new Error("Invalid emergency combo");
+      params.panic = {
+        buttons: [...(combo.buttons as string[])],
+        holdMs: combo.holdMs,
+      };
+    }
+  }
+  return params;
 }

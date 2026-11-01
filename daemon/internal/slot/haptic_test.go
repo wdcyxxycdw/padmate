@@ -87,7 +87,7 @@ func TestSwitchesAndRefreshFeedback(t *testing.T) {
 	var states []engine.Feedback
 	s, err := slot.New(slot.Config{
 		Index: 0, Gen: 1, Program: compile(t, bind), Arbiter: sim.Arb, Clock: sim.Clock,
-		Switches: func() profile.FeedbackSwitches { return sw },
+		Switches: func(string) profile.FeedbackSwitches { return sw },
 		OnHaptic: func(input.DeviceID, engine.Haptic) { haptics++ },
 		Feedback: func(f engine.Feedback) { states = append(states, f) },
 	})

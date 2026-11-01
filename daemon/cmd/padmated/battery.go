@@ -168,7 +168,7 @@ func batteryCue(u supervisor.PowerUpdate, sw profile.FeedbackSwitches) (e input.
 // decides, posts to the non-blocking queues, and logs.
 func (r *liveRun) onPower(u supervisor.PowerUpdate) {
 	key := u.Key.String()
-	sw := r.feedbackSwitches()
+	sw := r.feedbackSwitchesFor(key)
 	episode, due := r.battery.update(key, u.Power, sw.LowBattery)
 	if !due {
 		return

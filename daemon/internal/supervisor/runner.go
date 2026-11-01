@@ -223,6 +223,11 @@ func (r *runner) newSlot() (*slot.Slot, error) {
 		Paused:     r.s.held.Load(),
 		ProfileKey: r.profileKey, LayerMemory: cfg.LayerMemory,
 		Calibration: cfg.Calibration, Power: r.s.powerOf, Switches: cfg.Switches,
+		FunctionKey: cfg.FunctionKey,
+	}
+	if f := cfg.OnFunctionKey; f != nil {
+		index := r.index
+		sc.OnFunctionKey = func(key string, prog *engine.Program) { f(index, key, prog) }
 	}
 	if f := cfg.ScriptFactory; f != nil {
 		runtime, err := f(r.index, r.gen, cfg.Clock, cfg.Output.Remote())

@@ -7,13 +7,18 @@ import {
   test,
 } from "@playwright/test";
 import type { ProfileDocument } from "../../src/shared/api";
+import type { PadsListResult } from "../../src/shared/pads";
 import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut } from "./helpers";
 
-// ADR-0012: View (back) or Menu (start) is the function key, Menu unless
-// the settings choose View. The Xbox button (guide) is never mapped. The
-// fake pad is a generic one, so the pad prints Back and Start.
+// ADR-0012, ADR-0017: one button of each controller is its function key
+// (Menu, unless Settings → 手柄设置 chooses View for it). The Xbox button
+// (guide) is never mapped. The fake pad is a generic one, so the pad prints
+// Back and Start.
+
+/** The name of the fake controller. */
+const FAKE_PAD = "padmate IPC fake gamepad";
 
 async function openControl(page: Page, control: string): Promise<void> {
   await page.locator(`button[data-callout="${control}"]`).click();
@@ -210,7 +215,7 @@ test("the function set of a file of the old format is edited on the mapping page
   }
 });
 
-test("the function key is chosen in Settings, followed by the daemon at once and named on the mapping page; the Xbox button is never mapped", async () => {
+test("the function key is chosen for the controller in Settings → 手柄设置, followed by the daemon at once and named on the mapping page; the Xbox button is never mapped", async () => {
   test.setTimeout(120000);
   const f = await editorFixture();
   await writeFile(
@@ -239,8 +244,16 @@ test("the function key is chosen in Settings, followed by the daemon at once and
     const live = await FixtureClient.connect(f);
     client = live;
     const configFile = join(f.path, "data", "config.json");
+    // The choice is the controller's own member of config.json.
+    const key = (await live.call<PadsListResult>("pads.list")).pads[0].key;
     const chosen = async () =>
-      JSON.parse(await readFile(configFile, "utf8")).functionKey;
+      JSON.parse(await readFile(configFile, "utf8")).devices?.[key]
+        ?.functionKey;
+    const openPads = async () => {
+      await page.getByRole("button", { name: "设置", exact: true }).click();
+      await page.getByRole("button", { name: "打开手柄设置" }).click();
+      return page.getByRole("region", { name: FAKE_PAD });
+    };
 
     // The file says nothing, so Menu is the function key: View is an
     // ordinary key, and Menu's own binding is ignored. The Xbox button types
@@ -254,14 +267,17 @@ test("the function key is chosen in Settings, followed by the daemon at once and
     await letGo(live, "guide");
     expect(chords(live)).toEqual([]);
 
-    await page.getByRole("button", { name: "设置", exact: true }).click();
-    const row = page.getByTestId("function-key-setting");
-    const choice = row.getByRole("radiogroup", { name: "功能键" });
-    const pick = (key: string) => choice.locator(`[data-value="${key}"]`);
+    const section = await openPads();
+    const choice = section.getByRole("radiogroup", { name: /^功能键/ });
+    const pick = (control: string) =>
+      choice.locator(`[data-value="${control}"]`);
     await expect(pick("start")).toHaveAttribute("aria-checked", "true");
     // The two keys are an icon and the name the pad prints (the fake pad is
-    // a generic one), not text that says where they are.
-    await expect(choice.getByRole("radio")).toHaveText(["Start", "Back"]);
+    // a generic one), Start marked as the default.
+    await expect(choice.getByRole("radio")).toHaveText([
+      "Start（默认）",
+      "Back",
+    ]);
     await expect(choice.locator(".control-icon")).toHaveCount(2);
     await page.screenshot({
       path: test.info().outputPath("settings-function-key.png"),
@@ -304,7 +320,7 @@ test("the function key is chosen in Settings, followed by the daemon at once and
     );
 
     // Menu again: the member goes from config.json.
-    await page.getByRole("button", { name: "设置", exact: true }).click();
+    await openPads();
     await pick("start").click();
     await expect.poll(chosen).toBeUndefined();
     await expect(page.getByRole("dialog")).toHaveCount(0);

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 0,
+  "devices": {
+    "050000007e0500006620000000000000/s:XKW2": {
+      "panic": {
+        "buttons": [
+          "paddle3",
+          "south"
+        ],
+        "holdMs": 900
+      }
+    },
+    "050000007e0500006720000000000000/s:XKW1": {
+      "panic": {
+        "buttons": [
+          "south",
+          "east"
+        ],
+        "holdMs": 800
+      }
+    }
+  }
+}

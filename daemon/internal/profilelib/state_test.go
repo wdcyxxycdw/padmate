@@ -251,3 +251,60 @@ func TestMemoryJoyCon2(t *testing.T) {
 		t.Fatalf("a full list does not save: %v", err)
 	}
 }
+
+// TestRememberController: the settings page lists the controllers that have
+// been connected (ADR-0017), and state.json keeps them.
+func TestRememberController(t *testing.T) {
+	lib := New(t.TempDir())
+	m := NewMemory(profile.State{}, true)
+	k1, k2 := strings.Repeat("a0", 16)+"/s:one", strings.Repeat("b1", 16)+"/s:two"
+	m.RememberController(k1, profile.KnownController{Name: "Joy-Con 2 (R)", Type: "joyconright", ButtonMask: 0x1ff, LastSeen: 100})
+	// An unknown button mask keeps the one remembered; the name is the last.
+	m.RememberController(k1, profile.KnownController{Name: "Joy-Con 2 (R)", Type: "joyconright", LastSeen: 200})
+	m.RememberController(k2, profile.KnownController{Name: "Xbox", Type: "xboxone", LastSeen: 50})
+	m.RememberController("", profile.KnownController{Name: "nobody"})
+	got := m.Controllers()
+	if len(got) != 2 || got[k1].ButtonMask != 0x1ff || got[k1].LastSeen != 200 || got[k2].Type != "xboxone" {
+		t.Fatalf("Controllers = %+v", got)
+	}
+	got[k1] = profile.KnownController{} // a copy
+	if m.Controllers()[k1].Name == "" {
+		t.Error("Controllers shares its map")
+	}
+	if err := m.Flush(lib); err != nil {
+		t.Fatal(err)
+	}
+	state, err := lib.ReadState()
+	if err != nil || !reflect.DeepEqual(state.Controllers, m.Controllers()) {
+		t.Fatalf("state.json: %+v %v", state.Controllers, err)
+	}
+	// A key that is no DeviceKey makes the file invalid.
+	state.Controllers["not a key"] = profile.KnownController{Name: "x", Type: "y"}
+	if err := lib.WriteState(state); err == nil {
+		t.Error("saved a controller with no DeviceKey")
+	}
+}
+
+// TestRememberControllerCap: at most MaxControllers are kept, the one seen
+// least recently dropped first, never the one just remembered.
+func TestRememberControllerCap(t *testing.T) {
+	m := NewMemory(profile.State{}, true)
+	key := func(i int) string { return fmt.Sprintf("%032x/s:%d", i, i) }
+	for i := 1; i <= MaxControllers+5; i++ {
+		m.RememberController(key(i), profile.KnownController{Name: "pad", Type: "xboxone", LastSeen: i})
+	}
+	got := m.Controllers()
+	if len(got) != MaxControllers {
+		t.Fatalf("%d kept; want %d", len(got), MaxControllers)
+	}
+	for i := 1; i <= 5; i++ {
+		if _, ok := got[key(i)]; ok {
+			t.Errorf("%d, the oldest, is still there", i)
+		}
+	}
+	// A new one with the oldest time still stays.
+	m.RememberController(key(1000), profile.KnownController{Name: "pad", Type: "xboxone", LastSeen: 0})
+	if _, ok := m.Controllers()[key(1000)]; !ok {
+		t.Error("the controller just remembered was dropped")
+	}
+}

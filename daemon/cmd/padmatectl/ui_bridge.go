@@ -42,6 +42,10 @@ func bridgeMethod(method string) bool {
 		// The latency statistics of the diagnostics page (ADR-0016).
 		"latency.get", "latency.reset",
 		"config.get", "config.put",
+		// The settings of each controller (ADR-0017): the controllers that
+		// have been connected, one controller's function key, feedback switches
+		// and emergency combo, and folding the retired global ones into them.
+		"pads.list", "pads.set", "pads.migrate",
 		// A repaired config.json: the UI has shown the dialog.
 		"config.repairSeen",
 		"profiles.list", "profiles.get", "profiles.put", "profiles.validate", "profiles.explain",

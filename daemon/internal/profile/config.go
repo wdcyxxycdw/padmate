@@ -5,6 +5,7 @@ import (
 	_ "embed" // config.schema.json
 	"errors"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/padfamily"
 )
 
 //go:generate go run ../../tools/schemacopy -src ../../../schema/config.schema.json -dst config.schema.json
@@ -38,15 +40,25 @@ type Config struct {
 	Devices           map[string]DeviceSettings
 	Timing            Timing
 	Output            OutputSettings
-	Safety            SafetySettings
-	// FunctionKey is the one function key, back or start
-	// (ADR-0012), the same for every profile and controller. DefaultConfig has
+	// Safety holds the retired safety.panic: the emergency combo of a family
+	// of controllers. Since ADR-0017 the combo is a setting of each controller
+	// (DeviceSettings.Panic); this applies to a controller that has none of its
+	// own. Read it through PadSettings.
+	Safety SafetySettings
+	// FunctionKey is the retired top-level functionKey, back or start
+	// (ADR-0012). Since ADR-0017 each controller has its own
+	// (DeviceSettings.FunctionKey); this is the function key of a controller
+	// with the standard layout that has none of its own. DefaultConfig has
 	// control.DefaultFunctionKey; the zero value, such as a Config built by
-	// hand, means the same (FunctionKeyOrDefault).
+	// hand, means the same (FunctionKeyOrDefault). Read it through PadSettings.
 	FunctionKey control.Control
-	// Feedback holds the four controller feedback switches (ADR-0015),
-	// global for every profile and controller.
+	// Feedback holds the retired top-level feedback switches (ADR-0015); since
+	// ADR-0017 each controller has its own (DeviceSettings.Feedback), and these
+	// are the switches of a controller that sets none. Read them through
+	// PadSettings.
 	Feedback FeedbackSwitches
+	// Legacy says which of the three retired members above the file has.
+	Legacy LegacyPad
 	// JoyCon2 holds the settings of the Joy-Con 2 backend (Bluetooth LE).
 	JoyCon2 JoyCon2Settings
 }
@@ -104,11 +116,12 @@ func DefaultConfig() *Config {
 	return &Config{Enabled: true, RestoreLayerState: true, ReleaseOnSwitch: "profileChange", FunctionKey: control.DefaultFunctionKey, Feedback: DefaultFeedbackSwitches(), JoyCon2: DefaultJoyCon2Settings()}
 }
 
-// FunctionKeyOrDefault returns the function key of c: its FunctionKey, or
-// control.DefaultFunctionKey when that is not set. A nil Config has the
-// default.
+// FunctionKeyOrDefault returns the retired top-level function key of c: its
+// FunctionKey, or control.DefaultFunctionKey when that is not set or is not
+// back or start (the top-level member never held a paddle). A nil Config has
+// the default. Read the function key of a controller through PadSettings.
 func (c *Config) FunctionKeyOrDefault() control.Control {
-	if c == nil || !c.FunctionKey.CanBeFunctionKey() {
+	if c == nil || !legacyFunctionKey(c.FunctionKey) {
 		return control.DefaultFunctionKey
 	}
 	return c.FunctionKey
@@ -167,10 +180,11 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 	if w.ReleaseOnSwitch != "" {
 		c.ReleaseOnSwitch = w.ReleaseOnSwitch
 	}
-	if fk, ok := control.Parse(w.FunctionKey); ok && fk.String() == w.FunctionKey && fk.CanBeFunctionKey() {
+	if fk, ok := control.Parse(w.FunctionKey); ok && fk.String() == w.FunctionKey && legacyFunctionKey(fk) {
 		c.FunctionKey = fk // the schema allows start, back and the retired guide, which reads as start
 	}
 	c.Devices = w.Devices
+	c.Legacy = LegacyPad{FunctionKey: w.FunctionKey != "", Feedback: w.Feedback != nil, Panic: len(w.Safety.Panic) > 0}
 	c.Timing, c.Output, c.Safety = resolveTiming(w.Timing), w.Output, w.Safety
 	if f := w.Feedback; f != nil {
 		if f.Rumble != nil {
@@ -212,25 +226,17 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 	}
 	checkCalibration(c.Devices, fail)
 	checkMappings(c.Devices, fail)
-	for family, combo := range c.Safety.Panic {
-		for i, name := range combo.Buttons {
-			ptr := childPointer(childPointer("/safety/panic", family)+"/buttons", strconv.Itoa(i))
-			ctl, ok := control.Parse(name)
-			if !ok || ctl.String() != name || ctl.IsVirtual() {
-				fail(ptr, "expected a canonical physical button name")
-			} else if ctl.Unmappable() {
-				// Not an error: a file written before padmate stopped using
-				// guide still loads, and its family keeps the built-in
-				// combo (PanicCombo.Usable), so the pause still works.
-				n := root.lookupPointer(ptr)
-				if n == nil {
-					n = root
-				}
-				ds = append(ds, Diagnostic{Severity: SeverityWarning, Pointer: ptr, Offset: n.start,
-					Message: quote(name) + " cannot be in an emergency combo: padmate does not use the Xbox, PS or Home button; the built-in combo applies"})
-			}
+	warn := func(ptr, msg string) {
+		n := root.lookupPointer(ptr)
+		if n == nil {
+			n = root
 		}
+		ds = append(ds, Diagnostic{Severity: SeverityWarning, Pointer: ptr, Offset: n.start, Message: msg})
 	}
+	for _, family := range sortedKeys(c.Safety.Panic) {
+		checkCombo(childPointer("/safety/panic", family), c.Safety.Panic[family], fail, warn)
+	}
+	checkPads(c.Devices, fail, warn)
 	if ds.HasErrors() {
 		return nil, place(data, ds)
 	}
@@ -238,6 +244,49 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		return c, place(data, ds)
 	}
 	return c, nil
+}
+
+// checkCombo reports the buttons of the emergency combo at the pointer ptr
+// that cannot be one: a name that is no canonical physical button is an
+// error, guide a warning (the built-in combo applies, PanicCombo.Usable).
+func checkCombo(ptr string, combo PanicCombo, fail, warn func(pointer, msg string)) {
+	for i, name := range combo.Buttons {
+		at := childPointer(ptr+"/buttons", strconv.Itoa(i))
+		ctl, ok := control.Parse(name)
+		if !ok || ctl.String() != name || ctl.IsVirtual() {
+			fail(at, "expected a canonical physical button name")
+		} else if ctl.Unmappable() {
+			// Not an error: a file written before padmate stopped using
+			// guide still loads, and the controller keeps the built-in
+			// combo (PanicCombo.Usable), so the pause still works.
+			warn(at, quote(name)+" cannot be in an emergency combo: padmate does not use the Xbox, PS or Home button; the built-in combo applies")
+		}
+	}
+}
+
+// checkPads reports the per-controller settings of the devices of c
+// (ADR-0017) that cannot work: a function key that the controller of the
+// DeviceKey cannot have (what its GUID allows, whatever its grip:
+// padfamily.PossibleFunctionKeys), and an emergency combo with a name that is
+// no button.
+func checkPads(devices map[string]DeviceSettings, fail, warn func(pointer, msg string)) {
+	for _, key := range sortedKeys(devices) {
+		dev := devices[key]
+		base := childPointer("/devices", key)
+		if dev.FunctionKey != "" {
+			allowed := padfamily.PossibleFunctionKeys(KeyGUID(key))
+			if fk, ok := control.Parse(dev.FunctionKey); !ok || !slices.Contains(allowed, fk) {
+				names := make([]string, len(allowed))
+				for i, c := range allowed {
+					names[i] = c.String()
+				}
+				fail(base+"/functionKey", quote(dev.FunctionKey)+" cannot be the function key of this controller: it can be "+strings.Join(names, ", "))
+			}
+		}
+		if dev.Panic != nil {
+			checkCombo(base+"/panic", *dev.Panic, fail, warn)
+		}
+	}
 }
 
 // Usable reports whether the combo can be used as written: guide, which

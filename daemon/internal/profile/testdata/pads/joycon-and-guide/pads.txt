@@ -1,0 +1,4 @@
+{{xbox}} standard
+{{joyconL}} joyconLeft
+{{joyconR}} joyconRightVertical
+{{pair}} joyconPair

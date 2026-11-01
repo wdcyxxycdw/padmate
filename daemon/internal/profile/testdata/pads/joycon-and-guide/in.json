@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 0,
+  "functionKey": "guide",
+  "safety": {
+    "panic": {
+      "standard": { "buttons": ["guide", "start"], "holdMs": 2000 },
+      "joyconLeft": { "buttons": ["south", "east"], "holdMs": 800 },
+      "joyconRightVertical": { "buttons": ["paddle3", "south"], "holdMs": 900 }
+    }
+  }
+}

@@ -23,6 +23,7 @@ import { shouldOffer } from "./onboarding/onboarding-model";
 import { DiagnosticsPage } from "./pages/DiagnosticsPage";
 import { EmptyState, NoController, NoProfile } from "./pages/EmptyState";
 import { LogsPage } from "./pages/LogsPage";
+import { PadsPage } from "./pages/PadsPage";
 import { CardProfileSettings } from "./pages/profiles/CardProfileSettings";
 import { NewProfileDialog } from "./pages/profiles/ProfileDialogs";
 import { ProfileSettingsDialog } from "./pages/profiles/ProfileSettingsDialog";
@@ -34,10 +35,9 @@ import {
   defaultProfileName,
   isDefaultProfile,
   profileName,
-  readConfig,
   sortProfilesByName,
 } from "./state/library-model";
-import { configuredFunctionKey } from "./state/settings-model";
+import { effectiveFunctionKey } from "./state/pads-model";
 import {
   activeProfileId,
   type Language,
@@ -62,8 +62,8 @@ type ShellState = Omit<
 const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
-// Logs and diagnostics are views inside Settings, so they have no rail item
-// of their own.
+// Logs, diagnostics and the controllers are views inside Settings, so they
+// have no rail item of their own.
 const pages: { page: Page; icon: IconName }[] = [
   { page: "overview", icon: "pad" },
   { page: "profiles", icon: "folder" },
@@ -73,7 +73,9 @@ const pages: { page: Page; icon: IconName }[] = [
 
 /** The rail item a page belongs to. */
 function railPage(page: Page): Page {
-  return page === "logs" || page === "diagnostics" ? "settings" : page;
+  return page === "logs" || page === "diagnostics" || page === "pads"
+    ? "settings"
+    : page;
 }
 
 function StatusPill({ state, t }: { state: ShellState; t: Translate }) {
@@ -479,9 +481,9 @@ export function App({ store }: { store: PadmateStore }) {
     [store],
   );
   // The Settings button of the view that was left, to take the focus back.
-  const [focusEntry, setFocusEntry] = useState<"logs" | "diagnostics" | null>(
-    null,
-  );
+  const [focusEntry, setFocusEntry] = useState<
+    "logs" | "diagnostics" | "pads" | null
+  >(null);
   const backButton = useRef<HTMLButtonElement>(null);
   const [profileSettings, setProfileSettings] = useState(false);
   // 配置设置 opened from a card of the 配置 page: the card's profile,
@@ -533,13 +535,13 @@ export function App({ store }: { store: PadmateStore }) {
       editor.getState().setGlobalTiming({});
     }
   }, [editor, state.config]);
-  // The function key the settings choose (ADR-0012): the mapping
-  // page names it and does not edit its own bindings.
+  // The function key of the controller being edited (ADR-0012, ADR-0017): the
+  // mapping page names it and does not edit its own bindings. Menu while no
+  // controller is connected.
+  const functionKey = effectiveFunctionKey(state.pads, selectedEntry);
   useEffect(() => {
-    editor
-      .getState()
-      .setFunctionKey(configuredFunctionKey(readConfig(state.config)));
-  }, [editor, state.config]);
+    editor.getState().setFunctionKey(functionKey);
+  }, [editor, functionKey]);
   const globalTiming = useMemo(() => {
     try {
       return (JSON.parse(state.config?.text ?? "{}") as Config).timing ?? {};
@@ -671,9 +673,13 @@ export function App({ store }: { store: PadmateStore }) {
     menuRequests.current += 1;
     setMenuRequest(menuRequests.current);
   };
-  // The views inside Settings: the logs and the diagnostics.
+  // The views inside Settings: the logs, the diagnostics and the controllers.
   const subView =
-    state.page === "logs" || state.page === "diagnostics" ? state.page : null;
+    state.page === "logs" ||
+    state.page === "diagnostics" ||
+    state.page === "pads"
+      ? state.page
+      : null;
   const setPage = state.setPage;
   const backToSettings = useCallback(() => {
     if (subView) setFocusEntry(subView);
@@ -775,7 +781,13 @@ export function App({ store }: { store: PadmateStore }) {
                   {t("settings")}
                 </button>
                 <h1 className="page-title page-subtitle">
-                  {t(subView === "logs" ? "logsTitle" : "diagnosticsTitle")}
+                  {t(
+                    subView === "logs"
+                      ? "logsTitle"
+                      : subView === "diagnostics"
+                        ? "diagnosticsTitle"
+                        : "pads",
+                  )}
                 </h1>
               </>
             ) : (
@@ -877,12 +889,15 @@ export function App({ store }: { store: PadmateStore }) {
             <LogsPage state={state} store={store} />
           ) : state.page === "diagnostics" ? (
             <DiagnosticsPage state={state} store={store} />
+          ) : state.page === "pads" ? (
+            <PadsPage state={state} store={store} />
           ) : (
             <SettingsPage
               state={state}
               store={store}
               onShowLogs={() => navigate("logs")}
               onShowDiagnostics={() => navigate("diagnostics")}
+              onShowPads={() => navigate("pads")}
               focusEntry={focusEntry}
               onEntryFocused={entryFocused}
             />

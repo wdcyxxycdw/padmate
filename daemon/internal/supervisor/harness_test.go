@@ -128,8 +128,11 @@ type opts struct {
 	// calibration is Config.Calibration.
 	calibration func(key string) *profile.Calibration
 	// switches is Config.Switches, onFeedback Config.OnFeedbackDevice.
-	switches   func() profile.FeedbackSwitches
-	onFeedback func(uint8, input.DeviceID, engine.Feedback)
+	switches func(key string) profile.FeedbackSwitches
+	// functionKey is Config.FunctionKey, onFunctionKey Config.OnFunctionKey.
+	functionKey   func(string, input.DeviceInfo) control.Control
+	onFunctionKey func(uint8, string, *engine.Program)
+	onFeedback    func(uint8, input.DeviceID, engine.Feedback)
 }
 
 // harness runs a Supervisor of opts.program on a fake clock,
@@ -185,7 +188,7 @@ func start(t testing.TB, o opts) *harness {
 		Trace: o.trace, OnEvent: o.onEvent, OnInput: o.onInput, OnUnrouted: o.onUnrouted, IgnoreDevice: o.ignore, OnReload: o.onReload, OnPause: o.onPause,
 		OnSuspend: o.onSuspend, Slots: max(o.slots, 1),
 		ScriptFactory: o.scriptFactory, Calibration: o.calibration, OnHapticDevice: o.onHaptic,
-		Switches: o.switches, OnFeedbackDevice: o.onFeedback,
+		Switches: o.switches, OnFeedbackDevice: o.onFeedback, FunctionKey: o.functionKey, OnFunctionKey: o.onFunctionKey,
 	})
 	if err != nil {
 		_ = h.out.Stop()

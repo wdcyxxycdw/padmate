@@ -293,7 +293,11 @@ describe("dialogs of Settings", () => {
   });
   it("修改紧急暂停", async () => {
     await openSettings();
-    fireEvent.click(screen.getByRole("button", { name: "修改紧急暂停" }));
+    fireEvent.click(screen.getByRole("button", { name: "打开手柄设置" }));
+    await screen.findByRole("heading", { name: "Test controller", level: 2 });
+    fireEvent.click(
+      screen.getByRole("button", { name: "修改紧急暂停 Test controller" }),
+    );
     await dialogNamed("修改紧急暂停");
     await clean("panic combo");
   });
@@ -344,7 +348,7 @@ describe("dialogs of Settings", () => {
     await dialogNamed("恢复默认映射？");
     await clean("reset mapping");
   });
-  it("the logs and the diagnostics views", async () => {
+  it("the logs, the diagnostics and the controllers views", async () => {
     await openSettings();
     fireEvent.click(screen.getByRole("button", { name: "查看日志" }));
     await screen.findByRole("heading", { name: "日志", level: 1 });
@@ -355,6 +359,13 @@ describe("dialogs of Settings", () => {
     await screen.findByRole("heading", { name: "诊断", level: 1 });
     expect(pageStructure().h1).toEqual(["诊断"]);
     await clean("diagnostics");
+    fireEvent.click(screen.getByRole("button", { name: "返回设置" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "打开手柄设置" }),
+    );
+    await screen.findByRole("heading", { name: "Test controller", level: 2 });
+    expect(pageStructure().h1).toEqual(["手柄设置"]);
+    await clean("controllers");
   });
 });
 

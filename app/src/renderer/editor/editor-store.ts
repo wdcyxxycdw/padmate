@@ -119,9 +119,10 @@ interface EditorState {
   view: KeyView;
   setView(view: KeyView): void;
   /**
-   * The function key (config.json functionKey): Menu until the app tells
-   * otherwise, and the same for every profile and controller. It is held
-   * here, as globalTiming is, so the editor's parts read it from one place.
+   * The function key of the controller being edited (config.json
+   * devices.<DeviceKey>.functionKey, ADR-0017): Menu until the app tells
+   * otherwise, and the same for every profile. It is held here, as
+   * globalTiming is, so the editor's parts read it from one place.
    */
   functionKey: FunctionKey;
   setFunctionKey(key: FunctionKey): void;
@@ -251,7 +252,7 @@ export function createEditorStore(api: PadmateAPI) {
     (diagnostics ?? []).filter(
       (diagnostic) => !isClearedInherited(diagnostic, draft, heldParent),
     );
-  // The function key the settings choose (setFunctionKey); the daemon ignores
+  // The function key of the controller (setFunctionKey); the daemon ignores
   // a layer's bindings on it, so the usage does not count them.
   let functionKey: FunctionKey = defaultFunctionKey;
   const analyse = (draft: Profile) => ({

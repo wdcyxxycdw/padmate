@@ -33,7 +33,7 @@ type fakeEffects struct {
 	calls       []effectCall
 }
 
-func (f *fakeEffects) Switches(uint8) (rumble, led bool) { return f.rumble, f.led }
+func (f *fakeEffects) Switches(uint8, string) (rumble, led bool) { return f.rumble, f.led }
 
 func (f *fakeEffects) Rumble(slot uint8, dev input.DeviceID, steps []haptic.Step) {
 	f.calls = append(f.calls, effectCall{Kind: "rumble", Slot: slot, Dev: dev, Steps: steps})

@@ -4,20 +4,13 @@ import {
   batteryTags,
   ComboRecorder,
   comboProblem,
-  configuredFunctionKey,
-  deviceCombo,
   FEEDBACK_SWITCHES,
-  feedbackSwitchOn,
   globalTiming,
   identifyFailureText,
-  isPanicFamily,
   joyCon2AutoConnect,
   parseMs,
-  setFeedbackSwitch,
-  setFunctionKey,
   setGlobalTiming,
   setJoyCon2AutoConnect,
-  setPanicCombo,
   startupDryRun,
   startupFailureText,
 } from "./settings-model";
@@ -65,45 +58,7 @@ describe("global timing", () => {
 });
 
 describe("emergency combos", () => {
-  it("sets and removes one family", () => {
-    const combo = { buttons: ["west", "east"], holdMs: 3000 };
-    const config: Config = {
-      schemaVersion: 0,
-      safety: {
-        panic: { joyconLeft: { buttons: ["south", "east"], holdMs: 500 } },
-      },
-    };
-    const next = setPanicCombo(config, "standard", combo);
-    expect(next).toEqual({
-      schemaVersion: 0,
-      safety: {
-        panic: {
-          joyconLeft: { buttons: ["south", "east"], holdMs: 500 },
-          standard: combo,
-        },
-      },
-    });
-    expect(setPanicCombo(next as Config, "standard", { ...combo })).toBeNull();
-    expect(setPanicCombo(config, "standard", null)).toBeNull();
-    expect(setPanicCombo(config, "joyconLeft", null)).toEqual({
-      schemaVersion: 0,
-    });
-    expect(config.safety?.panic?.standard).toBeUndefined();
-  });
-
-  it("checks families, devices and the number of buttons", () => {
-    expect(isPanicFamily("joyconRightVertical")).toBe(true);
-    expect(isPanicFamily("joycon")).toBe(false);
-    const combo = {
-      device: 7,
-      family: "standard",
-      buttons: ["back", "start"],
-      holdMs: 2000,
-    };
-    const status = { combos: [combo] } as Parameters<typeof deviceCombo>[0];
-    expect(deviceCombo(status, 7)).toBe(combo);
-    expect(deviceCombo(status, 8)).toBeUndefined();
-    expect(deviceCombo(null, 7)).toBeUndefined();
+  it("checks the number of buttons of a combo", () => {
     expect(comboProblem(["a"])).toBe("few");
     expect(comboProblem(["a", "b"])).toBeNull();
     expect(comboProblem(["a", "b", "c", "d"])).toBeNull();
@@ -139,78 +94,6 @@ describe("emergency combos", () => {
     expect(recorder.recorded).toEqual(["start", "back"]);
     // Held alone it is no recording at all.
     expect(recorder.update([])).toBe(false);
-  });
-});
-
-describe("the function key of config.json (ADR-0012)", () => {
-  it("is Menu unless the file says View", () => {
-    expect(configuredFunctionKey(null)).toBe("start");
-    expect(configuredFunctionKey({ schemaVersion: 0 })).toBe("start");
-    for (const key of ["start", "back"] as const)
-      expect(
-        configuredFunctionKey({ schemaVersion: 0, functionKey: key }),
-      ).toBe(key);
-    // Anything else reads as Menu, as the daemon reads a repaired file, and
-    // so does the Xbox button of a file written before padmate stopped
-    // mapping it.
-    for (const value of ["guide", "select", "Menu", "", 1, null, ["back"]])
-      expect(
-        configuredFunctionKey({
-          schemaVersion: 0,
-          functionKey: value as never,
-        }),
-        String(value),
-      ).toBe("start");
-  });
-
-  it("sets the member, keeping the others in their order", () => {
-    const config: Config = {
-      schemaVersion: 0,
-      timing: { holdMs: 300 },
-      rules: [],
-    };
-    const next = setFunctionKey(config, "back");
-    expect(next).toEqual({ ...config, functionKey: "back" });
-    expect(Object.keys(next ?? {})).toEqual([
-      "schemaVersion",
-      "timing",
-      "rules",
-      "functionKey",
-    ]);
-    // Changing it keeps the member where it is.
-    const placed: Config = {
-      schemaVersion: 0,
-      functionKey: "guide",
-      rules: [],
-    };
-    expect(Object.keys(setFunctionKey(placed, "back") ?? {})).toEqual([
-      "schemaVersion",
-      "functionKey",
-      "rules",
-    ]);
-    expect(setFunctionKey(placed, "back")?.functionKey).toBe("back");
-    // The config it was given is not changed.
-    expect(config).not.toHaveProperty("functionKey");
-  });
-
-  it("removes the member for Menu, which the file leaves unsaid", () => {
-    expect(
-      setFunctionKey(
-        { schemaVersion: 0, functionKey: "back", rules: [] },
-        "start",
-      ),
-    ).toEqual({ schemaVersion: 0, rules: [] });
-    // A value that is not a key is Menu too, and goes.
-    expect(
-      setFunctionKey({ schemaVersion: 0, functionKey: "x" as never }, "start"),
-    ).toEqual({ schemaVersion: 0 });
-  });
-
-  it("writes nothing when the file already says it", () => {
-    expect(setFunctionKey({ schemaVersion: 0 }, "start")).toBeNull();
-    expect(
-      setFunctionKey({ schemaVersion: 0, functionKey: "back" }, "back"),
-    ).toBeNull();
   });
 });
 
@@ -261,83 +144,9 @@ describe("identify a controller", () => {
   });
 });
 
-describe("the feedback switches of config.json (ADR-0015)", () => {
-  const base: Config = { schemaVersion: 0 };
-
+describe("the feedback switches (ADR-0015)", () => {
   it("lists the four switches in the order the page shows them", () => {
     expect(FEEDBACK_SWITCHES).toEqual(["rumble", "led", "pause", "lowBattery"]);
-  });
-
-  it("is on unless the file says false", () => {
-    for (const key of FEEDBACK_SWITCHES) {
-      expect(feedbackSwitchOn(null, key)).toBe(true);
-      expect(feedbackSwitchOn(base, key)).toBe(true);
-      expect(feedbackSwitchOn({ ...base, feedback: {} }, key)).toBe(true);
-      expect(
-        feedbackSwitchOn({ ...base, feedback: { [key]: true } }, key),
-      ).toBe(true);
-      expect(
-        feedbackSwitchOn({ ...base, feedback: { [key]: false } }, key),
-      ).toBe(false);
-    }
-    // One switch does not touch another.
-    expect(
-      feedbackSwitchOn({ ...base, feedback: { led: false } }, "rumble"),
-    ).toBe(true);
-  });
-
-  it("writes false for a switch that goes off and removes the member when it goes on", () => {
-    const off = setFeedbackSwitch(base, "rumble", false);
-    expect(off).toEqual({ schemaVersion: 0, feedback: { rumble: false } });
-    const more = setFeedbackSwitch(off as Config, "lowBattery", false);
-    expect(more).toEqual({
-      schemaVersion: 0,
-      feedback: { rumble: false, lowBattery: false },
-    });
-    const back = setFeedbackSwitch(more as Config, "rumble", true);
-    expect(back).toEqual({
-      schemaVersion: 0,
-      feedback: { lowBattery: false },
-    });
-  });
-
-  it("drops the object with its last member, so the file is as before", () => {
-    const off: Config = { schemaVersion: 0, feedback: { led: false } };
-    const on = setFeedbackSwitch(off, "led", true);
-    expect(on).toEqual({ schemaVersion: 0 });
-    expect(on && "feedback" in on).toBe(false);
-  });
-
-  it("changes nothing when the switch already is as asked", () => {
-    expect(setFeedbackSwitch(base, "pause", true)).toBeNull();
-    expect(
-      setFeedbackSwitch(
-        { ...base, feedback: { pause: false } },
-        "pause",
-        false,
-      ),
-    ).toBeNull();
-    // A member written as true is on: turning it on removes it.
-    expect(
-      setFeedbackSwitch({ ...base, feedback: { pause: true } }, "pause", true),
-    ).toEqual({ schemaVersion: 0 });
-  });
-
-  it("keeps the other members of the file and does not change its input", () => {
-    const config: Config = {
-      schemaVersion: 0,
-      enabled: false,
-      timing: { holdMs: 300 },
-      feedback: { led: false },
-    };
-    const before = structuredClone(config);
-    expect(setFeedbackSwitch(config, "rumble", false)).toEqual({
-      schemaVersion: 0,
-      enabled: false,
-      timing: { holdMs: 300 },
-      feedback: { led: false, rumble: false },
-    });
-    expect(config).toEqual(before);
   });
 });
 
@@ -405,18 +214,18 @@ describe("joycon2.autoConnect of config.json", () => {
   it("keeps what else the file holds, and changes nothing when it already is as asked", () => {
     const other: Config = {
       schemaVersion: 0,
-      feedback: { led: false },
+      devices: { "k/p:x": { feedback: { led: false } } },
       joycon2: { autoConnect: true },
     };
     expect(setJoyCon2AutoConnect(other, false)).toEqual({
       schemaVersion: 0,
-      feedback: { led: false },
+      devices: { "k/p:x": { feedback: { led: false } } },
       joycon2: { autoConnect: false },
     });
     // A member written as true is on, and goes.
     expect(setJoyCon2AutoConnect(other, true)).toEqual({
       schemaVersion: 0,
-      feedback: { led: false },
+      devices: { "k/p:x": { feedback: { led: false } } },
     });
     expect(setJoyCon2AutoConnect(base, true)).toBeNull();
     expect(

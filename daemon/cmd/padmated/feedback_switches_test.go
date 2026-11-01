@@ -46,15 +46,15 @@ func (tl *testLive) applySwitches(t *testing.T, off ...string) {
 // has none yet has every switch on, and a stored config replaces them.
 func TestFeedbackSwitchesOfTheEffectiveConfig(t *testing.T) {
 	r := &liveRun{}
-	if got := r.feedbackSwitches(); got != profile.DefaultFeedbackSwitches() {
+	if got := r.feedbackSwitchesFor(""); got != profile.DefaultFeedbackSwitches() {
 		t.Fatalf("without a config: %+v, want every switch on", got)
 	}
 	r.selection.Store(settingsOff("rumble", "pause"))
-	if got := r.feedbackSwitches(); got.Rumble || !got.LED || got.Pause || !got.LowBattery {
+	if got := r.feedbackSwitchesFor(""); got.Rumble || !got.LED || got.Pause || !got.LowBattery {
 		t.Errorf("rumble and pause off: %+v", got)
 	}
 	r.selection.Store(settingsOff())
-	if got := r.feedbackSwitches(); got != profile.DefaultFeedbackSwitches() {
+	if got := r.feedbackSwitchesFor(""); got != profile.DefaultFeedbackSwitches() {
 		t.Errorf("back on: %+v", got)
 	}
 }

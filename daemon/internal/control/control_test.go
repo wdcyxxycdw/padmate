@@ -342,11 +342,12 @@ func TestHasDepth(t *testing.T) {
 	}
 }
 
-// Back and Start are the controls that can be the function key (ADR-0012),
-// and only they; Start is the default. Guide is not: padmate never maps it.
+// Back, Start and the four paddles are the controls that can be a function key
+// (ADR-0012, ADR-0017), and only they; Start is the default. Guide is not:
+// padmate never maps it.
 func TestCanBeFunctionKey(t *testing.T) {
 	for _, c := range control.All() {
-		want := c == control.Back || c == control.Start
+		want := c == control.Back || c == control.Start || c >= control.Paddle1 && c <= control.Paddle4
 		if got := c.CanBeFunctionKey(); got != want {
 			t.Errorf("%s.CanBeFunctionKey() = %t, want %t", c, got, want)
 		}
