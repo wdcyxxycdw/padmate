@@ -13,10 +13,11 @@ const (
 
 // JoyConLeft, JoyConRight and JoyConPair describe virtual gamepads with
 // the ids and controls that SDL 3.4.16 gives a Switch 1 Joy-Con with
-// padmate's hints: one alone, held sideways, and the pair that
-// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1" gives (SDL_gamepad.c,
-// the HIDAPI Switch mappings, as read from the source). They model SDL's
-// mapping, not the device: no report parsing, rotation or serial.
+// padmate's hints: one alone, held sideways, and the pair that SDL makes
+// of a left and a right one connected together (SDL_gamepad.c, the HIDAPI
+// Switch mappings, as read from the source). They model SDL's mapping, not
+// the device: no report parsing, rotation or serial, and SDL pairs only
+// HIDAPI Joy-Cons, so virtual ones are never combined.
 func JoyConLeft(name string) input.VirtualDesc {
 	return input.VirtualDesc{
 		Name:    name,

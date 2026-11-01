@@ -1,5 +1,8 @@
-# Two Joy-Cons under padmate's default, COMBINE=0 (ADR-0002):
-# each is its own gamepad. Joy-Con (L) holds east. Joy-Con (R) wakes
+# Two Joy-Cons that SDL leaves apart, each its own gamepad: what a left
+# and a right Joy-Con give under --hint
+# SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0 (a diagnostic; padmate's default
+# pairs them, see joycon-combine), and what two Joy-Cons of one side give
+# always (ADR-0002). Joy-Con (L) holds east. Joy-Con (R) wakes
 # while L has the slot: with one slot it waits, and its tap of south
 # maps nothing (multi-joycon gives it a second slot). L lets go of east,
 # so it holds nothing when it is switched off and SDL has no recentering

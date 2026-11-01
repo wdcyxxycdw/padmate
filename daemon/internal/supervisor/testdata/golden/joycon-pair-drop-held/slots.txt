@@ -1,0 +1,8 @@
+@0 slot 0 gen=1 <- id 3 "Nintendo Switch Joy-Con (L/R)" key=050000007e0500000820000001006803/p:nintendo_joycons_combined home=050000007e0500000820000001006803/p:nintendo_joycons_combined provisional
+@100 slot 0 gen=1 <- id 3 "Nintendo Switch Joy-Con (L/R)" key=050000007e0500000820000001006803/p:nintendo_joycons_combined home=050000007e0500000820000001006803/p:nintendo_joycons_combined confirmed
+@500 slot 0 gen=1 free
+@510 slot 0 gen=1 <- id 4 "Nintendo Switch Joy-Con (L)" key=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 home=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 provisional
+@600 slot 0 gen=1 <- id 4 "Nintendo Switch Joy-Con (L)" key=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 home=050000007e0500000620000001006801/s:aa-bb-cc-dd-ee-01 confirmed
+@800 slot 0 gen=1 free
+@800 slot 0 gen=1 <- id 6 "Nintendo Switch Joy-Con (L/R)" key=050000007e0500000820000001006803/p:nintendo_joycons_combined home=050000007e0500000820000001006803/p:nintendo_joycons_combined provisional reconnected
+@900 slot 0 gen=1 <- id 6 "Nintendo Switch Joy-Con (L/R)" key=050000007e0500000820000001006803/p:nintendo_joycons_combined home=050000007e0500000820000001006803/p:nintendo_joycons_combined confirmed

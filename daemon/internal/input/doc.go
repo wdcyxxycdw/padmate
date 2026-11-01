@@ -7,13 +7,14 @@
 // SDL_Init(SDL_INIT_GAMEPAD) and then pumps SDL events. The hints always
 // include SDL_NO_SIGNAL_HANDLERS=1, so SIGINT and SIGTERM stay with
 // os/signal instead of becoming SDL_EVENT_QUIT, and
-// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0, so every Joy-Con is its own
-// gamepad. Every SDL call of the package happens on that thread;
-// other goroutines hand it commands through a channel, which it checks
-// between short SDL_WaitEventTimeout calls. The go-sdl3 package also locks
-// the main goroutine to the main thread in its init; nothing in padmate
-// needs that, and it does not matter because SDL treats the thread that
-// initialized its event subsystem as its main thread.
+// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1: a left and a right Joy-Con that
+// are connected together are one gamepad, the pair, and a lone one is a
+// gamepad held sideways (ADR-0002). Every SDL call of the package happens
+// on that thread; other goroutines hand it commands through a channel,
+// which it checks between short SDL_WaitEventTimeout calls. The go-sdl3
+// package also locks the main goroutine to the main thread in its init;
+// nothing in padmate needs that, and it does not matter because SDL treats
+// the thread that initialized its event subsystem as its main thread.
 //
 // T-input turns SDL gamepad events into Events, with padmate's own types
 // and control names (ARCHITECTURE §7.1), and sends them on a bounded

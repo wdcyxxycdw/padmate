@@ -511,7 +511,7 @@ func TestRecordVirtual(t *testing.T) {
 		}
 		// padmate's Joy-Con hint is set, and SDL's default of the other kept.
 		for _, want := range []struct{ prefix, word string }{
-			{"# hints in effect: ", input.HintCombineJoyCons + "=0"},
+			{"# hints in effect: ", input.HintCombineJoyCons + "=1"},
 			{"# hints unset (SDL's default): ", input.HintVerticalJoyCons},
 		} {
 			var words []string

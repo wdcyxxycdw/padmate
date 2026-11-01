@@ -33,7 +33,8 @@
 
 ## 手柄没有出现，或者输入重复
 
-- 先确认手柄是 Xbox、PlayStation、Switch Pro 或单只 Joy-Con。
+- 先确认手柄是 Xbox、PlayStation、Switch Pro 或 Joy-Con。
+- 左右两只 Joy-Con 同时连着时是一个手柄，只连着一只时是横握的小手柄。第二只连上、或两只里有一只断开时，手柄会被换掉：按着的键被松开，映射在新手柄上继续。合并后的手柄和单只 Joy-Con 的设置是分开的。
 - Steam、DS4Windows 和 HidHide 可能抢占手柄。诊断页的“冲突”指出正在运行的是哪一个并说明怎么办，见[诊断](09-diagnostics.zh-CN.md)。
 - 手柄在“设置”页的“手柄调校”里写着“未识别为手柄”时，用[映射向导](11-mapping-wizard.zh-CN.md)建一份映射。
 

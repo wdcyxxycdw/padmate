@@ -1,0 +1,21 @@
+# A pair of Joy-Cons that SDL takes apart and puts together again
+# (ADR-0002), each time with a key held and its ButtonUp lost. The pair
+# holds east; R is switched off, SDL deletes the pair and finds L again at
+# its next scan, 10 ms later, with a new id: the pair's removal releases
+# Space at @500. L taps south, then holds east when R wakes again: SDL
+# replaces L with the pair (id 5, R's own add, is skipped as in
+# joycon-combine), and L's removal releases Space at @800. The pair is
+# back under the key it had, and taps south.
+# The GUIDs and serials are joycon-combine's; the pair has no serial, so
+# its key is its GUID and fixed path.
+{"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"Nintendo Switch Joy-Con (L/R)","type":"joyconpair","vendor":1406,"product":8200,"version":1,"guid":"050000007e0500000820000001006803","driver":"hidapi","path":"nintendo_joycons_combined","serial":"","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":3}
+{"timeNs":510000000,"kind":"added","device":4,"info":{"id":4,"name":"Nintendo Switch Joy-Con (L)","type":"joyconleft","vendor":1406,"product":8198,"version":1,"guid":"050000007e0500000620000001006801","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-01","gamepad":true,"virtual":false}}
+{"timeNs":600000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":610000000,"kind":"up","device":4,"control":"south"}
+{"timeNs":700000000,"kind":"down","device":4,"control":"east"}
+{"timeNs":800000000,"kind":"removed","device":4}
+{"timeNs":800000000,"kind":"added","device":6,"info":{"id":6,"name":"Nintendo Switch Joy-Con (L/R)","type":"joyconpair","vendor":1406,"product":8200,"version":1,"guid":"050000007e0500000820000001006803","driver":"hidapi","path":"nintendo_joycons_combined","serial":"","gamepad":true,"virtual":false}}
+{"timeNs":900000000,"kind":"down","device":6,"control":"south"}
+{"timeNs":910000000,"kind":"up","device":6,"control":"south"}

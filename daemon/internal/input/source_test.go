@@ -128,15 +128,15 @@ func TestOpenCloseTwice(t *testing.T) {
 
 // TestHints checks the hints read back after SDL_Init for each preset:
 // the three hints Open always sets first, then the preset's, then the
-// other backend hints and the Joy-Con hints, each once. Joy-Cons are not
-// combined, and the grip is left to SDL.
+// other backend hints and the Joy-Con hints, each once. A left and a right
+// Joy-Con are combined into a pair, and the grip is left to SDL.
 func TestHints(t *testing.T) {
 	lib := inputtest.Library(t)
 	inputtest.Unsetenv(t, input.HintCombineJoyCons, input.HintVerticalJoyCons)
 	first := []input.Hint{
 		{Name: input.HintBackgroundEvents, Value: "1"},
 		{Name: input.HintNoSignalHandlers, Value: "1"},
-		{Name: input.HintCombineJoyCons, Value: "0"},
+		{Name: input.HintCombineJoyCons, Value: "1"},
 	}
 	for _, name := range input.PresetNames() {
 		hints, _ := input.PresetHints(name)
@@ -153,7 +153,7 @@ func TestHints(t *testing.T) {
 		for _, h := range hints {
 			want[h.Name] = h.Value
 		}
-		want[input.HintCombineJoyCons] = "0"
+		want[input.HintCombineJoyCons] = "1"
 		want[input.HintVerticalJoyCons] = ""
 		seen := make(map[string]bool)
 		for _, h := range got {
@@ -178,7 +178,8 @@ func TestHints(t *testing.T) {
 	}
 }
 
-// TestHintOverride pins the only way to override a Joy-Con default: a
+// TestHintOverride pins the only way to override a Joy-Con default (the
+// combine hint to "0" keeps every Joy-Con apart, a diagnostic): a
 // hint of Options, which Open sets after openHints, wins because SDL keeps
 // the value set last. A hint of openHints is read back once, where Open
 // set it first.
@@ -189,7 +190,7 @@ func TestHintOverride(t *testing.T) {
 		hint  input.Hint
 		index int // where Hints has it; -1 for anywhere
 	}{
-		{"combine", input.Hint{Name: input.HintCombineJoyCons, Value: "1"}, 2},
+		{"combine", input.Hint{Name: input.HintCombineJoyCons, Value: "0"}, 2},
 		{"vertical", input.Hint{Name: input.HintVerticalJoyCons, Value: "1"}, -1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -222,7 +223,7 @@ func TestHintFromEnvironment(t *testing.T) {
 		set string
 	}{
 		{"backend", "xinput", input.Hint{Name: "SDL_JOYSTICK_HIDAPI", Value: "1"}, "0"},
-		{"joycon", "default", input.Hint{Name: input.HintCombineJoyCons, Value: "1"}, ""},
+		{"joycon", "default", input.Hint{Name: input.HintCombineJoyCons, Value: "0"}, ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv(tc.env.Name, tc.env.Value)

@@ -52,7 +52,7 @@ type Options struct {
 	Library string
 	// Hints are set in order before SDL_Init, after openHints:
 	// SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1, SDL_NO_SIGNAL_HANDLERS=1 and
-	// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0, which Open always sets first.
+	// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1, which Open always sets first.
 	// A hint here with one of those names overrides it. nil means the
 	// "default" preset. A hint that is also an environment variable keeps
 	// the environment's value, which SDL gives priority.

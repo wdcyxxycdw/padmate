@@ -1,0 +1,11 @@
+# R's Space ends at @500 with the ReleaseAll of its removal, since its
+# ButtonUp was lost, and the pair's Space ends the same way at @800. R
+# maps south again after the pair.
++LCtrl@100 +Z@100
+-Z@120 -LCtrl@120
++Space@200
+-Space@500
++Space@600
+-Space@800
++LCtrl@900 +Z@900
+-Z@920 -LCtrl@920

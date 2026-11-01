@@ -11,7 +11,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 | Area | Decision | ADR |
 |---|---|---|
 | Platform and processes | Windows 10/11 x64 only. The Go daemon `padmated` does all the mapping, lives in the tray and runs as a single instance; the Electron UI is optional, and closing it does not affect mapping | [Processes and stack](adr/0001-processes-and-stack.md) |
-| Input | A bundled, pinned SDL 3.4.16 (go-sdl3 + purego); Joy-Cons are not combined | [Controller input](adr/0002-input-sdl.md) |
+| Input | A bundled, pinned SDL 3.4.16 (go-sdl3 + purego); a left and a right Joy-Con together are one controller | [Controller input](adr/0002-input-sdl.md) |
 | Several controllers | 4 slots built in advance, other controllers queue; a new assignment first stands in, and any button press confirms it | [Several controllers and slots](adr/0003-devices-and-slots.md) |
 | Output | SendInput scan codes; events carry a `dwExtraInfo` tag; only T-output calls SendInput | [Keyboard and mouse output](adr/0004-output-sendinput.md) |
 | Threads | The slot loops, T-output and T-input each lock an OS thread; the engine is pure | [Engine and threads](adr/0005-engine-and-threads.md) |
@@ -89,7 +89,7 @@ Ownership: the device state belongs to the router; the engine and the script run
 
 `internal/input`; the reasons are in [Controller input](adr/0002-input-sdl.md).
 
-- `input.Open` starts T-input: it locks the thread, loads SDL (`$PADMATE_SDL3`, then next to the exe; on Windows it must be the pinned 3.4.16; it is loaded once per process, and there is one Source at a time), sets the hints in the order "always → preset → `--hint`" (later ones override earlier ones), and calls `SDL_Init(SDL_INIT_GAMEPAD)`.
+- `input.Open` starts T-input: it locks the thread, loads SDL (`$PADMATE_SDL3`, then next to the exe; on Windows it must be the pinned 3.4.16; it is loaded once per process, and there is one Source at a time), sets the hints in the order "always → preset → `--hint`" (later ones override earlier ones; "always" is background events on, SDL's signal handlers off and `SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`), and calls `SDL_Init(SDL_INIT_GAMEPAD)`.
 - Every SDL call is on T-input: other goroutines hand it functions through a command channel, run between two `SDL_WaitEventTimeout(2 ms)`. It is not woken with `SDL_PushEvent` (which races with `SDL_Quit`). As soon as an event returns, `latency.Now` is read into `Event.Stamp` (§13).
 - **The event channel** holds 1024, and sending never blocks: when full, buttons and axes are dropped and counted. `DeviceAdded`, `DeviceRemoved` and `ComboHeld` are never dropped; they go to the backlog and wait their turn in order. While the backlog is not empty, buttons and axes are dropped too, so no event overtakes a queued device event.
 - **Mapping changes.** SDL mappings take effect by GUID at once, without releasing what is held. A joystick without a mapping is reported raw (`IsGamepad` false); when a mapping is added, a `DeviceAdded` with `IsGamepad` true is sent again for the same id; when a mapping is taken away, a `DeviceRemoved` and a `DeviceAdded` with `IsGamepad` false; when a mapping changes, a `DeviceRemapped` (not written to traces, §5.7).
@@ -99,6 +99,8 @@ Ownership: the device state belongs to the router; the engine and the script run
 ### 5.4 Device identity (`internal/input/devicekey.go`)
 
 The DeviceID changes on every connection; `DeviceKey{GUID, Serial, Path, N}` stays the same across reconnects, and N tells apart controllers connected at the same time that are the same in everything else. The router uses it to recognize a controller that comes back, so it takes its slot back, or so a stand-in slot changes its home (§5.8).
+
+A left and a right Joy-Con connected together are replaced by one pair device (§7.1): SDL removes the lone Joy-Con and adds the pair under a new DeviceID, and the pair has no serial in SDL 3.4.16, so its key is the pair's GUID and fixed path, the same for any two Joy-Cons and every time. A lone Joy-Con keeps its own key (GUID and serial) and gets it back when the pair goes and it returns. The swap is an ordinary removal and addition (`DeviceRemoved` does `ReleaseAll`, §5.6); the state kept per DeviceKey (calibration, layer state in state.json) is not carried from the lone one to the pair.
 
 ### 5.5 The receiver watchdog (`receiver.go`, `watchdog.go`, `hidbeat.go`)
 
@@ -256,11 +258,11 @@ Controls are defined by `internal/control`; names are case-sensitive. Aliases ar
 - Aliases: `a b x y` (south east west north), `lb rb`, `l3 r3`, `select` (back). Raw axis names: `leftx lefty rightx righty lefttrigger righttrigger`.
 - There is only ever one function key; see §7.9.
 
-**Joy-Cons**: each one is a controller, held sideways by default; the types are `joyconleft` and `joyconright`, and the combined `joyconpair` needs `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`. The button mapping is SDL 3.4.16's (Switch 1; Switch 2's are not supported):
+**Joy-Cons**: a left and a right one that are connected together are one controller, the pair (`joyconpair`), with no switch or setting; one connected alone is a controller of its own, held sideways by default (`joyconleft`, `joyconright`). The rule is the same for every Joy-Con SDL pairs. The pair replaces the lone devices (§5.4, and "Joy-Con pairs" in PITFALLS), so a key held on a Joy-Con is released when its partner connects or when one of the pair drops, and mapping continues on the new device. `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0` keeps them apart, for diagnosis. The button mapping is SDL 3.4.16's (Switch 1; Switch 2's are not supported):
 
 - Sideways: SL/SR are leftshoulder/rightshoulder; L(R) and ZL(ZR) are paddle2/paddle4 (left) or paddle1/paddle3 (right); −/+ is start; Capture/Home is guide; the four face buttons are south/east/west/north; the stick is the left stick. SDL's 250 ms release delay applies.
-- Upright L: SL/SR are paddle2/paddle4, L/ZL are leftshoulder/lt, − is back, Capture is misc1. Upright R: SL/SR are paddle3/paddle1, R/ZR are rightshoulder/rt, + is start, Home is guide, the stick is the right stick. Combined, they are the same as a standard controller.
-- There are no misc2..6, no touchpad and no `sl`/`sr` aliases. The UI judges the grip by `buttonMask`: a single one with south and no rightstick is held sideways (the right one held upright has face buttons too); Go's `padlabel` has the same rule. The daemon judges the grip by `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` (unset, empty, starting with 0 or false means sideways). The emergency combo (§5): leftshoulder+rightshoulder for a single one held sideways, paddle2+paddle4 for upright L, paddle3+paddle1 for upright R, back+start combined.
+- Upright L: SL/SR are paddle2/paddle4, L/ZL are leftshoulder/lt, − is back, Capture is misc1. Upright R: SL/SR are paddle3/paddle1, R/ZR are rightshoulder/rt, + is start, Home is guide, the stick is the right stick. The pair is the same as a standard controller, plus misc1 (Capture) and paddle1–4, and the grip hint does not apply to it.
+- There are no misc2..6, no touchpad and no `sl`/`sr` aliases. The UI judges the grip by `buttonMask`: a single one with south and no rightstick is held sideways (the right one held upright has face buttons too); Go's `padlabel` has the same rule. The daemon judges the grip by `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` (unset, empty, starting with 0 or false means sideways). The emergency combo (§5): leftshoulder+rightshoulder for a single one held sideways, paddle2+paddle4 for upright L, paddle3+paddle1 for upright R, back+start for the pair.
 
 ### 7.2 Gesture recognition
 
@@ -737,7 +739,7 @@ Top-level members: `enabled` (the switch of automatic selection, true by default
 
 | Family | Combo |
 |---|---|
-| standard, a combined pair of Joy-Cons | back+start |
+| standard, a pair of Joy-Cons (left and right connected together) | back+start |
 | joyconLeft / joyconRight (sideways) | leftshoulder+rightshoulder |
 | joyconLeftVertical | paddle2+paddle4 |
 | joyconRightVertical | paddle3+paddle1 |
