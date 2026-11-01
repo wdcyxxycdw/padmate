@@ -14,5 +14,5 @@ func parseFunctionKey(s string) (control.Control, error) {
 	if c, ok := control.Parse(s); ok && c.String() == s && c.CanBeFunctionKey() {
 		return c, nil
 	}
-	return control.Invalid, errors.New("--function-key must be start, back or guide")
+	return control.Invalid, errors.New("--function-key must be start or back")
 }

@@ -245,7 +245,7 @@ describe("the session builds the mapping the Go session builds (session_test.go)
     }
   }
 
-  it("asks for the 25 controls in the ADR's order", () => {
+  it("asks for the 24 controls in the ADR's order", () => {
     expect(DEFAULT_STEPS.map((s) => s.id)).toEqual([
       "a",
       "b",
@@ -271,9 +271,9 @@ describe("the session builds the mapping the Go session builds (session_test.go)
       "rt",
       "view",
       "menu",
-      "home",
     ]);
-    expect(DEFAULT_STEPS).toHaveLength(25);
+    // No Home: padmate never maps it (ADR-0012).
+    expect(DEFAULT_STEPS).toHaveLength(24);
   });
 
   it("binds nothing in the quiet period, then the first release", () => {
@@ -332,13 +332,12 @@ describe("the session builds the mapping the Go session builds (session_test.go)
     r.bound(r.push(5, 32767, -32768), "rt");
     r.bound(r.press(6), "view");
     r.bound(r.press(7), "menu");
-    r.bound(r.press(10), "home");
     expect(r.session.done()).toBe(true);
     const built = r.session.mapping();
     expect(built.mapping).toBe(
       `${guid},*,a:b0,b:b1,x:b2,y:b3,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,` +
         "leftx:a0,lefty:a1,leftstick:b8,rightx:a2,righty:a3~,rightstick:b9," +
-        "leftshoulder:b4,rightshoulder:b5,lefttrigger:a4,righttrigger:a5,back:b6,start:b7,guide:b10,platform:Windows",
+        "leftshoulder:b4,rightshoulder:b5,lefttrigger:a4,righttrigger:a5,back:b6,start:b7,platform:Windows",
     );
     expect(built.warnings).toEqual([]);
   });
@@ -462,7 +461,7 @@ describe("the session builds the mapping the Go session builds (session_test.go)
     expect(r.session.done()).toBe(true);
     expect(r.session.current()).toBeNull();
     r.session.redo();
-    expect(r.session.current()?.step.id).toBe("home");
+    expect(r.session.current()?.step.id).toBe("menu");
   });
 
   it("warns when View or Menu is not mapped", () => {

@@ -8,11 +8,11 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// functionKeyLiveProfile has a base layer with a binding on each of the three
+// functionKeyLiveProfile has a base layer with a binding on each of the two
 // controls that can be the function key, so that whichever is not it is an
-// ordinary control, and a function set that rebinds south and binds the three
-// too. Everything holds its key (no mode), so that the printer shows each press
-// and release.
+// ordinary control, and a function set that rebinds south and binds the two
+// too. Both also bind guide, which padmate never maps (ADR-0012). Everything
+// holds its key (no mode), so that the printer shows each press and release.
 const functionKeyLiveProfile = `{"schemaVersion":1,"name":"first","layers":{"base":{
 	"south":{"press":{"type":"keys","keys":"F13"}},
 	"east":{"press":{"type":"keys","keys":"Space"}},
@@ -38,6 +38,8 @@ func (tl *testLive) functionKey() control.Control {
 // the old function set are released before config.put returns (invariant 1), a
 // function key that is held is forgotten, and the presses after it use the new
 // function key. A config that does not change the key leaves the profile alone.
+// guide, which an old config.json may still choose, reads as start, and sends
+// nothing whichever key is the function key.
 func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	dir := t.TempDir()
 	writeLibraryProfile(t, dir, "first", functionKeyLiveProfile)
@@ -81,7 +83,7 @@ func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	press("south", "F1")
 	press("east", "Space") // held through the change, with its normal binding
 	gen := tl.profileTarget.Load().gen
-	saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"guide"}`)
+	saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"back"}`)
 	if !saved.Applied || saved.RestartRequired || saved.Problem != "" {
 		t.Fatalf("function key not applied live: %+v", saved)
 	}
@@ -94,8 +96,8 @@ func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	if got := tl.profileTarget.Load(); got.gen == gen || got.id != "first" {
 		t.Fatalf("profile not reloaded: %+v, was generation %d", got, gen)
 	}
-	if got := tl.functionKey(); got != control.Guide {
-		t.Fatalf("the function key after config.put is %s, want guide", got)
+	if got := tl.functionKey(); got != control.Back {
+		t.Fatalf("the function key after config.put is %s, want back", got)
 	}
 	// The releases of what was held, and of start, which is an ordinary control
 	// now and was the function key when it went down, send nothing.
@@ -106,25 +108,28 @@ func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	// start is ordinary: its layer binding works now.
 	press("start", "F16")
 	release("start", "F16")
-	// guide is the function key: nothing for it, the set for south, and the
-	// set's binding for the ordinary center keys.
-	button(src, "guide", true)
+	// back is the function key: nothing for it, the set for south, and the
+	// set's binding for the ordinary center key.
+	button(src, "back", true)
 	quiet("the new function key")
 	press("south", "F1")
 	release("south", "F1")
 	press("start", "F6")
 	release("start", "F6")
+	button(src, "guide", true)
 	button(src, "guide", false)
+	quiet("guide under the function key")
+	button(src, "back", false)
 	press("south", "F13")
 	release("south", "F13")
 	// The ignored bindings are said again, for the new key.
-	if lines := logLines(tl.log.String(), "bindings on the function key are ignored"); len(lines) != 2 || !strings.Contains(lines[1], `"functionKey":"guide"`) || !strings.Contains(lines[1], "/layers/base/guide") {
+	if lines := logLines(tl.log.String(), "bindings on the function key are ignored"); len(lines) != 2 || !strings.Contains(lines[1], `"functionKey":"back"`) || !strings.Contains(lines[1], "/layers/base/back") {
 		t.Fatalf("log lines %q", lines)
 	}
 
 	// Another field: the function key, and the profile, stay.
 	gen = tl.profileTarget.Load().gen
-	if saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"guide","output":{"sendToOwnWindow":false}}`); !saved.Applied {
+	if saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"back","output":{"sendToOwnWindow":false}}`); !saved.Applied {
 		t.Fatalf("%+v", saved)
 	}
 	if got := tl.profileTarget.Load().gen; got != gen {
@@ -132,23 +137,30 @@ func TestConfigPutAppliesFunctionKeyLive(t *testing.T) {
 	}
 
 	// The function key held at the change is forgotten, and the key it was is
-	// an ordinary control: south, pressed while guide is still down, uses its
-	// normal binding.
-	button(src, "guide", true)
+	// an ordinary control: south, pressed while back is still down, uses its
+	// normal binding. guide, which a config.json written before padmate
+	// stopped mapping it may hold, is taken as start.
+	button(src, "back", true)
 	tl.sync()
-	if saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"back"}`); !saved.Applied {
+	if saved := putConfig(t, client, `{"schemaVersion":0,"functionKey":"guide"}`); !saved.Applied || saved.Problem != "" {
 		t.Fatalf("%+v", saved)
+	}
+	if got := tl.functionKey(); got != control.Start {
+		t.Fatalf("the function key after config.put of guide is %s, want start", got)
 	}
 	press("south", "F13")
 	release("south", "F13")
-	button(src, "guide", false)
+	button(src, "back", false)
 	quiet("the release of the old function key")
-	press("guide", "F18")
-	release("guide", "F18")
-	button(src, "back", true)
+	press("back", "F15")
+	release("back", "F15")
+	button(src, "guide", true)
+	button(src, "guide", false)
+	quiet("guide")
+	button(src, "start", true)
 	press("south", "F1")
 	release("south", "F1")
-	button(src, "back", false)
+	button(src, "start", false)
 	// The default is start again when the member is left out.
 	if saved := putConfig(t, client, `{"schemaVersion":0}`); !saved.Applied {
 		t.Fatalf("%+v", saved)

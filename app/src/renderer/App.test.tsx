@@ -1830,28 +1830,26 @@ describe("the function key setting (ADR-0012)", () => {
   });
   const sent = (app: ReturnType<typeof setup>, n = 0) =>
     JSON.parse(vi.mocked(app.api.putConfig).mock.calls[n]?.[0] as string);
-  const dialog = () => screen.queryByRole("dialog", { name: /Game Bar/ });
   const choose = (value: string) =>
     fireEvent.click(
       group().querySelector(`[data-value="${value}"]`) as HTMLElement,
     );
 
-  it("is a row of 通用 named 功能键, with the three keys as the controller shows them, Menu by default", async () => {
+  it("is a row of 通用 named 功能键, with the two keys as the controller shows them, Menu by default", async () => {
     setup({ snapshot: withType("xboxone") });
     await openPage("设置");
     const general = screen.getByRole("heading", { name: "通用", level: 2 })
       .parentElement as HTMLElement;
     expect(general.contains(row())).toBe(true);
     // The icon and the name the controller prints, not a text that says where.
+    // Not the Xbox button: padmate never maps it (ADR-0012).
     expect(radios().map((radio) => radio.textContent)).toEqual([
       "Menu",
       "View",
-      "Xbox",
     ]);
     expect(radios().map((radio) => radio.getAttribute("data-value"))).toEqual([
       "start",
       "back",
-      "guide",
     ]);
     for (const radio of radios())
       expect(radio.querySelector(".control-icon")).not.toBeNull();
@@ -1868,18 +1866,13 @@ describe("the function key setting (ADR-0012)", () => {
     // The controller of the fixtures is a Switch Pro controller.
     setup();
     await openPage("设置");
-    expect(radios().map((radio) => radio.textContent)).toEqual([
-      "+",
-      "−",
-      "Home",
-    ]);
+    expect(radios().map((radio) => radio.textContent)).toEqual(["+", "−"]);
     cleanup();
     setup({ snapshot: { ...status, devices: [], slots: [], combos: [] } });
     fireEvent.click(await screen.findByRole("button", { name: "设置" }));
     expect(radios().map((radio) => radio.textContent)).toEqual([
       "Menu",
       "View",
-      "Xbox",
     ]);
   });
 
@@ -1893,21 +1886,20 @@ describe("the function key setting (ADR-0012)", () => {
     expect(radios().map((radio) => radio.textContent)).toEqual([
       "Menu",
       "View",
-      "Xbox",
     ]);
     fireEvent.keyDown(radios()[0], { key: "ArrowRight" });
     await waitFor(() => expect(app.api.putConfig).toHaveBeenCalledTimes(1));
     expect(sent(app).functionKey).toBe("back");
   });
 
-  it("shows the key the file chooses, and Menu for anything else", async () => {
-    setup({ config: config("guide") });
-    await openPage("设置");
-    expect(chosen()).toBe("guide");
-    cleanup();
+  it("shows the key the file chooses, and Menu for anything else, the Xbox button of an older file too", async () => {
     setup({ config: config("back") });
     await openPage("设置");
     expect(chosen()).toBe("back");
+    cleanup();
+    setup({ config: config("guide") });
+    await openPage("设置");
+    expect(chosen()).toBe("start");
     cleanup();
     setup({ config: config("select") });
     await openPage("设置");
@@ -1931,8 +1923,7 @@ describe("the function key setting (ADR-0012)", () => {
       functionKey: "back",
     });
     await screen.findByText("已自动保存");
-    // The choice is made, and no notice comes with View.
-    expect(dialog()).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("removes the member when Menu is chosen again, which is the default", async () => {
@@ -1949,114 +1940,21 @@ describe("the function key setting (ADR-0012)", () => {
       new Error("config changed outside padmate"),
     );
     await openPage("设置");
-    choose("guide");
-    expect(chosen()).toBe("guide");
+    choose("back");
+    expect(chosen()).toBe("back");
     await screen.findByText("未保存，请重试");
     expect(chosen()).toBe("start");
-    // Nothing is chosen, so there is nothing to warn about.
-    expect(dialog()).toBeNull();
   });
 
-  it("asks the user, in a dialog, to turn off the Game Bar's own use of the Xbox button", async () => {
-    const app = setup();
+  it("drops the Xbox button an older file chooses when it writes", async () => {
+    const app = setup({ config: config("guide") });
     await openPage("设置");
-    choose("guide");
-    const open = await screen.findByRole("dialog", {
-      name: "关闭 Xbox Game Bar 的手柄按钮",
-    });
-    expect(sent(app).functionKey).toBe("guide");
-    expect(open.textContent).toContain("Xbox Game Bar 也会打开");
-    expect(open.textContent).toContain("padmate 无法阻止");
-    expect(open.textContent).toContain("Windows 设置 → 游戏 → Game Bar");
-    expect(open.textContent).toContain("允许控制器打开 Game Bar");
-    expect(open.textContent).toContain(
-      "使用控制器上的此按钮打开 Xbox Game Bar",
-    );
-    expect(open.textContent).toContain("Steam");
-    expect(
-      within(open).getByRole("button", { name: "打开 Windows 设置" }),
-    ).toBeTruthy();
-    expect(within(open).getByRole("button", { name: "知道了" })).toBeTruthy();
-    // It is a modal dialog: the page is behind it.
-    expect((open as HTMLDialogElement).open).toBe(true);
+    choose("back");
+    await waitFor(() => expect(app.api.putConfig).toHaveBeenCalledTimes(1));
+    expect(sent(app)).toEqual({ schemaVersion: 0, functionKey: "back" });
   });
 
-  it("closes with 知道了, and the choice stays", async () => {
-    const app = setup();
-    await openPage("设置");
-    choose("guide");
-    await screen.findByRole("dialog", {
-      name: "关闭 Xbox Game Bar 的手柄按钮",
-    });
-    fireEvent.click(screen.getByRole("button", { name: "知道了" }));
-    await waitFor(() => expect(dialog()).toBeNull());
-    expect(app.api.openGameBarSettings).not.toHaveBeenCalled();
-    expect(app.api.putConfig).toHaveBeenCalledTimes(1);
-  });
-
-  it("opens Windows Settings with 打开 Windows 设置, then closes", async () => {
-    const app = setup();
-    await openPage("设置");
-    choose("guide");
-    await screen.findByRole("dialog", {
-      name: "关闭 Xbox Game Bar 的手柄按钮",
-    });
-    fireEvent.click(screen.getByRole("button", { name: "打开 Windows 设置" }));
-    await waitFor(() => expect(dialog()).toBeNull());
-    // The window asks with no address: Main opens the one page it knows.
-    expect(app.api.openGameBarSettings).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(app.api.openGameBarSettings).mock.calls[0]).toEqual([]);
-    expect(app.api.putConfig).toHaveBeenCalledTimes(1);
-  });
-
-  it("stays open and says so when Windows Settings cannot be opened", async () => {
-    const app = setup();
-    vi.mocked(app.api.openGameBarSettings).mockRejectedValueOnce(
-      new Error("refused"),
-    );
-    await openPage("设置");
-    choose("guide");
-    const open = await screen.findByRole("dialog", {
-      name: "关闭 Xbox Game Bar 的手柄按钮",
-    });
-    fireEvent.click(screen.getByRole("button", { name: "打开 Windows 设置" }));
-    expect((await within(open).findByRole("alert")).textContent).toBe(
-      "无法打开 Windows 设置。",
-    );
-    expect(dialog()).not.toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "知道了" }));
-    await waitFor(() => expect(dialog()).toBeNull());
-  });
-
-  it("is in English too", async () => {
-    setup();
-    await openPage("设置");
-    fireEvent.change(screen.getByRole("combobox", { name: "语言" }), {
-      target: { value: "en" },
-    });
-    choose("guide");
-    const open = await screen.findByRole("dialog", {
-      name: "Turn off the Game Bar button",
-    });
-    expect(open.textContent).toContain(
-      "Windows also opens the Xbox Game Bar when the Xbox button is pressed",
-    );
-    expect(open.textContent).toContain("Settings → Gaming → Game Bar");
-    expect(open.textContent).toContain(
-      "Allow your controller to open Game Bar",
-    );
-    expect(open.textContent).toContain("Open Xbox Game Bar using this button");
-    expect(
-      within(open).getByRole("button", { name: "Open Windows Settings" }),
-    ).toBeTruthy();
-    expect(within(open).getByRole("button", { name: "Got it" })).toBeTruthy();
-  });
-
-  it("does not ask when the file already has the Xbox button, and cannot be changed without a configuration", async () => {
-    setup({ config: config("guide") });
-    await openPage("设置");
-    expect(dialog()).toBeNull();
-    cleanup();
+  it("cannot be changed without a configuration", async () => {
     setup({ config: new Error("no profile library") });
     await openPage("设置");
     expect(

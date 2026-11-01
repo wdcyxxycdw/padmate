@@ -13,7 +13,7 @@ import (
 func controlRanks() map[string]int {
 	order := []string{
 		"south", "east", "west", "north", "leftshoulder", "rightshoulder", "lt", "rt",
-		"leftstick", "rightstick", "back", "start", "guide", "touchpad",
+		"leftstick", "rightstick", "back", "start", "touchpad",
 		"misc1", "paddle1", "paddle2", "paddle3", "paddle4",
 		"dpad.up", "dpad.down", "dpad.left", "dpad.right",
 		"dpad.upleft", "dpad.upright", "dpad.downleft", "dpad.downright",
@@ -32,13 +32,14 @@ func controlRanks() map[string]int {
 
 // fillControls lists the controls that a hold of a set blocks when the set
 // does not bind them: every control that can fire with the stick and d-pad
-// modes of the profile and every ring that is bound, except back and start. One
-// of them is the function key, which cannot be blocked, and which one is
-// chosen in padmate's settings, so neither is touched.
+// modes of the profile and every ring that is bound, except back, start and
+// guide. One of back and start is the function key, which cannot be blocked,
+// and which one is chosen in padmate's settings, so neither is touched; guide
+// is never mapped (ADR-0012).
 func (cv *converter) fillControls() []string {
 	list := []string{
 		"south", "east", "west", "north", "leftshoulder", "rightshoulder", "lt", "rt",
-		"leftstick", "rightstick", "guide", "touchpad", "misc1", "paddle1", "paddle2", "paddle3", "paddle4",
+		"leftstick", "rightstick", "touchpad", "misc1", "paddle1", "paddle2", "paddle3", "paddle4",
 		"dpad.up", "dpad.down", "dpad.left", "dpad.right",
 	}
 	if cv.dpadMode == "eightWay" {
@@ -174,7 +175,7 @@ func (cv *converter) build() *obj {
 		p.set("functionSet", cv.functionSet())
 	}
 	if cv.startBound {
-		cv.rep.info("function.default", loc{control: "start"}, "Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View 或 Xbox 键")
+		cv.rep.info("function.default", loc{control: "start"}, "Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View")
 	}
 	if emitted > 0 {
 		cv.rep.info("layers.ui", loc{}, "这个配置除了 base 还有 %d 个别的层；映射页只编辑 base，其他层只能在文件里改，界面保存时原样保留", emitted)

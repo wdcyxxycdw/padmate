@@ -13,7 +13,7 @@ import {
   actionText,
   canonicalControl,
   gestureName,
-  isFunctionKey,
+  isIgnoredControl,
   savedForm,
   swapView,
   usedGestures,
@@ -101,11 +101,12 @@ export function BindingsListDialog({
     "按住时其他键换成另一套",
     "While held, other keys switch to another set",
   );
-  // What a set binds on the function key is ignored (ADR-0012): not listed.
+  // What a set binds on the function key or the Xbox button is ignored
+  // (ADR-0012): not listed.
   const rows = Object.entries(shown.layers.base).filter(
     ([key, binding]) =>
       key !== "color" &&
-      !isFunctionKey(key, functionKey) &&
+      !isIgnoredControl(key, functionKey) &&
       typeof binding === "object" &&
       binding,
   ) as [string, ProfileBinding][];

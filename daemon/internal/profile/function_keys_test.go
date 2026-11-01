@@ -12,9 +12,10 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The function key (ADR-0012): one control of back, start and guide,
-// chosen in config.json. A profile's functionSet holds the bindings used while
-// it is held, written like a layer and bindable on any control.
+// The function key (ADR-0012): back or start, chosen in config.json.
+// A profile's functionSet holds the bindings used while it is held, written
+// like a layer and bindable on any control but guide, which is left out with a
+// warning.
 func TestFunctionSetParse(t *testing.T) {
 	const src = `{
 	"schemaVersion": 1, "name": "fn",
@@ -32,6 +33,9 @@ func TestFunctionSetParse(t *testing.T) {
 	if p == nil || ds.HasErrors() {
 		t.Fatalf("errors: %v", ds)
 	}
+	if !strings.Contains(diagText(ds), `"guide" is ignored: padmate does not map the Xbox, PS or Home button (/functionSet/guide)`) {
+		t.Errorf("diagnostics %v; want a warning that guide is ignored", ds)
+	}
 	set := p.FunctionSet
 	if set == nil || p.FunctionKeys != nil {
 		t.Fatalf("function set %v, function keys %v", set, p.FunctionKeys)
@@ -39,13 +43,15 @@ func TestFunctionSetParse(t *testing.T) {
 	if set.Name != profile.FunctionSetName || profile.FunctionSetName != "function" {
 		t.Errorf("set name %q", set.Name)
 	}
-	for _, c := range []control.Control{control.Back, control.Start, control.Guide} {
+	for _, c := range []control.Control{control.Back, control.Start} {
 		if want := "function:" + c.String(); profile.FunctionLevel(c) != want {
 			t.Errorf("FunctionLevel(%s) = %q, want %q", c, profile.FunctionLevel(c), want)
 		}
 	}
-	if profile.FunctionLevel(control.South) != "" || profile.FunctionLevel(control.Invalid) != "" {
-		t.Errorf("FunctionLevel of a control that cannot be the function key: %q %q", profile.FunctionLevel(control.South), profile.FunctionLevel(control.Invalid))
+	for _, c := range []control.Control{control.South, control.Guide, control.Invalid} {
+		if got := profile.FunctionLevel(c); got != "" {
+			t.Errorf("FunctionLevel(%s), which cannot be the function key, = %q", c, got)
+		}
 	}
 	// The bindings are in control order; the ID keeps the name as written.
 	var got []string
@@ -56,7 +62,6 @@ func TestFunctionSetParse(t *testing.T) {
 		"south /functionSet/south",
 		"west /functionSet/x",
 		"back /functionSet/back",
-		"guide /functionSet/guide",
 		"start /functionSet/start",
 		"lt /functionSet/lt",
 		"ls.cw /functionSet/ls.cw",
@@ -70,8 +75,8 @@ func TestFunctionSetParse(t *testing.T) {
 	if b := set.Binding(control.LSCW); b == nil || b.Press == nil || b.Press.ID != "/functionSet/ls.cw/press" {
 		t.Errorf("ls.cw: %+v", b)
 	}
-	if b := set.Binding(control.Guide); b == nil || b.Press == nil || b.Press.Type != profile.ActionLayer {
-		t.Errorf("guide: %+v", b)
+	if b := set.Binding(control.Guide); b != nil {
+		t.Errorf("guide: %+v, want it left out", b)
 	}
 	if p.Layer("base").Binding(control.Back) != nil || p.Layer("function") != nil || p.Layer("function:start") != nil {
 		t.Error("a function set is not a layer")
@@ -194,10 +199,11 @@ func TestFunctionSetDuplicateAlias(t *testing.T) {
 	}
 }
 
-// back, start and guide are bindable in any layer or in common: which of them
-// is the function key is config.json's choice, not known when a profile is
-// read, so a binding on one is kept and raises no warning (ADR-0012; ADR-0012
-// dropped the ones on back and start).
+// back and start are bindable in any layer or in common: which of them is the
+// function key is config.json's choice, not known when a profile is read, so a
+// binding on one is kept and raises no warning (ADR-0012; ADR-0012 dropped the
+// ones on back and start). guide is never bound: its binding is left out with
+// a warning, and one that is not valid is no error either.
 func TestCenterKeysAreBindableInLayers(t *testing.T) {
 	const src = `{
 	"schemaVersion": 1, "name": "old",
@@ -212,16 +218,19 @@ func TestCenterKeysAreBindableInLayers(t *testing.T) {
 	},
 	"common": {"start": {"block": true}}}`
 	p, ds := profile.Parse([]byte(src))
-	if p == nil || ds.HasErrors() || len(ds) != 0 {
-		t.Fatalf("diagnostics: %v", ds)
+	if p == nil || ds.HasErrors() || len(ds) != 1 || ds[0].Pointer != "/layers/base/guide" || ds[0].Severity != profile.SeverityWarning {
+		t.Fatalf("diagnostics: %v; want one warning on guide", ds)
 	}
-	if n := len(p.Layer("base").Bindings); n != 4 {
-		t.Errorf("base has %d bindings, want 4", n)
+	if n := len(p.Layer("base").Bindings); n != 3 {
+		t.Errorf("base has %d bindings, want 3", n)
 	}
-	for _, c := range []control.Control{control.Back, control.Start, control.Guide} {
+	for _, c := range []control.Control{control.Back, control.Start} {
 		if p.Layer("base").Binding(c) == nil {
 			t.Errorf("base lost its binding of %s", c)
 		}
+	}
+	if b := p.Layer("base").Binding(control.Guide); b != nil {
+		t.Errorf("base keeps its binding of guide: %+v", b)
 	}
 	if b := p.Layer("paint").Binding(control.Back); b == nil || b.ID != "/layers/paint/select" {
 		t.Errorf("paint: select is back: %+v", b)
@@ -229,10 +238,10 @@ func TestCenterKeysAreBindableInLayers(t *testing.T) {
 	if b := p.Common.Binding(control.Start); b == nil || !b.Block {
 		t.Errorf("common: %+v", b)
 	}
-	// guide was never dropped, so a binding on it that is not valid is an error.
-	_, ds = profile.Parse([]byte(`{"schemaVersion": 1, "name": "old", "layers": {"base": {
+	// Nothing reads a binding on guide, so one that is not valid is a warning.
+	p, ds = profile.Parse([]byte(`{"schemaVersion": 1, "name": "old", "layers": {"base": {
 		"guide": {"press": {"type": "layer", "layer": "nonesuch", "op": "hold"}}}}}`))
-	if !strings.Contains(diagText(ds), `unknown layer "nonesuch"`) || !ds.HasErrors() {
+	if p == nil || ds.HasErrors() || !strings.Contains(diagText(ds), `unknown layer "nonesuch"`) {
 		t.Errorf("diagnostics %v", ds)
 	}
 }
@@ -241,8 +250,8 @@ func TestCenterKeysAreBindableInLayers(t *testing.T) {
 // so a file that was valid may hold one that is not, and the format is frozen:
 // such a file stays valid. Parse leaves the binding out of the model with a
 // warning (so Compile never sees it, whichever control is the function key),
-// and keeps the ones that are valid. A binding on guide, which was never
-// dropped, and one in the function set, which is new, are still errors.
+// and keeps the ones that are valid. One in the function set, which is new, is
+// still an error.
 func TestInvalidBindingsOnBackAndStartAreLeftOut(t *testing.T) {
 	for _, tc := range []struct{ name, in, binding, id, want string }{
 		{"unknown layer", `"layers": {"base": {%s}}`, `"start": {"press": {"type": "layer", "layer": "no such layer", "op": "hold"}}`, "/layers/base/start/press/layer", `unknown layer "no such layer"`},
@@ -286,7 +295,7 @@ func TestInvalidBindingsOnBackAndStartAreLeftOut(t *testing.T) {
 		if south != 1 {
 			t.Errorf("%s: the valid binding of south is in %d layers, want 1", tc.name, south)
 		}
-		for _, fn := range []control.Control{control.Back, control.Start, control.Guide} {
+		for _, fn := range []control.Control{control.Back, control.Start} {
 			if _, err := engine.Compile(p, engine.WithFunctionKey(fn)); err != nil {
 				t.Errorf("%s: Compile with function key %s: %v", tc.name, fn, err)
 			}
@@ -303,11 +312,10 @@ func TestInvalidBindingsOnBackAndStartAreLeftOut(t *testing.T) {
 	if l := p.Layer("base"); l.Binding(control.Back) == nil || l.Binding(control.Start) != nil || len(l.Bindings) != 1 {
 		t.Errorf("base: %+v", l.Bindings)
 	}
-	// New things are strict: the function set, and guide.
+	// The function set is new, and strict.
 	for _, in := range []string{
 		`"layers": {"base": {}}, "functionSet": {"start": {"press": {"type": "layer", "layer": "no such layer", "op": "hold"}}}`,
 		`"layers": {"base": {}}, "functionSet": {"back": {"press": {"type": "keys", "keys": "Ctrl+Nonsense"}}}`,
-		`"layers": {"base": {"guide": {"press": {"type": "keys", "keys": "Ctrl+Nonsense"}}}}`,
 	} {
 		if q, ds := profile.Parse([]byte(`{"schemaVersion": 1, "name": "x", ` + in + `}`)); q != nil && !ds.HasErrors() {
 			t.Errorf("%s: no error, diagnostics %v", in, ds)

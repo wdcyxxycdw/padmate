@@ -1,7 +1,7 @@
-// The function key (ADR-0012): one of View (back), Menu (start)
-// and the Xbox button (guide), chosen in the settings, holds no bindings of
-// its own; while it is held, the other controls use the profile's function
-// set (profile.functionSet). These are the editor's rules for it.
+// The function key (ADR-0012): View (back) or Menu (start),
+// chosen in the settings, holds no bindings of its own; while it is held, the
+// other controls use the profile's function set (profile.functionSet). The
+// Xbox button (guide) is never mapped. These are the editor's rules for them.
 import { describe, expect, it } from "vitest";
 import type { ProfileDiagnostic } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
@@ -14,6 +14,7 @@ import {
   functionKeys,
   functionSetId,
   isFunctionKey,
+  isIgnoredControl,
   isLabelOnlyWarning,
   layerUsage,
   savedForm,
@@ -36,7 +37,7 @@ const profile: Profile = {
 
 const withSet: Profile = {
   ...profile,
-  common: { guide: { block: true } },
+  common: { misc1: { block: true } },
   functionSet: {
     south: { label: "Redo", press: keys("Ctrl+Shift+Z") },
     "ls.cw": { press: keys("Ctrl+]") },
@@ -48,11 +49,20 @@ const withSet: Profile = {
 const order = (value: object) => Object.keys(value);
 
 describe("the function key", () => {
-  it("is Menu unless the settings choose another of the three", () => {
+  it("is Menu unless the settings choose View, and Menu for the Xbox button of an older file", () => {
     expect(defaultFunctionKey).toBe("start");
-    expect([...functionKeys].sort()).toEqual(["back", "guide", "start"]);
+    expect([...functionKeys].sort()).toEqual(["back", "start"]);
     for (const key of functionKeys) expect(asFunctionKey(key)).toBe(key);
-    for (const value of [undefined, null, "", "select", "south", 3, {}])
+    for (const value of [
+      undefined,
+      null,
+      "",
+      "guide",
+      "select",
+      "south",
+      3,
+      {},
+    ])
       expect(asFunctionKey(value), String(value)).toBe("start");
   });
 
@@ -60,7 +70,6 @@ describe("the function key", () => {
     const names: Record<FunctionKey, string[]> = {
       start: ["start"],
       back: ["back", "select"],
-      guide: ["guide"],
     };
     for (const key of functionKeys)
       for (const control of [
@@ -75,6 +84,14 @@ describe("the function key", () => {
       ])
         expect(isFunctionKey(control, key), `${key} ${control}`).toBe(
           names[key].includes(control),
+        );
+  });
+
+  it("is ignored by the daemon with the Xbox button, whichever key it is", () => {
+    for (const key of functionKeys)
+      for (const control of ["back", "select", "start", "guide", "south"])
+        expect(isIgnoredControl(control, key), `${key} ${control}`).toBe(
+          control === "guide" || isFunctionKey(control, key),
         );
   });
 
@@ -113,7 +130,7 @@ describe("the function set as a key set", () => {
 
   it("goes after common when the profile has one", () => {
     const made = setBinding(
-      { ...profile, common: { guide: { block: true } }, analog: {} },
+      { ...profile, common: { misc1: { block: true } }, analog: {} },
       functionSetId,
       "north",
       { press: keys("F14") },
@@ -137,7 +154,7 @@ describe("the function set as a key set", () => {
     expect(order(one.functionSet ?? {})).toEqual(["ls.cw", "east"]);
   });
 
-  it("can bind back, start and guide, whichever of them the settings choose", () => {
+  it("can bind back and start, whichever of them the settings choose", () => {
     const made = setBinding(profile, functionSetId, "back", {
       press: keys("Ctrl+V"),
     });
@@ -290,6 +307,7 @@ describe("the old functionKeys (ADR-0012) and the one set they stand for (ADR-00
 });
 
 describe("what a save writes of the function set and of back, start and guide (ADR-0012)", () => {
+  // guide is the Xbox button, which the daemon no longer maps.
   const bound: Profile = {
     schemaVersion: 1,
     name: "Bound",
@@ -307,15 +325,18 @@ describe("what a save writes of the function set and of back, start and guide (A
     common: { back: { block: true }, guide: { block: true } },
   };
 
-  it("keeps the bindings on back, start and guide in every layer and common", () => {
+  it("keeps the bindings on back and start in every layer and common, and drops the ones on guide", () => {
     const saved = savedForm(bound);
-    expect(saved).toBe(bound);
     expect(saved.layers.base.back).toBeDefined();
     expect(saved.layers.alt.start).toBeDefined();
-    expect(saved.common).toEqual({
-      back: { block: true },
-      guide: { block: true },
+    expect(saved.layers.base.guide).toBeUndefined();
+    expect(saved.common).toEqual({ back: { block: true } });
+    const without = savedForm({
+      ...bound,
+      layers: { ...bound.layers, base: { south: bound.layers.base.south } },
+      common: { back: { block: true } },
     });
+    expect(savedForm(without)).toBe(without);
   });
 
   it("writes functionSet only when it has bindings", () => {
@@ -405,10 +426,11 @@ describe("what a save writes of the function set and of back, start and guide (A
     }
     const usage = layerUsage(bound, "start");
     expect(usage.extraLayers).toEqual(["alt"]);
-    // back and guide are ordinary controls when Menu is the function key.
-    expect(usage.commonBindings).toBe(2);
-    expect(usage.blocks).toBe(2);
-    expect(layerUsage(bound, "back").commonBindings).toBe(1);
+    // back is an ordinary control when Menu is the function key; guide is
+    // never mapped, so it does not count either way.
+    expect(usage.commonBindings).toBe(1);
+    expect(usage.blocks).toBe(1);
+    expect(layerUsage(bound, "back").commonBindings).toBe(0);
   });
 });
 

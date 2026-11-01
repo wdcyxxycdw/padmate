@@ -15,7 +15,7 @@ import {
   type FunctionKey,
   type Gesture,
   gestureName,
-  isFunctionKey,
+  isIgnoredControl,
   usedGestures,
 } from "../editor/editor-model";
 import {
@@ -59,8 +59,8 @@ export interface ShortcutSheet {
 
 type Bindings = Record<string, ProfileBinding>;
 
-// What a file binds on the function key is ignored by the daemon, so it is
-// not a shortcut of the table.
+// What a file binds on the function key or the Xbox button is ignored by the
+// daemon, so it is not a shortcut of the table.
 function entries(
   layer: unknown,
   functionKey: FunctionKey,
@@ -68,7 +68,7 @@ function entries(
   return Object.entries((layer ?? {}) as Bindings).filter(
     ([key, binding]) =>
       key !== "color" &&
-      !isFunctionKey(key, functionKey) &&
+      !isIgnoredControl(key, functionKey) &&
       !!binding &&
       typeof binding === "object",
   );

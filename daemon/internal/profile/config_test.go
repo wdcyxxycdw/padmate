@@ -342,8 +342,10 @@ func TestConfigFeedbackSwitches(t *testing.T) {
 }
 
 // TestConfigFunctionKey: config.json functionKey picks the one function key
-// (ADR-0012): start unless it says back or guide. Anything else, in
-// type or value, is a schema error that the repair resets.
+// (ADR-0012): start unless it says back. guide, which a file written
+// before the Xbox button was retired may hold, still loads and reads as start.
+// Anything else, in type or value, is a schema error that the repair
+// resets.
 func TestConfigFunctionKey(t *testing.T) {
 	if got := DefaultConfig().FunctionKey; got != control.Start {
 		t.Errorf("DefaultConfig().FunctionKey = %s; want start", got)
@@ -355,7 +357,7 @@ func TestConfigFunctionKey(t *testing.T) {
 		{`{"schemaVersion":0}`, control.Start},
 		{`{"schemaVersion":0,"functionKey":"start"}`, control.Start},
 		{`{"schemaVersion":0,"functionKey":"back"}`, control.Back},
-		{`{"schemaVersion":0,"functionKey":"guide"}`, control.Guide},
+		{`{"schemaVersion":0,"functionKey":"guide"}`, control.Start},
 	} {
 		c, ds := ParseConfig([]byte(tc.doc))
 		if c == nil || ds.HasErrors() {

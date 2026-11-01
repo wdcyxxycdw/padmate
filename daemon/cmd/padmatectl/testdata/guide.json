@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "xbox button",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "guide": {"label": "工具", "press": {"type": "keys", "keys": "F24", "mode": "tap"}}
+    }
+  },
+  "functionSet": {
+    "guide": {"press": {"type": "keys", "keys": "Ctrl+Nonsense"}}
+  }
+}

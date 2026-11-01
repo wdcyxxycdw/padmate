@@ -541,7 +541,7 @@ export function controllerChips({
   scriptEntry?: string;
   /**
    * The function key (config.json functionKey), whose chip is the tag and
-   * holds no bindings; the other two of back, start and guide are ordinary.
+   * holds no bindings; the other of back and start is ordinary.
    */
   functionKey: FunctionKey;
 }): Record<string, ChipInfo> {

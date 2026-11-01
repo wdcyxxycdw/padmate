@@ -1327,6 +1327,10 @@ func (e *Engine) lookup(c control.Control, g Gesture) (string, *profile.Binding,
 // global(), which the caller looks at before), above the registry's levels
 // or the overlays.
 func (e *Engine) lookupWith(c control.Control, g Gesture, fn control.Control) (string, *profile.Binding, *profile.Action, bool) {
+	if c.Unmappable() {
+		// guide is never mapped (ADR-0012), whatever a level binds on it.
+		return "", nil, nil, false
+	}
 	if fn != control.Invalid {
 		if l, name := e.prog.functionSet(fn); l != nil {
 			if b := l.Binding(c); b != nil {

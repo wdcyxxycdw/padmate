@@ -312,6 +312,13 @@ func (cv *converter) convertSet(set *setModel) map[string]*binding {
 	for _, i := range sortedKeys(set.buttons) {
 		control, btn := buttonControls[i], set.buttons[i]
 		at := loc{set: set.index, control: control}
+		if control == "guide" {
+			// padmate never maps the Xbox, PS or Home button (ADR-0012).
+			if len(btn.slots) > 0 || btn.setSelect > 0 {
+				cv.rep.dropped("control.guide", at, "padmate 不映射 Xbox、PS 或 Home 键，这个按键没有导入")
+			}
+			continue
+		}
 		if name, fn := functionKeyControls[control]; fn && cv.functionKey(at, set, name, btn) {
 			continue
 		}

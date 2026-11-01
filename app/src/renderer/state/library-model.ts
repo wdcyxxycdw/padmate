@@ -160,9 +160,11 @@ export function configText(config: Config, bom = false): string {
 
 /**
  * The members ADR-0008 retired: defaultProfile, onUnmatched and ignore, and
- * rules whose profile is null (they stopped padmate for an app). The daemon
- * still loads a file with them and ignores them; the UI drops them from
- * every document it writes. Returns config itself when it has none.
+ * rules whose profile is null (they stopped padmate for an app); and the
+ * Xbox button as the function key (functionKey "guide", ADR-0012), which the
+ * daemon reads as Menu, the default. The daemon still loads a file with them
+ * and ignores them; the UI drops them from every document it writes. Returns
+ * config itself when it has none.
  */
 export function withoutRetired(config: Config): Config {
   const legacy = config as Config & Record<string, unknown>;
@@ -170,15 +172,25 @@ export function withoutRetired(config: Config): Config {
   const kept = rules?.filter(
     (rule) => !(isRule(rule) && rule.profile === null),
   );
+  const guide = legacy.functionKey === "guide";
   const retired =
-    "defaultProfile" in legacy || "onUnmatched" in legacy || "ignore" in legacy;
+    guide ||
+    "defaultProfile" in legacy ||
+    "onUnmatched" in legacy ||
+    "ignore" in legacy;
   if (!retired && (!rules || kept?.length === rules.length)) return config;
   const {
     defaultProfile: _default,
     onUnmatched: _unmatched,
     ignore: _ignore,
-    ...rest
+    ...others
   } = legacy;
+  // Filtered, not taken apart, so that the members keep their order.
+  const rest = guide
+    ? Object.fromEntries(
+        Object.entries(others).filter(([key]) => key !== "functionKey"),
+      )
+    : others;
   return (
     rules && kept && kept.length !== rules.length
       ? { ...rest, rules: kept }

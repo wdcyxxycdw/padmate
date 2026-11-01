@@ -1,7 +1,7 @@
 近似  set 1 / east：长按里的换 set 在长按成立时就换，不等松开
 丢弃  set 1 / west：同一个动作里既发键又换 set：只保留换 set
 近似  set 1 / west：长按里的换 set 在长按成立时就换，不等松开
-丢弃  set 1 / guide：这个按键的“松开”换成了切换 set，原来的动作丢弃
+丢弃  set 1 / guide：padmate 不映射 Xbox、PS 或 Home 键，这个按键没有导入
 丢弃  set 1 / leftstick / slot 3：同一个动作里有不止一个换 set，只用第一个
 信息  set 2：导入为层“Second”
 信息  set 3：导入为层“set3”

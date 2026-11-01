@@ -6,7 +6,7 @@
 
 ## 功能键
 
-手柄中间有三个键：View、Menu 和 Xbox 键。PlayStation 手柄上是 Create（或 Share）、Options 和 PS 键，Switch Pro 手柄上是 −、+ 和 Home。其中一个是功能键，默认是 Menu。
+手柄中间的 View 和 Menu 两个键里，有一个是功能键，默认是 Menu。PlayStation 手柄上它们是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。
 
 功能键像笔记本的 Fn 键：
 
@@ -16,8 +16,19 @@
 
 ### 更换功能键
 
-1. 点“设置”，在“通用”里找到“功能键”，点其中一个键。选中立即生效，对所有配置和手柄一样。
-2. 选 Xbox 键会弹出对话框。按 Xbox 键时 Windows 的 Xbox Game Bar 也会打开，padmate 无法阻止。请在“设置 → 游戏 → Game Bar”里关掉“允许控制器打开 Game Bar”（旧版 Windows 里叫“使用控制器上的此按钮打开 Xbox Game Bar”）。点“打开 Windows 设置”直达这一页，点“知道了”关闭对话框，选择已生效。Steam 运行时也可能占用 Xbox 键。
+点“设置”，在“通用”里找到“功能键”，点其中一个键。选中立即生效，对所有配置和手柄一样。
+
+### 为什么不能用 Xbox 键
+
+中间的 Xbox 键（PlayStation 手柄上是 PS 键，Switch 手柄上是 Home）不能当功能键，也不能设快捷键，手柄图上没有它的标签。别的程序和手柄自己都在用这个键：
+
+- 按它会打开 Windows 的 Xbox Game Bar。
+- Steam 运行时，按它会打开 Steam 的大屏幕模式，和 Menu 一起按还会变成 Alt+Tab。
+- 有的手柄长按它会关机，按住它再按别的键会重置手柄的设置。
+
+这些 padmate 都拦不住，所以 padmate 不用这个键。padmate 照样读到它，诊断页里能看到它被按下。
+
+以前把 Xbox 键选成功能键的，现在按 Menu 处理。下次在设置页改任何一项时，这个旧选择会从配置文件里去掉。
 
 ### 设置功能键的一套
 
@@ -59,6 +70,6 @@
 - 要让某层里的某个键什么也不做，写 `"block": true`。
 - `defaultLayer` 是启动时的 base 层，不写就是 `base`。
 
-View、Menu 和 Xbox 键对应 `back`、`start` 和 `guide`。写在当前功能键上的设置不生效，但留在文件里。功能键的一套写在 `functionSet` 里，写法和层一样。
+View 和 Menu 对应 `back` 和 `start`。写在当前功能键上的设置不生效，但留在文件里。Xbox 键是 `guide`，写在它上面的设置一律不生效，检查时会给出警告；在映射页改这个配置时，它们会从文件里去掉。功能键的一套写在 `functionSet` 里，写法和层一样。
 
 保存文件后 padmate 自动重新读取。写完可在 `resources\bin` 文件夹运行 `.\padmatectl.exe validate profile.json` 检查，它会指出错在哪里，不改文件。

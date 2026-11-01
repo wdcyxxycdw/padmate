@@ -61,10 +61,12 @@ describe("3D controller component", () => {
     const buttons = container.querySelectorAll<HTMLButtonElement>(
       "button[data-callout]",
     );
-    // The function key (Menu by default) is tagged, not a button (ADR-0012).
-    // Each stick is two buttons, its movement and its press.
-    expect(buttons).toHaveLength(18);
-    expect(container.querySelectorAll("[data-callout]")).toHaveLength(19);
+    // The function key (Menu by default) is tagged, not a button, and the
+    // Xbox button, which padmate never maps, has no chip (ADR-0012). Each
+    // stick is two buttons, its movement and its press.
+    expect(buttons).toHaveLength(17);
+    expect(container.querySelectorAll("[data-callout]")).toHaveLength(18);
+    expect(container.querySelector('[data-callout="guide"]')).toBeNull();
     const controls = [
       "south",
       "east",
@@ -148,7 +150,7 @@ describe("3D controller component", () => {
     expect(screen.getByRole("list", { name: "手柄按键状态" })).toBeDefined();
   });
 
-  it("tags the function key that cannot be opened, whichever of View, Menu and the Xbox button it is", () => {
+  it("tags the function key that cannot be opened, whichever of View and Menu it is", () => {
     const select = vi.fn();
     const menu = vi.fn();
     const { container } = render(
@@ -185,12 +187,10 @@ describe("3D controller component", () => {
     expect(menu).not.toHaveBeenCalled();
     // The pad's own name for it stays on the badge and in the layout.
     expect(container.querySelector('button[data-callout="back"]')).toBeNull();
-    // The other two are ordinary controls.
-    for (const control of ["start", "guide"])
-      expect(
-        container.querySelector(`button[data-callout="${control}"]`),
-        control,
-      ).not.toBeNull();
+    // The other is an ordinary control.
+    expect(
+      container.querySelector('button[data-callout="start"]'),
+    ).not.toBeNull();
   });
 
   it("tags the function key without a chip given for it, Menu until it is told another", () => {
@@ -202,10 +202,6 @@ describe("3D controller component", () => {
       <Controller info={info} t={translator("en")} />,
     );
     expect(tagged(container)).toEqual(["start"]);
-    rerender(
-      <Controller info={info} t={translator("en")} functionKey="guide" />,
-    );
-    expect(tagged(container)).toEqual(["guide"]);
     rerender(
       <Controller info={info} t={translator("en")} functionKey="back" />,
     );
@@ -320,7 +316,7 @@ describe("3D controller component", () => {
         t={translator("en")}
         input={{ buttons: { south: true }, axes: {} }}
         selectedControl="south"
-        chips={{ guide: chip({ title: "Not set", state: "unbound" }) }}
+        chips={{ back: chip({ title: "Not set", state: "unbound" }) }}
       />,
     );
     // The scene gets the stage host to put the session's canvas in, the
@@ -332,7 +328,7 @@ describe("3D controller component", () => {
     expect(initial).toEqual({
       input: { buttons: { south: true }, axes: {} },
       selected: "south",
-      unbound: ["guide"],
+      unbound: ["back"],
     });
     expect(screen.getByRole("group").getAttribute("data-renderer")).toBe(
       "loading",
@@ -402,7 +398,7 @@ describe("3D controller component", () => {
         state: "script",
       }),
       "rightstick.press": chip({ title: "Locked", state: "locked" }),
-      guide: chip({ title: "Not set", state: "unbound" }),
+      start: chip({ title: "Not set", state: "unbound" }),
       back: chip({ title: "Blocked", state: "locked" }),
       lefttrigger: chip({
         title: "Eyedropper",
@@ -449,7 +445,7 @@ describe("3D controller component", () => {
     const locked = button("RS Press · Locked");
     expect(locked.querySelector(".stage-chip-lock")).not.toBeNull();
     expect(locked.title).toContain("Only editable in the file");
-    expect(button("Xbox · Not set").getAttribute("data-state")).toBe("unbound");
+    expect(button("Menu · Not set").getAttribute("data-state")).toBe("unbound");
     const back = button("View · Blocked");
     expect(back.querySelector(".stage-chip-lock")).not.toBeNull();
     expect(back.title).toContain("Only editable in the file");
@@ -518,7 +514,8 @@ describe("3D controller component", () => {
     };
     expect(placement("lefttrigger")).toEqual(["top", "left"]);
     expect(placement("rightshoulder")).toEqual(["top", "right"]);
-    expect(placement("guide")).toEqual(["top", null]);
+    expect(placement("back")).toEqual(["top", null]);
+    expect(placement("guide")).toEqual([undefined, undefined]);
     expect(placement("dpad.left")).toEqual(["left", null]);
     // A stick is one chip of two cells, which sits in its column.
     const stick = (control: string) =>
@@ -540,7 +537,7 @@ describe("3D controller component", () => {
       <Controller info={{ ...info, type: "ps5" }} t={translator("en")} />,
     );
     expect(placement("touchpad")).toEqual(["top", null]);
-    expect(placement("guide")).toEqual(["bottom", null]);
+    expect(placement("guide")).toEqual([undefined, undefined]);
     expect(container.querySelector(".controller-hint")).toBeNull();
     expect(
       container
@@ -567,7 +564,6 @@ describe("3D controller component", () => {
     expect(art("righttrigger")).toBe("kenney/xbox_rt");
     expect(art("dpad.up")).toBe("kenney/xbox_dpad_up");
     expect(art("back")).toBe("kenney/xbox_button_view");
-    expect(art("guide")).toBe("kenney/xbox_guide");
     // A stick's two cells: the stick turning both ways, and its click.
     expect(art("leftstick")).toBe("promptfont/analog-l-cl");
     expect(art("leftstick.press")).toBe("kenney/xbox_stick_l_press");
@@ -795,16 +791,16 @@ describe("3D controller component", () => {
       <Controller
         info={info}
         t={translator("en")}
-        chips={{ guide: chip({ title: "Not set", state: "unbound" }) }}
+        chips={{ back: chip({ title: "Not set", state: "unbound" }) }}
       />,
     );
-    expect(update).toHaveBeenLastCalledWith(undefined, undefined, ["guide"]);
+    expect(update).toHaveBeenLastCalledWith(undefined, undefined, ["back"]);
     rerender(
       <Controller
         info={info}
         t={translator("en")}
         selectedControl="south"
-        chips={{ guide: chip({ title: "Home" }) }}
+        chips={{ back: chip({ title: "Paste" }) }}
       />,
     );
     expect(update).toHaveBeenLastCalledWith(undefined, "south", []);

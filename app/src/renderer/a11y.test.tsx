@@ -184,7 +184,7 @@ describe("the key drawer", () => {
     "leftstick.press",
     "dpad.up",
     "leftshoulder",
-    "guide",
+    "back",
   ])
     it(`${control} has no violation`, async () => {
       renderApp();

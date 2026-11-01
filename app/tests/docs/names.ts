@@ -39,8 +39,6 @@ export const names: Name[] = [
   ["平时", "Normal"],
   ["功能键", "Function key"],
   ["按住功能键", "Hold function key"],
-  ["打开 Windows 设置", "Open Windows Settings"],
-  ["知道了", "Got it"],
   ["按键操作", "Key actions"],
   ["清除这一套里的设置", "Clear in this set"],
   // A profile for a painting app.
@@ -334,21 +332,6 @@ export const external: External[] = [
     zh: "WASD",
     en: "WASD",
     reason: "text on a button of the app: the four letter keys, not translated",
-  },
-  {
-    zh: "设置 → 游戏 → Game Bar",
-    en: "Settings → Gaming → Game Bar",
-    reason: "menu path in the Settings of Windows, not in padmate",
-  },
-  {
-    zh: "允许控制器打开 Game Bar",
-    en: "Allow your controller to open Game Bar",
-    reason: "switch on the Game Bar page of the Settings of Windows 11",
-  },
-  {
-    zh: "使用控制器上的此按钮打开 Xbox Game Bar",
-    en: "Open Xbox Game Bar using this button on a controller",
-    reason: "the same switch, as older versions of Windows name it",
   },
   {
     zh: "平时：…",

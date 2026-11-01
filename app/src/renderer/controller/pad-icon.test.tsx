@@ -155,7 +155,6 @@ describe("the vendored icons", () => {
       "lt",
       "view",
       "menu",
-      "home",
     ]) {
       const spec = stepInfo(step, "en").icon;
       if (spec.kind === "art") used.add(spec.name);

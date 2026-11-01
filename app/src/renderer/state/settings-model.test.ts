@@ -128,15 +128,17 @@ describe("emergency combos", () => {
 });
 
 describe("the function key of config.json (ADR-0012)", () => {
-  it("is Menu unless the file says View or the Xbox button", () => {
+  it("is Menu unless the file says View", () => {
     expect(configuredFunctionKey(null)).toBe("start");
     expect(configuredFunctionKey({ schemaVersion: 0 })).toBe("start");
-    for (const key of ["start", "back", "guide"] as const)
+    for (const key of ["start", "back"] as const)
       expect(
         configuredFunctionKey({ schemaVersion: 0, functionKey: key }),
       ).toBe(key);
-    // Anything else reads as Menu, as the daemon reads a repaired file.
-    for (const value of ["select", "Menu", "", 1, null, ["back"]])
+    // Anything else reads as Menu, as the daemon reads a repaired file, and
+    // so does the Xbox button of a file written before padmate stopped
+    // mapping it.
+    for (const value of ["guide", "select", "Menu", "", 1, null, ["back"]])
       expect(
         configuredFunctionKey({
           schemaVersion: 0,
@@ -152,8 +154,8 @@ describe("the function key of config.json (ADR-0012)", () => {
       timing: { holdMs: 300 },
       rules: [],
     };
-    const next = setFunctionKey(config, "guide");
-    expect(next).toEqual({ ...config, functionKey: "guide" });
+    const next = setFunctionKey(config, "back");
+    expect(next).toEqual({ ...config, functionKey: "back" });
     expect(Object.keys(next ?? {})).toEqual([
       "schemaVersion",
       "timing",

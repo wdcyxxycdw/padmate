@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import type { PadmateAPI } from "../../../shared/api";
 import {
   ControlIcon,
   type ControlIconSpec,
@@ -13,7 +11,7 @@ import {
 import { type FunctionKey, functionKeys } from "../../editor/editor-model";
 import type { PadNames } from "../../editor/key-view";
 import type { Language } from "../../state/store";
-import { Dialog, Notice, Segmented } from "../../ui/controls";
+import { Segmented } from "../../ui/controls";
 import "../pages.css";
 
 const tx = (language: Language, zh: string, en: string) =>
@@ -98,94 +96,5 @@ export function FunctionKeyRow({
         onChange={onChange}
       />
     </div>
-  );
-}
-
-/**
- * What choosing the Xbox button as the function key asks of the user
- * (ADR-0012): Windows opens the Xbox Game Bar from that button too, which
- * padmate can neither stop nor change, so the user turns it off in Windows
- * Settings. The setting is saved already; either button only closes this.
- * padmate does not read the Game Bar's setting and cannot tell whether it is
- * off. A dialog and not a banner: the user has to see it.
- */
-export function GameBarDialog({
-  open,
-  language,
-  api,
-  onClose,
-}: {
-  open: boolean;
-  language: Language;
-  api: Pick<PadmateAPI, "openGameBarSettings">;
-  onClose: () => void;
-}) {
-  const t = (zh: string, en: string) => tx(language, zh, en);
-  const [failed, setFailed] = useState(false);
-  const understood = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    setFailed(false);
-    // The dialog's own effect (a child) has run showModal already.
-    understood.current?.focus();
-  }, [open]);
-  const openSettings = async () => {
-    try {
-      await api.openGameBarSettings();
-    } catch {
-      setFailed(true);
-      return;
-    }
-    onClose();
-  };
-  return (
-    <Dialog
-      open={open}
-      title={t("关闭 Xbox Game Bar 的手柄按钮", "Turn off the Game Bar button")}
-      closeLabel={t("关闭提示", "Close this notice")}
-      onClose={onClose}
-      className="confirm-dialog"
-      footer={
-        <>
-          <span className="spacer" />
-          <button
-            type="button"
-            className="btn"
-            onClick={() => void openSettings()}
-          >
-            {t("打开 Windows 设置", "Open Windows Settings")}
-          </button>
-          <button
-            ref={understood}
-            type="button"
-            className="btn-primary"
-            onClick={onClose}
-          >
-            {t("知道了", "Got it")}
-          </button>
-        </>
-      }
-    >
-      <p className="dialog-text">
-        {t(
-          "按下 Xbox 键时，Windows 的 Xbox Game Bar 也会打开，padmate 无法阻止。",
-          "Windows also opens the Xbox Game Bar when the Xbox button is pressed, and padmate cannot stop it.",
-        )}
-      </p>
-      <p className="dialog-text">
-        {t(
-          "请在 Windows 设置 → 游戏 → Game Bar 中，关闭“允许控制器打开 Game Bar”（旧版 Windows 里叫“使用控制器上的此按钮打开 Xbox Game Bar”）。Steam 运行时也可能占用这个键。",
-          "In Windows Settings → Gaming → Game Bar, turn off “Allow your controller to open Game Bar” (older versions of Windows call it “Open Xbox Game Bar using this button on a controller”). Steam may also take this button while it runs.",
-        )}
-      </p>
-      {failed && (
-        <Notice kind="error" role="alert">
-          {t(
-            "无法打开 Windows 设置。",
-            "Windows Settings could not be opened.",
-          )}
-        </Notice>
-      )}
-    </Dialog>
   );
 }

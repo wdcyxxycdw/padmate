@@ -344,6 +344,8 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     await expect(calloutButtons).toHaveCount(18);
     await expect(page.locator("[data-callout='start']")).toHaveCount(1);
     await expect(page.locator("button[data-callout='start']")).toHaveCount(0);
+    // padmate never maps the Xbox button (ADR-0012): it has no chip.
+    await expect(page.locator("[data-callout='guide']")).toHaveCount(0);
     for (const control of [
       "south",
       "east",
@@ -354,7 +356,6 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       "dpad.left",
       "dpad.right",
       "back",
-      "guide",
       "leftstick",
       "leftstick.press",
       "rightstick",

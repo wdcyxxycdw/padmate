@@ -19,7 +19,7 @@ import {
   type Gesture,
   gestureName,
   gestures,
-  isFunctionKey,
+  isIgnoredControl,
   type KeyView,
   savedForm,
   swapView,
@@ -252,10 +252,11 @@ export function ControllerWorkspace({
   onShowScripts?: () => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  // The function key only switches sets: there is nothing to open on it.
+  // The function key only switches sets and the Xbox button is never mapped:
+  // there is nothing to open on them.
   const functionKey = useStore(editor, (value) => value.functionKey);
   const open =
-    selected && !isFunctionKey(selected, functionKey) ? selected : undefined;
+    selected && !isIgnoredControl(selected, functionKey) ? selected : undefined;
   const input = useStore(store, (value) => value.inputs[info.id]);
   // The sticks this controller has its own calibration for, as a
   // string so the selector's result compares by value.
@@ -392,7 +393,7 @@ export function ControllerWorkspace({
     functionKey,
   ]);
   const select = (control: string | undefined) => {
-    if (control === undefined || !isFunctionKey(control, functionKey))
+    if (control === undefined || !isIgnoredControl(control, functionKey))
       onSelect(control);
   };
   const close = () => {
@@ -444,7 +445,7 @@ export function ControllerWorkspace({
               // Name and timing are in 配置设置; describe() says so.
               if (diagnosticProfileSetting(diagnostic)) return;
               const control = diagnosticControl(diagnostic);
-              if (!control || isFunctionKey(control, functionKey)) return;
+              if (!control || isIgnoredControl(control, functionKey)) return;
               // The key sits in a set: show that set (or the usual keys).
               const shown = diagnosticView(diagnostic);
               if (shown) editor.getState().setView(shown);

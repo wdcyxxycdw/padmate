@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "name": "Xbox 键",
+  "layers": {
+    "base": {
+      "south": {"label": "撤销", "press": {"type": "keys", "keys": "Ctrl+Z", "mode": "tap"}},
+      "guide": {"label": "工具", "press": {"type": "keys", "keys": "F24", "mode": "tap"}}
+    },
+    "paint": {
+      "guide": {"press": {"type": "layer", "layer": "nowhere", "op": "hold"}}
+    }
+  },
+  "common": {
+    "guide": {"press": {"type": "keys", "keys": "Shfit+A"}}
+  },
+  "functionSet": {
+    "south": {"label": "重做", "press": {"type": "keys", "keys": "Ctrl+Shift+Z", "mode": "tap"}},
+    "guide": {"block": true}
+  }
+}

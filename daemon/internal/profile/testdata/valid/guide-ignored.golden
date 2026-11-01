@@ -1,0 +1,18 @@
+name "Xbox 键", schemaVersion 1
+layer base
+	south         /layers/base/south         label "撤销"  press: keys Ctrl+Z tap
+layer paint
+function key set function
+	south         /functionSet/south         label "重做"  press: keys Ctrl+Shift+Z tap
+7:7: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/layers/base/guide)
+	> "guide": {"label": "工具", "press": {"type…
+10:7: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/layers/paint/guide)
+	> "guide": {"press": {"type": "layer", "la…
+10:16: warning: binding left out because it is not valid: unknown layer "nowhere" (/layers/paint/guide/press/layer)
+	> {"press": {"type": "layer", "layer": "no…
+14:5: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/common/guide)
+	> "guide": {"press": {"type": "keys", "key…
+14:50: warning: binding left out because it is not valid: unknown key "Shfit"; did you mean Shift? (/common/guide/press/keys)
+	> Shfit+A"}}
+18:5: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/functionSet/guide)
+	> "guide": {"block": true}

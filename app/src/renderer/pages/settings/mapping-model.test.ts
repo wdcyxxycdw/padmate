@@ -106,15 +106,9 @@ describe("what each prompt of the wizard shows", () => {
       kind: "art",
       name: "kenney/xbox_button_menu",
     });
-    expect(stepInfo("home", "en").icon).toEqual({
-      kind: "art",
-      name: "kenney/switch_button_home",
-    });
-    // Home may be missing: it can be skipped.
-    expect(stepInfo("home", "zh-CN").hint).toContain("跳过");
   });
 
-  it("says that View and Menu are for the emergency pause, and does not call them the function key (ADR-0012: the function key is one of three, chosen in Settings)", () => {
+  it("says that View and Menu are for the emergency pause, and does not call them the function key (ADR-0012: the function key is one of two, chosen in Settings)", () => {
     for (const id of ["view", "menu"]) {
       expect(stepInfo(id, "zh-CN").hint).toContain("用于紧急暂停");
       expect(stepInfo(id, "zh-CN").hint).not.toContain("功能键");

@@ -122,7 +122,7 @@ const mixed: Profile = {
       color: "#ff0000",
     },
   },
-  common: { guide: { press: { type: "layer", op: "toggle", layer: "tools" } } },
+  common: { misc1: { press: { type: "layer", op: "toggle", layer: "tools" } } },
 };
 
 describe("shortcut table", () => {

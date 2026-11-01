@@ -100,13 +100,6 @@
           "keys": "Esc"
         }
       },
-      "guide": {
-        "release": {
-          "type": "layer",
-          "layer": "Controller mode",
-          "op": "switch"
-        }
-      },
       "dpad.up": {
         "press": {
           "type": "keys",
@@ -180,14 +173,6 @@
         }
       }
     },
-    "Controller mode": {
-      "guide": {
-        "release": {
-          "type": "layer",
-          "layer": "base",
-          "op": "switch"
-        }
-      }
-    }
+    "Controller mode": {}
   }
 }

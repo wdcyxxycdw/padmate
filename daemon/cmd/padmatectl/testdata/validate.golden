@@ -47,3 +47,12 @@ exit 0
 $ padmatectl validate --json testdata/function-set.json
 {"file":"testdata/function-set.json","ok":true,"diagnostics":[],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0},{"id":"/layers/base/back","control":"back","label":"paste","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/south","control":"south","label":"重做","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/west","control":"west","gesture":"tap","addedLatencyMs":250},{"id":"/functionSet/back","control":"back","gesture":"press","addedLatencyMs":0},{"id":"/functionSet/ls.cw","control":"ls.cw","gesture":"press","addedLatencyMs":0}]}
 exit 0
+$ padmatectl validate testdata/guide.json
+testdata/guide.json:7:7: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/layers/base/guide)
+testdata/guide.json:11:5: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/functionSet/guide)
+testdata/guide.json:11:55: warning: binding left out because it is not valid: unknown key "Nonsense" (/functionSet/guide/press/keys)
+  /layers/base/south "撤销": press +0 ms
+exit 0
+$ padmatectl validate --json testdata/guide.json
+{"file":"testdata/guide.json","ok":true,"diagnostics":[{"severity":"warning","pointer":"/layers/base/guide","offset":179,"line":7,"col":7,"message":"\"guide\" is ignored: padmate does not map the Xbox, PS or Home button"},{"severity":"warning","pointer":"/functionSet/guide","offset":299,"line":11,"col":5,"message":"\"guide\" is ignored: padmate does not map the Xbox, PS or Home button"},{"severity":"warning","pointer":"/functionSet/guide/press/keys","offset":349,"line":11,"col":55,"message":"binding left out because it is not valid: unknown key \"Nonsense\""}],"bindings":[{"id":"/layers/base/south","control":"south","label":"撤销","gesture":"press","addedLatencyMs":0}]}
+exit 0

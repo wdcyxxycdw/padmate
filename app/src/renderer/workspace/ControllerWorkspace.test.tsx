@@ -777,7 +777,7 @@ describe("the function key", () => {
     act(() => editor.getState().setFunctionKey("back"));
     const { rerender } = render(<Harness editor={editor} />);
     expect(switchOptions()[1][0]).toBe("按住功能键");
-    act(() => editor.getState().setFunctionKey("guide"));
+    act(() => editor.getState().setFunctionKey("start"));
     rerender(<Harness editor={editor} />);
     expect(switchOptions()[1][0]).toBe("按住功能键");
   });
@@ -790,7 +790,7 @@ describe("the function key", () => {
         .getAllByRole("radio")
         .map((radio) => radio.textContent),
     ).toEqual(["Normal", "Hold function key"]);
-    act(() => editor.getState().setFunctionKey("guide"));
+    act(() => editor.getState().setFunctionKey("back"));
     expect(
       within(screen.getByRole("radiogroup", { name: "Keys being edited" }))
         .getAllByRole("radio")
@@ -906,7 +906,7 @@ describe("the function key", () => {
     expect(screen.queryByRole("complementary")).toBeNull();
   });
 
-  it("leaves the other two of View, Menu and the Xbox button as keys to open and set", async () => {
+  it("leaves the other of View and Menu as a key to open and set, and has no Xbox button", async () => {
     const editor = await editorFor({
       ...withSet,
       layers: {
@@ -924,17 +924,13 @@ describe("the function key", () => {
     const back = chip(container, "back") as HTMLElement;
     expect(back.tagName).toBe("BUTTON");
     expect(back.getAttribute("aria-label")).toBe("View · 粘贴");
-    // The Xbox button has nothing yet, and can be given something.
-    const guide = chip(container, "guide") as HTMLElement;
-    expect(guide.tagName).toBe("BUTTON");
-    expect(guide.dataset.state).toBe("unbound");
+    // padmate never maps the Xbox button (ADR-0012): it has no chip.
+    expect(chip(container, "guide")).toBeNull();
     fireEvent.click(back);
     expect(select).toHaveBeenLastCalledWith("back");
-    fireEvent.click(guide);
-    expect(select).toHaveBeenLastCalledWith("guide");
     // Whichever key is the function key is the one that is only a tag.
-    act(() => editor.getState().setFunctionKey("guide"));
-    expect(chip(container, "guide")?.tagName).toBe("DIV");
+    act(() => editor.getState().setFunctionKey("back"));
+    expect(chip(container, "back")?.tagName).toBe("DIV");
     expect(chip(container, "start")?.tagName).toBe("BUTTON");
     expect(chip(container, "start")?.dataset.state).toBe("unbound");
   });

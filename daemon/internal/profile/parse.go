@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"strconv"
@@ -97,8 +98,12 @@ type resolver struct {
 	// data. A merged profile (Resolve) says where the text came from.
 	where func(off int) string
 	// unread holds the IDs of the bindings on back and start in a layer or in
-	// common, which ADR-0012 used to drop unread (leaveOutUnread).
+	// common, which ADR-0012 used to drop unread, and of every binding on an
+	// unmappable control (leaveOutUnread).
 	unread map[string]bool
+	// unmapped holds the IDs of the bindings on an unmappable control,
+	// anywhere (control.Control.Unmappable), which leaveOutUnread takes out.
+	unmapped map[string]bool
 }
 
 func (r *resolver) errorAt(off int, ptr, msg string) {
@@ -219,10 +224,17 @@ func resolve(data []byte, root *node, where func(off int) string) (*Profile, Dia
 // so such a file may hold one that is not valid, and the format is frozen: a
 // valid profile stays valid. Each error of such a binding becomes a warning, and
 // the binding is taken out of p, so that engine.Compile never sees it, whichever
-// control is the function key. A binding that is valid stays. guide was never
-// dropped and the function set is new, so they get no such tolerance.
+// control is the function key. A binding that is valid stays.
+//
+// A binding on guide, which padmate no longer maps (ADR-0012), is taken out of
+// p wherever it is, valid or not, after a warning (layerAt); its errors become
+// warnings too, since nothing reads it. A binding in the function set on back
+// or start is not tolerated: that set is new.
 func (r *resolver) leaveOutUnread(p *Profile) {
-	left := map[string]bool{}
+	left := maps.Clone(r.unmapped)
+	if left == nil {
+		left = map[string]bool{}
+	}
 	for i := range r.ds {
 		d := &r.ds[i]
 		if d.Severity != SeverityError {
@@ -242,7 +254,11 @@ func (r *resolver) leaveOutUnread(p *Profile) {
 	if len(left) == 0 {
 		return
 	}
-	for _, l := range append(slices.Clone(p.Layers), p.Common) {
+	sets := append(slices.Clone(p.Layers), p.Common, p.FunctionSet)
+	if fk := p.FunctionKeys; fk != nil {
+		sets = append(sets, fk.Back, fk.Start)
+	}
+	for _, l := range sets {
 		if l != nil {
 			l.Bindings = slices.DeleteFunc(l.Bindings, func(b *Binding) bool { return left[b.ID] })
 		}
@@ -381,11 +397,20 @@ func (r *resolver) layerAt(name string, parts []string, w wireLayer, inLayer boo
 			continue
 		}
 		first[c] = m
-		// A binding on back, start or guide is kept like any other: which of
-		// them is the function key is config.json's choice (ADR-0012), not
-		// known here, and engine.Compile ignores the one that is.
+		// A binding on back or start is kept like any other: which of them
+		// is the function key is config.json's choice (ADR-0012), not known
+		// here, and engine.Compile ignores the one that is. One on guide is
+		// checked like the rest and then left out (leaveOutUnread).
 		id := childPointer(ptr, m.name)
-		if inLayer && (c == control.Back || c == control.Start) {
+		unmapped := c.Unmappable()
+		if unmapped {
+			if r.unmapped == nil {
+				r.unmapped = map[string]bool{}
+			}
+			r.unmapped[id] = true
+			r.warnAt(m.key, id, quote(m.name)+" is ignored: padmate does not map the Xbox, PS or Home button")
+		}
+		if unmapped || inLayer && (c == control.Back || c == control.Start) {
 			if r.unread == nil {
 				r.unread = map[string]bool{}
 			}

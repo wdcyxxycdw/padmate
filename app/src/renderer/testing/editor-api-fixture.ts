@@ -188,7 +188,6 @@ export function editorAPIFixture() {
         data: developmentStartup,
       };
     }),
-    openGameBarSettings: vi.fn(async () => {}),
     onClosing: vi.fn((_listener: () => void) => () => {}),
     readyToClose: vi.fn(async () => {}),
     exportCheatSheet: vi.fn(async () => ({ saved: true })),

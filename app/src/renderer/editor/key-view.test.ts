@@ -15,19 +15,15 @@ describe("the key set the page shows", () => {
   it("is the one asked for, if the pad has the function key", () => {
     expect(effectiveView("function", pad("xboxone"), "back")).toBe("function");
     expect(effectiveView("function", pad("ps5"), "start")).toBe("function");
-    expect(effectiveView("function", pad("ps5"), "guide")).toBe("function");
     expect(effectiveView("normal", pad("ps5"), "start")).toBe("normal");
   });
 
   it("is the usual one when the pad has no such function key", () => {
-    // A single Joy-Con held sideways has no View, only Menu and Home.
+    // A single Joy-Con held sideways has no View, only Menu.
     expect(effectiveView("function", pad("joyconleft", 0xf), "back")).toBe(
       "normal",
     );
     expect(effectiveView("function", pad("joyconleft", 0xf), "start")).toBe(
-      "function",
-    );
-    expect(effectiveView("function", pad("joyconleft", 0xf), "guide")).toBe(
       "function",
     );
   });
@@ -42,7 +38,7 @@ describe("naming the key sets", () => {
     viewOptions(pad(type), language, functionKey).map((option) => option.label);
 
   it("says 按住功能键 whichever key it is and whatever the pad calls it (ADR-0013)", () => {
-    for (const functionKey of ["start", "back", "guide"] as const)
+    for (const functionKey of ["start", "back"] as const)
       for (const type of ["xboxone", "ps5", "ps4", "switchpro", "xbox360"]) {
         expect(names(type, "zh-CN", functionKey)).toEqual([
           "平时",

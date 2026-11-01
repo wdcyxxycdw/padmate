@@ -128,7 +128,7 @@
 - **鼠标模式的摇杆**：`CancelAll` 后仍推着的摇杆要先回死区才恢复（`mouseLock`）；`Reload` 和校准变化不上锁，否则界面自动保存会让指针停住。`inputOnly` 引擎 `Output` 为空，不能调 `Output.Move`/`Jump` 或排 deadline。
 
 ### 功能键
-- 功能键（`Program.fnKey`，`back`、`start`、`guide` 之一）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
+- 功能键（`Program.fnKey`，`back` 或 `start`）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
 
 ### 序列、决策与 Fuzz
 - 取消序列要先标序列再取消点按和文字（`cancelQueued`：先 `endSeq`），否则多发一步。`TapSequence`（KeySpec 数组）不排队、与别的 owner 并行，黄金输出依赖这点；`Sequence` 等之前的结束，`engineOutput.TypeText` 要经 `Sequence`。序列里的等待从上一步物理抬起算，不叠加 `gap`。
@@ -187,7 +187,7 @@
 
 ### 编辑器：按键、功能键与摇杆
 - **摇杆的两个选中 id**：`leftstick`、`rightstick` 是“旋转”，`leftstick.press`、`rightstick.press` 是“点按”，而绑定键 `leftstick` 是按下摇杆的绑定。绑定键找抽屉经 `calloutFor`，选中 id 找绑定经 `bindingKey`，比较“选中的是不是这个标注”先 `calloutOf`，否则“点按”格没名字、不亮引线。
-- **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由 config.json 的 `functionKey` 定，纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。
+- **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由 config.json 的 `functionKey` 定，纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。`guide` 永不映射：列出或计数绑定的代码要连同功能键一起把它排除（界面用 `isIgnoredControl`，守护进程用 `control.Control.Unmappable`），保存时去掉（`savedForm`）。
 - **映射向导的捕获与清理**：向导开的是留着的捕获：窗口 `blur`、锁屏、睡眠调 `windowAway()`，不停止它；关闭、重载、渲染进程崩溃、退出调 `stop()`，断连调 `disconnected()`。不要把 blur 改成 `stop()`（向导开着时切到别的程序，手柄键会发出快捷键），也不要把别的路径改成 `windowAway()`（窗口关了映射还停着）。
 - **快捷键捕获**：start/stop/事件都带 session，卸载时迟到的 start 只能停自己的会话；钩子只观察，自动测试不可真按 Win+L、Ctrl+Alt+Del 或注销。录紧急组合时超时或失败的 `capture.start` 仍可能到达 daemon、`capture.stop` 也可能没发出，所以 `pad-capture.ts` 发过 start 后一直重发 stop 直到确认或断连。
 

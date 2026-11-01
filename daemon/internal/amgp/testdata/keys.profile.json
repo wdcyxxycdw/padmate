@@ -68,12 +68,6 @@
           "keys": "MediaPlayPause"
         }
       },
-      "guide": {
-        "press": {
-          "type": "keys",
-          "keys": "VolumeUp"
-        }
-      },
       "paddle2": {
         "press": {
           "type": "keys",

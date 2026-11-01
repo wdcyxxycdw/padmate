@@ -14,13 +14,21 @@
 界面只编辑 `layers.base`，界面用语里不出现“层”。层引擎、IPC/CLI 切层、脚本 API 都不变。文件里有其他层、common、层动作或 block 时，界面照常显示、不可编辑，换成别的动作前要确认。`defaultLayer` 不是 base 时整份配置只读。需要“按住换一组键”时用功能键，它不增加延迟。
 
 ### 二、只有一个功能键
-- 全局一个，不按配置分：`back`、`start`、`guide` 之一，默认 `start`（config.json 的 `functionKey`）。按住它时，其他控件先查 profile 的 `functionSet`，没设的用平时的绑定。
+- 全局一个，不按配置分：`back` 或 `start`，默认 `start`（config.json 的 `functionKey`）。按住它时，其他控件先查 profile 的 `functionSet`，没设的用平时的绑定。
 - 用哪一套在按下时定（和层的 press-owner 一样）。
 - 功能键自己的边沿不进手势识别，所以不给任何键加延迟。它仍参加紧急组合。
 - 没有反馈，不进 state.json，不出现在层事件里。功能键自己不能绑定，写了的编译时忽略。
 - 手柄报告不出当前功能键，就没有功能键。
 - 换功能键保存即生效，走切换配置的路径，先释放所有按着的输出。
-- 选 Xbox 键时 Game Bar 也会响应。padmate 不改系统设置，由设置页对话框说明并提供跳转按钮。
+
+### 二之一、不用 Xbox 键
+Xbox 键（PS 键、Home，SDL 的 `guide`）既不当功能键，也不能映射。Windows 的 Game Bar、Steam（大屏幕模式，和 Menu 一起按是 Alt+Tab）和手柄固件（长按关机、组合键重置）都在用它，padmate 拦不住，也不改系统设置。
+- 输入照常读：诊断页、`padmatectl monitor`、`pad.isDown` 都看得到它。引擎查找绑定时跳过它（`control.Control.Unmappable`），编译也不收它。
+- profile 里写在 `guide` 上的绑定（任何层、common、`functionSet`、旧的 `functionKeys`）照常解析，然后从模型拿掉，每条给一个警告；它们本身的错误也降为警告。格式冻结，所以有效的 profile 仍有效，`padmatectl validate` 不报错。
+- 界面不显示它：手柄图没有它的标签，按键列表、快捷键表、映射向导都不列它。界面保存 profile 时去掉 `guide` 上的绑定，和退役的反馈开关一样：守护进程不读的东西，下次保存时去掉，只打开不改不重写。
+- config.json 的 `functionKey: "guide"` 仍合 schema，守护进程按 `start` 读。界面每次写 config.json 都去掉它（和 ADR-0008 退役的成员一样，`withoutRetired`），所以文件在下次改设置时被改写。不在读的时候改写，因为守护进程从不自己改用户的文件。
+- 导入 AntiMicroX 配置时，`guide` 上的按键丢弃并写进报告。
+- 脚本处理器（`pad.on` 等）仍收得到 `guide` 的按键，是否也拦下另议。
 
 ### 三、摇杆、扳机和每设备调校
 - 新增十个虚拟控件：内圈、外圈、旋钮顺逆时针刻度、扳机第二段。只加可选字段，`schemaVersion` 仍是 1，脚本 API 版本不升。阈值字段见 schema。
@@ -44,7 +52,7 @@
 `extends` 只在配置库里有效，最多 4 层，成环或父配置有错则子配置不加载。合并按控件、成员或单项覆盖，`script` 整体替换。删除被继承的配置时，先把子配置写成合并后的完整内容。界面不提供继承，守护进程照常接受文件里的 `extends`。
 
 ### 七、映射向导
-SDL 不认识的手柄被当作普通摇杆。不把“原始控件”加进控件模型：用户在向导里做一份 SDL 映射，之后它就是标准手柄。原始输入只在向导和 `padmatectl monitor --raw` 里用，不进 slot、引擎和紧急组合检测。向导期间这只手柄的映射暂停（`capture.start`）。映射写进 config.json 的 `devices.<DeviceKey>.mapping`，同一 GUID 的所有 DeviceKey 一起写，因为 SDL 按 GUID 生效。收到 `GAMEPAD_REMAPPED` 时 slot 完整复位，因为 SDL 重新映射不会松开按着的键。
+SDL 不认识的手柄被当作普通摇杆。不把“原始控件”加进控件模型：用户在向导里做一份 SDL 映射，之后它就是标准手柄。向导不问 Home（SDL 的 `guide`），因为 padmate 不用它。原始输入只在向导和 `padmatectl monitor --raw` 里用，不进 slot、引擎和紧急组合检测。向导期间这只手柄的映射暂停（`capture.start`）。映射写进 config.json 的 `devices.<DeviceKey>.mapping`，同一 GUID 的所有 DeviceKey 一起写，因为 SDL 按 GUID 生效。收到 `GAMEPAD_REMAPPED` 时 slot 完整复位，因为 SDL 重新映射不会松开按着的键。
 
 ### 八、导入 AntiMicroX 配置
 纯包 `internal/amgp` 解析 `.amgp`，输出总能通过 `profile.Parse`，并给一份报告（丢弃、近似、信息）。守护进程只收内容，不收路径。只读它的文件格式和行为，不看它的代码。
@@ -54,14 +62,17 @@ SDL 不认识的手柄被当作普通摇杆。不把“原始控件”加进控�
 - 没写模式的摇杆在第一次修改前，界面显示“四方向”而引擎按 `standard` 工作。
 - 单层界面与 AntiMicroX 的 set 不对等，导入的其余层只能在文件里看全。
 - “点按”在有长按或双击时要等分辨。
-- 选 Xbox 键的人要自己关 Game Bar 的开关。
+- 想多一个功能键的人只能用 View 或 Menu；Xbox 键上原有的设置不再生效。
+- 用向导映射的手柄不报告 Home，诊断页也就看不到它。
 - 父配置改了，子配置的行为会变，界面不显示继承关系。
 
 ## 放弃的做法
 
 - **任意键当修饰键，或同时按下组合。** 参与的键每次按下都要多等，固定一个功能键更简单。
 - **用真的层实现功能键，或多个功能键。** 层有切层脉冲、颜色、HUD 层名，功能键都不要；多个功能键会占掉 View 和 Menu。
+- **Xbox 键可选作功能键，由设置页对话框提醒用户关 Game Bar。** 这是之前的做法。Game Bar 只是冲突之一，Steam 和手柄固件的冲突用户关不掉。
 - **padmate 自动关 Game Bar。** 违反“不修改全局系统设置”。
+- **config.json 里的 `functionKey: "guide"` 改成 schema 错误。** 老文件会读不进来，修复时整个成员被重置；按 `start` 读效果相同而且不报错。
 - **两段扳机互斥，或曲线移动阈值。** 前者延迟第一段，后者让内外圈和两段扳机错位。
 - **“原始控件”进控件模型。** 要改 schema、类型、编辑器和脚本声明，用户还得自己判断每个按钮是什么。
 - **映射写进 `SDL_GAMECONTROLLERCONFIG`。** 优先级最高，运行中改不了，也会盖住用户自己的设置。

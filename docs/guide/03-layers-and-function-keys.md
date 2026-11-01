@@ -6,7 +6,7 @@ A controller has few keys. The function key and layers let one key do different 
 
 ## The function key
 
-The middle of the controller has three keys: View, Menu and the Xbox button. On a PlayStation controller they are Create (or Share), Options and the PS button, and on a Switch Pro controller they are −, + and Home. One of them is the function key, and by default it is Menu.
+Of the two keys in the middle of the controller, View and Menu, one is the function key, and by default it is Menu. On a PlayStation controller they are Create (or Share) and Options, and on a Switch Pro controller − and +.
 
 The function key works like a laptop's Fn key:
 
@@ -16,8 +16,19 @@ The function key works like a laptop's Fn key:
 
 ### Changing the function key
 
-1. Click “Settings”, open “General”, find “Function key”, and click one of the keys. It applies at once, for all profiles and controllers.
-2. Choosing the Xbox button shows a dialog. Pressing it also opens the Xbox Game Bar of Windows, which padmate cannot stop. In Windows, under “Settings → Gaming → Game Bar”, turn off “Allow your controller to open Game Bar” (older versions of Windows call it “Open Xbox Game Bar using this button on a controller”). Click “Open Windows Settings” to go straight to that page, and “Got it” to close the dialog. Your choice already applies. Steam may also take the Xbox button while it runs.
+Click “Settings”, open “General”, find “Function key”, and click one of the keys. It applies at once, for all profiles and controllers.
+
+### Why the Xbox button cannot be used
+
+The Xbox button in the middle (the PS button on a PlayStation controller, Home on a Switch controller) cannot be the function key and cannot have a shortcut, and the controller picture has no tag for it. Other programs, and the controller itself, already use it:
+
+- Pressing it opens the Xbox Game Bar of Windows.
+- While Steam runs, pressing it opens Steam's Big Picture mode, and pressing it with Menu becomes Alt+Tab.
+- On some controllers, holding it turns the controller off, and holding it while pressing another key resets the controller's settings.
+
+padmate cannot stop any of this, so it does not use the button. padmate still reads it, and the diagnostics page shows when it is pressed.
+
+If you chose the Xbox button as the function key before, Menu is used now. The next time you change anything on the Settings page, the old choice is removed from the configuration file.
 
 ### Setting the function key's set
 
@@ -59,6 +70,6 @@ Each profile has its own folder in `%APPDATA%\padmate\profiles`, and the `profil
 - To make a key do nothing in a layer, write `"block": true`.
 - `defaultLayer` is the base layer at start-up. Without it, it is `base`.
 
-View, Menu and the Xbox button are `back`, `start` and `guide`. A setting written on the current function key does not apply, but stays in the file. The function key's set is written in `functionSet`, in the same way as a layer.
+View and Menu are `back` and `start`. A setting written on the current function key does not apply, but stays in the file. The Xbox button is `guide`: no setting written on it applies, and the check gives a warning for each; when you edit the profile on the Mapping page, they are removed from the file. The function key's set is written in `functionSet`, in the same way as a layer.
 
 After you save the file, padmate rereads it. To check it, run `.\padmatectl.exe validate profile.json` in the `resources\bin` folder. It points out what is wrong and does not change the file.

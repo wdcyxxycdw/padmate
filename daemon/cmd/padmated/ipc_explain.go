@@ -43,7 +43,7 @@ type rpcExplanation struct {
 	Name            string `json:"name"`
 	DeclarativeOnly bool   `json:"declarativeOnly"`
 	// FunctionKey is the function key config.json chooses (ADR-0012),
-	// "back", "start" or "guide": the one for every slot, and the key the
+	// "back" or "start": the one for every slot, and the key the
 	// FunctionSet of each slot belongs to.
 	FunctionKey string `json:"functionKey"`
 	// IsFunctionKey is set when the control is the function key: it sends
@@ -75,7 +75,7 @@ type rpcSlotExplanation struct {
 // "label-only" as a layer's.
 type rpcFunctionSetResult struct {
 	rpcLayerResult
-	// Key is the function key, "back", "start" or "guide".
+	// Key is the function key, "back" or "start".
 	Key string `json:"key"`
 	// HasSet is whether the profile has a function set at all.
 	HasSet bool `json:"hasSet"`

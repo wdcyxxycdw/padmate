@@ -49,7 +49,7 @@
       "x-go-field": "ReleaseOnSwitch"
     },
     "functionKey": {
-      "description": "The one function key (ADR-0012): while it is held, the other controls use the profile's functionSet first. start (Menu, Options, Plus; the default), back (View, Create, Share, Minus) or guide (the Xbox, PS or Home button, which Windows may also react to). It is the same for every profile and every controller, and takes effect at once. The function key sends nothing and cannot be bound.",
+      "description": "The one function key (ADR-0012): while it is held, the other controls use the profile's functionSet first. start (Menu, Options, Plus; the default) or back (View, Create, Share, Minus). It is the same for every profile and every controller, and takes effect at once. The function key sends nothing and cannot be bound. guide (the Xbox, PS or Home button) is retired: padmate never maps that button, and a file that still says guide is read as start.",
       "enum": [
         "start",
         "back",

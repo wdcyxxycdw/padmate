@@ -1,0 +1,14 @@
+name "旧格式里的 Xbox 键", schemaVersion 1
+layer base
+	south         /layers/base/south         label ""  press: keys A hold
+function key set function:back
+function key set function:start
+	east          /functionKeys/start/east   label ""  press: keys C hold
+effective function set function
+	east          /functionKeys/start/east   label ""  press: keys C hold
+10:14: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/functionKeys/back/guide)
+	> "guide": {"press": {"type": "keys", "key…
+11:65: warning: "guide" is ignored: padmate does not map the Xbox, PS or Home button (/functionKeys/start/guide)
+	> "guide": {"label": "只有名字"}}
+11:74: warning: binding has no action (/functionKeys/start/guide)
+	> {"label": "只有名字"}}

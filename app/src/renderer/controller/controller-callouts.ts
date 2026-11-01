@@ -57,11 +57,10 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
   // A single Joy-Con held sideways has no back, only start (ADR-0012).
   if (padHasFunctionKey("back", info.type, info.buttonMask))
     add("back", "top", { offset: -1 });
-  if (ps) {
-    // The PS button sits low between the sticks; the touchpad takes the top center.
-    if (info.type !== "ps3")
-      add("touchpad", "top", { offset: 0, raised: true });
-  } else add("guide", "top", { offset: 0, raised: true });
+  // The touchpad takes the top center. The Xbox, PS or Home button has no
+  // chip: padmate never maps it (ADR-0012).
+  if (ps && info.type !== "ps3")
+    add("touchpad", "top", { offset: 0, raised: true });
   add("start", "top", { offset: 1 });
   add("righttrigger", "top", { side: "right", slot: 0 });
   add("rightshoulder", "top", { side: "right", slot: 1 });
@@ -81,7 +80,6 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
   };
   column(left, "left");
   column(right, "right");
-  if (ps) add("guide", "bottom", { offset: 0 });
   return callouts;
 }
 

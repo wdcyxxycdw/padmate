@@ -13,10 +13,10 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the function key (ADR-0012): one of back, start
-// and guide, start unless Compile is told otherwise, sends nothing, stays out
-// of gesture recognition, and while it is held the other controls look their
-// binding up in the profile's function set first.
+// Tests of the function key (ADR-0012): back or start, start unless
+// Compile is told otherwise, sends nothing, stays out of gesture recognition,
+// and while it is held the other controls look their binding up in the
+// profile's function set first. guide is neither the function key nor mapped.
 
 // compileFn parses src and compiles it with function key fn; control.Invalid
 // is the default, start.
@@ -36,11 +36,11 @@ func compileFn(t testing.TB, src string, fn control.Control) *engine.Program {
 // fnProfile has a base layer, a layer alt that rebinds south, and a function
 // set. The set rebinds south and west (west is a press there, while the base
 // binding is a tap and a hold), blocks dpad.up, owns dpad.left with a label
-// only, and binds lt, north and the three controls that can be the function
-// key; east is not in it. back, guide and start have a binding in the base
-// layer too, so whichever of them is not the function key is an ordinary
-// control, and the one that is has a binding that is ignored, in the layer and
-// in the set. rightshoulder is a tap with a hold of Shift, a gesture that
+// only, and binds lt, north, the two controls that can be the function key and
+// guide; east is not in it. back, guide and start have a binding in the base
+// layer too: whichever of back and start is not the function key is an
+// ordinary control, the one that is has a binding that is ignored, in the
+// layer and in the set, and guide's are left out by profile.Parse. rightshoulder is a tap with a hold of Shift, a gesture that
 // another control's press commits at once (holdPreferred).
 const fnProfile = `{"schemaVersion":1,"name":"fn","layers":{
  "base":{
@@ -95,35 +95,37 @@ func TestFunctionKeySets(t *testing.T) {
 	}
 }
 
-// Each of back, start and guide can be the function key: it sends nothing,
-// and the binding it has in a layer and in the set is ignored and listed
-// (IgnoredFunctionKeyBindings); the other two are ordinary controls, with
-// their own bindings in the layers, and under the function key with the set's.
+// Each of back and start can be the function key: it sends nothing, and the
+// binding it has in a layer and in the set is ignored and listed
+// (IgnoredFunctionKeyBindings); the other is an ordinary control, with its own
+// binding in the layers, and under the function key with the set's. guide
+// cannot be the function key (Compile takes start instead) and sends nothing,
+// plain or under the function key.
 func TestFunctionKeyChoice(t *testing.T) {
 	for _, tc := range []struct {
 		fn      control.Control
 		ignored []string
-		// The base binding and the set's of each key, as sent.
-		plain, under map[string]string
+		// The other center key, and its base binding and the set's, as sent.
+		other, plain, under string
 	}{
-		{control.Invalid, []string{"/layers/base/start", "/functionSet/start"}, map[string]string{"back": "V", "guide": "G"}, map[string]string{"back": "F7", "guide": "F8"}},
-		{control.Start, []string{"/layers/base/start", "/functionSet/start"}, map[string]string{"back": "V", "guide": "G"}, map[string]string{"back": "F7", "guide": "F8"}},
-		{control.Back, []string{"/layers/base/back", "/functionSet/back"}, map[string]string{"guide": "G", "start": "S"}, map[string]string{"guide": "F8", "start": "F9"}},
-		{control.Guide, []string{"/layers/base/guide", "/functionSet/guide"}, map[string]string{"back": "V", "start": "S"}, map[string]string{"back": "F7", "start": "F9"}},
-		{control.Control(250), []string{"/layers/base/start", "/functionSet/start"}, map[string]string{"back": "V", "guide": "G"}, map[string]string{"back": "F7", "guide": "F8"}},
+		{control.Invalid, []string{"/layers/base/start", "/functionSet/start"}, "back", "V", "F7"},
+		{control.Start, []string{"/layers/base/start", "/functionSet/start"}, "back", "V", "F7"},
+		{control.Back, []string{"/layers/base/back", "/functionSet/back"}, "start", "S", "F9"},
+		{control.Guide, []string{"/layers/base/start", "/functionSet/start"}, "back", "V", "F7"},
+		{control.Control(250), []string{"/layers/base/start", "/functionSet/start"}, "back", "V", "F7"},
 	} {
 		prog := compileFn(t, fnProfile, tc.fn)
 		fn := prog.FunctionKey()
 		t.Run(fn.String()+" from "+tc.fn.String(), func(t *testing.T) {
-			if !fn.CanBeFunctionKey() || (tc.fn.CanBeFunctionKey() && fn != tc.fn) {
+			if !fn.CanBeFunctionKey() || fn == control.Guide || (tc.fn.CanBeFunctionKey() && fn != tc.fn) {
 				t.Errorf("FunctionKey() = %s for %s", fn, tc.fn)
 			}
 			if got := prog.IgnoredFunctionKeyBindings(); !slices.Equal(got, tc.ignored) {
 				t.Errorf("ignored bindings %q; want %q", got, tc.ignored)
 			}
 			for _, bi := range prog.Bindings() {
-				if bi.Binding.Control == fn {
-					t.Errorf("Bindings() lists %s of %s, the function key", bi.Binding.ID, bi.Layer)
+				if bi.Binding.Control == fn || bi.Binding.Control == control.Guide {
+					t.Errorf("Bindings() lists %s of %s", bi.Binding.ID, bi.Layer)
 				}
 			}
 			name := fn.String()
@@ -139,19 +141,21 @@ func TestFunctionKeyChoice(t *testing.T) {
 			if got, want := r.String(), "@110 down decl/1 F1, @120 up decl/1 F1"; got != want {
 				t.Errorf("under the function key sent %q; want %q", got, want)
 			}
-			// The other two are ordinary controls, plain and under the key.
-			for _, other := range []string{"back", "guide", "start"} {
-				if other == name {
-					continue
-				}
-				plain, under := tc.plain[other], tc.under[other]
-				r := &recorder{}
-				e := engine.New(prog, r, engine.Options{})
-				runDeadlines(t, e, r, "+"+other+"@0 -"+other+"@10 +"+name+"@20 +"+other+"@30 -"+other+"@40 -"+name+"@50")
-				want := "@0 down decl/1 " + plain + ", @10 up decl/1 " + plain + ", @30 down decl/2 " + under + ", @40 up decl/2 " + under
-				if got := r.String(); got != want {
-					t.Errorf("%s: sent %q; want %q", other, got, want)
-				}
+			// The other is an ordinary control, plain and under the key.
+			other := tc.other
+			r = &recorder{}
+			e = engine.New(prog, r, engine.Options{})
+			runDeadlines(t, e, r, "+"+other+"@0 -"+other+"@10 +"+name+"@20 +"+other+"@30 -"+other+"@40 -"+name+"@50")
+			want := "@0 down decl/1 " + tc.plain + ", @10 up decl/1 " + tc.plain + ", @30 down decl/2 " + tc.under + ", @40 up decl/2 " + tc.under
+			if got := r.String(); got != want {
+				t.Errorf("%s: sent %q; want %q", other, got, want)
+			}
+			// guide sends nothing, plain or under the key, though both bind it.
+			r = &recorder{}
+			e = engine.New(prog, r, engine.Options{})
+			runDeadlines(t, e, r, "+guide@0 -guide@10 +"+name+"@20 +guide@30 -guide@40 -"+name+"@50 wait@500")
+			if got := r.String(); got != "" {
+				t.Errorf("guide: sent %q; want nothing", got)
 			}
 		})
 	}
@@ -212,11 +216,11 @@ func TestFunctionKeyPressOwner(t *testing.T) {
 	}
 }
 
-// There is one function key. The other two center keys are ordinary controls:
-// pressing one under the function key does not switch anything, and neither
-// of them is a function key of its own, so held with the function key they
-// both have bindings of the set, and held alone they have no effect on which
-// set is used.
+// There is one function key. The other center key is an ordinary control:
+// pressing it under the function key does not switch anything, and it is not a
+// function key of its own, so held with the function key it has the binding of
+// the set, and held alone it has no effect on which set is used. guide sends
+// nothing and selects nothing.
 func TestOtherCenterKeysAreOrdinary(t *testing.T) {
 	for _, tc := range []struct {
 		name, steps, want string
@@ -225,7 +229,8 @@ func TestOtherCenterKeysAreOrdinary(t *testing.T) {
 		{"alone", "+back@0 -back@10", "@0 down decl/1 V, @10 up decl/1 V", control.Invalid},
 		{"back held, then the function key", "+back@0 +start@5 +south@10 -south@20 -start@25 -back@30", "@0 down decl/1 V, @10 down decl/2 F1, @20 up decl/2 F1, @30 up decl/1 V", control.Invalid},
 		{"back held under the function key: its set binding", "+start@0 +back@5 +south@10 -south@20 -back@25", "@5 down decl/1 F7, @10 down decl/2 F1, @20 up decl/2 F1, @25 up decl/1 F7", control.Start},
-		{"guide does not take the set", "+guide@0 +south@10 -south@20 -guide@30", "@0 down decl/1 G, @10 down decl/2 A, @20 up decl/2 A, @30 up decl/1 G", control.Invalid},
+		{"guide sends nothing and does not take the set", "+guide@0 +south@10 -south@20 -guide@30", "@10 down decl/2 A, @20 up decl/2 A", control.Invalid},
+		{"guide under the function key sends nothing", "+start@0 +guide@5 -guide@8 +south@10 -south@20 -start@25", "@10 down decl/2 F1, @20 up decl/2 F1", control.Invalid},
 		{"the function key let go under back", "+start@0 +back@5 -start@10 +south@15 -south@20 -back@25", "@5 down decl/1 F7, @15 down decl/2 A, @20 up decl/2 A, @25 up decl/1 F7", control.Invalid},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -260,7 +265,7 @@ func TestFunctionKeyWithoutASet(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		fn   control.Control
-	}{{"start", control.Start}, {"back", control.Back}, {"guide", control.Guide}} {
+	}{{"start", control.Start}, {"back", control.Back}} {
 		t.Run("old format, "+tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileFn(t, old, tc.fn), r, engine.Options{})
@@ -387,7 +392,7 @@ func TestFunctionKeyAddsNoDelay(t *testing.T) {
 // no cycle, level or binding, and the level of a binding found in the set,
 // function:<the key>.
 func TestFunctionKeyDecisions(t *testing.T) {
-	for _, fn := range []control.Control{control.Start, control.Back, control.Guide} {
+	for _, fn := range []control.Control{control.Start, control.Back} {
 		t.Run(fn.String(), func(t *testing.T) {
 			var got []engine.Decision
 			r := &recorder{}
@@ -428,7 +433,7 @@ func TestFunctionKeyDecisions(t *testing.T) {
 func TestFunctionKeyExitPaths(t *testing.T) {
 	prog := compileLayers(t, fnProfile)
 	plain := compileLayers(t, `{"schemaVersion":1,"name":"plain","layers":{"base":{"south":{"press":{"type":"keys","keys":"A"}}}}}`)
-	other := compileFn(t, fnProfile, control.Guide)
+	other := compileFn(t, fnProfile, control.Back)
 	for _, tc := range []struct {
 		name   string
 		exit   func(e *engine.Engine, l *ledger, now int)
@@ -553,7 +558,7 @@ func TestFunctionKeyReloadChangesTheSet(t *testing.T) {
 // Nothing is left held: every Up the ledger sees has its Down (invariant 1).
 func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 	start := compileLayers(t, fnProfile)
-	guide := compileFn(t, fnProfile, control.Guide)
+	back := compileFn(t, fnProfile, control.Back)
 	newLedger := func(t *testing.T, prog *engine.Program) (*engine.Engine, *ledger, func(c control.Control, down bool, at int)) {
 		l := &ledger{t: t, held: map[ledgerKey]int{}, ctl: map[uint64]control.Control{}, record: true}
 		e := engine.New(prog, l, engine.Options{})
@@ -571,7 +576,7 @@ func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 		if len(l.held) != 2 {
 			t.Fatalf("held %v; want F1 and B", l.held)
 		}
-		e.Reload(timeAt(15), guide)
+		e.Reload(timeAt(15), back)
 		l.releaseAll() // what the slot's ReleaseOwners does after a reload
 		if got := e.ActiveFunctionKey(); got != control.Invalid {
 			t.Errorf("function key held %v after the reload; want none", got)
@@ -584,14 +589,14 @@ func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 		if len(l.held) != 0 || l.cmds != 2 {
 			t.Fatalf("after the releases: %d commands, %v held; want the two Downs only", l.cmds, l.held)
 		}
-		// start is an ordinary control now: its base binding works. guide is the
+		// start is an ordinary control now: its base binding works. back is the
 		// function key: its edges send nothing and it selects the set.
 		step(control.Start, true, 30)
 		step(control.Start, false, 31)
-		step(control.Guide, true, 40)
+		step(control.Back, true, 40)
 		step(control.South, true, 41)
 		step(control.South, false, 42)
-		step(control.Guide, false, 43)
+		step(control.Back, false, 43)
 		step(control.South, true, 50)
 		step(control.South, false, 51)
 		if want := []string{"F1", "B", "S", "F1", "A"}; !slices.Equal(l.sent, want) {
@@ -603,30 +608,30 @@ func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 	})
 	t.Run("the new key was down as an ordinary control", func(t *testing.T) {
 		e, l, step := newLedger(t, start)
-		step(control.Guide, true, 0) // G, held
+		step(control.Back, true, 0)  // V, held
 		step(control.South, true, 5) // A, held
 		if len(l.held) != 2 {
-			t.Fatalf("held %v; want G and A", l.held)
+			t.Fatalf("held %v; want V and A", l.held)
 		}
-		e.Reload(timeAt(10), guide)
+		e.Reload(timeAt(10), back)
 		l.releaseAll()
 		if got := e.ActiveFunctionKey(); got != control.Invalid {
-			t.Errorf("function key held %v after the reload although guide is down; want none", got)
+			t.Errorf("function key held %v after the reload although back is down; want none", got)
 		}
-		// A press while guide is still down does not use the set: the key
+		// A press while back is still down does not use the set: the key
 		// selects it from its next press.
 		step(control.South, false, 12)
 		step(control.South, true, 14)
 		step(control.South, false, 15)
-		step(control.Guide, false, 16)
-		step(control.Guide, true, 20)
+		step(control.Back, false, 16)
+		step(control.Back, true, 20)
 		step(control.South, true, 21)
 		step(control.South, false, 22)
-		step(control.Guide, false, 23)
+		step(control.Back, false, 23)
 		if len(l.held) != 0 {
 			t.Fatalf("%v held at the end", l.held)
 		}
-		want := []string{"G", "A", "A", "F1"}
+		want := []string{"V", "A", "A", "F1"}
 		if !slices.Equal(l.sent, want) {
 			t.Errorf("Downs %q; want %q", l.sent, want)
 		}
@@ -636,7 +641,7 @@ func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 		step(control.West, true, 0) // pending: tap or hold
 		step(control.Start, true, 5)
 		step(control.South, true, 6) // buffered behind west
-		e.Reload(timeAt(10), guide)
+		e.Reload(timeAt(10), back)
 		l.releaseAll()
 		if d, ok := e.NextDeadline(); ok {
 			t.Errorf("a deadline at %v is left", time.Duration(d))
@@ -1035,5 +1040,63 @@ func TestViewFunctionKey(t *testing.T) {
 	e.Reset(clock.Time(20 * time.Millisecond))
 	if got := e.View().FunctionKey; got != control.Invalid {
 		t.Errorf("FunctionKey = %v after Reset", got)
+	}
+}
+
+// guide is never mapped (ADR-0012). profile.Parse leaves its bindings out, and
+// the engine does not map one that a profile built by hand, or a level of a
+// registry, has: Compile skips it unchecked and does not list it, a press
+// sends nothing, and it is not the function key whatever WithFunctionKey says.
+func TestGuideIsNeverMapped(t *testing.T) {
+	keysAction := func(id, k string) *profile.Action {
+		return &profile.Action{ID: id, Type: profile.ActionKeys, Mode: profile.ModeHold, Keys: keys.MustParse(k)}
+	}
+	bad := &profile.Binding{ID: "/layers/base/guide", Control: control.Guide, Press: &profile.Action{ID: "/layers/base/guide/press", Type: profile.ActionType(250)}}
+	south := &profile.Binding{ID: "/layers/base/south", Control: control.South, Press: keysAction("/layers/base/south/press", "A")}
+	inCommon := &profile.Binding{ID: "/common/guide", Control: control.Guide, Press: keysAction("/common/guide/press", "G")}
+	inSet := &profile.Binding{ID: "/functionSet/guide", Control: control.Guide, Press: keysAction("/functionSet/guide/press", "F8")}
+	prog, err := engine.Compile(&profile.Profile{
+		Layers:      []*profile.Layer{{Name: "base", Bindings: []*profile.Binding{south, bad}}},
+		Common:      &profile.Layer{Name: "common", Bindings: []*profile.Binding{inCommon}},
+		FunctionSet: &profile.Layer{Name: "function", Bindings: []*profile.Binding{inSet}},
+	}, engine.WithFunctionKey(control.Guide))
+	if err != nil {
+		t.Fatalf("Compile: %v", err)
+	}
+	if fn := prog.FunctionKey(); fn != control.Start {
+		t.Errorf("FunctionKey() = %s; want start", fn)
+	}
+	for _, bi := range prog.Bindings() {
+		if bi.Binding.Control == control.Guide {
+			t.Errorf("Bindings() lists %s", bi.Binding.ID)
+		}
+	}
+	if got := prog.IgnoredFunctionKeyBindings(); len(got) != 0 {
+		t.Errorf("IgnoredFunctionKeyBindings() = %q; want none", got)
+	}
+	var decisions []string
+	r := &recorder{}
+	e := engine.New(prog, r, engine.Options{Trace: func(d engine.Decision) {
+		if d.Control == control.Guide {
+			decisions = append(decisions, brief(d))
+		}
+	}})
+	run(t, e, r, "+guide@0 -guide@10 +start@20 +guide@30 -guide@40 -start@50 +south@60 -south@70")
+	if got, want := r.String(), "@60 down decl/3 A, @70 up decl/3 A"; got != want {
+		t.Errorf("sent %q; want %q", got, want)
+	}
+	if want := []string{"@0 guide down unbound", "@10 guide up end", "@30 guide down unbound", "@40 guide up end"}; !slices.Equal(decisions, want) {
+		t.Errorf("decisions of guide %q; want %q", decisions, want)
+	}
+	if e.ControlDown(control.Guide) {
+		t.Error("guide reads as down after its release")
+	}
+	// A level of a registry that binds guide is not asked either.
+	level := fakeLevel{name: "reg", bindings: map[control.Control]*profile.Binding{control.Guide: inCommon}}
+	r = &recorder{}
+	e = engine.New(prog, r, engine.Options{Registry: fakeRegistry{levels: []engine.Level{level}}})
+	run(t, e, r, "+guide@0 -guide@10")
+	if got := r.String(); got != "" {
+		t.Errorf("registry: sent %q; want nothing", got)
 	}
 }

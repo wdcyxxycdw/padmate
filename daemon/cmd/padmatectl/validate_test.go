@@ -49,8 +49,13 @@ const (
 	functionSet  = "testdata/function-set.json"
 )
 
+// guideBindings binds guide, which padmate never maps (ADR-0012), in the base
+// layer and, not validly, in the function set: two warnings, no error, and
+// neither binding listed.
+const guideBindings = "testdata/guide.json"
+
 // TestValidateGolden compares a transcript of validate over the fixtures
-// labelOnly, functionKeys and functionSet, as text and as JSON, with
+// labelOnly, functionKeys, functionSet and guideBindings, as text and as JSON, with
 // testdata/validate.golden.
 func TestValidateGolden(t *testing.T) {
 	var b strings.Builder
@@ -63,6 +68,8 @@ func TestValidateGolden(t *testing.T) {
 		{"validate", "--json", functionKeys},
 		{"validate", functionSet},
 		{"validate", "--json", functionSet},
+		{"validate", guideBindings},
+		{"validate", "--json", guideBindings},
 	} {
 		code, stdout, stderr := runCmd(t, args...)
 		if stderr != "" {

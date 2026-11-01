@@ -38,8 +38,8 @@ type Program struct {
 	// Response curves, indexed by curveLS, curveRS, curveLT, curveRT.
 	curves [4]curveKind
 
-	// fnKey is the function key of this Program (ADR-0012): back,
-	// start or guide, never control.Invalid. fnSet is the profile's function
+	// fnKey is the function key of this Program (ADR-0012): back or
+	// start, never control.Invalid. fnSet is the profile's function
 	// set, nil when it has none, and fnLevel the name that set has in lookups
 	// and decisions, profile.FunctionLevel(fnKey).
 	fnKey   control.Control
@@ -55,9 +55,9 @@ type CompileOption func(*compileOptions)
 
 type compileOptions struct{ functionKey control.Control }
 
-// WithFunctionKey makes c the function key of the Program (ADR-0012): back,
-// start or guide, the one control that sends nothing, cannot be bound and
-// selects the function set while it is held. Any other control, and without
+// WithFunctionKey makes c the function key of the Program (ADR-0012): back or
+// start, the one control that sends nothing, cannot be bound and selects the
+// function set while it is held. Any other control, guide too, and without
 // this option, means control.DefaultFunctionKey (start). The key comes from
 // config.json, which this pure package does not read, so the caller passes it.
 func WithFunctionKey(c control.Control) CompileOption {
@@ -259,9 +259,14 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 	}
 	// A binding on the function key sends nothing and is not looked up
 	// (ADR-0012): Compile does not even check it, and remembers it for the
-	// log. Every other control, back, start and guide too, is an ordinary one.
+	// log. One on guide, which profile.Parse already leaves out, is skipped
+	// the same way without a word. Every other control, the other of back and
+	// start too, is an ordinary one.
 	for _, l := range p.Layers {
 		for i, b := range l.Bindings {
+			if b != nil && b.Control.Unmappable() {
+				continue
+			}
 			if b != nil && b.Control == fnKey {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
@@ -273,6 +278,9 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 	}
 	if p.Common != nil {
 		for i, b := range p.Common.Bindings {
+			if b != nil && b.Control.Unmappable() {
+				continue
+			}
 			if b != nil && b.Control == fnKey {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
@@ -284,6 +292,9 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 	}
 	if set := p.EffectiveFunctionSet(); set != nil {
 		for j, b := range set.Bindings {
+			if b != nil && b.Control.Unmappable() {
+				continue
+			}
 			if b != nil && b.Control == fnKey {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
@@ -312,7 +323,7 @@ func (p *Program) addBindingInfo(l *profile.Layer, name string) {
 	bindings := slices.Clone(l.Bindings)
 	slices.SortFunc(bindings, func(a, b *profile.Binding) int { return int(a.Control) - int(b.Control) })
 	for _, b := range bindings {
-		if b.Control == p.fnKey {
+		if b.Control == p.fnKey || b.Control.Unmappable() {
 			continue // ignored (Compile)
 		}
 		gs := gesturesOf(b)

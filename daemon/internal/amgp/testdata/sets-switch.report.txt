@@ -1,6 +1,7 @@
 信息  set 4：set 的名称“base”已被别的层用了或是保留名，层叫“set4”
 信息  set 5：set 的名称“Edit mode”已被别的层用了或是保留名，层叫“set5”
 信息  set 1 / north：换 set 的目标是它自己所在的 set，忽略
+丢弃  set 1 / guide：padmate 不映射 Xbox、PS 或 Home 键，这个按键没有导入
 信息  set 1 / rightshoulder：换 set 的目标是它自己所在的 set，忽略
 信息  set 2 / north：换 set 的目标是它自己所在的 set，忽略
 信息  set 2：导入为层“Edit mode”

@@ -170,12 +170,6 @@
           "holdMs": 400
         }
       },
-      "guide": {
-        "press": {
-          "type": "keys",
-          "keys": "Esc"
-        }
-      },
       "dpad.up": {
         "label": "t / *[RETURN]",
         "tap": {

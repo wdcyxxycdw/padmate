@@ -110,7 +110,7 @@
       "x-go-field": "FunctionKeys"
     },
     "functionSet": {
-      "description": "Bindings that apply while the function key is held (ADR-0012). The function key is one for every profile, chosen in config.json (functionKey: start by default, back or guide). A control that the set does not bind keeps its normal binding. Optional. When both functionSet and functionKeys are written, functionKeys is ignored.",
+      "description": "Bindings that apply while the function key is held (ADR-0012). The function key is one for every profile, chosen in config.json (functionKey: start by default, or back). A control that the set does not bind keeps its normal binding. Optional. When both functionSet and functionKeys are written, functionKeys is ignored.",
       "$ref": "#/$defs/functionBindings",
       "x-go-type": "*wireLayer",
       "x-go-field": "FunctionSet"
@@ -535,7 +535,7 @@
           "$ref": "#/$defs/binding"
         },
         "guide": {
-          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Windows or Steam may also react to it. Ignored while it is the function key (config.json functionKey, ADR-0012).",
+          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Ignored with a warning: padmate never maps it, since Windows, Steam and the controller itself react to it (ADR-0012).",
           "$ref": "#/$defs/binding"
         },
         "start": {
@@ -886,7 +886,7 @@
           "$ref": "#/$defs/binding"
         },
         "guide": {
-          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Windows or Steam may also react to it.",
+          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Ignored with a warning: padmate never maps it (ADR-0012).",
           "$ref": "#/$defs/binding"
         },
         "leftstick": {
@@ -1187,7 +1187,7 @@
     },
     "functionBindings": {
       "title": "Function set",
-      "description": "Bindings used while the function key is held (ADR-0012), keyed by control and written like a layer without a color: the same bindings, gestures and actions. A control the set does not bind keeps its normal binding. Any control can be bound here, back, start and guide too, except the function key itself (config.json functionKey, start by default): a binding on it is ignored. Bind each control only once.",
+      "description": "Bindings used while the function key is held (ADR-0012), keyed by control and written like a layer without a color: the same bindings, gestures and actions. A control the set does not bind keeps its normal binding. Any control can be bound here, back and start too, except the function key itself (config.json functionKey, start by default), whose binding is ignored, and guide, which padmate never maps. Bind each control only once.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -1212,7 +1212,7 @@
           "$ref": "#/$defs/binding"
         },
         "guide": {
-          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Bindable here, except while it is the function key (config.json functionKey, ADR-0012): then the binding is ignored. Windows or Steam may also react to it.",
+          "description": "Center logo button: Xbox button, PS button, Home (Nintendo). Ignored with a warning: padmate never maps it (ADR-0012).",
           "$ref": "#/$defs/binding"
         },
         "start": {

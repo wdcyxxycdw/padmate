@@ -132,11 +132,6 @@ it("names the set in the header as the function key, in both languages", async (
   await setup("north", "function", "zh-CN", paint, info, "back");
   expect(screen.getByTestId("drawer-view").textContent).toBe("按住功能键");
   cleanup();
-  await setup("north", "function", "en", paint, info, "guide");
-  expect(screen.getByTestId("drawer-view").textContent).toBe(
-    "Hold function key",
-  );
-  cleanup();
   await setup("north", "normal");
   expect(screen.queryByTestId("drawer-view")).toBeNull();
 });
@@ -316,14 +311,14 @@ it("pastes into the set", async () => {
   });
 });
 
-it("binds one of View, Menu and the Xbox button that is not the function key, in the set as anywhere", async () => {
+it("binds the one of View and Menu that is not the function key, in the set as anywhere", async () => {
   const { editor, record } = await setup(
     "back",
     "function",
     "zh-CN",
     paint,
     info,
-    "guide",
+    "start",
   );
   expect(shortcutValue()).toBe("");
   await record("Ctrl+V");
@@ -332,7 +327,7 @@ it("binds one of View, Menu and the Xbox button that is not the function key, in
   });
   expect(draft(editor).layers.base.back).toBeUndefined();
   cleanup();
-  const usual = await setup("start", "normal", "zh-CN", paint, info, "guide");
+  const usual = await setup("start", "normal", "zh-CN", paint, info, "back");
   await usual.record("Ctrl+S");
   expect(draft(usual.editor).layers.base.start).toEqual({
     press: { type: "keys", keys: "Ctrl+S" },

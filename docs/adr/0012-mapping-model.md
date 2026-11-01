@@ -14,13 +14,21 @@ The engine and the profile format support layers, many gestures, sequences, inne
 The UI edits only `layers.base`, and the UI's wording never mentions "layers". The layer engine, switching layers over IPC/CLI and the script API stay as they are. When a file has other layers, common, layer actions or block, the UI shows them as usual but they cannot be edited; replacing one with another action needs a confirmation. When `defaultLayer` is not base, the whole profile is read-only. For "hold to get another set of keys", use the function key, which adds no latency.
 
 ### 2. A single function key
-- One for everything, not per profile: one of `back`, `start` and `guide`, `start` by default (`functionKey` in config.json). While it is held, the other controls first look in the profile's `functionSet`, and use their usual bindings where it sets none.
+- One for everything, not per profile: `back` or `start`, `start` by default (`functionKey` in config.json). While it is held, the other controls first look in the profile's `functionSet`, and use their usual bindings where it sets none.
 - Which set applies is decided at the press (like a layer's press owner).
 - The function key's own edges never enter gesture recognition, so it adds latency to no key. It still takes part in the emergency combo.
 - It has no feedback, is not stored in state.json and does not appear in layer events. The function key itself cannot be bound; a binding written for it is ignored when compiling.
 - If a controller cannot report the current function key, it has no function key.
 - Changing the function key applies on save and goes through the path of switching profiles, releasing every held output first.
-- With the Xbox button chosen, Game Bar responds too. padmate does not change system settings; a dialog on the Settings page explains this and offers a button that opens the setting.
+
+### 2a. The Xbox button is not used
+The Xbox button (the PS button, Home; SDL's `guide`) is neither the function key nor mappable. Windows' Game Bar, Steam (Big Picture mode, and Alt+Tab when pressed with Menu) and the controller's firmware (turning off on a long press, resetting with a combination) all act on it; padmate can stop none of them, and does not change system settings.
+- Its input is read as usual: the Diagnostics page, `padmatectl monitor` and `pad.isDown` all see it. The engine's lookup skips it (`control.Control.Unmappable`), and Compile takes none of its bindings.
+- A binding on `guide` in a profile (in any layer, in common, in `functionSet` or in the old `functionKeys`) is parsed as usual, then taken out of the model with a warning for each; its own errors are lowered to warnings too. The format is frozen, so a valid profile stays valid, and `padmatectl validate` reports no error.
+- The UI does not show it: the controller picture has no tag for it, and the key list, the shortcut table and the mapping wizard leave it out. When the UI saves a profile it drops the bindings on `guide`, as it does the retired feedback switches: what the daemon does not read goes at the next save, and a file only opened is not rewritten.
+- `functionKey: "guide"` in config.json still passes the schema, and the daemon reads it as `start`. The UI drops it from every config.json it writes (like the members ADR-0008 retired, `withoutRetired`), so the file is rewritten at the next change of a setting. It is not rewritten when it is read, since the daemon never changes a user's file by itself.
+- An AntiMicroX import drops what is on `guide`, and says so in the report.
+- Script handlers (`pad.on` and the like) still receive presses of `guide`; whether to hold those back too is left open.
 
 ### 3. Sticks, triggers and per-device calibration
 - Ten new virtual controls: inner ring, outer ring, the knob's clockwise and counter-clockwise ticks, and the trigger's second stage. They add optional fields only; `schemaVersion` stays 1 and the script API version is not raised. The threshold fields are in the schema.
@@ -44,7 +52,7 @@ The UI edits only `layers.base`, and the UI's wording never mentions "layers". T
 `extends` works only within the profile library, at most 4 levels deep; a cycle, or a parent with errors, keeps the child from loading. Merging overrides by control, by member or by item; `script` is replaced as a whole. When a profile that others inherit from is deleted, its children are first written out with their merged full content. The UI offers no inheritance; the daemon accepts `extends` written in a file as usual.
 
 ### 7. The mapping wizard
-A controller SDL does not know is treated as a plain joystick. "Raw controls" are not added to the control model: in the wizard the user makes an SDL mapping, after which it is a standard gamepad. Raw input is used only in the wizard and in `padmatectl monitor --raw`; it never enters slots, the engine or emergency-combo detection. During the wizard, that controller's mapping is paused (`capture.start`). The mapping is written to config.json under `devices.<DeviceKey>.mapping`, for every DeviceKey of the same GUID at once, since SDL applies it by GUID. On `GAMEPAD_REMAPPED` the slot is fully reset, because SDL's remapping does not release held keys.
+A controller SDL does not know is treated as a plain joystick. "Raw controls" are not added to the control model: in the wizard the user makes an SDL mapping, after which it is a standard gamepad. The wizard does not ask for Home (SDL's `guide`), since padmate does not use it. Raw input is used only in the wizard and in `padmatectl monitor --raw`; it never enters slots, the engine or emergency-combo detection. During the wizard, that controller's mapping is paused (`capture.start`). The mapping is written to config.json under `devices.<DeviceKey>.mapping`, for every DeviceKey of the same GUID at once, since SDL applies it by GUID. On `GAMEPAD_REMAPPED` the slot is fully reset, because SDL's remapping does not release held keys.
 
 ### 8. Importing AntiMicroX profiles
 The pure package `internal/amgp` parses `.amgp`; its output always passes `profile.Parse`, and it comes with a report (dropped, approximated, information). The daemon accepts content only, never a path. We read only AntiMicroX's file format and behavior, not its code.
@@ -54,14 +62,17 @@ The pure package `internal/amgp` parses `.amgp`; its output always passes `profi
 - For a stick with no mode written, the UI shows "4 directions" until its first edit, while the engine works in `standard`.
 - The single-set UI does not match AntiMicroX's sets; the other layers of an import can be seen in full only in the file.
 - "Tap" has to wait to tell gestures apart when there is also a hold or a double tap.
-- People who choose the Xbox button have to turn off Game Bar's switch themselves.
+- Whoever wants a function key has only View and Menu to choose from; what was set on the Xbox button no longer works.
+- A controller mapped in the wizard does not report Home, so the Diagnostics page does not see it either.
 - When a parent profile changes, its children behave differently, and the UI does not show the inheritance.
 
 ## Alternatives given up
 
 - **Any button as a modifier, or chords pressed together.** Every press of the buttons involved would have to wait longer; one fixed function key is simpler.
 - **A function key built from real layers, or several function keys.** Layers have switch pulses, colors and layer names in the HUD, none of which the function key wants; several function keys would use up View and Menu.
+- **The Xbox button as a choice of function key, with a dialog on the Settings page asking the user to turn off Game Bar.** This was the earlier decision. Game Bar is only one of the conflicts; the user cannot turn off Steam's or the firmware's.
 - **padmate turns off Game Bar itself.** That breaks "do not change global system settings".
+- **`functionKey: "guide"` in config.json as a schema error.** An old file would not load, and the repair would reset the whole member; reading it as `start` has the same effect with no error.
 - **Mutually exclusive trigger stages, or a curve that moves the thresholds.** The first delays the first stage; the second puts the rings and the two trigger stages out of line.
 - **"Raw controls" in the control model.** The schema, the types, the editor and the script declarations would all change, and users would have to work out what each button is themselves.
 - **Writing mappings to `SDL_GAMECONTROLLERCONFIG`.** It takes the highest priority, cannot change while running, and would cover the user's own settings.

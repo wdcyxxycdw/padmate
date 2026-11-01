@@ -74,9 +74,6 @@
       "rightstick": {
         "block": true
       },
-      "guide": {
-        "block": true
-      },
       "touchpad": {
         "block": true
       },
@@ -175,9 +172,6 @@
         "type": "keys",
         "keys": "B"
       }
-    },
-    "guide": {
-      "block": true
     },
     "touchpad": {
       "block": true

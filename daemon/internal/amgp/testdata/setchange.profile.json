@@ -80,17 +80,6 @@
           "type": "keys",
           "keys": "A"
         }
-      },
-      "guide": {
-        "press": {
-          "type": "keys",
-          "keys": "B"
-        },
-        "release": {
-          "type": "layer",
-          "layer": "Second",
-          "op": "switch"
-        }
       }
     },
     "Second": {

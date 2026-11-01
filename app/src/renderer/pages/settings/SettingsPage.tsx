@@ -36,7 +36,7 @@ import { ModelLicenses } from "./ModelLicenses";
 import { ComboKeys, PanicComboDialog, seconds } from "./PanicComboDialog";
 import { ResetMappingDialog } from "./ResetMappingDialog";
 import { FeedbackSection } from "./SettingsFeedback";
-import { FunctionKeyRow, GameBarDialog } from "./SettingsFunctionKey";
+import { FunctionKeyRow } from "./SettingsFunctionKey";
 import { OverlaySection } from "./SettingsOverlay";
 import { TimingSection } from "./SettingsTiming";
 import { UpdatesSection } from "./SettingsUpdates";
@@ -100,10 +100,8 @@ export function SettingsPage({
   const [comboFor, setComboFor] = useState<string | null>(null);
   // The gap as typed, while it differs from what is saved.
   const [gapText, setGapText] = useState<string | null>(null);
-  // The function key just chosen, until it is saved; and the notice about
-  // Game Bar that choosing the Xbox button brings (ADR-0012).
+  // The function key just chosen, until it is saved.
   const [pendingKey, setPendingKey] = useState<FunctionKey | null>(null);
-  const [gameBar, setGameBar] = useState(false);
   const shown = saving ?? saved;
   const disabled = !editable || state.busy || !!saving;
 
@@ -231,14 +229,12 @@ export function SettingsPage({
   const family = combo && isPanicFamily(combo.family) ? combo.family : null;
   const parsed = editable ? readConfig(config) : null;
   const functionKey = pendingKey ?? configuredFunctionKey(parsed);
-  // The choice is saved at once. The Xbox button asks the user to turn off
-  // the Game Bar's own use of it; the notice comes once the choice is saved.
+  // The choice is saved at once.
   const chooseFunctionKey = async (key: FunctionKey) => {
     if (key === functionKey) return;
     setPendingKey(key);
     try {
-      const result = await write((source) => setFunctionKey(source, key));
-      if (result.ok && key === "guide") setGameBar(true);
+      await write((source) => setFunctionKey(source, key));
     } finally {
       setPendingKey(null);
     }
@@ -639,12 +635,6 @@ export function SettingsPage({
           </section>
         </div>
       </div>
-      <GameBarDialog
-        open={gameBar}
-        language={language}
-        api={store.getState().api}
-        onClose={() => setGameBar(false)}
-      />
       {calibrating && (
         <CalibrationDialog
           open

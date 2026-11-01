@@ -79,7 +79,6 @@ import {
   uiFailureText,
 } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
-import { systemSettingsHandlers } from "./system-settings";
 import { LANGUAGE_FILE, LanguageFile, languageHandlers } from "./ui-language";
 import type { UpdateController } from "./update-controller";
 import { updateHandlers } from "./update-handlers";
@@ -481,9 +480,6 @@ function registerHandlers(update: UpdateController): void {
       (method, params) => manager?.call(method, params),
       runtimeOptions().packagedTest,
     ),
-    // The Game Bar page of Windows Settings, the one address Main
-    // opens for the window (system-settings.ts).
-    ...systemSettingsHandlers((url) => shell.openExternal(url)),
     // The page that says why the mapping service did not start.
     ...startFailureHandlers({
       state: () => manager?.state,

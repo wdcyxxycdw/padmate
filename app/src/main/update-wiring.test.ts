@@ -146,17 +146,9 @@ describe("how the update code is wired into Main", () => {
     expect(wiring).toMatch(
       /openExternal: \(url\) => \{\s*if \(!isManualDownloadURL\(url\)\)\s*throw new Error\("Not the download address"\);\s*return shell\.openExternal\(url\);/,
     );
-    // The other place that opens an address is the one Windows Settings page
-    // of the Xbox button's notice (system-settings.ts): the handler
-    // table calls the shell with the one address that file allows.
-    expect(pins("shell.openExternal(").sort()).toEqual([
-      "src/main/index.ts",
-      "src/main/update-main.ts",
-    ]);
-    expect(main.match(/shell\.openExternal\(/g)).toHaveLength(1);
-    expect(main).toContain(
-      "...systemSettingsHandlers((url) => shell.openExternal(url)),",
-    );
+    // Nothing else opens an address.
+    expect(pins("shell.openExternal(")).toEqual(["src/main/update-main.ts"]);
+    expect(main).not.toContain("shell.openExternal(");
     expect(source("../preload/index.ts")).not.toContain("shell");
   });
 

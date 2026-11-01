@@ -247,12 +247,17 @@ func (c Control) IsValid() bool { return c >= South && c <= lastControl }
 const DefaultFunctionKey = Start
 
 // CanBeFunctionKey reports whether c is one of the controls that config.json
-// can make the function key: Back, Start and Guide (ADR-0012). There
-// is only one function key at a time, the same for every profile: it sends
-// nothing and cannot be bound, and while it is held the other controls use
-// the profile's function set first. Every other control, these two included,
-// is an ordinary control.
-func (c Control) CanBeFunctionKey() bool { return c == Back || c == Guide || c == Start }
+// can make the function key: Back and Start (ADR-0012). There is only
+// one function key at a time, the same for every profile: it sends nothing
+// and cannot be bound, and while it is held the other controls use the
+// profile's function set first. The other of the two is an ordinary control.
+func (c Control) CanBeFunctionKey() bool { return c == Back || c == Start }
+
+// Unmappable reports whether padmate never maps c: Guide, the Xbox, PS or
+// Home button (ADR-0012). Windows, Steam and the controller's own firmware
+// all act on it, so it is neither the function key nor bindable. Its input is
+// still read and shown, like any control's.
+func (c Control) Unmappable() bool { return c == Guide }
 
 // IsTrigger reports whether c is LT or RT, a virtual button driven by a
 // trigger axis.

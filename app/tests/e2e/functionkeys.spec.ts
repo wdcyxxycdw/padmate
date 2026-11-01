@@ -11,9 +11,9 @@ import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut } from "./helpers";
 
-// ADR-0012: one of View (back), Menu (start) and the Xbox
-// button (guide) is the function key, Menu unless the settings choose another.
-// The fake pad is a generic one, so the pad prints Back, Start and Home.
+// ADR-0012: View (back) or Menu (start) is the function key, Menu unless
+// the settings choose View. The Xbox button (guide) is never mapped. The
+// fake pad is a generic one, so the pad prints Back and Start.
 
 async function openControl(page: Page, control: string): Promise<void> {
   await page.locator(`button[data-callout="${control}"]`).click();
@@ -210,7 +210,7 @@ test("the function set of a file of the old format is edited on the mapping page
   }
 });
 
-test("the function key is chosen in Settings, followed by the daemon at once and named on the mapping page; the Xbox button asks for the Game Bar to be turned off", async () => {
+test("the function key is chosen in Settings, followed by the daemon at once and named on the mapping page; the Xbox button is never mapped", async () => {
   test.setTimeout(120000);
   const f = await editorFixture();
   await writeFile(
@@ -242,28 +242,27 @@ test("the function key is chosen in Settings, followed by the daemon at once and
     const chosen = async () =>
       JSON.parse(await readFile(configFile, "utf8")).functionKey;
 
-    // The file says nothing, so Menu is the function key: View and the Xbox
-    // button are ordinary keys, and Menu's own binding is ignored.
+    // The file says nothing, so Menu is the function key: View is an
+    // ordinary key, and Menu's own binding is ignored. The Xbox button types
+    // nothing, and has no chip.
     await expect(
       page.getByRole("radiogroup", { name: "编辑的按键" }).getByRole("radio"),
     ).toHaveText(["平时", "按住功能键"]);
+    await expect(page.locator('[data-callout="guide"]')).toHaveCount(0);
     await hold(live, "guide");
-    await expect.poll(() => chords(live)).toContain("F24");
+    await page.waitForTimeout(500);
     await letGo(live, "guide");
+    expect(chords(live)).toEqual([]);
 
     await page.getByRole("button", { name: "设置", exact: true }).click();
     const row = page.getByTestId("function-key-setting");
     const choice = row.getByRole("radiogroup", { name: "功能键" });
     const pick = (key: string) => choice.locator(`[data-value="${key}"]`);
     await expect(pick("start")).toHaveAttribute("aria-checked", "true");
-    // The three keys are an icon and the name the pad prints (the fake pad is
+    // The two keys are an icon and the name the pad prints (the fake pad is
     // a generic one), not text that says where they are.
-    await expect(choice.getByRole("radio")).toHaveText([
-      "Start",
-      "Back",
-      "Home",
-    ]);
-    await expect(choice.locator(".control-icon")).toHaveCount(3);
+    await expect(choice.getByRole("radio")).toHaveText(["Start", "Back"]);
+    await expect(choice.locator(".control-icon")).toHaveCount(2);
     await page.screenshot({
       path: test.info().outputPath("settings-function-key.png"),
     });
@@ -302,49 +301,6 @@ test("the function key is chosen in Settings, followed by the daemon at once and
     ).toBe("DIV");
     await expect(page.locator('button[data-callout="start"]')).toContainText(
       "Save",
-    );
-
-    // The Xbox button: saved, then the dialog asks for the Game Bar's own use
-    // of the button to be turned off. 打开 Windows 设置 is not pressed: it
-    // would open the real Settings of Windows.
-    await page.getByRole("button", { name: "设置", exact: true }).click();
-    await pick("guide").click();
-    const dialog = page.getByRole("dialog", {
-      name: "关闭 Xbox Game Bar 的手柄按钮",
-    });
-    await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText("Xbox Game Bar 也会打开");
-    await expect(dialog).toContainText("允许控制器打开 Game Bar");
-    await expect(
-      dialog.getByRole("button", { name: "打开 Windows 设置" }),
-    ).toBeVisible();
-    await page.screenshot({
-      path: test.info().outputPath("settings-game-bar-dialog.png"),
-    });
-    await dialog.getByRole("button", { name: "知道了" }).click();
-    await expect(dialog).toHaveCount(0);
-    await expect.poll(chosen).toBe("guide");
-    // The function key was the Xbox button from the moment it was saved.
-    await hold(live, "guide", "east");
-    await expect.poll(() => chords(live)).toContain("F21");
-    await letGo(live, "east", "guide");
-    await hold(live, "guide");
-    await page.waitForTimeout(500);
-    await letGo(live, "guide");
-    expect(chords(live)).toEqual([]);
-
-    await page.getByRole("button", { name: "映射", exact: true }).click();
-    await expect(switcher.getByRole("radio")).toHaveText([
-      "平时",
-      "按住功能键",
-    ]);
-    expect(
-      await page
-        .locator('[data-callout="guide"]')
-        .evaluate((element) => element.tagName),
-    ).toBe("DIV");
-    await expect(page.locator('button[data-callout="back"]')).toContainText(
-      "Paste",
     );
 
     // Menu again: the member goes from config.json.

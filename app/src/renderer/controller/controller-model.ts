@@ -197,18 +197,16 @@ export function controllerLabels(
 }
 
 /**
- * Which of the three keys a function key can be (back, start, guide) a pad
- * has (ADR-0012). A single Joy-Con held sideways has no back, only
- * − or +, and Capture or Home. A pad without the function key has no function
- * key: its other keys work as usual.
+ * Which of the two keys a function key can be (back, start) a pad has
+ * (ADR-0012). A single Joy-Con held sideways has no back, only − or
+ * +. A pad without the function key has no function key: its other keys work
+ * as usual.
  */
 export function padFunctionKeys(
   type: string,
   buttonMask?: number,
 ): FunctionKey[] {
-  return isSidewaysJoyCon(type, buttonMask)
-    ? ["start", "guide"]
-    : ["start", "back", "guide"];
+  return isSidewaysJoyCon(type, buttonMask) ? ["start"] : ["start", "back"];
 }
 
 /** Whether the pad has the function key. */
@@ -222,8 +220,8 @@ export function padHasFunctionKey(
 
 /**
  * What the pad prints on the function key, e.g. Menu on an Xbox pad, Options
- * on a DualSense, + on a Switch pad; View, Create, −, or the Xbox button, the
- * PS button and Home for the others of the three.
+ * on a DualSense, + on a Switch pad; View, Create or − for the other of the
+ * two.
  */
 export function functionKeyLabel(
   key: FunctionKey,

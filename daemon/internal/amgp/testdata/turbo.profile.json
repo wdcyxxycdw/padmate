@@ -140,18 +140,6 @@
           "tapGapMs": 40
         }
       },
-      "guide": {
-        "press": {
-          "type": "keys",
-          "keys": "WheelDown",
-          "mode": "tap",
-          "repeat": {
-            "style": "tap",
-            "delayMs": 0,
-            "rateHz": 20
-          }
-        }
-      },
       "misc1": {
         "press": {
           "type": "keys",

@@ -218,19 +218,6 @@ const stepDefinitions: Record<string, StepDefinition> = {
       "Also called Start, Options or +. Used for the emergency pause",
     ],
   },
-  home: {
-    icon: art("switch_button_home"),
-    zh: [
-      "Home（主页键）",
-      "按下 Home 键",
-      "有的手柄叫 Guide、Xbox 键或 PS 键；没有的话请跳过",
-    ],
-    en: [
-      "Home",
-      "Press Home",
-      "Also called Guide, the Xbox button or the PS button. Skip it if there is none",
-    ],
-  },
 };
 
 /** The name, instruction, hint and picture of the wizard's step with this ID. */

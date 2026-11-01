@@ -59,7 +59,7 @@ flags:
             A profile written to a file of another library, or by itself,
             is read like any profile; an "extends" there is an error.
   --function-key KEY
-            the function key, start, back or guide, that the
+            the function key, start or back, that the
             bindings are compiled with: the bindings on it are ignored and
             not listed. config.json is not read; the default is start.
 `
@@ -87,7 +87,7 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print one JSON object per file")
 	merged := fs.Bool("merged", false, "print each profile with its parents merged in")
-	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start, back or guide")
+	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start or back")
 	if code, ok := parseFlags(fs, args, validateUsage, stdout, stderr); !ok {
 		return code
 	}

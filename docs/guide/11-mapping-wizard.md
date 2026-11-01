@@ -18,13 +18,13 @@ padmate cannot read the keys of some controllers: no-name USB controllers, or co
 5. After all controls, the wizard lists everything it recorded for you to confirm. Click “Save”.
 6. With no warnings, the window closes by itself. Otherwise it stays open: it says “Mapping saved” with the warnings below it (see the next section), and you click “Done” to close it.
 
-The wizard asks in this order: A, B, X, Y; the D-pad up, down, left and right; the left stick left, right, up, down and press; the right stick the same; LB, RB, LT, RT; and last View, Menu and Home.
+The wizard asks in this order: A, B, X, Y; the D-pad up, down, left and right; the left stick left, right, up, down and press; the right stick the same; LB, RB, LT, RT; and last View and Menu. padmate does not use the Home key (the Xbox button, the PS button), so the wizard does not ask for it; see [Layers and the function key](03-layers-and-function-keys.md).
 
 These buttons are always available:
 
 - “Back”: go back to the previous control.
 - “Redo”: record this control again.
-- “Skip”: skip a control the controller does not have, for example some controllers have no Home key.
+- “Skip”: skip a control the controller does not have, for example some controllers have no right stick.
 - “Finish”: stop asking for the remaining controls and go straight to the check.
 - “Cancel”: give up and save nothing.
 

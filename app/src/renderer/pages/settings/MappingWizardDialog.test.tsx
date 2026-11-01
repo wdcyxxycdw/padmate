@@ -244,7 +244,7 @@ describe("starting the wizard", () => {
     expect(screen.queryByTestId("wizard-prompt")).toBeNull();
     await s.pass(1);
     expect(s.prompt()).toBe("按下 A 键");
-    expect(screen.getByText("1 / 25")).toBeTruthy();
+    expect(screen.getByText("1 / 24")).toBeTruthy();
   });
 
   it("is a remap for a controller SDL knows", async () => {
@@ -312,7 +312,7 @@ describe("answering the prompts", () => {
     s.emit("button", 3, 0);
     expect(s.prompt()).toBe("按下 B 键");
     expect(screen.getByText("已记录 A：按钮 3")).toBeTruthy();
-    expect(screen.getByText("2 / 25")).toBeTruthy();
+    expect(screen.getByText("2 / 24")).toBeTruthy();
     // The list shows what each control got.
     const list = screen.getByRole("list", { name: "已记录的控件" });
     const a = within(list).getByText("A").closest("li") as HTMLElement;
@@ -437,7 +437,7 @@ describe("answering the prompts", () => {
     expect(screen.getByText("Detected: Button 4")).toBeTruthy();
     s.emit("button", 4, 0);
     expect(screen.getByText("Recorded A: Button 4")).toBeTruthy();
-    expect(screen.getByText("2 / 25")).toBeTruthy();
+    expect(screen.getByText("2 / 24")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Skip" })).toBeTruthy();
   });
 });
@@ -455,7 +455,7 @@ describe("saving the mapping", () => {
   it("lists the answers, and warns that View and Menu are not mapped", async () => {
     await review();
     const list = screen.getByRole("list", { name: "已记录的控件" });
-    expect(within(list).getAllByRole("listitem")).toHaveLength(25);
+    expect(within(list).getAllByRole("listitem")).toHaveLength(24);
     expect(
       screen.getByText(
         "没有映射 View 和 Menu。它们是紧急暂停的按键，缺了它们这只手柄无法用紧急暂停。",
@@ -485,8 +485,9 @@ describe("saving the mapping", () => {
       fireEvent.click(screen.getByRole("button", { name: "跳过" }));
     expect(s.prompt()).toBe("按下 View 键");
     s.press(6);
+    // Menu is the last control: the review follows it.
     s.press(7);
-    fireEvent.click(screen.getByRole("button", { name: "完成" }));
+    expect(screen.getByRole("list", { name: "已记录的控件" })).toBeTruthy();
     expect(screen.queryByText(/没有映射/)).toBeNull();
   });
 
@@ -542,8 +543,8 @@ describe("saving the mapping", () => {
   it("goes back from the review to the last control", async () => {
     const s = await review();
     fireEvent.click(screen.getByRole("button", { name: "上一步" }));
-    expect(s.prompt()).toBe("按下 Home 键");
-    expect(screen.getByText("25 / 25")).toBeTruthy();
+    expect(s.prompt()).toBe("按下 Menu 键");
+    expect(screen.getByText("24 / 24")).toBeTruthy();
   });
 });
 
@@ -718,7 +719,7 @@ describe("while the mapping is being saved", () => {
     // Not the quiet period's text, and the answers are still there.
     expect(screen.queryByText("请先别碰手柄，稍等一下…")).toBeNull();
     const list = screen.getByRole("list", { name: "已记录的控件" });
-    expect(within(list).getAllByRole("listitem")).toHaveLength(25);
+    expect(within(list).getAllByRole("listitem")).toHaveLength(24);
     const save = screen.getByRole("button", {
       name: "正在保存…",
     }) as HTMLButtonElement;

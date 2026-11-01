@@ -28,8 +28,8 @@ type Profile struct {
 	Layers         []*Layer
 	// FunctionSet is the function set the file writes (ADR-0012): the
 	// bindings used while the function key is held; nil when the file has no
-	// functionSet. Unlike a function key's set of FunctionKeys it may bind back,
-	// start and guide. The engine reads EffectiveFunctionSet, not this.
+	// functionSet. Unlike a function key's set of FunctionKeys it may bind back
+	// and start. The engine reads EffectiveFunctionSet, not this.
 	FunctionSet *Layer
 	// FunctionKeys is the old format of the function key bindings (ADR-0012)
 	// as the file writes it; nil when the file has no functionKeys. It stays
@@ -61,8 +61,8 @@ type FunctionKeys struct {
 const FunctionSetName = "function"
 
 // FunctionLevel returns the name that the function set has as a level of the
-// lookup and in decisions while function key c is the one: "function:back",
-// "function:start" or "function:guide", and "" when c cannot be the function
+// lookup and in decisions while function key c is the one: "function:back"
+// or "function:start", and "" when c cannot be the function
 // key (control.Control.CanBeFunctionKey). The colon keeps it apart from the
 // name of a layer, which is free text, the way a script's "layer:x" scope is.
 func FunctionLevel(c control.Control) string {

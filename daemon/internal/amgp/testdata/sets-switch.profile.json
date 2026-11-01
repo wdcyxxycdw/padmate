@@ -56,12 +56,6 @@
           "type": "keys",
           "keys": "A"
         }
-      },
-      "guide": {
-        "press": {
-          "type": "keys",
-          "keys": "B"
-        }
       }
     },
     "Edit mode": {

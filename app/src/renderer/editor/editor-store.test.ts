@@ -1036,8 +1036,6 @@ describe("the shown key set (function key)", () => {
   it("is Menu as the function key until the settings choose another", async () => {
     const { store } = setup();
     expect(store.getState().functionKey).toBe("start");
-    store.getState().setFunctionKey("guide");
-    expect(store.getState().functionKey).toBe("guide");
     store.getState().setFunctionKey("back");
     expect(store.getState().functionKey).toBe("back");
     // The profile is not part of it: nothing to save.

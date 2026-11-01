@@ -458,6 +458,54 @@ describe("savedForm", () => {
     ]);
   });
 
+  it("leaves out the bindings on the Xbox button, which the daemon no longer maps (ADR-0012)", () => {
+    // In every layer, in common and in the function set, valid or not; a set
+    // left with nothing goes, and the rest keeps its order.
+    const draft = {
+      schemaVersion: 1,
+      name: "p",
+      layers: {
+        base: {
+          guide: { press: { type: "keys", keys: "F24" } },
+          south: { press: { type: "keys", keys: "A" } },
+        },
+        paint: { guide: { block: true } },
+      },
+      common: { guide: { label: "Home" } },
+      functionSet: { guide: { press: { type: "keys", keys: "Nonsense" } } },
+    } as Profile;
+    const before = structuredClone(draft);
+    const saved = savedForm(draft);
+    expect(saved).toEqual({
+      schemaVersion: 1,
+      name: "p",
+      layers: {
+        base: { south: { press: { type: "keys", keys: "A" } } },
+        paint: {},
+      },
+      common: {},
+    });
+    expect(draft).toEqual(before);
+    // The old functionKeys too, as the set it stands for.
+    const old = {
+      schemaVersion: 1,
+      name: "p",
+      layers: { base: {} },
+      functionKeys: {
+        back: {
+          guide: { press: { type: "keys", keys: "B" } },
+          east: { press: { type: "keys", keys: "C" } },
+        },
+      },
+    } as Profile;
+    expect(savedForm(old)).toEqual({
+      schemaVersion: 1,
+      name: "p",
+      layers: { base: {} },
+      functionSet: { east: { press: { type: "keys", keys: "C" } } },
+    });
+  });
+
   it("drops a feedback object left with nothing", () => {
     const draft: Profile = {
       schemaVersion: 1,

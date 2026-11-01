@@ -18,8 +18,9 @@
 //     used while the function key is held (ADR-0012), FunctionSet,
 //     and the old format's sets, FunctionKeys, are resolved like layers;
 //     which control is the function key is config.json's choice, so a
-//     binding on back, start or guide is kept here and engine.Compile
-//     ignores the one that is.
+//     binding on back or start is kept here and engine.Compile ignores the
+//     one that is. A binding on guide, which padmate never maps, is left out
+//     with a warning.
 //
 // A profile of the library may extend another (ADR-0012): Resolve
 // merges the chain of parents into one document first (extends.go) and checks

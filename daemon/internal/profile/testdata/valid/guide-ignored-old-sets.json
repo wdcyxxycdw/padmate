@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "旧格式里的 Xbox 键",
+  "layers": {
+    "base": {
+      "south": {"press": {"type": "keys", "keys": "A"}}
+    }
+  },
+  "functionKeys": {
+    "back": {"guide": {"press": {"type": "keys", "keys": "B"}}},
+    "start": {"east": {"press": {"type": "keys", "keys": "C"}}, "guide": {"label": "只有名字"}}
+  }
+}

@@ -6,10 +6,10 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The function key (ADR-0012): of back (View), start
-// (Menu) and guide (the Xbox, PS or Home button) one control is the function
-// key, the same in every profile; config.json chooses it (WithFunctionKey of
-// Compile; start by default). It sends nothing and is not bindable: a binding
+// The function key (ADR-0012): back (View) or start (Menu) is the
+// function key, the same in every profile; config.json chooses it
+// (WithFunctionKey of Compile; start by default). guide (the Xbox, PS or Home
+// button) cannot be: padmate never maps it, and lookupWith finds nothing on it. It sends nothing and is not bindable: a binding
 // on it in a layer, in common or in the function set is left out by Compile
 // (Program.IgnoredFunctionKeyBindings). Its edges never enter gesture
 // recognition: they start no cycle, are not buffered, are not seen by a

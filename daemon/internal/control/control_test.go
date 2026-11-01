@@ -342,11 +342,11 @@ func TestHasDepth(t *testing.T) {
 	}
 }
 
-// Back, Guide and Start are the controls that can be the function key
-// (ADR-0012), and only they; Start is the default.
+// Back and Start are the controls that can be the function key (ADR-0012),
+// and only they; Start is the default. Guide is not: padmate never maps it.
 func TestCanBeFunctionKey(t *testing.T) {
 	for _, c := range control.All() {
-		want := c == control.Back || c == control.Guide || c == control.Start
+		want := c == control.Back || c == control.Start
 		if got := c.CanBeFunctionKey(); got != want {
 			t.Errorf("%s.CanBeFunctionKey() = %t, want %t", c, got, want)
 		}
@@ -360,5 +360,18 @@ func TestCanBeFunctionKey(t *testing.T) {
 	}
 	if !control.DefaultFunctionKey.CanBeFunctionKey() || control.DefaultFunctionKey != control.Start {
 		t.Errorf("DefaultFunctionKey = %s", control.DefaultFunctionKey)
+	}
+}
+
+// Guide is the one control padmate never maps (ADR-0012); every other
+// control can be bound.
+func TestUnmappable(t *testing.T) {
+	for _, c := range control.All() {
+		if got, want := c.Unmappable(), c == control.Guide; got != want {
+			t.Errorf("%s.Unmappable() = %t, want %t", c, got, want)
+		}
+	}
+	if control.Invalid.Unmappable() {
+		t.Error("Invalid is unmappable")
 	}
 }

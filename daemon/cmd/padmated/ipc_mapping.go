@@ -528,7 +528,7 @@ func (r *liveRun) changeMapping(ctx context.Context, dev supervisor.DeviceView, 
 	}
 	if mapping.GUID != "" {
 		// The emergency combo is back+start on most controllers, and the
-		// function key is one of View, Menu and the Xbox button (ADR-0012): a
+		// function key is View or Menu (ADR-0012): a
 		// mapping without View and Menu leaves the controller without a way to
 		// pause (ARCHITECTURE section 5).
 		if !mapping.Binds("back") {

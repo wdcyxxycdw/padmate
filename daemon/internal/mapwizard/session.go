@@ -19,15 +19,15 @@ type Step struct {
 
 // DefaultSteps is the order of the prompts (ADR-0012): the face buttons, the
 // d-pad, the left stick (left, right, up, down) and its click, the same for
-// the right stick, the shoulders and triggers, View, Menu and Home. SDL names
-// View back and Menu start.
+// the right stick, the shoulders and triggers, View and Menu. SDL names View
+// back and Menu start. Home (SDL guide) has no step: padmate never maps it.
 var DefaultSteps = []Step{
 	{"a", "a"}, {"b", "b"}, {"x", "x"}, {"y", "y"},
 	{"dpup", "dpup"}, {"dpdown", "dpdown"}, {"dpleft", "dpleft"}, {"dpright", "dpright"},
 	{"ls-left", "-leftx"}, {"ls-right", "+leftx"}, {"ls-up", "-lefty"}, {"ls-down", "+lefty"}, {"ls-click", "leftstick"},
 	{"rs-left", "-rightx"}, {"rs-right", "+rightx"}, {"rs-up", "-righty"}, {"rs-down", "+righty"}, {"rs-click", "rightstick"},
 	{"lb", "leftshoulder"}, {"rb", "rightshoulder"}, {"lt", "lefttrigger"}, {"rt", "righttrigger"},
-	{"view", "back"}, {"menu", "start"}, {"home", "guide"},
+	{"view", "back"}, {"menu", "start"},
 }
 
 // The Codes of a Warning.

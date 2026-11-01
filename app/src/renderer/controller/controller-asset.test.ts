@@ -33,10 +33,15 @@ describe("licensed controller assets", () => {
           .filter((c) => c.control.endsWith("trigger") && c.placement === "top")
           .map((c) => c.control),
       ).toEqual(["lefttrigger", "righttrigger"]);
+      // Every control of the model has a chip but the Xbox, PS or Home
+      // button, which padmate never maps (ADR-0012); the model still lights
+      // it when it is pressed.
+      expect(model.controls.has("guide")).toBe(true);
+      const mapped = [...model.controls.keys()].filter((c) => c !== "guide");
       expect(new Set(model.callouts.map((c) => c.control))).toEqual(
-        new Set(model.controls.keys()),
+        new Set(mapped),
       );
-      expect(model.callouts).toHaveLength(model.controls.size);
+      expect(model.callouts).toHaveLength(mapped.length);
       for (const control of [
         "south",
         "east",

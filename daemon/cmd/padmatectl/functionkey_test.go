@@ -20,7 +20,6 @@ func TestValidateFunctionKeyFlag(t *testing.T) {
 		{nil, []string{"/layers/base/back", "/functionSet/south", "/functionSet/back"}, []string{"/layers/base/start", "/functionSet/start"}},
 		{[]string{"--function-key", "start"}, []string{"/layers/base/back", "/functionSet/south"}, []string{"/layers/base/start", "/functionSet/start"}},
 		{[]string{"--function-key=back"}, []string{"/layers/base/start", "/functionSet/start", "/functionSet/south"}, []string{"/layers/base/back", "/functionSet/back"}},
-		{[]string{"--function-key", "guide"}, []string{"/layers/base/back", "/layers/base/start", "/functionSet/back", "/functionSet/start"}, nil},
 	} {
 		args := append(append([]string{"validate"}, tc.args...), "testdata/function-set.json")
 		code, stdout, stderr := runCmd(t, args...)
@@ -38,16 +37,17 @@ func TestValidateFunctionKeyFlag(t *testing.T) {
 			}
 		}
 	}
-	for _, bad := range []string{"south", "select", "", "Start"} {
+	// guide was the third choice until padmate stopped mapping it (ADR-0012).
+	for _, bad := range []string{"south", "select", "", "Start", "guide"} {
 		code, _, stderr := runCmd(t, "validate", "--function-key", bad, "testdata/function-set.json")
-		if code != 2 || !strings.Contains(stderr, "--function-key must be start, back or guide") {
+		if code != 2 || !strings.Contains(stderr, "--function-key must be start or back") {
 			t.Errorf("--function-key %q = %d, stderr %q; want exit 2 and the message", bad, code, stderr)
 		}
 	}
 }
 
 // trace replays with the function key the flag names: a press of south while
-// guide is held runs the function set's binding when guide is the function key,
+// back is held runs the function set's binding when back is the function key,
 // and the layer's when it is not (the default start is).
 func TestTraceFunctionKeyFlag(t *testing.T) {
 	dir := t.TempDir()
@@ -60,10 +60,10 @@ func TestTraceFunctionKeyFlag(t *testing.T) {
 }
 `
 	const events = `{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Pad","guid":"030000000a0000000a00000000000000","gamepad":true}}
-{"timeNs":10000000,"kind":"down","device":1,"control":"guide"}
+{"timeNs":10000000,"kind":"down","device":1,"control":"back"}
 {"timeNs":100000000,"kind":"down","device":1,"control":"south"}
 {"timeNs":200000000,"kind":"up","device":1,"control":"south"}
-{"timeNs":300000000,"kind":"up","device":1,"control":"guide"}
+{"timeNs":300000000,"kind":"up","device":1,"control":"back"}
 `
 	for path, text := range map[string]string{profilePath: prof, tracePath: events} {
 		if err := os.WriteFile(path, []byte(text), 0o600); err != nil {
@@ -76,7 +76,7 @@ func TestTraceFunctionKeyFlag(t *testing.T) {
 	}{
 		{nil, "output   +A\n", "+F1"},
 		{[]string{"--function-key", "start"}, "output   +A\n", "+F1"},
-		{[]string{"--function-key", "guide"}, "output   +F1\n", "+A"},
+		{[]string{"--function-key", "back"}, "output   +F1\n", "+A"},
 	} {
 		args := append(append([]string{"trace"}, tc.flag...), "--profile", profilePath, "--input", tracePath)
 		code, stdout, stderr := runCmd(t, args...)
@@ -87,8 +87,10 @@ func TestTraceFunctionKeyFlag(t *testing.T) {
 			t.Errorf("%q: want %q and not %q:\n%s", args, tc.want, tc.not, stdout)
 		}
 	}
-	code, _, stderr := runCmd(t, "trace", "--function-key", "south", "--profile", profilePath, "--input", tracePath)
-	if code != 2 || !strings.Contains(stderr, "--function-key must be start, back or guide") {
-		t.Errorf("--function-key south = %d, stderr %q; want exit 2 and the message", code, stderr)
+	for _, bad := range []string{"south", "guide"} {
+		code, _, stderr := runCmd(t, "trace", "--function-key", bad, "--profile", profilePath, "--input", tracePath)
+		if code != 2 || !strings.Contains(stderr, "--function-key must be start or back") {
+			t.Errorf("--function-key %s = %d, stderr %q; want exit 2 and the message", bad, code, stderr)
+		}
 	}
 }

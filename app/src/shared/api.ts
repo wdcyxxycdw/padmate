@@ -519,7 +519,7 @@ export interface LayerExplanation {
  */
 export interface FunctionSetExplanation extends LayerExplanation {
   /** The function key now in effect. */
-  key: "back" | "start" | "guide";
+  key: "back" | "start";
   /** Whether the profile has a function set at all. */
   hasSet: boolean;
 }
@@ -529,7 +529,7 @@ export interface ProfileExplanation {
   name: string;
   declarativeOnly: boolean;
   /** The function key now in effect (config.json functionKey), the same for every slot. */
-  functionKey: "back" | "start" | "guide";
+  functionKey: "back" | "start";
   /** The control is itself the function key: it has no binding to explain. */
   isFunctionKey: boolean;
   slots: {
@@ -1011,11 +1011,6 @@ export interface PadmateAPI {
   // -32017 in a development build.
   getStartup(): Promise<StartupState>;
   setStartup(enabled: boolean): Promise<StartupState>;
-  // Opens the Game Bar page of Windows Settings (ms-settings:gaming-gamebar,
-  // the only address Main opens), where the user turns off "Allow your
-  // controller to open Game Bar" when the Xbox button is the function key
-  // (ADR-0012). It takes no address.
-  openGameBarSettings(): Promise<void>;
   // Closing the window: Main asks the renderer once, which commits
   // the field being typed in, waits for its saves and then calls
   // readyToClose. Main closes after a few seconds anyway.

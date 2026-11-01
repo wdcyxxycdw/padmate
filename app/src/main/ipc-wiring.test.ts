@@ -11,7 +11,6 @@ import { libraryHandlers } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
 import { startFailureHandlers } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
-import { systemSettingsHandlers } from "./system-settings";
 import { LanguageFile, languageHandlers } from "./ui-language";
 import { updateHandlers } from "./update-handlers";
 
@@ -321,7 +320,6 @@ describe("Electron IPC wiring", () => {
         }),
       ),
       ...Object.keys(appPathHandlers(async () => "")),
-      ...Object.keys(systemSettingsHandlers(async () => {})),
       ...Object.keys(languageHandlers(new LanguageFile(""))),
       ...Object.keys(
         appIconHandlers({
@@ -343,7 +341,6 @@ describe("Electron IPC wiring", () => {
     expect(main).toContain("...macroHandlers(");
     expect(main).toContain("...deviceHandlers(");
     expect(main).toContain("...startupHandlers(");
-    expect(main).toContain("...systemSettingsHandlers(");
     expect(main).toContain("...updateHandlers(");
     expect(main).toContain("...startFailureHandlers(");
     expect(main).toContain("...archiveHandlers(");

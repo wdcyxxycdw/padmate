@@ -379,10 +379,11 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 ### 7.9 功能键
 
-任何时候只有一个功能键，像笔记本的 Fn：自己不发键，按住时其他控件先用 profile 的 `functionSet`，没设的照常用平时的绑定。选 `guide` 时 Xbox Game Bar 也响应这个键，设置页提醒用户自己关。它是 `back`、`start`、`guide` 之一，默认 `start`，由 config.json 的 `functionKey` 选（§10.3），对所有配置和手柄一样。实现在 `engine/function_keys.go`，设计见 [ADR：映射模型](adr/0012-mapping-model.zh-CN.md)。
+任何时候只有一个功能键，像笔记本的 Fn：自己不发键，按住时其他控件先用 profile 的 `functionSet`，没设的照常用平时的绑定。它是 `back` 或 `start`，默认 `start`，由 config.json 的 `functionKey` 选（§10.3），对所有配置和手柄一样。实现在 `engine/function_keys.go`，设计见 [ADR：映射模型](adr/0012-mapping-model.zh-CN.md)。
 
 - **编译选项**：`engine.Compile(p, engine.WithFunctionKey(c))`。引擎不读 config.json，padmated 把 `functionKey` 传进每次编译；非法值按 `start`。
-- **功能键自己不能绑定**：写在功能键上的绑定照常解析、保留在文件里，但 `Compile` 忽略它们；功能键换了它们又生效。老文件里 `back`、`start` 上的绑定从没被读过，可能不合法：格式冻结，有效的 profile 永远有效，所以它们的错误降为警告并从模型拿掉；`guide` 上和 `functionSet` 里的不合法照常是错误。
+- **功能键自己不能绑定**：写在功能键上的绑定照常解析、保留在文件里，但 `Compile` 忽略它们；功能键换了它们又生效。老文件里 `back`、`start` 上的绑定从没被读过，可能不合法：格式冻结，有效的 profile 永远有效，所以它们的错误降为警告并从模型拿掉；`functionSet` 里的不合法照常是错误。
+- **`guide` 永不映射**（[ADR：映射模型](adr/0012-mapping-model.zh-CN.md)）：它不是功能键（`CanBeFunctionKey` 为假，`WithFunctionKey(Guide)` 按 `start` 编译）；`profile.Parse` 把它上面的每条绑定从模型拿掉并给警告（其中的错误降为警告）；手工构造的 profile 里有的，`Compile` 跳过；`lookupWith` 对它什么也不找（`control.Control.Unmappable`），所以 registry 的层也绑不上它。它的边沿照常经过 `stepButton`，当作没绑定的控件（决策 `unbound`），脚本处理器和 `ButtonObserver` 照常收到。
 - **一套绑定**：`Profile.EffectiveFunctionSet()` 是引擎读的那一套：有顶层 `functionSet` 就用它，否则由旧格式 `functionKeys` 合成；两者都写时用 `functionSet` 并警告。
 - **边沿不进手势识别**：功能键边沿在更新物理状态后、缓冲之前交给 `stepFunctionKey` 并返回。所以它不开始周期、不进缓冲、不打断别的控件的待定手势、不发键，脚本处理器和 `ButtonObserver` 收不到它；决策是 `function`。`pad.isDown` 仍读物理状态。
 - **状态**：`Engine.fnActive`，经 `View.FunctionKey` 进 slot 快照（`profiles.explain` 用，§11）。CancelAll、Pause、Resume 和同一功能键的 Reload 不动它；Reset 清掉它。**换功能键的 Reload** 也清掉它（先 CancelAll）：新功能键即使这时按着也要等下一次按下才选 `functionSet`。
@@ -600,7 +601,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
       "west":  { "label": "笔/橡皮", "tap": { "type": "keys", "keys": "F13" }, "hold": { "type": "keys", "keys": "F14" } },
       "north": { "label": "下一笔刷", "tap": { "type": "script", "name": "cycleBrush", "args": { "dir": 1 } } },
       "leftshoulder": { "label": "Alt 层", "press": { "type": "layer", "layer": "alt", "op": "hold" } },
-      "guide": { "block": true }
+      "misc1": { "block": true }
     },
     "paint2": { "south": { "press": { "type": "keys", "keys": "F15" } } },
     "alt":    { "south": { "label": "重做", "press": { "type": "keys", "keys": "Ctrl+Shift+Z" } } }
@@ -667,7 +668,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 
 **功能键的两种写法**
 
-- `functionSet`（现行）：写法同层（没有 `color`），可写任何控件含 `back`、`start`、`guide`；写在当时功能键上的那条编译时忽略。解析出的 `Profile.FunctionSet` 绑定 ID 是 `/functionSet/<控件>`。
+- `functionSet`（现行）：写法同层（没有 `color`），可写任何控件含 `back`、`start`；写在当时功能键上的那条编译时忽略。`guide` 上的绑定在这里和别处一样，带警告拿掉（§7.9）。解析出的 `Profile.FunctionSet` 绑定 ID 是 `/functionSet/<控件>`。
 - `functionKeys`（旧格式，仍有效）：`{"back"?: 一套, "start"?: 一套}`，里面不能写 `back`、`start`、`select`。
 - 引擎读 `Profile.EffectiveFunctionSet()`：有 `functionSet` 就用它，否则由旧格式合成（§7.9）；两个都有时 `functionKeys` 被忽略并给警告（指针 `/functionKeys`）。
 
@@ -718,11 +719,11 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 }
 ```
 
-顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认、`back`、`guide`；对所有配置和手柄一样）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`safety.panic`、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
+顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`safety.panic`、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
 
 **规则**（自动选择，§9）：首条已启用的匹配规则胜出，没有匹配的用 `default`。`exe` 是文件名或完整路径，不区分大小写，`/` 与 `\` 等价，不读标题、不支持通配符。`device` 只接受 `"any"`。
 
-**即时生效**：`enabled`、`releaseOnSwitch`、`rules`、`timing`、`safety`、`output.*`、`functionKey`、`calibration`、`feedback`、`devices.*.mapping` 保存后即时生效（`applyLiveSettings`）；设备 `ignored` 和 `restoreLayerState` 在启动时读取，变了报 `restartRequired`。`functionKey` 变了会用新值重新编译当前配置，各 slot 走 `Supervisor.Reload`（先释放所有按着的输出）。选 `guide` 时 Xbox Game Bar 也会响应，padmate 不改系统设置。
+**即时生效**：`enabled`、`releaseOnSwitch`、`rules`、`timing`、`safety`、`output.*`、`functionKey`、`calibration`、`feedback`、`devices.*.mapping` 保存后即时生效（`applyLiveSettings`）；设备 `ignored` 和 `restoreLayerState` 在启动时读取，变了报 `restartRequired`。`functionKey` 变了会用新值重新编译当前配置，各 slot 走 `Supervisor.Reload`（先释放所有按着的输出）。
 
 **每设备调校**：`devices.<DeviceKey>.calibration.ls/rs` 有可选 `deadzone`、`saturation`（0–1），覆盖 profile 同名值（顺序见 §7.5），扳机不调校。两个成员都给时 `saturation` 必须大于 `deadzone`；只给一个时叠加后的一对在运行时检查，不成立就忽略这根摇杆并记 warn。
 
@@ -758,7 +759,7 @@ schema 用 draft 2020-12，只用 VS Code 和 Monaco 支持的关键字（不用
 
 - 每条诊断一行 `path:line:col: severity: message (pointer)`，pointer 为根时省略；没有诊断的文件打印 `path: ok`。
 - `--json`：每个文件一行 `{"file", "ok", "diagnostics"}`，`ok` 表示没有错误。
-- `--function-key KEY`（`start`、`back`、`guide`，默认 `start`）：编译用的功能键，代替 config.json 的 `functionKey`（validate 不读 config.json）；别的值退出码 2。
+- `--function-key KEY`（`start` 或 `back`，默认 `start`）：编译用的功能键，代替 config.json 的 `functionKey`（validate 不读 config.json）；别的值退出码 2。
 - **退出码**：没有文件有错误为 0（允许警告）；有文件有错误为 1；用法错误或有文件读不了为 2（优先于 1）。读不了的文件报到 stderr，其余照常检查。
 - 没有错误的文件接着用 `engine.Compile` 编译，在诊断行后每个绑定打印一行附加延迟：`  <pointer> ["label"]: press +0 ms`；有触感的加 `, haptic tick`；无动作的是 `no action`。pointer 里的控件名与文件一致；label 用 `strconv.Quote`，没有时省略。功能键的一套排在 common 之后。
 - `--json` 的对象对无错误的文件多一个 `bindings` 数组，每项 `{"id","control","label","gesture","haptic","addedLatencyMs"}`（control 是标准名；label、gesture、haptic 没有时省略）；有错误的文件没有这个字段。
@@ -949,7 +950,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 - `main/security.ts` 的 `baseWebPreferences`：`contextIsolation`、`sandbox` 开，`nodeIntegration` 关。拒绝导航、新窗口和 webview。内容安全策略由 `padmate://app` 的响应头给出：`script-src 'self'`、`connect-src 'none'`。
 - preload 只暴露命名的类型化方法，各对应一个 `padmate:*` 通道。渲染进程拿不到 token、管道名、PID，不能发任意 RPC。
-- Main 的每个处理函数检查发送方是主窗口的主 frame、URL 是应用自己的、参数合格（`validate*`）。涉及路径的操作只接受 Main 自己拼的路径或写死的目标（如 `ms-settings:gaming-gamebar`）。
+- Main 的每个处理函数检查发送方是主窗口的主 frame、URL 是应用自己的、参数合格（`validate*`）。涉及路径的操作只接受 Main 自己拼的路径或写死的目标。
 - 返回给渲染进程的错误只带 code 和已知的 data，不带用户目录下的路径。
 
 ### 12.3 和守护进程的连接
@@ -988,12 +989,13 @@ JSON-RPC 标准码（如 -32602）之外：
 外壳（`App.tsx`）：左侧导航为映射、配置、脚本、设置；日志和诊断是设置的子视图。顶栏左侧是配置菜单，右侧是运行状态、暂停和“更多”菜单。`config.get` 带 `restartRequired` 时设置页提示需要重启。配置损坏被守护进程修复后 `ConfigRepairDialog` 提示，Main 只接受 `config.broken-YYYYMMDD-HHMMSS[-N].json` 形式的备份名并自己拼路径。
 
 - **映射页**：固定正面的 Three.js 手柄（本地 GLB），渲染器常驻不销毁。摇杆由“旋转”（`leftstick`）和“点按”（`leftstick.press`）两格组成；“旋转”格的标题是 `analog.ls.label`（`analog-editor.ts` 的 `setStickLabel`，不经 `settleStickMode`）。旋钮刻度的抽屉只有一个快捷键框（`SingleShortcutField`，写 `{press:{type:"keys"}}`，保留 `label`、`haptic`）。十字键四个方向是普通按键的抽屉，没有设置面板。按键图标由 `pad-icon.tsx` 从 `app/src/renderer/controller/pad-icons/` 的 SVG 解析出路径画成内联 SVG（`PadIcon`），手柄图标签、抽屉标题、按键预览（`control-icon.tsx`）和映射向导共用。点标签开 `KeyDrawer`：映射只有点按、长按、双击，动作只有“快捷键”和“脚本”；文件里的其他映射和动作照常生效。点按写 `press` 还是 `tap` 由键上有无长按/双击决定（`settleTap`）。快捷键只能录入（`ShortcutField`，键盘经 `keyboard-capture`，鼠标和滚轮窗口自收）。`analog` 参数整个配置共用，不随功能键分套。
-- **功能键**（引擎见 §7.9，格式见 §10.3、§10.4）：只有一个，`back`、`start`、`guide` 之一，默认 `start`，在设置页选；它本身不可绑定，界面编辑它切换到的那一套（`profile.functionSet`）。“平时 / 按住功能键”开关切 `view`（不写盘、不进撤销），做法是 `swapView` 把 `functionSet` 与 `layers.base` 互换。旧格式 `functionKeys` 读入时合成为一套。
+- **功能键**（引擎见 §7.9，格式见 §10.3、§10.4）：只有一个，`back` 或 `start`，默认 `start`，在设置页选；它本身不可绑定，界面编辑它切换到的那一套（`profile.functionSet`）。“平时 / 按住功能键”开关切 `view`（不写盘、不进撤销），做法是 `swapView` 把 `functionSet` 与 `layers.base` 互换。旧格式 `functionKeys` 读入时合成为一套。
+- **Xbox 键**（`guide`）：手柄图上没有它的标签（`controllerCallouts` 不放它，3D 模型按下时照常点亮），按键列表、快捷键表和层计数不算文件写在它上面的，和功能键一样（`isIgnoredControl`）。`savedForm` 从每个层、common 和那一套里去掉它上面的绑定，所以界面编辑过的配置里不再有它们。
 - **手写 `extends`**：界面不创建也不显示，沿用来的键当作自己的键，改了哪个才把哪个写进自己的文件（`inheritance.ts`）。删父配置时守护进程先把子配置写成完整内容；子配置有错误或沿用了父配置的脚本时返回 -32023。
 - **配置页**：一个软件对应一个配置，没绑定的用固定默认配置 `default`；顶部开关是 config 的 `enabled`。程序已被别的配置的启用规则选中时先确认，确认后删掉那条规则。新建的配置是空的，名称必填、最多 64 字符、不重名。删除先 `profiles.delete`：拒绝为正在使用（-32012）则切到另一个配置再请求，拒绝为引用（-32013）则先用 `config.put` 删掉引用规则再请求，解决不了就写回并切回原配置；默认配置不可删。导出 `.padmate` 和导入经 `profiles.export`/`import`（上限 4 MiB）；名称被占用（-32021）时 Main 留下文件并返回一次性 token（2 分钟过期，最多 4 份），页面选“替换”或“另存为”。导入 AntiMicroX经 `profiles.importAmgp`，`AmgpReportDialog` 显示报告。
 - **脚本页**：脚本库各配置共用，经 `macros.*`（§11）操作，文件只由守护进程写。名称检查 `shared/macro-names.ts` 与 Go 共用 `daemon/testdata/macro-names.json`。
 - **设置页**（`SettingsPage.tsx`）：修改立即保存。分区：通用（语言、功能键、登录时启动）、浮层、反馈、安全（紧急暂停组合 `safety.panic`）、手柄调校（`devices.<DeviceKey>`，含识别和映射向导）、按键判定（`timing`）、高级（`output.sendToOwnWindow`、`output.eventGapMs` 0–50 ms）、更新、关于。保存时读完整 config，只改自己的字段，带 revision。登录时启动经 `startup.get/set`，不写 config.json；开发版返回 -32017。
-- **映射向导**：保存写 `devices.<DeviceKey>.mapping`。`mapwizard.ts` 是 Go `internal/mapwizard` 的 TypeScript 副本，`mapwizard.test.ts` 读 `daemon/internal/mapwizard/testdata/vectors.json` 要求结果一致，改规则要两边一起改。
+- **映射向导**：保存写 `devices.<DeviceKey>.mapping`。问 24 个控件，最后是 View 和 Menu，不问 Home（`guide`）。`mapwizard.ts` 是 Go `internal/mapwizard` 的 TypeScript 副本，`mapwizard.test.ts` 读 `daemon/internal/mapwizard/testdata/vectors.json` 要求结果一致，改规则要两边一起改。
 
 ### 12.6 诊断
 

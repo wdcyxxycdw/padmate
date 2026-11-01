@@ -39,7 +39,7 @@ type Config struct {
 	Timing            Timing
 	Output            OutputSettings
 	Safety            SafetySettings
-	// FunctionKey is the one function key, back, start or guide
+	// FunctionKey is the one function key, back or start
 	// (ADR-0012), the same for every profile and controller. DefaultConfig has
 	// control.DefaultFunctionKey; the zero value, such as a Config built by
 	// hand, means the same (FunctionKeyOrDefault).
@@ -154,7 +154,7 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		c.ReleaseOnSwitch = w.ReleaseOnSwitch
 	}
 	if fk, ok := control.Parse(w.FunctionKey); ok && fk.String() == w.FunctionKey && fk.CanBeFunctionKey() {
-		c.FunctionKey = fk // the schema allows only start, back and guide
+		c.FunctionKey = fk // the schema allows start, back and the retired guide, which reads as start
 	}
 	c.Devices = w.Devices
 	c.Timing, c.Output, c.Safety = resolveTiming(w.Timing), w.Output, w.Safety

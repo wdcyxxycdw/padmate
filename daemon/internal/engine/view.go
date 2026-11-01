@@ -13,9 +13,8 @@ type View struct {
 	// control order. It is nil when the hints are off and not nil, possibly
 	// empty, when they are on.
 	Hints []Hint
-	// FunctionKey is the function key (control.Back, control.Start or
-	// control.Guide) while it is held and a press looks its control up in the
-	// function set first (ActiveFunctionKey), control.Invalid when it is not
+	// FunctionKey is the function key (control.Back or control.Start) while
+	// it is held and a press looks its control up in the function set first (ActiveFunctionKey), control.Invalid when it is not
 	// held (profiles.explain, ADR-0016).
 	FunctionKey control.Control
 }

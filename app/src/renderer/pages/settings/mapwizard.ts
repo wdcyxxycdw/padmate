@@ -446,7 +446,6 @@ export const DEFAULT_STEPS: readonly Step[] = [
   { id: "rt", output: "righttrigger" },
   { id: "view", output: "back" },
   { id: "menu", output: "start" },
-  { id: "home", output: "guide" },
 ];
 
 /**

@@ -236,6 +236,33 @@ describe("config.json documents", () => {
     ).toBeNull();
   });
 
+  it("drops the Xbox button as the function key from every write (ADR-0012)", () => {
+    // The daemon reads it as Menu, the default, which the file leaves out.
+    const old = legacy({ functionKey: "guide", enabled: true, future: 1 });
+    expect(withoutRetired(old)).toEqual({
+      schemaVersion: 0,
+      enabled: true,
+      future: 1,
+    });
+    const text = changeConfigText(JSON.stringify(old), (value) =>
+      setSwitching(value, false),
+    );
+    expect(Object.keys(JSON.parse(text ?? "{}"))).toEqual([
+      "schemaVersion",
+      "enabled",
+      "future",
+    ]);
+    // View stays, in its place.
+    const back = config({ functionKey: "back", enabled: true });
+    expect(withoutRetired(back)).toBe(back);
+    const both = legacy({ ignore: [], functionKey: "back", enabled: true });
+    expect(Object.keys(withoutRetired(both))).toEqual([
+      "schemaVersion",
+      "functionKey",
+      "enabled",
+    ]);
+  });
+
   const selection = legacy({
     defaultProfile: "fallback",
     ignore: ["explorer.exe"],

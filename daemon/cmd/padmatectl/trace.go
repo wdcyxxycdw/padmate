@@ -22,8 +22,8 @@ const traceUsage = `usage: padmatectl trace --profile FILE --input FILE [--json]
 
 Replays one recorded gamepad trace without injecting keys and prints the
 timeline from raw input through gesture decisions to keyboard output.
---json prints one JSON object per timeline item. --function-key (start,
-back or guide; default start) is the function key the profile is compiled
+--json prints one JSON object per timeline item. --function-key (start
+or back; default start) is the function key the profile is compiled
 with, as config.json's functionKey is for padmated: trace does not read it.`
 
 type traceItem struct {
@@ -98,7 +98,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	profilePath := fs.String("profile", "", "profile to load")
 	inputPath := fs.String("input", "", "recorded input trace")
 	asJSON := fs.Bool("json", false, "print JSON timeline items")
-	functionKey := fs.String("function-key", "start", "the function key the profile is compiled with: start, back or guide")
+	functionKey := fs.String("function-key", "start", "the function key the profile is compiled with: start or back")
 	if code, ok := parseFlags(fs, args, traceUsage+"\n", stdout, stderr); !ok {
 		return code
 	}

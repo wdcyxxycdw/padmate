@@ -104,21 +104,25 @@ export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
   return next;
 }
 /**
- * The function key (ADR-0012): one of View (back), Menu (start) and
- * the Xbox button (guide), chosen in the settings (config.json functionKey)
- * and the same for every profile and controller. It holds no bindings of its
- * own. While it is held, the other controls use the profile's function set
- * (profile.functionSet), and a control the set leaves out does what it does
- * otherwise. The other two of the three are ordinary controls.
+ * The function key (ADR-0012): View (back) or Menu (start), chosen in
+ * the settings (config.json functionKey) and the same for every profile and
+ * controller. It holds no bindings of its own. While it is held, the other
+ * controls use the profile's function set (profile.functionSet), and a control
+ * the set leaves out does what it does otherwise. The other of the two is an
+ * ordinary control.
  */
-export const functionKeys = ["start", "back", "guide"] as const;
+export const functionKeys = ["start", "back"] as const;
 export type FunctionKey = (typeof functionKeys)[number];
 /** The function key when config.json does not choose one: Menu. */
 export const defaultFunctionKey: FunctionKey = "start";
 /** Which set of bindings the mapping page shows and edits: the usual one, or the function set. */
 export type KeyView = "normal" | "function";
 
-/** value when it names a function key, else the default (as the daemon reads config.json). */
+/**
+ * value when it names a function key, else the default (as the daemon reads
+ * config.json): the Xbox button, which an older config.json may choose, is
+ * Menu.
+ */
 export function asFunctionKey(value: unknown): FunctionKey {
   return (functionKeys as readonly unknown[]).includes(value)
     ? (value as FunctionKey)
@@ -131,6 +135,25 @@ export function isFunctionKey(
   functionKey: FunctionKey,
 ): boolean {
   return canonicalControl(control) === functionKey;
+}
+
+/**
+ * The Xbox, PS or Home button, which padmate never maps (ADR-0012): Windows,
+ * Steam and the controller itself act on it. The daemon leaves a binding on
+ * it out with a warning; the editor shows none and a save drops it.
+ */
+export const unmappedControl = "guide";
+
+/**
+ * Whether the daemon ignores what a set binds on control: the function key,
+ * which only switches sets, and the Xbox button, which is never mapped.
+ */
+export function isIgnoredControl(
+  control: string,
+  functionKey: FunctionKey,
+): boolean {
+  const key = canonicalControl(control);
+  return key === functionKey || key === unmappedControl;
 }
 
 /**
@@ -364,9 +387,10 @@ function filledAction(action: ProfileAction): ProfileAction | null {
  * older format version (0) is saved at the current one. The four
  * feedback switches that moved to config.json (ADR-0015) are not written: the
  * daemon no longer reads them, so a save drops them, and a feedback object
- * left with nothing goes too. The bindings on back, start and guide stay
- * wherever the file has them: which of them is the function key changes in
- * the settings (ADR-0012), and the daemon ignores the one that is. A file of
+ * left with nothing goes too. The bindings on back and start stay wherever
+ * the file has them: which of them is the function key changes in the
+ * settings (ADR-0012), and the daemon ignores the one that is. A binding on
+ * the Xbox button (guide), which the daemon no longer maps, goes. A file of
  * the old functionKeys is saved as the functionSet it stands for, without
  * functionKeys (the daemon never rewrites a file by itself), and functionSet
  * is written only when it has bindings. A profile based on another
@@ -391,6 +415,10 @@ export function savedForm(
     let changed = false;
     const next: Record<string, unknown> = {};
     for (const [control, value] of Object.entries(bindings)) {
+      if (canonicalControl(control) === unmappedControl) {
+        changed = true;
+        continue;
+      }
       if (!value || typeof value !== "object") {
         next[control] = value;
         continue;
@@ -706,8 +734,9 @@ export interface LayerUsage {
 }
 /**
  * What a profile uses beyond the base layer. The function key (config.json
- * functionKey) holds no bindings, so what a layer or common binds on it is
- * ignored by the daemon and is not counted (ADR-0012).
+ * functionKey) holds no bindings and the Xbox button is never mapped, so what
+ * a layer or common binds on them is ignored by the daemon and is not counted
+ * (ADR-0012).
  */
 export function layerUsage(
   profile: Profile,
@@ -735,7 +764,7 @@ export function layerUsage(
     for (const [key, binding] of Object.entries(layer)) {
       if (
         key === "color" ||
-        isFunctionKey(key, functionKey) ||
+        isIgnoredControl(key, functionKey) ||
         typeof binding !== "object" ||
         !binding
       )

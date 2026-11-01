@@ -13,11 +13,10 @@ const names = (pad?: Parameters<typeof functionKeyChoices>[0]) =>
   functionKeyChoices(pad).map((choice) => [choice.key, choice.name]);
 
 describe("the keys to choose from", () => {
-  it("are Menu, View and the Xbox button, named as an Xbox controller does, when none is connected", () => {
+  it("are Menu and View, named as an Xbox controller does, when none is connected", () => {
     expect(names()).toEqual([
       ["start", "Menu"],
       ["back", "View"],
-      ["guide", "Xbox"],
     ]);
     expect(names({ type: "xboxone" })).toEqual(names());
   });
@@ -26,22 +25,18 @@ describe("the keys to choose from", () => {
     expect(names({ type: "ps5" })).toEqual([
       ["start", "Options"],
       ["back", "Create"],
-      ["guide", "PS"],
     ]);
     expect(names({ type: "ps4" })).toEqual([
       ["start", "Options"],
       ["back", "Share"],
-      ["guide", "PS"],
     ]);
     expect(names({ type: "switchpro" })).toEqual([
       ["start", "+"],
       ["back", "−"],
-      ["guide", "Home"],
     ]);
     expect(names({ type: "xbox360" })).toEqual([
       ["start", "Start"],
       ["back", "Back"],
-      ["guide", "Xbox"],
     ]);
   });
 
@@ -56,25 +51,21 @@ describe("the keys to choose from", () => {
     expect(names({ type: "joyconleft", buttonMask: 1 })).toEqual([
       ["start", "−"],
       ["back", "View"],
-      ["guide", "Capture"],
     ]);
     expect(names({ type: "joyconright", buttonMask: 1 })).toEqual([
       ["start", "+"],
       ["back", "View"],
-      ["guide", "Home"],
     ]);
   });
 
   it("are drawn with the icon of the key preview: the symbol printed on the key, not a word (ADR-0013)", () => {
-    const [menu, view, xbox] = functionKeyChoices({ type: "xboxone" });
+    const [menu, view] = functionKeyChoices({ type: "xboxone" });
     expect(menu.icon).toEqual({ kind: "art", name: "kenney/xbox_button_menu" });
     expect(view.icon).toEqual({ kind: "art", name: "kenney/xbox_button_view" });
-    expect(xbox.icon).toEqual({ kind: "art", name: "kenney/xbox_guide" });
     expect(functionKeyChoices({ type: "ps5" }).map(({ icon }) => icon)).toEqual(
       [
         { kind: "art", name: "kenney/playstation5_button_options" },
         { kind: "art", name: "kenney/playstation5_button_create" },
-        { kind: "art", name: "kenney/switch_button_home" },
       ],
     );
     expect(
@@ -82,7 +73,6 @@ describe("the keys to choose from", () => {
     ).toEqual([
       { kind: "art", name: "kenney/switch_button_plus" },
       { kind: "art", name: "kenney/switch_button_minus" },
-      { kind: "art", name: "kenney/switch_button_home" },
     ]);
   });
 });
@@ -110,13 +100,12 @@ describe("the row of the setting", () => {
     screen.getByRole("radiogroup", { name: /功能键|Function key/ });
   const radios = () => screen.getAllByRole("radio");
 
-  it("is its name and the three keys, each an icon and a name, with no text to explain them", () => {
+  it("is its name and the two keys, each an icon and a name, with no text to explain them", () => {
     row();
     expect(group().getAttribute("aria-label")).toBe("功能键");
     expect(radios().map((radio) => radio.textContent)).toEqual([
       "Menu",
       "View",
-      "Xbox",
     ]);
     // The icon is drawn, and hidden from a screen reader, which reads the name.
     for (const radio of radios()) {
@@ -126,7 +115,7 @@ describe("the row of the setting", () => {
       expect(icon?.hasAttribute("data-label")).toBe(false);
     }
     expect(radios().map((radio) => radio.getAttribute("aria-checked"))).toEqual(
-      ["true", "false", "false"],
+      ["true", "false"],
     );
     expect(document.querySelector(".row-hint")).toBeNull();
     expect(screen.queryByRole("combobox")).toBeNull();
@@ -135,9 +124,9 @@ describe("the row of the setting", () => {
   });
 
   it("shows the key the file chooses", () => {
-    row("guide");
+    row("back");
     expect(radios().map((radio) => radio.getAttribute("aria-checked"))).toEqual(
-      ["false", "false", "true"],
+      ["false", "true"],
     );
   });
 
@@ -147,7 +136,6 @@ describe("the row of the setting", () => {
     expect(radios().map((radio) => radio.textContent)).toEqual([
       "Options",
       "Create",
-      "PS",
     ]);
   });
 
@@ -159,9 +147,9 @@ describe("the row of the setting", () => {
     fireEvent.keyDown(radios()[0], { key: "ArrowRight" });
     expect(onChange).toHaveBeenLastCalledWith("back");
     fireEvent.keyDown(radios()[0], { key: "ArrowLeft" });
-    expect(onChange).toHaveBeenLastCalledWith("guide");
+    expect(onChange).toHaveBeenLastCalledWith("back");
     // Only the chosen one is a tab stop.
-    expect(radios().map((radio) => radio.tabIndex)).toEqual([0, -1, -1]);
+    expect(radios().map((radio) => radio.tabIndex)).toEqual([0, -1]);
   });
 
   it("is off when it cannot be saved", () => {

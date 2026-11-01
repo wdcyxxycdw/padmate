@@ -92,7 +92,6 @@ const api: PadmateAPI = {
     listen<KeyboardCaptureEvent>("padmate:keyboardCapture", listener),
   getStartup: () => invoke("padmate:startupGet"),
   setStartup: (enabled) => invoke("padmate:startupSet", enabled),
-  openGameBarSettings: () => invoke("padmate:gameBarSettingsOpen"),
   onClosing: (listener) => listen<void>("padmate:closing", () => listener()),
   readyToClose: () => invoke("padmate:readyToClose"),
   exportCheatSheet: (format, content) =>

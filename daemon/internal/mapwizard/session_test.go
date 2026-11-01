@@ -114,13 +114,12 @@ func TestSessionBuildsAMapping(t *testing.T) {
 	r.mustBind(r.push(5, 32767, -32768), "rt")
 	r.mustBind(r.press(6), "view")
 	r.mustBind(r.press(7), "menu")
-	r.mustBind(r.press(10), "home")
 	if !r.s.Done() {
 		t.Error("the session is not done after the last step")
 	}
 	want := testGUID + ",*,a:b0,b:b1,x:b2,y:b3,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2," +
 		"leftx:a0,lefty:a1,leftstick:b8,rightx:a2,righty:a3~,rightstick:b9," +
-		"leftshoulder:b4,rightshoulder:b5,lefttrigger:a4,righttrigger:a5,back:b6,start:b7,guide:b10,platform:Windows"
+		"leftshoulder:b4,rightshoulder:b5,lefttrigger:a4,righttrigger:a5,back:b6,start:b7,platform:Windows"
 	m, warns, err := r.s.Mapping()
 	if err != nil {
 		t.Fatal(err)
@@ -271,8 +270,8 @@ func TestRedoAfterTheLastStep(t *testing.T) {
 		t.Fatal("not done after skipping every step")
 	}
 	r.s.Redo()
-	if _, st, ok := r.s.Current(); !ok || st.ID != "home" {
-		t.Errorf("Redo after the end asks %q %v, want home", st.ID, ok)
+	if _, st, ok := r.s.Current(); !ok || st.ID != "menu" {
+		t.Errorf("Redo after the end asks %q %v, want menu", st.ID, ok)
 	}
 }
 

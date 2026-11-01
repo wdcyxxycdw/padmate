@@ -118,9 +118,6 @@
       "rightstick": {
         "block": true
       },
-      "guide": {
-        "block": true
-      },
       "touchpad": {
         "block": true
       },
@@ -225,9 +222,6 @@
       "rightstick": {
         "block": true
       },
-      "guide": {
-        "block": true
-      },
       "touchpad": {
         "block": true
       },
@@ -327,9 +321,6 @@
         "block": true
       },
       "rightstick": {
-        "block": true
-      },
-      "guide": {
         "block": true
       },
       "touchpad": {

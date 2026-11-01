@@ -203,30 +203,42 @@ func TestIPCExplainFunctionKeys(t *testing.T) {
 }
 
 // With another function key in config.json, the explanation follows it.
+// guide, which a config.json written before padmate stopped mapping it may
+// still hold, is start; its own binding is left out, so nothing explains it.
 func TestIPCExplainFunctionKeyFromConfig(t *testing.T) {
-	dir := t.TempDir()
-	writeLibraryProfile(t, dir, "fn", `{"schemaVersion":1,"name":"fn","layers":{"base":{"south":{"press":{"type":"keys","keys":"F13"}},"start":{"press":{"type":"keys","keys":"F16"}},"guide":{"press":{"type":"keys","keys":"F18"}}}},"functionSet":{"south":{"press":{"type":"keys","keys":"F1"}}}}`)
-	tl, src := startFocusLive(t, dir, "fn", `{"schemaVersion":0,"functionKey":"guide"}`, false)
-	client := rpcTestClient(t, tl.liveRun)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	var guide, start, south rpcExplanation
-	for control, result := range map[string]*rpcExplanation{"guide": &guide, "start": &start, "south": &south} {
-		if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": control}, result); err != nil {
-			t.Fatal(err)
-		}
+	for _, tc := range []struct{ config, key, other string }{
+		{"back", "back", "start"},
+		{"guide", "start", "back"},
+	} {
+		t.Run(tc.config, func(t *testing.T) {
+			dir := t.TempDir()
+			writeLibraryProfile(t, dir, "fn", `{"schemaVersion":1,"name":"fn","layers":{"base":{"south":{"press":{"type":"keys","keys":"F13"}},"back":{"press":{"type":"keys","keys":"F15"}},"start":{"press":{"type":"keys","keys":"F16"}},"guide":{"press":{"type":"keys","keys":"F18"}}}},"functionSet":{"south":{"press":{"type":"keys","keys":"F1"}}}}`)
+			tl, src := startFocusLive(t, dir, "fn", `{"schemaVersion":0,"functionKey":"`+tc.config+`"}`, false)
+			client := rpcTestClient(t, tl.liveRun)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var key, other, guide, south rpcExplanation
+			for control, result := range map[string]*rpcExplanation{tc.key: &key, tc.other: &other, "guide": &guide, "south": &south} {
+				if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": control}, result); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if !key.IsFunctionKey || key.FunctionKey != tc.key || other.IsFunctionKey || guide.IsFunctionKey || south.IsFunctionKey {
+				t.Fatalf("%s %+v, %s %+v, guide %+v, south %+v", tc.key, key, tc.other, other, guide, south)
+			}
+			if f := key.Slots[0].FunctionSet; f.Key != tc.key || f.Layer != "function:"+tc.key {
+				t.Errorf("function set %+v", f)
+			}
+			if l := guide.Slots[0].Layers[0]; l.Binding != "" || l.Resolution != "fallthrough" {
+				t.Errorf("guide in base: %+v", l)
+			}
+			button(src, tc.key, true)
+			tl.sync()
+			if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": "south"}, &south); err != nil || !south.Slots[0].FunctionHeld || !south.Slots[0].FunctionSet.Selected {
+				t.Errorf("south under %s: %+v, %v", tc.key, south, err)
+			}
+			button(src, tc.key, false)
+			tl.sync()
+		})
 	}
-	if !guide.IsFunctionKey || guide.FunctionKey != "guide" || start.IsFunctionKey || south.IsFunctionKey {
-		t.Fatalf("guide %+v, start %+v, south %+v", guide, start, south)
-	}
-	if f := guide.Slots[0].FunctionSet; f.Key != "guide" || f.Layer != "function:guide" {
-		t.Errorf("function set %+v", f)
-	}
-	button(src, "guide", true)
-	tl.sync()
-	if err := client.CallResult(ctx, "profiles.explain", map[string]string{"device": "1", "control": "south"}, &south); err != nil || !south.Slots[0].FunctionHeld || !south.Slots[0].FunctionSet.Selected {
-		t.Errorf("south under guide: %+v, %v", south, err)
-	}
-	button(src, "guide", false)
-	tl.sync()
 }

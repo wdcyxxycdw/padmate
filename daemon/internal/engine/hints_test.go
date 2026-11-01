@@ -93,7 +93,7 @@ func (h *hsim) wantShown(when, want string) {
 // each kind of label: a label, a shortcut, a sequence, a script, a macro, a
 // layer, a precision action, and a binding with nothing to show.
 const hintsProfile = `{"schemaVersion":1,"name":"stack","defaultLayer":"base","script":{"entry":"main.ts","api":"0.21"},
-"common":{"misc4":{"label":"通用","press":{"type":"keys","keys":"F1"}},"guide":{"press":{"type":"keys","keys":"F2"}}},
+"common":{"misc4":{"label":"通用","press":{"type":"keys","keys":"F1"}},"back":{"press":{"type":"keys","keys":"F2"}}},
 "layers":{
 "base":{
  "rightshoulder":{"label":"提示","press":{"type":"hud","op":"hints"}},
@@ -158,17 +158,17 @@ func TestHintsWhileHeld(t *testing.T) {
 // The lists hintsProfile gives, in control order. The control that holds the
 // hints (rightshoulder) is not in them.
 const (
-	hintsOfBase = "on:south=撤销 | east=Space | west=brush | north=Ctrl+S | guide=F2" +
+	hintsOfBase = "on:south=撤销 | east=Space | west=brush | north=Ctrl+S | back=F2" +
 		" | leftstick=层：fn | rightstick=层：fn | leftshoulder=精确模式 | dpad.up=多 行 | dpad.left=Ctrl+K, S" +
 		" | dpad.right=层：base/fn | misc1=层：fn | misc2=层：base | misc4=通用 | misc5=复制 | lt=Alt"
 	// fn over the base: fn's south and misc4 win, east is blocked, lt is fn's.
-	hintsOfFnOverlay = "on:south=重做 | west=brush | north=Ctrl+S | guide=F2" +
+	hintsOfFnOverlay = "on:south=重做 | west=brush | north=Ctrl+S | back=F2" +
 		" | leftstick=层：fn | rightstick=层：fn | leftshoulder=精确模式 | dpad.up=多 行 | dpad.left=Ctrl+K, S" +
 		" | dpad.right=层：base/fn | misc1=层：fn | misc2=层：base | misc3=层：extra | misc4=fn 返回 | misc5=复制 | lt=Shift"
 	// fn as the base layer: only fn and the common bindings.
-	hintsOfFnBase = "on:south=重做 | guide=F2 | misc3=层：extra | misc4=fn 返回 | lt=Shift"
+	hintsOfFnBase = "on:south=重做 | back=F2 | misc3=层：extra | misc4=fn 返回 | lt=Shift"
 	// extra over fn over the base: extra's label-only south wins, west is blocked.
-	hintsOfFnExtra = "on:south=额外 | north=Ctrl+S | guide=F2" +
+	hintsOfFnExtra = "on:south=额外 | north=Ctrl+S | back=F2" +
 		" | leftstick=层：fn | rightstick=层：fn | leftshoulder=精确模式 | dpad.up=多 行 | dpad.left=Ctrl+K, S" +
 		" | dpad.right=层：base/fn | misc1=层：fn | misc2=层：base | misc3=层：extra | misc4=fn 返回 | misc5=复制 | lt=Shift"
 )
@@ -256,7 +256,7 @@ func TestHintsActionTexts(t *testing.T) {
  "north":{"hold":{"type":"hud","op":"hints"}},
  "misc2":{"release":{"type":"keys","keys":"F7"},"tap":{"type":"keys","keys":"F6","mode":"tap"}},
  "misc3":{"doubleTap":{"type":"keys","keys":"F8","mode":"tap"},"release":{"type":"keys","keys":"F9"}},
- "guide":{"label":"label wins","press":{"type":"keys","keys":"F10"}},
+ "back":{"label":"label wins","press":{"type":"keys","keys":"F10"}},
  "misc1":{"hold":{"type":"keys","keys":"F11"},"doubleTap":{"type":"keys","keys":"F12","mode":"tap"}}
 }}}`
 	h := newHsim(t, src)
@@ -266,7 +266,7 @@ func TestHintsActionTexts(t *testing.T) {
 		"east=鼠标跳转",
 		"west=copy all",
 		"north=按键提示",
-		"guide=label wins",
+		"back=label wins",
 		"misc1=F11",
 		"misc2=F6",
 		"misc3=F8", // press and tap look first, then hold, then the multi-taps, the release last

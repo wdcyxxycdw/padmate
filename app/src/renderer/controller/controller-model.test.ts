@@ -182,44 +182,32 @@ describe("controller presentation", () => {
 
 describe("the function key of a controller (ADR-0012)", () => {
   it.each([
-    ["xboxone", "View", "Menu", "Xbox"],
-    ["xboxseries", "View", "Menu", "Xbox"],
-    ["xbox360", "Back", "Start", "Xbox"],
-    ["ps5", "Create", "Options", "PS"],
-    ["ps4", "Share", "Options", "PS"],
-    ["ps3", "Select", "Start", "PS"],
-    ["switchpro", "−", "+", "Home"],
-    ["joyconpair", "−", "+", "Home"],
-    ["unknown", "Back", "Start", "Home"],
-  ])("is named as %s prints it: %s, %s and %s", (type, back, start, guide) => {
+    ["xboxone", "View", "Menu"],
+    ["xboxseries", "View", "Menu"],
+    ["xbox360", "Back", "Start"],
+    ["ps5", "Create", "Options"],
+    ["ps4", "Share", "Options"],
+    ["ps3", "Select", "Start"],
+    ["switchpro", "−", "+"],
+    ["joyconpair", "−", "+"],
+    ["unknown", "Back", "Start"],
+  ])("is named as %s prints it: %s and %s", (type, back, start) => {
     expect(functionKeyLabel("back", type)).toBe(back);
     expect(functionKeyLabel("start", type)).toBe(start);
-    expect(functionKeyLabel("guide", type)).toBe(guide);
   });
 
-  it("has all three on a controller, and no View on a single Joy-Con held sideways", () => {
+  it("has both on a controller, and no View on a single Joy-Con held sideways", () => {
     // Held sideways it reports face buttons (buttonMask bit 0), as the
     // labels decide it.
-    expect(padFunctionKeys("joyconleft", 1)).toEqual(["start", "guide"]);
-    expect(padFunctionKeys("joyconright", 0xf)).toEqual(["start", "guide"]);
+    expect(padFunctionKeys("joyconleft", 1)).toEqual(["start"]);
+    expect(padFunctionKeys("joyconright", 0xf)).toEqual(["start"]);
     expect(padHasFunctionKey("back", "joyconleft", 1)).toBe(false);
     expect(padHasFunctionKey("start", "joyconleft", 1)).toBe(true);
-    expect(padHasFunctionKey("guide", "joyconleft", 1)).toBe(true);
     expect(functionKeyLabel("start", "joyconleft", {}, 1)).toBe("−");
     expect(functionKeyLabel("start", "joyconright", {}, 0xf)).toBe("+");
-    expect(functionKeyLabel("guide", "joyconleft", {}, 1)).toBe("Capture");
-    expect(functionKeyLabel("guide", "joyconright", {}, 1)).toBe("Home");
     // Held upright it has − or + as the Back and Start buttons of a pad.
-    expect(padFunctionKeys("joyconleft", 2).sort()).toEqual([
-      "back",
-      "guide",
-      "start",
-    ]);
-    expect(padFunctionKeys("xboxone").sort()).toEqual([
-      "back",
-      "guide",
-      "start",
-    ]);
+    expect(padFunctionKeys("joyconleft", 2).sort()).toEqual(["back", "start"]);
+    expect(padFunctionKeys("xboxone").sort()).toEqual(["back", "start"]);
   });
 
   it("takes the names the controller reports", () => {

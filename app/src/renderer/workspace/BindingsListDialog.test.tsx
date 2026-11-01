@@ -413,11 +413,22 @@ it("lists the one the settings choose, and the others as keys with their binding
     ["View", "功能键", "按住时其他键换成另一套", "fixed"],
   ]);
   expect(rows.filter((row) => row[0] === "View")).toHaveLength(1);
-  // The Xbox button.
-  act(() => editor.getState().setFunctionKey("guide"));
-  expect(rowsOf().slice(-1)).toEqual([
-    ["Xbox", "功能键", "按住时其他键换成另一套", "fixed"],
-  ]);
+});
+
+it("does not list what the file binds on the Xbox button, which is never mapped (ADR-0012)", async () => {
+  const editor = await editorFor({
+    ...profile,
+    layers: {
+      base: {
+        ...profile.layers.base,
+        guide: { label: "工具", press: { type: "keys", keys: "F24" } },
+      },
+    },
+  });
+  render(<Harness editor={editor} onSelect={vi.fn()} />);
+  const rows = rowsOf();
+  expect(rows.map((row) => row[0])).not.toContain("Xbox");
+  expect(rows.flat().join(" ")).not.toContain("工具");
 });
 
 it("lists them when nothing else is set", async () => {
@@ -494,8 +505,6 @@ it("names the function key as the pad prints it, in English too", async () => {
   ]);
   act(() => editor.getState().setFunctionKey("back"));
   expect(names("ps5")[0][0]).toBe("Create");
-  act(() => editor.getState().setFunctionKey("guide"));
-  expect(names("ps5")[0][0]).toBe("PS");
 });
 
 it("draws the function key with the icon of the connected pad's generation (ADR-0013)", async () => {

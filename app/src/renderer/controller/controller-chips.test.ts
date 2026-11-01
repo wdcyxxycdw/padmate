@@ -1037,12 +1037,12 @@ describe("the chip of the function key (ADR-0012)", () => {
 
   it("tags the function key whatever the file binds on it, and only that key", () => {
     for (const language of ["zh-CN", "en"] as const)
-      for (const functionKey of ["start", "back", "guide"] as const) {
+      for (const functionKey of ["start", "back"] as const) {
         const result = chips({ profile: file, language, functionKey });
         expect(result[functionKey], `${language} ${functionKey}`).toEqual(
           tag(language),
         );
-        for (const other of ["start", "back", "guide"] as const)
+        for (const other of ["start", "back"] as const)
           if (other !== functionKey)
             expect(result[other].state, `${functionKey} ${other}`).toBe(
               "bound",
@@ -1050,20 +1050,19 @@ describe("the chip of the function key (ADR-0012)", () => {
       }
   });
 
-  it("shows the other two of View, Menu and the Xbox button as ordinary keys", () => {
-    const result = chips({ profile: file, functionKey: "guide" });
-    expect(result.start).toMatchObject({
+  it("shows the other of View and Menu as an ordinary key", () => {
+    expect(chips({ profile: file, functionKey: "back" }).start).toMatchObject({
       title: "保存",
       detail: [{ keys: "Ctrl+S" }],
       state: "bound",
     });
-    expect(result.back).toMatchObject({
+    expect(chips({ profile: file, functionKey: "start" }).back).toMatchObject({
       title: "Ctrl+V",
       titleKeys: { keys: "Ctrl+V" },
       state: "bound",
     });
     // A key nobody bound is unset, like any other.
-    expect(chips({ functionKey: "guide" }).start.state).toBe("unbound");
+    expect(chips({ functionKey: "back" }).start.state).toBe("unbound");
   });
 
   it("is the same in every display mode, and when no profile is open", () => {
