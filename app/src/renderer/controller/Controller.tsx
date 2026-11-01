@@ -29,6 +29,7 @@ import {
   controllerLabels,
   controlStrength,
   familyName,
+  padHasControl,
   stickPush,
   triggerValue,
 } from "./controller-model";
@@ -90,8 +91,10 @@ function systemGlyph(
   family: ControllerFamily,
 ): ReactNode {
   if (
-    !["back", "start", "guide", "touchpad"].includes(control) ||
-    Array.from(label).length <= 2
+    !["back", "start", "guide", "misc1", "touchpad"].includes(control) ||
+    Array.from(label).length <= 2 ||
+    // A misc button other than Capture keeps its name, e.g. 附加键 1.
+    (control === "misc1" && label !== "Capture")
   )
     return undefined;
   const name =
@@ -505,8 +508,8 @@ export function Controller({
     undefined,
   );
   const [renderer, setRenderer] = useState("loading");
-  const { type, buttonLabels, buttonMask } = info;
-  const modelKey = stageKey({ type, buttonLabels, buttonMask });
+  const { type, buttonLabels, buttonMask, axisMask } = info;
+  const modelKey = stageKey({ type, buttonLabels, buttonMask, axisMask });
   const stateId = useId();
   const hintId = useId();
   const labels = controllerLabels(
@@ -547,7 +550,7 @@ export function Controller({
     try {
       const modelInfo: Pick<
         DeviceInfo,
-        "type" | "buttonLabels" | "buttonMask"
+        "type" | "buttonLabels" | "buttonMask" | "axisMask"
       > = JSON.parse(modelKey);
       const current = latest.current;
       // The scene takes the session's canvas into the stage host (H2): the
@@ -666,19 +669,21 @@ export function Controller({
         className="controller-accessible-state"
         aria-label={tx(language, "手柄按键状态", "Controller state")}
       >
-        {Object.entries(labels).map(([control, label]) => (
-          <li
-            key={control}
-            data-control={control}
-            data-pressed={!!input?.buttons[control]}
-          >
-            {label}
-            {input?.buttons[control] ? ` · ${t("pressed")}` : ""}
-            {control.endsWith("trigger")
-              ? ` ${Math.round(triggerValue(input?.axes[control]) * 100)}%`
-              : ""}
-          </li>
-        ))}
+        {Object.entries(labels)
+          .filter(([control]) => padHasControl(control, info))
+          .map(([control, label]) => (
+            <li
+              key={control}
+              data-control={control}
+              data-pressed={!!input?.buttons[control]}
+            >
+              {label}
+              {input?.buttons[control] ? ` · ${t("pressed")}` : ""}
+              {control.endsWith("trigger")
+                ? ` ${Math.round(triggerValue(input?.axes[control]) * 100)}%`
+                : ""}
+            </li>
+          ))}
       </ul>
     </fieldset>
   );

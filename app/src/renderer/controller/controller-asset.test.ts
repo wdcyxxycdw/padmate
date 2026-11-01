@@ -2,9 +2,10 @@ import { readFile } from "node:fs/promises";
 import { Mesh, Quaternion, Texture, Vector3 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { describe, expect, it, vi } from "vitest";
-import { buildAssetModel } from "./controller-asset";
+import { sdlPads } from "../testing/sdl-pads";
+import { buildAssetModel, type ModelInfo } from "./controller-asset";
 
-async function fixture(type: string) {
+async function fixture(type: string, masks: Omit<ModelInfo, "type"> = {}) {
   const file = type.startsWith("ps") ? "dualsense" : "xbox";
   const bytes = await readFile(
     new URL(`./assets/${file}.glb`, import.meta.url),
@@ -18,7 +19,7 @@ async function fixture(type: string) {
     bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
     "",
   );
-  return buildAssetModel(gltf.scene, { type });
+  return buildAssetModel(gltf.scene, { type, ...masks });
 }
 describe("licensed controller assets", () => {
   it.each(["xboxone", "ps5", "switchpro"])(
@@ -58,6 +59,29 @@ describe("licensed controller assets", () => {
       model.dispose();
     },
   );
+  it.each([
+    "ps4",
+    "ps5Edge",
+    "switchPro",
+    "joyConPair",
+    "joyConLeftSideways",
+    "joyConRightUpright",
+    "xboxElite",
+  ] as const)("anchors every chip of %s on the model", async (name) => {
+    const { type, ...masks } = sdlPads[name];
+    const model = await fixture(type, masks);
+    const mapped = [...model.controls.keys()].filter((c) => c !== "guide");
+    expect(new Set(model.callouts.map((c) => c.control))).toEqual(
+      new Set(mapped),
+    );
+    // On the shell, inside its outline.
+    for (const control of mapped) {
+      const point = model.controls.get(control)?.point;
+      expect(Math.abs(point?.x ?? 9), control).toBeLessThan(2.8);
+      expect(Math.abs(point?.y ?? 9), control).toBeLessThan(2.2);
+    }
+    model.dispose();
+  });
   it("resets all input feedback on release and disposes each resource once", async () => {
     const model = await fixture("xboxone");
     const stick = model.sticks.get("left");

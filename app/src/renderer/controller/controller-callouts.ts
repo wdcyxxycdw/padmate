@@ -2,12 +2,13 @@ import type { DeviceInfo } from "../../shared/api";
 import {
   controllerLabels,
   familyName,
+  padHasControl,
   padHasFunctionKey,
 } from "./controller-model";
 
 export type ModelInfo = Pick<
   DeviceInfo,
-  "type" | "buttonLabels" | "buttonMask"
+  "type" | "buttonLabels" | "buttonMask" | "axisMask"
 >;
 
 /**
@@ -19,7 +20,8 @@ export type ModelInfo = Pick<
  * - `top` with a `side`: the shoulder corner above that column, `slot` 0–1.
  * - `top` without a side: the row above the controller, `offset` chip widths
  *   from the center. A `raised` chip sits a little higher than the rest.
- * - `bottom`: centered below the controller.
+ * - `bottom`: the row below the controller, `offset` chip widths from the
+ *   center: the extra buttons (Share, Capture, mute, paddles).
  *
  * controller-3d.css turns these into positions for each chip density.
  */
@@ -35,7 +37,15 @@ export interface Callout {
   raised?: boolean;
 }
 
-// Each endpoint identifies one physical control; the same IDs feed selection and input feedback.
+// The extra buttons in the row below the controller, left to right: the left
+// hand's paddles, the misc button, the right hand's paddles (the upper one of
+// each hand nearer the middle).
+const bottomRow = ["paddle4", "paddle2", "misc1", "paddle1", "paddle3"];
+
+// Each endpoint identifies one physical control; the same IDs feed selection
+// and input feedback. A pad gets a chip for each control it has
+// (padHasControl), so a single Joy-Con held sideways shows no D-pad and a
+// DualSense Edge its four back and Fn buttons.
 export function controllerCallouts(info: ModelInfo): Callout[] {
   const labels = controllerLabels(
     info.type,
@@ -43,15 +53,23 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
     info.buttonMask,
   );
   const ps = familyName(info.type) === "playstation";
+  const has = (control: string) => padHasControl(control, info);
   const callouts: Callout[] = [];
   const add = (
     control: string,
     placement: Callout["placement"],
     position: Omit<Callout, "control" | "label" | "placement"> = {},
   ) => {
-    callouts.push({ control, label: labels[control], placement, ...position });
+    if (has(control))
+      callouts.push({
+        control,
+        label: labels[control],
+        placement,
+        ...position,
+      });
   };
-  // DOM order is the keyboard order: top band left to right, then the columns.
+  // DOM order is the keyboard order: top band left to right, then the
+  // columns, then the row below.
   add("lefttrigger", "top", { side: "left", slot: 0 });
   add("leftshoulder", "top", { side: "left", slot: 1 });
   // A single Joy-Con held sideways has no back, only start (ADR-0012).
@@ -59,8 +77,7 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
     add("back", "top", { offset: -1 });
   // The touchpad takes the top center. The Xbox, PS or Home button has no
   // chip: padmate never maps it (ADR-0012).
-  if (ps && info.type !== "ps3")
-    add("touchpad", "top", { offset: 0, raised: true });
+  add("touchpad", "top", { offset: 0, raised: true });
   add("start", "top", { offset: 1 });
   add("righttrigger", "top", { side: "right", slot: 0 });
   add("rightshoulder", "top", { side: "right", slot: 1 });
@@ -69,17 +86,28 @@ export function controllerCallouts(info: ModelInfo): Callout[] {
     : ["leftstick", "dpad.up", "dpad.left", "dpad.right", "dpad.down"];
   const right = ["north", "east", "west", "south", "rightstick"];
   // A stick holds its movement and its press (two cells), so it is two slots
-  // tall: the chips after it move down by one.
+  // tall: the chips after it move down by one. A column of fewer controls
+  // sits about the middle of slots 2 to 7.
   const column = (controls: string[], placement: "left" | "right") => {
-    let slot = 2;
-    for (const control of controls) {
-      const span = control.endsWith("stick") ? 2 : 1;
-      add(control, placement, span > 1 ? { slot, span } : { slot });
-      slot += span;
+    const present = controls.filter(has);
+    const span = (control: string) => (control.endsWith("stick") ? 2 : 1);
+    const height = present.reduce((sum, control) => sum + span(control), 0);
+    let slot = 2 + Math.floor((6 - height) / 2);
+    for (const control of present) {
+      add(
+        control,
+        placement,
+        span(control) > 1 ? { slot, span: span(control) } : { slot },
+      );
+      slot += span(control);
     }
   };
   column(left, "left");
   column(right, "right");
+  const extra = bottomRow.filter(has);
+  extra.forEach((control, index) => {
+    add(control, "bottom", { offset: index - (extra.length - 1) / 2 });
+  });
   return callouts;
 }
 

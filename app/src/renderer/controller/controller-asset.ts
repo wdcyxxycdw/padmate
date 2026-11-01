@@ -165,6 +165,7 @@ export function buildAssetModel(
           "dpad.down": point("down__cap", [-1.7, 0.3, 0.8]),
           "dpad.left": point("left__cap", [-2, 0.7, 0.8]),
           "dpad.right": point("right__cap", [-1.2, 0.7, 0.8]),
+          misc1: point("mute__button", [0, 0.25, 0.8]),
         }
       : {
           south: new Vector3(1.576, 0.68, 0.71),
@@ -184,8 +185,38 @@ export function buildAssetModel(
           "dpad.down": new Vector3(-0.76, -0.06, 0.92),
           "dpad.left": new Vector3(-0.99, 0.17, 0.86),
           "dpad.right": new Vector3(-0.53, 0.17, 0.86),
+          // Share (Series), Capture: below the Xbox button.
+          misc1: new Vector3(0, 0.62, 0.7),
         };
-    if (info.type === "ps3") delete positions.touchpad;
+    // The paddles of an Elite or Edge, a Joy-Con's other side buttons: on the
+    // grips, which the front view shows (the Elite's are behind them). An
+    // Edge's Fn buttons sit below the sticks.
+    const grip = (x: number, y: number) => new Vector3(x, y, 0.6);
+    Object.assign(
+      positions,
+      ps
+        ? {
+            paddle1: grip(1.75, -0.95),
+            paddle2: grip(-1.75, -0.95),
+            paddle3: positions.rightstick
+              .clone()
+              .add(new Vector3(0.1, -0.5, 0)),
+            paddle4: positions.leftstick
+              .clone()
+              .add(new Vector3(-0.1, -0.5, 0)),
+          }
+        : {
+            paddle1: grip(1.45, -0.5),
+            paddle2: grip(-1.45, -0.5),
+            paddle3: grip(1.75, -0.95),
+            paddle4: grip(-1.75, -0.95),
+          },
+    );
+    // A marker for each control the pad has a chip for, and the Xbox, PS or
+    // Home button, which has none but lights when pressed.
+    for (const name of Object.keys(positions))
+      if (name !== "guide" && !callouts.some((c) => c.control === name))
+        delete positions[name];
     const ray = new Raycaster();
     for (const [name, p] of Object.entries(positions)) {
       // Project front controls onto the actual surface, retaining trigger anchors above the shoulders.

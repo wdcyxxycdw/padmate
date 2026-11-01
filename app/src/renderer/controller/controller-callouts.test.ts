@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { sdlPads } from "../testing/sdl-pads";
 import { controllerCallouts } from "./controller-callouts";
 
 const controls = (info: Parameters<typeof controllerCallouts>[0]) =>
@@ -16,17 +17,22 @@ describe("the function keys among the callouts (ADR-0012)", () => {
   });
 
   it("are Menu alone on a single Joy-Con held sideways", () => {
-    for (const type of ["joyconleft", "joyconright"]) {
-      const list = controls({ type, buttonMask: 0xf });
-      expect(list, type).not.toContain("back");
-      expect(list, type).toContain("start");
+    for (const info of [
+      sdlPads.joyConLeftSideways,
+      sdlPads.joyConRightSideways,
+    ]) {
+      const list = controls(info);
+      expect(list, info.type).not.toContain("back");
+      expect(list, info.type).toContain("start");
     }
   });
 
-  it("are both on a single Joy-Con held upright", () => {
-    const list = controls({ type: "joyconleft", buttonMask: 2 });
-    expect(list).toContain("back");
-    expect(list).toContain("start");
+  it("are the one each single Joy-Con held upright has", () => {
+    // − on the left one, + on the right one.
+    expect(controls(sdlPads.joyConLeftUpright)).toContain("back");
+    expect(controls(sdlPads.joyConLeftUpright)).not.toContain("start");
+    expect(controls(sdlPads.joyConRightUpright)).toContain("start");
+    expect(controls(sdlPads.joyConRightUpright)).not.toContain("back");
   });
 });
 
@@ -134,5 +140,161 @@ describe("the stick callouts in the three chip densities (controller-3d.css)", (
         );
       }
     }
+  });
+});
+
+describe("the callouts follow the controls SDL reports", () => {
+  const callout = (info: Parameters<typeof controllerCallouts>[0], c: string) =>
+    controllerCallouts(info).find((entry) => entry.control === c);
+  const standard = [
+    "lefttrigger",
+    "leftshoulder",
+    "back",
+    "start",
+    "righttrigger",
+    "rightshoulder",
+    "leftstick",
+    "dpad.up",
+    "dpad.left",
+    "dpad.right",
+    "dpad.down",
+    "north",
+    "east",
+    "west",
+    "south",
+    "rightstick",
+  ];
+
+  it("keep the standard layout when SDL did not say", () => {
+    expect(controls({ type: "xboxone" }).sort()).toEqual([...standard].sort());
+    expect(controls({ type: "switchpro" }).sort()).toEqual(
+      [...standard].sort(),
+    );
+    expect(controls({ type: "ps4" }).sort()).toEqual(
+      [...standard, "touchpad"].sort(),
+    );
+    expect(controls({ type: "ps3" })).not.toContain("touchpad");
+  });
+
+  it.each([
+    ["xboxSeries", ["misc1"]],
+    ["xboxElite", ["paddle1", "paddle2", "paddle3", "paddle4"]],
+    ["ps4", ["touchpad"]],
+    ["ps5", ["touchpad", "misc1"]],
+    [
+      "ps5Edge",
+      ["touchpad", "misc1", "paddle1", "paddle2", "paddle3", "paddle4"],
+    ],
+    ["switchPro", ["misc1"]],
+    ["joyConPair", ["misc1", "paddle1", "paddle2", "paddle3", "paddle4"]],
+  ] as const)("give %s its extra buttons: %j", (name, extra) => {
+    expect(controls(sdlPads[name]).sort()).toEqual(
+      [...standard, ...extra].sort(),
+    );
+  });
+
+  it("never give the Xbox, PS or Home button a chip", () => {
+    for (const info of Object.values(sdlPads))
+      expect(controls(info)).not.toContain("guide");
+  });
+
+  it("show only what a single Joy-Con held sideways has", () => {
+    expect(controls(sdlPads.joyConLeftSideways).sort()).toEqual(
+      [
+        "north",
+        "east",
+        "west",
+        "south",
+        "leftstick",
+        "leftshoulder",
+        "rightshoulder",
+        "start",
+        "paddle2",
+        "paddle4",
+      ].sort(),
+    );
+    expect(controls(sdlPads.joyConRightSideways)).toEqual(
+      expect.arrayContaining(["paddle1", "paddle3", "leftstick"]),
+    );
+    expect(controls(sdlPads.joyConRightSideways)).not.toContain("rightstick");
+    // Its SL and SR are the shoulders, its L and ZL (R and ZR) paddles.
+    expect(callout(sdlPads.joyConLeftSideways, "leftshoulder")?.label).toBe(
+      "SL",
+    );
+    expect(callout(sdlPads.joyConLeftSideways, "paddle2")?.label).toBe("L");
+    expect(callout(sdlPads.joyConLeftSideways, "paddle4")?.label).toBe("ZL");
+    expect(callout(sdlPads.joyConRightSideways, "paddle1")?.label).toBe("R");
+    expect(callout(sdlPads.joyConRightSideways, "paddle3")?.label).toBe("ZR");
+  });
+
+  it("show only what a single Joy-Con held upright has", () => {
+    expect(controls(sdlPads.joyConLeftUpright).sort()).toEqual(
+      [
+        "lefttrigger",
+        "leftshoulder",
+        "back",
+        "leftstick",
+        "dpad.up",
+        "dpad.left",
+        "dpad.right",
+        "dpad.down",
+        "misc1",
+        "paddle2",
+        "paddle4",
+      ].sort(),
+    );
+    expect(controls(sdlPads.joyConRightUpright).sort()).toEqual(
+      [
+        "righttrigger",
+        "rightshoulder",
+        "start",
+        "north",
+        "east",
+        "west",
+        "south",
+        "rightstick",
+        "paddle1",
+        "paddle3",
+      ].sort(),
+    );
+    // Upright, the right one's SL and SR are paddles and R, ZR its shoulder
+    // and trigger, though it has face buttons.
+    expect(callout(sdlPads.joyConRightUpright, "paddle1")?.label).toBe("SR");
+    expect(callout(sdlPads.joyConRightUpright, "paddle3")?.label).toBe("SL");
+    expect(callout(sdlPads.joyConRightUpright, "rightshoulder")?.label).toBe(
+      "R",
+    );
+    expect(callout(sdlPads.joyConLeftUpright, "misc1")?.label).toBe("Capture");
+  });
+
+  it("put the extra buttons in one row below the controller, the left hand's on the left", () => {
+    const row = (info: Parameters<typeof controllerCallouts>[0]) =>
+      controllerCallouts(info)
+        .filter((entry) => entry.placement === "bottom")
+        .sort((a, b) => (a.offset ?? 0) - (b.offset ?? 0))
+        .map((entry) => [entry.control, entry.offset]);
+    expect(row(sdlPads.ps5Edge)).toEqual([
+      ["paddle4", -2],
+      ["paddle2", -1],
+      ["misc1", 0],
+      ["paddle1", 1],
+      ["paddle3", 2],
+    ]);
+    expect(row(sdlPads.switchPro)).toEqual([["misc1", 0]]);
+    expect(row(sdlPads.joyConLeftSideways)).toEqual([
+      ["paddle4", -0.5],
+      ["paddle2", 0.5],
+    ]);
+    expect(row({ type: "xboxone" })).toEqual([]);
+  });
+
+  it("center a short column on the middle of the stage", () => {
+    // The sideways Joy-Con's stick alone, its four face buttons.
+    const info = sdlPads.joyConLeftSideways;
+    expect(callout(info, "leftstick")?.slot).toBe(4);
+    expect(callout(info, "north")?.slot).toBe(3);
+    expect(callout(info, "south")?.slot).toBe(6);
+    // A full column is where it was.
+    expect(callout(sdlPads.ps5, "dpad.up")?.slot).toBe(2);
   });
 });

@@ -35,6 +35,16 @@
 
 - **2.4G 接收器后面的手柄电量会存在始终为满的情况**：Xbox 模式 CHARGING 100 %，Switch/PS4 模式 CHARGED 100 %。低电提醒永远不会响。
 
+### 各手柄的按键
+读自 SDL 3.4.16 的 `SDL_gamepad.c`（`SDL_CreateMappingForHIDAPIGamepad`）和 HIDAPI 驱动，不是真机实测。`DeviceInfo.buttonMask` 就是这些映射；界面按它出标签，样例在 `app/src/renderer/testing/sdl-pads.ts`。
+
+- **DualShock 4**：标准 15 键加 touchpad（触摸板按下），没有麦克风键。触摸位置 padmate 不读。第三方 DS4 的触摸板看它的能力报告；映射里照样有 touchpad，所以界面会给标签，但按下可能没有事件。
+- **DualSense**：再加 misc1（麦克风键）。**Edge**：paddle1 右背键、paddle2 左背键、paddle3 右 Fn、paddle4 左 Fn。蓝牙连接、手柄还发简单报告时（报告 0x01 长 10 或 78 字节），驱动只报 PS 键和触摸板按下，麦克风键和 Edge 的四个键要等增强报告才有。
+- **Switch Pro**：标准 15 键加 misc1（截图键），Home 是 guide。
+- **单只 Joy-Con**：横握（默认）的映射里有 guide，左手那只的 guide 是截图键，右手那只是 Home 键；padmate 不映射 guide，所以横握的左手 Joy-Con 截图键不能用。竖握的左手那只截图键是 misc1。竖握的右手那只也有面键，界面看有没有 rightstick 区分握法。
+- **一对 Joy-Con**：标准 15 键加 misc1（截图键）和 paddle1–4（右 SR、左 SL、右 SL、左 SR）。
+- 触摸位置、陀螺仪和加速度计不是按键，不能映射。Switch 2 的手柄不支持（ARCHITECTURE §7.1）。
+
 ### 映射、重新映射和原始摇杆
 - 实测：`SDL_AddGamepadMapping` 看不出新加还是更新，要用 `SDL_GetGamepadMappingForID` 读回比较（忽略 `platform`、`crc`）；环境变量 `SDL_GAMECONTROLLERCONFIG` 里有同 GUID 映射时 Add 照样成功但读回的是环境变量里的，所以 `MappingStatus.Applied` 靠读回。
 - 实测：`SDL_ReloadGamepadMappings` 拿走所有运行时映射，也读 `SDL_GAMECONTROLLERCONFIG_FILE` 指的文件：先把文件重写成要留的再 Reload。留下的手柄收到 `REMOVED` 加 `REMAPPED`（没有 `ADDED`），所以不能按事件名处理：先看 `SDL_GetJoysticks` 还列不列它，再看 `SDL_IsGamepad`，否则手柄丢了。没动过映射的手柄也收 REMAPPED：映射文本相同就不发 `DeviceRemapped`，否则另一只手柄上按着的修饰键会被复位松开。

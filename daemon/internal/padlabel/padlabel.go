@@ -25,7 +25,7 @@ type Pad struct {
 	// for south, east, west and north.
 	Printed map[string]string
 	// ButtonMask is SDL's buttons of the pad, 0 when unknown. A single
-	// Joy-Con with a south button is held sideways.
+	// Joy-Con with a south button and no right stick is held sideways.
 	ButtonMask uint32
 }
 
@@ -52,9 +52,10 @@ func family(typ string) string {
 }
 
 // sideways reports whether p is a single Joy-Con held sideways, as the UI
-// tells it: one whose buttons include south.
+// tells it: one whose buttons include south but not the right stick, which a
+// right one held upright has with its face buttons.
 func sideways(p Pad) bool {
-	return (p.Type == "joyconleft" || p.Type == "joyconright") && p.ButtonMask&1 != 0
+	return (p.Type == "joyconleft" || p.Type == "joyconright") && p.ButtonMask&1 != 0 && p.ButtonMask&(1<<8) == 0
 }
 
 // Labels returns the label of each control of p: what controllerLabels

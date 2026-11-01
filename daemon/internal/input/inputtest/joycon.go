@@ -59,3 +59,36 @@ func JoyConPair(name string) input.VirtualDesc {
 		Axes: []string{"leftx", "lefty", "rightx", "righty", "lefttrigger", "righttrigger"},
 	}
 }
+
+// JoyConLeftUpright and JoyConRightUpright describe a single Joy-Con held
+// upright, as SDL 3.4.16 maps it with
+// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1: the left one has − (back), the
+// D-pad, L and ZL, Capture (misc1) and its SL and SR as paddles; the right
+// one + (start), the face buttons, R and ZR and its SR and SL.
+func JoyConLeftUpright(name string) input.VirtualDesc {
+	return input.VirtualDesc{
+		Name:    name,
+		Vendor:  VendorNintendo,
+		Product: ProductJoyConLeft,
+		Buttons: []string{
+			"back", "dpad.up", "dpad.down", "dpad.left", "dpad.right",
+			"leftshoulder", "leftstick", "misc1", "paddle2", "paddle4",
+		},
+		Axes: []string{"leftx", "lefty", "lefttrigger"},
+	}
+}
+
+// JoyConRightUpright describes an upright Joy-Con (R); see
+// JoyConLeftUpright.
+func JoyConRightUpright(name string) input.VirtualDesc {
+	return input.VirtualDesc{
+		Name:    name,
+		Vendor:  VendorNintendo,
+		Product: ProductJoyConRight,
+		Buttons: []string{
+			"south", "east", "west", "north", "guide", "start",
+			"rightshoulder", "rightstick", "paddle1", "paddle3",
+		},
+		Axes: []string{"rightx", "righty", "righttrigger"},
+	}
+}

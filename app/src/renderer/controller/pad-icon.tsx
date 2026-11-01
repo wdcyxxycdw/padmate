@@ -112,9 +112,13 @@ const triggers: Record<string, string> = {
   ZR: "switch_button_zr",
 };
 // The back paddles by the name controllerLabels gives them. A pair of
-// Joy-Cons has an SL and an SR on each side, which one icon cannot tell
-// apart, so their names stay text.
+// Joy-Cons has an SL and an SR on each side: the icon is the button's, the
+// chip's place and its name say which side.
 const paddles: Record<string, string> = {
+  "右 SR": "switch_button_sr",
+  "左 SL": "switch_button_sl",
+  "右 SL": "switch_button_sl",
+  "左 SR": "switch_button_sr",
   "背键 1": "xbox_elite_paddle_top_right",
   "背键 2": "xbox_elite_paddle_bottom_right",
   "背键 3": "xbox_elite_paddle_top_left",
@@ -227,8 +231,8 @@ function systemIcon(
 /**
  * The icon of a control as the pad prints it (labels is controllerLabels,
  * family its controller family), or undefined where neither set has one:
- * the d-pad's and a stick's diagonals, its push stages, Capture, the extra
- * buttons and a Joy-Con pair's side buttons keep their own drawing or name.
+ * the d-pad's and a stick's diagonals, its push stages, Capture and the
+ * extra buttons keep their own drawing or name.
  *
  * leftstick and rightstick are the stick clicks (L3/R3); a stick's movement
  * is stickMoveIcon.

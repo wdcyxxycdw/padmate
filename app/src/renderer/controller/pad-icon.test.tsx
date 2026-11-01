@@ -299,6 +299,12 @@ describe("the icon of each control", () => {
     expect(name("paddle2", "joyconleft", 0xf)).toBe("kenney/switch_button_l");
     expect(name("paddle4", "joyconleft", 0xf)).toBe("kenney/switch_button_zl");
     expect(name("paddle3", "joyconright", 0xf)).toBe("kenney/switch_button_zr");
+    // A pair of Joy-Cons: the SL and SR of each side (the chip's place and
+    // name tell the side).
+    expect(name("paddle1", "joyconpair")).toBe("kenney/switch_button_sr");
+    expect(name("paddle2", "joyconpair")).toBe("kenney/switch_button_sl");
+    expect(name("paddle3", "joyconpair")).toBe("kenney/switch_button_sl");
+    expect(name("paddle4", "joyconpair")).toBe("kenney/switch_button_sr");
   });
 
   it("draws the system buttons with the symbol printed on them", () => {
@@ -343,8 +349,6 @@ describe("the icon of each control", () => {
       ["misc1", "switchpro"],
       ["guide", "joyconleft", 0xf],
       ["misc2", "xboxone"],
-      // A pair of Joy-Cons has an SL and an SR on each side.
-      ["paddle1", "joyconpair"],
       // A touchpad that is not a PlayStation's.
       ["touchpad", "unknown"],
       ["bogus", "xboxone"],

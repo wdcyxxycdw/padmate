@@ -21,8 +21,13 @@ import type { ModelInfo } from "./controller-callouts";
  * What a stage is made from: the shell and the labels of the buttons, so the
  * same pad always gets the same stage.
  */
-export function stageKey({ type, buttonLabels, buttonMask }: ModelInfo) {
-  return JSON.stringify({ type, buttonLabels, buttonMask });
+export function stageKey({
+  type,
+  buttonLabels,
+  buttonMask,
+  axisMask,
+}: ModelInfo) {
+  return JSON.stringify({ type, buttonLabels, buttonMask, axisMask });
 }
 
 export interface RetainedStage {

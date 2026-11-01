@@ -11,6 +11,9 @@ The middle of the page shows a front-facing 3D controller. Each key has a tag be
 - The tag says what the key does. A key that is not set yet says “Not set”, and a key handled by a script says “Handled by a script”. See [Scripts](08-scripts.md).
 - Click a tag to open the settings of that key.
 - The tag of a stick has two cells: “Move” above for pushing the stick, “Press” below for pressing it down.
+- The tags follow the connected controller and only cover the keys it has. PlayStation controllers show the shape of a DualSense, all others the shape of an Xbox controller; key names and icons are what the controller prints, such as × ○ □ △, L1 and Options, or B A Y X, ZL and +.
+- The row below the controller holds the extra keys: the Share button of an Xbox Series controller, the mute button of a DualSense, the Capture button of a Switch controller, the back and Fn buttons of an Elite or Edge, and the SL and SR of Joy-Cons. A controller without them has no such row.
+- A single Joy-Con held sideways has one stick, four face buttons, SL, SR, L and ZL (R and ZR on the right one), and − or +. The Xbox, PS and Home buttons cannot be mapped; SDL reports the Capture button of a left Joy-Con held sideways as the Home button, so it cannot be mapped either.
 
 ## The key drawer
 

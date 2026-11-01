@@ -78,15 +78,11 @@ describe("control icons of the key preview", () => {
       kind: "glyph",
       glyph: "capture",
     });
-    // The extra buttons and a Joy-Con pair's side buttons have names of
-    // their own, as the tray names them, never padmate's position names.
+    // The extra buttons have names of their own, as the tray names them,
+    // never padmate's position names.
     expect(icon("misc2", "xboxone")).toEqual({
       kind: "badge",
       text: "附加键 2",
-    });
-    expect(icon("paddle1", "joyconpair")).toEqual({
-      kind: "badge",
-      text: "右 SR",
     });
     // A name SDL reports that neither set prints stays a word; so does a
     // trigger's, and a control nobody names keeps its own.

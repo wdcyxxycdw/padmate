@@ -36,7 +36,9 @@ func labelCases() []Pad {
 	var cases []Pad
 	for _, typ := range types {
 		for _, labels := range printed {
-			for _, mask := range []uint32{0, 1, 0x7fff &^ 1} {
+			// 0x5ff is a right Joy-Con held upright: face buttons and its own
+			// stick (SDL_gamepad.c).
+			for _, mask := range []uint32{0, 1, 0x7fff &^ 1, 0x5ff} {
 				cases = append(cases, Pad{Type: typ, Printed: labels, ButtonMask: mask})
 			}
 		}
@@ -126,6 +128,9 @@ func TestName(t *testing.T) {
 		{"paddle1", ps, "右背键"}, {"paddle4", ps, "左 Fn"},
 		{"paddle2", left, "L"}, {"paddle4", left, "ZL"}, {"paddle2", vertical, "SL"}, {"paddle4", vertical, "SR"},
 		{"paddle1", Pad{Type: "joyconright", ButtonMask: 2}, "SR"}, {"paddle3", Pad{Type: "joyconright", ButtonMask: 1}, "ZR"},
+		// Upright, a right Joy-Con has face buttons and the right stick: its
+		// SL is a paddle and R its shoulder, as on the left one.
+		{"paddle3", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "SL"}, {"rightshoulder", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "R"},
 		{"paddle2", Pad{Type: "joyconpair"}, "左 SL"}, {"paddle1", Pad{Type: "joyconpair"}, "右 SR"},
 		{"misc1", xbox, "Share"}, {"misc1", ps, "Mute"}, {"misc1", Pad{Type: "switchpro"}, "Capture"}, {"misc1", Pad{}, "附加键 1"}, {"misc6", xbox, "附加键 6"},
 		{"bogus", xbox, "bogus"},

@@ -100,13 +100,97 @@ function miscLabel(family: ControllerFamily, index: number): string {
 
 /**
  * Whether a pad is a single Joy-Con held sideways: it reports face buttons
- * (buttonMask bit 0), and its SL and SR are the shoulders.
+ * (buttonMask bit 0) but no right stick (bit 8), which a right one held
+ * upright has with its face buttons, and its SL and SR are the shoulders.
  */
 export function isSidewaysJoyCon(type: string, buttonMask?: number): boolean {
   return (
     (type === "joyconleft" || type === "joyconright") &&
     buttonMask !== undefined &&
-    (buttonMask & 1) !== 0
+    (buttonMask & 1) !== 0 &&
+    (buttonMask & (1 << 8)) === 0
+  );
+}
+
+// SDL's gamepad buttons and axes by their bit in DeviceInfo.buttonMask and
+// axisMask: the SDL_GamepadButton and SDL_GamepadAxis order
+// (internal/input/controls.go).
+const sdlButtons = [
+  "south",
+  "east",
+  "west",
+  "north",
+  "back",
+  "guide",
+  "start",
+  "leftstick",
+  "rightstick",
+  "leftshoulder",
+  "rightshoulder",
+  "dpad.up",
+  "dpad.down",
+  "dpad.left",
+  "dpad.right",
+  "misc1",
+  "paddle1",
+  "paddle2",
+  "paddle3",
+  "paddle4",
+  "touchpad",
+  "misc2",
+  "misc3",
+  "misc4",
+  "misc5",
+  "misc6",
+];
+const sdlAxes = [
+  "leftx",
+  "lefty",
+  "rightx",
+  "righty",
+  "lefttrigger",
+  "righttrigger",
+];
+/** The controls a pad has with each of them: a stick's axes or its click. */
+const controlParts: Record<string, { buttons: string[]; axes: string[] }> = {
+  leftstick: { buttons: ["leftstick"], axes: ["leftx", "lefty"] },
+  rightstick: { buttons: ["rightstick"], axes: ["rightx", "righty"] },
+  lefttrigger: { buttons: [], axes: ["lefttrigger"] },
+  righttrigger: { buttons: [], axes: ["righttrigger"] },
+};
+
+/** What decides the controls of a pad: DeviceInfo's type and masks. */
+export interface PadControls {
+  type: string;
+  buttonMask?: number;
+  axisMask?: number;
+}
+
+/**
+ * Whether a pad has a control: a button, a trigger, or a stick (its axes or
+ * its click), as SDL maps them for it (buttonMask, axisMask). While SDL has
+ * not said (both 0 or missing), a pad has the standard controls of SDL's
+ * gamepad, and a DualShock 4 or DualSense its touchpad; the extra buttons
+ * (misc, paddles) only show once SDL reports them.
+ */
+export function padHasControl(control: string, pad: PadControls): boolean {
+  const parts = controlParts[control] ?? {
+    buttons: sdlButtons.includes(control) ? [control] : [],
+    axes: [],
+  };
+  if (!pad.buttonMask && !pad.axisMask) {
+    if (control === "touchpad") return pad.type === "ps4" || pad.type === "ps5";
+    return (
+      parts.axes.length > 0 ||
+      parts.buttons.some((button) => sdlButtons.indexOf(button) < 15)
+    );
+  }
+  const buttons = pad.buttonMask ?? 0;
+  const axes = pad.axisMask ?? 0;
+  return (
+    parts.buttons.some(
+      (button) => (buttons & (1 << sdlButtons.indexOf(button))) !== 0,
+    ) || parts.axes.some((axis) => (axes & (1 << sdlAxes.indexOf(axis))) !== 0)
   );
 }
 

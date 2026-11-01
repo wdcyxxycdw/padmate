@@ -58,7 +58,9 @@ func newRPCInputSourceWith(opts input.Options, caps input.Capabilities) *rpcInpu
 		s.axes[a.String()] = 0
 	}
 	info := input.DeviceInfo{ID: 1, Name: "padmate IPC fake gamepad", Type: "standard", GUID: "ff007061646d61746566616b65007600", Driver: "virtual", IsGamepad: true, Virtual: true,
-		ButtonMask: (1 << 26) - 1, AxisMask: (1 << 6) - 1, Capabilities: caps}
+		// SDL's standard gamepad: the 15 standard buttons and 6 axes, no
+		// extra buttons, so the mapping page shows the standard chips.
+		ButtonMask: (1 << 15) - 1, AxisMask: (1 << 6) - 1, Capabilities: caps}
 	s.caps = info.Capabilities
 	added := input.Event{Time: uint64(clock.Real().Now()), Kind: input.DeviceAdded, Device: 1, Info: &info}
 	s.events <- added

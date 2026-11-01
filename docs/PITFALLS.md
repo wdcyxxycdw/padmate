@@ -35,6 +35,16 @@ Written from the source (except the receiver entry). In go-sdl3, `SDL_POWERSTATE
 
 - **A controller behind a 2.4 GHz receiver may always report a full battery**: CHARGING 100 % in Xbox mode, CHARGED 100 % in Switch/PS4 mode. The low-battery warning never goes off.
 
+### The buttons of each controller
+Read from SDL 3.4.16's `SDL_gamepad.c` (`SDL_CreateMappingForHIDAPIGamepad`) and HIDAPI drivers, not tested on hardware. `DeviceInfo.buttonMask` is these mappings; the UI gives labels by it, with samples in `app/src/renderer/testing/sdl-pads.ts`.
+
+- **DualShock 4**: the 15 standard buttons plus touchpad (pressing the touchpad); no mute button. padmate does not read touch positions. A third-party DS4's touchpad depends on its capability report; the mapping has touchpad anyway, so the UI gives it a label, but pressing it may send no event.
+- **DualSense**: also misc1 (the mute button). **Edge**: paddle1 right back button, paddle2 left back button, paddle3 right Fn, paddle4 left Fn. Over Bluetooth, while the controller still sends simple reports (report 0x01 of 10 or 78 bytes), the driver reports only the PS button and the touchpad press; the mute button and the Edge's four buttons come only with enhanced reports.
+- **Switch Pro**: the 15 standard buttons plus misc1 (Capture); Home is guide.
+- **A single Joy-Con**: held sideways (the default) its mapping has guide, which is Capture on the left one and Home on the right one; padmate never maps guide, so the Capture button of a left Joy-Con held sideways cannot be used. Held upright, the left one's Capture is misc1. The right one held upright has face buttons too; the UI tells the grip by whether it has rightstick.
+- **A pair of Joy-Cons**: the 15 standard buttons plus misc1 (Capture) and paddle1–4 (right SR, left SL, right SL, left SR).
+- Touch positions, the gyroscope and the accelerometer are not buttons and cannot be mapped. Switch 2 controllers are not supported (ARCHITECTURE §7.1).
+
 ### Mappings, remapping and raw sticks
 - Tested: `SDL_AddGamepadMapping` does not tell whether it added or updated; read it back with `SDL_GetGamepadMappingForID` and compare (ignoring `platform` and `crc`). When the environment variable `SDL_GAMECONTROLLERCONFIG` has a mapping for the same GUID, Add still succeeds but reads back the environment's mapping, so `MappingStatus.Applied` relies on the read-back.
 - Tested: `SDL_ReloadGamepadMappings` drops every run-time mapping and also reads the file that `SDL_GAMECONTROLLERCONFIG_FILE` names: first rewrite the file to what should stay, then Reload. Controllers that stay get `REMOVED` plus `REMAPPED` (no `ADDED`), so events cannot be handled by name: first check whether `SDL_GetJoysticks` still lists it, then `SDL_IsGamepad`, or the controller is lost. A controller whose mapping did not change gets REMAPPED too: when the mapping text is the same, no `DeviceRemapped` is sent, or a modifier held on another controller would be reset and released.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { sdlPads } from "../testing/sdl-pads";
 import {
   axisPosition,
   controllerLabels,
@@ -6,7 +7,9 @@ import {
   faceLabels,
   familyName,
   functionKeyLabel,
+  isSidewaysJoyCon,
   padFunctionKeys,
+  padHasControl,
   padHasFunctionKey,
   stickActiveThreshold,
   stickDeflection,
@@ -217,6 +220,66 @@ describe("the function key of a controller (ADR-0012)", () => {
     // A control with no name of its own is named by itself.
     expect(functionKeyLabel("start", "xboxone", { start: "Menu" })).toBe(
       "Menu",
+    );
+  });
+});
+
+describe("the controls of a pad", () => {
+  const has = (control: string, info: Parameters<typeof padHasControl>[1]) =>
+    padHasControl(control, info);
+
+  it("are the standard ones while SDL has not said", () => {
+    for (const control of ["south", "dpad.up", "leftstick", "lefttrigger"])
+      expect(has(control, { type: "xboxone" }), control).toBe(true);
+    expect(has("misc1", { type: "switchpro" })).toBe(false);
+    expect(has("paddle1", { type: "xboxone" })).toBe(false);
+    // The touchpad of a DualShock 4 or DualSense is standard.
+    expect(has("touchpad", { type: "ps4" })).toBe(true);
+    expect(has("touchpad", { type: "ps5" })).toBe(true);
+    expect(has("touchpad", { type: "ps3" })).toBe(false);
+  });
+
+  it("are the ones SDL reports", () => {
+    expect(has("misc1", sdlPads.switchPro)).toBe(true);
+    expect(has("misc1", sdlPads.ps4)).toBe(false);
+    expect(has("touchpad", sdlPads.ps4)).toBe(true);
+    expect(has("paddle3", sdlPads.ps5Edge)).toBe(true);
+    expect(has("paddle3", sdlPads.ps5)).toBe(false);
+    expect(has("dpad.up", sdlPads.joyConLeftSideways)).toBe(false);
+    expect(has("lefttrigger", sdlPads.joyConLeftSideways)).toBe(false);
+    expect(has("lefttrigger", sdlPads.joyConLeftUpright)).toBe(true);
+    // A stick is there with its axes or its click.
+    expect(has("leftstick", sdlPads.joyConLeftSideways)).toBe(true);
+    expect(has("rightstick", sdlPads.joyConLeftSideways)).toBe(false);
+    expect(has("leftstick", { type: "xboxone", buttonMask: 1 << 7 })).toBe(
+      true,
+    );
+    expect(has("leftstick", { type: "xboxone", axisMask: 1 })).toBe(true);
+  });
+
+  it("are not a name that is no control", () => {
+    expect(has("nonsense", sdlPads.ps5)).toBe(false);
+    expect(has("nonsense", { type: "ps5" })).toBe(false);
+  });
+});
+
+describe("a single Joy-Con held sideways", () => {
+  it("is told by the buttons SDL maps", () => {
+    expect(
+      isSidewaysJoyCon("joyconleft", sdlPads.joyConLeftSideways.buttonMask),
+    ).toBe(true);
+    expect(
+      isSidewaysJoyCon("joyconright", sdlPads.joyConRightSideways.buttonMask),
+    ).toBe(true);
+    expect(
+      isSidewaysJoyCon("joyconleft", sdlPads.joyConLeftUpright.buttonMask),
+    ).toBe(false);
+    // Upright, the right one has face buttons too, and its own stick.
+    expect(
+      isSidewaysJoyCon("joyconright", sdlPads.joyConRightUpright.buttonMask),
+    ).toBe(false);
+    expect(isSidewaysJoyCon("joyconpair", sdlPads.joyConPair.buttonMask)).toBe(
+      false,
     );
   });
 });

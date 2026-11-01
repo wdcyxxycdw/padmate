@@ -13,6 +13,7 @@ import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeviceInfo } from "../../shared/api";
 import { translator } from "../i18n";
+import { sdlPads } from "../testing/sdl-pads";
 import { Controller } from "./Controller";
 import type { ChipInfo } from "./controller-chips";
 import * as scenes from "./controller-scene";
@@ -804,5 +805,113 @@ describe("3D controller component", () => {
       />,
     );
     expect(update).toHaveBeenLastCalledWith(undefined, "south", []);
+  });
+});
+
+describe("the controls of the connected pad", () => {
+  const ids = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>("[data-callout]")]
+      .map((node) => node.dataset.callout)
+      .sort();
+
+  it("gives each extra button SDL reports a chip below the controller", () => {
+    const { container } = render(
+      <Controller
+        info={{ ...info, ...sdlPads.ps5Edge }}
+        t={translator("en")}
+      />,
+    );
+    for (const control of ["misc1", "paddle1", "paddle2", "paddle3", "paddle4"])
+      expect(
+        container
+          .querySelector(`button[data-callout="${control}"]`)
+          ?.getAttribute("data-placement"),
+        control,
+      ).toBe("bottom");
+    const art = (control: string) =>
+      container
+        .querySelector(`[data-callout="${control}"] svg`)
+        ?.getAttribute("data-pad-icon");
+    expect(art("misc1")).toBe("kenney/playstation5_button_mute");
+    expect(art("paddle1")).toBe("kenney/playstation5_elite_rb");
+    expect(art("paddle4")).toBe("kenney/playstation5_elite_fn_l");
+  });
+
+  it("draws Capture, which neither icon set has, with its own symbol", () => {
+    const { container } = render(
+      <Controller
+        info={{ ...info, ...sdlPads.switchPro }}
+        t={translator("en")}
+      />,
+    );
+    const glyph = container.querySelector(
+      '[data-callout="misc1"] .stage-glyph',
+    );
+    expect(glyph?.querySelector("svg rect")).not.toBeNull();
+    expect(glyph?.textContent).toBe("");
+  });
+
+  it("follows the pad as another one is chosen or plugged in", () => {
+    const { container, rerender } = render(
+      <Controller info={info} t={translator("en")} />,
+    );
+    expect(ids(container)).not.toContain("misc1");
+    expect(ids(container)).toContain("dpad.up");
+    rerender(
+      <Controller
+        info={{ ...info, id: 2, ...sdlPads.joyConLeftSideways }}
+        t={translator("en")}
+      />,
+    );
+    // A single Joy-Con held sideways: no D-pad, right stick, triggers or −.
+    expect(ids(container)).toEqual(
+      [
+        "east",
+        "leftshoulder",
+        "leftstick",
+        "leftstick.press",
+        "north",
+        "paddle2",
+        "paddle4",
+        "south",
+        "start",
+        "rightshoulder",
+        "west",
+      ].sort(),
+    );
+    rerender(
+      <Controller
+        info={{ ...info, id: 3, ...sdlPads.joyConPair }}
+        t={translator("en")}
+      />,
+    );
+    expect(ids(container)).toEqual(
+      expect.arrayContaining(["misc1", "paddle1", "dpad.up", "rightstick"]),
+    );
+    expect(
+      container
+        .querySelector('[data-callout="paddle1"] svg')
+        ?.getAttribute("data-pad-icon"),
+    ).toBe("kenney/switch_button_sr");
+    // Unplugged, the pad's info goes back to what SDL did not describe.
+    rerender(<Controller info={info} t={translator("en")} />);
+    expect(ids(container)).not.toContain("paddle1");
+  });
+
+  it("lists the state of the pad's own controls only", () => {
+    const { container } = render(
+      <Controller
+        info={{ ...info, ...sdlPads.joyConLeftSideways }}
+        t={translator("en")}
+      />,
+    );
+    const listed = [
+      ...container.querySelectorAll<HTMLElement>(
+        ".controller-accessible-state li",
+      ),
+    ].map((node) => node.dataset.control);
+    expect(listed).toContain("paddle2");
+    expect(listed).not.toContain("dpad.up");
+    expect(listed).not.toContain("misc2");
   });
 });

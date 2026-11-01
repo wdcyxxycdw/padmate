@@ -25,6 +25,7 @@ import {
   type PadmateStore,
 } from "../state/store";
 import { editorAPIFixture } from "../testing/editor-api-fixture";
+import { sdlPads } from "../testing/sdl-pads";
 import {
   ControllerWorkspace,
   describeDiagnostic,
@@ -735,8 +736,7 @@ describe("the function key", () => {
   const joyCon: DeviceInfo = {
     ...info,
     name: "Joy-Con (L)",
-    type: "joyconleft",
-    buttonMask: 0xf,
+    ...sdlPads.joyConLeftSideways,
   };
   const chip = (container: HTMLElement, control: string) =>
     container.querySelector<HTMLElement>(`[data-callout="${control}"]`);

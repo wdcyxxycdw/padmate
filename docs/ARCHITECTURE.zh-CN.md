@@ -260,7 +260,7 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 - 横握：SL/SR 是 leftshoulder/rightshoulder，L(R) 和 ZL(ZR) 是 paddle2/paddle4（左）或 paddle1/paddle3（右），−/+ 是 start，Capture/Home 是 guide，四个面键是 south/east/west/north，摇杆是 left 摇杆。受 SDL 250 ms 抬起延迟影响。
 - 竖握 L：SL/SR 是 paddle2/paddle4，L/ZL 是 leftshoulder/lt，− 是 back，Capture 是 misc1。竖握 R：SL/SR 是 paddle3/paddle1，R/ZR 是 rightshoulder/rt，+ 是 start，Home 是 guide，摇杆是 right 摇杆。合并后与标准手柄相同。
-- 没有 misc2..6、touchpad 和 `sl`/`sr` 别名。握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并的 back+start。
+- 没有 misc2..6、touchpad 和 `sl`/`sr` 别名。界面按 `buttonMask` 判断握法：有 south、没有 rightstick 的单只是横握（竖握的右手那只也有面键）；Go 的 `padlabel` 同一规则。守护进程的握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并的 back+start。
 
 ### 7.2 手势识别
 
@@ -989,7 +989,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 外壳（`App.tsx`）：左侧导航为映射、配置、脚本、设置；日志和诊断是设置的子视图。顶栏左侧是配置菜单，右侧是运行状态、暂停和“更多”菜单。`config.get` 带 `restartRequired` 时设置页提示需要重启。配置损坏被守护进程修复后 `ConfigRepairDialog` 提示，Main 只接受 `config.broken-YYYYMMDD-HHMMSS[-N].json` 形式的备份名并自己拼路径。
 
-- **映射页**：固定正面的 Three.js 手柄（本地 GLB），渲染器常驻不销毁。摇杆由“旋转”（`leftstick`）和“点按”（`leftstick.press`）两格组成；“旋转”格的标题是 `analog.ls.label`（`analog-editor.ts` 的 `setStickLabel`，不经 `settleStickMode`）。旋钮刻度的抽屉只有一个快捷键框（`SingleShortcutField`，写 `{press:{type:"keys"}}`，保留 `label`、`haptic`）。十字键四个方向是普通按键的抽屉，没有设置面板。按键图标由 `pad-icon.tsx` 从 `app/src/renderer/controller/pad-icons/` 的 SVG 解析出路径画成内联 SVG（`PadIcon`），手柄图标签、抽屉标题、按键预览（`control-icon.tsx`）和映射向导共用。点标签开 `KeyDrawer`：映射只有点按、长按、双击，动作只有“快捷键”和“脚本”；文件里的其他映射和动作照常生效。点按写 `press` 还是 `tap` 由键上有无长按/双击决定（`settleTap`）。快捷键只能录入（`ShortcutField`，键盘经 `keyboard-capture`，鼠标和滚轮窗口自收）。`analog` 参数整个配置共用，不随功能键分套。
+- **映射页**：固定正面的 Three.js 手柄（本地 GLB），渲染器常驻不销毁。摇杆由“旋转”（`leftstick`）和“点按”（`leftstick.press`）两格组成；“旋转”格的标题是 `analog.ls.label`（`analog-editor.ts` 的 `setStickLabel`，不经 `settleStickMode`）。旋钮刻度的抽屉只有一个快捷键框（`SingleShortcutField`，写 `{press:{type:"keys"}}`，保留 `label`、`haptic`）。十字键四个方向是普通按键的抽屉，没有设置面板。标签由 `controllerCallouts` 按 `padHasControl`（`controller-model.ts`，读 `DeviceInfo` 的 `buttonMask`、`axisMask`，两者都是 0 时按标准手柄）给出：手柄没有的键不出，附加键（misc1、paddle1–4）在 `placement:"bottom"` 一排，`offset` 从中间算，左手的 paddle4、paddle2 在左，右手的 paddle1、paddle3 在右；`controller-3d.css` 让这一排夹在两列之间。模型上的锚点只给有标签的键（加上 guide，按下时照常点亮）；各手柄的掩码样例在 `testing/sdl-pads.ts`，`internal/input` 的 `TestVirtualFamilyControls` 用虚拟手柄核对同一组数字。按键图标由 `pad-icon.tsx` 从 `app/src/renderer/controller/pad-icons/` 的 SVG 解析出路径画成内联 SVG（`PadIcon`），手柄图标签、抽屉标题、按键预览（`control-icon.tsx`）和映射向导共用。点标签开 `KeyDrawer`：映射只有点按、长按、双击，动作只有“快捷键”和“脚本”；文件里的其他映射和动作照常生效。点按写 `press` 还是 `tap` 由键上有无长按/双击决定（`settleTap`）。快捷键只能录入（`ShortcutField`，键盘经 `keyboard-capture`，鼠标和滚轮窗口自收）。`analog` 参数整个配置共用，不随功能键分套。
 - **功能键**（引擎见 §7.9，格式见 §10.3、§10.4）：只有一个，`back` 或 `start`，默认 `start`，在设置页选；它本身不可绑定，界面编辑它切换到的那一套（`profile.functionSet`）。“平时 / 按住功能键”开关切 `view`（不写盘、不进撤销），做法是 `swapView` 把 `functionSet` 与 `layers.base` 互换。旧格式 `functionKeys` 读入时合成为一套。
 - **Xbox 键**（`guide`）：手柄图上没有它的标签（`controllerCallouts` 不放它，3D 模型按下时照常点亮），按键列表、快捷键表和层计数不算文件写在它上面的，和功能键一样（`isIgnoredControl`）。`savedForm` 从每个层、common 和那一套里去掉它上面的绑定，所以界面编辑过的配置里不再有它们。
 - **手写 `extends`**：界面不创建也不显示，沿用来的键当作自己的键，改了哪个才把哪个写进自己的文件（`inheritance.ts`）。删父配置时守护进程先把子配置写成完整内容；子配置有错误或沿用了父配置的脚本时返回 -32023。

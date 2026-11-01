@@ -34,6 +34,7 @@ import {
   renderApp,
   rulesThatFailed,
 } from "./testing/a11y-harness";
+import { sdlPads } from "./testing/sdl-pads";
 import { UpdateDialogs } from "./update/UpdateDialogs";
 import { supportedUpdateState, updateApi } from "./update/update-api-fixture";
 
@@ -266,9 +267,11 @@ describe("dialogs of the mapping page", () => {
   });
 });
 
+// A Switch Pro controller as SDL describes it: its axes make it one to
+// calibrate.
 const calibratable = {
   ...gamepad,
-  info: { ...gamepad.info, axisMask: 0b1111 },
+  info: { ...gamepad.info, ...sdlPads.switchPro },
 };
 const mappingGUID = "ff00aabb000000000000000000007600";
 

@@ -175,7 +175,8 @@
  * - Side columns: slots 2–6 stack around the stage's middle, hugging the model.
  * - Shoulder corners: slots 0–1 above a column, a little closer to the model.
  * - Top row: centered above the model, raised chip a little higher.
- * - Bottom: centered below the model, above the floating editor notice.
+ * - Bottom: a row below the model, centered like the top row, above the
+ *   floating editor notice: the extra buttons.
  */
 .controller-labels {
   position: absolute;
@@ -253,9 +254,16 @@
 .stage-chip[data-placement="top"][data-raised] {
   top: max(8px, calc(var(--top-y) - var(--top-raise)));
 }
+/* The row below stays between the two columns, whose last chips reach as
+   low: up to five chips (two paddles each side and a misc button) share
+   the width between them, each no wider than a chip of the top row. */
 .stage-chip[data-placement="bottom"] {
-  width: var(--top-w);
-  left: 50%;
+  --row-pitch: min(
+    calc(var(--top-w) + var(--top-gap)),
+    calc((100cqw - 2 * (var(--side-x) + var(--chip-w) + var(--top-gap))) / 5)
+  );
+  width: calc(var(--row-pitch) - var(--top-gap));
+  left: calc(50% + var(--offset) * var(--row-pitch));
   top: min(
     calc(50% + min(27.4cqh, 19.6cqw) + 6px),
     calc(100% - 72px - var(--chip-h))
