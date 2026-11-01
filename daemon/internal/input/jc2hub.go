@@ -32,10 +32,14 @@ import (
 //     gamepad's last state; the differences are the ButtonDown, ButtonUp and
 //     AxisMotion events.
 //   - The watchdog: a link that is silent for jc2.DefaultSilence is dormant,
-//     and its gamepad is reported removed while the link stays; when reports
-//     come again the gamepad is reported added with a new DeviceID and the
-//     same DeviceKey. After jc2.DefaultLinkGiveUp of silence the link is
-//     closed.
+//     and the link stays while it counts for no gamepad: the gamepad it was
+//     in is reported removed, and a pair that loses a side this way is
+//     replaced at once by the side that still reports, as a single (so a
+//     live side does not wait for the silent one to be given up). When
+//     reports come again, the layout is made anew as for a fresh connection:
+//     a gamepad is reported added with a new DeviceID and the same
+//     DeviceKey, and a single that finds its partner back is replaced by the
+//     pair. After jc2.DefaultLinkGiveUp of silence the link is closed.
 //
 // Only the hub's own links ever form a pair: a Joy-Con 2 left and a Joy-Con 2
 // right. A Switch 1 Joy-Con that SDL reports is a gamepad of Source, never
@@ -149,7 +153,11 @@ type jc2Link struct {
 	serial   string
 	cal      jc2.StickCal
 	firmware [3]byte
-	interval string
+	// paramsRequest is what became of the request for the
+	// throughput-optimized connection parameters; params are the current
+	// ones, as far as the transport can tell (zero when unknown).
+	paramsRequest string
+	params        jc2win.ConnParams
 
 	silence jc2.Silence
 	dormant bool
@@ -314,6 +322,8 @@ func (h *joyCon2Hub) Handle(ev jc2win.Event, now time.Duration) {
 		h.connected(ev, now)
 	case jc2win.Report:
 		h.report(ev, now)
+	case jc2win.Params:
+		h.paramsChanged(ev)
 	case jc2win.Lost:
 		if l := h.find(ev.Link); l != nil {
 			h.log.Info("joy-con 2 link lost", "addr", jc2win.FormatAddr(l.addr), "serial", l.serial, "err", ev.Err)
@@ -458,7 +468,8 @@ func (h *joyCon2Hub) connected(ev jc2win.Event, now time.Duration) {
 	user, _ := jc2.ParseUserStick(ev.Info.UserStick)
 	factory, _ := jc2.ParseFactoryStick(ev.Info.FactoryStick)
 	l.cal = jc2.ChooseStick(user, factory)
-	l.serial, l.firmware, l.interval = serial, ev.Info.Firmware, ev.Info.Interval
+	l.serial, l.firmware = serial, ev.Info.Firmware
+	l.paramsRequest, l.params = ev.Info.ParamsRequest, ev.Info.Params
 	l.phase, l.since = linkConnected, now
 	h.seq++
 	l.connSeq = h.seq
@@ -466,7 +477,8 @@ func (h *joyCon2Hub) connected(ev jc2win.Event, now time.Duration) {
 	l.silence.Seen(now)
 	h.log.Info("joy-con 2 connected", "addr", jc2win.FormatAddr(l.addr), "side", l.side.String(), "serial", serial, "player", l.player,
 		"firmware", fmt.Sprintf("%d.%d.%d", l.firmware[0], l.firmware[1], l.firmware[2]),
-		"calibration", calSource(user, factory), "interval", l.interval)
+		"calibration", calSource(user, factory), "params_request", l.paramsRequest,
+		"interval_ms", l.params.IntervalMs(), "latency", l.params.Latency, "timeout_ms", l.params.Timeout.Milliseconds())
 	if l.candidate {
 		l.candidate = false
 		h.remember(KnownJoyCon2{Addr: l.addr, Serial: serial, Side: l.side})
@@ -510,16 +522,31 @@ func (h *joyCon2Hub) report(ev jc2win.Event, now time.Duration) {
 		return // cannot happen: the transport sends whole reports
 	}
 	l.silence.Seen(now)
+	wasDormant := l.dormant
 	l.rep, l.haveRep, l.dormant = r, true, false
-	if dev := l.dev; dev != nil {
-		h.stamp = ev.Stamp
-		h.settle(dev, now) // brings a dormant gamepad back
-		if dev.live {
-			h.emitDiff(dev, now)
-			h.updatePower(dev, now)
-		}
-		h.stamp = 0
+	h.stamp = ev.Stamp
+	if wasDormant {
+		// The link counts again: the layout is made anew, and the gamepad it
+		// is in is reported added with what is held now as fresh presses.
+		h.layout(now)
 	}
+	if dev := l.dev; dev != nil && dev.live {
+		h.emitDiff(dev, now)
+		h.updatePower(dev, now)
+	}
+	h.stamp = 0
+}
+
+// paramsChanged handles the new connection parameters of a link.
+func (h *joyCon2Hub) paramsChanged(ev jc2win.Event) {
+	l := h.find(ev.Link)
+	if l == nil || l.phase != linkConnected || l.params == ev.Params {
+		return
+	}
+	h.log.Info("joy-con 2 connection parameters changed", "addr", jc2win.FormatAddr(l.addr), "serial", l.serial,
+		"interval_ms", ev.Params.IntervalMs(), "latency", ev.Params.Latency, "timeout_ms", ev.Params.Timeout.Milliseconds(),
+		"was_interval_ms", l.params.IntervalMs())
+	l.params = ev.Params
 }
 
 // Tick runs the timers at now: the pairing window, the silence watchdog of
@@ -542,10 +569,8 @@ func (h *joyCon2Hub) Tick(now time.Duration) {
 				changed = true
 			case !l.dormant && l.silence.Dead(now):
 				l.dormant = true
-				h.log.Warn("joy-con 2 silent: reported removed, link kept", "addr", jc2win.FormatAddr(l.addr), "serial", l.serial)
-				if l.dev != nil {
-					h.settle(l.dev, now)
-				}
+				h.log.Warn("joy-con 2 silent: link kept, gamepad reported removed", "addr", jc2win.FormatAddr(l.addr), "serial", l.serial)
+				changed = true // the layout drops it; its partner becomes a single at once
 			}
 		case linkConnecting:
 			if now-l.since >= joyCon2ConnectTimeout {
@@ -593,14 +618,18 @@ func (h *joyCon2Hub) removeLink(l *jc2Link) {
 	h.links = slices.DeleteFunc(h.links, func(o *jc2Link) bool { return o == l })
 }
 
-// layout makes the gamepads fit the connected links: one left and one right
-// make a pair (the first of each, in the order they came up), and every other
-// link is a gamepad of its own. A gamepad that no longer fits is reported
-// removed first; then the new ones are reported added.
+// layout makes the gamepads fit the links that are connected and not dormant:
+// one left and one right make a pair (the first of each, in the order they
+// came up), and every other link is a gamepad of its own. A dormant link is in
+// no gamepad, so when one side of a pair goes silent the pair is replaced at
+// once by the other side alone, and when it reports again the pair is made
+// again. A gamepad that no longer fits is reported removed first; then the
+// new ones are reported added, each with a new DeviceID and with what its
+// controls hold now as fresh presses.
 func (h *joyCon2Hub) layout(now time.Duration) {
 	var conn []*jc2Link
 	for _, l := range h.links {
-		if l.phase == linkConnected {
+		if l.phase == linkConnected && !l.dormant {
 			conn = append(conn, l)
 		}
 	}
@@ -645,7 +674,7 @@ func (h *joyCon2Hub) layout(now time.Duration) {
 			l.dev = dev
 		}
 		h.devs = append(h.devs, dev)
-		h.settle(dev, now)
+		h.addLive(dev, now)
 	}
 }
 
@@ -660,32 +689,14 @@ func (h *joyCon2Hub) modeOf(links []*jc2Link) jc2.Mode {
 	return jc2.Horizontal
 }
 
-// retire ends the gamepad dev, whose links changed: it is reported removed if
-// it was live.
+// retire ends the gamepad dev, whose links changed or went silent: it is
+// reported removed if it was live.
 func (h *joyCon2Hub) retire(dev *jc2Device, now time.Duration) {
 	h.removeLive(dev, now)
 	for _, l := range dev.links {
 		if l.dev == dev {
 			l.dev = nil
 		}
-	}
-}
-
-// settle makes the gamepad dev live exactly when all its links are alive: a
-// gamepad with a dormant link is reported removed, and comes back, as a new
-// device, when every link reports again.
-func (h *joyCon2Hub) settle(dev *jc2Device, now time.Duration) {
-	alive := true
-	for _, l := range dev.links {
-		if l.dormant {
-			alive = false
-		}
-	}
-	switch {
-	case dev.live && !alive:
-		h.removeLive(dev, now)
-	case !dev.live && alive:
-		h.addLive(dev, now)
 	}
 }
 
@@ -1068,8 +1079,17 @@ type JoyCon2LinkStatus struct {
 	Player int
 	// Firmware is "major.minor.patch", or "" when unknown.
 	Firmware string
-	// Interval says what is known about the connection parameters.
-	Interval string
+	// ParamsRequest says what became of the request for the
+	// throughput-optimized connection parameters: "accepted",
+	// "unavailable (Windows 10)" or "failed: <why>"; "" until the link is up.
+	ParamsRequest string
+	// IntervalMs is the current connection interval in milliseconds, 0 when
+	// unknown (Windows 10 cannot tell). Latency is the peripheral latency in
+	// connection events and TimeoutMs the supervision timeout; both mean
+	// something only when IntervalMs is not 0.
+	IntervalMs float64
+	Latency    int
+	TimeoutMs  int
 	// State is "connecting", "connected", "dormant" (silent, its gamepad
 	// reported removed) or "closing".
 	State string
@@ -1095,7 +1115,10 @@ func (h *joyCon2Hub) Status(now time.Duration) JoyCon2Status {
 		st.Known = append(st.Known, JoyCon2KnownStatus{KnownJoyCon2: k, Connected: l != nil && l.phase == linkConnected})
 	}
 	for _, l := range h.links {
-		ls := JoyCon2LinkStatus{Addr: l.addr, Side: l.side, Serial: l.serial, Player: l.player, Interval: l.interval}
+		ls := JoyCon2LinkStatus{Addr: l.addr, Side: l.side, Serial: l.serial, Player: l.player, ParamsRequest: l.paramsRequest}
+		if l.params.Known() {
+			ls.IntervalMs, ls.Latency, ls.TimeoutMs = l.params.IntervalMs(), int(l.params.Latency), int(l.params.Timeout.Milliseconds())
+		}
 		switch l.phase {
 		case linkConnecting:
 			ls.State = "connecting"

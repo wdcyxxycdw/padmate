@@ -39,7 +39,9 @@ const (
 	replyTimeout     = 2 * time.Second       // per start-up command
 	commandSpacing   = 10 * time.Millisecond // between start-up commands
 	discoverTries    = 3
-	intervalWait     = 500 * time.Millisecond // for Windows to apply the preferred parameters
+	paramsFirst      = 500 * time.Millisecond // first re-read of the connection parameters, once Windows applied the request
+	paramsEvery      = 2 * time.Second        // then re-read this often
+	paramsMaxFails   = 3                      // failed reads in a row before a link is not read any more
 )
 
 // Link states. A link is connecting until Connected is sent, live until it
@@ -83,6 +85,12 @@ type link struct {
 	props    map[string]genericattributeprofile.GattCharacteristicProperties
 	subs     []*handlerReg
 	request  *bluetooth.BluetoothLEPreferredConnectionParametersRequest
+
+	// The connection parameters, read now and then (pollParams).
+	params      ConnParams // as last read
+	paramsDue   time.Time  // when to read next; zero until the link is up
+	paramsFails int
+	paramsOff   bool // they cannot be read: no getter before Windows 11
 }
 
 // handlerReg is an event handler and what is needed to remove it again.
@@ -137,7 +145,8 @@ func (t *Transport) doConnect(l *link) {
 	}
 	l.log.Info("connected", "after", time.Since(start).Round(time.Millisecond),
 		"firmware", fmt.Sprintf("%d.%d.%d", info.Firmware[0], info.Firmware[1], info.Firmware[2]),
-		"interval", info.Interval)
+		"params_request", info.ParamsRequest, "interval_ms", info.Params.IntervalMs(),
+		"latency", info.Params.Latency, "timeout_ms", info.Params.Timeout.Milliseconds())
 
 	// Connected comes before the first Report: callbacks drop reports until
 	// the state is live.
@@ -145,6 +154,9 @@ func (t *Transport) doConnect(l *link) {
 		// Nobody would learn of this link, so there is none.
 		t.finish(l, errors.New("the consumer does not read events"))
 		return
+	}
+	if !l.paramsOff {
+		l.paramsDue = time.Now().Add(paramsFirst)
 	}
 	l.state.CompareAndSwap(stConnecting, stLive)
 	// The link may have gone down while Connected was on its way; then no
@@ -202,7 +214,7 @@ func (t *Transport) open(l *link) (info LinkInfo, err error) {
 	}
 	l.log.Debug("step", "name", "start-up commands", "took", time.Since(s).Round(time.Millisecond))
 
-	info.Interval = t.preferThroughput(l)
+	info.ParamsRequest, info.Params = t.preferThroughput(l)
 	return info, nil
 }
 
@@ -539,38 +551,20 @@ func (t *Transport) commandWriter(l *link, c *genericattributeprofile.GattCharac
 }
 
 // preferThroughput asks Windows for the throughput-optimized connection
-// parameters, which keeps the connection interval short, and describes what
-// it learned for the log. This is Windows 11 only: where the classes are
-// missing (Windows 10) it says so and goes on. The request must stay open
-// for Windows to keep applying it; release closes it.
-func (t *Transport) preferThroughput(l *link) string {
-	var desc string
+// parameters, which keeps the connection interval short, and returns what
+// became of the request (ParamsAccepted, ParamsUnavailable or "failed: ...")
+// and the first read of the current parameters. This is Windows 11 only:
+// where the classes are missing (Windows 10) it says so and goes on. The
+// request must stay open for Windows to keep applying it; release closes it.
+//
+// Windows applies the request some time later and may settle on other values
+// than the first read shows, which is why pollParams keeps reading.
+func (t *Transport) preferThroughput(l *link) (request string, params ConnParams) {
 	err := try(func() error {
-		read := func() (text string, interval uint16) {
-			text = "unknown"
-			defer func() { // the getter does not exist before Windows 11
-				if recover() != nil {
-					text, interval = "unknown", 0
-				}
-			}()
-			p, err := l.dev.GetConnectionParameters()
-			if err != nil {
-				return text, 0
-			}
-			defer p.Release()
-			iv, ierr := p.GetConnectionInterval() // units of 1.25 ms
-			lat, _ := p.GetConnectionLatency()
-			to, _ := p.GetLinkTimeout() // units of 10 ms
-			if ierr != nil {
-				return text, 0
-			}
-			return fmt.Sprintf("%.2f ms, latency %d, timeout %d ms", float64(iv)*1.25, lat, int(to)*10), iv
-		}
-		before, ivBefore := read()
 		pref, err := bluetooth.BluetoothLEPreferredConnectionParametersGetThroughputOptimized()
 		if err != nil {
 			if isClassNotRegistered(err) {
-				desc = "not requested (needs Windows 11); interval " + before
+				request = ParamsUnavailable
 				return nil
 			}
 			return err
@@ -590,36 +584,124 @@ func (t *Transport) preferThroughput(l *link) string {
 			return err
 		}
 		l.request = req
-
-		// The change comes some time after the request; look for it.
-		after, ivAfter := before, ivBefore
-		deadline := time.NewTimer(intervalWait)
-		defer deadline.Stop()
-		tick := time.NewTicker(50 * time.Millisecond)
-		defer tick.Stop()
-	wait:
-		for ivAfter == ivBefore {
-			select {
-			case <-tick.C:
-				after, ivAfter = read()
-			case <-deadline.C:
-				break wait
-			case <-l.cancel:
-				break wait
-			case <-l.down:
-				break wait
-			case <-t.stop:
-				break wait
-			}
-		}
-		desc = "throughput-optimized requested; interval " + before + " -> " + after
+		request = ParamsAccepted
 		return nil
 	})
 	if err != nil {
 		l.log.Warn("could not request the preferred connection parameters", "err", err)
-		return "request failed: " + err.Error()
+		request = "failed: " + err.Error()
 	}
-	return desc
+	l.sampleParams()
+	return request, l.params
+}
+
+// errNoParamsGetter says that Windows cannot tell the connection parameters
+// (the getter is Windows 11's).
+var errNoParamsGetter = errors.New("jc2win: the connection parameters cannot be read (needs Windows 11)")
+
+// readParams reads the current connection parameters of l. It runs on the
+// transport goroutine, which owns l.dev.
+func (l *link) readParams() (p ConnParams, err error) {
+	defer func() { // the getter does not exist before Windows 11
+		if recover() != nil {
+			p, err = ConnParams{}, errNoParamsGetter
+		}
+	}()
+	if l.dev == nil {
+		return p, errors.New("the device is closed")
+	}
+	cp, err := l.dev.GetConnectionParameters()
+	if err != nil {
+		return p, err
+	}
+	defer cp.Release()
+	iv, err := cp.GetConnectionInterval() // units of 1.25 ms
+	if err != nil {
+		return p, err
+	}
+	lat, err := cp.GetConnectionLatency()
+	if err != nil {
+		return p, err
+	}
+	to, err := cp.GetLinkTimeout() // units of 10 ms
+	if err != nil {
+		return p, err
+	}
+	return ConnParams{
+		Interval: time.Duration(iv) * 1250 * time.Microsecond,
+		Latency:  lat,
+		Timeout:  time.Duration(to) * 10 * time.Millisecond,
+	}, nil
+}
+
+// sampleParams reads the parameters into l.params and says whether they
+// differ from the last read. A link whose parameters cannot be read (no getter,
+// or several failures in a row) is not read again. Transport goroutine only.
+func (l *link) sampleParams() (changed bool) {
+	p, err := l.readParams()
+	switch {
+	case err == nil:
+		l.paramsFails = 0
+		changed = p != l.params
+		l.params = p
+	case errors.Is(err, errNoParamsGetter):
+		l.paramsOff = true
+	default:
+		l.log.Debug("could not read the connection parameters", "err", err)
+		if l.paramsFails++; l.paramsFails >= paramsMaxFails {
+			l.paramsOff = true
+		}
+	}
+	return changed
+}
+
+// pollParams reads the connection parameters of the live links that are due
+// and sends a Params event for each that changed. It runs on the transport
+// goroutine (never in a callback) and never waits: a Params that does not fit
+// in the channel is sent again at the next read.
+func (t *Transport) pollParams() {
+	now := time.Now()
+	for _, l := range t.pollable() {
+		if now.Before(l.paramsDue) {
+			continue
+		}
+		l.paramsDue = now.Add(paramsEvery)
+		prev := l.params
+		if !l.sampleParams() {
+			continue
+		}
+		if !t.trySend(Event{Kind: Params, Link: l.id, Addr: l.addr, Params: l.params}) {
+			l.params = prev // the consumer has not seen it
+			continue
+		}
+		l.log.Info("connection parameters changed", "interval_ms", l.params.IntervalMs(),
+			"latency", l.params.Latency, "timeout_ms", l.params.Timeout.Milliseconds(),
+			"was_interval_ms", prev.IntervalMs())
+	}
+}
+
+// pollable returns the live links whose parameters are read now and then.
+func (t *Transport) pollable() []*link {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	var out []*link
+	for _, l := range t.links {
+		if !l.finished && !l.paramsOff && !l.paramsDue.IsZero() && l.state.Load() == stLive {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+// nextParams returns when the next read is due, if any link is read.
+func (t *Transport) nextParams() (time.Time, bool) {
+	var next time.Time
+	for _, l := range t.pollable() {
+		if next.IsZero() || l.paramsDue.Before(next) {
+			next = l.paramsDue
+		}
+	}
+	return next, !next.IsZero()
 }
 
 // release closes everything l holds, in the order that lets Windows drop

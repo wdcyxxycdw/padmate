@@ -201,7 +201,8 @@ func TestCallbacksDoNotWait(t *testing.T) {
 		{"scan_windows.go", "func (t *Transport) onScanStopped("},
 	} {
 		body := funcBody(t, srcs[c.file], c.decl)
-		for _, bad := range []string{".Lock()", ".RLock()", "time.Sleep", "t.await(", "emitWait("} {
+		// The connection parameters are read by the transport goroutine only.
+		for _, bad := range []string{".Lock()", ".RLock()", "time.Sleep", "t.await(", "emitWait(", "GetConnectionParameters(", "readParams(", "sampleParams(", "pollParams("} {
 			if strings.Contains(body, bad) {
 				t.Errorf("%s contains %s", c.decl, bad)
 			}

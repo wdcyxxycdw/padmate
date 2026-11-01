@@ -387,11 +387,23 @@ func factoryBlock(cal jc2.StickCal) []byte {
 
 // connectedEvent builds the Connected event of a link; factory may be nil.
 func connectedEvent(id jc2win.LinkID, side jc2.Side, serial string, factory []byte) jc2win.Event {
-	info := jc2win.LinkInfo{Side: side, Firmware: [3]byte{2, 1, 4}, Interval: "15 ms", FactoryStick: factory}
+	info := jc2win.LinkInfo{Side: side, Firmware: [3]byte{2, 1, 4}, FactoryStick: factory,
+		ParamsRequest: jc2win.ParamsAccepted, Params: testParams(15)}
 	if serial != "" {
 		info.InfoBlock = infoBlock(serial)
 	}
 	return jc2win.Event{Kind: jc2win.Connected, Link: id, Info: info}
+}
+
+// testParams returns connection parameters of the interval in milliseconds,
+// a latency of 0 and a timeout of 9600 ms.
+func testParams(intervalMs float64) jc2win.ConnParams {
+	return jc2win.ConnParams{Interval: time.Duration(intervalMs * float64(time.Millisecond)), Timeout: 9600 * time.Millisecond}
+}
+
+// paramsEvent builds the Params event of a link.
+func paramsEvent(id jc2win.LinkID, p jc2win.ConnParams) jc2win.Event {
+	return jc2win.Event{Kind: jc2win.Params, Link: id, Params: p}
 }
 
 // reportEvent builds a native input report.

@@ -27,7 +27,10 @@
 // Start launches one goroutine. It locks itself to an OS thread, initializes
 // the Windows Runtime for that thread (multithreaded apartment) and does
 // every WinRT call that is not inside a callback; Scan, Connect, Disconnect
-// and Close only queue a request for it.
+// and Close only queue a request for it. The same goroutine reads the
+// connection parameters of every live link every 2 s (Windows 11) and sends a
+// Params event when they changed; that is a plain call on the goroutine, not a
+// callback.
 //
 // Three WinRT events call into Go on threads of the Windows thread pool: an
 // advertisement was received, a characteristic value changed, a device's
@@ -47,6 +50,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input/jc2"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/latency"
@@ -78,8 +82,9 @@ type LinkID uint32
 // EventKind says which fields of an Event are set.
 type EventKind uint8
 
-// The kinds of Event. A link produces Connected, then Reports, then exactly
-// one Lost; or exactly one Failed if it never gets to Connected.
+// The kinds of Event. A link produces Connected, then Reports (and, where
+// Windows can tell, Params), then exactly one Lost; or exactly one Failed if
+// it never gets to Connected.
 const (
 	// Advert is an advertisement with manufacturer data of Nintendo's
 	// company id (Addr, RSSI, Company, Data).
@@ -94,6 +99,11 @@ const (
 	Lost
 	// Failed ends a link that never became Connected (Link, Addr, Err).
 	Failed
+	// Params says that the connection parameters of a connected link
+	// changed (Link, Params). It is sent only where Windows can tell the
+	// current parameters (Windows 11), by the transport goroutine and never
+	// by a callback.
+	Params
 )
 
 func (k EventKind) String() string {
@@ -108,6 +118,8 @@ func (k EventKind) String() string {
 		return "lost"
 	case Failed:
 		return "failed"
+	case Params:
+		return "params"
 	}
 	return fmt.Sprintf("EventKind(%d)", uint8(k))
 }
@@ -134,6 +146,8 @@ type Event struct {
 	Report [ReportLen]byte
 	Stamp  latency.Stamp
 	Info   LinkInfo
+	// Params is the new connection parameters of a Params event.
+	Params ConnParams
 	// Err is why a link ended: Lost may carry nil, Failed always carries
 	// an error.
 	Err error
@@ -147,10 +161,43 @@ type LinkInfo struct {
 	// reads jc2.FlashInfo, jc2.FlashFactoryStick and jc2.FlashUserStick,
 	// unparsed. Nil when that read failed.
 	InfoBlock, FactoryStick, UserStick []byte
-	// Interval says what is known about the connection parameters, for
-	// logs.
-	Interval string
+	// ParamsRequest is the result of the request for the throughput-optimized
+	// connection parameters: ParamsAccepted, ParamsUnavailable or
+	// "failed: <why>".
+	ParamsRequest string
+	// Params is the first read of the connection parameters, the zero value
+	// where they cannot be read.
+	Params ConnParams
 }
+
+// The values of LinkInfo.ParamsRequest, other than a failure.
+const (
+	// ParamsAccepted says that Windows 11 took the request for the
+	// throughput-optimized parameters.
+	ParamsAccepted = "accepted"
+	// ParamsUnavailable says that this is Windows 10, which has neither the
+	// request nor a way to read the parameters.
+	ParamsUnavailable = "unavailable (Windows 10)"
+)
+
+// ConnParams are the current parameters of a Bluetooth LE connection, as
+// Windows reports them. The zero value means unknown.
+type ConnParams struct {
+	// Interval is the connection interval, a multiple of 1.25 ms; zero when
+	// unknown.
+	Interval time.Duration
+	// Latency is the peripheral latency in connection events.
+	Latency uint16
+	// Timeout is the supervision timeout, a multiple of 10 ms.
+	Timeout time.Duration
+}
+
+// Known reports whether the parameters were read.
+func (p ConnParams) Known() bool { return p.Interval > 0 }
+
+// IntervalMs returns Interval in milliseconds (7.5, 11.25, 15, ...), or 0
+// when unknown.
+func (p ConnParams) IntervalMs() float64 { return float64(p.Interval) / float64(time.Millisecond) }
 
 // Errors of failed and lost links. They are wrapped, so use errors.Is.
 var (

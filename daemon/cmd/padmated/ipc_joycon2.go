@@ -96,7 +96,17 @@ type rpcJoyCon2Link struct {
 	Player int    `json:"player"`
 	// Firmware is "major.minor.patch", absent when unknown.
 	Firmware string `json:"firmware,omitempty"`
-	Interval string `json:"interval,omitempty"`
+	// ParamsRequest is what became of the request for the
+	// throughput-optimized connection parameters: "accepted", "unavailable
+	// (Windows 10)" or "failed: <why>"; absent until the link is up.
+	ParamsRequest string `json:"paramsRequest,omitempty"`
+	// IntervalMs is the current connection interval in milliseconds, absent
+	// when unknown (Windows 10). Latency (connection events) and TimeoutMs
+	// (supervision timeout) are the other two current parameters; read them
+	// only when intervalMs is present, as 0 is left out.
+	IntervalMs float64 `json:"intervalMs,omitempty"`
+	Latency    int     `json:"latency,omitempty"`
+	TimeoutMs  int     `json:"timeoutMs,omitempty"`
 	// State is "connecting", "connected", "dormant" (silent; its gamepad is
 	// reported removed) or "closing".
 	State string `json:"state"`
@@ -122,7 +132,8 @@ func newRPCJoyCon2Status(st input.JoyCon2Status) rpcJoyCon2Status {
 	}
 	for _, l := range st.Links {
 		out.Links = append(out.Links, rpcJoyCon2Link{Addr: input.KnownJoyCon2{Addr: l.Addr}.AddrText(), Serial: l.Serial, Side: l.Side.String(),
-			Player: l.Player, Firmware: l.Firmware, Interval: l.Interval, State: l.State, Device: l.Device, Known: l.Known})
+			Player: l.Player, Firmware: l.Firmware, ParamsRequest: l.ParamsRequest, IntervalMs: l.IntervalMs, Latency: l.Latency, TimeoutMs: l.TimeoutMs,
+			State: l.State, Device: l.Device, Known: l.Known})
 	}
 	return out
 }

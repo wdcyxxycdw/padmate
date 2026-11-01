@@ -140,7 +140,7 @@ func (s *rpcInputSource) JoyCon2Status() (input.JoyCon2Status, error) {
 		st.Known = append(st.Known, input.JoyCon2KnownStatus{KnownJoyCon2: e.KnownJoyCon2, Connected: e.device != 0})
 		if e.device != 0 {
 			st.Links = append(st.Links, input.JoyCon2LinkStatus{Addr: e.Addr, Side: e.Side, Serial: e.Serial, Player: e.player,
-				Firmware: "2.1.4", Interval: "simulated", State: "connected", Device: e.device, Known: true})
+				Firmware: "2.1.4", ParamsRequest: "accepted", IntervalMs: 15, Latency: 0, TimeoutMs: 9600, State: "connected", Device: e.device, Known: true})
 		}
 	}
 	return st, nil

@@ -24,11 +24,11 @@ padmate remembers the Joy-Con 2 it connected. Next time, do not use the tray men
 
 - You have to hold SYNC every time: after you turn on the PC, after sleep, after the Joy-Con 2 was turned off or went out of range. Pressing the ordinary buttons wakes the Switch 2 but not the PC.
 - padmate connects only Joy-Con 2 that it remembers, and only while SYNC is held. A Joy-Con 2 that you have never connected through the tray menu is left alone.
-- When a Joy-Con 2 stops sending (turned off, out of range, signal lost), padmate lets go of its keys in about a third of a second. If the signal comes back within 3 seconds, it works again with no SYNC; if it takes longer than 3 seconds, hold SYNC to connect it again.
+- When a Joy-Con 2 stops sending (turned off, out of range, signal lost), padmate lets go of its keys in about a third of a second. If it was one half of a pair, the other half goes on alone right then. If the signal comes back within 3 seconds, it works again with no SYNC; if it takes longer than 3 seconds, hold SYNC to connect it again.
 
 ## One Joy-Con or two
 
-- **One left and one right Joy-Con 2** become one full gamepad by themselves, as soon as both are connected. There is no setting for it. When one of them goes away, the other goes on alone. Held keys are released each time this changes. A Joy-Con 2 only ever pairs with another Joy-Con 2: it never mixes with a Joy-Con of the original Switch, so a Joy-Con 2 and an original Joy-Con stay two single controllers.
+- **One left and one right Joy-Con 2** become one full gamepad by themselves, as soon as both are connected. There is no setting for it. When one of them goes away or stops sending, the other goes on alone at once, and when the first one is back, the two become one gamepad again. Held keys are released each time this changes. A Joy-Con 2 only ever pairs with another Joy-Con 2: it never mixes with a Joy-Con of the original Switch, so a Joy-Con 2 and an original Joy-Con stay two single controllers.
 - **A single Joy-Con 2** is held sideways, like a single Joy-Con of the original Switch: one stick, four face buttons, SL, SR, L and ZL (R and ZR on the right one), and − or +. See [The controller picture and the key drawer](01-controller-and-drawer.md).
 - **The C key** is on the right Joy-Con 2. It is an extra key, and you can map it like the other extra keys. The Home and Capture keys cannot be mapped.
 - The emergency pause is SL and SR together for a single one, and − and + together for a pair. See [The tray and emergency release](12-tray-and-emergency.md).

@@ -257,17 +257,22 @@ func (t *Transport) loop() {
 		default:
 		}
 		t.reconcileScan()
+		t.pollParams()
 		c, ok := t.pop()
 		if !ok {
-			var retry <-chan time.Time
+			var retry, params <-chan time.Time
 			if t.scanWant.Load() && t.scan == nil && !t.scanRetryAt.IsZero() {
 				retry = time.After(time.Until(t.scanRetryAt))
+			}
+			if next, ok := t.nextParams(); ok {
+				params = time.After(time.Until(next))
 			}
 			select {
 			case <-t.wake:
 			case <-t.stop:
 				return
 			case <-retry:
+			case <-params:
 			}
 			continue
 		}

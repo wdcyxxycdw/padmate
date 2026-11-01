@@ -623,30 +623,212 @@ func TestHubDormantSideOfAPair(t *testing.T) {
 	l := r.mustConnect(addrL1, jc2.SideL, serL1)
 	rr := r.mustConnect(addrR1, jc2.SideR, serR1)
 	r.take() // L single, then the pair (id 2)
-	// R keeps reporting; L goes silent.
-	for range 3 {
+	// R keeps reporting; L goes silent. At the silence the pair is replaced at
+	// once by R alone, holding what R holds as a fresh press.
+	for range 2 {
 		r.step(100 * time.Millisecond)
 		r.report(rr, bRA)
 	}
-	equalStrings(t, "L silent", r.takeDesc(), []string{"down 2 east", "removed 2"}) // the press was before the removal
+	equalStrings(t, "before the silence", r.takeDesc(), []string{"down 2 east"})
 	r.step(100 * time.Millisecond)
+	equalStrings(t, "L silent", r.takeDesc(), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 south"})
 	r.report(rr, bRA|bRB)
-	if evs := r.take(); len(evs) != 0 {
-		t.Fatalf("events %v from a pair that is reported removed", descs(evs))
-	}
-	// L comes back: the pair is a new gamepad and shows both sides' state.
+	equalStrings(t, "single R", r.takeDesc(), []string{"down 3 west"})
+	// L comes back: the single is replaced by the pair, which shows both
+	// sides' state.
 	r.report(l, bLMinus)
-	got := r.takeDesc()
-	equalStrings(t, "L back", got, []string{"added 3 Joy-Con 2 pair", "down 3 south", "down 3 east", "down 3 back"})
-	// R goes silent for good while L reports: after 300 ms the pair goes,
-	// after 3 s the link is closed and L is a single again.
+	equalStrings(t, "L back", r.takeDesc(), []string{"removed 3", "added 4 Joy-Con 2 pair", "down 4 south", "down 4 east", "down 4 back"})
+	// R goes silent for good while L reports: after 300 ms the pair is
+	// replaced by L alone, and after 3 s the link is closed, with no event
+	// of its own.
 	for range 30 {
 		r.step(100 * time.Millisecond)
 		r.report(l, bLMinus)
 	}
-	equalStrings(t, "R gives up", r.takeDesc(), []string{"removed 3", "added 4 Joy-Con 2 (L)", "down 4 start"})
+	equalStrings(t, "R gives up", r.takeDesc(), []string{"removed 4", "added 5 Joy-Con 2 (L)", "down 5 start"})
 	if d := r.tr.disconnectList(); !slices.Equal(d, []jc2win.LinkID{rr}) {
 		t.Errorf("disconnects %v, want the silent right link", d)
+	}
+}
+
+// TestHubPairBreaksUpOnSilence: when one side of a pair goes silent, the side
+// that still reports is a single at once, as for a fresh connection, and the
+// silent side's revival makes the pair again. Every step releases first.
+func TestHubPairBreaksUpOnSilence(t *testing.T) {
+	r := newRig(t, knownAuto)
+	l := r.mustConnect(addrL1, jc2.SideL, serL1)
+	rr := r.mustConnect(addrR1, jc2.SideR, serR1)
+	r.take()
+	pairID := joyCon2IDBase + 1
+	r.report(l, bLMinus)
+	r.report(rr, bRA|bRX)
+	r.take()
+	if h := r.trk.heldNames(pairID); !slices.Equal(h, []string{"back", "east", "north"}) {
+		t.Fatalf("the pair holds %v, want A, X and minus (east, north, back)", h)
+	}
+
+	// Right keeps reporting for 299 ms: nothing happens. At 300 ms the left
+	// side, the silent one, ends the pair.
+	r.step(jc2.DefaultSilence - time.Millisecond)
+	r.report(rr, bRA|bRX)
+	if evs := r.take(); len(evs) != 0 {
+		t.Fatalf("events %v before the silence timeout", descs(evs))
+	}
+	r.step(time.Millisecond)
+	evs := r.take()
+	equalStrings(t, "the pair breaks up", descs(evs), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 south", "down 3 east"})
+	if h := r.trk.heldNames(pairID); h != nil {
+		t.Errorf("the removed pair still holds %v", h)
+	}
+	if h := r.trk.heldNames(joyCon2IDBase + 2); !slices.Equal(h, []string{"east", "south"}) {
+		t.Errorf("the single holds %v, want what the right Joy-Con holds", h)
+	}
+	for _, e := range evs {
+		if e.Kind == ButtonDown && e.Stamp != 0 {
+			t.Errorf("a press made by the timer has the stamp %d of no report", e.Stamp)
+		}
+	}
+	single := r.trk.live[joyCon2IDBase+2]
+	if single.Type != "joyconright" || single.Serial != serR1 {
+		t.Errorf("single %+v, want the right Joy-Con alone", single)
+	}
+	if d := r.tr.disconnectList(); len(d) != 0 {
+		t.Errorf("disconnects %v at the silence: the link stays", d)
+	}
+	st := r.h.Status(r.now)
+	if st.Links[0].State != "dormant" || st.Links[0].Device != 0 || st.Links[1].State != "connected" || st.Links[1].Device != joyCon2IDBase+2 {
+		t.Errorf("links %+v", st.Links)
+	}
+	// Another tick changes nothing.
+	r.step(10 * time.Millisecond)
+	if evs := r.take(); len(evs) != 0 {
+		t.Errorf("events %v on a tick with nothing new", descs(evs))
+	}
+
+	// The single works on its own.
+	r.report(rr, bRA)
+	equalStrings(t, "single", r.takeDesc(), []string{"up 3 east"})
+
+	// The silent side reports again while the other is live: the pair is made
+	// again, as for a fresh second connection, with what both hold.
+	r.report(l, bLMinus|bLUp)
+	evs = r.take()
+	equalStrings(t, "the pair again", descs(evs), []string{"removed 3", "added 4 Joy-Con 2 pair", "down 4 east", "down 4 back", "down 4 dpad.up"})
+	for _, e := range evs {
+		if e.Kind == ButtonDown && e.Stamp != 1234 {
+			t.Errorf("fresh press without the report's stamp: %d", e.Stamp)
+		}
+	}
+	if h := r.trk.heldNames(joyCon2IDBase + 2); h != nil {
+		t.Errorf("the removed single still holds %v", h)
+	}
+}
+
+// TestHubPairSilenceKeepsKeys: the single that follows a pair has its own
+// DeviceKey, and the pair that follows a single has the pair's again.
+func TestHubPairSilenceKeepsKeys(t *testing.T) {
+	r := newRig(t, knownAuto)
+	l := r.mustConnect(addrL1, jc2.SideL, serL1)
+	rr := r.mustConnect(addrR1, jc2.SideR, serR1)
+	keyPair := KeyOf(r.trk.live[joyCon2IDBase+1])
+	r.take()
+	// Right goes silent: the left one is the single.
+	for range 4 {
+		r.step(100 * time.Millisecond)
+		r.report(l, 0)
+	}
+	if k := KeyOf(r.trk.live[joyCon2IDBase+2]); k.Serial != serL1 || k == keyPair {
+		t.Errorf("single key %+v", k)
+	}
+	r.report(rr, 0)
+	if k := KeyOf(r.trk.live[joyCon2IDBase+3]); k != keyPair {
+		t.Errorf("pair key %+v after the revival, want %+v", k, keyPair)
+	}
+}
+
+// TestHubSilenceOfBothSidesOfAPair: both sides going silent leaves no gamepad,
+// and each revival brings back what fits.
+func TestHubSilenceOfBothSidesOfAPair(t *testing.T) {
+	r := newRig(t, knownAuto)
+	l := r.mustConnect(addrL1, jc2.SideL, serL1)
+	rr := r.mustConnect(addrR1, jc2.SideR, serR1)
+	r.report(l, bLMinus)
+	r.report(rr, bRA)
+	r.take()
+	r.step(jc2.DefaultSilence)
+	equalStrings(t, "both silent", r.takeDesc(), []string{"removed 2"})
+	r.report(l, bLMinus)
+	equalStrings(t, "L back", r.takeDesc(), []string{"added 3 Joy-Con 2 (L)", "down 3 start"})
+	r.report(rr, bRA)
+	equalStrings(t, "R back", r.takeDesc(), []string{"removed 3", "added 4 Joy-Con 2 pair", "down 4 east", "down 4 back"})
+}
+
+// TestHubSilenceWithASpareController: with a second left Joy-Con connected,
+// the right one of a pair whose left goes silent pairs with the spare, and
+// the first left Joy-Con takes the pair back when it reports again: what a
+// fresh connection of the three would make.
+func TestHubSilenceWithASpareController(t *testing.T) {
+	r := newRig(t, knownAuto)
+	l1 := r.mustConnect(addrL1, jc2.SideL, serL1)
+	rr := r.mustConnect(addrR1, jc2.SideR, serR1)
+	l2 := r.mustConnect(addrL2, jc2.SideL, serL2)
+	equalStrings(t, "connect", r.takeDesc(), []string{"added 1 Joy-Con 2 (L)", "removed 1", "added 2 Joy-Con 2 pair", "added 3 Joy-Con 2 (L)"})
+	for range 4 {
+		r.step(100 * time.Millisecond)
+		r.report(rr, 0)
+		r.report(l2, 0)
+	}
+	equalStrings(t, "L1 silent", r.takeDesc(), []string{"removed 2", "removed 3", "added 4 Joy-Con 2 pair"})
+	if p := r.trk.live[joyCon2IDBase+3]; p.Serial != serL2+"+"+serR1 {
+		t.Errorf("pair %q, want the spare left with the right one", p.Serial)
+	}
+	r.report(l1, 0)
+	want := []string{"removed 4", "added 5 Joy-Con 2 pair", "added 6 Joy-Con 2 (L)"}
+	if got := r.takeDesc(); !slices.Equal(got, want) {
+		t.Errorf("L1 back: %q, want %q: it connected first, so it is the left of the pair again", got, want)
+	}
+}
+
+// TestHubConnectionParams: the status carries the request's result and the
+// current parameters, which Params events update; an unknown value is 0.
+func TestHubConnectionParams(t *testing.T) {
+	r := newRig(t, knownAuto)
+	l := r.mustConnect(addrL1, jc2.SideL, serL1)
+	r.take()
+	link := func() JoyCon2LinkStatus { return r.h.Status(r.now).Links[0] }
+	if got := link(); got.ParamsRequest != "accepted" || got.IntervalMs != 15 || got.Latency != 0 || got.TimeoutMs != 9600 {
+		t.Fatalf("at connect %+v", got)
+	}
+	// Windows settled on another interval, and a latency.
+	p := testParams(7.5)
+	p.Latency = 4
+	r.feed(paramsEvent(l, p))
+	if got := link(); got.IntervalMs != 7.5 || got.Latency != 4 || got.TimeoutMs != 9600 || got.ParamsRequest != "accepted" {
+		t.Errorf("after Params %+v", got)
+	}
+	if evs := r.take(); len(evs) != 0 {
+		t.Errorf("events %v from a Params event", descs(evs))
+	}
+	// The same value again, an unknown link and a stray link change nothing.
+	r.feed(paramsEvent(l, p))
+	r.feed(paramsEvent(l+40, testParams(30)))
+	if got := link(); got.IntervalMs != 7.5 {
+		t.Errorf("after strays %+v", got)
+	}
+	// Windows 10: the request is unavailable and the parameters unknown.
+	r.advertise(addrR1, jc2.SideR, true)
+	id := r.tr.connectList()[1].id
+	ev := connectedEvent(id, jc2.SideR, serR1, nil)
+	ev.Info.ParamsRequest, ev.Info.Params = jc2win.ParamsUnavailable, jc2win.ConnParams{}
+	r.feed(ev)
+	if got := r.h.Status(r.now).Links[1]; got.ParamsRequest != "unavailable (Windows 10)" || got.IntervalMs != 0 || got.Latency != 0 || got.TimeoutMs != 0 {
+		t.Errorf("Windows 10 link %+v", got)
+	}
+	// A Params event of a link that is gone is ignored.
+	r.lost(l)
+	r.feed(paramsEvent(l, testParams(30)))
+	if st := r.h.Status(r.now); len(st.Links) != 1 || st.Links[0].IntervalMs != 0 {
+		t.Errorf("links %+v", st.Links)
 	}
 }
 
@@ -798,8 +980,9 @@ func TestHubPowerEvents(t *testing.T) {
 	r.reportPower(l, 0, 2<<2)
 	r.reportPower(rr, 0, 3<<2)
 	got = r.takeDesc()
-	if len(got) != 2 || got[0] != "added 3 Joy-Con 2 pair" || got[1] != "power 3 discharging 20" {
-		t.Errorf("revival events %q, want the gamepad and its power", got)
+	want := []string{"added 3 Joy-Con 2 (L)", "power 3 discharging 20", "removed 3", "added 4 Joy-Con 2 pair", "power 4 discharging 20"}
+	if !slices.Equal(got, want) {
+		t.Errorf("revival events %q, want %q: the left alone, then the pair and its power", got, want)
 	}
 	// Off by default.
 	r2 := newRig(t, knownAuto)
@@ -842,7 +1025,8 @@ func TestHubReadoutAndStatus(t *testing.T) {
 		t.Fatalf("links %+v", st.Links)
 	}
 	if got := st.Links[0]; got.Side != jc2.SideL || got.Serial != serL1 || got.Firmware != "2.1.4" || got.State != "connected" ||
-		got.Device != joyCon2IDBase || !got.Known || got.Interval != "15 ms" || got.Player != 0 {
+		got.Device != joyCon2IDBase || !got.Known || got.ParamsRequest != "accepted" || got.IntervalMs != 15 ||
+		got.Latency != 0 || got.TimeoutMs != 9600 || got.Player != 0 {
 		t.Errorf("link %+v", got)
 	}
 	r.advertise(addrR1, jc2.SideR, true) // connecting

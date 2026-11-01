@@ -350,7 +350,8 @@ func TestIPCJoyCon2StatusShape(t *testing.T) {
 			{KnownJoyCon2: input.KnownJoyCon2{Addr: joyLeftAddr, Serial: "XKW1", Side: jc2.SideL}, Connected: true},
 			{KnownJoyCon2: input.KnownJoyCon2{Addr: joyRightAddr, Serial: "XKW2", Side: jc2.SideR}},
 		}
-		s.status.Links = []input.JoyCon2LinkStatus{{Addr: joyLeftAddr, Side: jc2.SideL, Serial: "XKW1", Player: 2, State: "connected", Device: 7001, Known: true, Firmware: "2.1.4", Interval: "15ms"}}
+		s.status.Links = []input.JoyCon2LinkStatus{{Addr: joyLeftAddr, Side: jc2.SideL, Serial: "XKW1", Player: 2, State: "connected", Device: 7001, Known: true, Firmware: "2.1.4",
+			ParamsRequest: "accepted", IntervalMs: 11.25, Latency: 0, TimeoutMs: 9600}}
 		s.status.Scanning = true
 	})
 	_ = src
@@ -363,7 +364,8 @@ func TestIPCJoyCon2StatusShape(t *testing.T) {
 	}
 	want := rpcJoyCon2Status{Available: true, AutoConnect: true, Scanning: true,
 		Known: []rpcJoyCon2Known{{Addr: "C8:48:05:00:00:01", Serial: "XKW1", Side: "L", Connected: true}, {Addr: "C8:48:05:00:00:02", Serial: "XKW2", Side: "R"}},
-		Links: []rpcJoyCon2Link{{Addr: "C8:48:05:00:00:01", Serial: "XKW1", Side: "L", Player: 2, Firmware: "2.1.4", Interval: "15ms", State: "connected", Device: 7001, Known: true}}}
+		Links: []rpcJoyCon2Link{{Addr: "C8:48:05:00:00:01", Serial: "XKW1", Side: "L", Player: 2, Firmware: "2.1.4",
+			ParamsRequest: "accepted", IntervalMs: 11.25, TimeoutMs: 9600, State: "connected", Device: 7001, Known: true}}}
 	if !reflect.DeepEqual(st, want) {
 		t.Fatalf("status\n got %+v\nwant %+v", st, want)
 	}

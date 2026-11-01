@@ -41,7 +41,7 @@ func FuzzJoyCon2Hub(f *testing.F) {
 
 // TestHubRandomWalk runs the fuzz interpreter on pseudo-random inputs, so
 // that an ordinary test run covers the deep states too, and checks that the
-// walks do reach pairs, dormant gamepads and revivals.
+// walks do reach pairs, silent controllers and revivals.
 func TestHubRandomWalk(t *testing.T) {
 	var pairs, revived, removed int
 	rng := rand.New(rand.NewPCG(1, 2))
@@ -223,7 +223,7 @@ func (z *hubFuzz) check(t *testing.T, before int) {
 				t.Fatalf("link %d is in two gamepads", l.id)
 			}
 			inDevice[l] = true
-			if l.phase != linkConnected || l.dev != dev {
+			if l.phase != linkConnected || l.dormant || l.dev != dev {
 				t.Fatalf("link %d in a gamepad is %v / %p", l.id, l.phase, l.dev)
 			}
 		}
@@ -240,9 +240,20 @@ func (z *hubFuzz) check(t *testing.T, before int) {
 		t.Fatalf("%d pairs", pairs)
 	}
 	players := map[int]bool{}
+	var lefts, rights int // connected links that report
 	for _, l := range h.links {
-		if l.phase == linkConnected && !inDevice[l] {
+		if l.phase == linkConnected && !l.dormant && !inDevice[l] {
 			t.Fatalf("connected link %d is in no gamepad", l.id)
+		}
+		if l.phase == linkConnected && l.dormant && l.dev != nil {
+			t.Fatalf("link %d is silent and still in a gamepad", l.id)
+		}
+		if l.phase == linkConnected && !l.dormant {
+			if l.side == jc2.SideL {
+				lefts++
+			} else {
+				rights++
+			}
 		}
 		if l.phase != linkClosing {
 			if players[l.player] {
@@ -250,6 +261,11 @@ func (z *hubFuzz) check(t *testing.T, before int) {
 			}
 			players[l.player] = true
 		}
+	}
+	// A left and a right Joy-Con that both report are a pair, whatever else
+	// went silent before.
+	if lefts > 0 && rights > 0 && pairs != 1 {
+		t.Fatalf("%d left and %d right Joy-Cons report, and there are %d pairs", lefts, rights, pairs)
 	}
 	if len(h.links) > joyCon2MaxLinks {
 		t.Fatalf("%d links", len(h.links))
