@@ -84,6 +84,27 @@ func TestConfigPanicComboBounds(t *testing.T) {
 	}
 }
 
+// TestConfigPanicComboWithGuide: guide, which padmate never uses (ADR-0012),
+// is no member of an emergency combo. A config.json that has one still loads,
+// with a warning on it: padmated gives that family its built-in combo, so the
+// emergency pause keeps working.
+func TestConfigPanicComboWithGuide(t *testing.T) {
+	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"safety":{"panic":{
+		"standard":{"buttons":["guide","start"],"holdMs":2000},
+		"joyconLeft":{"buttons":["leftshoulder","rightshoulder"],"holdMs":2000}
+	}}}`))
+	if c == nil || ds.HasErrors() {
+		t.Fatalf("config %v, diagnostics %v", c, ds)
+	}
+	if len(ds) != 1 || ds[0].Severity != SeverityWarning || ds[0].Pointer != "/safety/panic/standard/buttons/0" ||
+		!strings.Contains(ds[0].Message, `"guide"`) || !strings.Contains(ds[0].Message, "built-in combo") {
+		t.Fatalf("diagnostics %v; want one warning on guide", ds)
+	}
+	if c.Safety.Panic["standard"].Usable() || !c.Safety.Panic["joyconLeft"].Usable() {
+		t.Errorf("Usable: standard %t, joyconLeft %t", c.Safety.Panic["standard"].Usable(), c.Safety.Panic["joyconLeft"].Usable())
+	}
+}
+
 // TestConfigSelection: the first enabled rule that names a profile wins;
 // an application no rule binds gets the fixed default profile
 // (ADR-0008).

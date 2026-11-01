@@ -558,6 +558,20 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 		e.stepFunctionKey(t, down)
 		return
 	}
+	if c.Unmappable() {
+		// guide (ADR-0012) is never mapped, by a profile or a script: no
+		// cycle, no buffering, no Button or ButtonObserver, and it does not
+		// interrupt a pending gesture. Only the physical state above follows
+		// it.
+		if e.trace != nil {
+			reason := ReasonUnbound
+			if !down {
+				reason = ReasonEnd
+			}
+			e.trace(Decision{T: t, Control: c, Edge: edgeOf(down), Reason: reason})
+		}
+		return
+	}
 	in.fn = e.fnActive
 	if e.inputOnly {
 		if e.button != nil {

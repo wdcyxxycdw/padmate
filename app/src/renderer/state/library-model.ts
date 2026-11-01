@@ -160,11 +160,12 @@ export function configText(config: Config, bom = false): string {
 
 /**
  * The members ADR-0008 retired: defaultProfile, onUnmatched and ignore, and
- * rules whose profile is null (they stopped padmate for an app); and the
- * Xbox button as the function key (functionKey "guide", ADR-0012), which the
- * daemon reads as Menu, the default. The daemon still loads a file with them
- * and ignores them; the UI drops them from every document it writes. Returns
- * config itself when it has none.
+ * rules whose profile is null (they stopped padmate for an app); and what
+ * ADR-0012 retired with the Xbox button: functionKey "guide", which the
+ * daemon reads as Menu, the default, and an emergency combo with guide,
+ * whose family keeps its built-in combo. The daemon still loads a file with
+ * them and ignores them; the UI drops them from every document it writes.
+ * Returns config itself when it has none.
  */
 export function withoutRetired(config: Config): Config {
   const legacy = config as Config & Record<string, unknown>;
@@ -173,8 +174,15 @@ export function withoutRetired(config: Config): Config {
     (rule) => !(isRule(rule) && rule.profile === null),
   );
   const guide = legacy.functionKey === "guide";
+  const panic = config.safety?.panic ?? {};
+  const guideCombos = Object.keys(panic).filter((family) => {
+    const buttons = (panic as Record<string, { buttons?: unknown }>)[family]
+      ?.buttons;
+    return Array.isArray(buttons) && buttons.includes("guide");
+  });
   const retired =
     guide ||
+    guideCombos.length > 0 ||
     "defaultProfile" in legacy ||
     "onUnmatched" in legacy ||
     "ignore" in legacy;
@@ -186,11 +194,22 @@ export function withoutRetired(config: Config): Config {
     ...others
   } = legacy;
   // Filtered, not taken apart, so that the members keep their order.
-  const rest = guide
-    ? Object.fromEntries(
-        Object.entries(others).filter(([key]) => key !== "functionKey"),
-      )
-    : others;
+  const rest = Object.fromEntries(
+    Object.entries(others).flatMap(([key, value]): [string, unknown][] => {
+      if (key === "functionKey" && guide) return [];
+      if (key !== "safety" || !guideCombos.length) return [[key, value]];
+      const left = Object.fromEntries(
+        Object.entries(panic).filter(
+          ([family]) => !guideCombos.includes(family),
+        ),
+      );
+      const { panic: _panic, ...safety } = value as Record<string, unknown>;
+      const next = Object.keys(left).length
+        ? { ...safety, panic: left }
+        : safety;
+      return Object.keys(next).length ? [[key, next]] : [];
+    }),
+  );
   return (
     rules && kept && kept.length !== rules.length
       ? { ...rest, rules: kept }

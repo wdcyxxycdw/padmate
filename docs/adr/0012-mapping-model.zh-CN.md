@@ -23,12 +23,13 @@
 
 ### 二之一、不用 Xbox 键
 Xbox 键（PS 键、Home，SDL 的 `guide`）既不当功能键，也不能映射。Windows 的 Game Bar、Steam（大屏幕模式，和 Menu 一起按是 Alt+Tab）和手柄固件（长按关机、组合键重置）都在用它，padmate 拦不住，也不改系统设置。
-- 输入照常读：诊断页、`padmatectl monitor`、`pad.isDown` 都看得到它。引擎查找绑定时跳过它（`control.Control.Unmappable`），编译也不收它。
+- 输入照常读：诊断页和 `padmatectl monitor` 看得到它。引擎里它的边沿只更新物理状态，不开始周期、不打断别的控件的待定手势，既不进查找也不给脚本（`control.Control.Unmappable`）；编译也不收它的绑定。
 - profile 里写在 `guide` 上的绑定（任何层、common、`functionSet`、旧的 `functionKeys`）照常解析，然后从模型拿掉，每条给一个警告；它们本身的错误也降为警告。格式冻结，所以有效的 profile 仍有效，`padmatectl validate` 不报错。
 - 界面不显示它：手柄图没有它的标签，按键列表、快捷键表、映射向导都不列它。界面保存 profile 时去掉 `guide` 上的绑定，和退役的反馈开关一样：守护进程不读的东西，下次保存时去掉，只打开不改不重写。
 - config.json 的 `functionKey: "guide"` 仍合 schema，守护进程按 `start` 读。界面每次写 config.json 都去掉它（和 ADR-0008 退役的成员一样，`withoutRetired`），所以文件在下次改设置时被改写。不在读的时候改写，因为守护进程从不自己改用户的文件。
 - 导入 AntiMicroX 配置时，`guide` 上的按键丢弃并写进报告。
-- 脚本处理器（`pad.on` 等）仍收得到 `guide` 的按键，是否也拦下另议。
+- 脚本也不能用它：对 `guide` 调 `on`、`global().on`、`observe`、`claim`，或把 `control` 类参数设成它，都是 TypeError，和未知控件一样；`pad.isDown`、`pad.heldFor`、`pad.has` 把它读成没按、没有。`padmate.d.ts` 的 `Button` 类型去掉 `"guide"`。脚本 API 版本不升：这条改动对所有支持的 API 同时生效（宿主若让 0.17 的脚本照收 `guide`，就等于映射了它），ADR-0010 说的“新版本只加成员”针对的是新增；写了 `guide` 的脚本加载失败，报错说明原因。
+- 紧急组合不能含它。`safety.panic` 里含 `guide` 的组合照常加载，在这个键上给警告；这一类手柄改用内置组合，紧急暂停照常可用，padmated 也记一条日志。修改组合的对话框不录 `guide`，界面每次写 config.json 都去掉这样的组合（`withoutRetired`）。
 
 ### 三、摇杆、扳机和每设备调校
 - 新增十个虚拟控件：内圈、外圈、旋钮顺逆时针刻度、扳机第二段。只加可选字段，`schemaVersion` 仍是 1，脚本 API 版本不升。阈值字段见 schema。

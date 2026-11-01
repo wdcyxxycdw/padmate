@@ -29,11 +29,11 @@ Hold the two small keys in the middle of the controller for 2 seconds, and all m
 ### Changing the combination
 
 1. Click “Settings” on the left, go to “Safety”, find the row “Emergency pause”, and click “Change”.
-2. In “Change emergency pause”, hold the new combination of keys and then release them. You need to hold 2 to 4 keys at once.
+2. In “Change emergency pause”, hold the new combination of keys and then release them. You need to hold 2 to 4 keys at once. The Xbox button (the PS button, Home) does not count; see [Layers and the function key](03-layers-and-function-keys.md).
 3. Choose 1 to 5 seconds in “Hold for”.
 4. Click “Save”. Until you save, the old combination stays valid.
 
-Click “Restore default” to go back to the factory combination.
+Click “Restore default” to go back to the factory combination. If a combination you set before has the Xbox button, the factory one is used now, and the old one is removed from the configuration file the next time you change anything on the Settings page.
 
 ## Releasing all keys
 

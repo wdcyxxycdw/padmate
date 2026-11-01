@@ -374,7 +374,7 @@
       ],
       "properties": {
         "buttons": {
-          "description": "Canonical physical SDL button names; at least two, so that one button held a little long never pauses.",
+          "description": "Canonical physical SDL button names; at least two, so that one button held a little long never pauses. guide (the Xbox, PS or Home button) cannot be one: padmate does not use it, and a combo with it is ignored with a warning, the family's built-in combo applying.",
           "type": "array",
           "minItems": 2,
           "maxItems": 8,

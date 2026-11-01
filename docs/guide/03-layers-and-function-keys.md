@@ -26,7 +26,7 @@ The Xbox button in the middle (the PS button on a PlayStation controller, Home o
 - While Steam runs, pressing it opens Steam's Big Picture mode, and pressing it with Menu becomes Alt+Tab.
 - On some controllers, holding it turns the controller off, and holding it while pressing another key resets the controller's settings.
 
-padmate cannot stop any of this, so it does not use the button. padmate still reads it, and the diagnostics page shows when it is pressed.
+padmate cannot stop any of this, so it does not use the button: it cannot be mapped, used in a script, or put in the emergency pause combination. padmate still reads it, and the diagnostics page shows when it is pressed.
 
 If you chose the Xbox button as the function key before, Menu is used now. The next time you change anything on the Settings page, the old choice is removed from the configuration file.
 

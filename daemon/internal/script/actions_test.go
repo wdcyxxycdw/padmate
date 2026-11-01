@@ -87,7 +87,7 @@ func TestActionParamKinds(t *testing.T) {
 			t.Errorf("values %s do not include %s", h.VM.Get("values"), want)
 		}
 	}
-	for _, args := range []map[string]any{{"b": 1}, {"c": "unknown"}, {"control": "missing"}, {"k": "not-a-key"}, {"unexpected": true}} {
+	for _, args := range []map[string]any{{"b": 1}, {"c": "unknown"}, {"control": "missing"}, {"control": "guide"}, {"k": "not-a-key"}, {"unexpected": true}} {
 		if err := h.InvokeAction("test", args, Event{}); err == nil {
 			t.Errorf("invalid args accepted: %v", args)
 		}

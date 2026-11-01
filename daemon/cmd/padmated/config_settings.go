@@ -173,14 +173,15 @@ func comboFamily(info input.DeviceInfo, vertical bool) string {
 // settings give it: its family's entry, or input.DefaultCombo. A gamepad
 // known to lack a button of its family's entry, such as a standard pad
 // without the paddles another pad recorded, keeps input.DefaultCombo, so
-// it still has an emergency pause. T-input (through ComboFor) and
+// it still has an emergency pause; so does an entry with guide, which
+// padmate never uses (profile.PanicCombo.Usable). T-input (through ComboFor) and
 // status.get both use it, so the UI shows the combo that fires. settings
 // may be nil.
 func effectiveCombo(settings *profile.Config, info input.DeviceInfo, vertical bool) (string, input.Combo) {
 	family := comboFamily(info, vertical)
 	if settings != nil {
 		combo, ok := settings.Safety.Panic[family]
-		if ok && !slices.ContainsFunc(combo.Buttons, func(b string) bool { return !info.MayHaveButton(b) }) {
+		if ok && combo.Usable() && !slices.ContainsFunc(combo.Buttons, func(b string) bool { return !info.MayHaveButton(b) }) {
 			return family, input.Combo{Buttons: slices.Clone(combo.Buttons), Hold: time.Duration(combo.HoldMs) * time.Millisecond}
 		}
 	}

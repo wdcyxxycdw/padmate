@@ -263,6 +263,47 @@ describe("config.json documents", () => {
     ]);
   });
 
+  it("drops an emergency combo with the Xbox button from every write (ADR-0012)", () => {
+    // The daemon ignores it and gives the family its built-in combo.
+    const old = legacy({
+      safety: {
+        panic: {
+          standard: { buttons: ["guide", "start"], holdMs: 2000 },
+          joyconLeft: {
+            buttons: ["leftshoulder", "rightshoulder"],
+            holdMs: 2000,
+          },
+        },
+      },
+      enabled: true,
+    });
+    expect(withoutRetired(old)).toEqual({
+      schemaVersion: 0,
+      safety: {
+        panic: {
+          joyconLeft: {
+            buttons: ["leftshoulder", "rightshoulder"],
+            holdMs: 2000,
+          },
+        },
+      },
+      enabled: true,
+    });
+    // With nothing left, panic and then safety go too.
+    const only = legacy({
+      safety: {
+        panic: { standard: { buttons: ["back", "guide"], holdMs: 900 } },
+      },
+    });
+    expect(withoutRetired(only)).toEqual({ schemaVersion: 0 });
+    const kept = config({
+      safety: {
+        panic: { standard: { buttons: ["back", "start"], holdMs: 900 } },
+      },
+    });
+    expect(withoutRetired(kept)).toBe(kept);
+  });
+
   const selection = legacy({
     defaultProfile: "fallback",
     ignore: ["explorer.exe"],

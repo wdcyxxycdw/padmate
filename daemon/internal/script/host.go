@@ -852,9 +852,9 @@ func (h *Host) onGesture(scope RegistrationScope, layer string, call goja.Functi
 		panic(h.VM.NewTypeError("on: expected control, gesture and handler"))
 	}
 	controlName, gestureName := call.Argument(0).String(), call.Argument(1).String()
-	c, ok := control.Parse(controlName)
+	c, ok := scriptControl(controlName)
 	if !ok {
-		panic(h.VM.NewTypeError(fmt.Sprintf("on: unknown control %q", controlName)))
+		panic(h.VM.NewTypeError(controlError("on", controlName)))
 	}
 	controlName = c.String()
 	if !validGesture(gestureName) {
@@ -891,9 +891,9 @@ func (h *Host) observe(call goja.FunctionCall) goja.Value {
 	if len(call.Arguments) < 2 {
 		panic(h.VM.NewTypeError("observe: expected control and handler"))
 	}
-	c, ok := control.Parse(call.Argument(0).String())
+	c, ok := scriptControl(call.Argument(0).String())
 	if !ok {
-		panic(h.VM.NewTypeError(fmt.Sprintf("observe: unknown control %q", call.Argument(0).String())))
+		panic(h.VM.NewTypeError(controlError("observe", call.Argument(0).String())))
 	}
 	fn, ok := goja.AssertFunction(call.Argument(1))
 	if !ok {
@@ -1003,11 +1003,11 @@ func (h *Host) now(goja.FunctionCall) goja.Value {
 func (h *Host) pad() *goja.Object {
 	o := h.VM.NewObject()
 	setFunction(h.VM, o, "isDown", 1, func(call goja.FunctionCall) goja.Value {
-		c, ok := control.Parse(call.Argument(0).String())
+		c, ok := scriptControl(call.Argument(0).String())
 		return h.VM.ToValue(ok && h.padState.Connected && h.padState.Down[c])
 	})
 	setFunction(h.VM, o, "heldFor", 1, func(call goja.FunctionCall) goja.Value {
-		c, ok := control.Parse(call.Argument(0).String())
+		c, ok := scriptControl(call.Argument(0).String())
 		if !ok || !h.padState.Connected || !h.padState.Down[c] {
 			return h.VM.ToValue(float64(0))
 		}
@@ -1041,7 +1041,7 @@ func (h *Host) pad() *goja.Object {
 		if a, ok := parseScriptAxis(name); ok {
 			return h.VM.ToValue(h.padState.Connected && h.padState.HasAxis[a])
 		}
-		if c, ok := control.Parse(name); ok {
+		if c, ok := scriptControl(name); ok {
 			return h.VM.ToValue(h.padState.Connected && h.padState.HasControl[c])
 		}
 		return h.VM.ToValue(false)
@@ -1248,4 +1248,28 @@ func setFunction(vm *goja.Runtime, o *goja.Object, name string, arity int, value
 	if err := fn.DefineDataProperty("length", vm.ToValue(arity), goja.FLAG_FALSE, goja.FLAG_TRUE, goja.FLAG_FALSE); err != nil {
 		panic(fmt.Sprintf("script: set %s.length: %v", name, err))
 	}
+}
+
+// scriptControl parses a control a script names. Like an unknown name, guide
+// (the Xbox, PS or Home button) is none: padmate never maps it (ADR-0012),
+// so a script can neither handle nor read it.
+func scriptControl(name string) (control.Control, bool) {
+	c, ok := control.Parse(name)
+	if !ok || c.Unmappable() {
+		return control.Invalid, false
+	}
+	return c, true
+}
+
+// controlError words the error of fn ("" for none) about name, which
+// scriptControl refused.
+func controlError(fn, name string) string {
+	msg := fmt.Sprintf("unknown control %q", name)
+	if c, ok := control.Parse(name); ok && c.Unmappable() {
+		msg = fmt.Sprintf("%q cannot be used: padmate does not map the Xbox, PS or Home button", name)
+	}
+	if fn == "" {
+		return msg
+	}
+	return fn + ": " + msg
 }

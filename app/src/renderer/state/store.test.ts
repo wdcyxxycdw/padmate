@@ -391,7 +391,7 @@ describe("live renderer state", () => {
       restoreLayerState: false,
       timing: { holdMs: 300 },
       safety: {
-        panic: { standard: { buttons: ["back", "guide"], holdMs: 3000 } },
+        panic: { standard: { buttons: ["back", "start"], holdMs: 3000 } },
       },
       output: { eventGapMs: 0, sendToOwnWindow: true },
     };

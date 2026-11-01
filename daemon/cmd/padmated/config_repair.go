@@ -72,6 +72,15 @@ func logConfigRepair(log *slog.Logger, repair *profilelib.ConfigRepair) {
 func (r *liveRun) readConfig(l *profilelib.Library) (*profile.Config, string, error) {
 	c, revision, repair, err := l.ReadRepairedConfig(true)
 	logConfigRepair(r.log, repair)
+	if c != nil {
+		for family, combo := range c.Safety.Panic {
+			if !combo.Usable() {
+				// guide is no member of a combo (ADR-0012): the family
+				// keeps its built-in combo (effectiveCombo).
+				r.log.Warn("emergency combo with guide ignored, the built-in combo applies", "family", family, "buttons", combo.Buttons)
+			}
+		}
+	}
 	if n := configNotice(l.Dir(), repair); n != nil {
 		r.configNotice.Store(n)
 		r.events.Publish("profile.changed", map[string]any{"kind": "configRepaired", "backup": n.Backup, "path": n.Path, "reset": n.Reset, "revision": repair.Revision})

@@ -197,16 +197,42 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 	checkMappings(c.Devices, fail)
 	for family, combo := range c.Safety.Panic {
 		for i, name := range combo.Buttons {
+			ptr := childPointer(childPointer("/safety/panic", family)+"/buttons", strconv.Itoa(i))
 			ctl, ok := control.Parse(name)
 			if !ok || ctl.String() != name || ctl.IsVirtual() {
-				fail(childPointer(childPointer("/safety/panic", family)+"/buttons", strconv.Itoa(i)), "expected a canonical physical button name")
+				fail(ptr, "expected a canonical physical button name")
+			} else if ctl.Unmappable() {
+				// Not an error: a file written before padmate stopped using
+				// guide still loads, and its family keeps the built-in
+				// combo (PanicCombo.Usable), so the pause still works.
+				n := root.lookupPointer(ptr)
+				if n == nil {
+					n = root
+				}
+				ds = append(ds, Diagnostic{Severity: SeverityWarning, Pointer: ptr, Offset: n.start,
+					Message: quote(name) + " cannot be in an emergency combo: padmate does not use the Xbox, PS or Home button; the built-in combo applies"})
 			}
 		}
 	}
 	if ds.HasErrors() {
 		return nil, place(data, ds)
 	}
+	if len(ds) > 0 {
+		return c, place(data, ds)
+	}
 	return c, nil
+}
+
+// Usable reports whether the combo can be used as written: guide, which
+// padmate never uses (ADR-0012), is no member of one. A family whose combo
+// is not usable keeps its built-in combo.
+func (p PanicCombo) Usable() bool {
+	for _, name := range p.Buttons {
+		if c, ok := control.Parse(name); ok && c.Unmappable() {
+			return false
+		}
+	}
+	return true
 }
 
 // Selection includes the release decision for a debounced, non-shell

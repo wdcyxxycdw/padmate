@@ -383,7 +383,7 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 - **编译选项**：`engine.Compile(p, engine.WithFunctionKey(c))`。引擎不读 config.json，padmated 把 `functionKey` 传进每次编译；非法值按 `start`。
 - **功能键自己不能绑定**：写在功能键上的绑定照常解析、保留在文件里，但 `Compile` 忽略它们；功能键换了它们又生效。老文件里 `back`、`start` 上的绑定从没被读过，可能不合法：格式冻结，有效的 profile 永远有效，所以它们的错误降为警告并从模型拿掉；`functionSet` 里的不合法照常是错误。
-- **`guide` 永不映射**（[ADR：映射模型](adr/0012-mapping-model.zh-CN.md)）：它不是功能键（`CanBeFunctionKey` 为假，`WithFunctionKey(Guide)` 按 `start` 编译）；`profile.Parse` 把它上面的每条绑定从模型拿掉并给警告（其中的错误降为警告）；手工构造的 profile 里有的，`Compile` 跳过；`lookupWith` 对它什么也不找（`control.Control.Unmappable`），所以 registry 的层也绑不上它。它的边沿照常经过 `stepButton`，当作没绑定的控件（决策 `unbound`），脚本处理器和 `ButtonObserver` 照常收到。
+- **`guide` 永不映射**（[ADR：映射模型](adr/0012-mapping-model.zh-CN.md)）：它不是功能键（`CanBeFunctionKey` 为假，`WithFunctionKey(Guide)` 按 `start` 编译）；`profile.Parse` 把它上面的每条绑定从模型拿掉并给警告（其中的错误降为警告）；手工构造的 profile 里有的，`Compile` 跳过；`lookupWith` 对它什么也不找（`control.Control.Unmappable`），所以 registry 的层也绑不上它。`stepButton` 里它的边沿只更新物理状态就返回，和功能键一样：不开始周期、不进缓冲、不打断待定手势，不给 `Button`、`ButtonObserver` 和脚本处理器；决策是 `unbound` 和 `end`。脚本宿主像拒绝未知控件一样拒绝它（`scriptControl`），`pad.isDown` 读成没按。
 - **一套绑定**：`Profile.EffectiveFunctionSet()` 是引擎读的那一套：有顶层 `functionSet` 就用它，否则由旧格式 `functionKeys` 合成；两者都写时用 `functionSet` 并警告。
 - **边沿不进手势识别**：功能键边沿在更新物理状态后、缓冲之前交给 `stepFunctionKey` 并返回。所以它不开始周期、不进缓冲、不打断别的控件的待定手势、不发键，脚本处理器和 `ButtonObserver` 收不到它；决策是 `function`。`pad.isDown` 仍读物理状态。
 - **状态**：`Engine.fnActive`，经 `View.FunctionKey` 进 slot 快照（`profiles.explain` 用，§11）。CancelAll、Pause、Resume 和同一功能键的 Reload 不动它；Reset 清掉它。**换功能键的 Reload** 也清掉它（先 CancelAll）：新功能键即使这时按着也要等下一次按下才选 `functionSet`。
@@ -719,7 +719,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 }
 ```
 
-顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`safety.panic`、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
+顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`safety.panic`（含 `guide` 的组合带警告加载但不用，这一类手柄保留内置组合，`PanicCombo.Usable`；界面每次写都去掉）、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
 
 **规则**（自动选择，§9）：首条已启用的匹配规则胜出，没有匹配的用 `default`。`exe` 是文件名或完整路径，不区分大小写，`/` 与 `\` 等价，不读标题、不支持通配符。`device` 只接受 `"any"`。
 

@@ -143,7 +143,9 @@ func (h *Host) gestureInteger(v goja.Value, name string, minimum, maximum int) i
 func (h *Host) claimGesture(scope RegistrationScope, layer string, call goja.FunctionCall) goja.Value {
 	target := call.Argument(0).String()
 	var controls []control.Control
-	if c, ok := control.Parse(target); ok {
+	if c, ok := control.Parse(target); ok && c.Unmappable() {
+		panic(h.VM.NewTypeError(controlError("claim", target)))
+	} else if ok {
 		controls = append(controls, c)
 	} else {
 		for _, c := range control.All() {

@@ -229,8 +229,8 @@ func TestOtherCenterKeysAreOrdinary(t *testing.T) {
 		{"alone", "+back@0 -back@10", "@0 down decl/1 V, @10 up decl/1 V", control.Invalid},
 		{"back held, then the function key", "+back@0 +start@5 +south@10 -south@20 -start@25 -back@30", "@0 down decl/1 V, @10 down decl/2 F1, @20 up decl/2 F1, @30 up decl/1 V", control.Invalid},
 		{"back held under the function key: its set binding", "+start@0 +back@5 +south@10 -south@20 -back@25", "@5 down decl/1 F7, @10 down decl/2 F1, @20 up decl/2 F1, @25 up decl/1 F7", control.Start},
-		{"guide sends nothing and does not take the set", "+guide@0 +south@10 -south@20 -guide@30", "@10 down decl/2 A, @20 up decl/2 A", control.Invalid},
-		{"guide under the function key sends nothing", "+start@0 +guide@5 -guide@8 +south@10 -south@20 -start@25", "@10 down decl/2 F1, @20 up decl/2 F1", control.Invalid},
+		{"guide sends nothing and does not take the set", "+guide@0 +south@10 -south@20 -guide@30", "@10 down decl/1 A, @20 up decl/1 A", control.Invalid},
+		{"guide under the function key sends nothing", "+start@0 +guide@5 -guide@8 +south@10 -south@20 -start@25", "@10 down decl/1 F1, @20 up decl/1 F1", control.Invalid},
 		{"the function key let go under back", "+start@0 +back@5 -start@10 +south@15 -south@20 -back@25", "@5 down decl/1 F7, @15 down decl/2 A, @20 up decl/2 A, @25 up decl/1 F7", control.Invalid},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -760,14 +760,14 @@ func TestFunctionKeysAndScripts(t *testing.T) {
 			t.Error("ControlDown does not report a held function key")
 		}
 	})
-	t.Run("the other center keys are ordinary", func(t *testing.T) {
+	t.Run("the other center key is ordinary, and guide is no key to a script", func(t *testing.T) {
 		r := &recorder{}
 		g := &gestureRegistry{entries: []engine.GestureEntry{entry(control.Back, "base"), entry(control.Guide, "global")}}
 		var buttons []engine.ButtonEvent
 		e := engine.New(compileLayers(t, src), r, engine.Options{Gestures: g, Button: func(ev engine.ButtonEvent) bool { buttons = append(buttons, ev); return false }})
 		run(t, e, r, "+back@0 -back@10 +guide@20 -guide@30")
-		if len(g.events) != 2 || len(buttons) != 4 {
-			t.Errorf("handler events %+v, buttons %+v; want a handler event and a button event for each of back and guide", g.events, buttons)
+		if len(g.events) != 1 || g.events[0].Control != control.Back || len(buttons) != 2 {
+			t.Errorf("handler events %+v, buttons %+v; want a handler event and two button events of back only", g.events, buttons)
 		}
 	})
 	t.Run("global() wins over the set", func(t *testing.T) {
@@ -1075,21 +1075,40 @@ func TestGuideIsNeverMapped(t *testing.T) {
 		t.Errorf("IgnoredFunctionKeyBindings() = %q; want none", got)
 	}
 	var decisions []string
+	var asked, observed []control.Control
+	g := &gestureRegistry{entries: []engine.GestureEntry{{ID: 1, Control: control.Guide, Gesture: engine.GesturePress, Scope: "global"}}}
 	r := &recorder{}
-	e := engine.New(prog, r, engine.Options{Trace: func(d engine.Decision) {
-		if d.Control == control.Guide {
-			decisions = append(decisions, brief(d))
-		}
-	}})
+	e := engine.New(prog, r, engine.Options{
+		Trace: func(d engine.Decision) {
+			if d.Control == control.Guide {
+				decisions = append(decisions, brief(d))
+			}
+		},
+		Gestures:       g,
+		Button:         func(ev engine.ButtonEvent) bool { asked = append(asked, ev.Control); return false },
+		ButtonObserver: func(ev engine.ButtonEvent) { observed = append(observed, ev.Control) },
+	})
 	run(t, e, r, "+guide@0 -guide@10 +start@20 +guide@30 -guide@40 -start@50 +south@60 -south@70")
-	if got, want := r.String(), "@60 down decl/3 A, @70 up decl/3 A"; got != want {
+	if got, want := r.String(), "@60 down decl/1 A, @70 up decl/1 A"; got != want {
 		t.Errorf("sent %q; want %q", got, want)
 	}
-	if want := []string{"@0 guide down unbound", "@10 guide up end", "@30 guide down unbound", "@40 guide up end"}; !slices.Equal(decisions, want) {
-		t.Errorf("decisions of guide %q; want %q", decisions, want)
+	// Nor does a script see it: no handler, no Button, no ButtonObserver.
+	if len(g.events) != 0 || slices.Contains(asked, control.Guide) || slices.Contains(observed, control.Guide) {
+		t.Errorf("handler events %+v, Button asked %v, observer saw %v", g.events, asked, observed)
 	}
 	if e.ControlDown(control.Guide) {
 		t.Error("guide reads as down after its release")
+	}
+	// It interrupts no pending gesture: a holdPreferred tap that another
+	// control's press would commit as a hold still waits for its release.
+	r = &recorder{}
+	e = engine.New(compileLayers(t, fnProfile), r, engine.Options{})
+	runDeadlines(t, e, r, "+rightshoulder@0 +guide@50 -guide@60 -rightshoulder@100")
+	if got, want := r.String(), "@100 tap decl/1 F6 20ms"; got != want {
+		t.Errorf("guide during a pending gesture: sent %q; want %q", got, want)
+	}
+	if want := []string{"@0 guide down unbound", "@10 guide up end", "@30 guide down unbound", "@40 guide up end"}; !slices.Equal(decisions, want) {
+		t.Errorf("decisions of guide %q; want %q", decisions, want)
 	}
 	// A level of a registry that binds guide is not asked either.
 	level := fakeLevel{name: "reg", bindings: map[control.Control]*profile.Binding{control.Guide: inCommon}}

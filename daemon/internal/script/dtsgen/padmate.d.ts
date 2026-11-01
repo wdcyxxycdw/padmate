@@ -55,7 +55,7 @@ declare module "padmate" {
 
   // ---- 控件 ----
   /** @since 0.5 */
-  export type Button = "south" | "east" | "west" | "north" | "back" | "guide" | "start"
+  export type Button = "south" | "east" | "west" | "north" | "back" | "start"
     | "leftstick" | "rightstick" | "leftshoulder" | "rightshoulder"
     | "dpad.up" | "dpad.down" | "dpad.left" | "dpad.right"
     | `misc${1 | 2 | 3 | 4 | 5 | 6}` | `paddle${1 | 2 | 3 | 4}` | "touchpad";

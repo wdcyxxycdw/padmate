@@ -2,6 +2,7 @@ package script
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/dop251/goja"
 
-	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
@@ -226,9 +226,9 @@ func (p ParamInfo) normalize(v any) (any, error) {
 			}
 			s = chord.String()
 		case "control":
-			c, valid := control.Parse(s)
+			c, valid := scriptControl(s)
 			if !valid {
-				return nil, fmt.Errorf("unknown control %q", s)
+				return nil, errors.New(controlError("", s))
 			}
 			s = c.String()
 		case "layer":

@@ -91,6 +91,25 @@ func TestEffectiveComboLackingButton(t *testing.T) {
 	}
 }
 
+// TestEffectiveComboWithGuide: a family's combo that has guide, which padmate
+// never uses (ADR-0012), does not apply: the built-in combo does, so the
+// emergency pause still works.
+func TestEffectiveComboWithGuide(t *testing.T) {
+	settings, ds := profile.ParseConfig([]byte(`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["guide","start"],"holdMs":1000}}}}`))
+	if ds.HasErrors() {
+		t.Fatal(ds)
+	}
+	builtIn := input.Combo{Buttons: []string{"back", "start"}, Hold: input.ComboHold}
+	info := input.DeviceInfo{Type: "xboxone"}
+	family, got := effectiveCombo(settings, info, false)
+	picked := configuredCombo(settings)(info, false)
+	for _, c := range []input.Combo{got, picked} {
+		if family != "standard" || !slices.Equal(c.Buttons, builtIn.Buttons) || c.Hold != builtIn.Hold {
+			t.Errorf("%s %+v, want standard %+v", family, c, builtIn)
+		}
+	}
+}
+
 func TestLiveConfigDeviceFilterAndCombo(t *testing.T) {
 	src, tl := newFakeSource(), &testLive{}
 	cfg := testConfig(t, tl, "", nil, "--dry-run", "--watch=false")

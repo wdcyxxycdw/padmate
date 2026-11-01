@@ -201,7 +201,8 @@ export function comboProblem(buttons: string[]): "few" | "many" | null {
  * Records the buttons held together: feed it the buttons held after each
  * change. While any is held it keeps the largest set held at once, in the
  * order they were pressed; when all are released, that set is the
- * recording, and the next press starts another one.
+ * recording, and the next press starts another one. The Xbox button
+ * (guide) is not seen.
  */
 export class ComboRecorder {
   private held: string[] = [];
@@ -215,7 +216,8 @@ export class ComboRecorder {
 
   /** Returns true when a recording finished. */
   update(buttons: Iterable<string>): boolean {
-    const now = new Set(buttons);
+    // padmate never uses the Xbox button (ADR-0012): it is no member.
+    const now = new Set([...buttons].filter((b) => b !== "guide"));
     const pressing = this.held.length > 0;
     this.held = this.held.filter((button) => now.has(button));
     for (const button of now)

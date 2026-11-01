@@ -125,6 +125,19 @@ describe("emergency combos", () => {
     expect(recorder.update([])).toBe(true);
     expect(recorder.recorded).toEqual(["north"]);
   });
+
+  it("does not record the Xbox button, which padmate never uses (ADR-0012)", () => {
+    const recorder = new ComboRecorder();
+    recorder.update(["guide"]);
+    expect(recorder.pressed).toEqual([]);
+    recorder.update(["guide", "start"]);
+    recorder.update(["guide", "start", "back"]);
+    expect(recorder.pressed).toEqual(["start", "back"]);
+    expect(recorder.update(["guide"])).toBe(true);
+    expect(recorder.recorded).toEqual(["start", "back"]);
+    // Held alone it is no recording at all.
+    expect(recorder.update([])).toBe(false);
+  });
 });
 
 describe("the function key of config.json (ADR-0012)", () => {
