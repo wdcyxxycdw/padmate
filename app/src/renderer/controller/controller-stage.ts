@@ -18,16 +18,26 @@
 import type { ModelInfo } from "./controller-callouts";
 
 /**
- * What a stage is made from: the shell and the labels of the buttons, so the
- * same pad always gets the same stage.
+ * What a stage is made from: the shell (the type and, for a Joy-Con, the USB
+ * ids that tell a Joy-Con 2) and the labels of the buttons, so the same pad
+ * always gets the same stage.
  */
 export function stageKey({
   type,
   buttonLabels,
   buttonMask,
   axisMask,
+  vendor,
+  product,
 }: ModelInfo) {
-  return JSON.stringify({ type, buttonLabels, buttonMask, axisMask });
+  return JSON.stringify({
+    type,
+    buttonLabels,
+    buttonMask,
+    axisMask,
+    vendor,
+    product,
+  });
 }
 
 export interface RetainedStage {

@@ -18,7 +18,11 @@ import type { Language, PadInput } from "../state/store";
 import { Icon } from "../ui/Icon";
 import { Keycaps } from "../ui/Keycaps";
 import { calloutOf, stickPress } from "./control-callout";
-import { type Callout, controllerCallouts } from "./controller-callouts";
+import {
+  type Callout,
+  controllerCallouts,
+  type ModelInfo,
+} from "./controller-callouts";
 import {
   type ChipInfo,
   type ChipSegment,
@@ -508,17 +512,29 @@ export function Controller({
     undefined,
   );
   const [renderer, setRenderer] = useState("loading");
-  const { type, buttonLabels, buttonMask, axisMask } = info;
-  const modelKey = stageKey({ type, buttonLabels, buttonMask, axisMask });
+  const { type, buttonLabels, buttonMask, axisMask, vendor, product } = info;
+  const modelKey = stageKey({
+    type,
+    buttonLabels,
+    buttonMask,
+    axisMask,
+    vendor,
+    product,
+  });
   const stateId = useId();
   const hintId = useId();
   const labels = controllerLabels(
     info.type,
     info.buttonLabels,
     info.buttonMask,
+    language,
   );
   const family = familyName(info.type);
-  const layout = controllerCallouts(info);
+  const layout = controllerCallouts(info, language);
+  // The chips of the row below share the width between the columns.
+  const rowCount = layout.filter(
+    (entry) => entry.placement === "bottom",
+  ).length;
   // The leader of a stick belongs to both its cells.
   const selectedCallout = selectedControl && calloutOf(selectedControl);
   // Leaders of unset controls are dashed; the scene reads this on each frame.
@@ -548,10 +564,7 @@ export function Controller({
       return;
     }
     try {
-      const modelInfo: Pick<
-        DeviceInfo,
-        "type" | "buttonLabels" | "buttonMask" | "axisMask"
-      > = JSON.parse(modelKey);
+      const modelInfo: ModelInfo = JSON.parse(modelKey);
       const current = latest.current;
       // The scene takes the session's canvas into the stage host (H2): the
       // first visit builds it, the next ones draw it at once. A replayed
@@ -601,7 +614,10 @@ export function Controller({
           className="controller-callouts"
           aria-hidden="true"
         />
-        <div className="controller-labels">
+        <div
+          className="controller-labels"
+          style={{ "--row-count": rowCount } as CSSProperties}
+        >
           {layout.map((callout) => {
             // Controls without chip data still get a chip named after them.
             const plain = (title: string): ChipInfo => ({

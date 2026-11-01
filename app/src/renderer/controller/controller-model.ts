@@ -1,5 +1,5 @@
 import type { FunctionKey } from "../editor/editor-model";
-import type { PadInput } from "../state/store";
+import type { Language, PadInput } from "../state/store";
 
 export type ControllerFamily = "xbox" | "playstation" | "nintendo" | "generic";
 export type FaceControl = "south" | "east" | "west" | "north";
@@ -87,14 +87,22 @@ function paddleLabels(type: string, sideways: boolean): Record<string, string> {
 /**
  * The name of misc button index: misc1 is the Share button of an Xbox
  * Series pad, the mute button of a DualSense and the Capture button of a
- * Nintendo pad (SDL_gamepad.h); the others are numbered.
+ * Nintendo pad (SDL_gamepad.h); misc2 is the C button of a Nintendo Switch 2
+ * pad (a Joy-Con 2 or the Pro Controller 2), printed C, 'C 键' in Chinese;
+ * the others are numbered.
  */
-function miscLabel(family: ControllerFamily, index: number): string {
+function miscLabel(
+  family: ControllerFamily,
+  index: number,
+  language: Language,
+): string {
   if (index === 1) {
     if (family === "xbox") return "Share";
     if (family === "playstation") return "Mute";
     if (family === "nintendo") return "Capture";
   }
+  if (index === 2 && family === "nintendo")
+    return language === "en" ? "C" : "C 键";
   return `附加键 ${index}`;
 }
 
@@ -198,6 +206,7 @@ export function controllerLabels(
   type: string,
   reported: Record<string, string> = {},
   buttonMask?: number,
+  language: Language = "zh-CN",
 ): Record<string, string> {
   const family = familyName(type);
   const common = {
@@ -269,7 +278,7 @@ export function controllerLabels(
     ...Object.fromEntries(
       [1, 2, 3, 4, 5, 6].map((index) => [
         `misc${index}`,
-        miscLabel(family, index),
+        miscLabel(family, index, language),
       ]),
     ),
     ...Object.fromEntries(

@@ -8,7 +8,7 @@ import {
   push,
   stickOf,
 } from "../testing/controller-assets";
-import { sdlPads } from "../testing/sdl-pads";
+import { joyCon2Pads, sdlPads } from "../testing/sdl-pads";
 import { joyConMaxHeight } from "./controller-joycon";
 
 type JoyConName =
@@ -24,9 +24,35 @@ const layouts: JoyConName[] = [
   "joyConRightUpright",
   "joyConPair",
 ];
-const joyCon = (name: JoyConName) => {
-  const { type, ...masks } = sdlPads[name];
-  return fixture(type, masks);
+/**
+ * The two generations the shells tests run for: what each pad is told by
+ * (the Joy-Con 2's USB ids), where the cap of its stick begins in the stick
+ * mesh, and how deep its cap sits over its pivot (normalized units, at least).
+ */
+const generations = [
+  {
+    name: "Switch OLED Joy-Con",
+    pads: sdlPads as Record<JoyConName, PadInfo>,
+    ids: {},
+    isCap: (z: number) => z >= 0.0109,
+    minDepth: 0.15,
+    minMove: 0.07,
+  },
+  {
+    name: "Joy-Con 2",
+    pads: joyCon2Pads as Record<JoyConName, PadInfo>,
+    ids: { vendor: 0x057e, product: 0x2066 },
+    isCap: () => true,
+    minDepth: 0.1,
+    minMove: 0.05,
+  },
+];
+type PadInfo = {
+  type: string;
+  buttonMask: number;
+  axisMask: number;
+  vendor?: number;
+  product?: number;
 };
 /** The shell's own meshes: the markers are not the model. */
 function outline(model: Model) {
@@ -46,7 +72,11 @@ const pointOf = (model: Model, control: string) => {
   return point;
 };
 
-describe("Joy-Con shells", () => {
+describe.each(generations)("$name shells", (generation) => {
+  const joyCon = (name: JoyConName) => {
+    const { type, ...masks } = generation.pads[name];
+    return fixture(type, masks);
+  };
   it("are as tall as the Xbox shell at most", async () => {
     const size = new Box3()
       .setFromObject(await parseGlb("xbox"))
@@ -113,7 +143,11 @@ describe("Joy-Con shells", () => {
   it.each(["joyconleft", "joyconright"])(
     "keeps a %s whose buttons are not known yet upright",
     async (type) => {
-      const model = await fixture(type);
+      const model = await fixture(type, {
+        ...generation.ids,
+        product:
+          type === "joyconleft" ? 0x2067 : (generation.ids.product ?? 0x2007),
+      });
       const size = outline(model).getSize(new Vector3());
       expect(size.y).toBeGreaterThan(size.x);
       // The stick end is the top of the left one; the right one's stick is
@@ -276,14 +310,16 @@ describe("Joy-Con shells", () => {
         );
         expect(axis.angleTo(new Vector3(0, 0, 1))).toBeLessThan(1e-6);
         const offset = rest.clone().sub(frame.getWorldPosition(new Vector3()));
-        expect(offset.z).toBeGreaterThan(0.15);
+        expect(offset.z).toBeGreaterThan(generation.minDepth);
         expect(Math.hypot(offset.x, offset.y)).toBeLessThan(0.1);
         // The pressed ring rides on the cap.
         expect(control.marker.parent).toBe(stick.pivot);
         for (const [x, y] of directions) {
           model.update(push(side, x, y));
           const moved = model.anchor(control).sub(rest);
-          expect(Math.hypot(moved.x, moved.y)).toBeGreaterThan(0.07);
+          expect(Math.hypot(moved.x, moved.y)).toBeGreaterThan(
+            generation.minMove,
+          );
           // +x is right; SDL's +y is down, which is -Y in the model.
           if (x) expect(Math.sign(moved.x)).toBe(Math.sign(x));
           if (y) expect(Math.sign(moved.y)).toBe(-Math.sign(y));
@@ -342,10 +378,11 @@ describe("Joy-Con shells", () => {
         return top;
       };
       const position = cap.geometry.attributes.position;
-      // The cap is the part of the stick above its stem (z 11 mm and up).
+      // The cap is the part of the stick above its stem (z 11 mm and up on a
+      // Switch OLED Joy-Con; a Joy-Con 2's stick is the cap alone).
       const capVertices: number[] = [];
       for (let i = 0; i < position.count; i++)
-        if (position.getZ(i) >= 0.0109) capVertices.push(i);
+        if (generation.isCap(position.getZ(i))) capVertices.push(i);
       expect(capVertices.length).toBeGreaterThan(100);
       const world = new Vector3();
       for (const [x, y] of directions) {

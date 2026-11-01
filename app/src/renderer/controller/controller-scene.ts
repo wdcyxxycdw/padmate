@@ -249,7 +249,7 @@ function createGpuStage(info: ModelInfo): SceneStage {
   // The model cache decodes and parses each shell once; this stage
   // gets its own copy, which it disposes with the stage.
   const loaded = controllerModels
-    .get(modelShell(info.type))
+    .get(modelShell(info.type, info))
     .then((asset) => {
       if (disposed) {
         disposeAsset(asset);

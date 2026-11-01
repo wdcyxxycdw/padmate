@@ -27,7 +27,7 @@ const store = (create: ReturnType<typeof fakeFactory>["create"]) =>
   });
 
 describe("stage key", () => {
-  it("names the shell, the button labels and the button mask", () => {
+  it("names the shell, the button labels, the button mask and the USB ids", () => {
     const key = stageKey({ type: "xboxone" });
     expect(stageKey({ type: "xboxone" })).toBe(key);
     expect(stageKey({ type: "ps5" })).not.toBe(key);
@@ -35,6 +35,22 @@ describe("stage key", () => {
     expect(
       stageKey({ type: "xboxone", buttonLabels: { south: "B" } }),
     ).not.toBe(key);
+    // A Joy-Con 2 and a Switch OLED Joy-Con differ by their USB ids only.
+    const oled = stageKey({
+      type: "joyconleft",
+      vendor: 0x57e,
+      product: 0x2006,
+    });
+    const joyCon2 = stageKey({
+      type: "joyconleft",
+      vendor: 0x57e,
+      product: 0x2067,
+    });
+    expect(joyCon2).not.toBe(oled);
+    expect(JSON.parse(joyCon2)).toMatchObject({
+      vendor: 0x57e,
+      product: 0x2067,
+    });
     // The key parses back into what the Controller passes in.
     expect(JSON.parse(stageKey({ type: "ps5", buttonMask: 7 }))).toEqual({
       type: "ps5",

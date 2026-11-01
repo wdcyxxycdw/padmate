@@ -32,6 +32,12 @@ const models = [
     source:
       "https://sketchfab.com/3d-models/nintendo-switch-oled-aa2c7d815a104accae7709eb39ac2184",
   },
+  {
+    title: "Nintendo Switch 2 Realistic 3D Model",
+    author: "NAIT Studio",
+    source:
+      "https://sketchfab.com/3d-models/nintendo-switch-2-realistic-3d-model-03e83c4832fc4cdcacb7724937509908",
+  },
 ];
 
 // The button icons (ADR-0013, pad-icons/README.md). PromptFont's license
@@ -113,8 +119,8 @@ export function ModelLicenses({
           <p className="page-licenses-note">
             {tx(
               language,
-              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox、DualShock 4 和 Switch OLED 素材重新打包为 GLB。DualShock 4 的贴图缩小并去掉了法线贴图；Switch OLED 只保留左右两只 Joy-Con，各放进自己的坐标系并拆成命名的部件，贴图转成 WebP 并缩小，背面仍带原贴图上的标志；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
-              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox, DualShock 4 and Switch OLED assets are repacked as GLB. The DualShock 4 textures are downscaled and its normal maps removed; of the Switch OLED only the two Joy-Cons are kept, each in its own frame and split into named parts, with the textures converted to WebP and downscaled, and the back still shows the logo of the original texture; the DualSense derivative previously split and named controls and baked transforms.",
+              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox、DualShock 4、Switch OLED 和 Switch 2 素材重新打包为 GLB。DualShock 4 的贴图缩小并去掉了法线贴图；Switch OLED 只保留左右两只 Joy-Con，各放进自己的坐标系并拆成命名的部件，贴图转成 WebP 并缩小，背面仍带原贴图上的标志；Switch 2 同样只保留左右两只 Joy-Con 2，拆成命名的部件，顶点量化存储，细小的触点和指示灯去掉，没有几何的 SL、SR、ZL、ZR 只留位置；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
+              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox, DualShock 4, Switch OLED and Switch 2 assets are repacked as GLB. The DualShock 4 textures are downscaled and its normal maps removed; of the Switch OLED only the two Joy-Cons are kept, each in its own frame and split into named parts, with the textures converted to WebP and downscaled, and the back still shows the logo of the original texture; of the Switch 2 likewise only the two Joy-Con 2s are kept, split into named parts with quantized vertices, the tiny contact pins and indicator dots left out, and only a position kept for SL, SR, ZL and ZR, which the model has no geometry for; the DualSense derivative previously split and named controls and baked transforms.",
             )}
           </p>
           <p className="page-licenses-note">

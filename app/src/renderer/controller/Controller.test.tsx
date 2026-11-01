@@ -13,7 +13,7 @@ import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeviceInfo } from "../../shared/api";
 import { translator } from "../i18n";
-import { sdlPads } from "../testing/sdl-pads";
+import { joyCon2Pads, sdlPads } from "../testing/sdl-pads";
 import { Controller } from "./Controller";
 import type { ChipInfo } from "./controller-chips";
 import * as scenes from "./controller-scene";
@@ -324,7 +324,11 @@ describe("3D controller component", () => {
     // callout layer and what the first frame shows.
     const [host, modelInfo, , , labels, initial] = create.mock.calls[0];
     expect(host).toBe(container.querySelector(".stage-host"));
-    expect(modelInfo).toEqual({ type: info.type });
+    expect(modelInfo).toEqual({
+      type: info.type,
+      vendor: info.vendor,
+      product: info.product,
+    });
     expect(labels).toBe(container.querySelector(".controller-callouts"));
     expect(initial).toEqual({
       input: { buttons: { south: true }, axes: {} },
@@ -913,5 +917,39 @@ describe("the controls of the connected pad", () => {
     expect(listed).toContain("paddle2");
     expect(listed).not.toContain("dpad.up");
     expect(listed).not.toContain("misc2");
+  });
+
+  it("gives a Joy-Con 2 pair its C button, named in the interface's language, and room for six chips below", () => {
+    const pair = { ...info, id: 4, ...joyCon2Pads.joyConPair };
+    const { container, rerender } = render(
+      <Controller info={pair} t={translator("en")} language="en" />,
+    );
+    const c = container.querySelector<HTMLElement>('[data-callout="misc2"]');
+    expect(c?.getAttribute("aria-label")).toMatch(/^C · /);
+    expect(c?.getAttribute("data-placement")).toBe("bottom");
+    expect(
+      container
+        .querySelector<HTMLElement>(".controller-labels")
+        ?.style.getPropertyValue("--row-count"),
+    ).toBe("6");
+    rerender(<Controller info={pair} t={translator("zh-CN")} />);
+    expect(
+      container
+        .querySelector('[data-callout="misc2"]')
+        ?.getAttribute("aria-label"),
+    ).toMatch(/^C 键 · /);
+    // A Switch OLED pair has no such button, and five chips at most.
+    rerender(
+      <Controller
+        info={{ ...info, id: 3, ...sdlPads.joyConPair }}
+        t={translator("en")}
+      />,
+    );
+    expect(container.querySelector('[data-callout="misc2"]')).toBeNull();
+    expect(
+      container
+        .querySelector<HTMLElement>(".controller-labels")
+        ?.style.getPropertyValue("--row-count"),
+    ).toBe("5");
   });
 });

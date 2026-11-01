@@ -223,6 +223,7 @@ export function KeyDrawer({
     info.type,
     info.buttonLabels,
     info.buttonMask,
+    language,
   );
   const glyph = labels[calloutOf(control)] ?? calloutOf(control);
   // A stick has two drawers: its movement ("stick") and its press (a button).

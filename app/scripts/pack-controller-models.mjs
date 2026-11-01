@@ -4,8 +4,14 @@ import { pathToFileURL } from "node:url";
 
 // Run from the repository root: node app/scripts/pack-controller-models.mjs
 // A model whose source is missing is skipped, so its committed GLB stays.
+// Names after the script pack only those sources (xbox, dualshock4,
+// dualsense, switch-oled, switch2); PADMATE_ASSET_CACHE points at another
+// asset-candidates directory, e.g. the one of the main checkout from a
+// worktree. PADMATE_PACK_LIST=1 prints how the Joy-Con 2 pieces were named.
 const out = "app/src/renderer/controller/assets";
-const cache = ".cache/asset-candidates";
+const cache = process.env.PADMATE_ASSET_CACHE ?? ".cache/asset-candidates";
+const only = process.argv.slice(2);
+const wanted = (name) => only.length === 0 || only.includes(name);
 
 // Longest side in pixels per texture role, and the WebP quality. PNG
 // textures are converted with these; textures that are already WebP are
@@ -139,7 +145,7 @@ function binaryBuilder(j, initial = Buffer.alloc(0)) {
   const chunks = [initial];
   let length = initial.length;
   return {
-    add(data, target) {
+    add(data, target, stride) {
       const pad = (4 - (length % 4)) % 4;
       if (pad) {
         chunks.push(Buffer.alloc(pad));
@@ -151,6 +157,7 @@ function binaryBuilder(j, initial = Buffer.alloc(0)) {
         byteOffset: length,
         byteLength: data.length,
         ...(target ? { target } : {}),
+        ...(stride ? { byteStride: stride } : {}),
       });
       chunks.push(data);
       length += data.length;
@@ -610,24 +617,449 @@ async function packJoycons(source) {
   return sizes;
 }
 
+// ---- Joy-Cons from "Nintendo Switch 2 Realistic 3D Model" -----------------
+//
+// The source holds the console with both Joy-Cons attached: twenty meshes of
+// the whole console, each a bag of separate pieces, none textured (a part's
+// look is the base colour of its material). The pieces of a Joy-Con are told
+// apart as connected components of the triangles, kept when they lie beside
+// the console and matched by position to the anchors below, as for the Switch
+// OLED, and each part gets one mesh, one node and one material.
+//
+// A Joy-Con 2 ends up in the same upright frame as the Switch OLED one: +Y
+// the top (the stick end of the left Joy-Con, the ABXY end of the right one),
+// +Z the front and the rail on +X for the left and -X for the right Joy-Con,
+// centred on the bounding box of the kept parts, in metres. The source has no
+// unit, so the scale comes from the console: the model is 1.041 wide with the
+// Joy-Cons attached and the console is 272 mm wide, 0.2615 m per unit. The
+// Joy-Con is then 115.8 mm long, the console's published height of 116 mm.
+//
+// The files are quantized (KHR_mesh_quantization): positions are 16-bit
+// integers of `unit` metres (the scale of the part's node), normals 8-bit
+// and indices 16-bit. A part's node sits at the part's origin; the stick's is
+// where it turns: on its axis, at the bottom of its base (the flange where the
+// stem leaves the shell), so the cap rocks about its base. The base is a part
+// of its own and stays.
+//
+// Anchors are the centre of the part's bounding box in the frame above, in
+// millimetres; a part of several pieces (the glyphs, the rail) has an anchor
+// for each. The identities follow the shapes: the letters A, B, X and Y are
+// modelled on the caps, the Home button has its house glyph and the C button
+// is the plain square under it. The source models one piece for the shoulder
+// (the big one that wraps the top edge and reaches behind the shell), none for
+// SL and SR and none for ZL and ZR: those are `points`, empty nodes of the
+// same names at the places they are on the real Joy-Con, which is where the
+// controller drawing points its leaders (the shoulder piece serves L or R,
+// ZL and ZR sit behind it).
+const middle = (box, k) => (box.low[k] + box.high[k]) / 2;
+// Where the points are, from the boxes of the parts (metres from the
+// centre): SL and SR on the rail, ZL and ZR on the back of the shoulder.
+const onRail = (y) => (boxes) => [
+  middle(boxes.get("rail"), 0),
+  y,
+  middle(boxes.get("rail"), 2),
+];
+const behind = (name, from) => ({
+  name,
+  at: (boxes) => [
+    middle(boxes.get(from), 0),
+    middle(boxes.get(from), 1),
+    boxes.get(from).low[2] + 0.002,
+  ],
+});
+const stickAnchors = (x, y) => [
+  { name: "stick", at: [x, y, 9.7] },
+  { name: "stick-base", at: [x, y, 6.8] },
+];
+const railAnchors = (side) => [
+  { name: "rail", at: [side * 17.3, -0.3, 0.6] },
+  { name: "connector", at: [side * 18.3, -0.3, 0.6] },
+  { name: "omit", at: [side * 19.7, -0.3, 0.6] },
+  { name: "sync", at: [side * 20.0, 49.2, 0.6] },
+  { name: "sync", at: [side * 20.2, 49.3, 0.6] },
+];
+
+const joycons2 = {
+  dir: `${cache}/switch2`,
+  note: "Extracted from the original model: only this Joy-Con, split into one mesh and material per part, moved into an upright frame, positions quantized.",
+  metresPerUnit: 0.2615,
+  unit: 5e-6,
+  // The world frame of the source is Y up; the rows give the Joy-Con's x, y
+  // and z axes in it.
+  frame: [
+    [0, 0, 1],
+    [1, 0, 0],
+    [0, 1, 0],
+  ],
+  // A component is part of a Joy-Con when its centre is further than this
+  // (metres) to the right (right Joy-Con) or the left of the console's middle.
+  sideStart: 0.092,
+  // A component joins the nearest anchor within anchorReach (mm): a button
+  // and the glyph on it are 1.8 apart. The others of at least keepTriangles
+  // triangles become detail-N, the rest (contact pins, indicator dots) are
+  // left out; an anchor named omit leaves its component out.
+  anchorReach: 1.2,
+  keepTriangles: 30,
+  sides: [
+    {
+      file: "joycon2-left.glb",
+      sign: -1,
+      anchors: [
+        ...stickAnchors(-3.0, 28.3),
+        { name: "dpad-up", at: [-3.1, 7.0, 5.8] },
+        { name: "dpad-down", at: [-2.8, -8.8, 5.8] },
+        { name: "dpad-left", at: [-10.9, -0.8, 5.8] },
+        { name: "dpad-right", at: [4.9, -1.0, 5.8] },
+        { name: "glyphs", at: [-3.2, 7.5, 7.6] },
+        { name: "glyphs", at: [-2.8, -9.2, 7.6] },
+        { name: "glyphs", at: [-11.2, -0.7, 7.6] },
+        { name: "glyphs", at: [5.4, -1.0, 7.6] },
+        { name: "minus", at: [7.6, 44.7, 5.2] },
+        { name: "capture", at: [4.6, -21.7, 4.4] },
+        { name: "l", at: [-5.3, 50.0, -5.3] },
+        ...railAnchors(1),
+      ],
+      points: [
+        { name: "sl", at: onRail(0.03) },
+        { name: "sr", at: onRail(-0.03) },
+        behind("zl", "l"),
+      ],
+    },
+    {
+      file: "joycon2-right.glb",
+      sign: 1,
+      anchors: [
+        ...stickAnchors(3.0, -0.9),
+        { name: "a", at: [10.9, 28.6, 5.8] },
+        { name: "b", at: [3.2, 20.8, 5.8] },
+        { name: "x", at: [2.9, 36.7, 5.8] },
+        { name: "y", at: [-4.9, 28.9, 5.8] },
+        { name: "glyphs", at: [10.9, 28.6, 7.6] },
+        { name: "glyphs", at: [3.3, 20.8, 7.6] },
+        { name: "glyphs", at: [2.9, 36.7, 7.6] },
+        { name: "glyphs", at: [-4.9, 28.9, 7.6] },
+        { name: "glyphs", at: [-4.5, -22.1, 5.8] },
+        { name: "glyphs", at: [-4.4, -21.3, 5.7] },
+        { name: "plus", at: [-7.7, 44.7, 5.2] },
+        { name: "home", at: [-4.5, -21.4, 3.2] },
+        { name: "c", at: [-4.6, -33.6, 4.4] },
+        { name: "r", at: [5.2, 50.0, -5.3] },
+        ...railAnchors(-1),
+      ],
+      points: [
+        { name: "sr", at: onRail(0.03) },
+        { name: "sl", at: onRail(-0.03) },
+        behind("zr", "r"),
+      ],
+    },
+  ],
+};
+
+// The triangles of a mesh node in the Joy-Con frame, in metres: the node's
+// world transform, the scale, then the frame. The world transform is a
+// rotation (the source is a Sketchfab export), so normals take the same.
+function sourceGeometry(j, bin, node, source) {
+  const prim = j.meshes[j.nodes[node].mesh].primitives[0];
+  const world = worldMatrix(j, node);
+  const column = (c) => world.slice(c * 4, c * 4 + 3);
+  const rows = source.frame.map((row) =>
+    [0, 1, 2].map((c) => dot(row, column(c)) * source.metresPerUnit),
+  );
+  const shift = source.frame.map(
+    (row) => dot(row, world.slice(12, 15)) * source.metresPerUnit,
+  );
+  const srcPos = readAccessor(j, bin, prim.attributes.POSITION);
+  const srcNormal = readAccessor(j, bin, prim.attributes.NORMAL);
+  const count = srcPos.length / 3;
+  const pos = new Float32Array(count * 3);
+  const normal = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const p = srcPos.subarray(i * 3, i * 3 + 3);
+    const n = srcNormal.subarray(i * 3, i * 3 + 3);
+    const turned = normalize(
+      source.frame.map((row) =>
+        dot(
+          row,
+          [0, 1, 2].map((c) => dot(column(c), n)),
+        ),
+      ),
+    );
+    for (let k = 0; k < 3; k++) {
+      pos[i * 3 + k] = dot(rows[k], p) + shift[k];
+      normal[i * 3 + k] = turned[k];
+    }
+  }
+  return {
+    pos,
+    normal,
+    index: readAccessor(j, bin, prim.indices),
+    material: prim.material,
+  };
+}
+
+// Every component of every mesh of the source: its geometry, the offsets of
+// its triangles, and its bounding box (metres).
+function sourceComponents(j, bin, source) {
+  const result = [];
+  j.nodes.forEach((n, node) => {
+    if (n.mesh === undefined) return;
+    const geo = sourceGeometry(j, bin, node, source);
+    for (const triangles of connectedComponents(geo)) {
+      const { low, high } = minMax(trianglePoints(geo, triangles));
+      result.push({ geo, triangles, low, high });
+    }
+  });
+  return result;
+}
+
+const centreOf = ({ low, high }) => low.map((l, i) => (l + high[i]) / 2);
+
+// Names the components of one Joy-Con 2. The ones beside the console, centred
+// on their bounding box, go to the shell (the one of the biggest box), the
+// anchored parts or detail-N. Returns the centre and the [name, components]
+// pairs: shell, the anchored parts in table order, the details.
+function nameParts2(components, source, side) {
+  const own = components.filter(
+    (c) => centreOf(c)[0] * side.sign > source.sideStart,
+  );
+  const low = [0, 1, 2].map((k) => Math.min(...own.map((c) => c.low[k])));
+  const high = [0, 1, 2].map((k) => Math.max(...own.map((c) => c.high[k])));
+  const centre = low.map((l, i) => (l + high[i]) / 2);
+  const volume = (c) => c.high.reduce((v, h, k) => v * (h - c.low[k]), 1);
+  const shell = own.reduce((a, b) => (volume(b) > volume(a) ? b : a));
+  const parts = new Map([["shell", [shell]]]);
+  const details = [];
+  const omitted = [];
+  for (const c of own) {
+    if (c === shell) continue;
+    const at = centreOf(c).map((v, k) => (v - centre[k]) * 1000);
+    let best;
+    let bestDistance = source.anchorReach;
+    for (const anchor of side.anchors) {
+      const d = Math.hypot(...anchor.at.map((a, k) => a - at[k]));
+      if (d < bestDistance) [best, bestDistance] = [anchor.name, d];
+    }
+    if (best === "omit") continue;
+    if (best !== undefined) {
+      parts.set(best, [...(parts.get(best) ?? []), c]);
+    } else if (c.triangles.length >= source.keepTriangles) {
+      details.push(c);
+    } else {
+      omitted.push(c);
+    }
+  }
+  if (process.env.PADMATE_PACK_LIST) {
+    const row = (name, c) =>
+      console.log(
+        `${side.file} ${name.padEnd(12)} ${String(c.triangles.length).padStart(5)} tris at ${centreOf(
+          c,
+        )
+          .map((v, k) => ((v - centre[k]) * 1000).toFixed(1).padStart(7))
+          .join(" ")}  size ${c.high
+          .map((h, k) => ((h - c.low[k]) * 1000).toFixed(1).padStart(5))
+          .join(" ")}`,
+      );
+    for (const [name, list] of parts) for (const c of list) row(name, c);
+    for (const c of details) row("detail", c);
+    for (const c of omitted) row("(left out)", c);
+  }
+  const wanted = [
+    ...new Set(side.anchors.map((a) => a.name).filter((n) => n !== "omit")),
+  ];
+  const missing = wanted.filter((name) => !parts.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      `${side.file}: no component near the anchor of ${missing.join(", ")}`,
+    );
+  }
+  const named = ["shell", ...wanted].map((name) => [name, parts.get(name)]);
+  for (const [i, c] of details.entries()) {
+    named.push([`detail-${i + 1}`, [c]]);
+  }
+  return { centre, parts: named };
+}
+
+// The bounding box (metres, the Joy-Con's centre at the origin) of a part.
+function partBox(components, centre) {
+  const low = [0, 1, 2].map((k) =>
+    Math.min(...components.map((c) => c.low[k])),
+  );
+  const high = [0, 1, 2].map((k) =>
+    Math.max(...components.map((c) => c.high[k])),
+  );
+  return {
+    low: low.map((v, k) => v - centre[k]),
+    high: high.map((v, k) => v - centre[k]),
+  };
+}
+
+// The glTF of one Joy-Con 2: a node and a mesh per part, each with its own
+// material (a clone of the source's), and an empty node for each point.
+function joycon2Document(source, side, centre, parts) {
+  const unit = joycons2.unit;
+  const j = {
+    asset: {
+      version: "2.0",
+      generator: "padmate pack-controller-models",
+      extras: { ...source.asset.extras, note: joycons2.note },
+    },
+    extensionsUsed: ["KHR_mesh_quantization"],
+    extensionsRequired: ["KHR_mesh_quantization"],
+    scene: 0,
+    scenes: [{ nodes: [] }],
+    nodes: [],
+    meshes: [],
+    materials: [],
+    accessors: [],
+    bufferViews: [],
+  };
+  const binary = binaryBuilder(j);
+  const view = (array, target, stride) =>
+    binary.add(
+      Buffer.from(array.buffer, array.byteOffset, array.byteLength),
+      target,
+      stride,
+    );
+  const addNode = (node) => {
+    j.nodes.push(node);
+    j.scenes[0].nodes.push(j.nodes.length - 1);
+  };
+  const boxes = new Map(
+    parts.map(([name, components]) => [name, partBox(components, centre)]),
+  );
+  for (const [name, components] of parts) {
+    // The part's origin, in metres from the Joy-Con's centre: the stick's is
+    // on its axis, at the bottom of its base; every other part's is the centre.
+    const { low, high } = boxes.get(name);
+    const origin =
+      name === "stick"
+        ? [
+            (low[0] + high[0]) / 2,
+            (low[1] + high[1]) / 2,
+            boxes.get("stick-base").low[2],
+          ]
+        : [0, 0, 0];
+    const pos = [];
+    const normal = [];
+    const index = [];
+    for (const { geo, triangles } of components) {
+      const remap = new Map();
+      for (const t of triangles) {
+        for (let k = 0; k < 3; k++) {
+          const v = geo.index[t + k];
+          if (!remap.has(v)) {
+            remap.set(v, pos.length / 4);
+            for (let c = 0; c < 3; c++) {
+              const at = geo.pos[v * 3 + c] - centre[c] - origin[c];
+              pos.push(Math.round(at / unit));
+              normal.push(Math.round(geo.normal[v * 3 + c] * 127));
+            }
+            // Four bytes per normal and eight per position keep every vertex
+            // aligned to four bytes, as glTF requires.
+            pos.push(0);
+            normal.push(0);
+          }
+          index.push(remap.get(v));
+        }
+      }
+    }
+    const count = pos.length / 4;
+    if (count > 0xffff) throw new Error(`${side.file}: ${name} is too big`);
+    const coordinate = (c) => pos.filter((_, i) => i % 4 === c);
+    j.accessors.push({
+      bufferView: view(Int16Array.from(pos), 34962, 8),
+      componentType: 5122,
+      count,
+      type: "VEC3",
+      min: [0, 1, 2].map((c) => Math.min(...coordinate(c))),
+      max: [0, 1, 2].map((c) => Math.max(...coordinate(c))),
+    });
+    const position = j.accessors.length - 1;
+    j.accessors.push({
+      bufferView: view(Int8Array.from(normal), 34962, 4),
+      componentType: 5120,
+      normalized: true,
+      count,
+      type: "VEC3",
+    });
+    const normals = j.accessors.length - 1;
+    j.accessors.push({
+      bufferView: view(Uint16Array.from(index), 34963),
+      componentType: 5123,
+      count: index.length,
+      type: "SCALAR",
+    });
+    j.materials.push({
+      ...structuredClone(source.materials[components[0].geo.material]),
+      name,
+    });
+    j.meshes.push({
+      name,
+      primitives: [
+        {
+          attributes: { POSITION: position, NORMAL: normals },
+          indices: j.accessors.length - 1,
+          material: j.materials.length - 1,
+          mode: 4,
+        },
+      ],
+    });
+    addNode({
+      name,
+      mesh: j.meshes.length - 1,
+      scale: [unit, unit, unit],
+      ...(name === "stick" ? { translation: origin } : {}),
+    });
+  }
+  for (const point of side.points) {
+    addNode({ name: point.name, translation: point.at(boxes) });
+  }
+  return { j, binary };
+}
+
+async function packJoycons2(source) {
+  const j = JSON.parse(await readFile(`${source.dir}/scene.gltf`, "utf8"));
+  const bin = await readFile(`${source.dir}/scene.bin`);
+  const components = sourceComponents(j, bin, joycons2);
+  const sizes = {};
+  for (const side of joycons2.sides) {
+    const { centre, parts } = nameParts2(components, joycons2, side);
+    const doc = joycon2Document(j, side, centre, parts);
+    sizes[side.file] = await writeGlb(doc.j, doc.binary.finish(), side.file);
+  }
+  return sizes;
+}
+
 await mkdir(out, { recursive: true });
 const sizes = {};
 for (const model of models) {
+  if (!wanted(model.name)) continue;
   if (!(await exists(`${model.dir}/scene.gltf`))) {
     console.log(`skip ${model.name}: no source in ${model.dir}`);
     continue;
   }
   sizes[model.file] = await pack(model);
 }
-if (await exists(`${cache}/dualsense.glb`)) {
+if (!wanted("dualsense")) {
+  // Not asked for.
+} else if (await exists(`${cache}/dualsense.glb`)) {
   await copyFile(`${cache}/dualsense.glb`, `${out}/dualsense.glb`);
   sizes["dualsense.glb"] = (await stat(`${out}/dualsense.glb`)).size;
 } else {
   console.log(`skip dualsense: no source at ${cache}/dualsense.glb`);
 }
-if (await exists(`${joycons.dir}/scene.gltf`)) {
+if (!wanted("switch-oled")) {
+  // Not asked for.
+} else if (await exists(`${joycons.dir}/scene.gltf`)) {
   Object.assign(sizes, await packJoycons(joycons));
 } else {
   console.log(`skip switch-oled: no source in ${joycons.dir}`);
+}
+if (!wanted("switch2")) {
+  // Not asked for.
+} else if (await exists(`${joycons2.dir}/scene.gltf`)) {
+  Object.assign(sizes, await packJoycons2(joycons2));
+} else {
+  console.log(`skip switch2: no source in ${joycons2.dir}`);
 }
 console.log(sizes);

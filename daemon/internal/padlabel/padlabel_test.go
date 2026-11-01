@@ -133,6 +133,7 @@ func TestName(t *testing.T) {
 		{"paddle3", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "SL"}, {"rightshoulder", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "R"},
 		{"paddle2", Pad{Type: "joyconpair"}, "左 SL"}, {"paddle1", Pad{Type: "joyconpair"}, "右 SR"},
 		{"misc1", xbox, "Share"}, {"misc1", ps, "Mute"}, {"misc1", Pad{Type: "switchpro"}, "Capture"}, {"misc1", Pad{}, "附加键 1"}, {"misc6", xbox, "附加键 6"},
+		{"misc2", xbox, "附加键 2"}, {"misc2", Pad{Type: "joyconright"}, "C 键"}, {"misc2", Pad{Type: "joyconpair"}, "C 键"},
 		{"bogus", xbox, "bogus"},
 	} {
 		if got := Name(tc.control, tc.pad); got != tc.want {

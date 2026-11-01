@@ -1,4 +1,5 @@
 import type { DeviceInfo } from "../../shared/api";
+import type { Language } from "../state/store";
 import {
   controllerLabels,
   familyName,
@@ -6,10 +7,16 @@ import {
   padHasFunctionKey,
 } from "./controller-model";
 
+/**
+ * What decides a pad's model and its controls: the type, SDL's masks and
+ * labels, and the USB ids (a Joy-Con 2 has the model of its own, see
+ * modelShell).
+ */
 export type ModelInfo = Pick<
   DeviceInfo,
   "type" | "buttonLabels" | "buttonMask" | "axisMask"
->;
+> &
+  Partial<Pick<DeviceInfo, "vendor" | "product">>;
 
 /**
  * Where one controller chip sits on the stage.
@@ -38,19 +45,31 @@ export interface Callout {
 }
 
 // The extra buttons in the row below the controller, left to right: the left
-// hand's paddles, the misc button, the right hand's paddles (the upper one of
-// each hand nearer the middle).
-const bottomRow = ["paddle4", "paddle2", "misc1", "paddle1", "paddle3"];
+// hand's paddles, the misc buttons (Share, Mute, Capture; the C button of a
+// Switch 2 pad), the right hand's paddles (the upper one of each hand nearer
+// the middle).
+const bottomRow = [
+  "paddle4",
+  "paddle2",
+  "misc1",
+  "misc2",
+  "paddle1",
+  "paddle3",
+];
 
 // Each endpoint identifies one physical control; the same IDs feed selection
 // and input feedback. A pad gets a chip for each control it has
 // (padHasControl), so a single Joy-Con held sideways shows no D-pad and a
 // DualSense Edge its four back and Fn buttons.
-export function controllerCallouts(info: ModelInfo): Callout[] {
+export function controllerCallouts(
+  info: ModelInfo,
+  language?: Language,
+): Callout[] {
   const labels = controllerLabels(
     info.type,
     info.buttonLabels,
     info.buttonMask,
+    language,
   );
   const ps = familyName(info.type) === "playstation";
   const has = (control: string) => padHasControl(control, info);

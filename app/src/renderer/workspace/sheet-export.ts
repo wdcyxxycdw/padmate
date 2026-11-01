@@ -46,6 +46,7 @@ export function useSheetExport({
     info?.type ?? "",
     info?.buttonLabels,
     info?.buttonMask,
+    language,
   );
   const options: SheetOptions = {
     language,

@@ -26,6 +26,7 @@ const buttonBits = [
   "paddle3",
   "paddle4",
   "touchpad",
+  "misc2",
 ];
 const axisBits = [
   "leftx",
@@ -149,4 +150,37 @@ export const sdlPads = {
     ],
     ["rightx", "righty", "righttrigger"],
   ),
+} as const;
+
+/** Nintendo's USB vendor id and the Joy-Con 2 products (jc2hub.go). */
+const nintendo = 0x057e;
+const joyCon2Product = {
+  joyconleft: 0x2067,
+  joyconright: 0x2066,
+  joyconpair: 0x2068,
+};
+
+// A Joy-Con 2 as the daemon's Bluetooth LE driver describes it: the buttons
+// of the Switch OLED Joy-Con in the same layout, and on the right one (and the
+// pair) the C button, misc2 (jc2hub_test.go has the masks).
+const joyCon2 = (
+  source: (typeof sdlPads)[keyof typeof sdlPads],
+  c: boolean,
+) => ({
+  type: source.type,
+  vendor: nintendo,
+  product: joyCon2Product[source.type as keyof typeof joyCon2Product],
+  buttonMask: c
+    ? source.buttonMask | (1 << buttonBits.indexOf("misc2"))
+    : source.buttonMask,
+  axisMask: source.axisMask,
+});
+
+/** The Joy-Con 2s, by the same names as the Switch OLED Joy-Cons. */
+export const joyCon2Pads = {
+  joyConLeftSideways: joyCon2(sdlPads.joyConLeftSideways, false),
+  joyConRightSideways: joyCon2(sdlPads.joyConRightSideways, true),
+  joyConLeftUpright: joyCon2(sdlPads.joyConLeftUpright, false),
+  joyConRightUpright: joyCon2(sdlPads.joyConRightUpright, true),
+  joyConPair: joyCon2(sdlPads.joyConPair, true),
 } as const;

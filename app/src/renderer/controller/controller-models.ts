@@ -21,7 +21,8 @@ import { familyName } from "./controller-model";
 
 /**
  * The shells: the DualSense for a PS5 pad, the DualShock 4 for a PS4 or PS3
- * pad, a Joy-Con (or both of a pair), the Xbox one for every other pad.
+ * pad, a Switch OLED Joy-Con (or both of a pair), a Joy-Con 2 (or both of a
+ * pair), the Xbox one for every other pad.
  */
 export type ModelShell =
   | "dualsense"
@@ -29,17 +30,55 @@ export type ModelShell =
   | "xbox"
   | "joycon-left"
   | "joycon-right"
-  | "joycon-pair";
+  | "joycon-pair"
+  | "joycon2-left"
+  | "joycon2-right"
+  | "joycon2-pair";
 
-/** The shells that are one GLB file each; the pair is made of two of them. */
-export type ModelFile = Exclude<ModelShell, "joycon-pair">;
+/** The shells that are one GLB file each; a pair is made of two of them. */
+export type ModelFile = Exclude<ModelShell, `${string}-pair`>;
 
-export function modelShell(type: string): ModelShell {
-  if (type === "joyconleft") return "joycon-left";
-  if (type === "joyconright") return "joycon-right";
-  if (type === "joyconpair") return "joycon-pair";
+/** Nintendo's USB vendor id. */
+const nintendo = 0x057e;
+/** The Joy-Con 2 products: left, right, and the pair the daemon reports. */
+const joyCon2Products = new Set([0x2067, 0x2066, 0x2068]);
+
+/**
+ * Whether a pad is a Joy-Con 2: Nintendo's vendor id and one of the Joy-Con
+ * 2 product ids, which the daemon's Bluetooth LE driver reports (driver
+ * "ble"); a Switch OLED Joy-Con has 0x2006 and 0x2007.
+ */
+export function isJoyCon2(ids: { vendor?: number; product?: number }) {
+  return (
+    ids.vendor === nintendo &&
+    ids.product !== undefined &&
+    joyCon2Products.has(ids.product)
+  );
+}
+
+/**
+ * The shell of a pad: by its type, and for a Joy-Con by its USB ids, the
+ * Joy-Con 2's own model or the Switch OLED one.
+ */
+export function modelShell(
+  type: string,
+  ids: { vendor?: number; product?: number } = {},
+): ModelShell {
+  const generation = isJoyCon2(ids) ? "joycon2" : "joycon";
+  if (type === "joyconleft") return `${generation}-left`;
+  if (type === "joyconright") return `${generation}-right`;
+  if (type === "joyconpair") return `${generation}-pair`;
   if (familyName(type) !== "playstation") return "xbox";
   return type === "ps5" ? "dualsense" : "dualshock";
+}
+
+/** The two files a pair of Joy-Cons is made of. */
+export function pairFiles(
+  shell: Extract<ModelShell, `${string}-pair`>,
+): [left: ModelFile, right: ModelFile] {
+  return shell === "joycon2-pair"
+    ? ["joycon2-left", "joycon2-right"]
+    : ["joycon-left", "joycon-right"];
 }
 
 /**
@@ -82,6 +121,8 @@ async function parseBundledFile(file: ModelFile): Promise<Group> {
     xbox: () => import("./assets/xbox.glb?url&inline"),
     "joycon-left": () => import("./assets/joycon-left.glb?url&inline"),
     "joycon-right": () => import("./assets/joycon-right.glb?url&inline"),
+    "joycon2-left": () => import("./assets/joycon2-left.glb?url&inline"),
+    "joycon2-right": () => import("./assets/joycon2-right.glb?url&inline"),
   }[file]();
   const bytes = decodeBase64(data.slice(data.indexOf(",") + 1));
   const loader = new GLTFLoader();
@@ -121,10 +162,12 @@ export function createShellParser(
     return parsed;
   };
   return async (shell: ModelShell): Promise<Group> => {
-    if (shell !== "joycon-pair") return fileOf(shell);
+    if (shell !== "joycon-pair" && shell !== "joycon2-pair")
+      return fileOf(shell);
+    const [leftFile, rightFile] = pairFiles(shell);
     const [left, right] = await Promise.all([
-      fileOf("joycon-left"),
-      fileOf("joycon-right"),
+      fileOf(leftFile),
+      fileOf(rightFile),
     ]);
     return joyConPair(modelCopy(left), modelCopy(right));
   };

@@ -329,8 +329,8 @@ export function ControllerWorkspace({
   }, [menu.pending]);
   const { type, buttonLabels, buttonMask } = info;
   const labels = useMemo(
-    () => controllerLabels(type, buttonLabels, buttonMask),
-    [type, buttonLabels, buttonMask],
+    () => controllerLabels(type, buttonLabels, buttonMask, language),
+    [type, buttonLabels, buttonMask, language],
   );
   // The chips show what is saved: a shortcut cleared in the drawer is unset
   // at once, though the draft keeps its empty card until the gesture is

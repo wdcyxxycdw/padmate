@@ -159,7 +159,8 @@ func paddleLabels(p Pad) map[string]string {
 
 // miscLabel names misc button i of a pad of family fam: misc1 is the
 // Share button of an Xbox Series pad, the mute button of a DualSense and
-// the Capture button of a Nintendo pad (SDL_gamepad.h).
+// the Capture button of a Nintendo pad (SDL_gamepad.h); misc2 is the C
+// button of a Nintendo Switch 2 pad (a Joy-Con 2).
 func miscLabel(fam string, i int) string {
 	if i == 1 {
 		switch fam {
@@ -170,6 +171,9 @@ func miscLabel(fam string, i int) string {
 		case "nintendo":
 			return "Capture"
 		}
+	}
+	if i == 2 && fam == "nintendo" {
+		return "C 键"
 	}
 	return fmt.Sprintf("附加键 %d", i)
 }

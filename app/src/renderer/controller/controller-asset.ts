@@ -14,7 +14,10 @@ import {
 import type { PadInput } from "../state/store";
 import { controllerCallouts, type ModelInfo } from "./controller-callouts";
 import {
+  isJoyCon2Shell,
   isJoyConShell,
+  joyCon2Stick,
+  joyCon2StickDepth,
   joyConMaxHeight,
   joyConPoints,
   joyConStick,
@@ -135,7 +138,7 @@ export function buildAssetModel(
     info.buttonLabels,
     info.buttonMask,
   );
-  const shell = modelShell(info.type);
+  const shell = modelShell(info.type, info);
   let disposed = false;
   const own = <T extends Resource>(resource: T): T => {
     resources.add(resource);
@@ -317,17 +320,20 @@ export function buildAssetModel(
       group.add(marker);
       controls.set(name, { point: p, marker, strength: 0 });
     }
-    // A Joy-Con's stick is a mesh of its own; its depth is in metres of the
-    // GLB, which the normalization scaled.
+    // A Joy-Con's stick is a mesh of its own. A Switch OLED Joy-Con's depth is
+    // in metres of the GLB, which the normalization scaled; a Joy-Con 2's
+    // stick turns about its node, so the mesh says how deep that is.
     const tilting = joyCon
       ? joyCon.sticks.map(
           ([side, mesh]) =>
-            [
-              side,
-              mesh,
-              joyConStick.depth * asset.scale.x,
-              joyConStick.maxTilt,
-            ] as const,
+            (isJoyCon2Shell(shell)
+              ? [side, mesh, joyCon2StickDepth(mesh), joyCon2Stick.maxTilt]
+              : [
+                  side,
+                  mesh,
+                  joyConStick.depth * asset.scale.x,
+                  joyConStick.maxTilt,
+                ]) as readonly [string, Mesh | undefined, number, number],
         )
       : (stickParts[shell] ?? []).map(
           ([side, prefix, depth, maxTilt]) =>

@@ -8,7 +8,12 @@ import {
   buildAssetModel,
   type ModelInfo,
 } from "../controller/controller-asset";
-import { joyConPair, modelShell } from "../controller/controller-models";
+import {
+  joyConPair,
+  type ModelFile,
+  modelShell,
+  pairFiles,
+} from "../controller/controller-models";
 
 export async function parseGlb(file: string) {
   const bytes = await readFile(
@@ -31,13 +36,12 @@ export async function modelFixture(
   type: string,
   masks: Omit<ModelInfo, "type"> = {},
 ) {
-  const shell = modelShell(type);
+  const shell = modelShell(type, masks);
+  const [leftFile, rightFile] =
+    shell === "joycon-pair" || shell === "joycon2-pair" ? pairFiles(shell) : [];
   const scene =
-    shell === "joycon-pair"
-      ? joyConPair(
-          await parseGlb("joycon-left"),
-          await parseGlb("joycon-right"),
-        )
+    leftFile && rightFile
+      ? joyConPair(await parseGlb(leftFile), await parseGlb(rightFile))
       : await parseGlb(
           {
             dualsense: "dualsense",
@@ -45,7 +49,9 @@ export async function modelFixture(
             xbox: "xbox",
             "joycon-left": "joycon-left",
             "joycon-right": "joycon-right",
-          }[shell],
+            "joycon2-left": "joycon2-left",
+            "joycon2-right": "joycon2-right",
+          }[shell as ModelFile],
         );
   return buildAssetModel(scene, { type, ...masks });
 }

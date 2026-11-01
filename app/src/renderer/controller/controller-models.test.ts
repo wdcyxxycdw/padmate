@@ -14,10 +14,12 @@ import {
   createModelCache,
   createShellParser,
   decodeBase64,
+  isJoyCon2,
   joyConPair,
   type ModelFile,
   modelCopy,
   modelShell,
+  pairFiles,
 } from "./controller-models";
 
 function template() {
@@ -95,6 +97,64 @@ describe("controller models", () => {
       "unknown",
     ])
       expect(modelShell(type)).toBe("xbox");
+  });
+
+  it("uses the Joy-Con 2 shell for Nintendo's Joy-Con 2 ids and the Switch OLED one for the other Joy-Cons", () => {
+    const nintendo = 0x057e;
+    // The ids the daemon's Bluetooth LE driver reports (jc2hub.go).
+    expect(
+      modelShell("joyconleft", { vendor: nintendo, product: 0x2067 }),
+    ).toBe("joycon2-left");
+    expect(
+      modelShell("joyconright", { vendor: nintendo, product: 0x2066 }),
+    ).toBe("joycon2-right");
+    expect(
+      modelShell("joyconpair", { vendor: nintendo, product: 0x2068 }),
+    ).toBe("joycon2-pair");
+    // A Switch OLED Joy-Con (0x2006 and 0x2007, whatever SDL driver runs it),
+    // an id of another vendor, and ids that are not known yet.
+    expect(
+      modelShell("joyconleft", { vendor: nintendo, product: 0x2006 }),
+    ).toBe("joycon-left");
+    expect(
+      modelShell("joyconright", { vendor: nintendo, product: 0x2007 }),
+    ).toBe("joycon-right");
+    expect(modelShell("joyconleft", { vendor: 0x1234, product: 0x2067 })).toBe(
+      "joycon-left",
+    );
+    expect(modelShell("joyconpair", { vendor: 0, product: 0 })).toBe(
+      "joycon-pair",
+    );
+    expect(modelShell("joyconpair", {})).toBe("joycon-pair");
+    // Only a Joy-Con takes the shell: a Pro Controller has other ids.
+    expect(modelShell("switchpro", { vendor: nintendo, product: 0x2067 })).toBe(
+      "xbox",
+    );
+    expect(isJoyCon2({ vendor: nintendo, product: 0x2066 })).toBe(true);
+    expect(isJoyCon2({ vendor: nintendo })).toBe(false);
+    expect(isJoyCon2({ product: 0x2066 })).toBe(false);
+    expect(pairFiles("joycon2-pair")).toEqual([
+      "joycon2-left",
+      "joycon2-right",
+    ]);
+    expect(pairFiles("joycon-pair")).toEqual(["joycon-left", "joycon-right"]);
+  });
+
+  it("makes a Joy-Con 2 pair of the two Joy-Con 2 files", async () => {
+    const parseFile = vi.fn(async (_file: ModelFile) => template());
+    const cache = createModelCache(createShellParser(parseFile));
+    const pair = await cache.get("joycon2-pair");
+    expect(parseFile.mock.calls.map(([file]) => file).sort()).toEqual([
+      "joycon2-left",
+      "joycon2-right",
+    ]);
+    // The two roots have the names the layout looks for, as in any pair.
+    expect(pair.children.map((child) => child.name)).toEqual([
+      "joycon-left",
+      "joycon-right",
+    ]);
+    await cache.get("joycon2-left");
+    expect(parseFile).toHaveBeenCalledTimes(2);
   });
 
   it("decodes and parses each shell once, and gives every scene its own copy", async () => {

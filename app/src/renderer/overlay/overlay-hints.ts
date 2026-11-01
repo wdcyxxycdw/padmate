@@ -113,6 +113,7 @@ export function hintControlName(
     pad?.type ?? "",
     pad?.buttonLabels,
     pad?.buttonMask,
+    language,
   );
   return listControlName(control, labels, language);
 }

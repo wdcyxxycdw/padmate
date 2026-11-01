@@ -1,16 +1,25 @@
-// The Joy-Con shells (Switch 1 Joy-Cons, one GLB each): how a single one is
-// turned or a pair laid out, and which part serves each control. Each GLB is
-// one node, mesh and material per part, in metres, centred, +Y the top (the
-// stick end of the left one, the ABXY end of the right one), +Z the front and
-// the rail on +X (left) or -X (right); the parts keep their names so a control
-// is found by the exact name (`s`, `sl`, `sr` and `sync` share prefixes).
+// The Joy-Con shells (the Switch OLED Joy-Cons and the Joy-Con 2, one GLB
+// each): how a single one is turned or a pair laid out, and which part serves
+// each control. Each GLB is one node, mesh and material per part, in metres,
+// centred, +Y the top (the stick end of the left one, the ABXY end of the
+// right one), +Z the front and the rail on +X (left) or -X (right); the parts
+// keep their names so a control is found by the exact name (`s`, `sl`, `sr`
+// and `sync` share prefixes). The Joy-Con 2 files also have the C button (`c`
+// on the right one), a real Capture button, and empty nodes for the parts the
+// source model lacks (`sl`, `sr`, `zl` or `zr`), and their stick's node sits
+// where it turns.
 import { Box3, Mesh, type Object3D, Vector3 } from "three";
 import type { ModelShell } from "./controller-models";
 
-export type JoyConShell = Extract<ModelShell, `joycon-${string}`>;
+export type JoyConShell = Extract<ModelShell, `joycon${string}-${string}`>;
 
 export function isJoyConShell(shell: ModelShell): shell is JoyConShell {
-  return shell.startsWith("joycon-");
+  return shell.startsWith("joycon");
+}
+
+/** Whether a shell is the Joy-Con 2 model, which has its own parts. */
+export function isJoyCon2Shell(shell: ModelShell) {
+  return shell.startsWith("joycon2-");
 }
 
 /**
@@ -28,9 +37,10 @@ export const joyConMaxHeight = 4.11;
 const pairGap = 0.25;
 
 /**
- * The Capture button is part of the left shell, not a mesh of its own. Its
- * place is the mirror of the right Home button (-5.5, -24.0 mm), a little
- * toward the rail, in metres in the Joy-Con's own frame.
+ * The Capture button of a Switch OLED Joy-Con is part of the left shell, not a
+ * mesh of its own (the Joy-Con 2's is a part named `capture`). Its place is the
+ * mirror of the right Home button (-5.5, -24.0 mm), a little toward the rail,
+ * in metres in the Joy-Con's own frame.
  */
 const capturePoint = new Vector3(0.0055, -0.024, 0.0078);
 /** Stands for the Capture point where a table names a part. */
@@ -50,6 +60,32 @@ const capture = "capture";
  * as much as the DualSense's; the 2D gauge carries the exact reading.
  */
 export const joyConStick = { depth: 0.008, maxTilt: 0.3 };
+
+/**
+ * How a Joy-Con 2's stick tilts. Its node is the pivot: the packer puts it on
+ * the stick's axis at the bottom of the stick's base, where the stem leaves
+ * the shell, 5.8 mm under the cap top. The stick is the cap alone (17.7 mm
+ * wide, 2.7 mm tall); the base stays, so the depth is read from the mesh
+ * (joyCon2StickDepth). `maxTilt` (radians) is the largest angle at which the
+ * cap stays over the shell: at 0.3 its lowest point is 0.65 mm above the
+ * shell's front in every one of the eight pushes (checked in the tests), a
+ * full push moves the cap top by 5.8 sin(0.3) = 1.7 mm.
+ */
+export const joyCon2Stick = { maxTilt: 0.3 };
+
+/**
+ * How far below its cap top a Joy-Con 2's stick turns, in the units of the
+ * normalized model: the cap top's height over the node's origin (the mesh's
+ * z = 0), scaled by the node's world scale.
+ */
+export function joyCon2StickDepth(mesh: Mesh): number {
+  if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+  const box = mesh.geometry.boundingBox;
+  if (!box) return 0;
+  mesh.updateWorldMatrix(true, false);
+  const scale = new Vector3().setFromMatrixColumn(mesh.matrixWorld, 2).length();
+  return box.max.z * scale;
+}
 
 type Table = Readonly<Record<string, string>>;
 
@@ -109,6 +145,8 @@ const uprightRight: Table = {
   paddle1: "sr",
   paddle3: "sl",
 };
+// The C button of the Joy-Con 2 on the right, SDL's misc2, held either way.
+const joyCon2Extra: Table = { misc2: "c" };
 
 /** One control, the Joy-Con root it is on, and the name of its part. */
 interface Assignment {
@@ -144,7 +182,11 @@ export function layoutJoyCons(
 ): JoyConLayout {
   const assign = (table: Table, root: Object3D): Assignment[] =>
     Object.entries(table).map(([control, part]) => ({ control, root, part }));
-  if (shell === "joycon-pair") {
+  const joyCon2 = isJoyCon2Shell(shell);
+  // The right Joy-Con 2's table has its C button; the left one has none.
+  const withC = (table: Table, left: boolean): Table =>
+    joyCon2 && !left ? { ...table, ...joyCon2Extra } : table;
+  if (shell.endsWith("-pair")) {
     const left = rootOf(asset, "joycon-left");
     const right = rootOf(asset, "joycon-right");
     const width = new Box3().setFromObject(left).getSize(new Vector3()).x;
@@ -153,12 +195,12 @@ export function layoutJoyCons(
     right.position.x = offset;
     return {
       assignments: [
-        ...assign(uprightLeft, left),
-        ...assign(uprightRight, right),
+        ...assign(withC(uprightLeft, true), left),
+        ...assign(withC(uprightRight, false), right),
       ],
     };
   }
-  const left = shell === "joycon-left";
+  const left = shell.endsWith("-left");
   if (sideways) asset.rotation.z = left ? Math.PI / 2 : -Math.PI / 2;
   const table = sideways
     ? left
@@ -167,7 +209,7 @@ export function layoutJoyCons(
     : left
       ? uprightLeft
       : uprightRight;
-  return { assignments: assign(table, asset) };
+  return { assignments: assign(withC(table, left), asset) };
 }
 
 /**
@@ -181,17 +223,22 @@ export function joyConPoints(layout: JoyConLayout) {
   const behind = new Set<string>();
   const sticks: [side: string, mesh: Mesh][] = [];
   for (const { control, root, part } of layout.assignments) {
-    if (part === capture) {
+    const node = root.getObjectByName(part);
+    if (part === capture && !node) {
       positions[control] = root.localToWorld(capturePoint.clone());
       continue;
     }
-    const mesh = root.getObjectByName(part);
-    if (!(mesh instanceof Mesh)) throw new Error(`No ${part} on a Joy-Con`);
-    positions[control] = new Box3()
-      .setFromObject(mesh)
-      .getCenter(new Vector3());
+    if (!node) throw new Error(`No ${part} on a Joy-Con`);
+    // A part without a mesh is an empty node the Joy-Con 2 files put where
+    // the model has no geometry (SL, SR, ZL and ZR).
+    if (node instanceof Mesh)
+      positions[control] = new Box3()
+        .setFromObject(node)
+        .getCenter(new Vector3());
+    else positions[control] = node.getWorldPosition(new Vector3());
     if (part === "zl" || part === "zr") behind.add(control);
-    if (part === "stick") sticks.push([control.slice(0, -5), mesh]);
+    if (part === "stick" && node instanceof Mesh)
+      sticks.push([control.slice(0, -5), node]);
   }
   return { positions, behind, sticks };
 }

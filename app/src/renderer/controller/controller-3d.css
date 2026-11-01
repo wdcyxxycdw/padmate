@@ -255,12 +255,16 @@
   top: max(8px, calc(var(--top-y) - var(--top-raise)));
 }
 /* The row below stays between the two columns, whose last chips reach as
-   low: up to five chips (two paddles each side and a misc button) share
+   low: its chips (up to five, two paddles each side and a misc button; a
+   Joy-Con 2 pair has six, with its C button, and --row-count says so) share
    the width between them, each no wider than a chip of the top row. */
 .stage-chip[data-placement="bottom"] {
   --row-pitch: min(
     calc(var(--top-w) + var(--top-gap)),
-    calc((100cqw - 2 * (var(--side-x) + var(--chip-w) + var(--top-gap))) / 5)
+    calc(
+      (100cqw - 2 * (var(--side-x) + var(--chip-w) + var(--top-gap))) /
+      max(5, var(--row-count, 5))
+    )
   );
   width: calc(var(--row-pitch) - var(--top-gap));
   left: calc(50% + var(--offset) * var(--row-pitch));

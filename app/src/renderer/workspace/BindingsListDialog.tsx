@@ -92,7 +92,7 @@ export function BindingsListDialog({
   if (!profile || !effective || !shown) return null;
   const missing = missingMacros(macros);
   const labels = info
-    ? controllerLabels(info.type, info.buttonLabels, info.buttonMask)
+    ? controllerLabels(info.type, info.buttonLabels, info.buttonMask, language)
     : {};
   const family = familyName(pad.type);
   const fixedName = functionKeyName(functionKey, pad);
