@@ -5,7 +5,7 @@ padmate 是 Windows 上的手柄 → 键盘快捷键映射器。
 
 - `daemon/`：Go 守护进程 `padmated`，以及 CLI `padmatectl` 和开发工具 `padmate-probe`。负责输入（SDL3）、映射引擎、输出（SendInput）、TypeScript 脚本（goja + esbuild）、托盘和 IPC。
 - `app/`：Electron UI 与 overlay（M10 起）。可选组件，关掉它映射照常工作。
-- 许可证 MIT。开发仓库 `github.com/wdcyxxycdw/padmate-dev`（私有）。
+- 许可证 MIT。仓库 `github.com/wdcyxxycdw/padmate`（公开，代码和文档都在这里）。
 
 ## 文档索引
 | 文档 | 内容 |
