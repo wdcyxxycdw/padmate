@@ -14,8 +14,7 @@
 //     digest, e.g. gh api repos/libsdl-org/SDL/releases/tags/release-X.Y.Z).
 //  2. Download the zip, check it against those values, and set DLLSHA256
 //     to the SHA-256 of the SDL3.dll inside it.
-//  3. Run `task sdl`, then rerun the hardware matrix
-// with the new DLL.
+//  3. Run `task sdl`, then rerun the hardware matrix with the new DLL.
 package sdlpin
 
 // The pinned SDL release.
