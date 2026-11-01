@@ -12,7 +12,7 @@ func TestRunUnsupported(t *testing.T) {
 	if code := run(&stderr); code != 1 {
 		t.Errorf("run() = %d, want 1", code)
 	}
-	if got, want := stderr.String(), "spk01 is only supported on Windows\n"; got != want {
+	if got, want := stderr.String(), "trayspike is only supported on Windows\n"; got != want {
 		t.Errorf("stderr = %q, want %q", got, want)
 	}
 }

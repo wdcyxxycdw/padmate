@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script/spike"
 )
 
-const usage = `usage: spk03 [-dispatch N] [-warmup N] [-allocs N] [-idle N] [-runs N] [-cycles=false]
+const usage = `usage: scriptspike [-dispatch N] [-warmup N] [-allocs N] [-idle N] [-runs N] [-cycles=false]
 
 The goja spike: goja dispatch and activation, esbuild build time, the
 watchdog checks and the QueryThreadCycleTime calibration, printed to
@@ -29,11 +29,11 @@ flags:
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
 
-// parseFlags parses and checks the flags. When ok is false, spk03 exits
+// parseFlags parses and checks the flags. When ok is false, scriptspike exits
 // with code.
 func parseFlags(args []string, stdout, stderr io.Writer) (opts spike.Options, code int, ok bool) {
 	opts = spike.DefaultOptions()
-	fs := flag.NewFlagSet("spk03", flag.ContinueOnError)
+	fs := flag.NewFlagSet("scriptspike", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {} // usage is printed below, to the right stream
 	fs.IntVar(&opts.Dispatch.N, "dispatch", opts.Dispatch.N, "timed dispatches per scenario")
@@ -60,7 +60,7 @@ func parseFlags(args []string, stdout, stderr io.Writer) (opts spike.Options, co
 		problem = "-warmup, -allocs and -idle must not be negative"
 	}
 	if problem != "" {
-		fmt.Fprintf(stderr, "spk03: %s\n", problem)
+		fmt.Fprintf(stderr, "scriptspike: %s\n", problem)
 		fmt.Fprint(stderr, usage)
 		return opts, 2, false
 	}
@@ -70,7 +70,7 @@ func parseFlags(args []string, stdout, stderr io.Writer) (opts spike.Options, co
 	return opts, 0, true
 }
 
-// run is spk03. Nothing else in the process may use esbuild or goja
+// run is scriptspike. Nothing else in the process may use esbuild or goja
 // before it, since the first build and activation are reported apart.
 func run(args []string, stdout, stderr io.Writer) int {
 	opts, code, ok := parseFlags(args, stdout, stderr)
@@ -79,7 +79,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	rep, err := spike.Run(opts)
 	if err != nil {
-		fmt.Fprintf(stderr, "spk03: %v\n", err)
+		fmt.Fprintf(stderr, "scriptspike: %v\n", err)
 		return 1
 	}
 	w := bufio.NewWriter(stdout)
@@ -88,7 +88,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		err = ferr
 	}
 	if err != nil {
-		fmt.Fprintf(stderr, "spk03: %v\n", err)
+		fmt.Fprintf(stderr, "scriptspike: %v\n", err)
 		return 1
 	}
 	return 0

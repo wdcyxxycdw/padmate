@@ -1,10 +1,10 @@
-// Command spk03 is the goja spike: goja and esbuild measured with the
+// Command scriptspike is the goja spike: goja and esbuild measured with the
 // benchmark script and the stand-in host of internal/script/spike.
 //
-// `task spk03` runs it with `go run`; flags go after --, as in
-// `task spk03 -- -dispatch 10000`.
+// `task spike:script` runs it with `go run`; flags go after --, as in
+// `task spike:script -- -dispatch 10000`.
 //
-//	spk03 [-dispatch N] [-warmup N] [-allocs N] [-idle N] [-runs N] [-cycles=false]
+//	scriptspike [-dispatch N] [-warmup N] [-allocs N] [-idle N] [-runs N] [-cycles=false]
 //
 // It builds the benchmark script with esbuild, activates it cold and warm
 // -runs times each (default 200), times -dispatch handler calls per

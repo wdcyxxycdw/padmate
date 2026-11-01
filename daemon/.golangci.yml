@@ -87,7 +87,7 @@ linters:
           files:
             - $all
             - "!**/internal/script/spike/**"
-            - "!**/tools/spk03/**"
+            - "!**/tools/scriptspike/**"
           deny:
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script/spike
               desc: the goja spike is throwaway; write production code in internal/script instead

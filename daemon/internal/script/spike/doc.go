@@ -15,7 +15,7 @@
 // one, back to back and after idle gaps, on a P-core and an E-core, and
 // counts their allocations; CheckWatchdog runs the
 // watchdog checks with Watchdog, a stand-in for the M5 watchdog. Run does
-// all of it, and Report.WriteMarkdown prints the results; tools/spk03 is
+// all of it, and Report.WriteMarkdown prints the results; tools/scriptspike is
 // the command. Timings use QueryPerformanceCounter on Windows, where
 // time.Now moves in steps of 0.5–2 ms, and the monotonic clock elsewhere.
 //

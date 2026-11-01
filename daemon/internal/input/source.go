@@ -79,7 +79,7 @@ type Options struct {
 	// it removed when its reports and its controls have been silent for
 	// the timeout; it comes back as a new device, with a new DeviceID, at
 	// its next SDL event. padmated passes DefaultReceiverTimeout. 0 leaves
-	// the watchdog off, as "padmatectl monitor", "record" and spk01 do,
+	// the watchdog off, as "padmatectl monitor", "record" and trayspike do,
 	// which then show what SDL reports; a timeout below 100ms is an error.
 	ReceiverTimeout time.Duration
 	// PowerEvents turns on DevicePower events: T-input reads the
@@ -87,7 +87,7 @@ type Options struct {
 	// the receiver watchdog's removal, sends SDL's battery events on, and
 	// reads every 30 s in case a driver sends none; it sends a DevicePower
 	// for the first read and each change. Only padmated sets it: the other
-	// consumers of Events (monitor, record, spk01) get no such event.
+	// consumers of Events (monitor, record, trayspike) get no such event.
 	// Source.Readout reads on request without it.
 	PowerEvents bool
 	// PowerPollEvery is how often T-input reads the power with
@@ -362,7 +362,7 @@ func (s *Source) Hints() []Hint { return append([]Hint(nil), s.hintsRead...) }
 
 // WriteHeader writes the SDL version and library of s, the preset named
 // preset and the hints in effect, one per line, each line starting with
-// prefix. It is the header that "padmatectl monitor" and spk01 print
+// prefix. It is the header that "padmatectl monitor" and trayspike print
 // before their events.
 func (s *Source) WriteHeader(w io.Writer, prefix, preset string) error {
 	var b strings.Builder

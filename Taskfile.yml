@@ -106,19 +106,19 @@ tasks:
     cmds:
       - go run ./tools/sdlfetch -out ../bin
 
-  spk01:
-    desc: Build the tray spike (tray on the main thread, T-input, GUI subsystem) into bin/spk01.exe next to the pinned SDL3.dll
+  spike:tray:
+    desc: Build the tray spike (tray on the main thread, T-input, GUI subsystem) into bin/trayspike.exe next to the pinned SDL3.dll
     dir: daemon
     platforms: [windows]
     deps: [sdl]
     cmds:
-      - go build -ldflags "-H=windowsgui {{.LDFLAGS}}" -o ../bin/spk01{{exeExt}} ./tools/spk01
+      - go build -ldflags "-H=windowsgui {{.LDFLAGS}}" -o ../bin/trayspike{{exeExt}} ./tools/trayspike
 
-  spk03:
-    desc: Run the goja spike (goja dispatch and activation, esbuild, watchdog, QueryThreadCycleTime) and print its Markdown report; flags after --, e.g. task spk03 -- -dispatch 10000
+  spike:script:
+    desc: Run the goja spike (goja dispatch and activation, esbuild, watchdog, QueryThreadCycleTime) and print its Markdown report; flags after --, e.g. task spike:script -- -dispatch 10000
     dir: daemon
     cmds:
-      - go run ./tools/spk03 {{.CLI_ARGS}}
+      - go run ./tools/scriptspike {{.CLI_ARGS}}
 
   dev:
     desc: Build padmated for the console subsystem so its logs are visible
@@ -139,7 +139,7 @@ tasks:
     env:
       PADMATE_REQUIRE_SDL: "1"
     cmds:
-      - go test -count=1 -v ./internal/input/... ./cmd/padmatectl ./cmd/padmated ./tools/spk01
+      - go test -count=1 -v ./internal/input/... ./cmd/padmatectl ./cmd/padmated ./tools/trayspike
 
   test:types:
     desc: Check script declarations and scaffold with TypeScript (TSC is the absolute path to the compiler's JS entry point)

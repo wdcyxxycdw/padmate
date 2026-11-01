@@ -8,7 +8,7 @@ import (
 )
 
 // SDLFlags are the --preset and --hint flags that padmated, the
-// padmatectl commands reading SDL and spk01 share.
+// padmatectl commands reading SDL and trayspike share.
 type SDLFlags struct {
 	Preset string   // the name of a preset of Presets
 	Extra  HintList // set after the preset's hints

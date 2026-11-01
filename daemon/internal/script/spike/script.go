@@ -24,7 +24,7 @@ type Script struct {
 
 // NewScript writes the benchmark script to a new temporary directory.
 func NewScript() (*Script, error) {
-	root, err := os.MkdirTemp("", "padmate-spk03-")
+	root, err := os.MkdirTemp("", "padmate-scriptspike-")
 	if err != nil {
 		return nil, fmt.Errorf("spike: %w", err)
 	}

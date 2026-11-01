@@ -48,7 +48,7 @@ jobs:
       - name: Fetch SDL3.dll
         run: go run ./tools/sdlfetch -out ../bin -cache "${{ runner.temp }}/sdl"
       # The SDL-backed tests (internal/input, padmatectl monitor and
-      # record, the tools/spk01 spike) drive an SDL virtual gamepad; with
+      # record, the tools/trayspike spike) drive an SDL virtual gamepad; with
       # the DLL fetched they must not skip. The spike's binary test does
       # not require the tray, which a runner session may not have.
       - run: go test ./...

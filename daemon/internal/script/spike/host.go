@@ -16,7 +16,7 @@ var FixedTime = time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 // Seeds of the fixed Math.random source of a Host runtime.
 const (
-	randSeed1 = 0x5350_4b30_33 // "SPK03"
+	randSeed1 = 0x5350_4b30_33 // fixed, so that runs stay comparable
 	randSeed2 = 0x7061_646d    // "padm"
 )
 

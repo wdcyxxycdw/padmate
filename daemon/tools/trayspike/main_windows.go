@@ -16,15 +16,15 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-const usageHead = `usage: spk01 [--preset NAME] [--hint NAME=VALUE]... [--duration D]
+const usageHead = `usage: trayspike [--preset NAME] [--hint NAME=VALUE]... [--duration D]
              [--log FILE] [--virtual-rate HZ]
 
 The tray spike: padmated's input side in its real shape. The main
 thread runs the tray (an icon with a Quit item), T-input reads SDL on its
-own thread, and the process has no window that can take the focus. spk01
+own thread, and the process has no window that can take the focus. trayspike
 waits 500ms for the connected devices, records every event for
 --duration and exits. SDL is loaded from $PADMATE_SDL3, or else from
-SDL3.dll next to spk01 ("task spk01" builds bin/spk01.exe next to the
+SDL3.dll next to trayspike ("task spike:tray" builds bin/trayspike.exe next to the
 pinned DLL).
 
 At the end it writes a summary: the event count, the dropped count and
@@ -80,10 +80,10 @@ type options struct {
 	rate     int
 }
 
-// parseFlags parses and checks the flags. When ok is false, spk01 exits
+// parseFlags parses and checks the flags. When ok is false, trayspike exits
 // with code.
 func parseFlags(args []string, stdout, stderr io.Writer) (opts options, code int, ok bool) {
-	fs := flag.NewFlagSet("spk01", flag.ContinueOnError)
+	fs := flag.NewFlagSet("trayspike", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {} // usage is printed below, to the right stream
 	var sdlFlags input.SDLFlags
@@ -112,7 +112,7 @@ func parseFlags(args []string, stdout, stderr io.Writer) (opts options, code int
 		problem = fmt.Sprintf("--virtual-rate must be between 0 and %d", maxRate)
 	}
 	if problem != "" {
-		fmt.Fprintf(stderr, "spk01: %s\n", problem)
+		fmt.Fprintf(stderr, "trayspike: %s\n", problem)
 		fmt.Fprint(stderr, usage)
 		return opts, 2, false
 	}
@@ -136,7 +136,7 @@ func (s *stopper) stop(reason string) {
 	})
 }
 
-// run is spk01. The calling goroutine must be the main one, locked to the
+// run is trayspike. The calling goroutine must be the main one, locked to the
 // main OS thread (systray's init does that), because it runs the tray
 // loop.
 func run(args []string, stdout, stderr io.Writer) int {
@@ -148,14 +148,14 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if opts.log != "" {
 		f, err := os.Create(opts.log)
 		if err != nil {
-			fmt.Fprintf(stderr, "spk01: %v\n", err)
+			fmt.Fprintf(stderr, "trayspike: %v\n", err)
 			return 1
 		}
 		logf = f
 	}
 	s, err := input.Open(input.Options{Hints: opts.hints})
 	if err != nil {
-		fmt.Fprintf(stderr, "spk01: %v\n", err)
+		fmt.Fprintf(stderr, "trayspike: %v\n", err)
 		if logf != nil {
 			_ = logf.Close()
 		}
@@ -187,7 +187,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		code := sp.run()
 		if logf != nil {
 			if err := logf.Close(); err != nil {
-				fmt.Fprintf(stderr, "spk01: %v\n", err)
+				fmt.Fprintf(stderr, "trayspike: %v\n", err)
 				code = 1
 			}
 		}
@@ -225,6 +225,6 @@ func endTray(ready <-chan struct{}, stderr io.Writer, code int) {
 	}
 	systray.Quit()
 	time.Sleep(exitGrace)
-	fmt.Fprintf(stderr, "spk01: the tray loop did not end within %v of systray.Quit; exiting\n", exitGrace)
+	fmt.Fprintf(stderr, "trayspike: the tray loop did not end within %v of systray.Quit; exiting\n", exitGrace)
 	os.Exit(code)
 }

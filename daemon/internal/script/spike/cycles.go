@@ -19,7 +19,7 @@ import (
 // calibration. Its sign is safe: a low rate overstates CPU time, so the
 // watchdog fires early. Observed on a 13600KF under load: 10 spins missed
 // the rate by more than 0.1% in 5 of 100 calibrations (worst -1.9%), 5
-// spins in 24 of 100 (worst -3.1%), and a full spk03 run saw -2.45% in 20;
+// spins in 24 of 100 (worst -3.1%), and a full scriptspike run saw -2.45% in 20;
 // when lightly loaded, 100 calibrations stayed within -0.17%.
 const (
 	CalibrationSpins = 10
@@ -226,7 +226,7 @@ func (r SpinResult) CyclesPerMicrosecond() Stats {
 	return Summarize(xs)
 }
 
-// WriteMarkdown writes the report as Markdown (task spk03).
+// WriteMarkdown writes the report as Markdown (task spike:script).
 func (r *CycleReport) WriteMarkdown(w io.Writer) error {
 	m := &mdWriter{w: w}
 	m.printf("- CPU: %s; ~MHz of CPU 0: %d; %d logical CPUs\n", r.CPU, r.NominalMHz, r.LogicalCPUs)

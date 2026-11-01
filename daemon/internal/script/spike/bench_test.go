@@ -7,7 +7,7 @@ import (
 
 // BenchmarkDispatch times whole scenario iterations, the event object
 // included. For the async scenarios that is the call and the resume, so
-// only async-call runs, as "async"; spk03 times the two apart.
+// only async-call runs, as "async"; scriptspike times the two apart.
 func BenchmarkDispatch(b *testing.B) {
 	p := program(b)
 	for _, s := range Scenarios {

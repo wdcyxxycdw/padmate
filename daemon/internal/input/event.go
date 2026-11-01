@@ -13,7 +13,7 @@ import (
 type DeviceID uint32
 
 // DeviceInfo describes a connected device. Its JSON form is the "info"
-// object of "padmatectl monitor --json" and of the spk01 log.
+// object of "padmatectl monitor --json" and of the trayspike log.
 type DeviceInfo struct {
 	ID DeviceID `json:"id"`
 	// Name is SDL's name for the device, such as "Xbox Wireless

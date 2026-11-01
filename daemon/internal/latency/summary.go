@@ -16,7 +16,7 @@ type Summary struct {
 // the zero Summary. ds is not modified. Negative values are allowed.
 //
 // It duplicates the percentile code of internal/script/spike on purpose:
-// only tools/spk03 may import the spike (depguard). The ranks are
+// only tools/scriptspike may import the spike (depguard). The ranks are
 // computed in integers, so that no p·N misrounds.
 func Summarize(ds []time.Duration) Summary {
 	n := len(ds)

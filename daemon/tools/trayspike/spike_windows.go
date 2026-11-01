@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// enumerateWait is how long spk01 collects the connected devices
+	// enumerateWait is how long trayspike collects the connected devices
 	// before the header. SDL reports most of them during SDL_Init, the
 	// others once its backends have detected them.
 	enumerateWait = 500 * time.Millisecond
@@ -27,10 +27,10 @@ const (
 	// the foreground window.
 	foregroundEvery = 100 * time.Millisecond
 	// virtualName is the name of the --virtual-rate gamepad.
-	virtualName = "padmate spk01 virtual gamepad"
+	virtualName = "padmate trayspike virtual gamepad"
 )
 
-// spike is one run of spk01, without the tray.
+// spike is one run of trayspike, without the tray.
 type spike struct {
 	s      *input.Source // closed by run
 	opts   options
@@ -237,7 +237,7 @@ func (sp *spike) recordUntil(rec *recorder, done func() bool) {
 // the enumeration.
 func (sp *spike) header(early []input.Event, cpus int) headerJSON {
 	h := headerJSON{
-		Type: "header", Tool: "spk01", Version: version.String(), PID: os.Getpid(),
+		Type: "header", Tool: "trayspike", Version: version.String(), PID: os.Getpid(),
 		SDL: sp.s.Version(), Library: sp.s.Library(), Preset: sp.opts.preset,
 		MainThread: sp.mainThread, InputThread: sp.s.ThreadID(), LogicalCPUs: cpus,
 		DurationNs: sp.opts.duration.Nanoseconds(), VirtualRate: sp.opts.rate,
@@ -263,8 +263,8 @@ func (sp *spike) header(early []input.Event, cpus int) headerJSON {
 func (sp *spike) printHeader() {
 	w := sp.stderr
 	// Like the other diagnostics on stderr, a failed write is ignored.
-	_ = sp.s.WriteHeader(w, "spk01: ", sp.opts.preset)
-	fmt.Fprintf(w, "spk01: main (tray) thread %d, T-input thread %d; recording for %v\n",
+	_ = sp.s.WriteHeader(w, "trayspike: ", sp.opts.preset)
+	fmt.Fprintf(w, "trayspike: main (tray) thread %d, T-input thread %d; recording for %v\n",
 		sp.mainThread, sp.s.ThreadID(), sp.opts.duration)
 }
 
@@ -276,32 +276,32 @@ func printSummary(w io.Writer, s *summaryJSON) {
 			kinds = append(kinds, fmt.Sprintf("%s %d", k, n))
 		}
 	}
-	fmt.Fprintf(w, "spk01: window %.3fs, ended by %s\n", s.WindowSec, s.Reason)
-	fmt.Fprintf(w, "spk01: %d events (%s), %d dropped\n", s.Events, strings.Join(kinds, ", "), s.Dropped)
+	fmt.Fprintf(w, "trayspike: window %.3fs, ended by %s\n", s.WindowSec, s.Reason)
+	fmt.Fprintf(w, "trayspike: %d events (%s), %d dropped\n", s.Events, strings.Join(kinds, ", "), s.Dropped)
 	if v := s.Virtual; v != nil {
-		fmt.Fprintf(w, "spk01: virtual gamepad at %d Hz: %d state changes sent (%.1f Hz), %d events received, removed %t\n",
+		fmt.Fprintf(w, "trayspike: virtual gamepad at %d Hz: %d state changes sent (%.1f Hz), %d events received, removed %t\n",
 			v.Rate, v.Sent, v.AchievedHz, v.Received, v.Removed)
 	}
 	for _, c := range []struct {
 		what string
 		cpu  cpuJSON
 	}{{"window", s.CPU}, {"process lifetime", s.ProcessCPU}} {
-		fmt.Fprintf(w, "spk01: CPU over the %s (%.3fs): user %.1fms, kernel %.1fms = %.3f%% of one core, %.4f%% of %d logical CPUs\n",
+		fmt.Fprintf(w, "trayspike: CPU over the %s (%.3fs): user %.1fms, kernel %.1fms = %.3f%% of one core, %.4f%% of %d logical CPUs\n",
 			c.what, c.cpu.WallSec, c.cpu.UserMs, c.cpu.KernelMs, c.cpu.OneCorePercent, c.cpu.MachinePercent, s.LogicalCPUs)
 	}
-	fmt.Fprintf(w, "spk01: tray ready %t; the foreground window was spk01's in %d of %d samples\n",
+	fmt.Fprintf(w, "trayspike: tray ready %t; the foreground window was trayspike's in %d of %d samples\n",
 		s.TrayReady, s.Foreground.Own, s.Foreground.Samples)
 	for _, d := range s.Devices {
-		fmt.Fprintf(w, "spk01: device %d %s %q %04x:%04x driver=%s guid=%s virtual=%t removed=%t\n",
+		fmt.Fprintf(w, "trayspike: device %d %s %q %04x:%04x driver=%s guid=%s virtual=%t removed=%t\n",
 			d.ID, d.Type, d.Name, d.Vendor, d.Product, d.Driver, d.GUID, d.Virtual, d.Removed)
 	}
 	for _, e := range s.Errors {
-		fmt.Fprintf(w, "spk01: error: %s\n", e)
+		fmt.Fprintf(w, "trayspike: error: %s\n", e)
 	}
 	if s.OK {
-		fmt.Fprintln(w, "spk01: ok")
+		fmt.Fprintln(w, "trayspike: ok")
 	} else {
-		fmt.Fprintln(w, "spk01: FAIL")
+		fmt.Fprintln(w, "trayspike: FAIL")
 	}
 }
 
@@ -398,7 +398,7 @@ func newRecorder(w *bufio.Writer) *recorder {
 }
 
 // record counts e and writes its line. It formats the line by hand: at
-// the rates spk01 measures, reflection would be a noticeable part of the
+// the rates trayspike measures, reflection would be a noticeable part of the
 // CPU time.
 func (r *recorder) record(e input.Event) {
 	r.events++
@@ -639,7 +639,7 @@ type (
 		MachinePercent float64 `json:"machinePercent"`
 	}
 	// foregroundJSON counts the samples of the foreground window's process
-	// during the window, and those where it was spk01.
+	// during the window, and those where it was trayspike.
 	foregroundJSON struct {
 		Samples int `json:"samples"`
 		Own     int `json:"own"`

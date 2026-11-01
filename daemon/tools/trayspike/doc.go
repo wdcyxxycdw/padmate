@@ -1,15 +1,15 @@
-// Command spk01 is the tray spike: padmated's input side in its real
+// Command trayspike is the tray spike: padmated's input side in its real
 // shape, to check SDL's joystick backends, background input and the CPU
 // cost of T-input.
 //
-// `task spk01` builds it with -H=windowsgui into bin/spk01.exe, next to
+// `task spike:tray` builds it with -H=windowsgui into bin/trayspike.exe, next to
 // the pinned SDL3.dll, so it has no console, like the release padmated.
 // Its main thread runs the fyne.io/systray message loop (a tray icon with
 // a Quit item), as padmated's will (M7); T-input is internal/input.Open
 // on its own locked OS thread. The process has no window that can take
 // the focus, so every event it receives is a background event.
 //
-//	spk01 [--preset NAME] [--hint NAME=VALUE]... [--duration D]
+//	trayspike [--preset NAME] [--hint NAME=VALUE]... [--duration D]
 //	      [--log FILE] [--virtual-rate HZ]
 //
 // It waits 500ms for the connected devices, records every event for

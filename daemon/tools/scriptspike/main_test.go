@@ -28,7 +28,7 @@ func TestFlags(t *testing.T) {
 		if tc.stdout {
 			usageOn = &stdout
 		}
-		if !strings.Contains(usageOn.String(), "usage: spk03") {
+		if !strings.Contains(usageOn.String(), "usage: scriptspike") {
 			t.Errorf("%q: no usage in %q", tc.args, usageOn.String())
 		}
 		if !strings.Contains(stderr.String(), tc.msg) {

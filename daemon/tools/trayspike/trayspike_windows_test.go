@@ -70,7 +70,7 @@ func TestParseFlagsBad(t *testing.T) {
 		if code := run(tt.args, &stdout, &stderr); code != 2 {
 			t.Errorf("%q: code %d, want 2", tt.args, code)
 		}
-		if !strings.Contains(stderr.String(), tt.msg) || !strings.Contains(stderr.String(), "usage: spk01") {
+		if !strings.Contains(stderr.String(), tt.msg) || !strings.Contains(stderr.String(), "usage: trayspike") {
 			t.Errorf("%q: stderr %q, want %q and the usage", tt.args, stderr.String(), tt.msg)
 		}
 		if stdout.Len() > 0 {
@@ -84,7 +84,7 @@ func TestHelp(t *testing.T) {
 	if code := run([]string{"-h"}, &stdout, &stderr); code != 0 {
 		t.Errorf("code %d, want 0", code)
 	}
-	if !strings.HasPrefix(stdout.String(), "usage: spk01") || stderr.Len() > 0 {
+	if !strings.HasPrefix(stdout.String(), "usage: trayspike") || stderr.Len() > 0 {
 		t.Errorf("stdout %q, stderr %q", stdout.String(), stderr.String())
 	}
 	for _, name := range input.PresetNames() {
@@ -203,7 +203,7 @@ func logLines(t *testing.T, data []byte) (headerJSON, []map[string]any, summaryJ
 func checkVirtualRun(t *testing.T, data []byte, rate int) summaryJSON {
 	t.Helper()
 	h, evs, s := logLines(t, data)
-	if h.Tool != "spk01" || h.SDL == "" || h.Library == "" || h.Preset != "default" || h.VirtualRate != rate ||
+	if h.Tool != "trayspike" || h.SDL == "" || h.Library == "" || h.Preset != "default" || h.VirtualRate != rate ||
 		h.InputThread == 0 || h.LogicalCPUs < 1 || len(h.Hints) == 0 {
 		t.Errorf("header %+v", h)
 	}
@@ -275,7 +275,7 @@ func TestSpike(t *testing.T) {
 	if sum.TrayReady {
 		t.Error("trayReady without a tray")
 	}
-	if !strings.Contains(stderr.String(), "spk01: ok\n") {
+	if !strings.Contains(stderr.String(), "trayspike: ok\n") {
 		t.Errorf("stderr:\n%s", stderr.String())
 	}
 }
@@ -307,20 +307,20 @@ func TestSpikeStop(t *testing.T) {
 	}
 }
 
-// TestBinary builds spk01 as a GUI-subsystem program and runs it with a
+// TestBinary builds trayspike as a GUI-subsystem program and runs it with a
 // virtual gamepad: the real shape, with the tray on the main thread and
 // no window of its own that could be focused.
 func TestBinary(t *testing.T) {
 	lib := inputtest.Library(t)
 	dir := t.TempDir()
-	exe := filepath.Join(dir, "spk01.exe")
+	exe := filepath.Join(dir, "trayspike.exe")
 	out, err := exec.Command("go", "build", "-ldflags=-H=windowsgui", "-o", exe, ".").CombinedOutput()
 	if err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	logPath := filepath.Join(dir, "spk01.jsonl")
+	logPath := filepath.Join(dir, "trayspike.jsonl")
 	const rate = 500
 	cmd := exec.CommandContext(ctx, exe, "--virtual-rate", "500", "--duration", "1s", "--log", logPath)
 	cmd.Env = append(os.Environ(), input.EnvLibrary+"="+lib)
@@ -329,10 +329,10 @@ func TestBinary(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	start := time.Now()
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("spk01: %v after %v; stderr:\n%s", err, time.Since(start), stderr.String())
+		t.Fatalf("trayspike: %v after %v; stderr:\n%s", err, time.Since(start), stderr.String())
 	}
 	if d := time.Since(start); d > 20*time.Second {
-		t.Errorf("spk01 took %v", d)
+		t.Errorf("trayspike took %v", d)
 	}
 	data, err := os.ReadFile(logPath)
 	if err != nil {
@@ -344,9 +344,9 @@ func TestBinary(t *testing.T) {
 	}
 	// The tray window is hidden and never focused.
 	if sum.Foreground.Samples == 0 || sum.Foreground.Own != 0 {
-		t.Errorf("foreground %+v, want samples and none of them spk01's", sum.Foreground)
+		t.Errorf("foreground %+v, want samples and none of them trayspike's", sum.Foreground)
 	}
-	if strings.Contains(stderr.String(), "did not end") || !strings.Contains(stderr.String(), "spk01: ok\n") {
+	if strings.Contains(stderr.String(), "did not end") || !strings.Contains(stderr.String(), "trayspike: ok\n") {
 		t.Errorf("stderr:\n%s", stderr.String())
 	}
 	if stdout.Len() > 0 {

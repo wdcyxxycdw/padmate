@@ -14,7 +14,7 @@ import (
 type ActivationReport struct {
 	Runs int
 	// First is the first build and activation of the measurement: in
-	// spk03 the first esbuild and goja use in the process.
+	// scriptspike the first esbuild and goja use in the process.
 	First ActivationRun
 	// Cold is Build + CompileBundle + Activate; Build, Compile and Run
 	// are its parts, and CompileRun is Compile + Run: an activation from a
