@@ -1,4 +1,5 @@
 信息  这份配置是为“Xbox 360 Controller”做的
 丢弃  set 1 / guide：padmate 不映射 Xbox、PS 或 Home 键，这个按键没有导入
 丢弃  set 1 / rightstick / slot 2：同时按住的键里只能有一个不是修饰键：保留了 W，丢弃了 A
+丢弃  AntiMicroX 里给按键起的名字没有导入：padmate 按手柄上印的名字显示按键
 信息  start：Menu（Start）是 padmate 默认的功能键，默认设置下它上面的绑定不生效；要让它们生效，到设置里把功能键换成 View

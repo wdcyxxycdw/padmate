@@ -15,8 +15,9 @@
 //   - a control the profile writes replaces the parent's whole control, in the
 //     base layer, in the function set and in common (the shared bindings,
 //     which the drawer notes);
-//   - controlNames and timing are merged member by member, analog one level
-//     deeper (a setting of a stick), as the daemon does.
+//   - timing is merged member by member, analog one level deeper (a setting
+//     of a stick), as the daemon does. controlNames is retired: the editor
+//     shows no key names, so it does not merge them.
 import type {
   Profile,
   ProfileBinding,
@@ -139,8 +140,6 @@ export function withInherited(
   if (functionSet !== own.functionSet) set({ functionSet });
   const common = layerWith(draft.common, up.common);
   if (common !== draft.common) set({ common });
-  const names = membersWith(draft.controlNames, up.controlNames, 1);
-  if (names !== draft.controlNames) set({ controlNames: names });
   const timing = membersWith(draft.timing, up.timing, 1);
   if (timing !== draft.timing) set({ timing });
   const analog = membersWith(draft.analog, up.analog, 2);
@@ -286,12 +285,6 @@ export function writeBack(
     shown.common,
     next.common,
     up.common,
-  );
-  merged.controlNames = reconcileMembers(
-    draft.controlNames,
-    shown.controlNames,
-    next.controlNames,
-    1,
   );
   merged.timing = reconcileMembers(draft.timing, shown.timing, next.timing, 1);
   merged.analog = reconcileMembers(draft.analog, shown.analog, next.analog, 2);

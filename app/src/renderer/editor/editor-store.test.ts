@@ -91,14 +91,21 @@ const named = (store: EditorStore, name: string): Profile => ({
 });
 /**
  * An edit that undo takes back (the name is not part of the history): the
- * south key's name. mark reads it, or the profile's name before any.
+ * label of the misc1 key, which has a shortcut. mark reads it, or the
+ * profile's name before any.
  */
 const marked = (store: EditorStore, value: string): Profile => ({
   ...draft(store),
-  controlNames: { south: value },
+  layers: {
+    ...draft(store).layers,
+    base: {
+      ...draft(store).layers.base,
+      misc1: { label: value, press: { type: "keys", keys: "F13" } },
+    },
+  },
 });
 const mark = (profile: Profile | null | undefined) =>
-  profile?.controlNames?.south ?? profile?.name;
+  profile?.layers.base.misc1?.label ?? profile?.name;
 /** Lets the save loop's promises run. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -582,10 +589,7 @@ describe("changes elsewhere", () => {
   it("ignores a read of the file that a save of its own has outdated", async () => {
     const { api, store } = setup();
     await store.getState().activate(context);
-    store.getState().edit({
-      ...draft(store),
-      controlNames: { south: "first" },
-    });
+    store.getState().edit(marked(store, "first"));
     await store.getState().flush();
     const read = api.getProfile.getMockImplementation();
     let release = () => {};
@@ -601,19 +605,19 @@ describe("changes elsewhere", () => {
     // An undo saves meanwhile.
     expect(store.getState().undo()).toBe(true);
     await store.getState().flush();
-    expect(draft(store).controlNames).toBeUndefined();
+    expect(draft(store).layers.base.misc1).toBeUndefined();
     release();
     await changed;
     await settled();
     // The old file did not bring the undone edit back or clear the history.
-    expect(draft(store).controlNames).toBeUndefined();
+    expect(draft(store).layers.base.misc1).toBeUndefined();
     expect(store.getState()).toMatchObject({
       reloaded: false,
       unsaved: false,
       canRedo: true,
     });
     expect(store.getState().redo()).toBe(true);
-    expect(draft(store).controlNames).toEqual({ south: "first" });
+    expect(mark(draft(store))).toBe("first");
   });
 
   it("reads the file again on request", async () => {

@@ -155,8 +155,7 @@ export function BindingsListDialog({
               >
                 <span className="bindings-control">
                   <ControlIcon icon={controlIcon(key, family, labels)} />
-                  {effective.controlNames?.[key] ??
-                    listControlName(key, labels, language)}
+                  {listControlName(key, labels, language)}
                 </span>
                 <span className="bindings-label">{binding.label ?? ""}</span>
                 <span className="bindings-actions">

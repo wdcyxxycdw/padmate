@@ -406,7 +406,7 @@ it("locates diagnostics on the chip whose drawer edits them", () => {
     ["/layers/base/leftstick/press", "leftstick.press"],
     ["/layers/base/l3/hold", "leftstick.press"],
     ["/layers/base/rightstick/label", "rightstick.press"],
-    ["/controlNames/leftstick", "leftstick.press"],
+    ["/controlNames/leftstick", null],
     ["/layers/base/ls.up/hold", "leftstick"],
     ["/layers/base/rs.active", "rightstick"],
     // Raw axes and half presses belong to the stick and trigger drawers.
@@ -416,8 +416,8 @@ it("locates diagnostics on the chip whose drawer edits them", () => {
     ["/layers/base/lefttrigger+", "lefttrigger"],
     ["/layers/base/righttrigger-/press", "righttrigger"],
     ["/layers/base/dpad.upleft/press", "dpad.up"],
-    ["/controlNames/lt", "lefttrigger"],
-    ["/controlNames/south", "south"],
+    ["/controlNames/lt", null],
+    ["/controlNames/south", null],
     ["/analog/rs/deadzone", "rightstick"],
     ["/analog/dpad/mode", "dpad.up"],
     ["/analog/axisThreshold", "leftstick"],
@@ -459,12 +459,8 @@ it("locates diagnostics on the chip whose drawer edits them", () => {
 
 it("describes where each diagnostic is in the words of the editor", () => {
   const labels = controllerLabels("xboxone");
-  const profile: Profile = {
-    ...paint,
-    controlNames: { south: "撤销键", east: "  " },
-  };
   const zh = (pointer: string) =>
-    describeDiagnostic(at(pointer), profile, labels, "zh-CN");
+    describeDiagnostic(at(pointer), labels, "zh-CN");
   expect(zh("/name")).toBe("配置设置 · 名称");
   expect(zh("/timing/holdMs")).toBe("配置设置 · 触发长按时间");
   expect(zh("/timing/tapGapMs")).toBe("配置设置 · 点按间隔");
@@ -476,16 +472,17 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(zh("/analog/dpad/mode")).toBe("十字键");
   expect(zh("/analog/ls/deadzone")).toBe("左摇杆 · 摇杆设置");
   expect(zh("/analog/rt/press")).toBe("RT 键 · 扳机设置");
-  expect(zh("/layers/base/south/press")).toBe("撤销键 · 点按");
-  // A blank key name falls back to the control.
-  expect(zh("/controlNames/east")).toBe("B 键 · 按键名称");
+  // The retired key names are not read: the printed name stands, and a
+  // problem in them is in a part the editor does not show.
+  expect(zh("/layers/base/south/press")).toBe("A 键 · 点按");
+  expect(zh("/controlNames/east")).toBe("界面中未显示的部分");
   expect(zh("/layers/base/east/label")).toBe("B 键 · 显示文字");
-  expect(zh("/layers/base/south/haptic")).toBe("撤销键 · 触感");
+  expect(zh("/layers/base/south/haptic")).toBe("A 键 · 触感");
   expect(zh("/layers/base/ls.up/hold")).toBe("左摇杆 · ↑ 长按");
   // The click of a stick is its press cell, named like its drawer.
   expect(zh("/layers/base/leftstick/hold")).toBe("左摇杆 点按 · 长按");
   expect(zh("/layers/base/rightstick/press")).toBe("右摇杆 点按 · 点按");
-  expect(zh("/controlNames/leftstick")).toBe("左摇杆 点按 · 按键名称");
+  expect(zh("/controlNames/leftstick")).toBe("界面中未显示的部分");
   expect(zh("/layers/base/ls.active")).toBe("左摇杆 · 任意方向");
   expect(zh("/layers/base/leftx+/press")).toBe("左摇杆 · 原始轴向右 点按");
   expect(zh("/layers/base/lefttrigger+")).toBe("LT 键 · 半按");
@@ -493,8 +490,7 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(zh("/layers/base/dpad.upleft/tap")).toBe("十字键 ↑ · ↖ 点按");
   expect(zh("/layers/base/color")).toBe("界面中未显示的部分");
   expect(zh("/layers/tools/south/press")).toBe("界面中未显示的部分");
-  const en = (pointer: string) =>
-    describeDiagnostic(at(pointer), null, labels, "en");
+  const en = (pointer: string) => describeDiagnostic(at(pointer), labels, "en");
   expect(en("/name")).toBe("Profile settings · Name");
   expect(en("/timing/multiTapMs")).toBe("Profile settings · Multi-tap window");
   expect(en("/feedback/pause")).toBe(
@@ -504,7 +500,9 @@ it("describes where each diagnostic is in the words of the editor", () => {
   expect(en("/layers/base/leftstick/haptic")).toBe(
     "Left stick · Press · Haptic",
   );
-  expect(en("/controlNames/south")).toBe("A key · Key name");
+  expect(en("/controlNames/south")).toBe(
+    "In a part of the file the editor does not show",
+  );
   expect(en("/layers/base/south/haptic")).toBe("A key · Haptic");
   expect(en("/common/south")).toBe(
     "In a part of the file the editor does not show",
@@ -546,8 +544,9 @@ it("opens the drawer that edits a diagnostic, but not for profile settings", asy
   expect(
     within(screen.getByRole("complementary")).getByText("lefttrigger"),
   ).toBeDefined();
-  fireEvent.click(problem("A 键 · 按键名称"));
-  expect(select).toHaveBeenLastCalledWith("south");
+  // A problem in the retired key names opens nothing.
+  fireEvent.click(problem("界面中未显示的部分"));
+  expect(select).toHaveBeenLastCalledWith("lefttrigger");
 });
 
 it("opens the drawer's menu once for a right-clicked chip", async () => {
@@ -1033,19 +1032,14 @@ it("tells where a problem in the function set is", () => {
   expect(diagnosticView(at("/controlNames/south"))).toBeNull();
   expect(diagnosticView(at("/analog/ls/mode"))).toBeNull();
   const labels = controllerLabels("xboxone");
-  expect(
-    describeDiagnostic(at("/functionSet/lt.full/tap"), null, labels, "en"),
-  ).toBe("Hold function key · LT key · full pull Tap");
+  expect(describeDiagnostic(at("/functionSet/lt.full/tap"), labels, "en")).toBe(
+    "Hold function key · LT key · full pull Tap",
+  );
   // The old format reads the same, and says "function key" whichever it is.
   expect(
-    describeDiagnostic(
-      at("/functionKeys/start/lt.full/tap"),
-      null,
-      labels,
-      "en",
-    ),
+    describeDiagnostic(at("/functionKeys/start/lt.full/tap"), labels, "en"),
   ).toBe("Hold function key · LT key · full pull Tap");
-  expect(
-    describeDiagnostic(at("/functionSet/a/press"), null, labels, "zh-CN"),
-  ).toBe("按住功能键 · A 键 · 点按");
+  expect(describeDiagnostic(at("/functionSet/a/press"), labels, "zh-CN")).toBe(
+    "按住功能键 · A 键 · 点按",
+  );
 });

@@ -186,42 +186,11 @@ it("uses English names for the drawer landmarks", async () => {
   expect(screen.getByRole("group", { name: "Shortcut" })).toBeDefined();
 });
 
-it("renames the key from the title and removes an empty name", async () => {
-  const { editor } = await setup();
-  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
-  const name = screen.getByRole("textbox", { name: "按键名称" });
-  expect(name.getAttribute("maxLength")).toBe("80");
-  expect(document.activeElement).toBe(name);
-  fireEvent.change(name, { target: { value: "笔刷循环" } });
-  // Typing is not an edit yet; Enter commits it.
-  expect(editor.getState().draft?.controlNames).toBeUndefined();
-  fireEvent.keyDown(name, { key: "Enter" });
-  expect(editor.getState().draft?.controlNames?.north).toBe("笔刷循环");
-  expect(screen.getByRole("heading", { name: "笔刷循环" })).toBeDefined();
-  expect(document.activeElement).toBe(
-    screen.getByRole("button", { name: "重命名此按键" }),
-  );
-  // Escape keeps the name as it was.
-  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
-  fireEvent.change(screen.getByRole("textbox", { name: "按键名称" }), {
-    target: { value: "" },
-  });
-  fireEvent.keyDown(screen.getByRole("textbox", { name: "按键名称" }), {
-    key: "Escape",
-  });
-  expect(editor.getState().draft?.controlNames?.north).toBe("笔刷循环");
-  expect(screen.getByRole("heading", { name: "笔刷循环" })).toBeDefined();
-  // An empty name, committed by leaving the field, removes the name.
-  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
-  expect(
-    (screen.getByRole("textbox", { name: "按键名称" }) as HTMLInputElement)
-      .value,
-  ).toBe("笔刷循环");
-  commit(screen.getByRole("textbox", { name: "按键名称" }), {
-    target: { value: " " },
-  });
-  expect(editor.getState().draft?.controlNames).toBeUndefined();
+it("has no way to rename a key, and its title is the printed name whatever the file says (controlNames is retired)", async () => {
+  await setup({ ...paint, controlNames: { north: "笔刷循环" } });
   expect(screen.getByRole("heading", { name: "Y 键" })).toBeDefined();
+  expect(screen.queryByRole("button", { name: "重命名此按键" })).toBeNull();
+  expect(screen.queryByRole("textbox", { name: "按键名称" })).toBeNull();
 });
 
 it("edits the label shown on the controller and drops it when emptied", async () => {
@@ -399,10 +368,6 @@ it("makes the drawer read-only when the profile starts in another key group", as
   ).toBe(true);
   expect(
     (screen.getByTestId("add-gesture") as HTMLButtonElement).disabled,
-  ).toBe(true);
-  expect(
-    (screen.getByRole("button", { name: "重命名此按键" }) as HTMLButtonElement)
-      .disabled,
   ).toBe(true);
   // Cards still open and close so the settings can be read.
   fireEvent.click(screen.getByRole("button", { name: /^点按/ }));
@@ -809,14 +774,6 @@ it("lists the validation results for this key in plain words", async () => {
           message: 'unknown key "NotAKey"',
         },
         {
-          severity: "warning",
-          pointer: "/controlNames/north",
-          offset: 8,
-          line: 9,
-          col: 2,
-          message: "name is long",
-        },
-        {
           severity: "error",
           pointer: "/layers/base/south/tap/keys",
           offset: 6,
@@ -838,9 +795,7 @@ it("lists the validation results for this key in plain words", async () => {
   const items = screen.getAllByTestId("control-diagnostic");
   expect(items.map((item) => item.textContent)).toEqual([
     '错误 · 点按：unknown key "NotAKey"',
-    "警告 · 按键名称：name is long",
   ]);
-  expect(items[1].dataset.severity).toBe("warning");
 });
 
 it("explains the waits of mappings in one sentence and tags the header", async () => {
@@ -1068,7 +1023,7 @@ it("names the stick's drawers in English", async () => {
   ).toBeDefined();
 });
 
-it("edits the stick's press as an ordinary key: label, mappings, key name and menu", async () => {
+it("edits the stick's press as an ordinary key: label, mappings and menu", async () => {
   const { editor, record } = await setup(
     {
       ...paint,
@@ -1083,8 +1038,8 @@ it("edits the stick's press as an ordinary key: label, mappings, key name and me
     },
     "leftstick.press",
   );
-  // The key name is what the chip and the drawer are called.
-  expect(screen.getByRole("heading", { name: "吸管" })).toBeDefined();
+  // The drawer is called by the printed name; the file's key name is not read.
+  expect(screen.getByRole("heading", { name: "左摇杆 点按" })).toBeDefined();
   const label = screen.getByRole("textbox", { name: "功能" });
   expect((label as HTMLInputElement).value).toBe("取色");
   expect(shortcutValue()).toBe("Alt");
@@ -1097,11 +1052,6 @@ it("edits the stick's press as an ordinary key: label, mappings, key name and me
   expect(click().label).toBe("吸色");
   await record("F6");
   expect(click().press).toEqual({ type: "keys", keys: "F6" });
-  // Renaming the key writes the name of the stick binding.
-  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
-  const name = screen.getByRole("textbox", { name: "按键名称" });
-  commit(name, { target: { value: "画笔大小" } });
-  expect(editor.getState().draft?.controlNames?.leftstick).toBe("画笔大小");
   // The key menu is there, as for any key.
   fireEvent.click(screen.getByTestId("key-actions"));
   const menu = await screen.findByRole("menu", { name: "按键操作" });
@@ -1109,7 +1059,7 @@ it("edits the stick's press as an ordinary key: label, mappings, key name and me
     within(menu)
       .getAllByRole("menuitem")
       .map((item) => item.textContent),
-  ).toEqual(["复制此按键的设置", "粘贴…", "重命名按键…", "清空此按键…"]);
+  ).toEqual(["复制此按键的设置", "粘贴…", "清空此按键…"]);
 });
 
 it("starts the stick's press afresh after the key was cleared and the other cell was visited", async () => {
@@ -1205,7 +1155,6 @@ it("keeps what the stick drawers show apart: the script tag, the notice and the 
   });
   const diagnostics = [
     problem("/layers/base/leftstick/press/keys", "bad click"),
-    problem("/controlNames/leftstick", "bad name"),
     problem("/layers/base/ls.outer/press/keys", "bad ring"),
     problem("/analog/ls/deadzone", "bad deadzone"),
   ];
@@ -1220,10 +1169,7 @@ it("keeps what the stick drawers show apart: the script tag, the notice and the 
     "错误 · 摇杆设置：bad deadzone",
   ]);
   rerender("leftstick.press");
-  expect(shown()).toEqual([
-    "错误 · 点按：bad click",
-    "错误 · 按键名称：bad name",
-  ]);
+  expect(shown()).toEqual(["错误 · 点按：bad click"]);
 });
 
 it("shows why the profile did not load instead of the not-a-library text", async () => {
@@ -1337,7 +1283,7 @@ it("opens the key actions menu on a menu request", async () => {
     within(menu)
       .getAllByRole("menuitem")
       .map((item) => item.textContent),
-  ).toEqual(["复制此按键的设置", "粘贴…", "重命名按键…", "清空此按键…"]);
+  ).toEqual(["复制此按键的设置", "粘贴…", "清空此按键…"]);
   // The menu keeps focus; the drawer's own focus move does not take it.
   expect(menu.contains(document.activeElement)).toBe(true);
   expect(screen.getByTestId("key-actions").getAttribute("aria-expanded")).toBe(

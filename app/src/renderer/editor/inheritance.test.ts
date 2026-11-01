@@ -146,16 +146,12 @@ describe("withInherited", () => {
       a: { tap: { type: "keys", keys: "S" } },
     });
   });
-  it("merges the key names and the timing member by member", () => {
+  it("merges the timing member by member, and not the retired key names", () => {
     const shown = withInherited(child, parent);
-    expect(shown.controlNames).toEqual({ south: "Undo" });
+    expect(shown.controlNames).toEqual(child.controlNames);
     expect(shown.timing).toEqual({ holdMs: 300, multiTapMs: 200 });
-    const over = withInherited(
-      { ...child, timing: { holdMs: 100 }, controlNames: { south: "Back" } },
-      parent,
-    );
+    const over = withInherited({ ...child, timing: { holdMs: 100 } }, parent);
     expect(over.timing).toEqual({ holdMs: 100 });
-    expect(over.controlNames).toEqual({ south: "Back" });
   });
   it("merges the settings of a stick one by one", () => {
     const shown = withInherited(
@@ -318,14 +314,12 @@ describe("writeBack", () => {
     });
     expect(result).not.toHaveProperty("functionKeys");
   });
-  it("writes only the key names and timing the edit changed", () => {
+  it("writes only the timing the edit changed", () => {
     const edited: Profile = {
       ...shown(),
-      controlNames: { south: "Undo", east: "Redo" },
       timing: { holdMs: 300, multiTapMs: 200, tapGapMs: 5 },
     };
     const result = writeBack(child, parent, edited);
-    expect(result.controlNames).toEqual({ east: "Redo" });
     expect(result.timing).toEqual({ multiTapMs: 200, tapGapMs: 5 });
   });
   it("lets a member go that the edit cleared", () => {

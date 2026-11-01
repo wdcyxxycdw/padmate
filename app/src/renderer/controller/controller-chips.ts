@@ -593,13 +593,11 @@ export function controllerChips({
       continue;
     }
     const movement = isStickMovement(control);
-    const key = bindingKey(control);
     const keys = relatedKeys(control);
     const physical = labels[control] ?? labels[calloutOf(control)] ?? control;
-    // The key name is the press cell's (the stick binding's), not the movement's.
-    const renamed =
-      (!movement && profile?.controlNames?.[key]?.trim()) || undefined;
-    const name = renamed ?? physical;
+    // Keys are named as the pad prints them: a file's controlNames is
+    // retired and not read.
+    const name = physical;
     // registrationsFor keeps only the base layer and global registrations.
     const owners = keys.flatMap(
       (related) => registrationsFor(registrations, related).owners,
@@ -655,7 +653,7 @@ export function controllerChips({
     let detail: ChipSegment[];
     if (!description) {
       title = blocked
-        ? (label ?? renamed ?? blocked)
+        ? (label ?? blocked)
         : scriptOwned
           ? (label ?? ownerTitle)
           : (label ?? unset);
@@ -672,14 +670,14 @@ export function controllerChips({
         : description.title;
       titleKeys = description.keys;
       const trigger = triggerOnly(description.segment);
-      const named = label ?? renamed;
+      const named = label;
       detail = [
         ...(trigger ? [trigger] : []),
         ...(named ? [{ text: named }] : []),
         ...description.extras,
       ];
-    } else if (label ?? renamed) {
-      title = label ?? renamed ?? "";
+    } else if (label) {
+      title = label;
       detail = [description.segment, ...description.extras];
     } else if (description.keysAsTitle) {
       title = description.title;

@@ -2,9 +2,6 @@
   "schemaVersion": 1,
   "name": "old-and-odd",
   "defaultLayer": "base",
-  "controlNames": {
-    "east": "Jump"
-  },
   "analog": {
     "ls": {
       "mode": "standard",

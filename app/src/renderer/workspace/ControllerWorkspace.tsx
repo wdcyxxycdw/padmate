@@ -83,7 +83,6 @@ export function diagnosticControl(
   const found = diagnosticSet(diagnostic.pointer);
   if (found?.rest[0] && found.rest[0] !== "color")
     return calloutFor(found.rest[0]);
-  if (bits[0] === "controlNames" && bits[1]) return calloutFor(bits[1]);
   if (bits[0] === "analog") return own(analogCallouts, bits[1]) ?? null;
   return null;
 }
@@ -151,7 +150,6 @@ function diagnosticPart(
 ): string {
   const words = (pair?: [string, string]) =>
     pair ? tx(language, pair[0], pair[1]) : "";
-  if (bits[0] === "controlNames") return tx(language, "按键名称", "Key name");
   if (bits[0] === "analog") return words(own(analogSettings, bits[1]));
   const key = canonicalControl(bits[2] ?? "");
   const direction = key.split(".")[1];
@@ -174,7 +172,6 @@ function diagnosticPart(
 /** Where a diagnostic is, in the words the editor uses (the notice's problem list). */
 export function describeDiagnostic(
   diagnostic: ProfileDiagnostic,
-  profile: Profile | null,
   labels: Record<string, string>,
   language: Language,
 ): string {
@@ -208,20 +205,13 @@ export function describeDiagnostic(
     control === "leftstick" || control === "leftstick.press"
       ? tx(language, "左摇杆", "Left stick")
       : tx(language, "右摇杆", "Right stick");
-  // The key name of a stick is its press's: the movement keeps the stick's.
-  const renamed =
-    control === "leftstick" || control === "rightstick"
-      ? undefined
-      : profile?.controlNames?.[bindingKey(control)]?.trim();
-  const name =
-    renamed ||
-    (isStickPress(control)
-      ? tx(language, `${stick} 点按`, `${stick} · Press`)
-      : control === "leftstick" || control === "rightstick"
-        ? stick
-        : control.startsWith("dpad.")
-          ? tx(language, `十字键 ${label}`, `D-pad ${label}`)
-          : tx(language, `${label} 键`, `${label} key`));
+  const name = isStickPress(control)
+    ? tx(language, `${stick} 点按`, `${stick} · Press`)
+    : control === "leftstick" || control === "rightstick"
+      ? stick
+      : control.startsWith("dpad.")
+        ? tx(language, `十字键 ${label}`, `D-pad ${label}`)
+        : tx(language, `${label} 键`, `${label} key`);
   const part = diagnosticPart(bits, control, language);
   const where = part ? `${name} · ${part}` : name;
   return inSet
@@ -439,7 +429,7 @@ export function ControllerWorkspace({
             editor={editor}
             language={language}
             describe={(diagnostic) =>
-              describeDiagnostic(diagnostic, draft, labels, language)
+              describeDiagnostic(diagnostic, labels, language)
             }
             onLocate={(diagnostic) => {
               // Name and timing are in 配置设置; describe() says so.

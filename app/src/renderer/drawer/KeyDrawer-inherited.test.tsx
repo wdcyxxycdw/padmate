@@ -150,8 +150,8 @@ it("shows the parent's gestures as the key's own, without a word about it", asyn
   ).toBe("撤销");
   expect(screen.getByRole("button", { name: /^点按/ })).toBeDefined();
   expect(screen.getByRole("button", { name: /^长按/ })).toBeDefined();
-  // And the parent's name for the key.
-  expect(screen.getByRole("heading", { name: "撤销键" })).toBeDefined();
+  // The parent's retired key name is not read: the printed name stands.
+  expect(screen.getByRole("heading", { name: "A 键" })).toBeDefined();
   expect(shortcutValue()).toBe("Ctrl+Z");
 });
 
@@ -256,18 +256,6 @@ it("copies the settings the key has, whoever wrote them", async () => {
   openMenu();
   fireEvent.click(menuItem("复制此按键的设置") as HTMLButtonElement);
   expect(screen.getByRole("status").textContent).toContain("已复制");
-});
-
-it("names the key as the profile does, and the parent's name stands where it has none", async () => {
-  const { editor } = await setup("south");
-  expect(screen.getByRole("heading", { name: "撤销键" })).toBeDefined();
-  fireEvent.click(screen.getByRole("button", { name: "重命名此按键" }));
-  const name = screen.getByRole("textbox", { name: "按键名称" });
-  fireEvent.change(name, { target: { value: "回退" } });
-  fireEvent.keyDown(name, { key: "Enter" });
-  // Only the name is written; the binding stays the parent's.
-  expect(editor.getState().draft?.controlNames).toEqual({ south: "回退" });
-  expect(base(editor)).not.toHaveProperty("south");
 });
 
 it("shows a stick whose directions come from the parent and the profile alike as plain bindings", async () => {

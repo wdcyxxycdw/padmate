@@ -624,7 +624,7 @@ The folder structure is in §3. The data folder is `%APPDATA%\padmate` by defaul
 
 ### 10.3 Binding syntax
 
-**Top-level members**: `schemaVersion`, `name` and `layers` (which must have `base`) are required. Optional: `extends`, `defaultLayer`, `controlNames`, `timing`, `analog`, `feedback`, `script` (`entry`, `api`, `params`, `tickHz`), `common` (the bottom layer shared by every layer), `functionSet` (the set while the function key is held, §7.9) and `functionKeys` (the old format).
+**Top-level members**: `schemaVersion`, `name` and `layers` (which must have `base`) are required. Optional: `extends`, `defaultLayer`, `controlNames` (retired: accepted and checked, read by nothing, dropped by the UI on save; [ADR: Editor UI](adr/0013-editor-ui.md)), `timing`, `analog`, `feedback`, `script` (`entry`, `api`, `params`, `tickHz`), `common` (the bottom layer shared by every layer), `functionSet` (the set while the function key is held, §7.9) and `functionKeys` (the old format).
 
 **Layers**: a map from control names (§7.1) to bindings, plus an optional `color`. An alias and its standard name cannot both appear in one layer. The targets of layer actions must exist.
 

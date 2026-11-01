@@ -386,7 +386,8 @@ function filledAction(action: ProfileAction): ProfileAction | null {
  * older format version (0) is saved at the current one. The four
  * feedback switches that moved to config.json (ADR-0015) are not written: the
  * daemon no longer reads them, so a save drops them, and a feedback object
- * left with nothing goes too. The bindings on back and start stay wherever
+ * left with nothing goes too. The retired key names (controlNames) go as
+ * well. The bindings on back and start stay wherever
  * the file has them: which of them is the function key changes in the
  * settings (ADR-0012), and the daemon ignores the one that is. A binding on
  * the Xbox button (guide), which the daemon no longer maps, goes. A file of
@@ -484,6 +485,13 @@ export function savedForm(
         key !== "feedback" ? [[key, value]] : feedback ? [[key, feedback]] : [],
       ),
     ) as Profile;
+  }
+  // The key names the UI once gave (controlNames) are retired: the daemon
+  // still accepts them, nothing reads them, and a save drops them, as it
+  // does the retired feedback switches. No binding changes with them.
+  if ("controlNames" in result) {
+    const { controlNames: _names, ...rest } = result;
+    result = rest as Profile;
   }
   return result;
 }

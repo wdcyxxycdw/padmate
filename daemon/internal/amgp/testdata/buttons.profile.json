@@ -2,12 +2,6 @@
   "schemaVersion": 1,
   "name": "Basic test",
   "defaultLayer": "base",
-  "controlNames": {
-    "south": "Undo",
-    "north": "Brush",
-    "lt": "Left trigger",
-    "dpad.up": "Up key"
-  },
   "analog": {
     "ls": {
       "mode": "standard",

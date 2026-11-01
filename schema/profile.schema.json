@@ -46,7 +46,7 @@
       "x-go-field": "DefaultLayer"
     },
     "controlNames": {
-      "description": "User-visible names for canonical controls; separate from binding action labels.",
+      "description": "Retired: names that the UI once gave canonical controls. Still accepted and checked, but nothing reads them: keys are shown by the names the controller prints, and the UI drops this member when it writes the profile (ADR-0013).",
       "type": "object",
       "maxProperties": 96,
       "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 80 },

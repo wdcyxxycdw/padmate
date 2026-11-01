@@ -120,16 +120,9 @@ func (cv *converter) build() *obj {
 	p.set("name", cv.profileName())
 	p.set("defaultLayer", "base")
 	if len(doc.names) > 0 {
-		controls := make([]string, 0, len(doc.names))
-		for c := range doc.names {
-			controls = append(controls, c)
-		}
-		sort.Slice(controls, func(i, j int) bool { return cv.rank[controls[i]] < cv.rank[controls[j]] })
-		names := newObj()
-		for _, c := range controls {
-			names.set(c, doc.names[c])
-		}
-		p.set("controlNames", names)
+		// padmate names keys as the controller prints them; controlNames
+		// is retired (ADR-0013).
+		cv.rep.dropped("names", loc{}, "AntiMicroX 里给按键起的名字没有导入：padmate 按手柄上印的名字显示按键")
 	}
 	if doc.keyPressTime > 0 {
 		p.set("timing", newObj().set("tapPressMs", min(doc.keyPressTime, maxKeyDownMs)))

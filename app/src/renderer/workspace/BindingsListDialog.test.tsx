@@ -596,12 +596,12 @@ it("lists what the profile takes from the one its file extends, unmarked (ADR-00
   const rows = [...dialog.querySelectorAll("li")]
     .filter((row) => row.querySelector(".bindings-control")?.textContent)
     .map((row) => row.textContent);
-  // Its own bindings first, then what the parent adds, under the parent's name
-  // and with no mark.
+  // Its own bindings first, then what the parent adds, with no mark, under
+  // the printed name: the parent's retired key name is not read.
   expect(rows.slice(0, 3)).toEqual([
     "A点按 Ctrl+Shift+Z",
     "X点按 E",
-    "重做点按 Ctrl+Y",
+    "B点按 Ctrl+Y",
   ]);
   expect(dialog.querySelector('[data-testid="inherited-mark"]')).toBeNull();
 });

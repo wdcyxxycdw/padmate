@@ -114,92 +114,13 @@ interface Confirmation {
   payload?: ProfileBinding;
 }
 
-function KeyTitle({
-  title,
-  name,
-  placeholder,
-  renamable = true,
-  disabled,
-  editing,
-  onEditing,
-  onRename,
-  language,
-}: {
-  title: string;
-  name: string;
-  placeholder: string;
-  /** False for a stick's movement: the key name belongs to its press. */
-  renamable?: boolean;
-  disabled: boolean;
-  editing: boolean;
-  onEditing: (editing: boolean) => void;
-  onRename: (name: string) => void;
-  language: Language;
-}) {
-  const input = useRef<HTMLInputElement>(null);
-  const pencil = useRef<HTMLButtonElement>(null);
-  // Enter and Escape return focus to the pencil; a click elsewhere keeps it.
-  const refocus = useRef(false);
-  const done = () => {
-    refocus.current = true;
-    onEditing(false);
-  };
-  // The name is committed on Enter or when the field loses focus.
-  const field = useCommitField({
-    value: name,
-    onCommit: (next) => onRename(next.trim()),
-    onDone: done,
-  });
-  useEffect(() => {
-    if (editing) {
-      input.current?.focus();
-      input.current?.select();
-    } else if (refocus.current) {
-      refocus.current = false;
-      pencil.current?.focus();
-    }
-  }, [editing]);
-  if (editing)
-    return (
-      <input
-        ref={input}
-        className="input drawer-rename"
-        aria-label={tx(language, "按键名称", "Key name")}
-        maxLength={80}
-        placeholder={placeholder}
-        {...field.props}
-        onKeyDown={(event) => {
-          if (event.key !== "Escape") return field.props.onKeyDown(event);
-          // Escape keeps the name as it was, typed or not.
-          event.preventDefault();
-          event.stopPropagation();
-          field.reset();
-          done();
-        }}
-        onBlur={() => {
-          field.commit();
-          onEditing(false);
-        }}
-      />
-    );
+/** The title of the drawer: the key's printed name. */
+function KeyTitle({ title }: { title: string }) {
   return (
     <div className="drawer-title-row">
       <h2 className="drawer-title" title={title} tabIndex={-1}>
         {title}
       </h2>
-      {renamable && (
-        <button
-          ref={pencil}
-          type="button"
-          className="icon-btn bare drawer-pencil"
-          aria-label={tx(language, "重命名此按键", "Rename this key")}
-          title={tx(language, "重命名此按键", "Rename this key")}
-          disabled={disabled}
-          onClick={() => onEditing(true)}
-        >
-          <Icon name="edit" size={13} stroke={2} />
-        </button>
-      )}
     </div>
   );
 }
@@ -317,9 +238,7 @@ export function KeyDrawer({
       : kind === "dpad"
         ? t(`十字键 ${glyph}`, `D-pad ${glyph}`)
         : t(`${glyph} 键`, `${glyph} key`);
-  // The key name of a stick is its press's (controlNames.leftstick).
-  const name = kind === "stick" ? "" : (profile?.controlNames?.[key] ?? "");
-  const title = name || defaultTitle;
+  const title = defaultTitle;
   const locked = !profile || !!state.readOnly || state.busy;
   const binding: ProfileBinding = profile ? baseBinding(profile, key) : {};
   const used = usedGestures(binding);
@@ -359,7 +278,6 @@ export function KeyDrawer({
     : keyScripts;
   const [clipboard, setClipboard] = useState(() => keyClipboard);
   const [copiedFor, setCopiedFor] = useState<string | null>(null);
-  const [renamingFor, setRenamingFor] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<Confirmation | null>(null);
   // The key whose mappings were cleared from the menu has none, as after the
   // last one is deleted: it shows no empty 点按 (ADR-0013). Opening another
@@ -392,15 +310,6 @@ export function KeyDrawer({
 
   const setBinding = (next: ProfileBinding | undefined) => {
     if (profile && !locked) edit(setBaseBinding(profile, key, next));
-  };
-  const rename = (value: string) => {
-    if (!profile || locked) return;
-    const names = { ...profile.controlNames };
-    if (value) names[key] = value;
-    else delete names[key];
-    const next: Profile = { ...profile, controlNames: names };
-    if (!Object.keys(names).length) delete next.controlNames;
-    edit(next);
   };
   const request = (confirmation: "paste" | "clear") =>
     setConfirm({
@@ -517,12 +426,6 @@ export function KeyDrawer({
             disabled: !clipboard || locked,
             onSelect: () => request("paste"),
           },
-          {
-            label: t("重命名按键…", "Rename key…"),
-            icon: "edit",
-            disabled: locked,
-            onSelect: () => setRenamingFor(control),
-          },
           { kind: "separator" },
           view === "normal"
             ? {
@@ -596,17 +499,7 @@ export function KeyDrawer({
           </span>
         )}
         <div className="drawer-heading">
-          <KeyTitle
-            title={title}
-            name={name}
-            placeholder={defaultTitle}
-            disabled={locked}
-            renamable={kind !== "stick"}
-            editing={renamingFor === control && !locked}
-            onEditing={(editing) => setRenamingFor(editing ? control : null)}
-            onRename={rename}
-            language={language}
-          />
+          <KeyTitle title={title} />
           <p className="drawer-subtitle">
             <span className="drawer-subtitle-text" title={profileText}>
               {profileText}

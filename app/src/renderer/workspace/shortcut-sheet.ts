@@ -85,7 +85,7 @@ function buttonName(
   { language, controlName }: SheetOptions,
 ): string {
   const key = canonicalControl(control);
-  const name = profile.controlNames?.[key] || controlName?.(key) || key;
+  const name = controlName?.(key) || key;
   return usedGestures(baseBinding(profile, key)).length > 1
     ? `${name} ${gestureName(gesture, language)}`
     : name;

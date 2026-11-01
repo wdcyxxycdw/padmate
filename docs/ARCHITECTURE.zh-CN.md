@@ -624,7 +624,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 
 ### 10.3 绑定语法
 
-**顶层成员**：必填 `schemaVersion`、`name`、`layers`（必须有 `base`）。可选：`extends`、`defaultLayer`、`controlNames`、`timing`、`analog`、`feedback`、`script`（`entry`、`api`、`params`、`tickHz`）、`common`（所有层共用的底层）、`functionSet`（按住功能键时的一套，§7.9）、`functionKeys`（旧格式）。
+**顶层成员**：必填 `schemaVersion`、`name`、`layers`（必须有 `base`）。可选：`extends`、`defaultLayer`、`controlNames`（退役：照常接受和检查，谁也不读，界面保存时去掉；见 [ADR：编辑界面](adr/0013-editor-ui.zh-CN.md)）、`timing`、`analog`、`feedback`、`script`（`entry`、`api`、`params`、`tickHz`）、`common`（所有层共用的底层）、`functionSet`（按住功能键时的一套，§7.9）、`functionKeys`（旧格式）。
 
 **层**：控件名（§7.1）到绑定的映射，另有可选 `color`。别名和标准名不能在同一层同时出现。层动作的目标必须存在。
 

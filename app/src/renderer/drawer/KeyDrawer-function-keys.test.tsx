@@ -249,7 +249,7 @@ it("clears a control from the set, and the set when it is the last", async () =>
     within(menu)
       .getAllByRole("menuitem")
       .map((item) => item.textContent),
-  ).toEqual(["复制此按键的设置", "粘贴…", "重命名按键…", "清除这一套里的设置"]);
+  ).toEqual(["复制此按键的设置", "粘贴…", "清除这一套里的设置"]);
   fireEvent.click(
     within(menu).getByRole("menuitem", { name: "清除这一套里的设置" }),
   );
@@ -290,7 +290,7 @@ it("keeps the usual menu in the usual view", async () => {
     within(screen.getByRole("menu", { name: "按键操作" }))
       .getAllByRole("menuitem")
       .map((item) => item.textContent),
-  ).toEqual(["复制此按键的设置", "粘贴…", "重命名按键…", "清空此按键…"]);
+  ).toEqual(["复制此按键的设置", "粘贴…", "清空此按键…"]);
 });
 
 it("pastes into the set", async () => {

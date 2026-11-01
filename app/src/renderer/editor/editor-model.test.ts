@@ -426,6 +426,26 @@ describe("savedForm", () => {
     expect(savedForm(draft)).toBe(draft);
   });
 
+  it("leaves out the retired key names (controlNames), in place, and no key with them", () => {
+    const draft = {
+      schemaVersion: 1,
+      name: "p",
+      controlNames: { south: "确认", leftstick: "笔刷" },
+      layers: { base: { south: { press: { type: "keys", keys: "A" } } } },
+    } as Profile;
+    const before = structuredClone(draft);
+    const saved = savedForm(draft);
+    expect(saved).toEqual({
+      schemaVersion: 1,
+      name: "p",
+      layers: { base: { south: { press: { type: "keys", keys: "A" } } } },
+    });
+    expect(Object.keys(saved)).toEqual(["schemaVersion", "name", "layers"]);
+    // The bindings are the draft's own objects: no key is rewritten.
+    expect(saved.layers.base).toBe(draft.layers.base);
+    expect(draft).toEqual(before);
+  });
+
   it("leaves out the feedback switches that moved to the settings (ADR-0015)", () => {
     // rumble, led, pause and lowBattery are global now: a save drops them from
     // the file and keeps the members that stay.

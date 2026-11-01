@@ -89,16 +89,13 @@ test("a key runs a script, ownership and IME warnings, real Markdown and PNG sho
     await page.keyboard.press("Control+Y");
     await expect.poll(northPress).toEqual(script);
     await client.call("fake.release", { control: "south" });
-    await page.getByRole("button", { name: "重命名此按键" }).click();
-    const keyName = page.getByRole("textbox", {
-      name: "按键名称",
-      exact: true,
-    });
-    await keyName.fill("笔刷循环");
-    await keyName.press("Enter");
-    await expect
-      .poll(async () => (await onDisk(client as FixtureClient)).controlNames)
-      .toEqual({ north: "笔刷循环" });
+    // Keys cannot be renamed: the drawer is titled by the printed name.
+    await expect(
+      page.getByRole("button", { name: "重命名此按键" }),
+    ).toHaveCount(0);
+    expect(
+      (await onDisk(client as FixtureClient)).controlNames,
+    ).toBeUndefined();
     expect((await onDisk(client)).layers.base.north?.press).toEqual({
       type: "macro",
       file: "下一个笔刷.ts",

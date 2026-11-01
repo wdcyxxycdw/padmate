@@ -242,19 +242,6 @@ export function controlDiagnostics(
       });
       continue;
     }
-    // The key name of a stick is its press's.
-    if (
-      bits[0] === "controlNames" &&
-      bits[1] &&
-      kind !== "stick" &&
-      canonicalControl(bits[1]) === bindingKey
-    ) {
-      result.push({
-        diagnostic,
-        where: tx(language, "按键名称", "Key name"),
-      });
-      continue;
-    }
     const found = diagnosticSet(diagnostic.pointer);
     if (found?.view !== view || !found.rest[0]) continue;
     if (!ownsKey(found.rest[0], bindingKey, kind, control)) continue;

@@ -170,10 +170,10 @@ it("shows a binding of its own and one that overrides the parent's the same way"
   expect(chip("dpad.left")?.getAttribute("data-state")).toBe("unbound");
 });
 
-it("takes the key names of the parent too", async () => {
+it("does not take the retired key names of the parent", async () => {
   await open(sketch);
-  // The parent calls the key 笔刷; the profile does not name it.
-  expect(chip("north")?.getAttribute("aria-label")).toBe("Y · 笔刷");
+  // The parent calls the key 笔刷 (controlNames): not read.
+  expect(chip("north")?.getAttribute("aria-label")).toBe("Y · B");
   // A key nobody names shows what it does.
   expect(chip("east")?.getAttribute("aria-label")).toBe("B · E");
 });

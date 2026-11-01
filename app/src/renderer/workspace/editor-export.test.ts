@@ -102,7 +102,6 @@ const joyConPaint: Profile = {
 const mixed: Profile = {
   schemaVersion: 1,
   name: "Paint | pen",
-  controlNames: { north: "笔刷 | 循环" },
   layers: {
     base: {
       south: {
@@ -133,7 +132,7 @@ describe("shortcut table", () => {
     expect(sheet.rows).toEqual([
       ["A 点按", "Ctrl+Z", "撤销（通常已是默认）"],
       ["A 长按", "Ctrl+F13", "撤销"],
-      ["笔刷 | 循环", "F14", "（未命名）"],
+      ["Y", "F14", "（未命名）"],
       ["X", "Ctrl+K → S", "（未命名，通常已是默认）"],
     ]);
     // Only base is shown; the other group and common are only counted.
@@ -198,7 +197,7 @@ describe("shortcut table", () => {
       "在绘画软件的快捷键设置中选中右列的功能，再按左列的手柄按键，padmate 将自动输入快捷键。",
     );
     expect(markdown).toContain("| 手柄按键 | 快捷键 | 请在软件中设置为 |");
-    expect(markdown).toContain("| 笔刷 \\| 循环 | F14 | （未命名） |");
+    expect(markdown).toContain("| Y | F14 | （未命名） |");
     expect(markdown).toContain("\n配置文件中还有 2 项设置未列出。\n");
     expect(markdown).toContain("\n- Aseprite 不支持 F13–F24。\n");
     for (const hidden of ["cycleBrush", "photo", "tools", "F15", "层", "Layer"])

@@ -20,7 +20,6 @@ const controls = Object.keys(labels);
 const paint: Profile = {
   schemaVersion: 1,
   name: "绘画",
-  controlNames: { leftshoulder: "修饰键" },
   layers: {
     base: {
       south: {
@@ -126,13 +125,13 @@ describe("controller chips", () => {
     });
   });
 
-  it("titles unlabeled bindings with the key name, the shortcut or the action", () => {
+  it("titles unlabeled bindings with the shortcut or the action", () => {
     const result = chips();
-    // A renamed control: its name, then what it does.
+    // A held modifier: its keys are the title, and it says it holds.
     expect(result.leftshoulder).toMatchObject({
-      title: "修饰键",
-      detail: [{ keys: "LCtrl", hold: true }],
-      summary: "Ctrl 按住",
+      title: "Ctrl",
+      titleKeys: { keys: "LCtrl" },
+      detail: [{ hold: true }],
     });
     // A plain shortcut is the title itself, shown as keycaps.
     expect(result.west).toMatchObject({
@@ -218,16 +217,15 @@ describe("controller chips", () => {
     expect(chips({ language: "en" })["rightstick.press"].title).toBe("Not set");
   });
 
-  it("names the press cell after the stick's key name", () => {
+  it("does not read the retired key names of a file (controlNames)", () => {
     const renamed = structuredClone(paint);
-    renamed.controlNames = { leftstick: "笔刷大小" };
+    renamed.controlNames = { leftstick: "笔刷大小", south: "确认" };
     renamed.layers.base.leftstick = { press: { type: "keys", keys: "Tab" } };
-    expect(chips({ profile: renamed })["leftstick.press"]).toMatchObject({
-      title: "笔刷大小",
-      detail: [{ keys: "Tab" }],
-    });
-    // The movement is not what that name is for.
-    expect(chips({ profile: renamed }).leftstick.title).toBe("↑ ↓ ← →");
+    const plain = structuredClone(renamed);
+    delete plain.controlNames;
+    // The chips are what they are without the names.
+    expect(chips({ profile: renamed })).toEqual(chips({ profile: plain }));
+    expect(chips({ profile: renamed })["leftstick.press"].title).toBe("Tab");
   });
 
   it("keeps a stick's movement and press apart in state, lock and script ownership", () => {
@@ -339,9 +337,7 @@ describe("controller chips", () => {
       expect(result.east.summary).not.toContain("按住");
     }
     // A real modifier still holds.
-    expect(chips().leftshoulder.detail).toEqual([
-      { keys: "LCtrl", hold: true },
-    ]);
+    expect(chips().leftshoulder.detail).toEqual([{ hold: true }]);
   });
 
   it("shows a script a key runs, and its missing file as a warning", () => {

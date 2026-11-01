@@ -73,7 +73,6 @@ export const names: Name[] = [
   ["确定", "OK"],
   // Guide 1: the controller picture and the key drawer
   ["由脚本接管", "Handled by a script"],
-  ["重命名此按键", "Rename this key"],
   ["功能", "Function"],
   ["映射", "Mappings"],
   ["摇杆设置", "Stick settings"],
