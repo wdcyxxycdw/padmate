@@ -2,7 +2,7 @@
 
 [English](0013-editor-ui.md)
 
-相关：UI-03、UI-04、UI-26 至 UI-46、OUT-18、PRO-20、PRO-29；[ARCHITECTURE §12](../ARCHITECTURE.zh-CN.md)；[ADR：映射模型](0012-mapping-model.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)；[ADR：脚本宏](0011-script-macros.zh-CN.md)
+相关：[ARCHITECTURE §12](../ARCHITECTURE.zh-CN.md)；[ADR：映射模型](0012-mapping-model.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)；[ADR：脚本宏](0011-script-macros.zh-CN.md)
 
 ## 背景
 

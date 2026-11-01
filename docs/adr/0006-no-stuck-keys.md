@@ -2,7 +2,7 @@
 
 [中文](0006-no-stuck-keys.zh-CN.md)
 
-Related: DMN-06, DMN-07, DMN-09, DMN-12, DMN-20, OUT-09, OUT-14; [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§8.2](../ARCHITECTURE.md#82-output-arbiter)
+Related: [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§8.2](../ARCHITECTURE.md#82-output-arbiter)
 
 ## Context
 
@@ -18,10 +18,10 @@ Invariant 1 requires every exit path to release every key. This record covers th
    - A signal that clears a reason (unlock, wake) is not trusted as such: the state is checked again, and the timer corrects missed messages.
    - Only the router opens the gate, after a barrier, so that no slot presses something from before the suspend.
    - Sleep and end of session wait for the release to go out (up to 1 s) and are not vetoed.
-5. **Quarantining held controls after waking (DMN-12).** For a key held across sleep, SDL first sends a synthesized up, and the down of the original hold arrives later and would press the key again by mistake. So when a suspend starts, the router quarantines every active control: a quarantined control is not mapped, and neither an up nor an empty snapshot lifts the quarantine; it needs an active state after resuming, then a release.
-6. **The held-keys log and the startup sweep (OUT-14).** Before a key goes down, the held keys are written to `held.bin`, a bitmap file outside the process, and the next start releases them. Bits are only added before the press and only cleared after the send. The sweep runs on T-output: it intersects the log with `GetAsyncKeyState` and sends one release for each key. A failure does not stop the start.
+5. **Quarantining held controls after waking.** For a key held across sleep, SDL first sends a synthesized up, and the down of the original hold arrives later and would press the key again by mistake. So when a suspend starts, the router quarantines every active control: a quarantined control is not mapped, and neither an up nor an empty snapshot lifts the quarantine; it needs an active state after resuming, then a release.
+6. **The held-keys log and the startup sweep.** Before a key goes down, the held keys are written to `held.bin`, a bitmap file outside the process, and the next start releases them. Bits are only added before the press and only cleared after the send. The sweep runs on T-output: it intersects the log with `GetAsyncKeyState` and sends one release for each key. A failure does not stop the start.
 7. **Only a log of the same sign-in session is swept** (session ID, LUID and sign-in time all equal). Otherwise the log is reset and no key is released, so that keys the user is holding right now are not released.
-8. **Offline emergency release (DMN-20).** `padmatectl release-all` does not use IPC; it signals the named event `Local\padmate.panic` in the session. The event is auto-reset, and only a padmated with `--inject` listens (a dry run listening would steal the signal). Access is granted to the current user explicitly, so both elevated and normal terminals can signal it.
+8. **Offline emergency release.** `padmatectl release-all` does not use IPC; it signals the named event `Local\padmate.panic` in the session. The event is auto-reset, and only a padmated with `--inject` listens (a dry run listening would steal the signal). Access is granted to the current user explicitly, so both elevated and normal terminals can signal it.
 
 ## Costs
 

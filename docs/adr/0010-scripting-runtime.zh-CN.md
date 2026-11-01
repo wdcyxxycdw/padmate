@@ -2,7 +2,7 @@
 
 [English](0010-scripting-runtime.md)
 
-相关：SCR-01、SCR-02、SCR-03；[ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
+相关：[ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
 
 ## 背景
 

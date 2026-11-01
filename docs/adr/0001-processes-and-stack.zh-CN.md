@@ -2,7 +2,7 @@
 
 [English](0001-processes-and-stack.md)
 
-相关：ENG-02、UI-01、UI-45、DMN-04、DMN-14、DMN-22；[ARCHITECTURE §2](../ARCHITECTURE.zh-CN.md#2-进程模型)、[§12](../ARCHITECTURE.zh-CN.md#12-electron)
+相关：[ARCHITECTURE §2](../ARCHITECTURE.zh-CN.md#2-进程模型)、[§12](../ARCHITECTURE.zh-CN.md#12-electron)
 
 ## 背景
 
@@ -16,7 +16,7 @@
 4. **界面的安全桥。** Renderer 开 sandbox 和 contextIsolation，关 nodeIntegration；页面由带 CSP 的 `padmate://app` 提供；preload 只暴露命名方法，Main 再校验。Main 通过子进程 `padmatectl ui-bridge`（有界 NDJSON、方法白名单）访问 IPC，token 不进 Renderer 和日志。
 5. **padmate 自己的窗口在前台时只演练、不发键。** 按已验证的进程实例判断，不把所有 electron.exe 当作自己。
 6. **启动顺序。** 界面先连现有守护进程，连不上才以 detached、无控制台的方式启动，关界面不终止它。打包版界面用 `--inject`，开发版、E2E 和测试用 `--dry-run`（[ADR：不卡键](0006-no-stuck-keys.zh-CN.md)）。
-7. **启动失败要说清楚（UI-45）。** 打包版 padmated 没有 stderr，所以用 `--startup-report FILE` 写一个 JSON 报告并以退出码 3 退出；Main 读报告（限大小，只留认得的字段）并停止重试。界面只显示失败页：原因、路径、“打开文件夹”“重试”“退出”。config.json 本身有错不算启动失败，由守护进程备份并修复（[ADR：配置库](0008-profile-library.zh-CN.md)）。
+7. **启动失败要说清楚。** 打包版 padmated 没有 stderr，所以用 `--startup-report FILE` 写一个 JSON 报告并以退出码 3 退出；Main 读报告（限大小，只留认得的字段）并停止重试。界面只显示失败页：原因、路径、“打开文件夹”“重试”“退出”。config.json 本身有错不算启动失败，由守护进程备份并修复（[ADR：配置库](0008-profile-library.zh-CN.md)）。
 8. **关窗只隐藏。** 守护进程连着、页面就绪时，关窗只隐藏窗口，页面、手柄舞台和 overlay 都留着，再打开显示同一个窗口。真正的退出路径（托盘退出、安装程序退出、更新重启）先等保存完成。没有连接或启动失败时，关窗直接退出。
 
 ## 代价

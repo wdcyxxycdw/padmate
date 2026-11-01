@@ -17,8 +17,7 @@ const MaxScriptBytes = 1 << 20
 
 // replaceAttempts and replaceRetry bound how long WriteScript retries a
 // replacement that Windows refuses because a reader, such as the script
-// watcher or a build, holds the old file open without FILE_SHARE_DELETE
-// (PITFALLS "Replacing a file by rename").
+// watcher or a build, holds the old file open without FILE_SHARE_DELETE.
 const (
 	replaceAttempts = 10
 	replaceRetry    = 20 * time.Millisecond

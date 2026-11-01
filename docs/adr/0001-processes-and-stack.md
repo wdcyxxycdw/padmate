@@ -2,7 +2,7 @@
 
 [中文](0001-processes-and-stack.zh-CN.md)
 
-Related: ENG-02, UI-01, UI-45, DMN-04, DMN-14, DMN-22; [ARCHITECTURE §2](../ARCHITECTURE.md#2-process-model), [§12](../ARCHITECTURE.md#12-electron)
+Related: [ARCHITECTURE §2](../ARCHITECTURE.md#2-process-model), [§12](../ARCHITECTURE.md#12-electron)
 
 ## Context
 
@@ -16,7 +16,7 @@ The mapping that runs all the time (reading controllers, the engine, SendInput, 
 4. **The UI's security bridge.** The renderer runs with sandbox and contextIsolation on and nodeIntegration off; pages come from `padmate://app`, which sends a CSP; the preload exposes named methods only, and Main checks them again. Main reaches IPC through a child process, `padmatectl ui-bridge` (bounded NDJSON, an allow-list of methods); the token never reaches the renderer or the logs.
 5. **While a padmate window is in the foreground, output is a dry run.** The check is by verified process instance; not every electron.exe counts as ours.
 6. **Startup order.** The UI first connects to a running daemon. Only when that fails does it start one, detached and without a console; closing the UI does not end it. The packaged UI starts it with `--inject`; the development build, E2E and tests use `--dry-run` ([ADR: No stuck keys](0006-no-stuck-keys.md)).
-7. **A failed start says why (UI-45).** The packaged padmated has no stderr, so `--startup-report FILE` writes a JSON report and the daemon exits with code 3; Main reads the report (bounded in size, known fields only) and stops retrying. The UI then shows only the failure page: the reason, the path, "Open folder", "Retry" and "Exit". A broken config.json is not a failed start: the daemon backs it up and repairs it ([ADR: Profile library](0008-profile-library.md)).
+7. **A failed start says why.** The packaged padmated has no stderr, so `--startup-report FILE` writes a JSON report and the daemon exits with code 3; Main reads the report (bounded in size, known fields only) and stops retrying. The UI then shows only the failure page: the reason, the path, "Open folder", "Retry" and "Exit". A broken config.json is not a failed start: the daemon backs it up and repairs it ([ADR: Profile library](0008-profile-library.md)).
 8. **Closing the window only hides it.** While the daemon is connected and the page is ready, closing the window hides it; the page, the controller stage and the overlay stay, and opening it again shows the same window. The real exit paths (tray exit, the installer's exit, an update restart) wait for saving to finish first. Without a connection, or after a failed start, closing the window exits.
 
 ## Costs

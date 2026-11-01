@@ -2,7 +2,7 @@
 
 [English](0011-script-macros.md)
 
-相关：SCR-50、SCR-51；[ADR：脚本运行时](0010-scripting-runtime.zh-CN.md)
+相关：[ADR：脚本运行时](0010-scripting-runtime.zh-CN.md)
 
 ## 背景
 

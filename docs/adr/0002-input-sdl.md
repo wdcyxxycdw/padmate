@@ -2,7 +2,7 @@
 
 [中文](0002-input-sdl.zh-CN.md)
 
-Related: IN-01, IN-07, IN-09, IN-30; [PITFALLS "SDL and controllers", "go-sdl3 and purego"](../PITFALLS.md)
+Related: [PITFALLS "SDL and controllers"](../PITFALLS.md)
 
 ## Context
 
@@ -21,7 +21,7 @@ Controller input uses SDL 3.4.x, loaded at run time as SDL3.dll through go-sdl3 
 3. **Fill the gaps of go-sdl3 with our own purego calls; do not fork it.** On Windows purego cannot return a struct by value, and go-sdl3 writes such results to an invalid address. The patches are in `internal/input/sdlext*.go`: they look the symbols up in the module go-sdl3 already loaded and are called on T-input only. What Go can do itself is not bound. Recheck them when go-sdl3 or SDL is upgraded, and go back to the direct call where upstream has fixed it.
 4. **Joy-Cons stay apart and are held sideways.** Each Joy-Con is one controller. When they are combined, SDL replaces the device when the other one wakes up: held keys are released and the DeviceKey changes. There are no Joy-Con-only control names (SL/SR are standard buttons in SDL's mapping). To change this, use `--hint` or the environment.
 5. **No ghost devices.** When a controller cannot be opened and `SDL_GetJoysticks` no longer lists it, nothing is reported.
-6. **Detecting a lost receiver link (IN-30).** No SDL event proves that the controller behind a receiver still sends reports, so HID reports serve as a heartbeat:
+6. **Detecting a lost receiver link.** No SDL event proves that the controller behind a receiver still sends reports, so HID reports serve as a heartbeat:
    - Opt-in: only padmated's live mode turns it on (default 2 s); `monitor`, `record` and the tests show SDL as it is.
    - Only Pro-protocol USB receivers are watched. A second, read-only handle to the same path is opened with SDL's public HID API; reading it does not disturb SDL.
    - Only a complete report whose timer byte changes counts as a heartbeat. A device is "armed" only after it keeps sending idle heartbeats while at rest, so a device that reports only on change is never armed, and a button held still is never released by mistake.
@@ -31,7 +31,7 @@ Controller input uses SDL 3.4.x, loaded at run time as SDL3.dll through go-sdl3 
 ## Costs
 
 - Following SDL means bumping the version and hash ourselves and repeating the hardware tests. A new clone must run `task sdl` first.
-- Using two Joy-Cons together needs a hint. Switch 2 Joy-Cons are not supported (IN-29).
+- Using two Joy-Cons together needs a hint. Switch 2 Joy-Cons are not supported.
 - Receiver detection relies on how the real hardware behaves and on SDL 3.4.16 forcing complete reports over USB; upgrading SDL means checking again. It errs on the side of no stuck keys: a link lost for more than 2 s releases the keys and reports a disconnect.
 
 ## Alternatives given up

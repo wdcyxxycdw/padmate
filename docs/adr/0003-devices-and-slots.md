@@ -2,7 +2,7 @@
 
 [中文](0003-devices-and-slots.zh-CN.md)
 
-Related: IN-05, IN-08, IN-09, IN-21, IN-26, IN-27, PRO-11; [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§8.2](../ARCHITECTURE.md#82-output-arbiter); for the slot loop and the supervisor, see [ADR: Engine and threads](0005-engine-and-threads.md)
+Related: [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§8.2](../ARCHITECTURE.md#82-output-arbiter); for the slot loop and the supervisor, see [ADR: Engine and threads](0005-engine-and-threads.md)
 
 ## Context
 
@@ -29,7 +29,7 @@ Related: IN-05, IN-08, IN-09, IN-21, IN-26, IN-27, PRO-11; [ARCHITECTURE §5](..
 
 ## Costs
 
-- One press on an idle controller while it stands in gives it the slot, and the controller in hand has to queue. Use `--device` to pin a controller, or IN-21 to ignore a device.
+- One press on an idle controller while it stands in gives it the slot, and the controller in hand has to queue. Use `--device` to pin a controller, or `devices.<DeviceKey>.ignored` in config.json to ignore a device.
 - An idle controller takes a slot too, and its buttons and axes are mapped by the profile.
 - A controller used only for sticks or triggers stays a stand-in; taking over needs a button press.
 - Two identical controllers differ only in #N in their keys. While the home controller is away, the other identical one may get its #N and take the slot back.

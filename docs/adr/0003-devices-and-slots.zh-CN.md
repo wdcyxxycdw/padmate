@@ -2,7 +2,7 @@
 
 [English](0003-devices-and-slots.md)
 
-相关：IN-05、IN-08、IN-09、IN-21、IN-26、IN-27、PRO-11；[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§8.2](../ARCHITECTURE.zh-CN.md#82-output-arbiter)；slot loop 和 supervisor 见 [ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
+相关：[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§8.2](../ARCHITECTURE.zh-CN.md#82-output-arbiter)；slot loop 和 supervisor 见 [ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
 
 ## 背景
 
@@ -29,7 +29,7 @@
 
 ## 代价
 
-- 闲置手柄暂代时被按一下，slot 就归它，手里的手柄只能排队。要固定手柄用 `--device`，要忽略某个设备用 IN-21。
+- 闲置手柄暂代时被按一下，slot 就归它，手里的手柄只能排队。要固定手柄用 `--device`，要忽略某个设备用 config.json 的 `devices.<DeviceKey>.ignored`。
 - 闲置手柄也占一个 slot，按钮和轴都按 profile 映射。
 - 只用摇杆或扳机的手柄一直是暂代，接管要按一下按钮。
 - 两只相同的手柄 key 只差 #N，home 的手柄没回来时，另一只相同的手柄可能得到它的 #N 并收回 slot。

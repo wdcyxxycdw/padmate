@@ -2,7 +2,7 @@
 
 [中文](0012-mapping-model.zh-CN.md)
 
-Related: MAP-01 to MAP-05, MAP-22 to MAP-27, ANA-03, ANA-04, ANA-09 to ANA-15, IN-14, IN-18, IN-19, PRO-19, PRO-21; [ARCHITECTURE §7, §10.3](../ARCHITECTURE.md); [ADR: Profile format](0007-profile-format.md); [ADR: Editor UI](0013-editor-ui.md)
+Related: [ARCHITECTURE §7, §10.3](../ARCHITECTURE.md); [ADR: Profile format](0007-profile-format.md); [ADR: Editor UI](0013-editor-ui.md)
 
 ## Context
 

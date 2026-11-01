@@ -2,7 +2,7 @@
 
 [English](0006-no-stuck-keys.md)
 
-相关：DMN-06、DMN-07、DMN-09、DMN-12、DMN-20、OUT-09、OUT-14；[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§8.2](../ARCHITECTURE.zh-CN.md#82-output-arbiter)
+相关：[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§8.2](../ARCHITECTURE.zh-CN.md#82-output-arbiter)
 
 ## 背景
 
@@ -18,10 +18,10 @@
    - 清原因的信号（解锁、唤醒）不信消息本身，复查状态；计时器纠正漏掉的消息。
    - 只有 router 在屏障之后才开闸门，以免 slot 按下挂起前的东西。
    - 睡眠和会话结束等释放发出（最多 1 s），不否决。
-5. **唤醒后的 held 隔离（DMN-12）。** 跨睡眠按住的键，SDL 先发合成 up，原 held 的 down 稍后到达，会错误地重新按键。所以挂起开始时 router 隔离所有 active 控件：隔离中的不进映射；up 和空快照不解除，必须先看到恢复后的 active 再看到 release。
-6. **held-keys 日志与启动扫除（OUT-14）。** 按下之前先把按着的键写进进程外的位图文件 `held.bin`，下次启动时释放。写在按下之前只加位、发完之后才去位。扫除在 T-output 上，日志与 `GetAsyncKeyState` 取交集后各发一次抬起。失败不阻止启动。
+5. **唤醒后的 held 隔离。** 跨睡眠按住的键，SDL 先发合成 up，原 held 的 down 稍后到达，会错误地重新按键。所以挂起开始时 router 隔离所有 active 控件：隔离中的不进映射；up 和空快照不解除，必须先看到恢复后的 active 再看到 release。
+6. **held-keys 日志与启动扫除。** 按下之前先把按着的键写进进程外的位图文件 `held.bin`，下次启动时释放。写在按下之前只加位、发完之后才去位。扫除在 T-output 上，日志与 `GetAsyncKeyState` 取交集后各发一次抬起。失败不阻止启动。
 7. **只扫除同一登录会话的日志**（会话 ID、LUID、登录时间三项相等），否则重置日志、不释放任何键，免得松开用户此刻按着的键。
-8. **离线紧急释放（DMN-20）。** `padmatectl release-all` 不走 IPC，触发会话内命名事件 `Local\padmate.panic`。事件是 auto-reset，只有 `--inject` 的 padmated 监听（演练监听会抢走触发）。显式授权当前用户，提权与否的终端都能触发。
+8. **离线紧急释放。** `padmatectl release-all` 不走 IPC，触发会话内命名事件 `Local\padmate.panic`。事件是 auto-reset，只有 `--inject` 的 padmated 监听（演练监听会抢走触发）。显式授权当前用户，提权与否的终端都能触发。
 
 ## 代价
 

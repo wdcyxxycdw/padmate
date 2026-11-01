@@ -2,7 +2,7 @@
 
 [English](0012-mapping-model.md)
 
-相关：MAP-01 至 MAP-05、MAP-22 至 MAP-27、ANA-03、ANA-04、ANA-09 至 ANA-15、IN-14、IN-18、IN-19、PRO-19、PRO-21；[ARCHITECTURE §7、§10.3](../ARCHITECTURE.zh-CN.md)；[ADR：配置文件格式](0007-profile-format.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)
+相关：[ARCHITECTURE §7、§10.3](../ARCHITECTURE.zh-CN.md)；[ADR：配置文件格式](0007-profile-format.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)
 
 ## 背景
 

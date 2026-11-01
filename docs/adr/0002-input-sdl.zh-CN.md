@@ -2,7 +2,7 @@
 
 [English](0002-input-sdl.md)
 
-相关：IN-01、IN-07、IN-09、IN-30；[PITFALLS“SDL 与手柄”“go-sdl3 与 purego”](../PITFALLS.zh-CN.md)
+相关：[PITFALLS“SDL 与手柄”](../PITFALLS.zh-CN.md)
 
 ## 背景
 
@@ -21,7 +21,7 @@
 3. **go-sdl3 缺的函数用 purego 自己补，不 fork。** purego 在 Windows 上不支持按值返回结构体，go-sdl3 对这类函数会写到非法地址。补丁在 `internal/input/sdlext*.go`：在 go-sdl3 已加载的同一模块上找符号，只在 T-input 上调用。能用 Go 做的不绑定。升级 go-sdl3 或 SDL 时重新核对，上游修好的改回直接用。
 4. **Joy-Con 不合并、横握。** 每只 Joy-Con 是一个手柄。合并时另一只醒来 SDL 会换设备，按着的键被释放，DeviceKey 也变。不加 Joy-Con 专用控件名（SL/SR 是 SDL 映射成的标准按钮）。要改只用 `--hint` 或环境变量。
 5. **不报告幽灵设备。** 手柄打不开、`SDL_GetJoysticks` 也不再列出它时，什么也不报告。
-6. **接收器掉线检测（IN-30）。** SDL 没有事件能证明接收器上的手柄还在发报告，所以用 HID 报告当心跳：
+6. **接收器掉线检测。** SDL 没有事件能证明接收器上的手柄还在发报告，所以用 HID 报告当心跳：
    - opt-in：只有 padmated 实机模式开启（默认 2 s）；`monitor`、`record` 和测试显示 SDL 原样。
    - 只看 Pro 协议的 USB 接收器；用 SDL 公开的 HID API 对同一路径再开一个只读句柄，读它不影响 SDL。
    - 只有计时字节在变的完整报告才算心跳。设备在静止时持续收到空闲心跳才“武装”，所以只在变化时发报告的设备永远不武装，按住不动不会被误放。
@@ -31,7 +31,7 @@
 ## 代价
 
 - 跟进 SDL 要自己升版本号和哈希、重跑硬件矩阵。新克隆必须先 `task sdl`。
-- 两只 Joy-Con 合用要自己加 hint。Switch 2 的 Joy-Con 不支持（IN-29）。
+- 两只 Joy-Con 合用要自己加 hint。Switch 2 的 Joy-Con 不支持。
 - 接收器检测依赖真机行为和 SDL 3.4.16 在 USB 上强制完整报告，升级 SDL 要重新核对。错在防卡键的一边：链路断超过 2 s 会释放按键并报告断开。
 
 ## 放弃的做法

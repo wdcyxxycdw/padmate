@@ -256,7 +256,7 @@ Controls are defined by `internal/control`; names are case-sensitive. Aliases ar
 - Aliases: `a b x y` (south east west north), `lb rb`, `l3 r3`, `select` (back). Raw axis names: `leftx lefty rightx righty lefttrigger righttrigger`.
 - There is only ever one function key; see §7.9.
 
-**Joy-Cons** (IN-07): each one is a controller, held sideways by default; the types are `joyconleft` and `joyconright`, and the combined `joyconpair` needs `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`. The button mapping is SDL 3.4.16's (Switch 1; Switch 2's are not supported):
+**Joy-Cons**: each one is a controller, held sideways by default; the types are `joyconleft` and `joyconright`, and the combined `joyconpair` needs `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`. The button mapping is SDL 3.4.16's (Switch 1; Switch 2's are not supported):
 
 - Sideways: SL/SR are leftshoulder/rightshoulder; L(R) and ZL(ZR) are paddle2/paddle4 (left) or paddle1/paddle3 (right); −/+ is start; Capture/Home is guide; the four face buttons are south/east/west/north; the stick is the left stick. SDL's 250 ms release delay applies.
 - Upright L: SL/SR are paddle2/paddle4, L/ZL are leftshoulder/lt, − is back, Capture is misc1. Upright R: SL/SR are paddle3/paddle1, R/ZR are rightshoulder/rt, + is start, Home is guide, the stick is the right stick. Combined, they are the same as a standard controller.
@@ -266,7 +266,7 @@ Controls are defined by `internal/control`; names are case-sensitive. Aliases ar
 
 One state machine per control: `Idle → Pending → (Tap count → WaitMore) | Holding`. The function key is not part of it.
 
-- **Waiting time** (MAP-08) is computed from the frozen reachable registrations: with only press/hold bindings, a press is handled at once; with a tap and a hold, it waits `holdMs`; with multi-taps it also waits `multiTapMs`.
+- **Waiting time** is computed from the frozen reachable registrations: with only press/hold bindings, a press is handled at once; with a tap and a hold, it waits `holdMs`; with multi-taps it also waits `multiTapMs`.
 - **The interruption policy** is chosen automatically: `holdPreferred` when the hold action is a layer operation, precision mode, key hints or modifiers only; `balanced` otherwise; a binding can set `timeOnly`. `holdPreferred`: when a new press comes during Pending, it is first decided as a hold and run, then the layer stack is snapshotted and the new press is dispatched. `balanced`/`timeOnly`: the interrupting events are buffered and replayed in their order once decided (§7.7).
 - Any press ends a WaitMore window: the tap count so far is committed first, then the new press is handled.
 
@@ -285,14 +285,14 @@ For each (control, gesture), the first receiver is found in this order:
 ### 7.4 Layers
 
 - The layer stack = common (bottom) + base + overlays. `layer` actions: `hold` (the overlay is removed on release), `toggle`, `switch` (replaces base), `cycle` (cycles through a list of base names). `defaultLayer` names the base at startup; it is `base` by default. `switch`/`cycle`/`toggle` take effect on press; "switch on release" is written as a `release` gesture with the layer action.
-- Lookup goes from top to bottom, and `block:true` consumes and stops. **press-owner**: at press the layer name, binding and action are saved, and the release goes to the layer of the press; controls already held at the press are blocked in the new layer until released. Latches (MAP-10) are recorded by (device, physical control).
+- Lookup goes from top to bottom, and `block:true` consumes and stops. **press-owner**: at press the layer name, binding and action are saved, and the release goes to the layer of the press; controls already held at the press are blocked in the new layer until released. Latches are recorded by (device, physical control).
 - `functionSet` is not a layer: it has no switch pulse, color or mode number, and does not enter `layers.active`, `LayerChange`, state.json or the overlay's layer notices.
 - **CancelAll**: ends every press cycle; clears toggles, repeat, sequences, pending gestures, the buffer, multi-tap windows, latches and all overlays (base stays); the Arbiter then releases the keys. To the engine, the controls are still held: their release produces no output, and a trigger must first go back below its release threshold before it can be pressed again.
 - **Persisting layer state**: `PersistentLayers` gives the base, the toggled layers and the cycle index (no hold layers); `RestoreLayers` runs only at a cancel/reset boundary and produces no keys. `slot.LayerMemory` keeps it in memory by (device, profile): profile switches and disconnects save before the reset, a normal exit freezes it before ReleaseAll; on disk it is state.json (§10.1).
 
 **The feedback seam** (`LayerChange`, `Feedback`): the engine publishes the current base, overlays, colors, switch pulses and pause state; durations and strengths are in the profile's top-level `feedback`. The three global switches are in config.json's `feedback` (`rumble`, `led`, `pause`, on by default), read through `Options.Switches` (nil means all on; called on the slot's goroutine, never blocks); with `pause` off, pause/resume give no pulse and do not show `pausedColor`. `Feedback.Mode` is the number of layer pulses: by position in the cycle when a cycle is declared, otherwise by layer name order, with base as 1. In live mode it goes through `Source.SetFeedback` (T-input) to the effect mixer (`internal/haptic`, §5).
 
-**The haptic seam** (MAP-25, HUD-10): `Options.Haptic` is passed by value, with zero allocations; `Binding.Haptic` is a preset (0 means none). `runAction` is the single dispatch point of declarative gestures: it calls `playHaptic` once, after the decision and before the action, and two gestures of the same cycle at the same moment touch only once; repeat, `block` bindings, gestures a script took over, anything during pause, a `strength` of 0 and the global rumble switch off make no touch. Knob ticks touch when dispatched (with `haptic.Tick` when the binding has no `haptic` and the stick has `knobTick`). Downstream it goes through `effectQueue.postEffect` (never blocks, §5).
+**The haptic seam**: `Options.Haptic` is passed by value, with zero allocations; `Binding.Haptic` is a preset (0 means none). `runAction` is the single dispatch point of declarative gestures: it calls `playHaptic` once, after the decision and before the action, and two gestures of the same cycle at the same moment touch only once; repeat, `block` bindings, gestures a script took over, anything during pause, a `strength` of 0 and the global rumble switch off make no touch. Knob ticks touch when dispatched (with `haptic.Tick` when the binding has no `haptic` and the stick has `knobTick`). Downstream it goes through `effectQueue.postEffect` (never blocks, §5).
 
 ### 7.5 Table of analog modes
 
@@ -302,19 +302,19 @@ For each (control, gesture), the first receiver is found in this order:
 | eightWay | Fires only the diagonal control; without a binding nothing fires, unless `diagonalFallback:"cardinals"` |
 | fourWay | Only 4 directions, 90° sectors each |
 | fourWayDiagonal | Only the 4 diagonal directions |
-| knob | A virtual knob (ANA-11): each `knobStepDeg` of rotation sends one tick of `ls.cw`/`ls.ccw`; no directions; `ls.active` and the rings work as usual |
-| mouse | The stick moves the pointer (MOU-01): no directions or ticks; `ls.active` and the rings work as usual; the pointer moves as soon as the stick leaves the dead zone |
+| knob | A virtual knob: each `knobStepDeg` of rotation sends one tick of `ls.cw`/`ls.ccw`; no directions; `ls.active` and the rings work as usual |
+| mouse | The stick moves the pointer: no directions or ticks; `ls.active` and the rings work as usual; the pointer moves as soon as the stick leaves the dead zone |
 
 The UI offers only fourWay, knob and mouse, and the d-pad has no settings in the UI; other modes in the file work as usual. A stick's optional `label` is only for the UI to show; the engine does not read it. A stick first applies the radial dead zone and outer saturation, then decides directions by `directionThreshold`; `directionDelayMs` delays direction changes, and `hysteresisDeg` debounces; `ls.active` and the rings fire together with the directions and are not delayed by `directionDelayMs`. Half-axis buttons use `analog.axisThreshold`, independent of the directions.
 
-- **Per-device calibration** (IN-14): the dead zone and the outer edge (`saturation`) are overridden per controller, in the order config.json's `devices.<DeviceKey>.calibration`, the profile's `analog.ls/rs`, the built-in default; combined they must satisfy 0 ≤ deadzone < saturation ≤ 1, otherwise this stick's calibration is ignored with a warning. A calibration change does no CancelAll: like Reload it does `settleVirtual`, directions and rings that no longer hold are released by the normal path, and new ones fire only after the stick returns to center and is pushed again.
-- **Inner and outer rings** (ANA-10): `norm ≥ outerThreshold` enters the outer ring; `norm < outerThreshold − 0.05`, or no longer active, leaves it. `ls.outer` is pressed inside the outer ring, `ls.inner` while active and not in the outer ring. They are pressed only when bound (or when a script listens).
-- **The virtual knob** (ANA-11): an angle of 0° points up and grows clockwise. The two axes are two inputs microseconds apart, so an axis input only sets `knobEvalAt = T + KnobSettle` (4 ms), and when it is due both axes are read as they are then. When it becomes active, the current angle is the reference `ref`, with no tick; when the shortest angle from `ref` reaches `knobStepDeg`, one tick is queued and `ref` moves; leaving the active zone forgets `ref`, so letting go to center makes no tick. The rate limit: at least max(tapPressMs) + max(tapGapMs) between two ticks (40 ms by default), never caught up later. A tick = one press and release of the tick control at the same moment; without a binding (and no script), it is dropped silently.
-- **Two-stage triggers** (ANA-14): `lt.full`'s hysteresis works on the raw value: reaching `fullPress` presses it, falling to `fullRelease` releases it; while it is pressed, `lt` stays pressed. Without a binding only the state is recorded.
-- **Rate-modulated repeat and curves** (ANA-12/13/15): `repeat.minRateHz` makes the repeat rate go from `minRateHz` to `rateHz` (12 by default) with the depth of the push, with a period of at least `repeatMinimum`; `analog.*.curve` (`linear`, `quadratic`, `cubic`) changes only the depth, never moves the thresholds and does not change the values scripts read. Only controls derived from sticks or triggers can use `minRateHz`, and it must not exceed `rateHz`.
-- **Moving the mouse with a stick** (MOU-01/04/05/06, `engine/stick_mouse.go`, pure, no allocations): the target velocity = the direction's unit vector × `mouseSpeed` × `curve(depth)` × the precision factor. It integrates by the clock, not by tick: on every axis input, tick and change of factor, the time since the last time (capped at 50 ms) is first integrated at the old velocity into an accumulator, then the velocity is recomputed; with `mouseSmoothingMs` not 0, the velocity is an exponential moving average of the target. `MouseTick` = 8 ms; when due, the integer part goes out through `Output.Move`; a late tick is not caught up.
+- **Per-device calibration**: the dead zone and the outer edge (`saturation`) are overridden per controller, in the order config.json's `devices.<DeviceKey>.calibration`, the profile's `analog.ls/rs`, the built-in default; combined they must satisfy 0 ≤ deadzone < saturation ≤ 1, otherwise this stick's calibration is ignored with a warning. A calibration change does no CancelAll: like Reload it does `settleVirtual`, directions and rings that no longer hold are released by the normal path, and new ones fire only after the stick returns to center and is pushed again.
+- **Inner and outer rings**: `norm ≥ outerThreshold` enters the outer ring; `norm < outerThreshold − 0.05`, or no longer active, leaves it. `ls.outer` is pressed inside the outer ring, `ls.inner` while active and not in the outer ring. They are pressed only when bound (or when a script listens).
+- **The virtual knob**: an angle of 0° points up and grows clockwise. The two axes are two inputs microseconds apart, so an axis input only sets `knobEvalAt = T + KnobSettle` (4 ms), and when it is due both axes are read as they are then. When it becomes active, the current angle is the reference `ref`, with no tick; when the shortest angle from `ref` reaches `knobStepDeg`, one tick is queued and `ref` moves; leaving the active zone forgets `ref`, so letting go to center makes no tick. The rate limit: at least max(tapPressMs) + max(tapGapMs) between two ticks (40 ms by default), never caught up later. A tick = one press and release of the tick control at the same moment; without a binding (and no script), it is dropped silently.
+- **Two-stage triggers**: `lt.full`'s hysteresis works on the raw value: reaching `fullPress` presses it, falling to `fullRelease` releases it; while it is pressed, `lt` stays pressed. Without a binding only the state is recorded.
+- **Rate-modulated repeat and curves**: `repeat.minRateHz` makes the repeat rate go from `minRateHz` to `rateHz` (12 by default) with the depth of the push, with a period of at least `repeatMinimum`; `analog.*.curve` (`linear`, `quadratic`, `cubic`) changes only the depth, never moves the thresholds and does not change the values scripts read. Only controls derived from sticks or triggers can use `minRateHz`, and it must not exceed `rateHz`.
+- **Moving the mouse with a stick** (`engine/stick_mouse.go`, pure, no allocations): the target velocity = the direction's unit vector × `mouseSpeed` × `curve(depth)` × the precision factor. It integrates by the clock, not by tick: on every axis input, tick and change of factor, the time since the last time (capped at 50 ms) is first integrated at the old velocity into an accumulator, then the velocity is recomputed; with `mouseSmoothingMs` not 0, the velocity is an exponential moving average of the target. `MouseTick` = 8 ms; when due, the integer part goes out through `Output.Move`; a late tick is not caught up.
   - **Safety boundaries**: no tick is scheduled during pause. `CancelAll` clears all mouse state and locks a stick still pushed outside the dead zone, which unlocks only once it is back inside; after resuming from pause, the next axis input is needed to move again. `Reload` and calibration changes are not safety boundaries: they keep the state, integrate up to now with the old target, and then recompute with the new settings.
-  - Precision mode (MOU-05, `op:"precision"`, `factor` 0.05–1, 0.3 by default) slows every mouse stick while its gesture is held, and can only be used on `press` and `hold`; jump (MOU-08, `op:"jump"`) puts the pointer at `x`, `y` (0–1) of the virtual desktop through `Output.Jump`.
+  - Precision mode (`op:"precision"`, `factor` 0.05–1, 0.3 by default) slows every mouse stick while its gesture is held, and can only be used on `press` and `hold`; jump (`op:"jump"`) puts the pointer at `x`, `y` (0–1) of the virtual desktop through `Output.Jump`.
 
 ### 7.6 Default parameters
 
@@ -334,17 +334,17 @@ The UI offers only fourWay, knob and mouse, and the d-pad has no settings in the
 
 `Compile` turns a parsed profile into an immutable `Program`, shared by several Engines; `timing` on the profile or on a binding can override `holdMs`, `multiTapMs`, `tapPressMs` and `tapGapMs`, and an explicit 0 is kept. `NextDeadline` and `Apply` drive the hold, multi-tap and repeat timers. With `Options.Trace` off, Step, Apply, CancelAll, Reset and Pause allocate nothing.
 
-**Action rules** (MAP-07): `profile.Parse`, `Compile` and `engine.CheckBinding` check the same rules, so the model `Parse` returns always compiles.
+**Action rules**: `profile.Parse`, `Compile` and `engine.CheckBinding` check the same rules, so the model `Parse` returns always compiles.
 
 - release, tap, doubleTap, tripleTap and quadTap run after the release and have nothing to hold: keys actions can only be tap mode and cannot have repeat, and layer actions cannot be `op:"hold"`. This guarantees no hold is left that nobody ends (invariant 1).
 - A KeySpec array (a key sequence) can only be tap mode and cannot have repeat; press/hold without a mode default to hold, so an array must write `"mode":"tap"`. repeat's `style`: `typematic` uses hold mode, `tap` uses tap mode, and without it, it follows the mode.
 - A keys action whose main key is a mouse button cannot have typematic repeat (pressing again while held would be taken by the app for a double click), and saving over IPC (`profilelib.Put`) refuses it too; tap-style repeat is allowed.
-- mouse and HUD actions press no keys and have no `mode` or `repeat`. sequence and text actions (MAP-22, OUT-21) hold nothing either and can be used on every gesture; `steps` go through `keys.ValidateSteps`, and text through `keys.ValidateText`. When it fires, the engine calls `Output.Sequence` or `TypeText` once; the engine does no timing, and queuing, waits, the gap between characters and cancellation are all in the Arbiter (§8.2).
+- mouse and HUD actions press no keys and have no `mode` or `repeat`. sequence and text actions hold nothing either and can be used on every gesture; `steps` go through `keys.ValidateSteps`, and text through `keys.ValidateText`. When it fires, the engine calls `Output.Sequence` or `TypeText` once; the engine does no timing, and queuing, waits, the gap between characters and cancellation are all in the Arbiter (§8.2).
 
 **Buffering and replaying interruptions**:
 
 - `timeOnly` and `balanced` buffer the interrupting button edges as a queue and replay them in their order once the Pending one is decided. When the drain first finds the Pending control's own release in the buffer, it is decided as a tap; if that would open a multi-tap window, the tap action does not run. That release stays in its place in the buffer, and only when it is replayed are the keys and layers held by the press action lifted and the release action run.
-- Repeat stops at the physical release; a replayed press whose own release is already in the buffer registers no repeat (OUT-11). A replayed press counts its holdMs deadline from its original time and is decided as a hold if that has passed, unless its own release is also in the buffer and earlier than the deadline.
+- Repeat stops at the physical release; a replayed press whose own release is already in the buffer registers no repeat. A replayed press counts its holdMs deadline from its original time and is decided as a hold if that has passed, unless its own release is also in the buffer and earlier than the deadline.
 
 **Multi-taps**: on reaching the maximum count the binding declares, it commits at once; when the window expires, or another control is pressed afterwards, the count so far is committed. The window is `multiTapMs` from the original time of the release.
 
@@ -352,11 +352,11 @@ The UI offers only fourWay, knob and mouse, and the d-pad has no settings in the
 
 **Lifecycle**:
 
-- **CancelAll(now)** (the engine's level of OUT-07, see §7.4): held controls that are not canceled get their cycle marked canceled, and their recorded chords are dropped; latched chords send their own `Up`, and the caller makes the Arbiter release the rest. A second call in a row does nothing.
-- **Reload(now, prog)** (PRO-03): CancelAll first, then swap prog; when held controls are released, the decision carries the old binding and the reason `canceled`, and sends no key. **Reset(now)**: CancelAll first, then treat every control (the function key included) as released; used when a device disconnects.
-- **Pause / Resume** (DMN-06): Pause does CancelAll first, then enters pause. A press during pause starts a cycle as usual, but counts as canceled at once: the decision's reason is `paused`, no key is sent, and its release is `canceled`. Resume sends no key and makes no decision; held controls must be released and pressed again to work. Reset, Reload and CancelAll all keep the pause.
+- **CancelAll(now)** (the engine's level of ReleaseAll, see §7.4): held controls that are not canceled get their cycle marked canceled, and their recorded chords are dropped; latched chords send their own `Up`, and the caller makes the Arbiter release the rest. A second call in a row does nothing.
+- **Reload(now, prog)**: CancelAll first, then swap prog; when held controls are released, the decision carries the old binding and the reason `canceled`, and sends no key. **Reset(now)**: CancelAll first, then treat every control (the function key included) as released; used when a device disconnects.
+- **Pause / Resume**: Pause does CancelAll first, then enters pause. A press during pause starts a cycle as usual, but counts as canceled at once: the decision's reason is `paused`, no key is sent, and its release is `canceled`. Resume sends no key and makes no decision; held controls must be released and pressed again to work. Reset, Reload and CancelAll all keep the pause.
 
-### 7.8 Decision records (ENG-20)
+### 7.8 Decision records
 
 With `Options.Trace` set, every button edge, every trigger value crossing a threshold, every ignored input and every cycle ended by CancelAll produces one `Decision{T, Control, Edge, Cycle, Gesture, Level, Binding, Action, Owner, Reason}`. Stick axes and trigger values that cross no threshold produce none; with Trace nil, nothing is built.
 
@@ -408,16 +408,16 @@ MediaKey  := VolumeUp|VolumeDown|VolumeMute|MediaPlayPause|MediaNext|MediaPrevio
 
 `padmatectl keys list` lists every key name, alias, scan code and VK; `padmatectl keys parse [--json] <spec>...` prints the normal form and draws `^` under the token in error.
 
-- Character keys are resolved for the foreground layout; physical keys are fixed US positions (OUT-04); scan codes are sent as they are and are never modifiers. The Arbiter first normalizes modifiers without a side to the left key with `Chord.Sided()`, then counts by physical key (OUT-06). `Z`, `KeyZ` and `sc:0x2C` are three different `keys.Key`.
+- Character keys are resolved for the foreground layout; physical keys are fixed US positions; scan codes are sent as they are and are never modifiers. The Arbiter first normalizes modifiers without a side to the left key with `Chord.Sided()`, then counts by physical key. `Z`, `KeyZ` and `sc:0x2C` are three different `keys.Key`.
 - Mouse keys have no scan code, VK or layout: a wheel press scrolls one notch and its release sends nothing; buttons can be held like keys. Media keys are keyboard keys with an E0 scan code and a VK, sent by VK. Neither can be a modifier, only the end of a chord; a mouse button cannot have typematic repeat (§7.7). New keys are appended to the key table, without changing schemaVersion.
 - A character key's character comes from `Key.Char()`. The Resolver must look up the layout with `Char()`, not `String()`: on Windows an uppercase letter resolves to Shift plus the key, and `Ctrl+Z` would become Ctrl+Shift+Z. Characters that need Shift to type (`! @ #` and so on) are not keys; parsing reports an error suggesting `Shift+1`.
 - **The US base mapping** (`Key.US()`): Pause has no single scan code and is sent as VK_PAUSE; NumLock's 0x45 becomes VK_PAUSE while Ctrl is held; the numpad scan codes 0x47–0x53 are translated by the system's NumLock, so Num0–Num9 and NumDecimal are sent by VK (§8.3); vkE8 is not in the key table and is injected only by MenuMask (§8.5).
 
-**Layouts** (OUT-04, `internal/output/layout*.go`, [ADR: Keyboard and mouse output](adr/0004-output-sendinput.md)): `Resolver.Resolve` serves as `ArbiterOptions.Resolve` and is called only on the Arbiter's goroutine; live mode (dry run and injection alike) uses it, and replays use `ChordStroke` (US).
+**Layouts** (`internal/output/layout*.go`, [ADR: Keyboard and mouse output](adr/0004-output-sendinput.md)): `Resolver.Resolve` serves as `ArbiterOptions.Resolve` and is called only on the Arbiter's goroutine; live mode (dry run and injection alike) uses it, and replays use `ChordStroke` (US).
 
 - **Fallback**: when the layout gives no usable key (no such VK or character; a scan code of 0, E1, out of range, or a numpad code without E0; the foreground layout cannot be read; and so on), the result of `ChordStroke` is returned without an error, with one warning per (spec, HKL) (padmated logs the warning `key sent as its US key`). Only an invalid chord returns an error.
 
-**Typing text** (OUT-21): `KEYEVENTF_UNICODE` is for text only. Text is not a KeySpec; it is the argument of the `text` action, of a sequence's `{"text":…}` step (§10.3) and of the script's `key.type`. `keys.ValidateText`: 1–256 UTF-16 units of valid UTF-8, with no control characters except `\n` and `\t` (one tap of Enter/Tab each). `padmatectl keyboard-capture` (OUT-15) finds keys in the key table by VK, and the capture hook never swallows physical keys.
+**Typing text**: `KEYEVENTF_UNICODE` is for text only. Text is not a KeySpec; it is the argument of the `text` action, of a sequence's `{"text":…}` step (§10.3) and of the script's `key.type`. `keys.ValidateText`: 1–256 UTF-16 units of valid UTF-8, with no control characters except `\n` and `\t` (one tap of Enter/Tab each). `padmatectl keyboard-capture` finds keys in the key table by VK, and the capture hook never swallows physical keys.
 
 ### 8.2 Output Arbiter
 
@@ -429,7 +429,7 @@ The implementation is in `internal/output` and is cross-platform. The pitfalls a
 - **Single-threaded**: the Arbiter takes no locks and is called by one goroutine only. In the daemon that is the locked `output.Loop` (T-output); other goroutines hand it commands through `Do` or `RemoteArbiter` (§5), so its Sender is the only caller of SendInput (invariant 3).
 - **Commands**: `Down`, `Up`, `Tap`, `Repeat`, `ReleaseOwners`/`ReleaseOwner`/`ReleaseAll`, `Advance`, `NextDeadline`, `Held`, `Stats`, `SetBlocked`, `SetTiming`, `SetEventGap`; and the non-key `Move`, `Jump`, `TypeText` and `Sequence`. An invalid owner or chord, or a failed resolution, returns an error, and nothing is sent or changed.
 - **The script seam**: `script.Host` calls these commands only through `OutputSink`, with an `SourceScript` owner; on a lifecycle switch, `ReleaseOwner` comes first, then the old Host disconnects its sink, so late output can never reach the Arbiter.
-- **Physical keys**: a chord becomes press events through `ArbiterOptions.Resolve`, modifiers first and the main key last (OUT-05); a key is always released with the release of the event that pressed it, even if the layout changed after the press. Physical keys flow through MenuMask to the Sender (§8.5).
+- **Physical keys**: a chord becomes press events through `ArbiterOptions.Resolve`, modifiers first and the main key last; a key is always released with the release of the event that pressed it, even if the layout changed after the press. Physical keys flow through MenuMask to the Sender (§8.5).
 - **Reference counting**: each owner holds a set of chords; each hold references every physical key of its chord, and a tap in progress references only the keys it pressed itself. A key goes down on its first reference and up when the last reference goes away.
 
 **Tap and Repeat**: Tap presses the keys not already down, and the tap references them until it ends; without a minimum press, the press and release go in the same batch; otherwise `Advance` ends the reference at now+hold, and the physical release is still subject to MinPress. When the main key is taken or within MinGap, the tap queues, and later taps merge (reported as dropped). Repeat works only on a chord the owner holds with Down, and sends one extra press of the main key.
@@ -442,19 +442,19 @@ The implementation is in `internal/output` and is cross-platform. The pitfalls a
 
 **Typing text is not a key** (`arbiter_text.go`): `TypeText(owner, text, gap)` types character by character with `KEYEVENTF_UNICODE` (one Send per character), regardless of layout, with `gap` between characters. Unicode events enter neither the key table, reference counts, the held-keys log nor the startup sweep; `ReleaseOwners` and `SetBlocked(true)` end the text of matching owners. When a Send goes out only partly, the release of a press that went out is sent again once at once, the text ends there and `Dropped` is notified; if that release fails again, it is handled like a key waiting to be sent again (`Arbiter.stuck`). Whether the system records a held state for `VK_PACKET` has not been tested; it is recorded only to keep invariant 1.
 
-**Sequences** (`arbiter_sequence.go`, MAP-22): `Sequence(owner, steps, hold, gap)` runs a list of `keys.Step` (tap, wait, type text; 1–64 steps). Like `TapSequence` it is a kind of `tapSeq`, and the whole sequence is canceled once its owner is released. When a step is dropped, the sequence goes on and `Dropped` is notified. A `Sequence` starts only after the `Sequence` before it (of any owner) has ended; at most 16 are queued, and more are dropped. `ReleaseOwners` (and so `ReleaseAll`, pause, reload, switching profiles, emergency release and exit) and `SetBlocked(true)` end matching sequences: steps not started are not sent, and a tap in progress is released as if canceled alone (invariant 1). A sequence never holds anything.
+**Sequences** (`arbiter_sequence.go`): `Sequence(owner, steps, hold, gap)` runs a list of `keys.Step` (tap, wait, type text; 1–64 steps). Like `TapSequence` it is a kind of `tapSeq`, and the whole sequence is canceled once its owner is released. When a step is dropped, the sequence goes on and `Dropped` is notified. A `Sequence` starts only after the `Sequence` before it (of any owner) has ended; at most 16 are queued, and more are dropped. `ReleaseOwners` (and so `ReleaseAll`, pause, reload, switching profiles, emergency release and exit) and `SetBlocked(true)` end matching sequences: steps not started are not sent, and a tap in progress is released as if canceled alone (invariant 1). A sequence never holds anything.
 
-**Release** (the Arbiter's level of OUT-07): `ReleaseOwners(match)` ends the holds and taps in progress of matching owners, then lifts every key without a reference in one batch (keys waiting to be sent again included): non-modifiers first, then modifiers, each in reverse order of pressing. The full path, `slot.ReleaseAll`, is `engine.CancelAll` (§7.4) and then `ReleaseOwners` matching the owners of the same slot number and any generation. `Slot.Reload` releases the same way, and later owners use the new generation.
+**Release** (the Arbiter's level of ReleaseAll): `ReleaseOwners(match)` ends the holds and taps in progress of matching owners, then lifts every key without a reference in one batch (keys waiting to be sent again included): non-modifiers first, then modifiers, each in reverse order of pressing. The full path, `slot.ReleaseAll`, is `engine.CancelAll` (§7.4) and then `ReleaseOwners` matching the owners of the same slot number and any generation. `Slot.Reload` releases the same way, and later owners use the new generation.
 
 **Several slots**: the owners of every slot are in the same Arbiter and share one keyboard ([ADR: Several controllers](adr/0003-devices-and-slots.md)). Reference counts span slots: two slots holding the same key press it once, and it goes up only when the last reference goes away, whichever slot is released, removed, reloaded or panics first.
 
 **Failed Sends** (invariant 1): state follows the commands, not the results of Send. A press that did not go out still counts as pressed, and its release is still sent when the last reference goes away: an extra release does no harm, while a missing release is a stuck key. When a batch goes out only partly, the releases that did not go out are sent again once at once; those that fail again wait to be sent again: the next `Down`, `Up`, `Tap`, `Repeat` or `Advance` sends them first, `ReleaseOwners` merges them into its own batch, and `NextDeadline` comes due after `RetryInterval` (100 ms by default).
 
-**Event gap** (OUT-17, `pace.go`): config.json's `output.eventGapMs`, 0–50 ms, 0 by default (some apps miss a Ctrl/Shift sent in the same SendInput as the main key). Above 0, the events of every owner go into one queue in command order, one Send per event, at least that far apart. **Releases do not wait for the gap** (invariant 1): `ReleaseOwners`/`ReleaseAll` do one Send at once, with the queued events first, then the release of the remaining keys.
+**Event gap** (`pace.go`): config.json's `output.eventGapMs`, 0–50 ms, 0 by default (some apps miss a Ctrl/Shift sent in the same SendInput as the main key). Above 0, the events of every owner go into one queue in command order, one Send per event, at least that far apart. **Releases do not wait for the gap** (invariant 1): `ReleaseOwners`/`ReleaseAll` do one Send at once, with the queued events first, then the release of the remaining keys.
 
-**The press gate** (DMN-06): `SetBlocked(true)` closes the gate; by itself it sends and releases nothing. While closed, valid `Down`, `Tap` and `Repeat` neither press nor hold; `Up`, `ReleaseOwners`, `ReleaseAll`, taps coming due and resends work as usual, so the gate never leaves a key stuck. The daemon uses it through `output.Loop.BlockFor` (§5): ReleaseAll first, then close the gate; pause (`BlockUser`) and system suspend (`BlockSystem`) each own a bit, and the gate opens only when all are open.
+**The press gate**: `SetBlocked(true)` closes the gate; by itself it sends and releases nothing. While closed, valid `Down`, `Tap` and `Repeat` neither press nor hold; `Up`, `ReleaseOwners`, `ReleaseAll`, taps coming due and resends work as usual, so the gate never leaves a key stuck. The daemon uses it through `output.Loop.BlockFor` (§5): ReleaseAll first, then close the gate; pause (`BlockUser`) and system suspend (`BlockSystem`) each own a bit, and the gate opens only when all are open.
 
-**The held-keys log** (OUT-14) lets the next start after a kill release what was left. The path is `%LOCALAPPDATA%\padmate\run\held.bin` (the format is in `internal/output`), used only with `--inject`. It records keyboard keys, media keys and mouse buttons; the wheel, pointer movement and Unicode events are never written.
+**The held-keys log** lets the next start after a kill release what was left. The path is `%LOCALAPPDATA%\padmate\run\held.bin` (the format is in `internal/output`), used only with `--inject`. It records keyboard keys, media keys and mouse buttons; the wheel, pointer movement and Unicode events are never written.
 
 - **Identity**: `GetAsyncKeyState` cannot tell injected from physically held keys, so a log left by another boot or sign-in session must not be swept. The log stores the identity of the run that wrote it (the session ID, the token's logon session, the sign-in time), and only when all three are equal is it the same; otherwise it counts as empty: it is reset and written with this run's identity, and not a single key is released.
 - **Write before sending**: before the ledger hands a batch to MenuMask, every press of the batch is added to the bitmap (SendInput may send only a prefix); after sending, it is changed to the keys it records as held. Each write is one WriteFile of the whole file, so a write cut off by a kill loses no key. When a write fails, keys are sent as usual, and a kill during that time may miss some; padmated never refuses to start because of an error in the log or the sweep.
@@ -462,7 +462,7 @@ The implementation is in `internal/output` and is cross-platform. The pitfalls a
 
 **What triggers ReleaseAll**: exit, reload and switching profiles, disconnects, pause and the emergency combo (`Loop.Block(true)`), locking the screen/sleep/sign-out/shutdown/the secure desktop (`Loop.BlockFor(BlockSystem, true)`), unloading a script (by owner); a panic of T-output releases through the ledger (§5).
 
-**Not implemented, and limits**: sending releases again while an elevated window or the secure desktop is up (OUT-13); dry run only, no injection, while padmate.exe is in the foreground (OUT-25); releasing on foreground changes; IME, Ctrl+Alt+Del, Win+L. A lone Alt/Win is masked; to open a menu, bind F10 or Ctrl+Esc (§8.5).
+**Not implemented, and limits**: sending releases again while an elevated window or the secure desktop is up; dry run only, no injection, while padmate.exe is in the foreground; releasing on foreground changes; IME, Ctrl+Alt+Del, Win+L. A lone Alt/Win is masked; to open a menu, bind F10 or Ctrl+Esc (§8.5).
 
 ### 8.3 Injection and the tag
 
@@ -481,11 +481,11 @@ The implementation is in `internal/output`; the design is in [ADR: Keyboard and 
 
 **The tag**: each event's `dwExtraInfo` is `Tag | nonce`: the high 32 bits are the ASCII "padm", the low 32 bits the nonce (the process id). The LL keyboard hook uses `output.IsPadmate` and `Nonce` to tell padmate's events from the physical keyboard and other injecting programs. The `dwExtraInfo` of the LL mouse hook has only the low 32 bits (tested) and no "padm" tag, so only the nonce can be used (`output.MayBePadmateMouse`). The tag can be forged and is used only for filtering.
 
-### 8.4 Dry-run output (OUT-09)
+### 8.4 Dry-run output
 
 The dry-run printer is padmated's `output.Sender` for replays and for live `--dry-run` (through MenuMask, so the mask keys it prints are the same as when injecting). The columns, the kinds of lines and examples are in `padmated -h` and `cmd/padmated/testdata/acceptance.golden`. A decision line comes before the send lines it causes (§7.8). Live output changes with time and with the foreground layout, so it has no golden file; `TestLiveVirtualDryRun` and others check the key lines (§14).
 
-### 8.5 Alt/Win menu masking (OUT-08)
+### 8.5 Alt/Win menu masking
 
 The implementation is in `internal/output/mask.go` and is cross-platform; the design is in [ADR: Keyboard and mouse output](adr/0004-output-sendinput.md).
 
@@ -536,27 +536,27 @@ The folder structure is in §3. The data folder is `%APPDATA%\padmate` by defaul
 - The **revision** is the SHA-256 of the file's raw bytes, so outside edits change it too; IPC writes use it to detect conflicts.
 - A profile in the library that is broken, unreadable or of too new a version still has an entry, with diagnostics, so the UI can repair it.
 
-**Versions and migration** (PRO-01, PRO-06)
+**Versions and migration**
 
 - `profile.CurrentSchema` is 1. `Parse` migrates before validating, so callers do not call `Migrate` themselves. Versions above the current one are refused (`upgrade padmate`).
 - Migration happens in memory only, and **the daemon never rewrites a file for being old**: the bytes on disk and the revision stay as they are, and every kind of write (put, copy, restore, import and export, renaming macros) edits by byte position.
 - The format is frozen: from now on only optional fields are added; a change that could break old files needs a migration step, `CurrentSchema` plus one, a change to the schema's `const`, and then `task gen`. The `schemaVersion` of config.json and state.json is 0.
 
-**Save snapshots** (PRO-17, `profilelib/history.go`)
+**Save snapshots** (`profilelib/history.go`)
 
 - Before `Put` replaces a profile.json with different bytes, under the same write lock it stores the old bytes as `profiles/<id>/.history/<UTC time>-<first 8 hex of SHA-256>.json` (without `.json`, that is the version), writing a temporary file beside it, Sync, rename.
 - Nothing is stored when it equals the newest snapshot, for a new profile, or when the same bytes are saved. Each profile keeps at most 30, deleting the oldest. A failed snapshot does not affect the save. When `.history` is a link or a file, it is not followed.
 
-**Export files** (PRO-20, `profilelib/archive.go`, `import.go`)
+**Export files** (`profilelib/archive.go`, `import.go`)
 
-- A profile exports as one zip (`.padmate`): `manifest.json` at the root (`{"type":"padmate-profile","format":1,"name","padmate"}`) and `profile/` (the content of the profile folder, without `.history`). The library macros profile.json refers to, together with their relative imports, go into `profile/macros/` (SCR-51).
+- A profile exports as one zip (`.padmate`): `manifest.json` at the root (`{"type":"padmate-profile","format":1,"name","padmate"}`) and `profile/` (the content of the profile folder, without `.history`). The library macros profile.json refers to, together with their relative imports, go into `profile/macros/`.
 - Under the write lock, export reads into memory within the limits of copying (256 entries, 32 MiB, 8 levels, refusing links and special files); each file is at most 4 MiB, and only scripts, JSON and text files are included.
 - **Import** (`ReadArchive`) checks everything before writing to disk: only unencrypted store/deflate zips with exactly one manifest; it refuses entries outside `profile/`, absolute paths, `..`, backslashes, device names, special entries and names that differ only in case; it counts the bytes after decompression (a zip bomb stops at 32 MiB); scripts and JSON must be UTF-8; profile.json passes the same validation as `Put`.
 - Scripts go into the script library: one with the same name and content is reused; for the same name with other content and no `macros` given, -32022, and nothing is written; `macros:"replace"` overwrites, and `"keep"` gives the imported script the next free "Name 2" and rewrites the references.
 - A new profile's ID is made from its name (`NewID`); a duplicate name (trimmed, NFC, case-insensitive) is refused. `Library.ImportProfile(data, name, unique)` takes a converted profile.json down the same path as an export file holding only a profile.json; with `unique` true, a duplicate name gets a number (used by the AntiMicroX import, §11.1).
 - How it writes: everything is written and Synced in a hidden `profiles/.tmp-import-*`, and under the write lock the name is checked again before the rename. Replacing an existing profile first renames the old folder to `.old-<id>-*`, then renames the new one, then stores the old profile.json as a snapshot and moves the old `.history` into the new folder. If it is interrupted between the two renames, the next copy, import, delete or start renames a `.old-<id>-*` back when `<id>` does not exist, and deletes it when it does.
 
-**The script library** (macros, SCR-50, SCR-51)
+**The script library** (macros)
 
 - `<data folder>/macros/`, independent of the profiles and shared by all of them. Each top-level `.ts`/`.js` (not `.d.ts`) is a macro, at most 64 in the whole library (`profile.MaxMacros`); modules in subfolders can be imported and are not macros; imports must not leave the library.
 - **Migrating scripts** (`Library.MigrateMacros`): when library mode starts (after it has the instance lock; never in a replay), the old-style `macros/` of each profile folder is moved into the library. One with the same name and content is deleted; one with the same name and other content gets the next free name, and that profile's references are rewritten. Before changing a profile, `<data folder>/macros-migration-<profile ID>.json` is written, every step can be done again, and a migration cut off is finished at the next start. A failure is only logged and does not stop the start.
@@ -571,12 +571,12 @@ The folder structure is in §3. The data folder is `%APPDATA%\padmate` by defaul
 - Content: `lastProfile`, `lastProfileSet` and the layer state per device and profile (`devices[DeviceKey].profiles[id]`: `base`, `toggled`, `cycles`). `lastProfileSet:true` with an empty `lastProfile` means it was disabled last time.
 - `profilelib.Memory` merges in memory and flushes every 500 ms in the background; on exit it flushes one last time after output has stopped, waiting at most 1 s. It validates, then writes a temporary file, Syncs and renames.
 
-**Automatic repair of config.json** (PRO-29, `profile.RepairConfig`, `profilelib.ReadRepairedConfig`)
+**Automatic repair of config.json** (`profile.RepairConfig`, `profilelib.ReadRepairedConfig`)
 
 - When the library entry starts, or on any read of config.json that finds errors, the original bytes are first backed up as `<data folder>/config.broken-YYYYMMDD-HHMMSS.json` (`O_EXCL`, never overwriting), then the file is replaced. If the replacement fails, the backup is deleted, the repaired settings stay in memory only, and only the first time is logged.
 - Every valid member is kept; each error removes the smallest member with a default that contains it; an error in a list removes the whole list, except `rules` (only the rule in error is removed). A file that cannot be parsed at all is replaced as a whole by `{"schemaVersion": 0}`. The repaired file always parses (`FuzzConfig`).
 
-**Inheritance** (PRO-19; the format's rules are in §10.3)
+**Inheritance** (the format's rules are in §10.3)
 
 - A child profile's profile.json is still its own text; saving, the revision and snapshots all follow that text, and it is never rewritten for having a parent.
 - Validation of profile text in the library always uses `Library.Parse(id, data)`, so a `Put` of a child requires its parent to be in the library, without a cycle. Writing a parent does not check its children (they report at load time). `Copy` keeps `extends`.
@@ -657,7 +657,7 @@ Combinations of gestures and actions (the rules are in §7.7):
 - **hud**: `hints` can only be on `press`/`hold`; while held, the overlay lists the labels of the controls of the current layer stack.
 - **sequence / text**: `text` follows the rules of `keys.ValidateText` (1–256 UTF-16 units; the only control characters accepted are `\n` and `\t`). Steps tap with `tapPressMs`, then wait `tapGapMs` (20 ms by default) before the next step; when the same binding fires again, it queues behind ("Sequences" in §8.2); pause, reload, switching profiles, emergency release and exit all end what is not done.
 
-**Other members of a binding**: `block` consumes the control without producing an action; `timing` overrides the four times (an explicit 0 is kept); `policy` is the interruption policy (§7.2); `latch` keeps the held chord until the next press of the same control (MAP-10); `haptic` touches once at each gesture's dispatch (§7.4), and is accepted on a binding without actions but does nothing there.
+**Other members of a binding**: `block` consumes the control without producing an action; `timing` overrides the four times (an explicit 0 is kept); `policy` is the interruption policy (§7.2); `latch` keeps the held chord until the next press of the same control; `haptic` touches once at each gesture's dispatch (§7.4), and is accepted on a binding without actions but does nothing there.
 
 **analog**: `ls`/`rs` (`mode`: `standard`, `eightWay`, `fourWay`, `fourWayDiagonal`, `knob` or `mouse`, plus dead zone, thresholds, knob, mouse speed and so on), `dpad`, `lt`/`rt` (`press`, `release`, `fullPress`, `fullRelease`, `curve`), `axisThreshold`. The ranges are in the schema, the defaults in §7.6. The main checks: `fullRelease` must not exceed `fullPress`, and a `fullPress` that is written must be above `press` (not checked when not written, so old files still load); `minRateHz` must not exceed the effective `rateHz`, and can only be used on stick directions, `active`, the rings, half axes and triggers; `precision` and `hints` on a gesture other than press/hold are errors. The control keys also include `ls.inner ls.outer ls.cw ls.ccw rs.* lt.full rt.full`.
 
@@ -671,7 +671,7 @@ What the four switches (true by default) do: `rumble` governs all rumble (layer 
 - `functionKeys` (the old format, still valid): `{"back"?: a set, "start"?: a set}`, which cannot bind `back`, `start` or `select`.
 - The engine reads `Profile.EffectiveFunctionSet()`: `functionSet` if there is one, otherwise one synthesized from the old format (§7.9); when both are present, `functionKeys` is ignored with a warning (pointer `/functionKeys`).
 
-**Inheritance** (`extends`, PRO-19)
+**Inheritance** (`extends`)
 
 The value is the ID of another profile in the library. The child writes only what it changes; the rest comes from the parent.
 
@@ -724,14 +724,14 @@ Top-level members: `enabled` (the switch of automatic selection, true by default
 
 **Taking effect at once**: `enabled`, `releaseOnSwitch`, `rules`, `timing`, `safety`, `output.*`, `functionKey`, `calibration`, `feedback` and `devices.*.mapping` take effect as soon as they are saved (`applyLiveSettings`); a device's `ignored` and `restoreLayerState` are read at startup, and a change reports `restartRequired`. A change of `functionKey` compiles the current profile again with the new value, and each slot goes through `Supervisor.Reload` (releasing every held output first). With `guide` chosen, Xbox Game Bar responds too; padmate does not change system settings.
 
-**Per-device calibration** (IN-14): `devices.<DeviceKey>.calibration.ls/rs` has an optional `deadzone` and `saturation` (0–1), overriding the profile's values of the same name (the order is in §7.5); triggers are not calibrated. When both members are given, `saturation` must be above `deadzone`; when only one is, the combined pair is checked at run time, and when it does not hold, that stick is ignored with a warning.
+**Per-device calibration**: `devices.<DeviceKey>.calibration.ls/rs` has an optional `deadzone` and `saturation` (0–1), overriding the profile's values of the same name (the order is in §7.5); triggers are not calibrated. When both members are given, `saturation` must be above `deadzone`; when only one is, the combined pair is checked at run time, and when it does not hold, that stick is ignored with a warning.
 
-**Custom controller mappings** (IN-18)
+**Custom controller mappings**
 
 - `devices.<DeviceKey>.mapping` is an SDL mapping string (1–2048 characters), written `GUID,*,a:b0,…,platform:Windows`: the GUID is the controller's, the name is written `*`, and there is no `type:` (it would change `DeviceInfo.Type`, by which the family of the emergency combo is chosen).
 - SDL applies mappings by GUID, so **every DeviceKey of the same GUID must have the same mapping**; `devices.setMapping` writes it into all such keys together. Two mappings with different bindings make the later one an error (`Equivalent`). A mapping with errors is removed on its own by the repair.
 
-**The default emergency combos** (DMN-07, `input.DefaultCombo`), held for 2000 ms by default:
+**The default emergency combos** (`input.DefaultCombo`), held for 2000 ms by default:
 
 | Family | Combo |
 |---|---|
@@ -760,7 +760,7 @@ The schemas use draft 2020-12, with only the keywords that VS Code and Monaco su
 - `--json`: one line per file, `{"file", "ok", "diagnostics"}`, where `ok` means no errors.
 - `--function-key KEY` (`start`, `back` or `guide`, `start` by default): the function key to compile with, instead of config.json's `functionKey` (validate does not read config.json); other values exit with code 2.
 - **Exit codes**: 0 when no file has errors (warnings allowed); 1 when some file has errors; 2 for a usage error or a file that cannot be read (taking precedence over 1). An unreadable file is reported to stderr, and the others are checked as usual.
-- A file without errors is then compiled with `engine.Compile`, and after the diagnostic lines one line per binding prints its added latency (PRO-04): `  <pointer> ["label"]: press +0 ms`; with a haptic touch, `, haptic tick` is added; without actions, `no action`. The control names in the pointer are as in the file; the label uses `strconv.Quote` and is left out when absent. The function key's set comes after common.
+- A file without errors is then compiled with `engine.Compile`, and after the diagnostic lines one line per binding prints its added latency: `  <pointer> ["label"]: press +0 ms`; with a haptic touch, `, haptic tick` is added; without actions, `no action`. The control names in the pointer are as in the file; the label uses `strconv.Quote` and is left out when absent. The function key's set comes after common.
 - With `--json`, the object of a file without errors has one more array, `bindings`, each entry `{"id","control","label","gesture","haptic","addedLatencyMs"}` (control is the standard name; label, gesture and haptic are left out when absent); a file with errors has no such field.
 - A failed compile reports at 1:1 the error `cannot compile the profile: …`, with exit code 1.
 - **Macros**: a referenced macro that is not in the script library (by exact name, `profile.MissingMacros`) gets the warning `macro file "x.ts" is not in the macros folder` at the `file` string. A library profile (path `…/profiles/<id>/profile.json`) looks in `<data folder>/macros`, other files in the `macros/` next to them.
@@ -772,12 +772,12 @@ The schemas use draft 2020-12, with only the keywords that VS Code and Monaco su
 - Strict JSON, without comments.
 - The daemon is the only writer: it writes a temporary file and renames it (an atomic write), every write carries a revision, and a snapshot is stored before a profile.json is replaced (§10.1).
 
-**Hot reload** (PRO-03, `internal/watch`)
+**Hot reload** (`internal/watch`)
 
 - stat every 100 ms, comparing size and modification time; after a change, the file must be stable for 200 ms before it is read, and it is stat'ed again after reading; if it changed again, the wait starts over. So a run of writes counts once, noticed 200–400 ms after the last write.
 
 
-### 10.6 Event JSON lines (ENG-08)
+### 10.6 Event JSON lines
 
 The output of `padmatectl monitor --json`, recordings made by `padmatectl record` and padmated's fake input are one format, implemented in `internal/input/eventjson.go` (`WriteEvent`, `ReadEvents`). One object per line:
 
@@ -965,8 +965,8 @@ The daemon's startup arguments: the installed app uses `--inject --data-dir` (it
 
 - **A failed start**: each start uses a new report file, `<userData>/startup-reports/daemon-<PID>-<n>.json` (`--startup-report`). When the child exits with a non-zero code, the report is read (at most 256 KiB, known fields only), retrying stops, the state becomes `failed`, and `failure` is `report`, `exit`, `spawn` or `timeout`. Exit code 0 without a report means the request was forwarded to a running instance. When `failed`, `StartFailure.tsx` fills the window, with only the reason and three buttons (Open folder, Retry, Exit).
 - **Event delivery**: through `EventBuffer` to the renderer, with at most 32 batches in flight and 128 waiting (events of the same device and control merge); on overflow it reports `dropped`, and the renderer refreshes its state. A connection generation keeps the results of old requests from overwriting the state after a reconnect.
-- **Capture sessions**: keyboard recording (OUT-15) uses a short-lived child process, `padmatectl keyboard-capture`, which installs its LL observing hook only after it owns its own `capture.start` connection, and observes only physical keys that were not injected; losing focus, canceling, exiting, disconnecting or a 30-second timeout ends the child process and releases the connection. For controller capture (`pad-capture.ts`), a failed `capture.stop` is sent again after 1 s until it succeeds or the connection drops.
-- **Keys sent to padmate's own windows** (OUT-25): while a registered UI is in the foreground, the Arbiter only keeps virtual accounts and publishes `output.preview`, without calling the Sender; on a foreground switch, the old target's keys are released first, and the `BlockOwnWindow` gate waits for gestures, repeat and old scripts to be canceled. `config.output.sendToOwnWindow` takes effect on save; a global dry-run always comes first.
+- **Capture sessions**: keyboard recording uses a short-lived child process, `padmatectl keyboard-capture`, which installs its LL observing hook only after it owns its own `capture.start` connection, and observes only physical keys that were not injected; losing focus, canceling, exiting, disconnecting or a 30-second timeout ends the child process and releases the connection. For controller capture (`pad-capture.ts`), a failed `capture.stop` is sent again after 1 s until it succeeds or the connection drops.
+- **Keys sent to padmate's own windows**: while a registered UI is in the foreground, the Arbiter only keeps virtual accounts and publishes `output.preview`, without calling the Sender; on a foreground switch, the old target's keys are released first, and the `BlockOwnWindow` gate waits for gestures, repeat and old scripts to be canceled. `config.output.sendToOwnWindow` takes effect on save; a global dry-run always comes first.
 
 ### 12.4 State and saving
 
@@ -990,10 +990,10 @@ The shell (`App.tsx`): the side navigation is Mapping, Profiles, Scripts and Set
 - **The Mapping page**: a Three.js controller seen from a fixed front (a local GLB), with a renderer that stays alive and is never destroyed. A stick is two cells, "rotation" (`leftstick`) and "press" (`leftstick.press`); the "rotation" cell's title is `analog.ls.label` (`setStickLabel` of `analog-editor.ts`, not through `settleStickMode`). The drawer of a knob tick has a single shortcut field (`SingleShortcutField`, writing `{press:{type:"keys"}}` and keeping `label` and `haptic`). The four directions of the d-pad have the drawers of ordinary buttons, with no settings panel. Button icons are drawn by `pad-icon.tsx` as inline SVG (`PadIcon`) from the paths parsed out of the SVGs in `app/src/renderer/controller/pad-icons/`, shared by the controller picture's labels, the drawer's title, the press preview (`control-icon.tsx`) and the mapping wizard. Clicking a label opens `KeyDrawer`: the mappings are only tap, hold and double tap, and the actions only "Shortcut" and "Script"; other mappings and actions in the file still work. Whether a tap is written as `press` or `tap` depends on whether the button also has a hold or double tap (`settleTap`). Shortcuts can only be recorded (`ShortcutField`: the keyboard through `keyboard-capture`, the mouse and wheel received by the window itself). The `analog` parameters are shared by the whole profile and are not split by the function key.
 - **The function key** (the engine in §7.9, the format in §10.3 and §10.4): there is one, one of `back`, `start` and `guide`, `start` by default, chosen on the Settings page; it cannot be bound itself, and the UI edits the set it switches to (`profile.functionSet`). The "Normal / Holding the function key" switch changes `view` (not written to disk, not in the undo history), by having `swapView` swap `functionSet` and `layers.base`. The old `functionKeys` format is synthesized into one set when read.
 - **`extends` written by hand**: the UI neither creates nor shows it; inherited buttons are treated as the profile's own, and only the one changed is written into the profile's own file (`inheritance.ts`). When a parent is deleted, the daemon first writes the children out with their full content; when a child has errors or inherits its parent's script, it returns -32023.
-- **The Profiles page**: one profile per app, and apps without a binding use the fixed default profile `default`; the switch at the top is config's `enabled`. When a program is already selected by an enabled rule of another profile, the user confirms first, and the confirmation deletes that rule. A new profile is empty; the name is required, at most 64 characters and unique. Deleting first calls `profiles.delete`: refused as in use (-32012), it switches to another profile and asks again; refused as referred to (-32013), it first deletes the referring rules with `config.put` and asks again; if that does not resolve it, it writes back and switches back to the original profile; the default profile cannot be deleted. Exporting `.padmate` and importing go through `profiles.export`/`import` (at most 4 MiB); when the name is taken (-32021), Main keeps the file and returns a one-time token (expiring after 2 minutes, at most 4 kept), and the page chooses "Replace" or "Save as". Importing AntiMicroX (PRO-21) goes through `profiles.importAmgp`, and `AmgpReportDialog` shows the report.
+- **The Profiles page**: one profile per app, and apps without a binding use the fixed default profile `default`; the switch at the top is config's `enabled`. When a program is already selected by an enabled rule of another profile, the user confirms first, and the confirmation deletes that rule. A new profile is empty; the name is required, at most 64 characters and unique. Deleting first calls `profiles.delete`: refused as in use (-32012), it switches to another profile and asks again; refused as referred to (-32013), it first deletes the referring rules with `config.put` and asks again; if that does not resolve it, it writes back and switches back to the original profile; the default profile cannot be deleted. Exporting `.padmate` and importing go through `profiles.export`/`import` (at most 4 MiB); when the name is taken (-32021), Main keeps the file and returns a one-time token (expiring after 2 minutes, at most 4 kept), and the page chooses "Replace" or "Save as". Importing AntiMicroX goes through `profiles.importAmgp`, and `AmgpReportDialog` shows the report.
 - **The Scripts page**: the script library is shared by every profile and is operated through `macros.*` (§11); only the daemon writes the files. The name check of `shared/macro-names.ts` shares `daemon/testdata/macro-names.json` with Go.
 - **The Settings page** (`SettingsPage.tsx`): changes save at once. The sections: General (language, the function key, start at sign-in), Overlay, Feedback, Safety (the emergency pause combo `safety.panic`), Controller calibration (`devices.<DeviceKey>`, with identification and the mapping wizard), Press timing (`timing`), Advanced (`output.sendToOwnWindow`, `output.eventGapMs` 0–50 ms), Updates, About. A save reads the whole config, changes only its own fields and carries the revision. Start at sign-in goes through `startup.get/set` and is not written to config.json; development builds return -32017.
-- **The mapping wizard** (IN-17/18/19): saving writes `devices.<DeviceKey>.mapping`. `mapwizard.ts` is the TypeScript copy of Go's `internal/mapwizard`; `mapwizard.test.ts` reads `daemon/internal/mapwizard/testdata/vectors.json` and requires the same results, so a change of the rules is made on both sides.
+- **The mapping wizard**: saving writes `devices.<DeviceKey>.mapping`. `mapwizard.ts` is the TypeScript copy of Go's `internal/mapwizard`; `mapwizard.test.ts` reads `daemon/internal/mapwizard/testdata/vectors.json` and requires the same results, so a change of the rules is made on both sides.
 
 ### 12.6 Diagnostics
 
@@ -1012,7 +1012,7 @@ The shell (`App.tsx`): the side navigation is Mapping, Profiles, Scripts and Set
 - The window never takes focus: transparent, frameless, `focusable:false` (`WS_EX_NOACTIVATE`), `alwaysOnTop`, `setIgnoreMouseEvents`, and `showInactive()` is called once. `overlay.ts` and `overlay-window.ts` contain no `show()`, `focus()`, `moveTop()` or `hide()` (`overlay.test.ts` reads the source to check); showing and hiding happen by the page switching `data-visible`.
 - Position: 480×160 DIP, centered at the bottom or top of the primary display's work area, never covering the screen (or Windows would take it for a full-screen program); it grows while hints or panels are shown, up to 494.
 - Both the main window's `closed` and `before-quit` destroy the overlay. Main subscribes to the topics that include `hud` only once the overlay is ready; after giving up on the overlay (no display, cannot be created, failed to load, a second crash), the subscription is removed, so that whenever a script's `host.has("hud")` is true, an overlay is really on the screen.
-- Content: toasts (HUD-04), key hints (HUD-03, from the slot's `hints`, every 250 ms, at most 16 entries) and script panels (SCR-22); the preferences (HUD-05: notices, position, opacity) are pushed to Main through `padmate:overlayPrefs`.
+- Content: toasts, key hints (from the slot's `hints`, every 250 ms, at most 16 entries) and script panels; the preferences (notices, position, opacity) are pushed to Main through `padmate:overlayPrefs`.
 
 ### 12.8 Automatic updates
 
@@ -1044,7 +1044,7 @@ The daemon creates and manages the tray (T-main in §5), not Electron.
 
 - **The installed app's test mode** (`main/runtime-options.ts`): requires `PADMATE_UI_TEST_PACKAGED=1` and all three private folders `PADMATE_UI_DATA_DIR`, `PADMATE_UI_IPC_DIR` and `PADMATE_UI_USER_DATA`; with any one missing, it runs as the real app (the real data folder plus `--inject`). Test mode uses the daemon and CLI in the bundled `resources\bin`, starts them with `--dry-run` and never `--inject`; the child processes' environment sets `PADMATE_PIPE` and `PADMATE_IPC_DIR`, with `APPDATA` and `LOCALAPPDATA` pointing to `<userData>\daemon-home\`; Main refuses `startup.set`.
 - `PADMATE_UI_TEST_UPDATE_URL` takes effect only in test mode and only for a loopback address; it replaces `UPDATE_URL`, and `quitAndInstall` is replaced by a function that only records.
-- Never start the installed padmate.exe (including `dist/installer/win-unpacked`): see PITFALLS "Files, builds and tools".
+- Never start the installed padmate.exe (including `dist/installer/win-unpacked`): it uses the real data, and its daemon runs with `--inject`.
 
 ### 12.11 Generated types and accessibility
 
@@ -1058,7 +1058,7 @@ The daemon creates and manages the tray (T-main in §5), not Electron.
 - The engine reads no time; time comes from `Input.T` and the `now` parameter. The slot loops, T-output and the router each have a `clock.Alarm`: it follows an absolute deadline and does nothing when the deadline has not changed, so a loop resetting it while a test advances a Fake does not push the deadline back.
 - `clock.Real()` is the only real clock in the process; on Windows it jumps only every 0.5–2 ms, so for microsecond precision use QPC (`latency.Now`). `clock.Fake` advances only on `Set` and `Advance`, firing timers in deadline order; to run work at each deadline in turn, advance one at a time with `Next` and `Set` (as simtest does).
 
-**End-to-end latency of the benchmark (ENG-11).** `L = t_ret − t_sdl`: from the timestamp SDL gives the edge (`Event.Time`, converted to QPC with `latency.CalibrateSDL`) to the return of the Send that carries the key of that edge. The target is p99 < 1.5 ms. How it is measured is `TestLatencyLive` in §14.
+**End-to-end latency of the benchmark.** `L = t_ret − t_sdl`: from the timestamp SDL gives the edge (`Event.Time`, converted to QPC with `latency.CalibrateSDL`) to the return of the Send that carries the key of that edge. The target is p99 < 1.5 ms. How it is measured is `TestLatencyLive` in §14.
 
 **Latency statistics in the product.** It measures `L′ = t_ret − t_in`, each time, inside the daemon. `t_in` is the `Event.Stamp` that T-input reads after the event returns (events read by the rescan after waking have no Stamp and are not measured). `slot.Handle` carries `t_in` and the DeviceKey with the command to T-output through `RemoteArbiter.MarkInput`; the Arbiter reads `t_ret` after its first call to the Sender and spends the mark, so an edge is measured once. Only keys really sent count; keys that do not come from an input edge (repeat, keys sent when their time comes, the later steps of a sequence, pointer movement, keys sent by scripts and so on) do not. With a global `--dry-run`, the Sender is the printer, and it still counts, flagged by `dryRun` of `latency.get`. `latency.Recorder` has one preallocated ring of 1000 per DeviceKey, for at most 8 controllers; writes happen on T-output without allocating. The UI marks a warning only with 50 samples, and the threshold is `latency.WarnP99` = 1.5 ms.
 
@@ -1088,15 +1088,15 @@ General rules:
 - Every test that holds keys runs `AssertNoneHeld` at its end (invariant 1).
 - Tests that need SDL, real injection or a session skip when the condition is missing; set `PADMATE_REQUIRE_SDL=1` and `PADMATE_REQUIRE_SESSION=1` to make them fail instead.
 - `TestMain` replaces the IPC pipe, the temporary folders and the name of the emergency release event with its own, so it never touches the user's real instance.
-- `-race` needs cgo; without gcc on the machine, only the remote CI's `go-race-ubuntu` runs it; the zero-allocation checks are skipped under `-race`.
+- `-race` needs cgo, so only the remote CI's `go-race-ubuntu` runs it; the zero-allocation checks are skipped under `-race`.
 - Automated acceptance runs locally; manual acceptance that needs hardware or human judgement is done by a maintainer.
 
 ### 14.2 Golden tests and traces
 
-- **Slot golden tests** (ENG-09, `internal/slot/testdata/golden/<case>/`): `profile.json`, `input.trace`, `output.trace` (including the final ReleaseAll), and an optional `decisions.jsonl`. Update with `go test ./internal/slot -run TestGolden -update -v`.
+- **Slot golden tests** (`internal/slot/testdata/golden/<case>/`): `profile.json`, `input.trace`, `output.trace` (including the final ReleaseAll), and an optional `decisions.jsonl`. Update with `go test ./internal/slot -run TestGolden -update -v`.
 - **Supervisor golden tests** (`internal/supervisor/testdata/golden/<case>/`): `profile.json`, `input.jsonl`, an optional `session.txt`, `output.trace`, `slots.txt`. Nothing may be held at the end, and there must be no log at WARN or above. Update with `go test ./internal/supervisor -run TestGolden -update -v`.
 - **Profiles**: `internal/profile/testdata/valid|invalid/*.json` each have a `.golden`; `examples/profiles/*.json` must have no diagnostics. Update with `go test ./internal/profile -update` and `go test ./cmd/padmatectl -run TestValidateGolden -update`. `TestNoSendInput` of `cmd/padmated` makes sure only `sender_windows.go` can refer to SendInput (invariant 6).
-- **Signing and PE checks** (PKG-09, PKG-11): they sign nothing, install no certificate and run none of the files checked, and run on every platform. `task test:sign` runs locally on Windows and is not part of `ci`.
+- **Signing and PE checks**: they sign nothing, install no certificate and run none of the files checked, and run on every platform. `task test:sign` runs locally on Windows and is not part of `ci`.
 
 ### 14.3 simtest
 
@@ -1116,7 +1116,7 @@ Windows only; they run only with `PADMATE_TEST_INJECT=1`. `task test:inject` fir
 1. `injecttest`'s hook swallows only tagged events whose nonce belongs to this test, so the physical keyboard keeps working.
 2. Before the first real key, a canary is sent (a release of the unassigned VK 0x97); if the hook does not swallow it within 3 seconds, the test fails.
 3. For keys the test sends itself, every batch is followed by a canary in the same SendInput (`InjectFenced`); if an event was not swallowed, the count is wrong or only part went out, it stops at once. For keys that padmatectl or padmated send, the canary is sent after it has exited or stopped.
-4. Tests that inject many batches (ENG-11) fence in O(1) with `Recorder.WaitOwn(n, timeout)`, without a canary after each batch, but still send a canary before the first real key. If an event was not swallowed, it returns `ErrUnswallowed`, and keeps returning it; when the hook stopped, `ErrHookStopped`; when the system removed the hook silently, nothing is seen at all, which shows as a timeout. `WaitOwn` and `WaitFence` share one wake-up channel, so only one goroutine may call them at a time.
+4. Tests that inject many batches fence in O(1) with `Recorder.WaitOwn(n, timeout)`, without a canary after each batch, but still send a canary before the first real key. If an event was not swallowed, it returns `ErrUnswallowed`, and keeps returning it; when the hook stopped, `ErrHookStopped`; when the system removed the hook silently, nothing is seen at all, which shows as a timeout. `WaitOwn` and `WaitFence` share one wake-up channel, so only one goroutine may call them at a time.
 5. Mouse events are handled the same way, with a `WH_MOUSE_LL` hook installed besides (`Recorder.MouseCanary`; the canary is a pair of relative moves with the nonce, +1/-1). `InjectFencedMixed` refuses mouse batches without `MouseCanary` first, and batches whose press and release are not in the same batch, so if the hook ever missed something, it would be one click and never a held button. Pointer movement uses `InjectFencedMoves`, and Unicode text `UnicodeCanary`.
 6. When the hook times out (LowLevelHooksTimeout), that key is not swallowed and the hook may be removed silently (PITFALLS "Keyboard output and layouts"), so every batch is fenced and injection stops on failure.
 
@@ -1138,7 +1138,7 @@ Other special tests:
 2. `lint`: `golangci-lint run` (configured in `daemon/.golangci.yml`, the same version, v2.13, as the remote CI)
 3. `test`: `go test ./...`
 4. `build`: the three commands built into `bin/`
-5. `pe:check`: `go run ./tools/pecheck -bin ../bin` (PKG-11, Windows only)
+5. `pe:check`: `go run ./tools/pecheck -bin ../bin` (Windows only)
 6. `app:gen-check`: `go run ./tools/codegen -check`
 7. `app:ci`: typecheck, lint, test, build
 
@@ -1164,7 +1164,7 @@ Special tests not in `task ci`, to run separately: `test:types` (with `PADMATE_T
 | `fuzz` | ubuntu-latest | A subset of the `fuzz` targets, 60 s each; a failure uploads `fuzz-corpus` |
 | `frontend` | windows-latest | Node 24, `npm ci`, `npm run ci`, `codegen -check`, `npm run test:e2e` |
 
-Releases have `.github/workflows/release.yml` besides (PKG-07, §15): it builds the installer, runs the installer smoke test, checks the release files and creates a draft release. `ci.yml` has no packaging job.
+Releases have `.github/workflows/release.yml` besides (§15): it builds the installer, runs the installer smoke test, checks the release files and creates a draft release. `ci.yml` has no packaging job.
 
 ## 15. Building and packaging
 

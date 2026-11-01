@@ -2,7 +2,7 @@
 
 [中文](0005-engine-and-threads.zh-CN.md)
 
-Related: DMN-02, DMN-03, IN-08, ENG-11, ENG-13, ENG-21, SCR-02; [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§13](../ARCHITECTURE.md#13-time-and-latency); [ADR: Several controllers](0003-devices-and-slots.md)
+Related: [ARCHITECTURE §5](../ARCHITECTURE.md#5-threading-model), [§13](../ARCHITECTURE.md#13-time-and-latency); [ADR: Several controllers](0003-devices-and-slots.md)
 
 ## Context
 
@@ -24,13 +24,13 @@ Related: DMN-02, DMN-03, IN-08, ENG-11, ENG-13, ENG-21, SCR-02; [ARCHITECTURE §
 7. **Restart after a panic; disable after repeated panics.** Each slot has a runner that restarts it with back-off after a panic. A restart does not Resync, so the button that caused the panic is not pressed again. Three panics within 10 s disable the slot; the next assignment enables it again.
 8. **Shutdown order.** The slots finish their queued edges and release, then the caller runs `Output.Stop`, and last `input.Source` is closed.
 9. **Pure packages do not log** (depguard forbids it); errors come out through `Slot.Errors`.
-10. **End-to-end latency.** A test drives padmated's live path with a virtual controller, real SendInput and a test hook that swallows the keys, and measures from the SDL event's timestamp to the return of SendInput. The gate is `task bench` on the development machine: p99 < 1.5 ms for rows A, B and C, three runs in a row. Timestamps are taken only in tests. `timeBeginPeriod` is never called on the key path. The worst measured p99 is about 1.17 ms, nearly all of it waking threads and SendInput. If it fails later, mitigate stage by stage, and change the structure only as a last resort, with a new ADR.
+10. **End-to-end latency.** A test drives padmated's live path with a virtual controller, real SendInput and a test hook that swallows the keys, and measures from the SDL event's timestamp to the return of SendInput. The gate is `task bench`: p99 < 1.5 ms for rows A, B and C, three runs in a row. Timestamps are taken only in tests. `timeBeginPeriod` is never called on the key path. The worst measured p99 is about 1.17 ms, nearly all of it waking threads and SendInput. If it fails later, mitigate stage by stage, and change the structure only as a last resort, with a new ADR.
 
 ## Costs
 
 - While a script runs, the declarative bindings of the same slot wait for it; the handler budget and safe mode are the safety net.
 - Every command is one round trip across threads; one slow Send holds up every slot.
-- The latency margin is small (about 22%), holds only on the development machine and leaves out SDL's polling on real hardware (up to about 1 ms); four controllers pressing at once exceed 1.5 ms.
+- The latency margin is small (about 22%), varies with the machine and leaves out SDL's polling on real hardware (up to about 1 ms); four controllers pressing at once exceed 1.5 ms.
 
 ## Alternatives given up
 

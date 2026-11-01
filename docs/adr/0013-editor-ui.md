@@ -2,7 +2,7 @@
 
 [中文](0013-editor-ui.zh-CN.md)
 
-Related: UI-03, UI-04, UI-26 to UI-46, OUT-18, PRO-20, PRO-29; [ARCHITECTURE §12](../ARCHITECTURE.md); [ADR: Mapping model](0012-mapping-model.md); [ADR: Processes and stack](0001-processes-and-stack.md); [ADR: Scripts as macros](0011-script-macros.md)
+Related: [ARCHITECTURE §12](../ARCHITECTURE.md); [ADR: Mapping model](0012-mapping-model.md); [ADR: Processes and stack](0001-processes-and-stack.md); [ADR: Scripts as macros](0011-script-macros.md)
 
 ## Context
 

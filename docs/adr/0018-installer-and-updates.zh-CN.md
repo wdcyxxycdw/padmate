@@ -2,7 +2,7 @@
 
 [English](0018-installer-and-updates.md)
 
-相关：PKG-02 至 PKG-13、SPK-07、SPK-11、ENG-18；[ARCHITECTURE §15](../ARCHITECTURE.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
+相关：[ARCHITECTURE §15](../ARCHITECTURE.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
 
 ## 背景
 

@@ -2,7 +2,7 @@
 
 [中文](0018-installer-and-updates.zh-CN.md)
 
-Related: PKG-02 to PKG-13, SPK-07, SPK-11, ENG-18; [ARCHITECTURE §15](../ARCHITECTURE.md); [ADR: Processes and stack](0001-processes-and-stack.md)
+Related: [ARCHITECTURE §15](../ARCHITECTURE.md); [ADR: Processes and stack](0001-processes-and-stack.md)
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 [English](0005-engine-and-threads.md)
 
-相关：DMN-02、DMN-03、IN-08、ENG-11、ENG-13、ENG-21、SCR-02；[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§13](../ARCHITECTURE.zh-CN.md#13-时间与延迟)；[ADR：多手柄](0003-devices-and-slots.zh-CN.md)
+相关：[ARCHITECTURE §5](../ARCHITECTURE.zh-CN.md#5-线程模型)、[§13](../ARCHITECTURE.zh-CN.md#13-时间与延迟)；[ADR：多手柄](0003-devices-and-slots.zh-CN.md)
 
 ## 背景
 
@@ -24,13 +24,13 @@
 7. **panic 后重启，反复 panic 就禁用。** 每个 slot 一个 runner，panic 后退避重启；重启不 Resync，以免再次按下引起 panic 的按钮。10 s 内 3 次 panic 就禁用，下一次分配时重新启用。
 8. **关闭顺序。** slot 处理完排队边沿并释放，然后调用者 `Output.Stop`，最后关闭 `input.Source`。
 9. **纯包不记日志**（depguard 禁止），错误经 `Slot.Errors` 流出。
-10. **端到端延迟。** 用真实 SendInput 和吞键的测试钩子、虚拟手柄驱动 padmated 实机路径，测从 SDL 事件时间戳到 SendInput 返回。门槛是开发机上的 `task bench`，A/B/C 三行 p99 < 1.5 ms，连续 3 次通过。时间戳只在测试里取。按键路径上不调用 `timeBeginPeriod`。实测最差 p99 约 1.17 ms，几乎都花在线程唤醒和 SendInput 上。以后不通过时按阶段逐项缓解，最后才改结构，那要写新 ADR。
+10. **端到端延迟。** 用真实 SendInput 和吞键的测试钩子、虚拟手柄驱动 padmated 实机路径，测从 SDL 事件时间戳到 SendInput 返回。门槛是 `task bench`，A/B/C 三行 p99 < 1.5 ms，连续 3 次通过。时间戳只在测试里取。按键路径上不调用 `timeBeginPeriod`。实测最差 p99 约 1.17 ms，几乎都花在线程唤醒和 SendInput 上。以后不通过时按阶段逐项缓解，最后才改结构，那要写新 ADR。
 
 ## 代价
 
 - 脚本运行时，同一 slot 的声明式绑定也要等它；靠处理器预算和安全模式兜底。
 - 每个命令一次跨线程往返；一个慢的 Send 会挡住所有 slot。
-- 延迟余量不大（约 22%），只在开发机上成立，不含真机最多约 1 ms 的 SDL 轮询；4 个手柄同时按会超过 1.5 ms。
+- 延迟余量不大（约 22%），随机器而变，不含真机最多约 1 ms 的 SDL 轮询；4 个手柄同时按会超过 1.5 ms。
 
 ## 放弃的做法
 

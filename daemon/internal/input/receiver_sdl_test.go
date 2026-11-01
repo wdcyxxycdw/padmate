@@ -262,7 +262,7 @@ func report(id, timer byte) []byte {
 // which SDL's CHECK_DEVICE_MAGIC turns into -1. It guards their ABI,
 // the sign of the C int results included, and on Windows/amd64 that
 // reading allocates nothing. Elsewhere the bindings are purego's
-// RegisterLibFunc, which allocates on every call (docs/PITFALLS.md).
+// RegisterLibFunc, which allocates on every call.
 func TestHIDBindings(t *testing.T) {
 	s := open(t, nil)
 	r, err := s.HIDProbe(`\\?\HID#VID_0000&PID_0000#padmate-missing`)

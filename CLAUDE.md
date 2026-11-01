@@ -4,7 +4,7 @@
 padmate 是 Windows 上的手柄 → 键盘快捷键映射器。
 
 - `daemon/`：Go 守护进程 `padmated`，以及 CLI `padmatectl` 和开发工具 `padmate-probe`。负责输入（SDL3）、映射引擎、输出（SendInput）、TypeScript 脚本（goja + esbuild）、托盘和 IPC。
-- `app/`：Electron UI 与 overlay（M10 起）。可选组件，关掉它映射照常工作。
+- `app/`：Electron UI 与 overlay。可选组件，关掉它映射照常工作。
 - 许可证 MIT。仓库 `github.com/wdcyxxycdw/padmate`（公开，代码和文档都在这里）。
 
 ## 文档索引
@@ -42,7 +42,7 @@ task gen            # go generate ./...：由 syscall_windows.go 的 //sys 声�
 task app:install    # 安装 app 的固定 npm 依赖与 Electron runtime（新克隆先运行）
 task app:build      # 构建 app/out
 task package:installer VERSION=v0.14.0 # NSIS 安装包到 dist/installer（仅 Windows；先 app:install）
-task test:installer # 安装、覆盖安装、卸载冒烟（SPK-07，仅 Windows）：INSTALLER=绝对路径 [UPGRADE=…]；暂写真实 HKCU 卸载项和开始菜单项
+task test:installer # 安装、覆盖安装、卸载冒烟（仅 Windows）：INSTALLER=绝对路径 [UPGRADE=…]；暂写真实 HKCU 卸载项和开始菜单项
 task release:r2 VERSION=v1.0.3 # 发布到下载站（R2，仅 Windows）：写线上的桶，owner 说“发布”才运行；加 -- --dry-run 只看计划
 task app:dev        # Windows 隔离开发界面，自动准备 .cache/ui-bin，daemon 默认 dry-run
 task app:prepare    # 单独准备开发 daemon/CLI；先退出占用它们的开发实例
@@ -51,9 +51,9 @@ task app:ci         # TypeScript → Biome → Vitest → 前端构建
 task app:e2e        # Windows 真实 Electron + 私有 fake-input daemon 的 Playwright 验收
 task sdl            # 下载并校验固定版本的 SDL3.dll 到 bin/（仅 Windows；已是正确的 DLL 时不联网）
 task test:sdl       # SDL 测试（虚拟手柄，不需要硬件），PADMATE_REQUIRE_SDL=1：找不到 SDL 就失败
-task spk01          # 构建 SPK-01 spike 到 bin/spk01.exe（仅 Windows，GUI 子系统）
-task spk03          # 运行 SPK-03 spike，Markdown 报告到 stdout，约 40 s；参数放在 -- 之后
-task bench          # ENG-11 延迟基准（仅 Windows，约 4.5 min）：热路径基准、单独测 SendInput、用虚拟手柄驱动 padmated 真实注入（每个键被测试自己的钩子吞掉），报告写到 bin/sendinput.md 和 bin/latency.md；BENCH_SCALE=5 加样本（最多 10）
+task spk01          # 构建托盘与 T-input 的 spike 到 bin/spk01.exe（仅 Windows，GUI 子系统）
+task spk03          # 运行 goja 与 esbuild 的 spike，Markdown 报告到 stdout，约 40 s；参数放在 -- 之后
+task bench          # 延迟基准（仅 Windows，约 4.5 min）：热路径基准、单独测 SendInput、用虚拟手柄驱动 padmated 真实注入（每个键被测试自己的钩子吞掉），报告写到 bin/sendinput.md 和 bin/latency.md；BENCH_SCALE=5 加样本（最多 10）
 ```
 
 ## 不可破坏的不变量

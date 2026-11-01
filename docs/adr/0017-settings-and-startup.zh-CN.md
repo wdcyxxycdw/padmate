@@ -2,7 +2,7 @@
 
 [English](0017-settings-and-startup.md)
 
-相关：UI-19、DMN-08、DMN-22；[ARCHITECTURE §10.1、§11](../ARCHITECTURE.zh-CN.md)；[ADR：不卡键](0006-no-stuck-keys.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
+相关：[ARCHITECTURE §10.1、§11](../ARCHITECTURE.zh-CN.md)；[ADR：不卡键](0006-no-stuck-keys.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
 
 ## 背景
 
@@ -24,7 +24,7 @@
 - **开关归守护进程。** 托盘菜单和 `startup.get`、`startup.set` 都经同一个自启项，用互斥锁串行。客户端不能传 exe 或参数：命令总是守护进程自己的可执行文件和启动参数，否则任何认证过的客户端都能让 padmate 登录时以任意参数启动。
 - 只有明确点击托盘或设置页的开关才写 HKCU Run。
 - **开发版和测试构建不写自启**：`startup.get` 报不可用，`startup.set` 返回 -32017，托盘灰显。这些构建只用内存里的自启项，每次读写前再查一次。
-- **长命令用参数文件引用（DMN-08）。** 命令超过 260 个 UTF-16 单元时，把完整参数写进 `%APPDATA%\padmate\startup\<id>.json`，Run 里只写 `padmated.exe --startup-id=<SHA256>`。文件不可变，以内容哈希为名，写完才写 Run；写 Run 失败只移除本次新建的文件。`--startup-id` 入口只接受独占的 argv，校验摘要、版本和 exe 路径，任何一项不对都失败退出，不回退为注入，不用默认 profile。超长到引用也放不下就明确失败，不改动已有的 Run。
+- **长命令用参数文件引用。** 命令超过 260 个 UTF-16 单元时，把完整参数写进 `%APPDATA%\padmate\startup\<id>.json`，Run 里只写 `padmated.exe --startup-id=<SHA256>`。文件不可变，以内容哈希为名，写完才写 Run；写 Run 失败只移除本次新建的文件。`--startup-id` 入口只接受独占的 argv，校验摘要、版本和 exe 路径，任何一项不对都失败退出，不回退为注入，不用默认 profile。超长到引用也放不下就明确失败，不改动已有的 Run。
 - GUI 登录启动可以没有 stdout，演练 printer 写 `io.Discard`，模式仍是 dry-run。`--log-file -` 回退默认持久日志。
 - 打包版界面用 `--inject` 启动守护进程，所以登记的自启也是 `--inject`；开发版、E2E 和测试仍用 `--dry-run`。
 

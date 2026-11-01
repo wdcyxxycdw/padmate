@@ -2,7 +2,7 @@
 
 [中文](0014-overlay.zh-CN.md)
 
-Related: HUD-01, HUD-03, HUD-04, HUD-05, SCR-22, SPK-09; [ARCHITECTURE §12](../ARCHITECTURE.md); [ADR: Scripting runtime](0010-scripting-runtime.md); [ADR: Processes and stack](0001-processes-and-stack.md)
+Related: [ARCHITECTURE §12](../ARCHITECTURE.md); [ADR: Scripting runtime](0010-scripting-runtime.md); [ADR: Processes and stack](0001-processes-and-stack.md)
 
 ## Context
 
@@ -26,7 +26,7 @@ The overlay's preload exposes receiving functions only, with no `send` or `invok
 - Toasts come from the `state` event of `engine.activity`: the profile name changes, pause or resume, the base layer changes. Layers pushed by hold or toggle get no toast, or holding a layer while painting would make it flash all the time. The first state after connecting is the starting point and shows no toast.
 - Position, opacity and the switch for notices are the UI's own preferences, stored in the renderer and pushed by the UI to Main; they go neither into config.json nor into a profile. Opacity fades only the background and does not use `BrowserWindow.setOpacity()`.
 
-### 4. Key hints (HUD-03)
+### 4. Key hints
 - The action `{"type":"hud","op":"hints"}` sends no key and can only be on `press` and `hold` gestures. Its state works the same way as precision mode, and `CancelAll` clears it too, so release, pause, reload and disconnect all end it.
 - The daemon computes the list, since it is the only authority on the resolved layer stack. It recomputes only when hints turn on or off and when the layer stack changes, never on the hot path. The slot object of the `state` event has an optional `hints`, present only while hints are on, at most 250 ms behind.
 - The renderer translates control names for the controller, with the same name table as the Mapping page.

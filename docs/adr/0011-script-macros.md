@@ -2,7 +2,7 @@
 
 [中文](0011-script-macros.zh-CN.md)
 
-Related: SCR-50, SCR-51; [ADR: Scripting runtime](0010-scripting-runtime.md)
+Related: [ADR: Scripting runtime](0010-scripting-runtime.md)
 
 ## Context
 

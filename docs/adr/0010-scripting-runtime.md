@@ -2,7 +2,7 @@
 
 [中文](0010-scripting-runtime.zh-CN.md)
 
-Related: SCR-01, SCR-02, SCR-03; [ADR: Engine and threads](0005-engine-and-threads.md)
+Related: [ADR: Engine and threads](0005-engine-and-threads.md)
 
 ## Context
 

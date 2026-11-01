@@ -2,7 +2,7 @@
 
 [中文](0017-settings-and-startup.zh-CN.md)
 
-Related: UI-19, DMN-08, DMN-22; [ARCHITECTURE §10.1, §11](../ARCHITECTURE.md); [ADR: No stuck keys](0006-no-stuck-keys.md); [ADR: Processes and stack](0001-processes-and-stack.md)
+Related: [ARCHITECTURE §10.1, §11](../ARCHITECTURE.md); [ADR: No stuck keys](0006-no-stuck-keys.md); [ADR: Processes and stack](0001-processes-and-stack.md)
 
 ## Context
 
@@ -24,7 +24,7 @@ Related: UI-19, DMN-08, DMN-22; [ARCHITECTURE §10.1, §11](../ARCHITECTURE.md);
 - **The switch belongs to the daemon.** The tray menu, `startup.get` and `startup.set` all go to the same startup entry, serialized by a mutex. Clients cannot pass an exe or arguments: the command is always the daemon's own executable and startup arguments, or any authenticated client could make padmate start at sign-in with any arguments.
 - HKCU Run is written only by an explicit click on the switch in the tray or on the Settings page.
 - **Development and test builds never write the startup entry**: `startup.get` reports it unavailable, `startup.set` returns -32017, and the tray item is grayed out. These builds use an in-memory startup entry only, checked again before every read and write.
-- **Long commands go through an argument file (DMN-08).** When the command exceeds 260 UTF-16 units, the full arguments are written to `%APPDATA%\padmate\startup\<id>.json`, and Run holds only `padmated.exe --startup-id=<SHA256>`. The file is immutable and named by its content hash, and Run is written only after the file; a failed Run write removes only the file this attempt created. The `--startup-id` entry accepts it only as the whole argv, and checks the digest, the version and the exe path; if any is wrong, it fails and exits, without falling back to injection or to the default profile. A command too long even for the reference fails clearly and leaves the existing Run alone.
+- **Long commands go through an argument file.** When the command exceeds 260 UTF-16 units, the full arguments are written to `%APPDATA%\padmate\startup\<id>.json`, and Run holds only `padmated.exe --startup-id=<SHA256>`. The file is immutable and named by its content hash, and Run is written only after the file; a failed Run write removes only the file this attempt created. The `--startup-id` entry accepts it only as the whole argv, and checks the digest, the version and the exe path; if any is wrong, it fails and exits, without falling back to injection or to the default profile. A command too long even for the reference fails clearly and leaves the existing Run alone.
 - A GUI start at sign-in may have no stdout; the dry-run printer writes to `io.Discard`, and the mode is still dry-run. `--log-file -` falls back to the default persistent log.
 - The packaged UI starts the daemon with `--inject`, so the registered start at sign-in uses `--inject` too; development builds, E2E and tests still use `--dry-run`.
 

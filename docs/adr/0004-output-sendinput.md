@@ -2,7 +2,7 @@
 
 [中文](0004-output-sendinput.zh-CN.md)
 
-Related: OUT-01 to OUT-08, OUT-17, MOU-01 to MOU-07; [ARCHITECTURE §8](../ARCHITECTURE.md#8-output), [PITFALLS "Keyboard output and layouts"](../PITFALLS.md)
+Related: [ARCHITECTURE §8](../ARCHITECTURE.md#8-output), [PITFALLS "Keyboard output and layouts"](../PITFALLS.md)
 
 ## Context
 
@@ -21,7 +21,7 @@ padmate injects keyboard and mouse input into the foreground program with SendIn
 4. **The injection tag.** `dwExtraInfo` is "padm" plus a nonce. It is for filtering events, not against forgery.
 5. **`padmatectl send` is the exception to invariant 3 outside the daemon.** It calls SendInput directly and does not coordinate key state. Tests with real injection must have every event swallowed by a hook (invariant 6).
 6. **Alt/Win menu mask key vkE8.** Before Alt or Win goes up, if no other key went down since, a press and release of the mask key are inserted in the same SendInput. A Sender wrapped by `MenuMask` does it; it sits between the Arbiter's ledger and the real Sender, and both dry runs and injection go through it. Masking is always on; to open the menu, bind F10.
-7. **Key gap (OUT-17).** `output.eventGapMs` (0–50 ms) queues events in the Arbiter, one Send per event; nothing sleeps in the Sender, since T-output must never stall. A key is held for a minimum time before it goes up, and the keys of one combination are never held together with the next one. **Releases do not wait for the gap** (invariant 1): `ReleaseOwners` and `ReleaseAll` go out at once, after the queued events in their order.
+7. **Key gap.** `output.eventGapMs` (0–50 ms) queues events in the Arbiter, one Send per event; nothing sleeps in the Sender, since T-output must never stall. A key is held for a minimum time before it goes up, and the keys of one combination are never held together with the next one. **Releases do not wait for the gap** (invariant 1): `ReleaseOwners` and `ReleaseAll` go out at once, after the queued events in their order.
 8. **Mouse buttons and the wheel are keys.** Mouse buttons (`MouseLeft`, `MouseX1` and so on) and `WheelUp/Down/Left/Right` are a kind of KeySpec and can go anywhere a main key can (but not as modifiers), so the existing mechanisms apply. The wheel is momentary: a press sends one notch, and the release injects nothing, though the arbiter still keeps account. Mouse buttons can be held, and every exit path lifts them; a button already held gets no second press (that would be half a double click).
 9. **Sticks move the pointer.** With `mode:"mouse"` a stick pushes the pointer, and the precise action `mouse precision` slows it while its gesture is held. The engine integrates the stick as a continuous system, independent of the timer's phase. Pause, `ReleaseAll` and `Reset` "lock" a stick that is being pushed; it moves again only after it returns to the dead zone. Movement is not a key: it has no owner and no release. It is injected as relative `MOUSEEVENTF_MOVE`, which the system pointer speed affects.
 

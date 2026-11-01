@@ -2,7 +2,7 @@
 
 [English](0016-diagnostics.md)
 
-相关：UI-20、UI-21、UI-22、DMN-15、IN-24；[ARCHITECTURE §7.8、§12、§13](../ARCHITECTURE.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)；[ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
+相关：[ARCHITECTURE §7.8、§12、§13](../ARCHITECTURE.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)；[ADR：引擎与线程](0005-engine-and-threads.zh-CN.md)
 
 ## 背景
 

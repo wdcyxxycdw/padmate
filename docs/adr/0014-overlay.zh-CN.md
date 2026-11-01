@@ -2,7 +2,7 @@
 
 [English](0014-overlay.md)
 
-相关：HUD-01、HUD-03、HUD-04、HUD-05、SCR-22、SPK-09；[ARCHITECTURE §12](../ARCHITECTURE.zh-CN.md)；[ADR：脚本运行时](0010-scripting-runtime.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
+相关：[ARCHITECTURE §12](../ARCHITECTURE.zh-CN.md)；[ADR：脚本运行时](0010-scripting-runtime.zh-CN.md)；[ADR：进程与技术栈](0001-processes-and-stack.zh-CN.md)
 
 ## 背景
 
@@ -26,7 +26,7 @@ Overlay 的 preload 只暴露接收函数，没有 `send`、`invoke`，页面调
 - toast 来源是 `engine.activity` 的 `state` 事件：配置名变、暂停或恢复、base 层变。hold、toggle 压入的层不提示，否则画画时按住切层会一直闪。连接后的第一个状态是起点，不出提示。
 - 位置、不透明度、提示消息开关是界面自己的偏好，存在渲染进程里，由界面推给 Main，不进 config.json 或 profile。不透明度只淡化背景，不用 `BrowserWindow.setOpacity()`。
 
-### 四、按键提示（HUD-03）
+### 四、按键提示
 - 动作 `{"type":"hud","op":"hints"}` 不发键，只能放在 `press` 和 `hold` 手势上。状态与精确模式同一套办法，`CancelAll` 一并清掉，所以松开、暂停、重载、断开都结束它。
 - 清单由守护进程算，因为它是已解析层栈的唯一权威。只在提示开启、结束、层栈变化时重算，不在热路径上。`state` 事件的 slot 对象带可选的 `hints`，只在提示开着时出现，最多比实际晚 250 ms。
 - 控件名由渲染进程按手柄翻译，与映射页同一份名字表。

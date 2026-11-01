@@ -256,7 +256,7 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 - 别名：`a b x y`（south east west north）、`lb rb`、`l3 r3`、`select`（back）。原始轴名：`leftx lefty rightx righty lefttrigger righttrigger`。
 - 功能键任何时候只有一个，见 §7.9。
 
-**Joy-Con**（IN-07）：每只是一个手柄，默认横握；类型 `joyconleft`、`joyconright`，合并的 `joyconpair` 需 `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`。键映射由 SDL 3.4.16 决定（Switch 1；Switch 2 的不支持）：
+**Joy-Con**：每只是一个手柄，默认横握；类型 `joyconleft`、`joyconright`，合并的 `joyconpair` 需 `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`。键映射由 SDL 3.4.16 决定（Switch 1；Switch 2 的不支持）：
 
 - 横握：SL/SR 是 leftshoulder/rightshoulder，L(R) 和 ZL(ZR) 是 paddle2/paddle4（左）或 paddle1/paddle3（右），−/+ 是 start，Capture/Home 是 guide，四个面键是 south/east/west/north，摇杆是 left 摇杆。受 SDL 250 ms 抬起延迟影响。
 - 竖握 L：SL/SR 是 paddle2/paddle4，L/ZL 是 leftshoulder/lt，− 是 back，Capture 是 misc1。竖握 R：SL/SR 是 paddle3/paddle1，R/ZR 是 rightshoulder/rt，+ 是 start，Home 是 guide，摇杆是 right 摇杆。合并后与标准手柄相同。
@@ -266,7 +266,7 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 每个控件一个状态机：`Idle → Pending → (Tap 计数 → WaitMore) | Holding`。功能键不在其内。
 
-- **等待时间**（MAP-08）按冻结的可达注册算：只有 press/hold 绑定时立即处理；有 tap 与 hold 时等 `holdMs`；有多击时还等 `multiTapMs`。
+- **等待时间**按冻结的可达注册算：只有 press/hold 绑定时立即处理；有 tap 与 hold 时等 `holdMs`；有多击时还等 `multiTapMs`。
 - **打断策略**自动选：hold 动作是层操作、精确模式、按键提示或纯修饰键时 `holdPreferred`，否则 `balanced`；绑定可设 `timeOnly`。`holdPreferred`：Pending 时有新按下，先把它判为 hold 并执行，再对层栈拍快照分发新按下。`balanced`/`timeOnly`：缓冲打断事件，判定后按原顺序重放（§7.7）。
 - 任何按下都结束 WaitMore 窗口：先提交已有 tap 计数，再处理新按下。
 
@@ -285,14 +285,14 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 ### 7.4 层
 
 - 层栈 = common（底）+ base + overlays。`layer` 动作：`hold`（松开撤销 overlay）、`toggle`、`switch`（替换 base）、`cycle`（在 base 名列表里循环）。`defaultLayer` 指定启动 base，缺省 `base`。`switch`/`cycle`/`toggle` 在按下时生效，“松开时切换”写成 `release` 手势加层动作。
-- 查找从上到下，`block:true` 消费并停止。**press-owner**：按下时保存层名、绑定和动作，松开交给按下时所在的层；按下时已按住的控件在新层中被屏蔽直到松开。锁存（MAP-10）按（设备，物理控件）记录。
+- 查找从上到下，`block:true` 消费并停止。**press-owner**：按下时保存层名、绑定和动作，松开交给按下时所在的层；按下时已按住的控件在新层中被屏蔽直到松开。锁存按（设备，物理控件）记录。
 - `functionSet` 不是层：没有切层脉冲、颜色和模式编号，不进 `layers.active`、`LayerChange`、state.json 和浮层层提示。
 - **CancelAll**：结束所有按压周期；清除 toggle、连发、序列、待定手势、缓冲、多击窗口、锁存和所有 overlay（base 不变）；之后由 Arbiter 释放按键。控件在引擎看来仍按着：松开无输出，扳机要先回到释放阈值以下才能再按。
 - **层状态持久化**：`PersistentLayers` 给出 base、已 toggle 的层和 cycle 序号（不含 hold 层），`RestoreLayers` 只在取消/复位边界执行，不产生按键。`slot.LayerMemory` 按（设备，profile）在内存保存：切换配置和断连在复位前保存，正常退出在 ReleaseAll 前冻结；磁盘上是 state.json（§10.1）。
 
 **反馈接缝**（`LayerChange`、`Feedback`）：引擎发布当前 base、overlays、颜色、切层脉冲和暂停状态；时长和强度在 profile 顶层 `feedback`。三个全局开关在 config.json 的 `feedback`（`rumble`、`led`、`pause`，默认开），经 `Options.Switches` 读（nil 为全开，在 slot 的 goroutine 上调用，不阻塞）；`pause` 关掉时暂停/恢复不给脉冲、不显示 `pausedColor`。`Feedback.Mode` 是层脉冲次数：声明了循环按循环位置，否则按层名排序，base 为 1。实机经 `Source.SetFeedback`（T-input）到效果混音器（`internal/haptic`，§5）。
 
-**触感接缝**（MAP-25、HUD-10）：`Options.Haptic` 按值传递，零分配；`Binding.Haptic` 是预设（0 为无）。`runAction` 是声明式手势的唯一分发点：决策之后、动作之前调一次 `playHaptic`，同一周期同一时刻的两个手势只响一次；连发、`block` 绑定、脚本接管的手势、暂停中、`strength` 为 0 或全局震动关着时不响。旋钮刻度在派发时响（绑定没有 `haptic` 且该摇杆 `knobTick` 时用 `haptic.Tick`）。下游经 `effectQueue.postEffect`（永不阻塞，§5）。
+**触感接缝**：`Options.Haptic` 按值传递，零分配；`Binding.Haptic` 是预设（0 为无）。`runAction` 是声明式手势的唯一分发点：决策之后、动作之前调一次 `playHaptic`，同一周期同一时刻的两个手势只响一次；连发、`block` 绑定、脚本接管的手势、暂停中、`strength` 为 0 或全局震动关着时不响。旋钮刻度在派发时响（绑定没有 `haptic` 且该摇杆 `knobTick` 时用 `haptic.Tick`）。下游经 `effectQueue.postEffect`（永不阻塞，§5）。
 
 ### 7.5 模拟量模式表
 
@@ -302,19 +302,19 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 | eightWay | 只触发对角控件；没绑定时不发，除非 `diagonalFallback:"cardinals"` |
 | fourWay | 只有 4 个方向，扇区各 90° |
 | fourWayDiagonal | 只有 4 个对角方向 |
-| knob | 虚拟旋钮（ANA-11）：每转 `knobStepDeg` 发一格 `ls.cw`/`ls.ccw`；不发方向；`ls.active` 和内外圈照常 |
-| mouse | 摇杆移动指针（MOU-01）：不发方向和刻度；`ls.active` 和内外圈照常；一推出死区指针就动 |
+| knob | 虚拟旋钮：每转 `knobStepDeg` 发一格 `ls.cw`/`ls.ccw`；不发方向；`ls.active` 和内外圈照常 |
+| mouse | 摇杆移动指针：不发方向和刻度；`ls.active` 和内外圈照常；一推出死区指针就动 |
 
 界面只提供 fourWay、knob、mouse，十字键在界面里没有设置；文件里别的模式照常生效。摇杆的可选 `label` 只给界面显示，引擎不读。摇杆先做径向死区和外圈饱和，再按 `directionThreshold` 判方向；`directionDelayMs` 延迟方向变化，`hysteresisDeg` 防抖；`ls.active`、内外圈与方向叠加触发，不被 `directionDelayMs` 延迟。半轴按钮用 `analog.axisThreshold`，与方向独立。
 
-- **每设备调校**（IN-14）：死区和外圈（`saturation`）按手柄覆盖，顺序为 config.json 的 `devices.<DeviceKey>.calibration`、profile 的 `analog.ls/rs`、内置默认；叠加后须 0 ≤ deadzone < saturation ≤ 1，否则这根摇杆的调校被忽略并记 warn。调校改变时不做 CancelAll：像 Reload 一样 `settleVirtual`，不再成立的方向/内外圈走正常释放路径松开，新成立的等摇杆回中再推才按。
-- **内外圈**（ANA-10）：`norm ≥ outerThreshold` 进入外圈，`norm < outerThreshold − 0.05` 或不再 active 时离开。`ls.outer` 在外圈内按下，`ls.inner` 在 active 且不在外圈时按下。只在有绑定（或脚本在监听）时才按下。
-- **虚拟旋钮**（ANA-11）：角度 0° 向上，顺时针增加。两个轴是相隔微秒的两个输入，所以轴输入只设 `knobEvalAt = T + KnobSettle`（4 ms），到点后按此刻两个轴读。active 时以当前角度为基准 `ref`，不出刻度；与 `ref` 的最短角差达到 `knobStepDeg` 就排一格并移动 `ref`；离开 active 区忘掉 `ref`，所以松手回中不出刻度。限速：两格之间至少 max(tapPressMs) + max(tapGapMs)（默认 40 ms），不补发。一格 = 同一时刻对刻度控件做一次按下和抬起，没有绑定（也没有脚本）时静默丢弃。
-- **两段扳机**（ANA-14）：`lt.full` 的滞回作用在原始值上，达到 `fullPress` 按下，降到 `fullRelease` 松开；它按着时 `lt` 一直按着。没绑定时只记录状态。
-- **速率调制连发与曲线**（ANA-12/13/15）：`repeat.minRateHz` 让连发速率随推动深度从 `minRateHz` 变到 `rateHz`（缺省 12），周期不小于 `repeatMinimum`；`analog.*.curve`（`linear`、`quadratic`、`cubic`）只改深度，不移动阈值，不改脚本读到的值。只有摇杆或扳机派生的控件可用 `minRateHz`，且不得大于 `rateHz`。
-- **摇杆移动鼠标**（MOU-01/04/05/06，`engine/stick_mouse.go`，纯函数，不分配）：目标速度 = 方向单位向量 × `mouseSpeed` × `curve(depth)` × 精确系数。按时钟积分，不按 tick：每次轴输入、tick、系数变化时先把上次到此刻的时间（上限 50 ms）按旧速度积进累加器再重算；`mouseSmoothingMs` 不为 0 时速度是目标的指数移动平均。`MouseTick` = 8 ms，到点经 `Output.Move` 发整数部分，晚了不补发。
+- **每设备调校**：死区和外圈（`saturation`）按手柄覆盖，顺序为 config.json 的 `devices.<DeviceKey>.calibration`、profile 的 `analog.ls/rs`、内置默认；叠加后须 0 ≤ deadzone < saturation ≤ 1，否则这根摇杆的调校被忽略并记 warn。调校改变时不做 CancelAll：像 Reload 一样 `settleVirtual`，不再成立的方向/内外圈走正常释放路径松开，新成立的等摇杆回中再推才按。
+- **内外圈**：`norm ≥ outerThreshold` 进入外圈，`norm < outerThreshold − 0.05` 或不再 active 时离开。`ls.outer` 在外圈内按下，`ls.inner` 在 active 且不在外圈时按下。只在有绑定（或脚本在监听）时才按下。
+- **虚拟旋钮**：角度 0° 向上，顺时针增加。两个轴是相隔微秒的两个输入，所以轴输入只设 `knobEvalAt = T + KnobSettle`（4 ms），到点后按此刻两个轴读。active 时以当前角度为基准 `ref`，不出刻度；与 `ref` 的最短角差达到 `knobStepDeg` 就排一格并移动 `ref`；离开 active 区忘掉 `ref`，所以松手回中不出刻度。限速：两格之间至少 max(tapPressMs) + max(tapGapMs)（默认 40 ms），不补发。一格 = 同一时刻对刻度控件做一次按下和抬起，没有绑定（也没有脚本）时静默丢弃。
+- **两段扳机**：`lt.full` 的滞回作用在原始值上，达到 `fullPress` 按下，降到 `fullRelease` 松开；它按着时 `lt` 一直按着。没绑定时只记录状态。
+- **速率调制连发与曲线**：`repeat.minRateHz` 让连发速率随推动深度从 `minRateHz` 变到 `rateHz`（缺省 12），周期不小于 `repeatMinimum`；`analog.*.curve`（`linear`、`quadratic`、`cubic`）只改深度，不移动阈值，不改脚本读到的值。只有摇杆或扳机派生的控件可用 `minRateHz`，且不得大于 `rateHz`。
+- **摇杆移动鼠标**（`engine/stick_mouse.go`，纯函数，不分配）：目标速度 = 方向单位向量 × `mouseSpeed` × `curve(depth)` × 精确系数。按时钟积分，不按 tick：每次轴输入、tick、系数变化时先把上次到此刻的时间（上限 50 ms）按旧速度积进累加器再重算；`mouseSmoothingMs` 不为 0 时速度是目标的指数移动平均。`MouseTick` = 8 ms，到点经 `Output.Move` 发整数部分，晚了不补发。
   - **安全边界**：暂停时不排 tick。`CancelAll` 清掉全部鼠标状态，并给仍推在死区外的摇杆上锁，回到死区内才解锁；恢复暂停后要有下一次轴输入才继续。`Reload` 和校准变化不是安全边界：不清状态，按旧目标积到此刻再按新设置重算。
-  - 精确模式（MOU-05，`op:"precision"`，`factor` 0.05–1，默认 0.3）在手势按住期间降低所有鼠标摇杆的速度，只能用在 `press`、`hold`；跳转（MOU-08，`op:"jump"`）经 `Output.Jump` 把指针放到虚拟桌面的 `x`、`y`（0–1）。
+  - 精确模式（`op:"precision"`，`factor` 0.05–1，默认 0.3）在手势按住期间降低所有鼠标摇杆的速度，只能用在 `press`、`hold`；跳转（`op:"jump"`）经 `Output.Jump` 把指针放到虚拟桌面的 `x`、`y`（0–1）。
 
 ### 7.6 默认参数
 
@@ -334,17 +334,17 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 `Compile` 把解析后的 profile 编成不可变的 `Program`，多个 Engine 共用；`timing` 可在 profile 或 binding 上覆盖 `holdMs`、`multiTapMs`、`tapPressMs`、`tapGapMs`，显式 0 也保留。`NextDeadline` 和 `Apply` 驱动 hold、多击、repeat 定时器。关闭 `Options.Trace` 时 Step、Apply、CancelAll、Reset、Pause 零分配。
 
-**动作规则**（MAP-07）：`profile.Parse`、`Compile`、`engine.CheckBinding` 检查同样的规则，所以 `Parse` 返回的模型总能编译。
+**动作规则**：`profile.Parse`、`Compile`、`engine.CheckBinding` 检查同样的规则，所以 `Parse` 返回的模型总能编译。
 
 - release、tap、doubleTap、tripleTap、quadTap 在松开之后才执行，没有可按住的对象：keys 动作只能 tap 模式、不能带 repeat，层动作不能 `op:"hold"`。这保证不会留下没人结束的按住（不变量 1）。
 - KeySpec 数组（键序列）只能 tap 模式、不能带 repeat；press/hold 不写 mode 时默认 hold，所以数组要写 `"mode":"tap"`。repeat 的 `style`：`typematic` 用 hold 模式，`tap` 用 tap 模式，不写则跟随 mode。
 - 主键是鼠标按键的 keys 动作不能带 typematic 连发（按住时再按会被应用当作双击），IPC 保存（`profilelib.Put`）同样拒绝；tap 风格连发可用。
-- mouse、HUD 动作不按键，没有 `mode`、`repeat`。sequence 与 text 动作（MAP-22、OUT-21）同样不按住任何东西，每个手势都能用；`steps` 过 `keys.ValidateSteps`，文字过 `keys.ValidateText`。触发时引擎调一次 `Output.Sequence` 或 `TypeText`；引擎不计时，排队、等待、字符间隔和取消都在 Arbiter（§8.2）。
+- mouse、HUD 动作不按键，没有 `mode`、`repeat`。sequence 与 text 动作同样不按住任何东西，每个手势都能用；`steps` 过 `keys.ValidateSteps`，文字过 `keys.ValidateText`。触发时引擎调一次 `Output.Sequence` 或 `TypeText`；引擎不计时，排队、等待、字符间隔和取消都在 Arbiter（§8.2）。
 
 **打断缓冲与重放**：
 
 - `timeOnly` 和 `balanced` 把打断的按钮边沿缓冲成队列，Pending 判定后按原顺序重放。drain 在缓冲里先找到 Pending 控件自己的松开时判为 tap，会打开多击窗口时不执行 tap 动作；这个松开留在缓冲原位，重放到它时才抬起 press 动作按住的键和层、执行 release 动作。
-- 连发在物理松开时就停止；重放的按下若自己的松开已在缓冲里，不登记连发（OUT-11）。重放的按下按原始时间算 holdMs 截止，已过就判 hold，除非自己的松开也在缓冲里且早于截止。
+- 连发在物理松开时就停止；重放的按下若自己的松开已在缓冲里，不登记连发。重放的按下按原始时间算 holdMs 截止，已过就判 hold，除非自己的松开也在缓冲里且早于截止。
 
 **多击**：达到绑定声明的最大次数时立即提交；窗口到期，或之后到来的其他控件按下时，提交已有计数。窗口从松开的原始时间起算 `multiTapMs`。
 
@@ -352,11 +352,11 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 
 **生命周期**：
 
-- **CancelAll(now)**（OUT-07 的引擎一级，见 §7.4）：按着且未取消的控件，周期标为已取消，记下的组合丢掉；锁存的组合自己发 `Up`，其余由调用者让 Arbiter 释放。连续第二次什么也不做。
-- **Reload(now, prog)**（PRO-03）：先 CancelAll 再换 prog；按着的控件松开时决策带旧绑定、reason `canceled`、不发键。**Reset(now)**：先 CancelAll，再把所有控件（含功能键）当作松开，用于设备断开。
-- **Pause / Resume**（DMN-06）：Pause 先 CancelAll 再进入暂停。暂停时的按下照常开始周期，但立即算已取消：决策 reason `paused`，不发键，松开是 `canceled`。Resume 不发键、不决策，按着的控件松开再按才工作。Reset、Reload、CancelAll 都保持暂停。
+- **CancelAll(now)**（ReleaseAll 的引擎一级，见 §7.4）：按着且未取消的控件，周期标为已取消，记下的组合丢掉；锁存的组合自己发 `Up`，其余由调用者让 Arbiter 释放。连续第二次什么也不做。
+- **Reload(now, prog)**：先 CancelAll 再换 prog；按着的控件松开时决策带旧绑定、reason `canceled`、不发键。**Reset(now)**：先 CancelAll，再把所有控件（含功能键）当作松开，用于设备断开。
+- **Pause / Resume**：Pause 先 CancelAll 再进入暂停。暂停时的按下照常开始周期，但立即算已取消：决策 reason `paused`，不发键，松开是 `canceled`。Resume 不发键、不决策，按着的控件松开再按才工作。Reset、Reload、CancelAll 都保持暂停。
 
-### 7.8 决策记录（ENG-20）
+### 7.8 决策记录
 
 设置了 `Options.Trace` 时，每个按钮边沿、越过阈值的扳机值、被忽略的输入和 CancelAll 结束的每个周期，产出一条 `Decision{T, Control, Edge, Cycle, Gesture, Level, Binding, Action, Owner, Reason}`。摇杆轴和未越过阈值的扳机值没有；Trace 为 nil 时不构造。
 
@@ -408,16 +408,16 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 
 完整键名、别名、扫描码和 VK 用 `padmatectl keys list` 查；`padmatectl keys parse [--json] <spec>...` 输出规范形式并在出错的 token 下画 `^`。
 
-- 字符键按前台布局解析；物理键固定为 US 位置（OUT-04）；扫描码原样发送，永远不是修饰键。Arbiter 先用 `Chord.Sided()` 把不分左右的修饰键归一为左键，再按物理键计数（OUT-06）。`Z`、`KeyZ`、`sc:0x2C` 是三个不同的 `keys.Key`。
+- 字符键按前台布局解析；物理键固定为 US 位置；扫描码原样发送，永远不是修饰键。Arbiter 先用 `Chord.Sided()` 把不分左右的修饰键归一为左键，再按物理键计数。`Z`、`KeyZ`、`sc:0x2C` 是三个不同的 `keys.Key`。
 - 鼠标键没有扫描码、VK 和布局：滚轮按下滚一格，松开不发；按键像键一样有按住状态。媒体键是键盘键，有 E0 扫描码和 VK，按 VK 发。两者不能当修饰键，只能在 chord 末尾；鼠标按键不能配 typematic 连发（§7.7）。新键追加在键表后面，不改 schemaVersion。
 - 字符键的字符由 `Key.Char()` 给出。Resolver 要用 `Char()` 查布局，不能用 `String()`：大写字母在 Windows 上解析为 Shift 加该键，`Ctrl+Z` 会变成 Ctrl+Shift+Z。需要 Shift 才能打出的字符（`! @ #` 等）不是键，解析时报错并提示写成 `Shift+1`。
 - **US 基准映射**（`Key.US()`）：Pause 无单个扫描码，按 VK_PAUSE 发；NumLock 的 0x45 在按住 Ctrl 时变成 VK_PAUSE；小键盘扫描码 0x47–0x53 随系统 NumLock 翻译，所以 Num0–Num9、NumDecimal 按 VK 发（§8.3）；vkE8 不在键表里，只由 MenuMask 注入（§8.5）。
 
-**布局**（OUT-04，`internal/output/layout*.go`，[ADR：键盘与鼠标输出](adr/0004-output-sendinput.zh-CN.md)）：`Resolver.Resolve` 用作 `ArbiterOptions.Resolve`，只在 Arbiter 的 goroutine 上调用；实机（演练与注入一样）用它，重放用 `ChordStroke`（US）。
+**布局**（`internal/output/layout*.go`，[ADR：键盘与鼠标输出](adr/0004-output-sendinput.zh-CN.md)）：`Resolver.Resolve` 用作 `ArbiterOptions.Resolve`，只在 Arbiter 的 goroutine 上调用；实机（演练与注入一样）用它，重放用 `ChordStroke`（US）。
 
 - **回退**：布局给不出能用的键（没有这个 VK 或字符、扫描码为 0/E1/超范围/不带 E0 的小键盘码、读不到前台布局等）时返回 `ChordStroke` 的结果，不报错，每个（spec, HKL）警告一次（padmated 记 warn `key sent as its US key`）。只有无效的组合返回错误。
 
-**文本输入**（OUT-21）：`KEYEVENTF_UNICODE` 只用于文本。文本不是 KeySpec，是 `text` 动作、序列的 `{"text":…}` 步骤（§10.3）和脚本 `key.type` 的参数。`keys.ValidateText`：1–256 个 UTF-16 单元，合法 UTF-8，除 `\n`、`\t`（各一次 Enter/Tab 点按）外无控制字符。`padmatectl keyboard-capture`（OUT-15）按 VK 在键表里找键，捕获钩子从不吞实体键。
+**文本输入**：`KEYEVENTF_UNICODE` 只用于文本。文本不是 KeySpec，是 `text` 动作、序列的 `{"text":…}` 步骤（§10.3）和脚本 `key.type` 的参数。`keys.ValidateText`：1–256 个 UTF-16 单元，合法 UTF-8，除 `\n`、`\t`（各一次 Enter/Tab 点按）外无控制字符。`padmatectl keyboard-capture`按 VK 在键表里找键，捕获钩子从不吞实体键。
 
 ### 8.2 Output Arbiter
 
@@ -429,7 +429,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 - **单线程**：Arbiter 不加锁，只由一个 goroutine 调用。守护进程里是锁定线程的 `output.Loop`（T-output），其他 goroutine 经 `Do` 或 `RemoteArbiter` 交命令（§5），所以它的 Sender 是唯一的 SendInput 调用者（不变量 3）。
 - **命令**：`Down`、`Up`、`Tap`、`Repeat`、`ReleaseOwners`/`ReleaseOwner`/`ReleaseAll`、`Advance`、`NextDeadline`、`Held`、`Stats`、`SetBlocked`、`SetTiming`、`SetEventGap`；非键的 `Move`、`Jump`、`TypeText`、`Sequence`。owner 或组合无效、解析失败时返回错误，什么也不发、不改。
 - **脚本接缝**：`script.Host` 只通过 `OutputSink` 调这些命令，带 `SourceScript` owner；生命周期切换时先 `ReleaseOwner`，再让旧 Host 断开 sink，迟到的输出触及不到 Arbiter。
-- **物理键**：组合经 `ArbiterOptions.Resolve` 得到按下事件，修饰键在前，主键最后（OUT-05）；键总是用按下它的那个事件的抬起来释放，按下后布局变了也一样。物理键流经 MenuMask 再到 Sender（§8.5）。
+- **物理键**：组合经 `ArbiterOptions.Resolve` 得到按下事件，修饰键在前，主键最后；键总是用按下它的那个事件的抬起来释放，按下后布局变了也一样。物理键流经 MenuMask 再到 Sender（§8.5）。
 - **引用计数**：每个 owner 持有一组组合；每个持有引用组合的全部物理键，进行中的 tap 只引用它自己按下的键。键在第一个引用时按下，最后一个引用去掉时抬起。
 
 **Tap 与 Repeat**：Tap 把没按下的键按下，由 tap 引用到结束；无最短按下约束时按下和抬起同一批，否则 `Advance` 在 now+hold 结束引用，物理抬起仍受 MinPress 约束。主键被占着或在 MinGap 内时 tap 排队，后来的点按合并（报告 dropped）。Repeat 只对 owner 用 Down 持有的组合有效，额外发一次主键按下。
@@ -442,19 +442,19 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 
 **文本输入不是键**（`arbiter_text.go`）：`TypeText(owner, text, gap)` 用 `KEYEVENTF_UNICODE` 逐字符输入（每个字符一次 Send），不看布局；字符之间隔 `gap`。Unicode 事件不进键表、引用计数、held-keys 日志和启动扫除；`ReleaseOwners` 和 `SetBlocked(true)` 结束匹配 owner 的文本。Send 只发出一部分时，已发出的按下，其抬起立即重发一次，文本就此结束并通知 `Dropped`；抬起再失败时像待重发的键处理（`Arbiter.stuck`）。系统是否为 `VK_PACKET` 记录按住状态没有实测，记着只为遵守不变量 1。
 
-**序列**（`arbiter_sequence.go`，MAP-22）：`Sequence(owner, steps, hold, gap)` 跑一串 `keys.Step`（点按、等待、输入文字；1–64 步），与 `TapSequence` 同为一种 `tapSeq`，owner 一释放整个序列都取消。一个步骤丢了序列继续并通知 `Dropped`。一个 `Sequence` 要等它之前的 `Sequence`（不论 owner）结束才开始，队里最多 16 个，再来的被丢弃。`ReleaseOwners`（所以 `ReleaseAll`、暂停、重载、切换配置、紧急释放、退出）和 `SetBlocked(true)` 结束匹配的序列：没开始的步骤不再发，进行中的点按像单独取消那样释放（不变量 1）。序列从不按住什么。
+**序列**（`arbiter_sequence.go`）：`Sequence(owner, steps, hold, gap)` 跑一串 `keys.Step`（点按、等待、输入文字；1–64 步），与 `TapSequence` 同为一种 `tapSeq`，owner 一释放整个序列都取消。一个步骤丢了序列继续并通知 `Dropped`。一个 `Sequence` 要等它之前的 `Sequence`（不论 owner）结束才开始，队里最多 16 个，再来的被丢弃。`ReleaseOwners`（所以 `ReleaseAll`、暂停、重载、切换配置、紧急释放、退出）和 `SetBlocked(true)` 结束匹配的序列：没开始的步骤不再发，进行中的点按像单独取消那样释放（不变量 1）。序列从不按住什么。
 
-**释放**（OUT-07 的 Arbiter 一级）：`ReleaseOwners(match)` 结束匹配 owner 的持有和进行中的 tap，然后在一批里抬起所有没有引用的键（含待重发的）：先非修饰键，再修饰键，各按按下的逆序。完整路径 `slot.ReleaseAll` 是先 `engine.CancelAll`（§7.4）再 `ReleaseOwners` 匹配同 slot 号、任意代数的 owner。`Slot.Reload` 同样释放，之后的 owner 用新代数。
+**释放**（ReleaseAll 的 Arbiter 一级）：`ReleaseOwners(match)` 结束匹配 owner 的持有和进行中的 tap，然后在一批里抬起所有没有引用的键（含待重发的）：先非修饰键，再修饰键，各按按下的逆序。完整路径 `slot.ReleaseAll` 是先 `engine.CancelAll`（§7.4）再 `ReleaseOwners` 匹配同 slot 号、任意代数的 owner。`Slot.Reload` 同样释放，之后的 owner 用新代数。
 
 **多个 slot**：所有 slot 的 owner 在同一个 Arbiter 里，共用一个键盘（[ADR：多手柄](adr/0003-devices-and-slots.zh-CN.md)）。引用计数跨 slot：两个 slot 按住同一个键只按下一次，最后一个引用去掉时才抬起，不管哪个 slot 先松开、被移除、重载或 panic。
 
 **Send 失败**（不变量 1）：状态跟随命令，不跟随 Send 的结果。没发出去的按下仍算按下，最后一个引用去掉时照样发抬起：多余的抬起无害，漏掉的抬起就是卡键。批次只发出一部分时，没发出的抬起立即重发一次；再失败的成为待重发，下一次 `Down`、`Up`、`Tap`、`Repeat`、`Advance` 先重发它们，`ReleaseOwners` 并进自己的批次，`NextDeadline` 在 `RetryInterval`（默认 100 ms）后到期。
 
-**事件间隔**（OUT-17，`pace.go`）：config.json 的 `output.eventGapMs`，0–50 ms，默认 0（有的软件会漏掉和主键在同一次 SendInput 里的 Ctrl/Shift）。大于 0 时所有 owner 的事件按命令顺序进一个队列，每个事件单独一次 Send，与上次至少隔这么久。**释放不等间隔**（不变量 1）：`ReleaseOwners`/`ReleaseAll` 立即一次 Send，队列里的事件在前，然后抬起剩下的键。
+**事件间隔**（`pace.go`）：config.json 的 `output.eventGapMs`，0–50 ms，默认 0（有的软件会漏掉和主键在同一次 SendInput 里的 Ctrl/Shift）。大于 0 时所有 owner 的事件按命令顺序进一个队列，每个事件单独一次 Send，与上次至少隔这么久。**释放不等间隔**（不变量 1）：`ReleaseOwners`/`ReleaseAll` 立即一次 Send，队列里的事件在前，然后抬起剩下的键。
 
-**按下的闸门**（DMN-06）：`SetBlocked(true)` 关上闸门，本身不发也不释放。关着时有效的 `Down`、`Tap`、`Repeat` 不按下也不持有；`Up`、`ReleaseOwners`、`ReleaseAll`、tap 到期和重发照常，所以闸门不会让键卡住。守护进程经 `output.Loop.BlockFor`（§5）：先 ReleaseAll 再关闸门，暂停（`BlockUser`）和系统挂起（`BlockSystem`）各占一位，都打开时闸门才开。
+**按下的闸门**：`SetBlocked(true)` 关上闸门，本身不发也不释放。关着时有效的 `Down`、`Tap`、`Repeat` 不按下也不持有；`Up`、`ReleaseOwners`、`ReleaseAll`、tap 到期和重发照常，所以闸门不会让键卡住。守护进程经 `output.Loop.BlockFor`（§5）：先 ReleaseAll 再关闸门，暂停（`BlockUser`）和系统挂起（`BlockSystem`）各占一位，都打开时闸门才开。
 
-**held-keys 日志**（OUT-14）：让强杀之后的下次启动释放残留键。路径 `%LOCALAPPDATA%\padmate\run\held.bin`（格式见 `internal/output`），只有 `--inject` 用。记键盘键、媒体键和鼠标按键；滚轮、指针移动和 Unicode 事件从不写入。
+**held-keys 日志**：让强杀之后的下次启动释放残留键。路径 `%LOCALAPPDATA%\padmate\run\held.bin`（格式见 `internal/output`），只有 `--inject` 用。记键盘键、媒体键和鼠标按键；滚轮、指针移动和 Unicode 事件从不写入。
 
 - **身份**：`GetAsyncKeyState` 分不出注入的和物理按着的键，所以别的开机或登录会话留下的日志不能扫除。日志存写它的那次运行的身份（会话 ID、令牌的登录会话、登录时间），三项全等才算同一个；不同时当作空：重置并写入本次身份，一个键也不释放。
 - **先写后发**：ledger 把一批交给 MenuMask 之前，先把这批的按下全部加进位图（SendInput 可能只发出前缀），发完之后改成它记着按住的键；每次写都是整个文件的一次 WriteFile，所以被强杀打断的写也不丢键。写失败时照常发键，这期间被强杀可能漏记；padmated 从不因为日志或扫除出错而拒绝启动。
@@ -462,7 +462,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 
 **ReleaseAll 的触发**：退出、重载和切换 profile、断连、暂停和紧急组合（`Loop.Block(true)`）、锁屏/睡眠/注销/关机/安全桌面（`Loop.BlockFor(BlockSystem, true)`）、脚本卸载（按 owner）；T-output 的 panic 走 ledger 释放（§5）。
 
-**未实现与限制**：提权窗口或安全桌面期间补发释放（OUT-13）；padmate.exe 在前台时只演练、不注入（OUT-25）；按前台变化释放；IME、Ctrl+Alt+Del、Win+L。单独的 Alt/Win 被屏蔽，要打开菜单绑定 F10 或 Ctrl+Esc（§8.5）。
+**未实现与限制**：提权窗口或安全桌面期间补发释放；padmate.exe 在前台时只演练、不注入；按前台变化释放；IME、Ctrl+Alt+Del、Win+L。单独的 Alt/Win 被屏蔽，要打开菜单绑定 F10 或 Ctrl+Esc（§8.5）。
 
 ### 8.3 注入与标记
 
@@ -481,11 +481,11 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 
 **标记**：每个事件的 `dwExtraInfo` 是 `Tag | nonce`：高 32 位是 ASCII "padm"，低 32 位是 nonce（进程 id）。LL 键盘钩子用 `output.IsPadmate`、`Nonce` 分清 padmate 的事件、实体键盘和其他注入程序。LL 鼠标钩子的 `dwExtraInfo` 只有低 32 位（实测），没有 "padm" 标记，只能靠 nonce（`output.MayBePadmateMouse`）。标记可以伪造，只用来过滤。
 
-### 8.4 演练输出（OUT-09）
+### 8.4 演练输出
 
 演练打印器是 padmated 在重放和 `--dry-run` 实机下的 `output.Sender`（经 MenuMask，所以打印的屏蔽键与注入时相同）。列、行种类和例子见 `padmated -h` 与 `cmd/padmated/testdata/acceptance.golden`。决策行在它引起的 send 行之前（§7.8）。实机输出随时间和前台布局变化，没有黄金文件，由 `TestLiveVirtualDryRun` 等检查关键行（§14）。
 
-### 8.5 Alt/Win 菜单屏蔽（OUT-08）
+### 8.5 Alt/Win 菜单屏蔽
 
 实现在 `internal/output/mask.go`，可跨平台，设计见 [ADR：键盘与鼠标输出](adr/0004-output-sendinput.zh-CN.md)。
 
@@ -536,27 +536,27 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 - **revision** 是原始文件字节的 SHA-256，外部编辑也会改变它；IPC 写入用它检查冲突。
 - 库里损坏、不可读、版本过新的配置仍有一项并带诊断，供界面修复。
 
-**版本与迁移**（PRO-01、PRO-06）
+**版本与迁移**
 
 - `profile.CurrentSchema` 是 1。`Parse` 自己先迁移再校验，调用方不用单独调 `Migrate`。版本高于当前的拒绝（`upgrade padmate`）。
 - 迁移只在内存里做，**守护进程从不因为文件旧而改写它**：磁盘字节和 revision 保持原样，各种写入（put、copy、restore、导入导出、宏改名）都按字节位置改。
 - 格式已冻结：以后只加可选字段；可能弄坏旧文件的改动要加一步迁移、`CurrentSchema` 加一、改 schema 的 `const`、再 `task gen`。config.json 和 state.json 的 `schemaVersion` 是 0。
 
-**保存快照**（PRO-17，`profilelib/history.go`）
+**保存快照**（`profilelib/history.go`）
 
 - `Put` 用不同的字节替换 profile.json 之前，在同一写锁内把旧字节存为 `profiles/<id>/.history/<UTC 时间>-<SHA-256 前 8 位>.json`（去掉 `.json` 是 version），旁边写临时文件、Sync、rename。
 - 与最新快照相同、新建、保存相同字节时不存。每个配置最多 30 个，多的删最旧。存快照失败不影响保存。`.history` 是链接或文件时不跟随。
 
-**导出文件**（PRO-20，`profilelib/archive.go`、`import.go`）
+**导出文件**（`profilelib/archive.go`、`import.go`）
 
-- 一个配置导出成一个 zip（`.padmate`）：根目录 `manifest.json`（`{"type":"padmate-profile","format":1,"name","padmate"}`）和 `profile/`（配置文件夹内容，去掉 `.history`）。profile.json 引用的库里宏连同它们的相对 import 放进 `profile/macros/`（SCR-51）。
+- 一个配置导出成一个 zip（`.padmate`）：根目录 `manifest.json`（`{"type":"padmate-profile","format":1,"name","padmate"}`）和 `profile/`（配置文件夹内容，去掉 `.history`）。profile.json 引用的库里宏连同它们的相对 import 放进 `profile/macros/`。
 - 导出在写锁内按复制的限制读入内存（256 项、32 MiB、8 层，链接和特殊文件拒绝），文件不超过 4 MiB，只含脚本、JSON 和文本文件。
 - **导入**（`ReadArchive`）在写盘前全部检查：只接受未加密的 store/deflate zip，恰好一个 manifest；拒绝 `profile/` 以外的项、绝对路径、`..`、反斜杠、设备名、特殊项、只差大小写的重名；按解压后的字节计数（zip 炸弹在 32 MiB 停）；脚本和 JSON 必须是 UTF-8；profile.json 通过与 `Put` 相同的校验。
 - 脚本放进脚本库：同名同内容复用；同名不同内容又没传 `macros` 时 -32022 且什么都没写；`macros:"replace"` 覆盖，`"keep"` 给导入的脚本取下一个空的“名称 2”并改写引用。
 - 新配置的 ID 由名称生成（`NewID`）；名称重名（去首尾空格、NFC、不分大小写）拒绝。`Library.ImportProfile(data, name, unique)` 把转换好的 profile.json 当只有 profile.json 的导出文件走同一路径，`unique` 为真时重名加序号（AntiMicroX 导入用，§11.1）。
 - 写法：在隐藏的 `profiles/.tmp-import-*` 写完并 Sync，写锁内再查名称后 rename。替换已有配置时先把旧文件夹 rename 成 `.old-<id>-*`，再 rename 新的，然后旧 profile.json 存成快照、旧 `.history` 移进新文件夹。两次 rename 之间中断时，下一次复制、导入、删除或启动把 `<id>` 不存在的 `.old-<id>-*` 改回原名，已存在的删除。
 
-**脚本库**（宏，SCR-50、SCR-51）
+**脚本库**（宏）
 
 - `<数据目录>/macros/`，与配置无关，所有配置共用。顶层 `.ts`/`.js`（不含 `.d.ts`）各是一个宏，整库最多 64 个（`profile.MaxMacros`）；子文件夹里的模块可被 import，不是宏，import 不得出库。
 - **脚本迁移**（`Library.MigrateMacros`）：库模式启动时（拿到实例锁之后，重放不做）把每个配置文件夹里旧式的 `macros/` 搬进库。同名同内容的删除；同名不同内容的取下一个空名并改写该配置的引用。改配置前先写 `<数据目录>/macros-migration-<配置ID>.json`，每一步可重做，被切断的下次启动完成。失败只记日志，不阻止启动。
@@ -571,12 +571,12 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 - 内容：`lastProfile`、`lastProfileSet` 和每设备每配置的层状态（`devices[DeviceKey].profiles[id]`：`base`、`toggled`、`cycles`）。`lastProfileSet:true` 加空 `lastProfile` 表示上次已禁用。
 - `profilelib.Memory` 在内存合并，后台每 500 ms 刷新；退出在 output 停止后最后刷新，最多等 1 s。校验后写临时文件、Sync、rename。
 
-**config.json 的自动修复**（PRO-29，`profile.RepairConfig`、`profilelib.ReadRepairedConfig`）
+**config.json 的自动修复**（`profile.RepairConfig`、`profilelib.ReadRepairedConfig`）
 
 - 库入口启动时和每次读 config.json 发现错误，先把原字节备份成 `<数据目录>/config.broken-YYYYMMDD-HHMMSS.json`（`O_EXCL`，从不覆盖），再替换。替换失败就删备份，修复后的设置只留在内存，日志只记第一次。
 - 保留所有合格的成员；每个错误删去包含它的、有默认值的最小成员；列表出错删整个列表，只有 `rules` 例外（只删出错的那条）。完全解析不了的整个换成 `{"schemaVersion": 0}`。修复后的文件总能解析（`FuzzConfig`）。
 
-**继承**（PRO-19，格式规则见 §10.3）
+**继承**（格式规则见 §10.3）
 
 - 子配置的 profile.json 仍是它自己的文本，保存、revision、快照都按这份文本，从不因为有父配置而改写。
 - 库里校验 profile 文本都用 `Library.Parse(id, data)`，所以 `Put` 子配置时父配置要在库里、不成环。写父配置不检查子配置（加载时再报）。`Copy` 保留 `extends`。
@@ -657,7 +657,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 - **hud**：`hints` 只能放 `press`/`hold`，按住期间浮层列出当前层栈各控件的 label。
 - **sequence / text**：`text` 规则 `keys.ValidateText`（1–256 个 UTF-16 单元，控制字符只接受 `\n`、`\t`）。步骤按 `tapPressMs` 点按，之后等 `tapGapMs`（默认 20 ms）才开始下一步；同一绑定再次触发时排在后面（§8.2“序列”）；暂停、重载、切换配置、紧急释放、退出都结束没做完的部分。
 
-**绑定的其他成员**：`block` 消费控件但不产生动作；`timing` 覆盖四个时间（显式 0 保留）；`policy` 打断策略（§7.2）；`latch` 把按住的组合保留到同一控件的下一次按下（MAP-10）；`haptic` 在每个手势分发时响一次（§7.4），写在没有动作的绑定上被接受但不起作用。
+**绑定的其他成员**：`block` 消费控件但不产生动作；`timing` 覆盖四个时间（显式 0 保留）；`policy` 打断策略（§7.2）；`latch` 把按住的组合保留到同一控件的下一次按下；`haptic` 在每个手势分发时响一次（§7.4），写在没有动作的绑定上被接受但不起作用。
 
 **analog**：`ls`/`rs`（`mode`：`standard`、`eightWay`、`fourWay`、`fourWayDiagonal`、`knob`、`mouse`，及死区、阈值、旋钮、鼠标速度等）、`dpad`、`lt`/`rt`（`press`、`release`、`fullPress`、`fullRelease`、`curve`）、`axisThreshold`。取值范围见 schema，默认值见 §7.6。主要校验：`fullRelease` 不得大于 `fullPress`，写了 `fullPress` 时须大于 `press`（没写则不查，旧文件仍可加载）；`minRateHz` 不得大于有效 `rateHz`，且只能用在摇杆方向、`active`、内外圈、半轴、扳机；`precision`、`hints` 写在 press/hold 以外的手势是错误。控件键还有 `ls.inner ls.outer ls.cw ls.ccw rs.* lt.full rt.full`。
 
@@ -671,7 +671,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 - `functionKeys`（旧格式，仍有效）：`{"back"?: 一套, "start"?: 一套}`，里面不能写 `back`、`start`、`select`。
 - 引擎读 `Profile.EffectiveFunctionSet()`：有 `functionSet` 就用它，否则由旧格式合成（§7.9）；两个都有时 `functionKeys` 被忽略并给警告（指针 `/functionKeys`）。
 
-**继承**（`extends`，PRO-19）
+**继承**（`extends`）
 
 值是配置库里另一个配置的 ID。子配置只写要改的，其余来自父配置。
 
@@ -724,14 +724,14 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 
 **即时生效**：`enabled`、`releaseOnSwitch`、`rules`、`timing`、`safety`、`output.*`、`functionKey`、`calibration`、`feedback`、`devices.*.mapping` 保存后即时生效（`applyLiveSettings`）；设备 `ignored` 和 `restoreLayerState` 在启动时读取，变了报 `restartRequired`。`functionKey` 变了会用新值重新编译当前配置，各 slot 走 `Supervisor.Reload`（先释放所有按着的输出）。选 `guide` 时 Xbox Game Bar 也会响应，padmate 不改系统设置。
 
-**每设备调校**（IN-14）：`devices.<DeviceKey>.calibration.ls/rs` 有可选 `deadzone`、`saturation`（0–1），覆盖 profile 同名值（顺序见 §7.5），扳机不调校。两个成员都给时 `saturation` 必须大于 `deadzone`；只给一个时叠加后的一对在运行时检查，不成立就忽略这根摇杆并记 warn。
+**每设备调校**：`devices.<DeviceKey>.calibration.ls/rs` 有可选 `deadzone`、`saturation`（0–1），覆盖 profile 同名值（顺序见 §7.5），扳机不调校。两个成员都给时 `saturation` 必须大于 `deadzone`；只给一个时叠加后的一对在运行时检查，不成立就忽略这根摇杆并记 warn。
 
-**自定义手柄映射**（IN-18）
+**自定义手柄映射**
 
 - `devices.<DeviceKey>.mapping` 是一个 SDL 映射字符串（1–2048 字符），写法 `GUID,*,a:b0,…,platform:Windows`：GUID 是手柄的，名字写 `*`，不写 `type:`（它改 `DeviceInfo.Type`，紧急组合的族按它选）。
 - SDL 按 GUID 应用映射，所以**同一 GUID 的所有 DeviceKey 必须是同一份映射**；`devices.setMapping` 一起写进所有这样的键。绑定不同的两份映射后者报错（`Equivalent`）。有错的映射在修复时被单独去掉。
 
-**默认紧急组合**（DMN-07，`input.DefaultCombo`），默认按住 2000 ms：
+**默认紧急组合**（`input.DefaultCombo`），默认按住 2000 ms：
 
 | 族 | 组合 |
 |---|---|
@@ -760,7 +760,7 @@ schema 用 draft 2020-12，只用 VS Code 和 Monaco 支持的关键字（不用
 - `--json`：每个文件一行 `{"file", "ok", "diagnostics"}`，`ok` 表示没有错误。
 - `--function-key KEY`（`start`、`back`、`guide`，默认 `start`）：编译用的功能键，代替 config.json 的 `functionKey`（validate 不读 config.json）；别的值退出码 2。
 - **退出码**：没有文件有错误为 0（允许警告）；有文件有错误为 1；用法错误或有文件读不了为 2（优先于 1）。读不了的文件报到 stderr，其余照常检查。
-- 没有错误的文件接着用 `engine.Compile` 编译，在诊断行后每个绑定打印一行附加延迟（PRO-04）：`  <pointer> ["label"]: press +0 ms`；有触感的加 `, haptic tick`；无动作的是 `no action`。pointer 里的控件名与文件一致；label 用 `strconv.Quote`，没有时省略。功能键的一套排在 common 之后。
+- 没有错误的文件接着用 `engine.Compile` 编译，在诊断行后每个绑定打印一行附加延迟：`  <pointer> ["label"]: press +0 ms`；有触感的加 `, haptic tick`；无动作的是 `no action`。pointer 里的控件名与文件一致；label 用 `strconv.Quote`，没有时省略。功能键的一套排在 common 之后。
 - `--json` 的对象对无错误的文件多一个 `bindings` 数组，每项 `{"id","control","label","gesture","haptic","addedLatencyMs"}`（control 是标准名；label、gesture、haptic 没有时省略）；有错误的文件没有这个字段。
 - 编译失败时报 1:1 处的错误 `cannot compile the profile: …`，退出码 1。
 - **宏**：引用的宏不在脚本库（按精确名字，`profile.MissingMacros`）时在 `file` 字符串处给警告 `macro file "x.ts" is not in the macros folder`。库配置（路径 `…/profiles/<id>/profile.json`）查 `<数据目录>/macros`，其他文件查旁边的 `macros/`。
@@ -772,12 +772,12 @@ schema 用 draft 2020-12，只用 VS Code 和 Monaco 支持的关键字（不用
 - 严格 JSON，不支持注释。
 - 守护进程是唯一写者：写临时文件再重命名（原子写），每次写入带 revision，替换 profile.json 前先存快照（§10.1）。
 
-**热重载**（PRO-03，`internal/watch`）
+**热重载**（`internal/watch`）
 
 - 每 100 ms stat 一次，比较大小和修改时间；变了之后要稳定 200 ms 才读，读完再 stat，又变了就重新等。所以连续写入只算一次，在最后一次写入后 200–400 ms 发现。
 
 
-### 10.6 事件的 JSON 行（ENG-08）
+### 10.6 事件的 JSON 行
 
 `padmatectl monitor --json` 的输出、`padmatectl record` 的录制和 padmated 的 fake 输入是同一种格式，实现在 `internal/input/eventjson.go`（`WriteEvent`、`ReadEvents`）。每行一个对象：
 
@@ -965,8 +965,8 @@ JSON-RPC 标准码（如 -32602）之外：
 
 - **启动失败**：每次启动用新的报告文件 `<userData>/startup-reports/daemon-<PID>-<序号>.json`（`--startup-report`）。子进程退出码非 0 时读报告（最多 256 KiB，只留认得的字段），结束重试，状态变 `failed`，`failure` 为 `report`、`exit`、`spawn` 或 `timeout`。退出码 0 且无报告，表示请求已转给运行中的实例。`failed` 时 `StartFailure.tsx` 占满窗口，只给原因和三个按钮（打开文件夹、重试、退出）。
 - **事件交付**：经 `EventBuffer` 交给渲染进程，在途批次最多 32 条、待发队列最多 128 条（同设备同控件合并），溢出时报告 `dropped`，渲染进程刷新状态。连接代数阻止旧请求结果覆盖重连后的状态。
-- **捕获类会话**：键盘录入（OUT-15）用短期子进程 `padmatectl keyboard-capture`，取得自己的 `capture.start` 连接所有权后才装 LL 观察钩子，只观察非注入的实体键；失焦、取消、退出、断开或 30 秒超时都结束子进程并释放连接。手柄捕获（`pad-capture.ts`）的 `capture.stop` 失败 1 s 重发，直到成功或断开。
-- **发到 padmate 自己窗口的键**（OUT-25）：已注册的 UI 在前台时，Arbiter 只做虚拟记账并发布 `output.preview`，不调用 Sender；切换前台时先释放原目标的键，用 `BlockOwnWindow` 闸门等手势、连发和旧脚本被取消。`config.output.sendToOwnWindow` 保存即生效；全局 dry-run 始终优先。
+- **捕获类会话**：键盘录入用短期子进程 `padmatectl keyboard-capture`，取得自己的 `capture.start` 连接所有权后才装 LL 观察钩子，只观察非注入的实体键；失焦、取消、退出、断开或 30 秒超时都结束子进程并释放连接。手柄捕获（`pad-capture.ts`）的 `capture.stop` 失败 1 s 重发，直到成功或断开。
+- **发到 padmate 自己窗口的键**：已注册的 UI 在前台时，Arbiter 只做虚拟记账并发布 `output.preview`，不调用 Sender；切换前台时先释放原目标的键，用 `BlockOwnWindow` 闸门等手势、连发和旧脚本被取消。`config.output.sendToOwnWindow` 保存即生效；全局 dry-run 始终优先。
 
 ### 12.4 状态和保存
 
@@ -990,10 +990,10 @@ JSON-RPC 标准码（如 -32602）之外：
 - **映射页**：固定正面的 Three.js 手柄（本地 GLB），渲染器常驻不销毁。摇杆由“旋转”（`leftstick`）和“点按”（`leftstick.press`）两格组成；“旋转”格的标题是 `analog.ls.label`（`analog-editor.ts` 的 `setStickLabel`，不经 `settleStickMode`）。旋钮刻度的抽屉只有一个快捷键框（`SingleShortcutField`，写 `{press:{type:"keys"}}`，保留 `label`、`haptic`）。十字键四个方向是普通按键的抽屉，没有设置面板。按键图标由 `pad-icon.tsx` 从 `app/src/renderer/controller/pad-icons/` 的 SVG 解析出路径画成内联 SVG（`PadIcon`），手柄图标签、抽屉标题、按键预览（`control-icon.tsx`）和映射向导共用。点标签开 `KeyDrawer`：映射只有点按、长按、双击，动作只有“快捷键”和“脚本”；文件里的其他映射和动作照常生效。点按写 `press` 还是 `tap` 由键上有无长按/双击决定（`settleTap`）。快捷键只能录入（`ShortcutField`，键盘经 `keyboard-capture`，鼠标和滚轮窗口自收）。`analog` 参数整个配置共用，不随功能键分套。
 - **功能键**（引擎见 §7.9，格式见 §10.3、§10.4）：只有一个，`back`、`start`、`guide` 之一，默认 `start`，在设置页选；它本身不可绑定，界面编辑它切换到的那一套（`profile.functionSet`）。“平时 / 按住功能键”开关切 `view`（不写盘、不进撤销），做法是 `swapView` 把 `functionSet` 与 `layers.base` 互换。旧格式 `functionKeys` 读入时合成为一套。
 - **手写 `extends`**：界面不创建也不显示，沿用来的键当作自己的键，改了哪个才把哪个写进自己的文件（`inheritance.ts`）。删父配置时守护进程先把子配置写成完整内容；子配置有错误或沿用了父配置的脚本时返回 -32023。
-- **配置页**：一个软件对应一个配置，没绑定的用固定默认配置 `default`；顶部开关是 config 的 `enabled`。程序已被别的配置的启用规则选中时先确认，确认后删掉那条规则。新建的配置是空的，名称必填、最多 64 字符、不重名。删除先 `profiles.delete`：拒绝为正在使用（-32012）则切到另一个配置再请求，拒绝为引用（-32013）则先用 `config.put` 删掉引用规则再请求，解决不了就写回并切回原配置；默认配置不可删。导出 `.padmate` 和导入经 `profiles.export`/`import`（上限 4 MiB）；名称被占用（-32021）时 Main 留下文件并返回一次性 token（2 分钟过期，最多 4 份），页面选“替换”或“另存为”。导入 AntiMicroX（PRO-21）经 `profiles.importAmgp`，`AmgpReportDialog` 显示报告。
+- **配置页**：一个软件对应一个配置，没绑定的用固定默认配置 `default`；顶部开关是 config 的 `enabled`。程序已被别的配置的启用规则选中时先确认，确认后删掉那条规则。新建的配置是空的，名称必填、最多 64 字符、不重名。删除先 `profiles.delete`：拒绝为正在使用（-32012）则切到另一个配置再请求，拒绝为引用（-32013）则先用 `config.put` 删掉引用规则再请求，解决不了就写回并切回原配置；默认配置不可删。导出 `.padmate` 和导入经 `profiles.export`/`import`（上限 4 MiB）；名称被占用（-32021）时 Main 留下文件并返回一次性 token（2 分钟过期，最多 4 份），页面选“替换”或“另存为”。导入 AntiMicroX经 `profiles.importAmgp`，`AmgpReportDialog` 显示报告。
 - **脚本页**：脚本库各配置共用，经 `macros.*`（§11）操作，文件只由守护进程写。名称检查 `shared/macro-names.ts` 与 Go 共用 `daemon/testdata/macro-names.json`。
 - **设置页**（`SettingsPage.tsx`）：修改立即保存。分区：通用（语言、功能键、登录时启动）、浮层、反馈、安全（紧急暂停组合 `safety.panic`）、手柄调校（`devices.<DeviceKey>`，含识别和映射向导）、按键判定（`timing`）、高级（`output.sendToOwnWindow`、`output.eventGapMs` 0–50 ms）、更新、关于。保存时读完整 config，只改自己的字段，带 revision。登录时启动经 `startup.get/set`，不写 config.json；开发版返回 -32017。
-- **映射向导**（IN-17/18/19）：保存写 `devices.<DeviceKey>.mapping`。`mapwizard.ts` 是 Go `internal/mapwizard` 的 TypeScript 副本，`mapwizard.test.ts` 读 `daemon/internal/mapwizard/testdata/vectors.json` 要求结果一致，改规则要两边一起改。
+- **映射向导**：保存写 `devices.<DeviceKey>.mapping`。`mapwizard.ts` 是 Go `internal/mapwizard` 的 TypeScript 副本，`mapwizard.test.ts` 读 `daemon/internal/mapwizard/testdata/vectors.json` 要求结果一致，改规则要两边一起改。
 
 ### 12.6 诊断
 
@@ -1012,7 +1012,7 @@ JSON-RPC 标准码（如 -32602）之外：
 - 窗口不抢焦点：透明、无边框、`focusable:false`（`WS_EX_NOACTIVATE`）、`alwaysOnTop`、`setIgnoreMouseEvents`，`showInactive()` 只调一次。`overlay.ts` 和 `overlay-window.ts` 里没有 `show()`、`focus()`、`moveTop()`、`hide()`（`overlay.test.ts` 读源码检查）；显示隐藏靠页面切 `data-visible`。
 - 位置：480×160 DIP，主显示器工作区底部或顶部居中，不铺满屏幕（否则被 Windows 当成全屏程序）；显示提示或面板时增高，最高 494。
 - 主窗口 `closed` 和 `before-quit` 都销毁 overlay。overlay 就绪后 Main 才订阅含 `hud` 的话题；放弃 overlay（无显示器、建不出、加载失败、第二次崩溃）后去掉订阅，这样脚本的 `host.has("hud")` 为真时屏幕上一定有 overlay。
-- 内容：toast（HUD-04）、按键提示（HUD-03，来源是 slot 的 `hints`，每 250 ms，最多 16 条）、脚本面板（SCR-22）；偏好（HUD-05：提示消息、位置、不透明度）经 `padmate:overlayPrefs` 推给 Main。
+- 内容：toast、按键提示（来源是 slot 的 `hints`，每 250 ms，最多 16 条）、脚本面板；偏好（提示消息、位置、不透明度）经 `padmate:overlayPrefs` 推给 Main。
 
 ### 12.8 自动更新
 
@@ -1044,7 +1044,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 - **安装版的测试模式**（`main/runtime-options.ts`）：要求 `PADMATE_UI_TEST_PACKAGED=1` 且 `PADMATE_UI_DATA_DIR`、`PADMATE_UI_IPC_DIR`、`PADMATE_UI_USER_DATA` 三个私有目录都设置，缺一项就按真的应用运行（真数据目录加 `--inject`）。测试模式用随包 `resources\bin` 的守护进程和 CLI，以 `--dry-run` 启动、从不 `--inject`；子进程环境设 `PADMATE_PIPE` 和 `PADMATE_IPC_DIR`，`APPDATA`、`LOCALAPPDATA` 指向 `<userData>\daemon-home\`；Main 拒绝 `startup.set`。
 - `PADMATE_UI_TEST_UPDATE_URL` 只在测试模式且是回环地址时生效，换掉 `UPDATE_URL`，`quitAndInstall` 换成只记录的函数。
-- 不要启动安装版的 padmate.exe（含 `dist/installer/win-unpacked`）：见 PITFALLS“文件、构建与工具”。
+- 不要启动安装版的 padmate.exe（含 `dist/installer/win-unpacked`）：它用真实数据，守护进程带 `--inject`。
 
 ### 12.11 生成的类型与无障碍
 
@@ -1058,7 +1058,7 @@ JSON-RPC 标准码（如 -32602）之外：
 - 引擎不读时间，时间来自 `Input.T` 和 `now` 参数。slot loop、T-output、router 各有一个 `clock.Alarm`：跟随绝对截止时间，截止时间没变时什么也不做，所以测试推进 Fake 时循环的重设不会把截止时间往后推。
 - `clock.Real()` 是进程内唯一的真实时钟；Windows 上它每 0.5–2 ms 才跳一次，要微秒精度用 QPC（`latency.Now`）。`clock.Fake` 只在 `Set`、`Advance` 时前进，按截止时间顺序触发定时器；要在每个截止时间依次执行工作，用 `Next` 和 `Set` 逐个推进（simtest 就这样做）。
 
-**基准的端到端延迟（ENG-11）。** `L = t_ret − t_sdl`：从 SDL 给边沿打的时间戳（`Event.Time`，由 `latency.CalibrateSDL` 换算到 QPC），到带着这个边沿的键的那次 Send 返回。目标 p99 < 1.5 ms。测法见 §14 的 `TestLatencyLive`。
+**基准的端到端延迟。** `L = t_ret − t_sdl`：从 SDL 给边沿打的时间戳（`Event.Time`，由 `latency.CalibrateSDL` 换算到 QPC），到带着这个边沿的键的那次 Send 返回。目标 p99 < 1.5 ms。测法见 §14 的 `TestLatencyLive`。
 
 **产品里的延迟统计。** 量 `L′ = t_ret − t_in`，每次在守护进程里量。`t_in` 是 T-input 在事件返回后读的 `Event.Stamp`（唤醒后重扫读出的事件没有 Stamp，不量）。`slot.Handle` 用 `RemoteArbiter.MarkInput` 把 `t_in` 和 DeviceKey 随命令带到 T-output；Arbiter 在第一次调用 Sender 之后读 `t_ret` 并花掉标记，所以一个边沿只量一次。只算真正发出的按键；不经输入边沿的键（连发、到点才发的键、序列后续步骤、指针移动、脚本发的键等）不算。整体 `--dry-run` 时 Sender 是打印器，照样算，`latency.get` 的 `dryRun` 标出。`latency.Recorder` 按 DeviceKey 各一个预分配的 1000 格环，最多 8 只手柄；写入在 T-output 上、不分配。界面要有 50 个样本才标警告，门槛 `latency.WarnP99` = 1.5 ms。
 
@@ -1088,15 +1088,15 @@ JSON-RPC 标准码（如 -32602）之外：
 - 每个会按住键的测试结束时执行 `AssertNoneHeld`（不变量 1）。
 - 需要 SDL、真实注入、会话的测试缺条件时跳过；设 `PADMATE_REQUIRE_SDL=1`、`PADMATE_REQUIRE_SESSION=1` 改为失败。
 - `TestMain` 把 IPC 管道、临时目录、紧急释放事件名换成自己的，不碰用户的真实实例。
-- `-race` 需要 cgo，本机没有 gcc，只由远程 CI 的 `go-race-ubuntu` 跑；零分配检查在 `-race` 下跳过。
+- `-race` 需要 cgo，只由远程 CI 的 `go-race-ubuntu` 跑；零分配检查在 `-race` 下跳过。
 - 自动验收在本地执行；需要硬件或人判断的验收由维护者手动执行。
 
 ### 14.2 黄金测试与 trace
 
-- **slot 黄金**（ENG-09，`internal/slot/testdata/golden/<case>/`）：`profile.json`、`input.trace`、`output.trace`（含最后的 ReleaseAll）、可选 `decisions.jsonl`。更新：`go test ./internal/slot -run TestGolden -update -v`。
+- **slot 黄金**（`internal/slot/testdata/golden/<case>/`）：`profile.json`、`input.trace`、`output.trace`（含最后的 ReleaseAll）、可选 `decisions.jsonl`。更新：`go test ./internal/slot -run TestGolden -update -v`。
 - **supervisor 黄金**（`internal/supervisor/testdata/golden/<case>/`）：`profile.json`、`input.jsonl`、可选 `session.txt`、`output.trace`、`slots.txt`。最后什么也不能按着，没有 WARN 及以上的日志。更新：`go test ./internal/supervisor -run TestGolden -update -v`。
 - **profile**：`internal/profile/testdata/valid|invalid/*.json` 各有 `.golden`；`examples/profiles/*.json` 必须没有诊断。更新：`go test ./internal/profile -update`、`go test ./cmd/padmatectl -run TestValidateGolden -update`。`cmd/padmated` 的 `TestNoSendInput` 保证只有 `sender_windows.go` 能引用 SendInput（不变量 6）。
-- **签名与 PE 检查**（PKG-09、PKG-11）：不签名、不装证书、不运行被检查的文件，任何平台都跑。`task test:sign` 在 Windows 本机跑，不在 `ci` 里。
+- **签名与 PE 检查**：不签名、不装证书、不运行被检查的文件，任何平台都跑。`task test:sign` 在 Windows 本机跑，不在 `ci` 里。
 
 ### 14.3 simtest
 
@@ -1116,7 +1116,7 @@ JSON-RPC 标准码（如 -32602）之外：
 1. `injecttest` 的钩子只吞带标记、nonce 属于本测试的事件，实体键盘照常可用。
 2. 发第一个真实键之前先发金丝雀（未分配的 VK 0x97 的抬起），钩子 3 秒内没吞掉就失败。
 3. 测试自己发的键，每批后面跟一个金丝雀，同一次 SendInput 发出（`InjectFenced`）；有事件没被吞掉、数量不对或只发出一部分，立即停止。padmatectl 或 padmated 发的键，等它退出或停下后再发金丝雀。
-4. 注入很多批的测试（ENG-11）用 `Recorder.WaitOwn(n, timeout)` 做 O(1) 的 fence，批后不跟金丝雀，但第一个真实键之前仍要先发金丝雀。有事件没被吞掉就返回 `ErrUnswallowed` 且之后一直返回；钩子停了返回 `ErrHookStopped`；钩子被系统静默移除时什么也看不到，表现为超时。`WaitOwn` 和 `WaitFence` 共用一个唤醒通道，同一时刻只能有一个 goroutine 调用。
+4. 注入很多批的测试用 `Recorder.WaitOwn(n, timeout)` 做 O(1) 的 fence，批后不跟金丝雀，但第一个真实键之前仍要先发金丝雀。有事件没被吞掉就返回 `ErrUnswallowed` 且之后一直返回；钩子停了返回 `ErrHookStopped`；钩子被系统静默移除时什么也看不到，表现为超时。`WaitOwn` 和 `WaitFence` 共用一个唤醒通道，同一时刻只能有一个 goroutine 调用。
 5. 鼠标事件同样处理，另装 `WH_MOUSE_LL` 钩子（`Recorder.MouseCanary`，金丝雀是一对带 nonce 的相对移动 +1/-1）。`InjectFencedMixed` 拒绝没有先 `MouseCanary` 的鼠标批次，也拒绝按下和抬起不在同一批的批次，所以钩子万一漏了只会是一次点击，不会留下按着的键。指针移动用 `InjectFencedMoves`，Unicode 文字用 `UnicodeCanary`。
 6. 钩子超时（LowLevelHooksTimeout）时那个键不被吞掉，钩子还可能被静默移除（PITFALLS“键盘输出与布局”），所以每批都要 fence，失败就停止注入。
 
@@ -1138,7 +1138,7 @@ JSON-RPC 标准码（如 -32602）之外：
 2. `lint`：`golangci-lint run`（配置 `daemon/.golangci.yml`，版本与远程 CI 同为 v2.13）
 3. `test`：`go test ./...`
 4. `build`：三个命令构建到 `bin/`
-5. `pe:check`：`go run ./tools/pecheck -bin ../bin`（PKG-11，仅 Windows）
+5. `pe:check`：`go run ./tools/pecheck -bin ../bin`（仅 Windows）
 6. `app:gen-check`：`go run ./tools/codegen -check`
 7. `app:ci`：typecheck、lint、test、build
 
@@ -1164,7 +1164,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `fuzz` | ubuntu-latest | `fuzz` 目标的子集，各 60 s，失败上传 `fuzz-corpus` |
 | `frontend` | windows-latest | Node 24，`npm ci`、`npm run ci`、`codegen -check`、`npm run test:e2e` |
 
-发布另有 `.github/workflows/release.yml`（PKG-07，§15）：构建安装包并跑安装冒烟，核对发布文件，生成草稿 release。`ci.yml` 没有打包任务。
+发布另有 `.github/workflows/release.yml`（§15）：构建安装包并跑安装冒烟，核对发布文件，生成草稿 release。`ci.yml` 没有打包任务。
 
 ## 15. 构建与打包
 

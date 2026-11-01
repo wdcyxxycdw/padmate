@@ -2,7 +2,7 @@
 
 [English](0007-profile-format.md)
 
-相关：PRO-01 至 PRO-04、PRO-06、ENG-08、ENG-14、IPC-04；[ARCHITECTURE §10](../ARCHITECTURE.zh-CN.md#10-格式)、[ADR：IPC](0009-ipc.zh-CN.md)
+相关：[ARCHITECTURE §10](../ARCHITECTURE.zh-CN.md#10-格式)、[ADR：IPC](0009-ipc.zh-CN.md)
 
 ## 背景
 

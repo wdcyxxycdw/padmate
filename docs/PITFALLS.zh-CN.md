@@ -8,7 +8,7 @@
 
 ### 基本行为与 hint
 - **SDL hint**：`input.Open` 在 `SDL_Init` 前设 `SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1`、`SDL_NO_SIGNAL_HANDLERS=1`（否则 SDL 拿走 Ctrl+C）、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0`，再设 preset 和 `--hint`。环境变量里的同名 hint 优先。`SDL_Quit` 重置 hint，每次 Open 重设。
-- **SDL 行为**：SDL 只给打开的手柄发事件，所以 GAMEPAD_ADDED 时就打开。每个轴的第一个值发两次。虚拟手柄的 `VirtualJoystickDesc.Version` 手填 136，改状态后调 `SDL_UpdateJoysticks`。分离时 SDL 先抬起按住的键、轴回中再发 removed，padmate 仍要 ReleaseAll。同进程内设备 id 不复用，重连靠 DeviceKey 认（IN-09）。guide 键的抬起推迟到按下后 250 ms，其间的按下被丢。
+- **SDL 行为**：SDL 只给打开的手柄发事件，所以 GAMEPAD_ADDED 时就打开。每个轴的第一个值发两次。虚拟手柄的 `VirtualJoystickDesc.Version` 手填 136，改状态后调 `SDL_UpdateJoysticks`。分离时 SDL 先抬起按住的键、轴回中再发 removed，padmate 仍要 ReleaseAll。同进程内设备 id 不复用，重连靠 DeviceKey 认。guide 键的抬起推迟到按下后 250 ms，其间的按下被丢。
 
 ### 设备信息与标识
 - **DeviceKey 的依据**：虚拟手柄 serial、path 为空，GUID 是 `ff00`、名字 CRC-16/ARC、名字前 9 字节、`00 76 01`。同名虚拟手柄只能靠 #N 区分；名字前 9 字节相同的两只，SDL 会把后一只报成前一只的名字，测试里让前 9 字节不同。XInput 的 path 是槽位，DeviceKey 不用。
@@ -47,7 +47,7 @@
 - **dwExtraInfo 标记**：注入事件带 `"padm"<<32 | nonce`（`output.ExtraInfo`），键盘 LL 钩子收到完整 64 位，测试靠它只吞自己 nonce 的事件。
 - **特殊键**（实测）：Pause 按 VK_PAUSE 发（wScan 0x45）；小键盘 0x47–0x53 随 NumLock 翻译，Num0–9、NumDecimal 按 VK 发；`MapVirtualKeyEx` 对导航键、PrintScreen、Pause 返回的扫描码与实体键不同，不能反推。
 - **菜单屏蔽**（实测）：单独的 Alt/Win 抬起前，MenuMask 在同一批插入 vk 0xE8 的按下和抬起。屏蔽键不进 Arbiter 和 ledger；`padmatectl send` 和 injecttest 不经过 MenuMask。
-- **UIPI**：向更高完整性级别窗口注入静默失败，只检测并提示（OUT-12），不绕过。Win+L、Ctrl+Alt+Del 无法注入。
+- **UIPI**：向更高完整性级别窗口注入静默失败，只检测并提示，不绕过。Win+L、Ctrl+Alt+Del 无法注入。
 
 ### held-keys 日志
 - 日志在每个新按下的 SendInput 之前写。“临时文件 + MoveFileEx”最坏 7.5 ms，所以在打开的句柄上原地改写：`heldfile_windows.go` 自己 CreateFile（不带 `FILE_FLAG_OVERLAPPED`），用带 OVERLAPPED 偏移的 `windows.WriteFile`；OVERLAPPED、计数和缓冲放堆上结构体，局部变量会逃逸分配（`TestHeldLogNoAllocs`）。
@@ -77,11 +77,11 @@
 
 - **Win32 绑定**：用 mkwinsyscall 生成，不手写 `NewLazySystemDLL`/`NewProc`；每个包在 `syscall_windows.go` 写 `//sys`，`task gen` 生成 `zsyscall_windows.go`。生成函数在 last error 为 0 时返回 `EINVAL`，判断失败看返回值。DLL 和函数第一次调用时才加载（会分配），钩子回调里要调的先在回调外调一次（`winhook.Start` 先调 `latency.Now`）。
 - 进程最后一个 GUI 线程退出时 Windows 销毁全部窗口类，之后 CreateWindowExW 报 "Cannot find window class"，所以 winsession 每次 Start 都在 T-session 上注册窗口类。
-- **padmate 自己的窗口也是前台**（UI-18）：托盘菜单和 Electron 界面打开时它们是前台，不过滤会把配置切到默认配置。padmated 按自己的 PID 过滤；已注册的 UI 按 OUT-25 保持当前配置、不释放，`app.foreground` 照常发布并带 `own:true`。测试用伪造 `winfocus.App` 调 `onForeground`，不切换真实前台。
+- **padmate 自己的窗口也是前台**：托盘菜单和 Electron 界面打开时它们是前台，不过滤会把配置切到默认配置。padmated 按自己的 PID 过滤；已注册的 UI 保持当前配置、不释放，`app.foreground` 照常发布并带 `own:true`。测试用伪造 `winfocus.App` 调 `onForeground`，不切换真实前台。
 - **托盘**：`fyne.io/systray` 必须运行在 main 线程。
-  - “打开窗口”只在安装版里启动 `padmate.exe`：开发版和测试构建若启动它，开出的是用真实数据、带 `--inject` 的应用。双击（DMN-05）由 `tray.Taps` 数，Tap 里不要阻塞。清理 worker 不要调 systray 的 Quit（Register 之前 onExit 是 nil），只向 main 消息队列投 WM_QUIT；失败、panic 和非预期的循环返回必须保留非零退出码。
+  - “打开窗口”只在安装版里启动 `padmate.exe`：开发版和测试构建若启动它，开出的是用真实数据、带 `--inject` 的应用。双击由 `tray.Taps` 数，Tap 里不要阻塞。清理 worker 不要调 systray 的 Quit（Register 之前 onExit 是 nil），只向 main 消息队列投 WM_QUIT；失败、panic 和非预期的循环返回必须保留非零退出码。
 - **真实前台会改掉测试的配置**：用真实 winsession/winfocus 跑库模式的测试会在启动约 50 ms 后按真实前台选配置，未绑定的前台会把 `--profile-id` 换成 `default`。这类测试在数据目录写 `{"schemaVersion":0,"enabled":false}`；测选择用 `startSelectionLive` 的假前台。
-- **命名事件的安全描述符**（DMN-20）：`CreateEvent(nil, …)` 用创建者令牌的默认 DACL；按 UAC 文档（没实测），提权令牌的默认 DACL 只给 Administrators 和 SYSTEM，同一用户不提权的进程里打不开 `EVENT_MODIFY_STATE`。所以 `emergency.Listen` 显式设 `D:(A;;0x1f0003;;;<用户 SID>)S:(ML;;NW;;;ME)`（`TestListenSecurity`）。事件已存在时 `CreateEvent` 返回有效句柄同时 err 是 ERROR_ALREADY_EXISTS，先看句柄，否则泄漏。
+- **命名事件的安全描述符**：`CreateEvent(nil, …)` 用创建者令牌的默认 DACL；按 UAC 文档（没实测），提权令牌的默认 DACL 只给 Administrators 和 SYSTEM，同一用户不提权的进程里打不开 `EVENT_MODIFY_STATE`。所以 `emergency.Listen` 显式设 `D:(A;;0x1f0003;;;<用户 SID>)S:(ML;;NW;;;ME)`（`TestListenSecurity`）。事件已存在时 `CreateEvent` 返回有效句柄同时 err 是 ERROR_ALREADY_EXISTS，先看句柄，否则泄漏。
 
 ## 暂停、系统事件与退出
 
@@ -96,7 +96,7 @@
 - **换紧急组合与加锁顺序**：config.json 的 `safety` 变了，只经 `Source.RepickCombos` 在 T-input 上调 `ComboWatch.Repick`，不要在别的 goroutine 动 ComboWatch，也不要为换组合重开 Source。`commitConfigLocked` 里先持有 `configApplyMu` 再取 `profileMu`，反过来会死锁。
 
 ### 退出
-- **注销、关机与 SIGTERM**（按文档，没实测）：GUI 子系统的 release 版收不到控制台事件，padmated 从 winsession 窗口的 `WM_QUERYENDSESSION`/`WM_ENDSESSION` 得知。`WM_ENDSESSION` 返回后约 5 s 系统强制结束进程，所以最多等 3 s。T-session 调过 `OnStop("session-end")` 时（`liveRun.sessionEnding`）先写完关闭日志再关 T-session；其他时候先关 T-session，收尾日志才不丢。不带 /F 的 taskkill 发 WM_CLOSE，按停止处理；带 /F 不给机会，释放靠 OUT-14 的 held-keys 日志。
+- **注销、关机与 SIGTERM**（按文档，没实测）：GUI 子系统的 release 版收不到控制台事件，padmated 从 winsession 窗口的 `WM_QUERYENDSESSION`/`WM_ENDSESSION` 得知。`WM_ENDSESSION` 返回后约 5 s 系统强制结束进程，所以最多等 3 s。T-session 调过 `OnStop("session-end")` 时（`liveRun.sessionEnding`）先写完关闭日志再关 T-session；其他时候先关 T-session，收尾日志才不丢。不带 /F 的 taskkill 发 WM_CLOSE，按停止处理；带 /F 不给机会，释放靠 held-keys 日志。
 - **释放后的输入清理上限**：supervisor Run 与 `Loop.Stop` 的释放及重试等完之后，feedback/input 尾部共享 1 s 上限；不能把超时包在按键释放外面。超时必须调非阻塞的 `Source.RequestClose`（`SetFeedback` 可能等卡住的 T-input）。超时或清理 worker 的 panic/Goexit 记错误、返回 1，继续写最终日志、关会话窗口；迟到清理不能重开输出。
 - **托盘退出的等待**：先关上 `output.BlockExit` 闸门再等界面存完（2 s），期间手柄按下不发键，闸门没有重开的路径；IPC 照常服务，`profiles.put`、`config.put` 仍写盘。`ui.exitReady` 按 `Hub.PublishSync` 返回的会话对号，别用客户端自报的名字。
 - **安装程序要守护进程退出**：
@@ -109,8 +109,8 @@
 
 ### 脚本与 slot、supervisor 的衔接
 - **首次 setup 的边沿屏障**：有脚本配置时 supervisor 每次 assign 都发 Resync，候选等 slot 完成 Resync 后才启动，否则 worker 可能在旧的全松状态读 `pad.isDown`；热重载加入脚本时 slot 必须用已有快照打开首次启动闸门。
-- **持久层与释放（PRO-11）**：退出、配置切换、断连必须先保存选择再取消控件，否则 CancelAll 清掉 toggle 后写回空状态。LayerMemory 不做磁盘 I/O；退出 loop 先 `preserveLayers`，刷盘在释放按键后。恢复不含 hold/latch。
-- **脚本单边消费（SCR-05）**：不能在 slot 里分别按消费结果送 ButtonDown/Up，只消费 release 会留下声明式 hold。脚本在 engine 的 `stepButton` 状态转换点解析，实体与虚拟控件走同一条路径。脚本 `pad` 只能用 slot loop 复制的快照。
+- **持久层与释放**：退出、配置切换、断连必须先保存选择再取消控件，否则 CancelAll 清掉 toggle 后写回空状态。LayerMemory 不做磁盘 I/O；退出 loop 先 `preserveLayers`，刷盘在释放按键后。恢复不含 hold/latch。
+- **脚本单边消费**：不能在 slot 里分别按消费结果送 ButtonDown/Up，只消费 release 会留下声明式 hold。脚本在 engine 的 `stepButton` 状态转换点解析，实体与虚拟控件走同一条路径。脚本 `pad` 只能用 slot loop 复制的快照。
 
 ### Arbiter 的计时与事件间隔队列
 `SetEventGap` 大于 0 时 Arbiter 把同一命令的键事件排队按间隔发出。改 `internal/output` 的 Arbiter 前过一遍，每条都有回归测试或 fuzz 语料。
@@ -121,7 +121,7 @@
 
 ### 手势与缓冲
 - **松开后才执行的手势不能按住**：`commitMulti` 在 `e.multi[c]` 的副本上执行动作后丢弃副本，`Down` 的组合、连发和按住的层没人结束（不变量 1）。所以 release、tap、多击只能用 tap 模式、不能带 repeat、层动作不能用 hold，由 `profile.Parse` 与 `engine.Compile` 同时检查（`TestParseAndCompileAgree`）；加新手势要么在 `e.ctl[c]` 上执行，要么两处都加规则。`Options.Registry` 的 Level 返回的 binding 不经 Compile，先用 `engine.CheckBinding`。
-- **缓冲里的边沿不能被越过**（MAP-09）：缓冲不空时，新边沿（含已分发控件的松开）排在末尾按原顺序重放。越过同一控件的边沿会卡键，越过别的控件的会乱序（修饰键先松开丢组合、多击窗口被提前提交）。Pending 控件自己的松开也不能越过：drain 判为 tap 时只执行 tap 动作（`decideTap`），松开留在原位。
+- **缓冲里的边沿不能被越过**：缓冲不空时，新边沿（含已分发控件的松开）排在末尾按原顺序重放。越过同一控件的边沿会卡键，越过别的控件的会乱序（修饰键先松开丢组合、多击窗口被提前提交）。Pending 控件自己的松开也不能越过：drain 判为 tap 时只执行 tap 动作（`decideTap`），松开留在原位。
 
 ### 模拟量与摇杆
 - **摇杆设置问引擎，不问 Program**：调校在 `Engine` 里，读用 `Engine.Analog()`。调校变化不能 CancelAll（拖滑块会松键），走 `settleVirtual(now, false, false)`；`Reset` 不清调校。`configNeedsRestart` 只比较被忽略的设备，否则每次拖滑块都提示“需重启”。
@@ -140,14 +140,14 @@
 端到端延迟的设计见 [ADR：引擎与线程](adr/0005-engine-and-threads.zh-CN.md)。
 
 - **Windows 计时**：`time.Now` 每 0.5–2 ms 才跳一次，测微秒级用 QPC（`latency.Now`）。Go 的 `time.Sleep(1ms)` 实际约 1.05–1.6 ms；Win32 的 `SleepEx(1)` 通常约 15 ms。要求“QPC 量出的间隔不小于某个等待”的测试不能用 `time.Sleep`，改在 `latency.Now` 上自旋。
-- **SDL 时钟**（ENG-11）：`SDL_GetTicksNS = (QPC − tick_start)·1e9/freq`，`Event.Time` 可换算回 QPC：`Source.SampleTicks` 取读数，`latency.CalibrateSDL` 定出 tick_start。实测 SDL 计数频率等于 QPC（10 MHz）。
+- **SDL 时钟**：`SDL_GetTicksNS = (QPC − tick_start)·1e9/freq`，`Event.Time` 可换算回 QPC：`Source.SampleTicks` 取读数，`latency.CalibrateSDL` 定出 tick_start。实测 SDL 计数频率等于 QPC（10 MHz）。
 
 ## 脚本
 
 决定见 [ADR：脚本运行时](adr/0010-scripting-runtime.zh-CN.md)。
 
 ### goja、esbuild 与类型
-- **goja**（SPK-03）：支持 ES2015+ 和 async/await，不支持 ESM、顶层 await、async generator、for-await，所以 esbuild 打包成 IIFE。一个 Runtime 同一时刻只能被一个 goroutine 使用。特性表见 `internal/script/compile/goja_features.json`。
+- **goja**：支持 ES2015+ 和 async/await，不支持 ESM、顶层 await、async generator、for-await，所以 esbuild 打包成 IIFE。一个 Runtime 同一时刻只能被一个 goroutine 使用。特性表见 `internal/script/compile/goja_features.json`。
   - `Runtime.Interrupt` 在 Go 原生函数内不生效，宿主 API 必须快速返回；没有调用在运行时发出的 Interrupt 会让下一次调用立即失败，每次调用结束都要 `ClearInterrupt`。
   - `Object.Get` 对缺失属性返回 Go 的 nil：带空洞的数组按下标取到 nil，直接 `.Export()`/`.String()` 会 panic，整个 slot 重启。读脚本给的数组元素先判 nil（`hud.go` 的 `stringValue`）。
 - **esbuild**：要设 `TsconfigRaw`，否则读根目录外的 tsconfig.json。计算出来的 `import()`/`require()` 路径按 glob 展开，不经 OnResolve，OnLoad 要再检查一次。
@@ -161,8 +161,8 @@
 - **QueryThreadCycleTime** 计 TSC 时间，睡眠不计，迁移没有跳变。启动时用 QPC 校准（每组 10 次 1 ms 忙等），循环内不能 `runtime.Gosched()`，否则压低 cycles/µs，把 900 ms 的脚本 CPU 用时高估为超过 1 s。`GetThreadTimes` 粒度 15.6 ms，不用。
 
 ### 生命周期、暂停与配置切换
-- **暂停不能只 ReleaseKeys**（SCR-04）：`every`、`sleep` 和 Promise continuation 仍会由 `RunDue` 重新按键。暂停必须让旧 Host 失效并拒绝候选 swap，恢复时 worker 重建；初始暂停要在 factory 构建前生效，否则 `onActivate` 已输出。
-- **owner、teardown 与失效**（SCR-04）：cycle 由整个 scriptRuntime 共用，新 `Lifecycle` 不能从 Cycle 1 重编号，否则取消的旧候选的 `Dispose.ReleaseOwner` 会释放同 slot、同 gen 的新键。旧 Host 的 owner 由 slot loop 先释放，再断开输出 sink，才让 worker 执行 teardown。离线紧急释放首次 Send 失败时，supervisor 仍要完成每个 slot 的 ReleaseAll 屏障再报合并错误，否则闸门重开后旧 every/sleep 会再次按键。
+- **暂停不能只 ReleaseKeys**：`every`、`sleep` 和 Promise continuation 仍会由 `RunDue` 重新按键。暂停必须让旧 Host 失效并拒绝候选 swap，恢复时 worker 重建；初始暂停要在 factory 构建前生效，否则 `onActivate` 已输出。
+- **owner、teardown 与失效**：cycle 由整个 scriptRuntime 共用，新 `Lifecycle` 不能从 Cycle 1 重编号，否则取消的旧候选的 `Dispose.ReleaseOwner` 会释放同 slot、同 gen 的新键。旧 Host 的 owner 由 slot loop 先释放，再断开输出 sink，才让 worker 执行 teardown。离线紧急释放首次 Send 失败时，supervisor 仍要完成每个 slot 的 ReleaseAll 屏障再报合并错误，否则闸门重开后旧 every/sleep 会再次按键。
 - **配置选择与热重载**：更换 profile key 必须在引擎替换和层恢复前停止旧 lifecycle，不能走保留旧脚本的热重载逻辑，否则新脚本 setup 失败后旧配置的 every 仍向新前台输出；旧 teardown 也不能把旧层选择写进新 ID 的层记忆（`TestProfileSwitchDisposesOldScriptWhenNewSetupFails`）。
 - **效果按（类、手柄）取消，不分哪个 runtime 放的**：新旧 runtime 同时在时（`Lifecycle.Swap`、`pollReload`），旧的取消若在新 `onActivate` 放效果之后才来，会把新效果一起结束，所以这两处在新的激活之前先调旧 Host 的 `CancelEffects()`。
 
@@ -182,14 +182,14 @@
 ### 编辑器：保存与草稿
 - **单层界面保存**：界面只编辑 `layers.base`，但草稿须是整份 profile，不能按界面模型重建，否则其他层、common、层动作、block、defaultLayer、反馈设置丢失。defaultLayer 不是 base 时整份只读。
 - 修改即保存：文本框回车或离开才提交（`useCommitField`），测试里 `change` 后要 `blur` 或回车；换动作类型会先得到带空部分的草稿，保存的是去掉空部分的 `savedForm`。`profile.changed` 引起的重读可能晚于自己的保存，revision 变了就再读一次。
-- **守护进程改写 profile.json**（SCR-50、SCR-51）：脚本改名、删除、移除旧式脚本由守护进程直接改文件。调用前 `flush()` 等写盘，存不下就不调；调用后 `reload()` 重读草稿，返回的 `profiles[].id` 含它才 `clearHistory(id)`。只换 revision 会让下次自动保存把旧名字写回；该清不清撤销记录，Ctrl+Z 会改回旧名。
-- **继承来的内容只用来显示，写回经 `writeBack`**（PRO-19）：`draft` 永远是配置自己的文件；`withInherited(draft, parent)` 补入父配置内容，只给手柄图、按键列表、对照表和抽屉读取。把补过的整份 `Profile` 交给 `state.edit` 前须 `writeBack(draft, parent, next)`，否则一次小修改就把父配置抄进子配置。读“保存的形式”的地方都要给 `savedForm` 传 `parent`。
+- **守护进程改写 profile.json**：脚本改名、删除、移除旧式脚本由守护进程直接改文件。调用前 `flush()` 等写盘，存不下就不调；调用后 `reload()` 重读草稿，返回的 `profiles[].id` 含它才 `clearHistory(id)`。只换 revision 会让下次自动保存把旧名字写回；该清不清撤销记录，Ctrl+Z 会改回旧名。
+- **继承来的内容只用来显示，写回经 `writeBack`**：`draft` 永远是配置自己的文件；`withInherited(draft, parent)` 补入父配置内容，只给手柄图、按键列表、对照表和抽屉读取。把补过的整份 `Profile` 交给 `state.edit` 前须 `writeBack(draft, parent, next)`，否则一次小修改就把父配置抄进子配置。读“保存的形式”的地方都要给 `savedForm` 传 `parent`。
 
 ### 编辑器：按键、功能键与摇杆
 - **摇杆的两个选中 id**：`leftstick`、`rightstick` 是“旋转”，`leftstick.press`、`rightstick.press` 是“点按”，而绑定键 `leftstick` 是按下摇杆的绑定。绑定键找抽屉经 `calloutFor`，选中 id 找绑定经 `bindingKey`，比较“选中的是不是这个标注”先 `calloutOf`，否则“点按”格没名字、不亮引线。
-- **功能键的一套**（UI-30）：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由 config.json 的 `functionKey` 定，纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。
-- **映射向导的捕获与清理**（IN-19）：向导开的是留着的捕获：窗口 `blur`、锁屏、睡眠调 `windowAway()`，不停止它；关闭、重载、渲染进程崩溃、退出调 `stop()`，断连调 `disconnected()`。不要把 blur 改成 `stop()`（向导开着时切到别的程序，手柄键会发出快捷键），也不要把别的路径改成 `windowAway()`（窗口关了映射还停着）。
-- **快捷键捕获**（UI-19）：start/stop/事件都带 session，卸载时迟到的 start 只能停自己的会话；钩子只观察，自动测试不可真按 Win+L、Ctrl+Alt+Del 或注销。录紧急组合时超时或失败的 `capture.start` 仍可能到达 daemon、`capture.stop` 也可能没发出，所以 `pad-capture.ts` 发过 start 后一直重发 stop 直到确认或断连。
+- **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由 config.json 的 `functionKey` 定，纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。
+- **映射向导的捕获与清理**：向导开的是留着的捕获：窗口 `blur`、锁屏、睡眠调 `windowAway()`，不停止它；关闭、重载、渲染进程崩溃、退出调 `stop()`，断连调 `disconnected()`。不要把 blur 改成 `stop()`（向导开着时切到别的程序，手柄键会发出快捷键），也不要把别的路径改成 `windowAway()`（窗口关了映射还停着）。
+- **快捷键捕获**：start/stop/事件都带 session，卸载时迟到的 start 只能停自己的会话；钩子只观察，自动测试不可真按 Win+L、Ctrl+Alt+Del 或注销。录紧急组合时超时或失败的 `capture.start` 仍可能到达 daemon、`capture.stop` 也可能没发出，所以 `pad-capture.ts` 发过 start 后一直重发 stop 直到确认或断连。
 
 - **按键图标的 SVG**（ADR：[编辑界面](adr/0013-editor-ui.zh-CN.md)）：Biome 也检查 `.svg`，外来图标不加 `<title>`，所以 `app/src/renderer/controller/pad-icons` 在 `biome.json` 里排除。`parseIcon` 只认 `<svg viewBox>` 和 `<path>`，新文件要先按 `pad-icons/README.md` 整理，否则多出的元素会被悄悄丢掉（`pad-icon.test.tsx` 拒绝这种文件）。只有白色、黑色填充换成 `currentColor`，新图标带别的颜色要在 `paint` 里决定怎么换。
 
@@ -203,4 +203,3 @@
 
 ### E2E
 - **前台限制**：录快捷键的辅助进程看系统前台，不是 Electron 焦点。Windows 的前台锁有时不让刚启动的测试窗口拿到前台，`recordShortcut` 10 s 后失败，这是桌面状态：单独重跑，不要靠发按键抢前台（不变量 6）。有人在用电脑时设 `PADMATE_E2E_DISPLAY=secondary`，把窗口挪到第一个非主显示屏。
-- **git worktree 里的 E2E**：worktree 的 `app/node_modules` 若是指向主仓库的 junction，electron.exe 路径会被解析到 junction 目标，`ownwindow.TrustedPaths` 拒绝注册，测试等到超时。worktree 要有真实的 node_modules（`npm ci` 或复制）。

@@ -2,7 +2,7 @@
 
 [中文](0015-controller-feedback.zh-CN.md)
 
-Related: IN-12, IN-13, MAP-25, HUD-08, HUD-10, UI-27, SCR-23; [ARCHITECTURE](../ARCHITECTURE.md); [ADR: Scripting runtime](0010-scripting-runtime.md); [ADR: Input](0002-input-sdl.md)
+Related: [ARCHITECTURE](../ARCHITECTURE.md); [ADR: Scripting runtime](0010-scripting-runtime.md); [ADR: Input](0002-input-sdl.md)
 
 ## Context
 
@@ -22,16 +22,16 @@ A controller can serve as a status indicator: pulses and colors for layers and p
 - The preset names have one source, shared by the profile schema, the engine and the script API. The strength is `feedback.strength`; 0 means off.
 - A haptic touch is a member of the binding, not of the action: the intent is "this button feels like something when pressed". The engine calls the callback once at the single dispatch point of declarative gestures; gestures that a script takes over, and anything during pause, make no touch. Knob ticks held back by the rate limit make none either.
 
-### 3. Identifying a controller (IN-13)
+### 3. Identifying a controller
 Identifying is an explicit act of the user: it ignores every switch and pause, works on controllers that are not mapped, and clears error cool-downs to try again. The daemon requires an explicit `device`; the command line chooses for the user when only one is connected. It does not go through the effect queue, since it must return an answer (whether rumble, the LED and the player lights each started).
 
 The player lights show the mode number of the current layer, not the slot number, because the tray badge and the layer pulses speak of the mode too.
 
-### 4. Four global feedback switches (UI-27)
+### 4. Four global feedback switches
 - Rumble, lights, the pause cue and the low-battery warning are stored in config.json's `feedback`, all on by default. They take effect at once, without reloading the profile or releasing held keys. When a switch goes from on to off, whatever it governs that is still running is stopped.
 - These switches are about the controller and the user, not about the mapping of one app, so they are not per profile. Members of the same name in a profile are kept and marked `deprecated`: parsed, ignored, not migrated. A profile's `feedback` keeps only timing, strength and the pause color.
 
-### 5. Battery and low-battery warnings (IN-12)
+### 5. Battery and low-battery warnings
 - The battery is dynamic data and is not part of the device info. It is read when a controller joins, when a receiver comes back, and on SDL's battery events, plus every 30 s as a fallback. Only a change sends a `DevicePower` event, and it does not go to slots, because a slot that falls behind drops non-critical edges.
 - XInput's charging is recorded as `wired`: SDL reports XInput's wired state as charging at 100%, and the two cannot be told apart. `unknown` never warns and changes no state.
 - The thresholds are fixed, not configurable: discharging at 0 to 25% warns; charging, plugging in or reaching 60% re-arms. The basis is the drivers' granularity (XInput has only four steps: 10, 40, 70 and 100); 60 is above the next step after the warning, so a voltage that bounces back one step does not warn again and again.

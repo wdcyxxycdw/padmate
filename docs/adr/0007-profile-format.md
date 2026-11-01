@@ -2,7 +2,7 @@
 
 [中文](0007-profile-format.zh-CN.md)
 
-Related: PRO-01 to PRO-04, PRO-06, ENG-08, ENG-14, IPC-04; [ARCHITECTURE §10](../ARCHITECTURE.md#10-formats), [ADR: IPC](0009-ipc.md)
+Related: [ARCHITECTURE §10](../ARCHITECTURE.md#10-formats), [ADR: IPC](0009-ipc.md)
 
 ## Context
 

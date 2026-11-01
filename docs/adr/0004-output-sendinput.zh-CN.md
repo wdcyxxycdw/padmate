@@ -2,7 +2,7 @@
 
 [English](0004-output-sendinput.md)
 
-相关：OUT-01 至 OUT-08、OUT-17、MOU-01 至 MOU-07；[ARCHITECTURE §8](../ARCHITECTURE.zh-CN.md#8-输出)、[PITFALLS“键盘输出与布局”](../PITFALLS.zh-CN.md)
+相关：[ARCHITECTURE §8](../ARCHITECTURE.zh-CN.md#8-输出)、[PITFALLS“键盘输出与布局”](../PITFALLS.zh-CN.md)
 
 ## 背景
 
@@ -21,7 +21,7 @@ padmate 用 SendInput 向前台程序注入键盘和鼠标。
 4. **注入标记。** `dwExtraInfo` 是 “padm” 加 nonce，用来过滤事件，不防伪造。
 5. **`padmatectl send` 是不变量 3 在守护进程之外的例外**，直接调用 SendInput，不协调按键状态。真实注入的测试必须每个事件都被钩子吞掉（不变量 6）。
 6. **Alt/Win 菜单屏蔽键 vkE8。** 抬起 Alt/Win 前，若此前没有别的键被按下，就在同一次 SendInput 里插入屏蔽键的按下和抬起。由 `MenuMask` 包装的 Sender 实现，位于 Arbiter 的 ledger 和真正的 Sender 之间，演练和注入都经过。屏蔽恒开；要开菜单就绑 F10。
-7. **按键间隔（OUT-17）。** `output.eventGapMs`（0–50 ms）在 Arbiter 里排队，每个事件一次 Send；Sender 里不 sleep，T-output 不能停住。抬起前保证最短按下，前一个组合的键不会和后一个组合一起按着。**释放不等间隔**（不变量 1）：`ReleaseOwners` 和 `ReleaseAll` 立即发出，排着的事件按原顺序在前。
+7. **按键间隔。** `output.eventGapMs`（0–50 ms）在 Arbiter 里排队，每个事件一次 Send；Sender 里不 sleep，T-output 不能停住。抬起前保证最短按下，前一个组合的键不会和后一个组合一起按着。**释放不等间隔**（不变量 1）：`ReleaseOwners` 和 `ReleaseAll` 立即发出，排着的事件按原顺序在前。
 8. **鼠标键和滚轮是键。** 鼠标键（`MouseLeft`、`MouseX1` 等）和 `WheelUp/Down/Left/Right` 是 KeySpec 的一类，可放在任何写主键的地方（不能当修饰键），已有机制直接适用。滚轮是瞬时的：按下发一格，松开不注入，仲裁器仍记账。鼠标按键有按住状态，所有退出路径都抬起；已按着的不再收到按下（那是双击的一半）。
 9. **摇杆移动指针。** 摇杆 `mode:"mouse"` 时推动指针，精确动作 `mouse precision` 在手势按住期间降速。引擎把摇杆当连续系统积分，不依赖定时器相位。暂停、`ReleaseAll`、`Reset` 让正推着的摇杆“上锁”，回到死区后才继续动。移动不是键，不记归属、没有释放。注入是相对的 `MOUSEEVENTF_MOVE`，受系统指针速度影响。
 

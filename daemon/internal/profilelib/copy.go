@@ -56,10 +56,9 @@ type copyItem struct {
 //
 // The source is read into memory, at most MaxCopyBytes, under the writer
 // lock, so the copy is one consistent version and Put never meets an open
-// source file, which Windows refuses to replace (PITFALLS "Replacing a
-// file by rename"). The files are then written and synced into a hidden temporary
-// folder without the lock, so a large copy does not hold up saves, and
-// renamed into place under the lock only when complete: a failure leaves
+// source file, which Windows refuses to replace. The files are then written
+// and synced into a hidden temporary folder without the lock, so a large
+// copy does not hold up saves, and renamed into place under the lock only when complete: a failure leaves
 // no partial profile behind. A copy also removes the temporary folders of
 // copies a crash or kill cut off.
 func (l *Library) Copy(from, to string) (string, error) {
