@@ -352,6 +352,9 @@ func (s *Source) play(e Effect, now time.Time) error {
 	case len(e.Steps) == 0 && !e.Preset.Valid() && (!e.Blink || e.Preset != 0):
 		return fmt.Errorf("input: invalid haptic preset %d", e.Preset)
 	}
+	if s.isJoyCon2(e.Device) {
+		return nil // a Joy-Con 2 has no effects that padmate drives
+	}
 	d := s.openDevice(e.Device)
 	if d == nil {
 		return ErrNoDevice
@@ -401,6 +404,9 @@ func (s *Source) Identify(id DeviceID) (haptic.Cues, error) {
 
 // identify is Identify on T-input at now.
 func (s *Source) identify(id DeviceID, now time.Time) (haptic.Cues, error) {
+	if s.isJoyCon2(id) {
+		return haptic.Cues{}, nil // a Joy-Con 2 gives no cue that padmate drives
+	}
 	d := s.openDevice(id)
 	if d == nil {
 		return haptic.Cues{}, ErrNoDevice
@@ -436,6 +442,9 @@ func (s *Source) setLight(l Light, now time.Time) error {
 	case l.Class != haptic.Script && l.Class != haptic.Alert:
 		return fmt.Errorf("input: lights of class %v are not set with SetLight", l.Class)
 	}
+	if s.isJoyCon2(l.Device) {
+		return nil
+	}
 	d := s.openDevice(l.Device)
 	if d == nil {
 		return ErrNoDevice
@@ -466,6 +475,9 @@ func (s *Source) stop(st Stop, now time.Time) error {
 		return errors.New("input: a stop needs a gamepad: device 0 is none")
 	case !effectClass(st.Class):
 		return fmt.Errorf("input: effects of class %v are not stopped with Stop", st.Class)
+	}
+	if s.isJoyCon2(st.Device) {
+		return nil
 	}
 	d := s.openDevice(st.Device)
 	if d == nil {

@@ -114,6 +114,11 @@ type Options struct {
 	// waits up to 1 s for the queue to be written. A handler panic stops
 	// the log worker and discards further records. nil discards them.
 	Log *slog.Logger
+	// JoyCon2 turns on the Joy-Con 2 backend (Bluetooth LE, ADR-0002;
+	// ble.go, jc2hub.go): T-input connects Joy-Con 2 controllers and reports
+	// them as gamepads next to SDL's. nil leaves it off, as "padmatectl
+	// monitor" and "record" and most tests do, and as it is outside Windows.
+	JoyCon2 *JoyCon2Options
 }
 
 // Source reads gamepads through SDL on T-input, its own locked OS thread.
@@ -188,6 +193,13 @@ type Source struct {
 	watched   int
 	lastWatch uint64
 	aliases   uint32
+	// joyOpts is Options.JoyCon2. joy is the Joy-Con 2 hub, made in init
+	// when the transport starts, and nil otherwise; joyErr is why it did
+	// not. All three are set before Open returns and never again; only
+	// T-input uses the hub.
+	joyOpts *JoyCon2Options
+	joy     *joyCon2Hub
+	joyErr  error
 }
 
 // deviceKind says how T-input reads a device. SDL changes it when a mapping
@@ -313,6 +325,7 @@ func Open(opts Options) (*Source, error) {
 		rawEvents: make(chan RawEvent, rawBuffer),
 		mappings:  mappings,
 		mapFile:   mapFile,
+		joyOpts:   opts.JoyCon2,
 	}
 	// The first latency.Now looks up QueryPerformanceCounter and the first Freq
 	// QueryPerformanceFrequency: both are done here, so that T-input's stamps
@@ -562,6 +575,7 @@ func (s *Source) init(hints []Hint) error {
 	if s.onCombo != nil {
 		s.watch = NewComboWatch(s.comboPick())
 	}
+	s.startJoyCon2() // after the hints and the watch: it reads both
 	return nil
 }
 
@@ -648,6 +662,7 @@ func (s *Source) loop() {
 		s.advanceEffects(time.Now())
 		s.flush()
 		s.flushRaw()
+		s.pumpJoyCon2()
 		if sdl.WaitEventTimeout(&ev, waitMS) {
 			s.stamp = latency.Now() // the start of the latency statistics
 			s.handle(&ev)
@@ -704,6 +719,9 @@ func (s *Source) emit(e Event) {
 // shutdown releases every SDL object and quits SDL. SDL_Quit would also do
 // it; releasing them first keeps the order explicit.
 func (s *Source) shutdown() {
+	// The Joy-Con 2 gamepads are reported removed and the transport is closed
+	// before SDL goes, so that nothing it started outlives the Source.
+	s.closeJoyCon2()
 	for _, v := range s.virtuals {
 		// The removal is not reported: the Events channel closes next.
 		_ = s.detach(v)

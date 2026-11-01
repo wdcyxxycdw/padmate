@@ -107,6 +107,9 @@ func (s *Source) RawDropped() uint64 { return s.rawDropped.Load() }
 func (s *Source) RawStart(id DeviceID) (RawInfo, error) {
 	var info RawInfo
 	err := s.do(func() error {
+		if s.isJoyCon2(id) {
+			return fmt.Errorf("%w: the raw stream of Joy-Con 2 %d", ErrUnsupported, id)
+		}
 		d := s.byPub(id)
 		if d == nil || d.dormant {
 			return fmt.Errorf("%w: %d", ErrNoDevice, id)

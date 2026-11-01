@@ -42,6 +42,7 @@ func isGUIDString(s string) bool {
 // functions in src/joystick/SDL_joystick.c and the SDL_CreateJoystickGUID
 // calls of each backend.
 var driverSignatures = map[byte]string{
+	'b': "ble",       // padmate's own: the Joy-Con 2 hub (jc2hub.go), not an SDL backend
 	'g': "gameinput", // SDL_gameinputjoystick.cpp
 	'h': "hidapi",    // SDL_hidapijoystick.c
 	'm': "mfi",       // Apple GameController framework

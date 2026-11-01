@@ -265,6 +265,9 @@ func (s *Source) mappingReport(set mappingSet) MappingReport {
 func (s *Source) GamepadMapping(id DeviceID) (string, error) {
 	var text string
 	err := s.do(func() error {
+		if s.isJoyCon2(id) {
+			return fmt.Errorf("%w: SDL reads no mapping for Joy-Con 2 %d", ErrUnsupported, id)
+		}
 		d := s.byPub(id)
 		if d == nil {
 			return fmt.Errorf("%w: %d", ErrNoDevice, id)

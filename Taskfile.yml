@@ -261,6 +261,12 @@ tasks:
       - go test -run '^$' -fuzz '^FuzzInspect$' -fuzztime {{.FUZZTIME}} ./internal/pecheck
       - go test -run '^$' -fuzz '^FuzzMainBundleRequires$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
       - go test -run '^$' -fuzz '^FuzzCheckUpdateConfig$' -fuzztime {{.FUZZTIME}} ./internal/installerpkg
+      - go test -run '^$' -fuzz '^FuzzCheckRequest$' -fuzztime {{.FUZZTIME}} ./internal/input/jc2
+      - go test -run '^$' -fuzz '^FuzzParseAdvert$' -fuzztime {{.FUZZTIME}} ./internal/input/jc2
+      - go test -run '^$' -fuzz '^FuzzParseReply$' -fuzztime {{.FUZZTIME}} ./internal/input/jc2
+      - go test -run '^$' -fuzz '^FuzzParseReport$' -fuzztime {{.FUZZTIME}} ./internal/input/jc2
+      - go test -run '^$' -fuzz '^FuzzParseStick$' -fuzztime {{.FUZZTIME}} ./internal/input/jc2
+      - go test -run '^$' -fuzz '^FuzzJoyCon2Hub$' -fuzztime {{.FUZZTIME}} ./internal/input
 
   lint:
     desc: Run golangci-lint

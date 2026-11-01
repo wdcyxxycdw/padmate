@@ -256,6 +256,12 @@ type Readout struct {
 func (s *Source) Readout(id DeviceID) (Readout, error) {
 	var r Readout
 	err := s.do(func() error {
+		if s.joy != nil {
+			if jr, ok := s.joy.Readout(id); ok {
+				r = jr
+				return nil
+			}
+		}
 		for _, d := range s.devices {
 			if d.pub != id {
 				continue

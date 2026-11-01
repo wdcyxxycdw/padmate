@@ -153,5 +153,6 @@ func (s *Source) reenumerate(ctx context.Context) error {
 		state.Dropped = s.dropped.Load()
 		s.send(Event{Time: now, Device: d.pub, Kind: DeviceState, Snapshot: state})
 	}
+	s.reenumerateJoyCon2()
 	return nil
 }

@@ -50,6 +50,14 @@
 // gamepads apart) are the ways to ask. Every effect ends when a gamepad is
 // removed or reported removed and when the Source closes. See feedback.go.
 //
+// With Options.JoyCon2, T-input also runs the Joy-Con 2 backend (ADR-0002):
+// SDL does not read these Bluetooth LE controllers, so package jc2win
+// connects them and package jc2 decodes their reports, and a hub (jc2hub.go)
+// on T-input turns them into gamepads whose events, DeviceInfo and DeviceKey
+// are those of any other (ble.go). A left and a right Joy-Con 2 form one pair
+// gamepad; they never combine with a Joy-Con that SDL reports. The ids of
+// these gamepads start at 0x40000001.
+//
 // AttachVirtual adds an SDL virtual gamepad whose buttons and axes are set
 // from Go. Its events take the same path as a real device's, so tests and
 // "padmatectl monitor --virtual" exercise the whole backend without
