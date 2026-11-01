@@ -260,6 +260,7 @@
 - **按路径读渲染进程文件的地方**：`padlabel_test.go` 读 `controller/controller-model.ts`；Main 的 `overlay`、`pad-capture`、`system-settings` 测试，`activity-model`、`mapwizard` 测试（读 daemon 的文件，按目录深度写 `../`）。`pad-icon.tsx` 的 `import.meta.glob` 匹配不到时返回空对象，构建不报错，只有 `pad-icon.test.tsx` 能发现。
 
 ### 配置库与软件选择
+- **实测：Windows 上打开着的文件不能被改名替换**：`atomicWrite` 先写临时文件再改名，盖到 `profile.json` 上；这时只要有人正读着 `profile.json`（daemon 自己处理 `profiles.get`、保存后重读、搜索索引），改名就失败（共享冲突或拒绝访问），编辑器停在“保存失败”。连续快速修改时也会遇到。`replace` 遇到这类错误会退避重试，约 0.6 s 后才放弃；别的错误立即返回。
 - **E2E 的当前配置**：没绑定的软件会切到默认配置，而 E2E 时前台常是终端。`fixture()` 写 `state.json` 的 `lastProfile:"paint"` 和 `config.json` 的 `enabled:false` 关掉按软件切换；打开开关后用 `profiles.activate` 回到需要的配置。
 
 ### E2E

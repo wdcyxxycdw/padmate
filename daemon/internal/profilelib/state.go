@@ -172,7 +172,7 @@ func atomicWriteBorn(root *os.Root, name string, data []byte, modTime, born time
 			return err
 		}
 	}
-	return root.Rename(tmp, name)
+	return replace(root, tmp, name)
 }
 
 // Memory is shared by slot owners, but never performs disk I/O from Save/Load.

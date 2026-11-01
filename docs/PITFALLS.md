@@ -260,6 +260,7 @@ The design is in ARCHITECTURE §12, the decisions in [ADR: Editor UI](adr/0013-e
 - **Places that read renderer files by path**: `padlabel_test.go` reads `controller/controller-model.ts`; Main's `overlay`, `pad-capture` and `system-settings` tests; the `activity-model` and `mapwizard` tests (which read daemon files, with `../` by folder depth). When the `import.meta.glob` of `pad-icon.tsx` matches nothing, it returns an empty object and the build does not fail; only `pad-icon.test.tsx` notices.
 
 ### The profile library and picking apps
+- **Measured: on Windows an open file cannot be renamed over**: `atomicWrite` writes a temporary file and renames it over `profile.json`; while anything reads `profile.json` (the daemon itself serving `profiles.get`, its reload after a save, a search indexer), the rename fails (a sharing violation or access denied) and the editor stops at its save-failed notice. Quick edits in a row run into it too. `replace` waits and tries again on such errors, giving up after about 0.6 s; other errors return at once.
 - **The current profile in E2E**: an unbound app switches to the default profile, and during E2E the foreground is often a terminal. `fixture()` writes `lastProfile:"paint"` in `state.json` and `enabled:false` in `config.json` to turn off switching by app; after turning the switch on, use `profiles.activate` to get back to the profile needed.
 
 ### E2E
