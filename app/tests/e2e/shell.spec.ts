@@ -339,9 +339,9 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     });
     const calloutButtons = page.locator("button[data-callout]");
     // The function key, Menu unless the settings say otherwise, is a tag and
-    // not a button; View and the Xbox button are ordinary buttons.
+    // not a button; View is an ordinary button, and the Xbox button has none.
     // Each stick is two buttons, its movement and its press.
-    await expect(calloutButtons).toHaveCount(18);
+    await expect(calloutButtons).toHaveCount(17);
     await expect(page.locator("[data-callout='start']")).toHaveCount(1);
     await expect(page.locator("button[data-callout='start']")).toHaveCount(0);
     // padmate never maps the Xbox button (ADR-0012): it has no chip.
