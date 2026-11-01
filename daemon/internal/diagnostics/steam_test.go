@@ -6,8 +6,8 @@ import (
 )
 
 // TestSteamInputClass: the class of Steam Input settings that may govern a
-// gamepad (IN-24, ADR-0071), from what SDL reports of it. The cases are the
-// gamepads of the owner's machine (hardware-matrix.md) and the others the
+// gamepad (IN-24, ADR-0016), from what SDL reports of it. The cases are the
+// gamepads of the owner's machine and the others the
 // research of the ADR named.
 func TestSteamInputClass(t *testing.T) {
 	for _, tc := range []struct {

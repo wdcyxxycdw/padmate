@@ -113,7 +113,7 @@ function mappingResult(value: unknown): MappingResult {
 // second while the page is open, and cleared on its button. The renderer
 // passes at most a selector (a connection ID or a key), nothing else.
 //
-// The mapping wizard and custom mappings (IN-17, IN-18, IN-19, ADR-0072): the
+// The mapping wizard and custom mappings (IN-17, IN-18, IN-19, ADR-0012): the
 // raw events of one controller (rawWatchStart, rawWatchStop; raw owns the
 // input.raw subscription), and the SDL mapping string saved or taken away for
 // it. The renderer passes a selector and a checked mapping string; the daemon

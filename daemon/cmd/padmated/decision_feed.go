@@ -26,7 +26,7 @@ const (
 	// publisher: about two seconds of the busiest realistic play. When it is
 	// full the oldest is dropped.
 	decisionFeedSize = 512
-	// unroutedBurst and unroutedPerSecond limit the unrouted events (ADR-0071):
+	// unroutedBurst and unroutedPerSecond limit the unrouted events (ADR-0016):
 	// a gamepad that no slot maps is pressed by a person, and a faulty one must
 	// not fill the feed.
 	unroutedBurst     = 16
@@ -73,7 +73,7 @@ const (
 
 // decisionFeed gets the engine's decisions (ENG-20) from the slots, and the
 // button edges of gamepads that no slot maps from the router, and publishes
-// them as engine.activity events for the diagnostics page (ADR-0071).
+// them as engine.activity events for the diagnostics page (ADR-0016).
 //
 // The slots and the router only copy a value into a bounded ring: a slot
 // goroutine must not encode JSON before its output goes out. A publisher
@@ -375,7 +375,7 @@ func (f *decisionFeed) run(ctx context.Context) {
 }
 
 // rpcDecisionEvent is the engine.activity event of a decision. at, waiting and
-// waitedMs are the daemon's, not the engine's (ADR-0071): at is the Unix
+// waitedMs are the daemon's, not the engine's (ADR-0016): at is the Unix
 // time in ms, waiting the gestures an unbound press waits for, waitedMs the
 // ms from the latest press to the decision of a tap, hold or multi-tap.
 type rpcDecisionEvent struct {

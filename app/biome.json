@@ -8,7 +8,7 @@
       "!playwright-report",
       "!test-results",
       "!src/shared/generated",
-      "!src/renderer/pad-icons",
+      "!src/renderer/controller/pad-icons",
       "!package-lock.json"
     ]
   },

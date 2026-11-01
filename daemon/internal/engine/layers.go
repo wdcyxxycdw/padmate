@@ -145,7 +145,7 @@ func (e *Engine) emitFeedback(pulse bool) { e.publishFeedback(pulse, false) }
 // publishFeedback gives the feedback hook the state of the layer and of the
 // pause. pulse asks for the pulses; pauseChange says the state changed because
 // the mapping paused or resumed, whose pulse and color the global pause switch
-// switches off (UI-27, ADR-0067). That switch works through rumble and led:
+// switches off (UI-27, ADR-0015). That switch works through rumble and led:
 // the pulse still needs the rumble switch, the pause color the led switch.
 // The switches are read now, so a state published again after a change of
 // config.json (RefreshFeedback) follows it.

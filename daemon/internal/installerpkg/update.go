@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// The parts of an installation that the automatic update (PKG-10, ADR-0073)
+// The parts of an installation that the automatic update (PKG-10, ADR-0018)
 // depends on, and that CheckTree reads: the main process of the window, which
 // must be one file that needs nothing installed, and resources\app-update.yml,
 // which electron-builder writes for the update source.
@@ -101,7 +101,7 @@ func mainBundleProblems(bundle []byte, err error) []string {
 	return []string{fmt.Sprintf("resources/app.asar: %s requires %s, which the installed application does not have (it has no node_modules); bundle it in electron.vite.config.ts", MainBundle, strings.Join(quoted, ", "))}
 }
 
-// UpdateURL is the address the application reads its updates from (ADR-0078):
+// UpdateURL is the address the application reads its updates from (ADR-0018):
 // the download site, where latest.yml, the installers and their .sha256 files
 // sit at the root of the bucket. It ends with a slash, because electron-updater
 // resolves the relative names in latest.yml against it. It is written three
@@ -119,7 +119,7 @@ const UpdateURL = "https://padmate.download/"
 const UpdateChannel = "latest"
 
 // formerUpdateSource is the provider of the builds up to v1.0.2, which read
-// the releases of the repository on GitHub (ADR-0073).
+// the releases of the repository on GitHub (ADR-0018).
 const formerUpdateSource = "github"
 
 // updateConfigValues reads the keys that start a line of resources\app-update.yml:
@@ -142,7 +142,7 @@ func updateConfigValues(data []byte) map[string]string {
 func downloadSiteProblems(values map[string]string) []string {
 	var problems []string
 	if values["provider"] != "generic" {
-		problems = append(problems, fmt.Sprintf("provider is %q, want generic (the download site, ADR-0078)", values["provider"]))
+		problems = append(problems, fmt.Sprintf("provider is %q, want generic (the download site, ADR-0018)", values["provider"]))
 	}
 	if got := values["url"]; got != UpdateURL {
 		problems = append(problems, fmt.Sprintf("url is %q, want %q", got, UpdateURL))

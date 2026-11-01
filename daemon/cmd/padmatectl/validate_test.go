@@ -40,8 +40,8 @@ var validateFixtures = []string{
 const labelOnly = "testdata/label-only.json"
 
 // functionKeys is a profile with the sets of the old functionKeys format
-// (MAP-27, ADR-0069), and a binding on back, an ordinary control since
-// ADR-0075. functionSet is the same in the new format, with a binding on the
+// (MAP-27, ADR-0012), and a binding on back, an ordinary control since
+// ADR-0012. functionSet is the same in the new format, with a binding on the
 // default function key, start, in the layer and in the set: validate compiles
 // with the default, which ignores them, so they are not listed.
 const (
@@ -355,7 +355,7 @@ func TestValidateMissingMacros(t *testing.T) {
 	}
 }
 
-// The wheel keys are keys (ADR-0062): a profile that binds them validates,
+// The wheel keys are keys (ADR-0004): a profile that binds them validates,
 // with their gestures listed, and a wheel key before a modifier is the same
 // error as any non-modifier before one.
 func TestValidateWheelKeys(t *testing.T) {
@@ -419,7 +419,7 @@ func TestValidateWheelKeys(t *testing.T) {
 	}
 }
 
-// The mouse buttons are keys too (ADR-0062): a profile that binds them
+// The mouse buttons are keys too (ADR-0004): a profile that binds them
 // validates, a tap repeat is repeated clicks, and a hold with a typematic
 // repeat is an error that suggests mode "tap", also with the JSON output.
 func TestValidateMouseButtons(t *testing.T) {
@@ -493,7 +493,7 @@ func TestValidateMouseButtons(t *testing.T) {
 	}
 }
 
-// A stick that moves the pointer and the mouse actions (ADR-0062, section 5)
+// A stick that moves the pointer and the mouse actions (ADR-0004, section 5)
 // validate; a precision action on a gesture that does not last while the
 // control is held, an out-of-range speed and an incomplete jump are errors, also
 // with the JSON output.
@@ -580,7 +580,7 @@ func TestValidateMousePointer(t *testing.T) {
 	}
 }
 
-// A HUD hints action (HUD-03, ADR-0063) validates on a press or a hold; on a
+// A HUD hints action (HUD-03, ADR-0014) validates on a press or a hold; on a
 // gesture that does not last while the control is held, with another operation
 // or with a property of another action it is an error, also with the JSON
 // output.

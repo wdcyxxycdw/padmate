@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// The tests in this file inject the mouse buttons (ADR-0062, second batch). A
+// The tests in this file inject the mouse buttons (ADR-0004, second batch). A
 // button is held until it is released, unlike a wheel notch, so these tests are
 // stricter than the wheel ones in inject_windows_test.go:
 //
@@ -133,7 +133,7 @@ func strokeProblems(events []output.KeyEvent, nonce uint32, got []injecttest.See
 	return problems
 }
 
-// TestInjectMouseButtons (ADR-0062) injects a click of each mouse button, its
+// TestInjectMouseButtons (ADR-0004) injects a click of each mouse button, its
 // press and its release in one batch, and checks what the mouse hook sees: the
 // message (WM_LBUTTONDOWN and so on), the number of the side button in the high
 // word of mouseData for MouseX1 and MouseX2, LLMHF_INJECTED, the nonce, that the
@@ -173,7 +173,7 @@ func TestInjectMouseButtons(t *testing.T) {
 	}
 }
 
-// TestInjectMouseButtonChord (ADR-0062) injects Shift+MouseLeft and
+// TestInjectMouseButtonChord (ADR-0004) injects Shift+MouseLeft and
 // Ctrl+Shift+MouseX2 as the Arbiter sends them, modifiers around the click, in
 // one SendInput call, and checks the order in which the two hooks saw the
 // events (strokeProblems): the modifier presses, the button press, the button

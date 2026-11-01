@@ -62,8 +62,8 @@ func TestControlNicknames(t *testing.T) {
 	}
 }
 
-// The binding keys ADR-0008 reserved for M20 ("combo:a+b", "a>b") are not
-// planned any more (ADR-0069): they are unknown controls like any other name,
+// The binding keys ADR-0007 reserved for M20 ("combo:a+b", "a>b") are not
+// planned any more (ADR-0012): they are unknown controls like any other name,
 // and the message does not promise that they arrive.
 func TestFormerlyReservedBindingKeysAreUnknownControls(t *testing.T) {
 	for _, p := range []string{"combo:a+b", "a>b", "lb>south"} {

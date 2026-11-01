@@ -31,11 +31,11 @@ func bridgeMethod(method string) bool {
 		// M17 identify a controller (IN-13): the daemon lets the controller buzz
 		// and flash; the selector is the DeviceKey of a row of the settings page.
 		"devices.identify",
-		// M25 the mapping wizard (IN-17, IN-18, IN-19, ADR-0072): the elements of a
+		// M25 the mapping wizard (IN-17, IN-18, IN-19, ADR-0012): the elements of a
 		// controller, and a mapping for it that the daemon saves in config.json and
 		// gives to SDL.
 		"devices.rawInfo", "devices.setMapping", "devices.resetMapping",
-		// M22 the latency statistics of the diagnostics page (DMN-15, ADR-0071).
+		// M22 the latency statistics of the diagnostics page (DMN-15, ADR-0016).
 		"latency.get", "latency.reset",
 		"config.get", "config.put",
 		// M13 a repaired config.json (PRO-29): the UI has shown the dialog.
@@ -50,7 +50,7 @@ func bridgeMethod(method string) bool {
 		// M13 back up one profile as an archive and add one (PRO-20): the
 		// daemon reads and writes the files, Electron main moves the bytes.
 		"profiles.export", "profiles.import",
-		// M25 import of an AntiMicroX profile (PRO-21, ADR-0072): Electron main
+		// M25 import of an AntiMicroX profile (PRO-21, ADR-0012): Electron main
 		// reads the file and passes its bytes; the daemon reads and checks it.
 		"profiles.importAmgp",
 		// M13 scripts page: new and import script, open the profile folder.
@@ -68,7 +68,7 @@ func bridgeMethod(method string) bool {
 		// mapping while input events still flow; the bridge connection owns
 		// the capture, which ends when it closes.
 		"capture.start", "capture.stop",
-		// M13 start at sign-in (UI-19, ADR-0052): the daemon writes its own
+		// M13 start at sign-in (UI-19, ADR-0001): the daemon writes its own
 		// command; neither method takes an executable or arguments.
 		"startup.get", "startup.set",
 	}, method)

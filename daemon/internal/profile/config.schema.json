@@ -28,7 +28,7 @@
       "x-go-field": "Enabled"
     },
     "onUnmatched": {
-      "description": "Ignored since ADR-0053: applications no rule binds use the fixed default profile. Accepted so that older files load; do not write it.",
+      "description": "Ignored since ADR-0008: applications no rule binds use the fixed default profile. Accepted so that older files load; do not write it.",
       "deprecated": true,
       "enum": [
         "keep",
@@ -49,7 +49,7 @@
       "x-go-field": "ReleaseOnSwitch"
     },
     "functionKey": {
-      "description": "The one function key (ADR-0075, MAP-27): while it is held, the other controls use the profile's functionSet first. start (Menu, Options, Plus; the default), back (View, Create, Share, Minus) or guide (the Xbox, PS or Home button, which Windows may also react to). It is the same for every profile and every controller, and takes effect at once. The function key sends nothing and cannot be bound.",
+      "description": "The one function key (ADR-0012, MAP-27): while it is held, the other controls use the profile's functionSet first. start (Menu, Options, Plus; the default), back (View, Create, Share, Minus) or guide (the Xbox, PS or Home button, which Windows may also react to). It is the same for every profile and every controller, and takes effect at once. The function key sends nothing and cannot be bound.",
       "enum": [
         "start",
         "back",
@@ -65,7 +65,7 @@
       "x-go-field": "RestoreLayerState"
     },
     "defaultProfile": {
-      "description": "Ignored since ADR-0053: the fixed default profile has the library ID \"default\". Accepted so that older files load; do not write it.",
+      "description": "Ignored since ADR-0008: the fixed default profile has the library ID \"default\". Accepted so that older files load; do not write it.",
       "deprecated": true,
       "type": "string",
       "minLength": 1,
@@ -74,7 +74,7 @@
       "x-ts-never": true
     },
     "ignore": {
-      "description": "Ignored since ADR-0053: every application either has a rule or uses the fixed default profile. Accepted so that older files load; do not write it.",
+      "description": "Ignored since ADR-0008: every application either has a rule or uses the fixed default profile. Accepted so that older files load; do not write it.",
       "deprecated": true,
       "type": "array",
       "items": {
@@ -115,7 +115,7 @@
       "x-go-field": "Output"
     },
     "feedback": {
-      "description": "The controller feedback switches (ADR-0067): they apply to every profile and every controller, and take effect at once.",
+      "description": "The controller feedback switches (ADR-0015): they apply to every profile and every controller, and take effect at once.",
       "$ref": "#/$defs/feedback",
       "x-go-type": "*wireConfigFeedback",
       "x-go-field": "Feedback"
@@ -145,7 +145,7 @@
           "x-go-type": "string"
         },
         "profile": {
-          "description": "Library ID. null, which disabled mapping before ADR-0053, is accepted so that older files load; such a rule is ignored. Do not write null.",
+          "description": "Library ID. null, which disabled mapping before ADR-0008, is accepted so that older files load; such a rule is ignored. Do not write null.",
           "type": [
             "string",
             "null"
@@ -179,7 +179,7 @@
           "x-go-type": "bool"
         },
         "mapping": {
-          "description": "SDL gamepad mapping string for this controller (IN-18, ADR-0072): it makes SDL read a joystick it does not know as a gamepad, or reads a known gamepad differently. Form: the controller's GUID, the name field *, the bindings such as a:b0 and platform:Windows. SDL applies a mapping by GUID, so every device key with the same GUID carries the same string; the mapping wizard and devices.setMapping write them together.",
+          "description": "SDL gamepad mapping string for this controller (IN-18, ADR-0012): it makes SDL read a joystick it does not know as a gamepad, or reads a known gamepad differently. Form: the controller's GUID, the name field *, the bindings such as a:b0 and platform:Windows. SDL applies a mapping by GUID, so every device key with the same GUID carries the same string; the mapping wizard and devices.setMapping write them together.",
           "type": "string",
           "minLength": 1,
           "maxLength": 2048,

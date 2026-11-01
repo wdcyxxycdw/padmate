@@ -301,7 +301,7 @@ func (s *smoke) cleanup() {
 // forceRunFlag makes an installer start padmate.exe when it is done. The
 // template does so through Explorer, as the user, so the new padmate.exe has
 // none of the test's environment: it would use the real data folder and start a
-// daemon that sends keys (ADR-0073). The smoke test never passes it.
+// daemon that sends keys (ADR-0018). The smoke test never passes it.
 const forceRunFlag = "--force-run"
 
 // refuseForceRun is the error for an argument string that has forceRunFlag.
@@ -701,7 +701,7 @@ func (s *smoke) checkInstalledAs(tag installerpkg.Tag, earlier, older bool) {
 	if !s.exists(s.startMenuLink) {
 		s.t.Errorf("no Start Menu shortcut %s", s.startMenuLink)
 	}
-	// createDesktopShortcut: always (ADR-0074).
+	// createDesktopShortcut: always (ADR-0018).
 	if !s.exists(s.desktopLink) {
 		s.t.Errorf("no desktop shortcut %s", s.desktopLink)
 	}
@@ -884,7 +884,7 @@ func TestInstallerSmoke(t *testing.T) {
 		}
 	}
 
-	// What the automatic update runs (PKG-10, ADR-0073): the downloaded
+	// What the automatic update runs (PKG-10, ADR-0018): the downloaded
 	// installer as --updated /S, silent, over the running daemon, without /D=
 	// (the folder is the recorded one) and without --force-run (that start is
 	// made by Explorer as the user, with the real data folder and --inject, and

@@ -24,7 +24,7 @@ type rpcDocument struct {
 	ID       string `json:"id,omitempty"`
 	Text     string `json:"text"`
 	Revision string `json:"revision"`
-	// Extends is the parent that Text names (PRO-19, ADR-0070), with the
+	// Extends is the parent that Text names (PRO-19, ADR-0012), with the
 	// chain above it; Text is the profile's own, not the merge (profiles.resolve).
 	Extends         *rpcExtends         `json:"extends,omitempty"`
 	Diagnostics     profile.Diagnostics `json:"diagnostics"`
@@ -271,7 +271,7 @@ func (r *liveRun) profileSavedLocked(id string, data []byte, saved profilelib.Sa
 			result.Applied = true
 		}
 	case target.dependsOn(id):
-		// The running profile extends this one (PRO-19, ADR-0070): it is
+		// The running profile extends this one (PRO-19, ADR-0012): it is
 		// merged again with the parent as it is now.
 		if err := r.reloadDependentLocked(context.Background(), target); err != nil {
 			result.Problem = err.Error()

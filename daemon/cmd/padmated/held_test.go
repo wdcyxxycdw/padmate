@@ -20,7 +20,7 @@ import (
 // profile.
 const spaceScan = 0x39
 
-// The held-key log (OUT-14, ADR-0027): "PDMH", version 4, the logon
+// The held-key log (OUT-14, ADR-0006): "PDMH", version 4, the logon
 // time, the session and the logon session of the run, and the bitmaps,
 // one bit per key.
 const (

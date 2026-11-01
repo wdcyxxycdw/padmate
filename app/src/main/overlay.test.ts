@@ -1891,12 +1891,12 @@ describe("the overlay's page", () => {
   });
 
   it("has the element the tests find, transparent and click-through", () => {
-    const css = source("../renderer/overlay.css");
+    const css = source("../renderer/overlay/overlay.css");
     expect(css).toMatch(/background:\s*transparent/);
     expect(css).toMatch(/pointer-events:\s*none/);
     expect(css).toMatch(/\[data-visible="false"\]\s*\{\s*opacity:\s*0;/);
     expect(css).toMatch(/\[data-visible="true"\]\s*\{\s*opacity:\s*1;/);
-    expect(source("../renderer/Overlay.tsx")).toContain(
+    expect(source("../renderer/overlay/Overlay.tsx")).toContain(
       'data-testid="overlay-root"',
     );
   });

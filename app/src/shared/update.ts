@@ -1,5 +1,5 @@
 // What the window and Main say to each other about updating padmate (PKG-10,
-// ADR-0073). The state is plain data: Main keeps the truth (update-controller.ts)
+// ADR-0018). The state is plain data: Main keeps the truth (update-controller.ts)
 // and pushes every change on padmate:updateState; the window only shows it and
 // sends back what the person chose.
 

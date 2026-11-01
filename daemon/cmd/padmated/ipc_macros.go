@@ -21,8 +21,8 @@ import (
 // script.path a legacy entry that does not exist. Data is {"file":FILE}.
 const rpcCodeMacroNotFound = -32019
 
-// macroMethods manage the script library (SCR-51; SCR-50, ADR-0055,
-// design §9): the macros folder of the data folder, which every profile
+// macroMethods manage the script library (SCR-51; SCR-50,
+// ADR-0011): the macros folder of the data folder, which every profile
 // runs its macros from. Every write goes through the library's writer
 // lock and os.Root. macros.create and macros.import write only the macros
 // folder; macros.rename and macros.delete also edit, in place, every
@@ -235,7 +235,7 @@ func readLibraryProfiles(l *profilelib.Library) ([]listedProfile, error) {
 	return out, nil
 }
 
-// rpcListMacros lists the script library (design §9, SCR-51): each file
+// rpcListMacros lists the script library (SCR-51): each file
 // of its macros folder with the profiles, controls and gestures that run
 // it in the profile.json files on disk, and its build or load problem
 // (macroChecks), which needs no gamepad; the macros that bindings run but

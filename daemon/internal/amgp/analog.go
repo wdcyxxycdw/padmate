@@ -7,7 +7,7 @@ import (
 
 const (
 	// mouseSpeedFactor turns AntiMicroX's mouse speed into pixels per second
-	// at full deflection: its speed is multiplied by 20 (ADR-0072).
+	// at full deflection: its speed is multiplied by 20 (ADR-0012).
 	mouseSpeedFactor = 20
 	// triggerGap is how far below the press threshold the release threshold
 	// is.

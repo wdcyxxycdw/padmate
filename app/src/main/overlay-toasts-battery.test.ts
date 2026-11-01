@@ -11,7 +11,7 @@ import {
   toastText,
 } from "./overlay-toasts";
 
-// The low-battery toast (IN-12, ADR-0065): told when a controller's "low" in the
+// The low-battery toast (IN-12, ADR-0015): told when a controller's "low" in the
 // state event's batteries goes from false to true, whichever window is in
 // front, with the controller's name first when there is more than one.
 

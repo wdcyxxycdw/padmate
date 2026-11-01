@@ -66,7 +66,7 @@ type rpcExiting struct {
 
 // announceExit tells the IPC clients that subscribe to daemon.exiting that
 // padmated stops for reason, "tray" when the user chose 退出 in the tray
-// (DMN-22, ADR-0056) and "installer" when daemon.exit asked for it, so that
+// (DMN-22, ADR-0001) and "installer" when daemon.exit asked for it, so that
 // the UI saves its last edit and quits too instead of showing a lost
 // connection. It waits until the event is written to their connections,
 // exitAnnounceWait at most, and returns the sessions it was written to.

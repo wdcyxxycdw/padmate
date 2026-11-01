@@ -93,7 +93,7 @@ func TestRepairConfigKeepsValidMembers(t *testing.T) {
 		want:    `{"schemaVersion":0,"enabled":true}`,
 		members: []string{"/rules"},
 	}, {
-		// ADR-0075: a function key that is none of start, back and guide goes
+		// ADR-0012: a function key that is none of start, back and guide goes
 		// alone, so the default (start) applies; a valid one stays.
 		name:    "function key",
 		data:    `{"schemaVersion":0,"functionKey":"select","enabled":false}`,

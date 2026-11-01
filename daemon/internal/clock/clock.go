@@ -95,7 +95,7 @@ var epoch = time.Now()
 // Real returns the process-wide real clock. Its Times count from a single
 // epoch on the monotonic clock, so all of them in a process compare
 // meaningfully. On Windows the monotonic clock moves in steps of 0.5–2 ms
-// (docs/PITFALLS.md "Windows 计时"); latency measurements that need microseconds use QPC.
+// (docs/PITFALLS.md "Windows timing"); latency measurements that need microseconds use QPC.
 func Real() Clock { return realClock{} }
 
 type realClock struct{}

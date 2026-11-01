@@ -202,7 +202,7 @@ func TestCheckTreeAndCheckInstallerRunThePECheck(t *testing.T) {
 }
 
 // The first installer of an upgrade test can be older than this source in two
-// independent ways (docs/build-installer.md): EarlierBuild leaves out the
+// independent ways: EarlierBuild leaves out the
 // comparison of its executables with this source's goldens (PKG-11), and
 // NoUpdateConfig leaves out resources\app-update.yml, which a release from
 // before the automatic update lacks (PKG-10). Each option excuses its own
@@ -243,8 +243,8 @@ func TestCheckTreeEarlierBuildAndNoUpdateConfigCompose(t *testing.T) {
 	}
 }
 
-// The builds up to v1.0.2 read GitHub (ADR-0073), this source reads the download
-// site (ADR-0078). The first installer (INSTALLER) of an upgrade test (`task
+// The builds up to v1.0.2 read GitHub (ADR-0018), this source reads the download
+// site (ADR-0018). The first installer (INSTALLER) of an upgrade test (`task
 // test:installer INSTALLER=<v1.0.2 installer> UPGRADE=<new>`, the migration
 // test) may be such a build: EarlierBuild lets its app-update.yml be the former
 // source as well,

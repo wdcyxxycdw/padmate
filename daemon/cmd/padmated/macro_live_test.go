@@ -137,8 +137,8 @@ func waitMacrosEvent(ctx context.Context, t *testing.T, events chan map[string]a
 	}
 }
 
-// A run that holds a key ends when the profile switches: the key goes up
-// (design §6.3), and a profile without macros needs no runtime.
+// A run that holds a key ends when the profile switches: the key goes up,
+// and a profile without macros needs no runtime.
 func TestLiveMacroProfileSwitchReleases(t *testing.T) {
 	dir := t.TempDir()
 	writeLibraryProfile(t, dir, "first", `{"schemaVersion":0,"name":"first","layers":{"base":{"south":{"press":{"type":"macro","file":"hold.ts"}}}}}`)

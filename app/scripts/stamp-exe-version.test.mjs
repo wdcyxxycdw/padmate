@@ -294,7 +294,7 @@ describe("electron-builder", () => {
     );
     expect(source).toMatch(/async signIf\(file\) \{/);
     expect(source).toMatch(/this\.forceCodeSigning/);
-    // The version ADR-0073's notes were checked against (app/package.json pins it).
+    // The version ADR-0018's notes were checked against (app/package.json pins it).
     const { version } = JSON.parse(
       readFileSync(
         resolve(here, "../node_modules/electron-builder/package.json"),

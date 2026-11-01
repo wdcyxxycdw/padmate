@@ -11,12 +11,12 @@ import (
 
 // profileButtons taps MouseX1 on south and holds MouseRight on east: a mouse
 // button is down from the press of the pad's button to its release, however
-// long that is (ADR-0062, second batch).
+// long that is (ADR-0004, second batch).
 const profileButtons = `{"schemaVersion": 1, "name": "buttons", "layers": {"base": {` +
 	`"south": {"press": {"type": "keys", "keys": "MouseX1", "mode": "tap"}}, ` +
 	`"east": {"press": {"type": "keys", "keys": "MouseRight", "mode": "hold"}}}}}` + "\n"
 
-// TestLiveInjectMouseButtons (ADR-0062) is TestLiveInjectWheel for mouse buttons:
+// TestLiveInjectMouseButtons (ADR-0004) is TestLiveInjectWheel for mouse buttons:
 // the presses of a virtual gamepad go through live mode with --inject, and the
 // mouse hook sees the button events SendInput injected, with padmated's nonce,
 // the process id (the mouse hook gets no more of dwExtraInfo, measured

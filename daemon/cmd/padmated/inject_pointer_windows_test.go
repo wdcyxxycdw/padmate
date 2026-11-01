@@ -16,7 +16,7 @@ import (
 // injection test to take it as stopped: a dozen ticks of the stick (8 ms).
 const pointerQuiet = 100 * time.Millisecond
 
-// TestLiveInjectPointer (ADR-0062, section 5) is TestLiveInjectVirtual for the
+// TestLiveInjectPointer (ADR-0004, section 5) is TestLiveInjectVirtual for the
 // stick that moves the pointer: the left stick of a virtual gamepad is pushed
 // through live mode with --inject (profilePointer), and the mouse hook sees the
 // moves SendInput injected, WM_MOUSEMOVE with padmated's nonce, the process id

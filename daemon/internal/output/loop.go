@@ -38,7 +38,7 @@ type LoopOptions struct {
 	// the errors of the held-key log after the sweep. It must not block or
 	// call the Loop, except Blocking. nil drops them.
 	Errors func(error)
-	// HeldFile is the path of the held-key log (OUT-14, ADR-0027). The loop
+	// HeldFile is the path of the held-key log (OUT-14, ADR-0006). The loop
 	// opens it for its whole run, on its goroutine, and first sweeps what
 	// the last run left in it (Swept). Before every Send it adds the keys
 	// the batch presses, and after it drops the keys the Sender left up, so
@@ -105,10 +105,10 @@ type SweepResult struct {
 // (CLAUDE.md invariant 1). Stop releases through the Arbiter. After a
 // panic the Arbiter's state is suspect, so the loop releases the keys a
 // ledger saw the Sender inject, and ends. The ledger's Sender is a
-// MenuMask over the Loop's Sender (OUT-08, ADR-0021).
+// MenuMask over the Loop's Sender (OUT-08, ADR-0004).
 //
 // With LoopOptions.HeldFile the loop keeps the held-key log (OUT-14,
-// ADR-0027): it sweeps what the last run left in it before its first
+// ADR-0006): it sweeps what the last run left in it before its first
 // command (Swept), the ledger writes it before and after every Send, and
 // Stop or the release after a panic finish it.
 //

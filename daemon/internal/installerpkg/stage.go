@@ -13,7 +13,6 @@ import (
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/branding"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/portablezip"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 )
 
 // stageMarker is the file that tells Stage a folder is one it made, and so
@@ -51,9 +50,6 @@ type StageOptions struct {
 // A folder that already exists is emptied, if Stage made it (it carries a
 // marker file) or it is empty; any other folder is left alone and reported.
 func Stage(ctx context.Context, opts StageOptions) error {
-	if err := publicmirror.RefusePackagingAt(opts.Root); err != nil {
-		return err
-	}
 	files, err := portablezip.Collect(ctx, portablezip.Options{Version: opts.Tag.Label, Root: opts.Root, BinDir: opts.BinDir, Log: opts.Log})
 	if err != nil {
 		return err

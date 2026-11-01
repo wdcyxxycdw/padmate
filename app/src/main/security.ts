@@ -23,7 +23,7 @@ export function contentSecurityPolicy(development: boolean): string {
 }
 
 /**
- * The web preferences every padmate window has (ADR-0039, ADR-0063): a
+ * The web preferences every padmate window has (ADR-0001, ADR-0014): a
  * sandboxed renderer without Node, isolated from its preload. The main
  * window adds its preload; the overlay adds its own, toast-only one
  * (preload/overlay.ts).
@@ -135,7 +135,7 @@ export function validateDeviceKey(value: unknown): string {
   if (key === "") throw new Error("Invalid device selector");
   return key;
 }
-// An SDL gamepad mapping string for devices.setMapping (IN-18, ADR-0072): at
+// An SDL gamepad mapping string for devices.setMapping (IN-18, ADR-0012): at
 // most the 2048 characters the daemon accepts (sdlmapping.MaxLen), printable
 // ASCII. The daemon parses it, normalises it and checks its GUID against the
 // controller's; this only keeps what is not a mapping out of the request.

@@ -218,7 +218,7 @@ func (f macroFixture) reload(t *testing.T, dir, doc string, gen uint32) {
 }
 
 // A reload or a profile switch ends the runs of the installed runtime when
-// it starts building the replacement (design §6.3), not when the
+// it starts building the replacement, not when the
 // replacement is installed: nothing more is pressed after Slot.Reload and
 // the old runs' keys are up. A macro pressed while the replacement builds
 // runs on it once it is installed, never on the old profile's runtime,

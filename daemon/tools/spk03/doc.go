@@ -10,12 +10,12 @@
 // -runs times each (default 200), times -dispatch handler calls per
 // scenario (default 100000) after -warmup untimed ones, counts the
 // allocations of -allocs more, times -idle more after each idle gap
-// (default 100; 0 skips those rows), runs the SCRIPTING §4.1 watchdog checks,
+// (default 100; 0 skips those rows), runs the watchdog checks,
 // records the esbuild message for a top-level await and, on Windows,
 // calibrates QueryThreadCycleTime against QueryPerformanceCounter
 // (-cycles=false skips that). It then prints one Markdown report to
 // stdout: the machine (CPU, logical CPUs, OS, Go, goja and esbuild
-// versions), the results table with the SCRIPTING §7 targets, the
+// versions), the results table with the targets, the
 // watchdog findings and the calibration. The full run takes about 40 s
 // and keeps one or two cores busy; run it on an otherwise idle machine.
 //

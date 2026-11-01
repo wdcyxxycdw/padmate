@@ -90,7 +90,7 @@ function codeOf(error: unknown): string {
 }
 
 /**
- * The automatic update (PKG-10, ADR-0073): when to look for a new version,
+ * The automatic update (PKG-10, ADR-0018): when to look for a new version,
  * what to tell the person, and the install, which waits for the saves and
  * runs only when they ask. It decides; electron-updater (UpdaterLike) does
  * the network, the checksum and the installer. Everything else it needs comes
@@ -222,7 +222,7 @@ export class UpdateController {
   /**
    * The one look of a check: a checked version above the running one, or
    * null. The download site holds releases only, and one latest.yml that
-   * every build reads (ADR-0078): a release candidate (1.0.3-rc.1) is not
+   * every build reads (ADR-0018): a release candidate (1.0.3-rc.1) is not
    * shown newer candidates, and is offered the release when that is higher,
    * which is the same look as for a release. A site without latest.yml is a
    * failure of the check, not "nothing newer".

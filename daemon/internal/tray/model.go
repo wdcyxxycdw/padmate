@@ -26,7 +26,7 @@ func Present(st supervisor.Status, views []slot.View) Presentation {
 // a charge, and "充电中" when it charges. It returns nothing for a pad whose
 // power is unknown, and for one that is wired (plugged in, or behind a
 // receiver that always says full): only a pad that discharges or charges shows
-// a battery (ADR-0067).
+// a battery (ADR-0015).
 func PowerParts(p input.Power) []string {
 	var parts []string
 	if (p.State == input.PowerDischarging || p.State == input.PowerCharging) && p.Percent >= 0 {

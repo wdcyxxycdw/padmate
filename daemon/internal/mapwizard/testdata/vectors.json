@@ -1,5 +1,5 @@
 {
-  "comment": "Cases that the Go detector (mapwizard.Detector) and the UI's copy of it must agree on (ADR-0072). Event kinds: b button (v 1 down, 0 up), a axis (v position), h hat (v direction mask). In 'want', '' means waiting; 'done:X' gives the binding value of the element the prompt found; 'rejected:R' gives the reason.",
+  "comment": "Cases that the Go detector (mapwizard.Detector) and the UI's copy of it must agree on (ADR-0012). Event kinds: b button (v 1 down, 0 up), a axis (v position), h hat (v direction mask). In 'want', '' means waiting; 'done:X' gives the binding value of the element the prompt found; 'rejected:R' gives the reason.",
   "axisSpec": [
     {"name": "trigger rests at the bottom and goes to the top", "index": 4, "rest": -32768, "far": 32767, "want": "a4"},
     {"name": "trigger rests at 0 and goes to the top", "index": 5, "rest": 0, "far": 32767, "want": "+a5"},

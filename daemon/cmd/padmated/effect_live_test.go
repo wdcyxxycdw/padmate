@@ -175,7 +175,7 @@ func TestLiveHapticRoutesToTheSlotsDevice(t *testing.T) {
 
 // TestLiveHapticSilencedByRumbleOff: with the global rumble switch off the
 // binding still sends its key but nothing is asked of the controller, and
-// nothing is printed (MAP-25, ADR-0067).
+// nothing is printed (MAP-25, ADR-0015).
 func TestLiveHapticSilencedByRumbleOff(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "profile.json")
 	if err := os.WriteFile(path, []byte(profileHaptics(`{}`)), 0o644); err != nil {

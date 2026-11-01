@@ -33,7 +33,7 @@ func (tl *testLive) functionKey() control.Control {
 }
 
 // TestConfigPutAppliesFunctionKeyLive: config.json's functionKey applies on
-// config.put without a restart (ADR-0075). The running profile is compiled
+// config.put without a restart (ADR-0012). The running profile is compiled
 // again and every slot reloaded, as for a profile switch: the keys held through
 // the old function set are released before config.put returns (invariant 1), a
 // function key that is held is forgotten, and the presses after it use the new

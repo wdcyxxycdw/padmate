@@ -28,7 +28,7 @@ func steamInputOf(conflicts []rpcConflict) (rpcConflict, bool) {
 	return rpcConflict{}, false
 }
 
-// TestSteamInputConflict (IN-24, ADR-0071): while Steam runs, the conflicts
+// TestSteamInputConflict (IN-24, ADR-0016): while Steam runs, the conflicts
 // list the classes of Steam Input settings that may govern the connected
 // gamepads. It says "may": padmate cannot see that Steam took one.
 func TestSteamInputConflict(t *testing.T) {

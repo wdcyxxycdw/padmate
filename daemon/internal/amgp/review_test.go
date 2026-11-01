@@ -78,7 +78,7 @@ func TestHeldLayerBlocksTheStickRings(t *testing.T) {
 
 // AntiMicroX writes the way back itself when a button holds a set; for the
 // function set that is not a binding that is lost. A binding on View or Menu is
-// an ordinary one since ADR-0075 (it sits in the function set here), and the
+// an ordinary one since ADR-0012 (it sits in the function set here), and the
 // report says that Menu is the function key by default.
 func TestFunctionKeyBackLinkIsNotAnError(t *testing.T) {
 	doc := xmlDoc("",

@@ -17,7 +17,7 @@ type Step struct {
 	Output string
 }
 
-// DefaultSteps is the order of the prompts (ADR-0072): the face buttons, the
+// DefaultSteps is the order of the prompts (ADR-0012): the face buttons, the
 // d-pad, the left stick (left, right, up, down) and its click, the same for
 // the right stick, the shoulders and triggers, View, Menu and Home. SDL names
 // View back and Menu start.
@@ -40,7 +40,7 @@ const (
 
 // Warning is something the user should know before saving the mapping.
 // View and Menu are the emergency combo, and one of them is the function key by
-// default (ADR-0075).
+// default (ADR-0012).
 type Warning struct {
 	Code string
 	Step string // the step the warning is about, when there is one

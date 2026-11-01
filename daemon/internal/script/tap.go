@@ -225,7 +225,7 @@ func (h *Host) processCompletions(items []tapCompletion) {
 // runCompletions processes one snapshot of the queued completions. A hold=0
 // array may enqueue its next completion synchronously; the wake lets
 // another budgeted owner turn handle it. Each scope's completions run in a
-// call of their own, so a macro's errors are its own (design §7); a run that
+// call of their own, so a macro's errors are its own; a run that
 // has ended ignores its completions. stop reports an error after which
 // RunDue must not run more callbacks: any error of the runtime's scope, as
 // before macros, or an interruption.

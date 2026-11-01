@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Profile inheritance in the library (PRO-19, ADR-0070).
+// Profile inheritance in the library (PRO-19, ADR-0012).
 
 const (
 	// extParent has a layer with two bindings, one with a macro, and a timing.

@@ -13,12 +13,12 @@ import (
 
 // profileWheels taps WheelDown on south and holds WheelUp on east: a wheel key
 // is a notch when it is pressed and nothing when it is released, however long
-// the button is held (ADR-0062).
+// the button is held (ADR-0004).
 const profileWheels = `{"schemaVersion": 1, "name": "wheels", "layers": {"base": {` +
 	`"south": {"press": {"type": "keys", "keys": "WheelDown", "mode": "tap"}}, ` +
 	`"east": {"press": {"type": "keys", "keys": "WheelUp", "mode": "hold"}}}}}` + "\n"
 
-// TestLiveInjectWheel (ADR-0062) is TestLiveInjectVirtual for wheel keys: the
+// TestLiveInjectWheel (ADR-0004) is TestLiveInjectVirtual for wheel keys: the
 // presses of a virtual gamepad go through live mode with --inject, and the
 // mouse hook sees the notches SendInput injected, with padmated's nonce, the
 // process id (the mouse hook gets no more of dwExtraInfo, measured

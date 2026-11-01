@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Profile inheritance (PRO-19, ADR-0070).
+// Profile inheritance (PRO-19, ADR-0012).
 
 // extLib is a library of profile files by ID.
 type extLib map[string]string
@@ -385,7 +385,7 @@ func TestExtendsChain(t *testing.T) {
 }
 
 // The function set is inherited per control whatever format each profile of the
-// chain wrote it in (ADR-0075), and Inherited says where each control comes
+// chain wrote it in (ADR-0012), and Inherited says where each control comes
 // from, under the pointer it has in the merged document, functionSet.
 func TestExtendsFunctionSetChain(t *testing.T) {
 	l := extLib{

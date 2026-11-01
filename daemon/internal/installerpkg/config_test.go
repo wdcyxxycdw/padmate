@@ -49,7 +49,7 @@ func TestElectronBuilderConfig(t *testing.T) {
 	}
 	// A wizard (PKG-13), per user, no administrator rights (PKG-03). It
 	// finishes with "run padmate" ticked, makes a Start Menu and a desktop
-	// shortcut (ADR-0074), and has no license page (TestNoLicensePage).
+	// shortcut (ADR-0018), and has no license page (TestNoLicensePage).
 	for key, value := range map[string]string{
 		"oneClick": "false", "perMachine": "false", "allowElevation": "false", "runAfterFinish": "true",
 		"createDesktopShortcut": "always", "createStartMenuShortcut": "true",
@@ -301,7 +301,7 @@ func TestNoLicensePage(t *testing.T) {
 // Whether and how padmate.exe is signed is decided by PADMATE_SIGN in the
 // environment of app/scripts/package-installer.mjs, never by this file: it holds
 // no certificate, thumbprint, password or account, and the default build signs
-// nothing (PKG-09, ADR-0073).
+// nothing (PKG-09, ADR-0018).
 func TestElectronBuilderSigningConfig(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
 	for _, key := range []string{

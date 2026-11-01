@@ -6,7 +6,7 @@
 // or the session locks or sleeps, except for a capture that was asked to
 // stay: the wizard's, which keeps the mapping paused while the user is in
 // another program, and after an unlock or a wake (the daemon's own system
-// pause covers the lock itself), until the wizard is closed (ADR-0076). When
+// pause covers the lock itself), until the wizard is closed (ADR-0013). When
 // the bridge connection ends, the daemon ends the capture itself.
 //
 // The bridge connection lives as long as the UI, so a lost capture.stop

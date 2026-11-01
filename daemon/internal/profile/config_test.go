@@ -38,7 +38,7 @@ func TestConfigValidation(t *testing.T) {
 		`{"schemaVersion":0,"rules":[{"exe":"paint.exe","profile":""}]}`,
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["south","south"],"holdMs":2000}}}}`,
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["leftx+","south"],"holdMs":2000}}}}`,
-		// UI-19 (ADR-0052): at least two buttons and 500 ms, so that one
+		// UI-19 (ADR-0001): at least two buttons and 500 ms, so that one
 		// button held a little long never pauses.
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["back"],"holdMs":2000}}}}`,
 		`{"schemaVersion":0,"safety":{"panic":{"joyconLeft":{"buttons":["back","start"],"holdMs":499}}}}`,
@@ -59,7 +59,7 @@ func TestConfigValidation(t *testing.T) {
 }
 
 // TestConfigPanicComboBounds: the smallest and largest emergency combos
-// config.json accepts (UI-19, ADR-0052).
+// config.json accepts (UI-19, ADR-0001).
 func TestConfigPanicComboBounds(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"safety":{"panic":{
 		"standard":{"buttons":["back","start"],"holdMs":500},
@@ -86,7 +86,7 @@ func TestConfigPanicComboBounds(t *testing.T) {
 
 // TestConfigSelection: the first enabled rule that names a profile wins;
 // an application no rule binds gets the fixed default profile (PRO-28,
-// ADR-0053).
+// ADR-0008).
 func TestConfigSelection(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"rules":[
 		{"exe":"paint.exe","profile":"off","enabled":false},
@@ -140,7 +140,7 @@ func TestConfigSelection(t *testing.T) {
 	}
 }
 
-// TestConfigLegacyMembersIgnored: config.json members that ADR-0053
+// TestConfigLegacyMembersIgnored: config.json members that ADR-0008
 // retired still load, so that an older file never stops padmated, but
 // select nothing: defaultProfile, onUnmatched and ignore are dropped, and
 // a rule with profile null is skipped, keeping its index.
@@ -297,7 +297,7 @@ func FuzzConfig(f *testing.F) {
 }
 
 // TestConfigFeedbackSwitches: config.json feedback holds the four global
-// feedback switches (UI-27, ADR-0067). Each is on unless it says false, the
+// feedback switches (UI-27, ADR-0015). Each is on unless it says false, the
 // members are independent, and a missing object is all on.
 func TestConfigFeedbackSwitches(t *testing.T) {
 	all := DefaultFeedbackSwitches()
@@ -342,7 +342,7 @@ func TestConfigFeedbackSwitches(t *testing.T) {
 }
 
 // TestConfigFunctionKey: config.json functionKey picks the one function key
-// (MAP-27, ADR-0075): start unless it says back or guide. Anything else, in
+// (MAP-27, ADR-0012): start unless it says back or guide. Anything else, in
 // type or value, is a schema error that the repair (PRO-29) resets.
 func TestConfigFunctionKey(t *testing.T) {
 	if got := DefaultConfig().FunctionKey; got != control.Start {

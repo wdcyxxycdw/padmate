@@ -1,6 +1,6 @@
 // Package latency measures the end-to-end latency of padmate: the benchmark
 // of ENG-11, which only the tests run, and the statistics that padmated keeps
-// of every real key (DMN-15, ADR-0071).
+// of every real key (DMN-15, ADR-0016).
 //
 // Stamp reads the high-resolution counter: QueryPerformanceCounter on
 // Windows, where time.Now moves in steps of 0.5–2 ms, and the monotonic

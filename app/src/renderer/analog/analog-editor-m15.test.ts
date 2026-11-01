@@ -289,7 +289,7 @@ describe("the two stages the editor set up before lt.full", () => {
     expect(analogIssues(next.analog)).toEqual([]);
   });
 
-  it("makes the same move in the function set (ADR-0075)", () => {
+  it("makes the same move in the function set (ADR-0012)", () => {
     const source = old();
     source.functionSet = {
       "lefttrigger+": { press: { type: "keys", keys: "C" } },

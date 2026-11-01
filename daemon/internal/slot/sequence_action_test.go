@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// Bindings of the sequence tests (MAP-22, OUT-21, ADR-0070): a shortcut, a
+// Bindings of the sequence tests (MAP-22, OUT-21, ADR-0012): a shortcut, a
 // wait and a text; a text alone.
 const (
 	southSequence = `"south": {"label": "序列", "press": {"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"wait": 100}, {"text": "ab"}, {"keys": "F13"}]}}`

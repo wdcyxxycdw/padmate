@@ -22,7 +22,7 @@ import (
 )
 
 // The mapping wizard and custom mappings of the daemon (IN-17, IN-18, IN-19,
-// ADR-0072): devices.rawInfo and the input.raw topic give the UI the elements
+// ADR-0012): devices.rawInfo and the input.raw topic give the UI the elements
 // of a joystick, devices.setMapping and devices.resetMapping save and apply a
 // mapping for it.
 
@@ -529,7 +529,7 @@ func (r *liveRun) changeMapping(ctx context.Context, dev supervisor.DeviceView, 
 	}
 	if mapping.GUID != "" {
 		// The emergency combo is back+start on most controllers, and the
-		// function key is one of View, Menu and the Xbox button (ADR-0075): a
+		// function key is one of View, Menu and the Xbox button (ADR-0012): a
 		// mapping without View and Menu leaves the controller without a way to
 		// pause (ARCHITECTURE section 5).
 		if !mapping.Binds("back") {

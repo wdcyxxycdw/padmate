@@ -1,0 +1,220 @@
+name: release
+
+# PKG-07: a v* tag builds the Windows installer and leaves it, with its SHA-256
+# and its latest.yml (PKG-10), in a draft release for the owner to publish: a
+# pre-release when the version has a prerelease part (v1.0.0-rc.1), the latest
+# release otherwise (v1.0.0). Every step is a task that runs the same way on a
+# developer machine:
+#
+#   task app:install
+#   task package:installer VERSION=v0.14.0
+#   task test:installer VERSION=v0.14.0 UPGRADE=<the same installer>
+#
+# The GitHub release is for the public code repository and for the installed
+# applications up to v1.0.2, which still read latest.yml here; a build from
+# v1.0.3 on reads the download site instead (ADR-0018, https://padmate.download/).
+# This workflow does not publish there and holds no secret for it: the owner
+# runs `task release:r2 VERSION=v1.0.3` on the release machine, for stable
+# versions only. The first build that reads the site is published in both
+# places, so that the installs which read GitHub reach it.
+#
+# workflow_dispatch builds the same for a tag name that need not exist yet; the
+# draft release then names the commit it was built from.
+#
+# Signing (PKG-09) is off unless the repository variable PADMATE_SIGN is azure
+# (Azure Artifact Signing). It is the one mode a GitHub runner can do: store signs with a
+# certificate in the runner's Windows certificate store, which a runner does
+# not have, and pfx reads a file of the machine, which a secret is not. The
+# step "Check the signing settings" refuses both before anything is built, so
+# a repository variable cannot ask for a signature this workflow would not
+# make. Azure's sign-in is secrets of the environment "release", which is where
+# the owner puts the protection rules (required reviewers); a build that does
+# not sign never uses them. Nothing here signs on its own: a version published
+# without a signature says so in its notes. Signing on the owner's own machine
+# (store, pfx) is task package:installer there, not this workflow.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to build, such as v0.14.0 or v0.14.0-rc.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  GO_VERSION: "1.27.x"
+  # The release of github.com/go-task/task that Taskfile.yml is written for.
+  TASK_VERSION: v3.53.1
+  # A tag push builds that tag; a manual run builds the version it was given.
+  VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    # The signing secrets live in this environment, and the owner may protect it.
+    environment: release
+    permissions:
+      # Creates the draft release and uploads the installer to it.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install task
+        run: |
+          go install "github.com/go-task/task/v3/cmd/task@${TASK_VERSION}"
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Refuse a name that is not a release tag
+        run: |
+          cd daemon && go run ./tools/packageinstaller version -version "$VERSION"
+      # Before anything is built: the modes this workflow cannot do (see the
+      # header) are an error, not a build that quietly fails to sign or signs
+      # with something else.
+      - name: Check the signing settings
+        env:
+          PADMATE_SIGN: ${{ vars.PADMATE_SIGN || 'none' }}
+          PADMATE_SIGN_SUBJECT: ${{ vars.PADMATE_SIGN_SUBJECT }}
+        run: |
+          case "$PADMATE_SIGN" in
+            none) ;;
+            azure)
+              if [ -z "$PADMATE_SIGN_SUBJECT" ]; then
+                echo "::error::PADMATE_SIGN is azure, so the repository variable PADMATE_SIGN_SUBJECT must name the signer."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::PADMATE_SIGN is $PADMATE_SIGN, which this workflow cannot do: a runner has no certificate store entry (store) and a secret is not a file (pfx). Only azure signs here; sign on your own machine with task package:installer."
+              exit 1
+              ;;
+          esac
+      - name: Install the frontend dependencies
+        run: task app:install
+      # The tasks below keep the pinned SDL3.dll in bin/, as package:installer
+      # does; the cache only saves the download, and sdlfetch checks the hash.
+      - name: Cache the pinned SDL3 zip
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/sdl
+          key: sdl3-zip-${{ hashFiles('daemon/internal/sdlpin/sdlpin.go') }}
+      - name: Fetch SDL3.dll
+        run: cd daemon && go run ./tools/sdlfetch -out ../bin -cache "$RUNNER_TEMP/sdl"
+      # PADMATE_SIGN is none when the repository variable is not set. The
+      # secrets are read only by the signing modes.
+      - name: Build the installer
+        env:
+          PADMATE_SIGN: ${{ vars.PADMATE_SIGN || 'none' }}
+          PADMATE_SIGN_SUBJECT: ${{ vars.PADMATE_SIGN_SUBJECT }}
+          PADMATE_SIGN_SHA1: ${{ vars.PADMATE_SIGN_SHA1 }}
+          PADMATE_SIGN_TIMESTAMP: ${{ vars.PADMATE_SIGN_TIMESTAMP }}
+          PADMATE_SIGN_AZURE_ENDPOINT: ${{ vars.PADMATE_SIGN_AZURE_ENDPOINT }}
+          PADMATE_SIGN_AZURE_ACCOUNT: ${{ vars.PADMATE_SIGN_AZURE_ACCOUNT }}
+          PADMATE_SIGN_AZURE_PROFILE: ${{ vars.PADMATE_SIGN_AZURE_PROFILE }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: task package:installer VERSION="$VERSION"
+      # Installs the installer, then installs it over itself while a daemon runs
+      # (the installer must stop it), as an update does (--updated /S), and
+      # uninstalls it: SPK-07 on a clean runner.
+      #
+      # A signed build is also checked where electron-builder leaves nothing to
+      # check: the installed files and the uninstaller (deleted from
+      # dist/installer after it is signed) must be signed by the publisher.
+      - name: Smoke-test install, upgrade and uninstall
+        env:
+          PADMATE_SIGN: ${{ vars.PADMATE_SIGN || 'none' }}
+          PADMATE_SIGN_SUBJECT: ${{ vars.PADMATE_SIGN_SUBJECT }}
+        run: |
+          if [ "$PADMATE_SIGN" != "none" ]; then
+            export PADMATE_INSTALLER_SIGNED_SUBJECT="$PADMATE_SIGN_SUBJECT"
+          fi
+          installer="$(cygpath -w "$GITHUB_WORKSPACE/dist/installer/padmate-${VERSION}-windows-amd64-setup.exe")"
+          task test:installer VERSION="$VERSION" INSTALLER="$installer" UPGRADE="$installer"
+      # latest.yml is what the installed application's update reads (on the
+      # download site since v1.0.3, on this release for the builds before): its
+      # version, file name and sha512 must be the installer's (electron-builder
+      # 26.17 writes no size). A signed build is checked for its signer as well.
+      - name: Check the release files
+        env:
+          PADMATE_SIGN: ${{ vars.PADMATE_SIGN || 'none' }}
+          PADMATE_SIGN_SUBJECT: ${{ vars.PADMATE_SIGN_SUBJECT }}
+        run: |
+          flags=(-update-info)
+          if [ "$PADMATE_SIGN" != "none" ]; then
+            if [ -z "$PADMATE_SIGN_SUBJECT" ]; then
+              echo "::error::PADMATE_SIGN is $PADMATE_SIGN, so the repository variable PADMATE_SIGN_SUBJECT must name the signer."
+              exit 1
+            fi
+            flags+=(-signed "$PADMATE_SIGN_SUBJECT")
+          fi
+          cd daemon && go run ./tools/packageinstaller verify -version "$VERSION" -dist ../dist/installer "${flags[@]}"
+      - name: Checksum
+        run: |
+          cd dist/installer
+          sha256sum "padmate-${VERSION}-windows-amd64-setup.exe" > "padmate-${VERSION}-windows-amd64-setup.exe.sha256"
+          cat "padmate-${VERSION}-windows-amd64-setup.exe.sha256"
+      - name: Keep the installer as a workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: padmate-${{ env.VERSION }}-windows-amd64-setup
+          path: |
+            dist/installer/padmate-${{ env.VERSION }}-windows-amd64-setup.exe
+            dist/installer/padmate-${{ env.VERSION }}-windows-amd64-setup.exe.sha256
+            dist/installer/latest.yml
+          if-no-files-found: error
+      # A draft: the owner reads it and publishes. A version with a prerelease
+      # part (-rc.1) is a pre-release, and one without is the latest release,
+      # which is what the installed applications up to v1.0.2 follow (a release
+      # candidate reaches it too). The tag need not exist yet for a draft. A run
+      # for a version whose release is published already fails: the installer
+      # people downloaded and the checksum next to it must not change under
+      # them. latest.yml goes up with every release, candidates included.
+      - name: Draft a release with the installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PADMATE_SIGN: ${{ vars.PADMATE_SIGN || 'none' }}
+          PADMATE_SIGN_SUBJECT: ${{ vars.PADMATE_SIGN_SUBJECT }}
+        run: |
+          files=("dist/installer/padmate-${VERSION}-windows-amd64-setup.exe" "dist/installer/padmate-${VERSION}-windows-amd64-setup.exe.sha256" "dist/installer/latest.yml")
+          case "$VERSION" in
+            *-*) kind=--prerelease ;;
+            *) kind=--latest ;;
+          esac
+          if [ "$PADMATE_SIGN" != "none" ]; then
+            signing="Signed by $PADMATE_SIGN_SUBJECT."
+          else
+            signing="Not code-signed yet, so Windows SmartScreen may warn."
+          fi
+          if is_draft="$(gh release view "$VERSION" --json isDraft --jq .isDraft 2> /dev/null)"; then
+            if [ "$is_draft" != "true" ]; then
+              echo "::error::The release $VERSION is published already. This workflow only fills a draft; build a new version instead."
+              exit 1
+            fi
+            gh release upload "$VERSION" "${files[@]}" --clobber
+          else
+            gh release create "$VERSION" "${files[@]}" --draft "$kind" \
+              --target "$GITHUB_SHA" --title "padmate $VERSION" \
+              --notes "Windows x64 installer, built by the release workflow from $GITHUB_SHA. Per-user install, no administrator rights. $signing SHA-256 is in the .sha256 file; latest.yml is what padmate's update reads."
+          fi

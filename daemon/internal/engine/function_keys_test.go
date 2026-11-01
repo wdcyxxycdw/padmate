@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the function key (MAP-27, ADR-0069, ADR-0075): one of back, start
+// Tests of the function key (MAP-27, ADR-0012): one of back, start
 // and guide, start unless Compile is told otherwise, sends nothing, stays out
 // of gesture recognition, and while it is held the other controls look their
 // binding up in the profile's function set first.
@@ -244,7 +244,7 @@ func TestOtherCenterKeysAreOrdinary(t *testing.T) {
 
 // The profile can have no set, in either format: the function key then
 // changes nothing, and the old functionKeys are merged into the one set, start's
-// first and back's for the controls start's does not bind (ADR-0075).
+// first and back's for the controls start's does not bind (ADR-0012).
 func TestFunctionKeyWithoutASet(t *testing.T) {
 	const plain = `{"schemaVersion":1,"name":"none","layers":{"base":{"south":{"press":{"type":"keys","keys":"A"}}}}}`
 	r := &recorder{}
@@ -547,7 +547,7 @@ func TestFunctionKeyReloadChangesTheSet(t *testing.T) {
 	}
 }
 
-// A Reload that changes the function key (config.json's functionKey, ADR-0075)
+// A Reload that changes the function key (config.json's functionKey, ADR-0012)
 // ends what is held like any Reload, forgets that the old key is held, and from
 // then on the new key is the function key and the old one an ordinary control.
 // Nothing is left held: every Up the ledger sees has its Down (invariant 1).
@@ -1011,7 +1011,7 @@ func TestFunctionKeyBetweenTaps(t *testing.T) {
 }
 
 // View says whether the function key is held, for the explanation of a mapping
-// (ADR-0071): control.Invalid when it is not, the key when it is, and none
+// (ADR-0016): control.Invalid when it is not, the key when it is, and none
 // again after Reset. Another center key changes nothing.
 func TestViewFunctionKey(t *testing.T) {
 	r := &recorder{}

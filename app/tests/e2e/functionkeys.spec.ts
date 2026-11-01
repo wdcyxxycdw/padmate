@@ -11,7 +11,7 @@ import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut } from "./helpers";
 
-// UI-30 and MAP-27 (ADR-0075): one of View (back), Menu (start) and the Xbox
+// UI-30 and MAP-27 (ADR-0012): one of View (back), Menu (start) and the Xbox
 // button (guide) is the function key, Menu unless the settings choose another.
 // The fake pad is a generic one, so the pad prints Back, Start and Home.
 
@@ -78,7 +78,7 @@ test("the function set of a file of the old format is edited on the mapping page
     const live = await FixtureClient.connect(f);
     client = live;
 
-    // The switch says 按住功能键, whichever key it is (ADR-0076). Start is a
+    // The switch says 按住功能键, whichever key it is (ADR-0013). Start is a
     // tag, and View, an ordinary key, is a button of its own.
     const switcher = page.getByRole("radiogroup", { name: "编辑的按键" });
     await expect(switcher.getByRole("radio")).toHaveText([

@@ -37,7 +37,7 @@ func libraryFile() string {
 //     dynamic loader to find.
 //
 // The first two are absolute paths. On Windows it never falls back to the
-// DLL search path: padmate loads the pinned DLL it ships (ADR-0007).
+// DLL search path: padmate loads the pinned DLL it ships (ADR-0002).
 func ResolveLibrary() (string, error) {
 	if p := os.Getenv(EnvLibrary); p != "" {
 		abs, err := filepath.Abs(p)

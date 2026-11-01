@@ -10,8 +10,7 @@ import (
 
 // WatchdogOptions are the limits of a Watchdog.
 type WatchdogOptions struct {
-	// Poll is how often the watchdog checks the running call; SCRIPTING
-	// §4.1 says every 2–5 ms.
+	// Poll is how often the watchdog checks the running call: every 2–5 ms.
 	Poll time.Duration
 	// Budget is the thread CPU time one call may use: 100 ms for a
 	// handler, 1000 ms for setup, 200 ms for teardown.
@@ -20,7 +19,7 @@ type WatchdogOptions struct {
 	Wall time.Duration
 }
 
-// HandlerWatchdog are the SCRIPTING §4.1 limits for a handler call.
+// HandlerWatchdog are the limits for a handler call.
 var HandlerWatchdog = WatchdogOptions{Poll: 2 * time.Millisecond, Budget: 100 * time.Millisecond, Wall: 2 * time.Second}
 
 // BudgetError is the value a Watchdog interrupts a runtime with; the
@@ -45,7 +44,7 @@ type Firing struct {
 	at      int64
 }
 
-// Watchdog is the SPK-03 stand-in for the watchdog of SCRIPTING §4.1, not
+// Watchdog is the SPK-03 stand-in for the script watchdog, not
 // the M5 one. A goroutine polls the thread CPU time of the call running
 // on the slot thread and interrupts the runtime when it is over budget.
 // Begin and End bracket every call; the mutex makes sure an Interrupt

@@ -91,7 +91,7 @@ type scriptResyncWaiter interface{ WaitForInitialResync() bool }
 // scriptConfigurator says whether the profile has a legacy script entry,
 // which takes over input: Dispatch and the gesture hooks see every button
 // edge, script-only virtual controls exist, and a cold runtime queues the
-// input until it is ready (ADR-0044). A runtime without it is configured.
+// input until it is ready (ADR-0010). A runtime without it is configured.
 type scriptConfigurator interface{ Configured() bool }
 
 // scriptNeeder says whether the profile needs the runtime at all: it has a
@@ -102,7 +102,7 @@ type scriptConfigurator interface{ Configured() bool }
 type scriptNeeder interface{ Needed() bool }
 
 // inputMarker is optional: an Arbiter that measures the latency of the keys an
-// input edge causes (DMN-15, ADR-0071). The slot marks the edge it is handling
+// input edge causes (DMN-15, ADR-0016). The slot marks the edge it is handling
 // with MarkInput(stamp, deviceKey), and clears the mark (a zero stamp) when it
 // has handled it. *output.RemoteArbiter is one, and *output.Arbiter is not: a
 // replay on a local Arbiter measures nothing.
@@ -142,7 +142,7 @@ type Config struct {
 	// Slot.
 	OnHaptic func(input.DeviceID, engine.Haptic)
 	// Switches, when set, returns the global feedback switches (UI-27,
-	// ADR-0067) the engine reads at each feedback state and haptic
+	// ADR-0015) the engine reads at each feedback state and haptic
 	// (engine.Options.Switches). It is called on the slot's goroutine, must not
 	// block, and returns what the last committed config.json says; nil means
 	// every switch on.

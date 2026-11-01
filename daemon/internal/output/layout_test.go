@@ -828,7 +828,7 @@ func (l *sentLog) expect(t *testing.T, step, want string) {
 }
 
 // A layout switch between a press and its release must not change what is
-// released (CLAUDE.md invariant 1, ADR-0003).
+// released (CLAUDE.md invariant 1, ADR-0004).
 func TestResolverLayoutSwitchReleasesPressedKey(t *testing.T) {
 	src := newFakeLayouts(t)
 	r, warns := newResolver(src)
@@ -894,7 +894,7 @@ func TestNewResolverNilSource(t *testing.T) {
 }
 
 // A mouse button is no character either: it bypasses the layout like the wheel
-// keys, and its release is a real event, not a silent one (ADR-0062).
+// keys, and its release is a real event, not a silent one (ADR-0004).
 func TestResolveButtons(t *testing.T) {
 	for _, tt := range []struct {
 		spec string // the sided chord the Arbiter resolves
@@ -940,7 +940,7 @@ func TestResolveButtons(t *testing.T) {
 
 // A wheel key is no character: it bypasses the layout, so the Resolver never
 // asks for the foreground layout, not even when it cannot be read, and gives
-// ChordStroke's stroke on every layout (ADR-0062).
+// ChordStroke's stroke on every layout (ADR-0004).
 func TestResolveWheelKeys(t *testing.T) {
 	for _, tt := range []struct {
 		spec string // the sided chord the Arbiter resolves

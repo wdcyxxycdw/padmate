@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Language } from "../store";
+import type { Language } from "../state/store";
 import { Icon, type IconName } from "../ui/Icon";
 import { type Conflict, ConflictNotices } from "./ConflictNotices";
 import "./pages.css";

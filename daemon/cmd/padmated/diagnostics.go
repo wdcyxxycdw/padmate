@@ -22,7 +22,7 @@ import (
 // docs folder.
 //
 // Kind is "conflict" for a program that is running, and "steamInput" (IN-24,
-// ADR-0071) for the Steam Input settings that may govern the connected
+// ADR-0016) for the Steam Input settings that may govern the connected
 // gamepads while Steam runs: Classes lists them (diagnostics.SteamClass,
 // "xbox", "playstation", "switch", "steamHardware"). padmate cannot see that
 // Steam took a gamepad, so the entry says which settings may.
@@ -35,7 +35,7 @@ type rpcConflict struct {
 }
 
 // troubleshootingDoc is the document that conflicts point developers to.
-const troubleshootingDoc = "docs/troubleshooting-input.md"
+const troubleshootingDoc = "docs/guide/09-diagnostics.md"
 
 func (r *liveRun) notice(n tray.Notification) {
 	if r.notices.Add(n) {
@@ -128,7 +128,7 @@ func (r *liveRun) conflictList(ctx context.Context, running []string) []rpcConfl
 }
 
 // steamInputConflict is the conflict of the Steam Input settings that may
-// govern the gamepads padmate maps or could map (IN-24, ADR-0071), from their
+// govern the gamepads padmate maps or could map (IN-24, ADR-0016), from their
 // type, vendor, product and driver. A gamepad that padmate ignores is not one:
 // Steam taking it over costs padmate nothing. It reports false when no class
 // applies, or when the gamepads cannot be listed now.

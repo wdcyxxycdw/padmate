@@ -1,5 +1,5 @@
 import type { Profile, ProfileBinding } from "../../shared/generated/schema";
-import { baseBinding, usedGestures } from "../editor-model";
+import { baseBinding, usedGestures } from "../editor/editor-model";
 import {
   type BindingControl,
   type DirectionGroup,
@@ -24,7 +24,7 @@ export interface PresetChange {
 
 /**
  * Cardinal bindings of the edited key set that a preset would replace: any
- * with a gesture or a block (ADR-0045 asks before a block is replaced). A
+ * with a gesture or a block (ADR-0012 asks before a block is replaced). A
  * display name alone is kept by the preset, so it is not a change.
  */
 export function presetChanges(

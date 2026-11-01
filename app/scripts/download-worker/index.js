@@ -1,4 +1,4 @@
-// The Cloudflare Worker of https://padmate.download/ (ADR-0078).
+// The Cloudflare Worker of https://padmate.download/ (ADR-0018).
 //
 // The site has no web page. This Worker is routed on the path "/" and nothing
 // else (wrangler.toml), so that the address opens the newest installer: it

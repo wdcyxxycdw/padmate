@@ -274,7 +274,7 @@ func TestIPCScriptEffects(t *testing.T) {
 // With the global rumble switch off nothing buzzes, not the script's members
 // and not the buzz of its error, and host.has("rumble") says so; the color
 // still goes. A gamepad without triggers ignores pad.rumbleTriggers. The
-// profile's retired rumble member is not read (ADR-0067).
+// profile's retired rumble member is not read (ADR-0015).
 func TestIPCScriptEffectsFollowTheSwitches(t *testing.T) {
 	tl, client := startFakeEffectsScript(t, "rumble,rgb", fmtProfile(`,"feedback":{"rumble":true}`), "rumble")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

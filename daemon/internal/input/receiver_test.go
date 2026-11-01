@@ -340,7 +340,7 @@ func (r *reporter) source() *hidBeat {
 // TestWatchReceiversChangesNeverArm: a device that reports only when its
 // input changes never arms, even when every change is so small that the
 // gamepad is at rest, and so is never removed when it falls silent, a
-// control held (ADR-0029 decision 5). The same device whose reports repeat
+// control held (ADR-0002). The same device whose reports repeat
 // their input arms after prove.
 func TestWatchReceiversChangesNeverArm(t *testing.T) {
 	every := uint64(receiverWatchEvery)
@@ -494,7 +494,7 @@ func (h *queuedAt) WithAttrs([]slog.Attr) slog.Handler { return h }
 func (h *queuedAt) WithGroup(string) slog.Handler      { return h }
 
 // TestLoseEmitsFirst: lose sends the DeviceRemoved before it logs, so
-// that its slot releases the keys however long the log takes (ADR-0029
+// that its slot releases the keys however long the log takes (ADR-0002
 // decision 11).
 func TestLoseEmitsFirst(t *testing.T) {
 	s := testSource(t, &logBuffer{})

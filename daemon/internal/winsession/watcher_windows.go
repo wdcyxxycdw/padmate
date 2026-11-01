@@ -356,7 +356,7 @@ func (w *Watcher) loop() error {
 	}
 }
 
-// teardown undoes setUp in the order ADR-0026 fixes: the session
+// teardown undoes setUp in the order ADR-0006 fixes: the session
 // notifications before the window they are registered for, and the window
 // last. A failure is logged at Debug: nothing can be done about it.
 func (w *Watcher) teardown(s *threadState) {

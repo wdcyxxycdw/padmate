@@ -2,7 +2,7 @@
 // without a layout engine can say it: jsdom has no widths, so the rules that
 // keep a wide badge or an English gesture name from running into the next
 // column are read from the style sheet. The widths themselves were measured in
-// Chromium (ARCHITECTURE §12, "诊断").
+// Chromium (ARCHITECTURE §12.6).
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 

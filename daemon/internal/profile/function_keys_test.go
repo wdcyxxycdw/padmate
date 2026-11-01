@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The function key (MAP-27, ADR-0075): one control of back, start and guide,
+// The function key (MAP-27, ADR-0012): one control of back, start and guide,
 // chosen in config.json. A profile's functionSet holds the bindings used while
 // it is held, written like a layer and bindable on any control.
 func TestFunctionSetParse(t *testing.T) {
@@ -89,7 +89,7 @@ func TestFunctionSetParse(t *testing.T) {
 }
 
 // The old format stays valid: its two sets are merged into the one set, start's
-// first, then back's for the controls start's does not bind (ADR-0075).
+// first, then back's for the controls start's does not bind (ADR-0012).
 func TestFunctionKeysParseAndMerge(t *testing.T) {
 	const src = `{
 	"schemaVersion": 1, "name": "fn",
@@ -169,7 +169,7 @@ func TestFunctionSetOverFunctionKeys(t *testing.T) {
 	if p == nil || ds.HasErrors() {
 		t.Fatalf("diagnostics %v", ds)
 	}
-	if want := []string{`2:2: warning: functionKeys is ignored because functionSet is also written (ADR-0075) (/functionKeys)`}; len(ds) != 1 || ds[0].String() != want[0] {
+	if want := []string{`2:2: warning: functionKeys is ignored because functionSet is also written (/functionKeys)`}; len(ds) != 1 || ds[0].String() != want[0] {
 		t.Errorf("diagnostics %v, want %q", ds, want)
 	}
 	set := p.EffectiveFunctionSet()
@@ -196,7 +196,7 @@ func TestFunctionSetDuplicateAlias(t *testing.T) {
 
 // back, start and guide are bindable in any layer or in common: which of them
 // is the function key is config.json's choice, not known when a profile is
-// read, so a binding on one is kept and raises no warning (ADR-0075; ADR-0069
+// read, so a binding on one is kept and raises no warning (ADR-0012; ADR-0012
 // dropped the ones on back and start).
 func TestCenterKeysAreBindableInLayers(t *testing.T) {
 	const src = `{
@@ -237,7 +237,7 @@ func TestCenterKeysAreBindableInLayers(t *testing.T) {
 	}
 }
 
-// ADR-0069 dropped a binding on back or start in a layer or in common unread,
+// ADR-0012 dropped a binding on back or start in a layer or in common unread,
 // so a file that was valid may hold one that is not, and the format is frozen:
 // such a file stays valid. Parse leaves the binding out of the model with a
 // warning (so Compile never sees it, whichever control is the function key),
@@ -352,9 +352,9 @@ func TestFunctionSetCheckBindings(t *testing.T) {
 // (functionSet has them), and a set has no color: it is not a layer.
 func TestFunctionKeysSchemaMessages(t *testing.T) {
 	for _, tc := range []struct{ name, set, want string }{
-		{"back", `"back": {}`, `"back" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/back)`},
-		{"start", `"start": {}`, `"start" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/start)`},
-		{"alias", `"select": {}`, `"select" cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can (/functionKeys/back/select)`},
+		{"back", `"back": {}`, `"back" cannot be bound in a functionKeys set; functionSet can (/functionKeys/back/back)`},
+		{"start", `"start": {}`, `"start" cannot be bound in a functionKeys set; functionSet can (/functionKeys/back/start)`},
+		{"alias", `"select": {}`, `"select" cannot be bound in a functionKeys set; functionSet can (/functionKeys/back/select)`},
 		{"color", `"color": "#FF0000"`, `a function key set has no color: it is not a layer (/functionKeys/back/color)`},
 		{"typo", `"southh": {}`, `unknown control "southh"; did you mean "south"? (/functionKeys/back/southh)`},
 	} {

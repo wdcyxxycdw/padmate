@@ -2,10 +2,10 @@
 // syntax that names them ("Ctrl+Shift+Z"), and the US-layout baseline that
 // maps each key to a set-1 scan code and a Windows virtual-key code. The
 // mouse wheel notches (WheelUp, ...) and buttons (MouseLeft, ...) are keys too
-// (KindMouse, ADR-0062): they have no scan code and no VK. The volume and media
-// keys (VolumeUp, MediaNext, ..., KindMedia, ADR-0070) are keyboard keys with an
+// (KindMouse, ADR-0004): they have no scan code and no VK. The volume and media
+// keys (VolumeUp, MediaNext, ..., KindMedia, ADR-0012) are keyboard keys with an
 // E0 scan code and a VK, which the output layer sends by VK. The rules for the
-// text a binding types (ValidateText, ADR-0070) are here too, so that profile
+// text a binding types (ValidateText, ADR-0012) are here too, so that profile
 // parsing, scripts and the output share them.
 //
 // The package is pure data and string processing with no platform
@@ -38,13 +38,13 @@ const (
 	KindScan
 	// KindModifier is Ctrl, Shift, Alt or Win, generic or sided.
 	KindModifier
-	// KindMouse is a mouse input standing in a key's place (ADR-0062): the
+	// KindMouse is a mouse input standing in a key's place (ADR-0004): the
 	// four wheel notches WheelUp, WheelDown, WheelLeft and WheelRight, and the
 	// five buttons MouseLeft, MouseRight, MouseMiddle, MouseX1 and MouseX2. It
 	// has no scan code, no VK and no layout; Key.Mouse says which input it is.
 	// It can be the main key of a chord, never a modifier.
 	KindMouse
-	// KindMedia is a volume or media key (ADR-0070, OUT-20): VolumeUp,
+	// KindMedia is a volume or media key (ADR-0012, OUT-20): VolumeUp,
 	// VolumeDown, VolumeMute, MediaPlayPause, MediaNext, MediaPrevious and
 	// MediaStop. It is a keyboard key with an E0 scan code and the VK of its
 	// VK_VOLUME_* or VK_MEDIA_* constant, and the output layer sends it by VK
@@ -89,7 +89,7 @@ const (
 	// MouseMove and MouseJump are not keys and have no KeySpec name: they tell
 	// the output layer that an event moves the pointer, relatively by a number of
 	// pixels (MouseMove) or to an absolute position (MouseJump), which the stick
-	// in mode "mouse" and the "mouse" action produce (ADR-0062, M15b). No Key has
+	// in mode "mouse" and the "mouse" action produce (ADR-0004, M15b). No Key has
 	// them, so no profile can spell them as a key.
 	MouseMove
 	MouseJump

@@ -7,7 +7,7 @@
 ;
 ; This file is UTF-8 with a BOM, so that NSIS reads it as Unicode. Keep it so.
 ;
-; The installer is a wizard (ADR-0068): a folder page, the progress and a
+; The installer is a wizard (ADR-0018): a folder page, the progress and a
 ; finish page. It installs for the current user only: customInstallMode skips
 ; electron-builder's page for "all users or only me" for good, and customInit
 ; ignores /allusers, so nothing ever asks for administrator rights. The

@@ -11,7 +11,7 @@ import type {
 import { startFailureText } from "../shared/start-failure-text";
 import type { EditorHandler } from "./library-handlers";
 
-// Why the mapping service did not start (UI-45, ADR-0056): padmated writes
+// Why the mapping service did not start (UI-45, ADR-0001): padmated writes
 // --startup-report FILE when live mode does not start, and Main reads it
 // once padmated has exited. The report is data from another program: Main
 // keeps only the known fields, bounded, and uses its paths for display and

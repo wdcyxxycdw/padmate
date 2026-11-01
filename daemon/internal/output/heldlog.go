@@ -12,15 +12,15 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// The held-key log of OUT-14 (ADR-0027) is a file of heldSize bytes: the
+// The held-key log of OUT-14 (ADR-0006) is a file of heldSize bytes: the
 // magic "PDMH", a little-endian uint32 version, the HeldIdentity of the
 // run that wrote it (HeldIdentity.put), and three bitmaps of 256 bits, one
 // bit per KeyID. Bitmap 0 has the scan codes without E0, bitmap 1 those
 // with E0 and bitmap 2 the VKs of the keys sent by VK, and in the slots of
 // VK_LBUTTON (0x01), VK_RBUTTON (0x02), VK_MBUTTON (0x04), VK_XBUTTON1 (0x05)
-// and VK_XBUTTON2 (0x06) the mouse buttons (ADR-0062), which no key is sent
-// by. The menu mask key (ADR-0021) and the wheel notches, which leave nothing
-// down (ADR-0062), are never in it. Version 2 had no identity and version 3 a
+// and VK_XBUTTON2 (0x06) the mouse buttons (ADR-0004), which no key is sent
+// by. The menu mask key (ADR-0004) and the wheel notches, which leave nothing
+// down (ADR-0004), are never in it. Version 2 had no identity and version 3 a
 // boot time where LogonTime is: the sweep resets both as corrupt. The buttons
 // did not change the format or the version: an older padmated reads their
 // bits as keys sent by those VKs. The media and volume keys (OUT-20) are sent
@@ -233,7 +233,7 @@ var (
 	removeHeld   = os.Remove
 )
 
-// heldLog is the held-key log of a Loop (OUT-14, ADR-0027), open for its
+// heldLog is the held-key log of a Loop (OUT-14, ADR-0006), open for its
 // whole run. The ledger marks the presses of a batch before it sends them
 // and settles the log after, so that the file has every key that may be
 // down whenever the process is killed. Only the loop goroutine uses it.

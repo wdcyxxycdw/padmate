@@ -10,7 +10,6 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { marker, refusal, repoRoot } from "./public-mirror.mjs";
 import {
   BUCKET,
   checkLatest,
@@ -25,6 +24,7 @@ import {
   parseLatest,
   planUpload,
   publish,
+  repoRoot,
   SITE,
   sha256Line,
   verifyPublished,
@@ -647,16 +647,6 @@ describe("publish", () => {
     expect(s.events).toEqual([]);
   });
 
-  it("refuses in the public code mirror", async () => {
-    const root = folder();
-    writeFileSync(join(root, marker), "x\n");
-    const s = site();
-    await expect(
-      publish({ label, dist: distOf(label) }, deps(s, { repoRoot: root })),
-    ).rejects.toThrow(refusal);
-    expect(s.events).toEqual([]);
-  });
-
   it("refuses when the installer or latest.yml is not there", async () => {
     const s = site();
     await expect(publish({ label, dist: folder() }, deps(s))).rejects.toThrow(
@@ -809,12 +799,10 @@ describe("the task", () => {
   const block =
     /^ {2}release:r2:\n(?: {4}.*\n|\s*\n)+/m.exec(taskfile)?.[0] ?? "";
 
-  it("runs the script for the VERSION, on Windows, and not in the public mirror", () => {
+  it("runs the script for the VERSION, on Windows", () => {
     expect(block).not.toBe("");
     expect(block).toContain("dir: app");
     expect(block).toContain("platforms: [windows]");
-    expect(block).toContain(`msg: "${refusal}"`);
-    expect(block).toContain('test ! -e "{{.ROOT_DIR}}/.padmate-public"');
     expect(block).toContain(
       'node scripts/publish-r2.mjs --version "{{.VERSION}}" {{.CLI_ARGS}}',
     );

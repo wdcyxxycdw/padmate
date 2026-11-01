@@ -93,7 +93,7 @@ const (
 	// ErrorCooldown is how long the motors or the player lights of a
 	// controller are left alone after a call to them failed: a write that
 	// blocks on a receiver that ignores output reports would hold up every
-	// controller's input (PITFALLS "2.4G 接收器"), so the Mixer does not
+	// controller's input (PITFALLS "2.4 GHz receivers"), so the Mixer does not
 	// hammer it. It is not shorter than MaxStepMs: whatever was running when
 	// the call failed has expired by itself when it ends. The motors (rumble
 	// and trigger rumble), the LED and the player lights each have a
@@ -112,7 +112,7 @@ const (
 
 	// sdlLEDRepeat is SDL_LED_MIN_REPEAT_MS, 5 s: the window in which SDL
 	// drops a repeat of the color it has. The constant is defined in a header
-	// that the cached sources do not have (PITFALLS "效果通道"), so the value
+	// that the cached sources do not have (PITFALLS "Effect channels"), so the value
 	// is not checked.
 	sdlLEDRepeat = 5 * time.Second
 	// ledWriteSlack is how long a failing LED write may take, and some more.

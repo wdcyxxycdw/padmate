@@ -97,7 +97,7 @@ type resolver struct {
 	// data. A merged profile (Resolve) says where the text came from.
 	where func(off int) string
 	// unread holds the IDs of the bindings on back and start in a layer or in
-	// common, which ADR-0069 used to drop unread (leaveOutUnread).
+	// common, which ADR-0012 used to drop unread (leaveOutUnread).
 	unread map[string]bool
 }
 
@@ -203,9 +203,9 @@ func resolve(data []byte, root *node, where func(off int) string) (*Profile, Dia
 		}
 	}
 	if w.FunctionSet != nil && w.FunctionKeys != nil {
-		// The old format yields to the new one (ADR-0075), so what it holds
+		// The old format yields to the new one (ADR-0012), so what it holds
 		// has no effect; it is still checked like the rest.
-		r.warnAt(root.members["functionKeys"].key, "/functionKeys", "functionKeys is ignored because functionSet is also written (ADR-0075)")
+		r.warnAt(root.members["functionKeys"].key, "/functionKeys", "functionKeys is ignored because functionSet is also written")
 	}
 	for _, check := range checks {
 		check(r, p)
@@ -214,7 +214,7 @@ func resolve(data []byte, root *node, where func(off int) string) (*Profile, Dia
 	return p, r.ds
 }
 
-// leaveOutUnread keeps a profile valid that was valid before ADR-0075. ADR-0069
+// leaveOutUnread keeps a profile valid that was valid before ADR-0012. ADR-0012
 // dropped a binding on back or start in a layer or in common before any check,
 // so such a file may hold one that is not valid, and the format is frozen: a
 // valid profile stays valid. Each error of such a binding becomes a warning, and
@@ -382,7 +382,7 @@ func (r *resolver) layerAt(name string, parts []string, w wireLayer, inLayer boo
 		}
 		first[c] = m
 		// A binding on back, start or guide is kept like any other: which of
-		// them is the function key is config.json's choice (ADR-0075), not
+		// them is the function key is config.json's choice (ADR-0012), not
 		// known here, and engine.Compile ignores the one that is.
 		id := childPointer(ptr, m.name)
 		if inLayer && (c == control.Back || c == control.Start) {

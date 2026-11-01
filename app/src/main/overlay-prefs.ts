@@ -4,7 +4,7 @@ import {
   parseOverlayPrefs,
 } from "../shared/overlay";
 
-// What the UI chose about the overlay (HUD-05, ADR-0063). The choices live in
+// What the UI chose about the overlay (HUD-05, ADR-0014). The choices live in
 // the UI's localStorage, like its language, and the UI pushes them here at
 // start and whenever one changes. Main keeps the latest valid ones, so an
 // overlay made later (it is made after the main window is ready, and again

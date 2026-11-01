@@ -35,7 +35,7 @@ const pins = (needle: string | RegExp) =>
     )
     .map(({ path }) => path);
 
-describe("how electron-updater is held (PKG-10, ADR-0073)", () => {
+describe("how electron-updater is held (PKG-10, ADR-0018)", () => {
   it("is imported by one file, at the version the notes were read from", () => {
     expect(pins(/from "electron-updater|require\("electron-updater/)).toEqual([
       "src/main/updater-electron.ts",

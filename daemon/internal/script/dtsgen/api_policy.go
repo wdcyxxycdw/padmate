@@ -7,7 +7,7 @@ import (
 )
 
 // SupportedAPIs lists the script API versions this daemon runs, the current
-// one first. The policy (M14, docs/SCRIPTING.md §6) is that a release
+// one first. The policy (M14) is that a release
 // supports the current API and the previous 0.N, so a script written for the
 // last release still loads after an upgrade: when the API moves on this list
 // becomes {new, previous}, and a shim keeps the members of the previous
@@ -57,7 +57,7 @@ func supportedText() string {
 // InputEvent, ...), and the padmate/math module. The members a macro can use
 // (the @macro marks in padmate.d.ts, SCR-50) are always in it.
 //
-// The core the documentation names (SCRIPTING §6) is on, key, layers and
+// The core the documentation names is on, key, layers and
 // pad; the rest are the definitions scripts are built from, the input and
 // time functions and the session store.
 var StableMembers = []string{

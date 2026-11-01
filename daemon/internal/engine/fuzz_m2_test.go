@@ -79,7 +79,7 @@ var fuzzLatched = keys.MustParse("Ctrl")
 //	      the cycle without its tap or release action; with bit 6 set
 //	      (0x40) it is a center key instead: start for an even op, back for
 //	      an odd one, pressed if up, else released. The first program's
-//	      function key is start and the second's back (MAP-27, ADR-0075), so
+//	      function key is start and the second's back (MAP-27, ADR-0012), so
 //	      the other one is an ordinary control that nothing binds
 //	8     wait max(1, next byte) ms
 //	9     wait until the next deadline
@@ -408,7 +408,7 @@ func (l *ledger) decided(d engine.Decision) {
 		// A press that the script's button handler consumed is decided on
 		// arrival: it starts no cycle and never waits in the buffer behind a
 		// pending gesture, and it sends and holds nothing, so it need not keep
-		// the order of the edges (ADR-0071). Its edge has no other decision,
+		// the order of the edges (ADR-0016). Its edge has no other decision,
 		// and is the one being stepped, the last.
 		if n := len(l.edges); n > l.next && l.edges[n-1] == want {
 			l.edges = l.edges[:n-1]
@@ -427,7 +427,7 @@ func (l *ledger) decided(d engine.Decision) {
 
 // unmatched checks that d, when it is the end of a multi-tap window with no
 // action for its taps (an unbound decision of a gesture that is not the
-// press, ADR-0071), is the answer to a press of the same control that came
+// press, ADR-0016), is the answer to a press of the same control that came
 // earlier: it has that cycle, and it carries no action or owner.
 func (l *ledger) unmatched(d engine.Decision) {
 	l.t.Helper()

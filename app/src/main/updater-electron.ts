@@ -32,7 +32,7 @@ export interface ElectronUpdaterOptions {
 const SHARED_STAGING_ID = "00000000-0000-0000-0000-000000000000";
 
 /**
- * The installed application's updater (PKG-10, ADR-0078): latest.yml and the
+ * The installed application's updater (PKG-10, ADR-0018): latest.yml and the
  * installer of the download site in update-config.ts, a silent NSIS install,
  * and nothing happens unless the person says so (UpdateController decides).
  * The site sees the address and a User-Agent of padmate and its version; no

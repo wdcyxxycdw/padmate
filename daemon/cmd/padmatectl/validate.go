@@ -258,7 +258,7 @@ func macroFolder(path string) string {
 
 // libraryOf returns the library and the ID of the profile whose file path
 // is, when path is <data>/profiles/<id>/profile.json: such a profile can
-// extend another (PRO-19, ADR-0070), which is read from the same library.
+// extend another (PRO-19, ADR-0012), which is read from the same library.
 func libraryOf(path string) (lib *profilelib.Library, id string, ok bool) {
 	abs, err := filepath.Abs(path)
 	if err != nil {

@@ -133,7 +133,7 @@ func benchRoute(b *testing.B, gap time.Duration) {
 	}
 	edges := [2]input.Event{button(1, "east", true), button(1, "east", false)}
 	// The gamepad takes the slot provisionally, and its first press
-	// confirms it (ADR-0019).
+	// confirms it (ADR-0003).
 	push(added(pad(1, "Latency pad", "03ab")))
 	push(edges[0])
 	await("the first press")

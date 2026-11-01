@@ -27,14 +27,14 @@ import type {
 } from "../shared/api";
 import type { Profile } from "../shared/generated/schema";
 import { App } from "./App";
-import { listControlName } from "./control-names";
-import { editorAPIFixture } from "./editor-api-fixture";
-import { IDENTIFY_COOLDOWN_MS } from "./pages/CalibrationDialog";
+import { listControlName } from "./controller/control-names";
 import { conflictName, conflictNames } from "./pages/ConflictNotices";
 import { NoController } from "./pages/EmptyState";
 import { logFields } from "./pages/LogsPage";
-import { versionText } from "./pages/SettingsPage";
-import { createPadmateStore } from "./store";
+import { IDENTIFY_COOLDOWN_MS } from "./pages/settings/CalibrationDialog";
+import { versionText } from "./pages/settings/SettingsPage";
+import { createPadmateStore } from "./state/store";
+import { editorAPIFixture } from "./testing/editor-api-fixture";
 
 const status: StatusResult = {
   version: "0.10.0",
@@ -523,7 +523,7 @@ describe("overlay settings (HUD-05)", () => {
   });
 });
 
-describe("feedback settings (UI-27, ADR-0067)", () => {
+describe("feedback settings (UI-27, ADR-0015)", () => {
   const section = () => screen.getByTestId("feedback-settings");
   const rows = () =>
     [...section().querySelectorAll(".row")].map(
@@ -1560,7 +1560,7 @@ describe("settings page", () => {
     const connection = vi.mocked(api.onConnection).mock.calls.at(-1)?.[0];
     act(() => connection?.({ phase: "disconnected", message: "gone" }));
     // The connection panel is in place of the page: the rows that the store
-    // still keeps cannot be looked at (ADR-0071 clears them on reconnect).
+    // still keeps cannot be looked at (ADR-0016 clears them on reconnect).
     expect(screen.queryByRole("list")).toBeNull();
     expect(screen.queryByRole("searchbox", { name: "筛选按键" })).toBeNull();
     expect(document.querySelector(".page-act-row")).toBeNull();
@@ -1798,7 +1798,7 @@ describe("settings page", () => {
     expect(dialog.textContent).toContain("MIT");
     expect(dialog.textContent).toContain("CC BY 4.0");
     expect(dialog.textContent).toContain("Rusfort");
-    // The button icons (ADR-0079 §7): Kenney's under CC0, PromptFont's under
+    // The button icons (ADR-0013): Kenney's under CC0, PromptFont's under
     // the OFL, whose text goes with them.
     expect(dialog.textContent).toContain("Kenney");
     expect(dialog.textContent).toContain("CC0");
@@ -1811,7 +1811,7 @@ describe("settings page", () => {
   });
 });
 
-describe("the function key setting (UI-30, ADR-0075)", () => {
+describe("the function key setting (UI-30, ADR-0012)", () => {
   const row = () => screen.getByTestId("function-key-setting");
   const group = (name: string | RegExp = /^(功能键|Function key)$/) =>
     within(row()).getByRole("radiogroup", { name });
@@ -2259,7 +2259,7 @@ describe("profiles in the shell", () => {
     fireEvent.click(screen.getByRole("button", { name: "关闭配置设置" }));
   }
 
-  it("names what 配置设置… holds, 基于 no longer among them (ADR-0076)", async () => {
+  it("names what 配置设置… holds, 基于 no longer among them (ADR-0013)", async () => {
     setup({ profiles: library });
     const menu = await openMenu();
     const text = within(menu).getByTestId("profile-settings").textContent;
@@ -2496,7 +2496,7 @@ describe("profiles in the shell", () => {
     const [id, text, revision] =
       vi.mocked(app.api.putProfile).mock.calls[0] ?? [];
     expect([id, revision]).toEqual(["krita", ""]);
-    // Only a name is asked for, and the profile is blank (ADR-0076).
+    // Only a name is asked for, and the profile is blank (ADR-0013).
     expect(JSON.parse(text as string)).toEqual({
       schemaVersion: 1,
       name: "Krita",
@@ -3209,7 +3209,7 @@ describe("shortcut table", () => {
     return menu;
   }
 
-  it("chooses what the keys show: the action name or the shortcut (ADR-0077)", async () => {
+  it("chooses what the keys show: the action name or the shortcut (ADR-0013)", async () => {
     // A choice saved before 按键名称 went away shows the action names.
     localStorage.setItem("padmate.labelDisplay", "names");
     setup({ profile: paint });
@@ -4089,7 +4089,7 @@ describe("the battery on the controller's row (IN-12)", () => {
 
   it("shows nothing for unknown, for a controller that is wired, and for one that discharges without a charge", async () => {
     // A wired controller has no battery to show, even with a full charge: a
-    // receiver says full for ever (ADR-0067).
+    // receiver says full for ever (ADR-0015).
     for (const battery of [
       { state: "unknown" },
       { state: "wired" },

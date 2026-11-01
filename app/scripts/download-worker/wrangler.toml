@@ -1,4 +1,4 @@
-# The Worker of https://padmate.download/ (ADR-0078): the address itself
+# The Worker of https://padmate.download/ (ADR-0018): the address itself
 # redirects to the newest installer; everything else on the site is R2.
 # Deploy by hand from this folder: npx wrangler@4.151.1 deploy
 #

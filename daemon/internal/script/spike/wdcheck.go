@@ -24,7 +24,7 @@ type WatchdogCheckOptions struct {
 	BlockedSleep time.Duration
 }
 
-// DefaultWatchdogCheck uses the SCRIPTING §4.1 handler limits.
+// DefaultWatchdogCheck uses the handler limits.
 func DefaultWatchdogCheck() WatchdogCheckOptions {
 	return WatchdogCheckOptions{
 		Watchdog:        HandlerWatchdog,
@@ -129,7 +129,7 @@ function deep() {
 }
 `
 
-// CheckWatchdog runs the SCRIPTING §4.1 checks on a new locked OS thread,
+// CheckWatchdog runs the checks on a new locked OS thread,
 // as a slot thread would be.
 func CheckWatchdog(opts WatchdogCheckOptions) (*WatchdogReport, error) {
 	type result struct {

@@ -146,7 +146,7 @@ const (
 // EVENT_ALL_ACCESS for the user of the process token, and a Medium
 // mandatory label with no-write-up, so that the same user's padmatectl
 // opens it with EVENT_MODIFY_STATE whether padmated runs elevated or not
-// (ADR-0028). Elevation itself is not tested.
+// (ADR-0006). Elevation itself is not tested.
 func TestListenSecurity(t *testing.T) {
 	l, err := Listen(testName())
 	if err != nil {

@@ -40,7 +40,7 @@ var fuzzSequences = [...][]keys.Step{
 
 // FuzzSequence runs random sequences of three owners among texts, taps, holds, a
 // closing gate, failed and partial Sends, releases and an event gap, and checks
-// what ADR-0070 promises: no character is typed while the gate is closed; the queue
+// what ADR-0012 promises: no character is typed while the gate is closed; the queue
 // of sequences never goes past MaxQueuedSequences; every call is told its end
 // exactly once, however it ended; and, at the end, once everything is released and
 // settled, nothing is queued, held, down or due (invariant 1).

@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the key hints (HUD-03, ADR-0063): a HUD hints action is held like a
+// Tests of the key hints (HUD-03, ADR-0014): a HUD hints action is held like a
 // precision action, ends on every path that ends a held action, and while it
 // holds the engine keeps the list of what the controls do in the current layer
 // stack.

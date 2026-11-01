@@ -1,4 +1,4 @@
-/* Settings, Scripts and Logs pages and the empty states (ADR-0045).
+/* Settings, Scripts and Logs pages and the empty states (ADR-0012).
    The page frame (.page-content) never scrolls; each page scrolls inside
    .page-scroll. Colors come from theme.css. */
 .page-scroll {
@@ -97,7 +97,7 @@
   height: 32px;
   font-size: 12.5px;
 }
-/* A choice among the keys of a controller (ADR-0076): each is the icon the
+/* A choice among the keys of a controller (ADR-0013): each is the icon the
    controller shows, then the name. */
 .segmented.control-choice > button {
   display: inline-flex;
@@ -924,7 +924,7 @@
   font-size: 12px;
 }
 
-/* Diagnostics (UI-20, UI-21, UI-22, IN-24; ADR-0071): a view inside Settings,
+/* Diagnostics (UI-20, UI-21, UI-22, IN-24; ADR-0016): a view inside Settings,
    with the events of the latest presses, the latency figures and the
    software that may hold the controller. */
 .page-column-diagnostics {

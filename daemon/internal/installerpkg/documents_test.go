@@ -6,34 +6,25 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 )
 
-// The installer ships the user guide and the user documents, and no other
-// document: not the rest of docs/, not the READMEs of the examples, not the
-// readme of the portable preview.
+// The installer ships the user guide and the READMEs, and no other document:
+// not the rest of docs/ and not the READMEs of the examples.
 func TestShipsFile(t *testing.T) {
 	for name, want := range map[string]bool{
 		"docs/guide/00-index.md":                 true,
-		"docs/guide/08-scripts.en.md":            true,
-		"docs/known-limitations.en.md":           true,
-		"docs/troubleshooting-input.md":          true,
-		"docs/SCRIPTING.md":                      false,
+		"docs/guide/08-scripts.zh-CN.md":         true,
 		"docs/ARCHITECTURE.md":                   false,
-		"docs/development.md":                    false,
-		"docs/build-installer.md":                false,
-		"docs/adr/0073-m28-1-0.md":               false,
-		"docs/acceptance/m28.md":                 false,
-		"docs/bench/latency.md":                  false,
+		"docs/ARCHITECTURE.zh-CN.md":             false,
+		"docs/PITFALLS.md":                       false,
+		"docs/adr/0018-installer-and-updates.md": false,
 		"docs/guide.md":                          false,
 		"examples/scripts/README.md":             false,
 		"examples/scripts/tabmate/README.md":     false,
 		"examples/scripts/tabmate/main.ts":       true,
 		"examples/profiles/basic.json":           true,
-		"README-PORTABLE.md":                     false,
 		"README.md":                              true,
-		"README.en.md":                           true,
+		"README.zh-CN.md":                        true,
 		"LICENSE":                                true,
 		"licenses/README.md":                     true,
 		"licenses/go/x@v1/NOTICE-NO-LICENSE.txt": true,
@@ -61,7 +52,7 @@ func writeFiles(t *testing.T, root string, names ...string) {
 // installedDocuments are the documents of a complete installation of this
 // source, as paths below the root of the installation.
 func installedDocuments() []string {
-	names := []string{ResourcesFolder + "/" + userGuideIndex, ResourcesFolder + "/" + UserGuide + "00-index.en.md"}
+	names := []string{ResourcesFolder + "/" + userGuideIndex, ResourcesFolder + "/" + UserGuide + "00-index.zh-CN.md"}
 	for _, name := range UserDocuments {
 		names = append(names, ResourcesFolder+"/"+name)
 	}
@@ -76,7 +67,7 @@ func TestDocumentProblems(t *testing.T) {
 	}
 
 	// Another document of docs/ or the README of an example is reported.
-	extra := []string{"resources/docs/adr/0001-x.md", "resources/docs/SCRIPTING.md", "resources/examples/scripts/README.md"}
+	extra := []string{"resources/docs/adr/0001-x.md", "resources/docs/ARCHITECTURE.md", "resources/examples/scripts/README.md"}
 	writeFiles(t, root, extra...)
 	got := strings.Join(documentProblems(root), "\n")
 	for _, name := range extra {
@@ -120,16 +111,15 @@ func TestMissingUserDocuments(t *testing.T) {
 	if got := missingUserDocuments(staged); len(got) != 0 {
 		t.Errorf("missingUserDocuments = %q, want none", got)
 	}
-	delete(staged, "docs/known-limitations.en.md")
+	delete(staged, "README.zh-CN.md")
 	delete(staged, userGuideIndex)
-	if got := strings.Join(missingUserDocuments(staged), ","); got != userGuideIndex+",docs/known-limitations.en.md" {
+	if got := strings.Join(missingUserDocuments(staged), ","); got != userGuideIndex+",README.zh-CN.md" {
 		t.Errorf("missingUserDocuments = %q", got)
 	}
 }
 
 // Every user document that the installer ships is in the repository.
 func TestUserDocumentsExist(t *testing.T) {
-	publicmirror.SkipIfMirror(t, "docs/")
 	root := filepath.Join("..", "..", "..")
 	for _, name := range append([]string{userGuideIndex}, UserDocuments...) {
 		if info, err := os.Stat(filepath.Join(root, filepath.FromSlash(name))); err != nil || !info.Mode().IsRegular() {

@@ -88,7 +88,7 @@ func isAbsolute(path string) bool {
 // callback lets esbuild handle them instead of recursing.
 type resolving struct{}
 
-// plugin enforces the import rules of SCRIPTING §3 for the script root,
+// plugin enforces the import rules for the script root,
 // which must be canonical, and serves the virtual padmate modules, by
 // import path.
 func plugin(root string, virtualModules map[string]string) api.Plugin {

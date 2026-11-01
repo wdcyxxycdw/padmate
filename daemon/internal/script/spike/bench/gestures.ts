@@ -1,4 +1,4 @@
-// SCRIPTING §8.2, TABMATE-style gestures and layers.
+// TABMATE-style gestures and layers.
 import { key, on } from "padmate";
 import { layer, layers } from "./layers";
 import type { InputEvent } from "./types";

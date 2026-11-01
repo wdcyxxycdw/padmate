@@ -42,7 +42,7 @@ func (r *liveRun) selectionConfig() *profile.Config {
 	return profile.DefaultConfig()
 }
 
-// feedbackSwitches returns the global feedback switches (UI-27, ADR-0067) of
+// feedbackSwitches returns the global feedback switches (UI-27, ADR-0015) of
 // the effective config, which the slots' engines, the effect queue's callers,
 // the scripts' effects and the low-battery alert read at each use. The result
 // is an immutable copy.

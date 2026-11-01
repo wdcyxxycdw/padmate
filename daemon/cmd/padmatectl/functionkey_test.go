@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// validate and trace read no config.json, so the function key (ADR-0075) is a
+// validate and trace read no config.json, so the function key (ADR-0012) is a
 // flag, start by default, like config.json's functionKey: which bindings are
 // ignored, and so listed, depends on it.
 func TestValidateFunctionKeyFlag(t *testing.T) {

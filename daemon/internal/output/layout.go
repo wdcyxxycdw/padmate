@@ -95,7 +95,7 @@ const (
 )
 
 // Resolver resolves chords against the foreground keyboard layout
-// (OUT-04, ADR-0003, ADR-0015). Its Resolve is an ArbiterOptions.Resolve.
+// (OUT-04, ADR-0004). Its Resolve is an ArbiterOptions.Resolve.
 //
 // Only character keys depend on the layout. Letters and digits are found
 // by VK: VK_A–VK_Z and VK_0–VK_9 are the same on every layout, and

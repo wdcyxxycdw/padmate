@@ -448,8 +448,8 @@ func TestCommittedGoldens(t *testing.T) {
 			}
 		}
 	}
-	// The low-level keyboard hook is in the CLI only, for recording a shortcut
-	// (docs/known-limitations.md says so); the daemon must not have it.
+	// The low-level keyboard hook is in the CLI only, for recording a shortcut;
+	// the daemon must not have it.
 	daemon, _ := Embedded("padmated")
 	for _, l := range daemon.Procs {
 		if strings.Contains(l, "SetWindowsHookEx") {

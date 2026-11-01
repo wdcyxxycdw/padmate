@@ -7,7 +7,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is the pure logic of the receiver watchdog (IN-30, ADR-0029).
+// This file is the pure logic of the receiver watchdog (IN-30, ADR-0002).
 // A 2.4G receiver of the Switch Pro protocol, such as GameSir's Nova 2
 // Lite in Switch mode, stays listed by SDL when its gamepad is switched
 // off, and SDL reports no removal, so the keys held then stay held. SDL

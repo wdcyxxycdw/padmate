@@ -233,7 +233,7 @@ func (l *Library) readExport(root *os.Root, id string) (items, macros []copyItem
 			files = r.Profile.MacroFiles()
 			if r.Merged != nil {
 				// A profile that extends another is exported whole, so that
-				// whoever imports it needs no parent (PRO-19, ADR-0070).
+				// whoever imports it needs no parent (PRO-19, ADR-0012).
 				flat, err := l.flatten(id, item.data)
 				if errors.Is(err, ErrInheritedScript) {
 					return nil, nil, &UnsupportedError{Path: id + "/profile.json", Reason: err.Error()}

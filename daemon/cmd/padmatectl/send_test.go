@@ -219,7 +219,7 @@ func TestSendParseErrors(t *testing.T) {
 }
 
 // send is a keyboard dev tool: a mouse key, a wheel notch or a button, is
-// rejected before anything is sent, with or without --dry-run (ADR-0062).
+// rejected before anything is sent, with or without --dry-run (ADR-0004).
 func TestSendRejectsMouseKeys(t *testing.T) {
 	for _, dryRun := range []bool{true, false} {
 		f := &fakeSender{}

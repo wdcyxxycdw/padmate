@@ -111,7 +111,7 @@ func TestResumeSnapshotDropOrderKeepsAxesSafe(t *testing.T) {
 }
 
 // The wake scan reads the controls as they are held, and a button or stick
-// that was held through the suspension stays quarantined (ADR-0033): the
+// that was held through the suspension stays quarantined (ADR-0006): the
 // router's state of the gamepad and the Resync it delivers lack it, while a
 // control that was not quarantined comes through. Without the mask a button
 // held through a lock would press its key right after the unlock.

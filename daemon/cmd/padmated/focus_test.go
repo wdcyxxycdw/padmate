@@ -94,7 +94,7 @@ export default defineScript({setup(){
 	}
 	tl, src := startFocusLive(t, dir, "first", `{"schemaVersion":0,"rules":[{"exe":"paint.exe","profile":"first"},{"exe":"later.exe","profile":"second"}]}`, false)
 	tl.waitFor(t, tl.log, "environment ready")
-	// The library always holds the fixed default (ADR-0053).
+	// The library always holds the fixed default (ADR-0008).
 	tl.waitFor(t, tl.log, "library at setup default,first,second first")
 	tl.onForeground(focusApp("paint.exe"))
 	tl.waitFor(t, tl.log, "foreground from idle paint.exe true")
@@ -140,7 +140,7 @@ func TestForegroundSwitchReleaseAndRestore(t *testing.T) {
 		t.Fatal("profileChange released Alt in the same profile")
 	}
 	// An application no rule binds gets the fixed default, which maps
-	// nothing (ADR-0053); an old null rule binds nothing.
+	// nothing (ADR-0008); an old null rule binds nothing.
 	change("game.exe")
 	tl.waitFor(t, tl.stdout, " -LAlt")
 	if got := tl.profileTarget.Load().id; got != profilelib.DefaultID {
@@ -256,7 +256,7 @@ func TestForegroundPoliciesInLive(t *testing.T) {
 		{"disabled", `"enabled":false,"releaseOnSwitch":"always"`, "first", false},
 		{"unbound_default", `"rules":[{"exe":"other.exe","profile":"second"}]`, profilelib.DefaultID, true},
 		{"disabled_rule_default", `"rules":[{"exe":"target.exe","profile":"second","enabled":false}]`, profilelib.DefaultID, true},
-		// Members ADR-0053 retired select nothing: target.exe still gets
+		// Members ADR-0008 retired select nothing: target.exe still gets
 		// the fixed default.
 		{"legacy_ignored", `"ignore":["target.exe"],"onUnmatched":"keep"`, profilelib.DefaultID, true},
 		{"legacy_default", `"onUnmatched":"default","defaultProfile":"second"`, profilelib.DefaultID, true},

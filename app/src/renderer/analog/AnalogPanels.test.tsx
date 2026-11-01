@@ -11,8 +11,8 @@ import { type ComponentType, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ScriptRegistration } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
-import { MacroContext } from "../macro-context";
-import type { Language, PadInput } from "../store";
+import { MacroContext } from "../state/macro-context";
+import type { Language, PadInput } from "../state/store";
 import {
   type AnalogPanelProps,
   StickPanel,
@@ -26,7 +26,7 @@ import {
 
 // The gesture editor belongs to the key drawer; a stub shows what the panels
 // hand to it and lets a test write one binding.
-vi.mock("../BindingEditor", async () => {
+vi.mock("../drawer/BindingEditor", async () => {
   const { createElement } = await import("react");
   return {
     BindingFields: ({
@@ -62,7 +62,7 @@ vi.mock("../BindingEditor", async () => {
           "stub: send F20",
         ),
       ),
-    // A knob step's one shortcut (ADR-0079 §8): writes a press of F20.
+    // A knob step's one shortcut (ADR-0013): writes a press of F20.
     SingleShortcutField: ({
       value,
       onChange,
@@ -1819,7 +1819,7 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
     render(<Harness initial={knobFile("rs")} control="rightstick" />);
     expect(row("rs.cw")).toBeDefined();
     fireEvent.click(row("rs.cw"));
-    // One shortcut and nothing else: not the mappings of a key (ADR-0079 §8).
+    // One shortcut and nothing else: not the mappings of a key (ADR-0013).
     const cw = screen.getByRole("region", { name: "顺时针一格" });
     expect(within(cw).queryByTestId("binding-fields")).toBeNull();
     fireEvent.click(
@@ -2610,7 +2610,7 @@ describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
     expect(speed().value).toBe("700");
   });
 
-  it("keeps each stick's name when parameters are copied, pasted or reset (ADR-0079 §8)", () => {
+  it("keeps each stick's name when parameters are copied, pasted or reset (ADR-0013)", () => {
     const file = mouseFile("ls", { mouseSpeed: 700, label: "移动画布" });
     file.analog = { ...file.analog, rs: { label: "缩放", mode: "knob" } };
     const { rerender } = render(<Harness initial={file} />);

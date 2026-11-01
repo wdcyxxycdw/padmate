@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { StatusResult } from "../../shared/api";
-import type { Language } from "../store";
+import type { Language } from "../state/store";
 import { Notice } from "../ui/controls";
 import { Icon } from "../ui/Icon";
 import "./pages.css";
@@ -34,7 +34,7 @@ function steamClassName(kind: string, language: Language): string {
 }
 
 /**
- * The classes of controller that a "steamInput" entry (ADR-0071) lists for
+ * The classes of controller that a "steamInput" entry (ADR-0016) lists for
  * the software called name, each once, in the order the daemon gave.
  */
 export function conflictClasses(

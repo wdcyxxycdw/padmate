@@ -412,7 +412,7 @@ func TestMonitorVirtualBinary(t *testing.T) {
 
 	t.Run("next to the executable", func(t *testing.T) {
 		// A release has no $PADMATE_SDL3: padmatectl loads the library
-		// next to it (ADR-0007).
+		// next to it (ADR-0002).
 		if !filepath.IsAbs(lib) {
 			t.Skip("the SDL library is a system library")
 		}

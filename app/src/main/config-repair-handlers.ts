@@ -2,7 +2,7 @@ import type { DaemonCall, EditorHandler } from "./library-handlers";
 import { validateConfigBackup } from "./security";
 
 /**
- * The dialog that tells of a repaired config.json (PRO-29, ADR-0057). The
+ * The dialog that tells of a repaired config.json (PRO-29, ADR-0013). The
  * renderer passes only the backup's file name (ConfigRepair.backup): 确定
  * tells the daemon the repair was shown, 打开文件夹 has Main select the
  * file in its data folder. show gets the checked name.

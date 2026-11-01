@@ -15,8 +15,7 @@ import (
 // capabilities, power, connection state and player index (IN-12). Directly
 // they come from SDL's read-only getters (input.Source.Readout), which send
 // the pad nothing; through the daemon only the capabilities and the
-// battery of devices.list are known. The owner pastes the blocks of the
-// Nova 2 Lite in each of its modes into docs/hardware-matrix.md.
+// battery of devices.list are known.
 
 // readouter is what the direct list reads the getters from: an
 // *input.Source, or a fake in the tests.

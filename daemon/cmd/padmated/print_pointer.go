@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// The dry-run text for the pointer (ADR-0062, section 5). A stick in mode
+// The dry-run text for the pointer (ADR-0004, section 5). A stick in mode
 // "mouse" sends a move every 8 ms, which as one line each would bury the rest of
 // the output, so the printer sums the moves of a window of moveWindow, starting
 // at the first of them, and prints one line, such as "move +46,-12", at the time

@@ -22,7 +22,7 @@ const (
 )
 
 // findMakensis returns the makensis.exe electron-builder downloaded the first
-// time it built the installer (docs/build-installer.md), or the one named by
+// time it built the installer, or the one named by
 // PADMATE_MAKENSIS.
 func findMakensis(t *testing.T) string {
 	t.Helper()

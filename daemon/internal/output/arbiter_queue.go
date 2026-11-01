@@ -113,7 +113,7 @@ func (a *Arbiter) busy(id KeyID) bool {
 	if id.momentary() {
 		// A wheel key has no state for a tap to wait for: its notch goes out
 		// whether the key is held, pending release or under a minimum gap
-		// (ADR-0062). Only the event gap's queue bounds it, as it bounds
+		// (ADR-0004). Only the event gap's queue bounds it, as it bounds
 		// the extra presses of any key: one waits at a time.
 		return len(a.outbox) > 0 && a.pressWaiting(id)
 	}
@@ -149,7 +149,7 @@ func (a *Arbiter) queueOrStart(o Owner, c keys.Chord, hold time.Duration, done f
 	if !a.busy(main) {
 		return a.startTap(o, hold, done, presses)
 	}
-	// ROADMAP OUT-10 bounds backlog by physical main key, across owners,
+	// OUT-10 bounds backlog by physical main key, across owners,
 	// layouts, and modifiers. The earliest tap keeps its chord and position.
 	if slices.ContainsFunc(a.queued, func(q *queuedTap) bool { return q.main == main }) {
 		a.stats.MergedTaps++

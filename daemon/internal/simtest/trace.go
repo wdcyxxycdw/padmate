@@ -73,7 +73,7 @@ const fracDigits = 6
 // the name runs to the last "@", so "+-@0" presses "-"; a value token splits
 // at the first "=", and v is a decimal float, except for the names "move" and
 // "jump", whose value is two integers, "move=+8,-3" and "jump=32768,0" (a
-// pointer move and a jump, ADR-0062). t is in milliseconds with up to
+// pointer move and a jump, ADR-0004). t is in milliseconds with up to
 // six fraction digits; a token without it takes the previous token's time,
 // 0 for the first. Times must not decrease. "#" starts a comment that runs
 // to the end of the line. Names are not validated. Errors are *TraceError.

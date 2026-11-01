@@ -177,7 +177,7 @@ type Host struct {
 	// budget is the runtime's output budget, the base scope's; each run of
 	// a macro forks it and so shares its token bucket.
 	budget *OutputBudget
-	// base is the output scope of the legacy script's key API (design §6.2).
+	// base is the output scope of the legacy script's key API.
 	base           *outputScope
 	tapCompletions *tapCompletionQueue
 	// macros are the runtime's macros by file name, macroOrder the same in
@@ -443,7 +443,7 @@ func (h *Host) Activate(p *goja.Program) error {
 }
 
 // ActivatePrograms installs the macros' bridges, runs the legacy entry and
-// its setup when there is one, then loads each macro (design §5.3). A
+// its setup when there is one, then loads each macro. A
 // failure of the entry fails the whole runtime and no macro loads; a macro
 // that fails to load keeps its error and does not run, and the others load.
 // Only a wall-clock wedge while a macro loads fails the runtime.

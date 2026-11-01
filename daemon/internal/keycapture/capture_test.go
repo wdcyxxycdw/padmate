@@ -46,7 +46,7 @@ func TestCaptureSpecialKeysAndInjectedIgnored(t *testing.T) {
 }
 
 // A key event with no known VK is no mouse key: the mouse keys have the zero
-// mapping, so their VK 0 must not match (ADR-0062). Binding capture records
+// mapping, so their VK 0 must not match (ADR-0004). Binding capture records
 // the keyboard only.
 func TestCaptureNeverYieldsMouseKeys(t *testing.T) {
 	for _, vk := range []uint32{0, 0xE8, 0xFF} {

@@ -179,7 +179,7 @@ describe("Electron IPC wiring", () => {
     );
     for (const place of [
       /"render-process-gone", \(\) => \{\s*capture\.stop\("renderer-exit"\);\s*padCapture\.stop\(\);\s*rawWatch\.reset\(\);/,
-      // A close that hides the window (ADR-0077) keeps the raw watch of the
+      // A close that hides the window (ADR-0013) keeps the raw watch of the
       // wizard, which resumes once the window is back.
       /window\.on\("close", \(event\) => \{\s*capture\.stop\("close"\);\s*padCapture\.stop\(\);[\s\S]*?hideOnClose\(\);\s*return;\s*\}\s*rawWatch\.reset\(\);/,
       /"did-start-loading", \(\) => \{\s*capture\.stop\("reload"\);\s*padCapture\.stop\(\);\s*rawWatch\.reset\(\);/,

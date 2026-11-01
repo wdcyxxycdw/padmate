@@ -10,7 +10,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is what T-input reads about a gamepad's power (IN-12, ADR-0065):
+// This file is what T-input reads about a gamepad's power (IN-12, ADR-0015):
 // the battery state and charge, as the states of the script API. A value is
 // not part of DeviceInfo, which is a static snapshot (and the info of
 // traces): it changes while the gamepad is connected, and travels as
@@ -25,7 +25,7 @@ import (
 const powerPollEvery = 30 * time.Second
 
 // PowerState is the power source of a gamepad, in the four states of the
-// script API's DeviceInfo.battery (SCRIPTING §2.2).
+// script API's DeviceInfo.battery.
 type PowerState uint8
 
 // The power states. The zero value is PowerUnknown, which is what SDL says
@@ -127,7 +127,7 @@ func (p *Power) UnmarshalJSON(data []byte) error {
 
 // powerFromSDL maps SDL's power state and percent for a gamepad of the SDL
 // backend driver (DeviceInfo.Driver). SDL_POWERSTATE_ERROR is
-// 4294967295 in go-sdl3 (ADR-0010); it and SDL_POWERSTATE_UNKNOWN, and a
+// 4294967295 in go-sdl3 (ADR-0002); it and SDL_POWERSTATE_UNKNOWN, and a
 // state that a newer SDL adds, are PowerUnknown, with no percent: nothing is
 // known then. Otherwise a percent below 0 is not reported (-1) and one above
 // 100 is 100.
@@ -242,7 +242,7 @@ type Readout struct {
 	// Connection is SDL's connection state of the gamepad: "wired",
 	// "wireless", or "unknown" (SDL_JOYSTICK_CONNECTION_UNKNOWN, or one that
 	// could not be read). A USB receiver is reported "wired" whatever is
-	// behind it (PITFALLS "2.4G 接收器").
+	// behind it (PITFALLS "2.4 GHz receivers").
 	Connection string
 	// PlayerIndex is SDL's player index of the gamepad, or -1 when it has
 	// none.

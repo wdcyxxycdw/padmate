@@ -11,7 +11,7 @@ import (
 
 // TestEnsureDefaultCreatesOnlyWhenMissing: the fixed default profile is
 // written, with no mapping, only where profile.json is missing; an
-// existing default folder stays as it is (PRO-28, ADR-0053).
+// existing default folder stays as it is (PRO-28, ADR-0008).
 func TestEnsureDefaultCreatesOnlyWhenMissing(t *testing.T) {
 	dir := t.TempDir()
 	l := New(dir)

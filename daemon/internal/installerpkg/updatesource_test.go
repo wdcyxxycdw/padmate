@@ -25,7 +25,7 @@ func tsConstant(t *testing.T, file, name string) string {
 // download), in the publish block of electron-builder.yml (which becomes
 // resources\app-update.yml), and here as UpdateURL and UpdateChannel, which
 // CheckTree demands of a built tree. They must not drift apart (PKG-10,
-// ADR-0078).
+// ADR-0018).
 func TestElectronBuilderPublishesToTheUpdateSource(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
 	url := tsConstant(t, "src/main/update-config.ts", "UPDATE_URL")
@@ -125,7 +125,7 @@ func TestFullUninstallDeletesTheUpdateCache(t *testing.T) {
 
 // The smoke test never starts a new padmate.exe, and so never runs an
 // installer with --force-run: that start is made by Explorer as the user, with
-// the real data folder and --inject (ADR-0073).
+// the real data folder and --inject (ADR-0018).
 func TestSmokeTestNeverForcesARun(t *testing.T) {
 	dir := filepath.Join("..", "installersmoke")
 	entries, err := os.ReadDir(dir)

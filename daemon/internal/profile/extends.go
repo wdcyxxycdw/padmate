@@ -16,7 +16,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// Profile inheritance (PRO-19, ADR-0070). A profile of the library may name
+// Profile inheritance (PRO-19, ADR-0012). A profile of the library may name
 // another, its parent, in a top-level "extends": what the profile does not
 // write is taken from the parent, which may have a parent of its own.
 //
@@ -28,7 +28,7 @@ import (
 //     name either of them wrote it: an alias is the same control); a layer
 //     the child does not have is the parent's; a layer's color is the
 //     child's if it has one;
-//   - the function set (functionSet, ADR-0075) is merged per control like a
+//   - the function set (functionSet, ADR-0012) is merged per control like a
 //     layer. A side that writes the old functionKeys is taken as the one set
 //     it stands for (Profile.EffectiveFunctionSet) first: when both sides
 //     have a set, the merged document has functionSet and no functionKeys;
@@ -602,7 +602,7 @@ type setMember struct {
 	src  string // its JSON Pointer in that document
 }
 
-// functionSet returns the function set of document d (ADR-0075): the members
+// functionSet returns the function set of document d (ADR-0012): the members
 // of its functionSet, or else of the one set its old functionKeys stands for:
 // start's, then back's for the controls start's does not bind. at is the node
 // whose "{" the merged object maps to; it is nil when d has no set.

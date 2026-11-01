@@ -42,7 +42,7 @@ type rpcExplanation struct {
 	ProfileID       string `json:"profileId"`
 	Name            string `json:"name"`
 	DeclarativeOnly bool   `json:"declarativeOnly"`
-	// FunctionKey is the function key config.json chooses (MAP-27, ADR-0075),
+	// FunctionKey is the function key config.json chooses (MAP-27, ADR-0012),
 	// "back", "start" or "guide": the one for every slot, and the key the
 	// FunctionSet of each slot belongs to.
 	FunctionKey string `json:"functionKey"`
@@ -61,7 +61,7 @@ type rpcSlotExplanation struct {
 	// library profile holds none.
 	FunctionHeld bool `json:"functionHeld"`
 	// FunctionSet is the profile's function set for the control, always there
-	// (ADR-0071, ADR-0075). It wins over the layers for the control while the
+	// (ADR-0016, ADR-0012). It wins over the layers for the control while the
 	// function key is held and the set binds the control.
 	FunctionSet rpcFunctionSetResult `json:"functionSet"`
 }

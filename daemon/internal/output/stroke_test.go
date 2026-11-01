@@ -65,7 +65,7 @@ func TestChordStroke(t *testing.T) {
 		{"LShift+sc:0x2A", []string{"down LShift sc=0x2A", "up   LShift sc=0x2A"}},
 		{"RCtrl+sc:0xE01D", []string{"down RCtrl sc=E0 1D", "up   RCtrl sc=E0 1D"}},
 		{"Ctrl+sc:0xE01D", []string{"down Ctrl sc=0x1D", "down sc:0xE01D sc=E0 1D", "up   sc:0xE01D sc=E0 1D", "up   Ctrl sc=0x1D"}},
-		// Wheel keys (ADR-0062): a mouse event with no scan code, behind its
+		// Wheel keys (ADR-0004): a mouse event with no scan code, behind its
 		// modifiers; the release of the notch comes first and injects nothing.
 		{"WheelUp", []string{"down WheelUp", "up   WheelUp"}},
 		{"WheelRight", []string{"down WheelRight", "up   WheelRight"}},
@@ -74,7 +74,7 @@ func TestChordStroke(t *testing.T) {
 			"up   WheelDown", "up   Shift sc=0x2A", "up   Ctrl sc=0x1D",
 		}},
 		{"RAlt+WheelLeft", []string{"down RAlt sc=E0 38", "down WheelLeft", "up   WheelLeft", "up   RAlt sc=E0 38"}},
-		// Mouse buttons (ADR-0062): mouse events too, but held like keys: the
+		// Mouse buttons (ADR-0004): mouse events too, but held like keys: the
 		// release is a real event, in reverse order behind the press.
 		{"MouseLeft", []string{"down MouseLeft", "up   MouseLeft"}},
 		{"LButton", []string{"down MouseLeft", "up   MouseLeft"}},

@@ -42,7 +42,7 @@ function recentApp(value: unknown): RecentApp {
 // Profile library management (UI-17) and window capture (PRO-16). Renderer
 // arguments are validated here before any request reaches the daemon. The
 // daemon still keeps saved versions of profile.json (PRO-17); the UI no
-// longer lists or restores them (ADR-0054).
+// longer lists or restores them (ADR-0008).
 export function libraryHandlers(
   call: DaemonCall,
 ): Record<string, EditorHandler> {

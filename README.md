@@ -1,65 +1,56 @@
 # padmate
 
-[English](README.en.md)
+[中文](README.zh-CN.md)
 
-padmate 是一款能将常用游戏手柄映射到键盘快捷键的软件。支持自定义功能键、摇杆旋钮以及高级脚本功能，支持 Xbox、PlayStation 和 Joy-Con 手柄。可用于绘画，剪辑，编程等需要大量快捷键使用的场景。
+padmate maps common game controllers to keyboard shortcuts. It supports a customizable function key, stick knobs and advanced scripting, and works with Xbox, PlayStation and Joy-Con controllers. It suits work that relies on many shortcuts, such as painting, video editing and programming.
 
-**让闲置手柄变成生产力。**
+**Turn an idle controller into a productivity tool.**
 
-适用于 Windows 10 和 11（x64）。
+For Windows 10 and 11 (x64).
 
-## 主要功能
+## Features
 
-- **按键映射**：每个按键可分别设置点按、长按和双击动作的映射。支持键盘，鼠标以及简单的宏设置。
-- **功能键**：设定功能键+普通按键的组合，让手柄拥有更多的快捷键。
-- **摇杆与扳机**：摇杆可用作旋钮或鼠标；扳机可作为按键使用，并支持两段触发。
-- **按软件切换配置**：可为每个软件建立独立的配置，随前台软件自动切换。
-- **脚本**：可使用 TypeScript 或 JavaScript 编写脚本，实现更复杂的操作。
-- **兼容 AntiMicroX**：可导入 AntiMicroX 的配置。
+- **Button mapping**: Each button can have separate mappings for a tap, a hold and a double tap. Keyboard keys, the mouse and simple macros are supported.
+- **Function key**: Combine the function key with another button to give the controller more shortcuts.
+- **Sticks and triggers**: A stick can act as a knob or a mouse; a trigger works as a button and can have two stages.
+- **Profiles per app**: Each app can have its own profile, which switches automatically with the foreground app.
+- **Scripts**: Write scripts in TypeScript or JavaScript for more complex actions.
+- **AntiMicroX compatibility**: AntiMicroX profiles can be imported.
 
-## 安装
+## Install
 
-1. 点击 GitHub [Release](https://github.com/wdcyxxycdw/padmate/releases) 页面下载最新版本。或访问专用下载站 [padmate.download](https://padmate.download/)
-2. 点击下载好的安装包，运行。安装包目前没有代码签名。若被Windows弹窗阻止安装，请先点击“更多信息”，再点击“仍要运行”即可继续。
+1. Download the latest version from the GitHub [Releases](https://github.com/wdcyxxycdw/padmate/releases) page, or from the dedicated download site [padmate.download](https://padmate.download/)
+2. Run the downloaded installer. The installer is not code-signed yet. If Windows stops the installation, click “More info”, then “Run anyway” to continue.
 
-## 使用指南
+## Documentation
 
-使用指南随安装包提供，在安装目录下的 `resources\docs\guide` 文件夹里，从 `00-index.md` 开始阅读（英文版为 `00-index.en.md`）。默认安装目录为 `%LOCALAPPDATA%\Programs\padmate`。
+- [User guide](docs/guide/00-index.md): a detailed description of every feature.
 
 ## ToDo
 
-- [x] 摇杆旋钮、方向键与鼠标模式
-- [x] 自动切换配置
-- [x] 自定义脚本
-- [x] 兼容 AntiMicroX 配置
-- [ ] 支持 Switch 2 的 Joy-Con
-- [ ] 支持 macOS 和 Linux
-- [ ] 为更多软件提供预设配置
+- [x] Stick knob, arrow key and mouse modes
+- [x] Automatic profile switching
+- [x] Custom scripts
+- [x] AntiMicroX profile compatibility
+- [ ] Support for Switch 2 Joy-Con controllers
+- [ ] Support for macOS and Linux
+- [ ] Ready-made profiles for more apps
 
-## 隐私
+## Privacy
 
-padmate 仅在检查和下载更新时联网，不会获取任何用户信息。支持在无网络状态下的使用。
+padmate goes online only to check for and download updates, and collects no user information. It also works without a network connection.
 
-## 从源码构建
+## Build from source
 
-需要 Go 1.27、Node 24、[Task](https://taskfile.dev) 和 golangci-lint v2.13。Task 和 golangci-lint 可以用 Go 安装，装好后确认 `%USERPROFILE%\go\bin` 在 PATH 里：
-
-```bash
-go install github.com/go-task/task/v3/cmd/task@latest
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
-```
-
-然后运行：
+Requires Go 1.27, Node 24, [Task](https://taskfile.dev) and golangci-lint v2.13.
 
 ```bash
 task sdl
 task app:install
 task ci
-task build
+task package:installer VERSION=v1.0.0
 ```
 
-本仓库只包含代码，不能构建安装包。安装包请从 GitHub Release 或 padmate.download 下载。
+## License
 
-## 许可证
-
-本项目以 [MIT](LICENSE) 许可证发布。
+This project is released under the [MIT](LICENSE) License.

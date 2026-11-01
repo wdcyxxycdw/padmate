@@ -1,4 +1,4 @@
-// Stand-ins for padmate/math and StickState.direction (SCRIPTING §2.1),
+// Stand-ins for padmate/math and StickState.direction,
 // which the M0d stub does not have. Angles: 0° is up, clockwise.
 
 export function clamp(v: number, lo: number, hi: number): number {
@@ -43,7 +43,7 @@ export function direction(x: number, y: number, sectors: 4 | 8, opts: DirectionO
   return Math.floor(((a + size / 2) % 360) / size);
 }
 
-/** Turns a rate in Hz into whole events per call (SCRIPTING §1.4): dt is
+/** Turns a rate in Hz into whole events per call: dt is
  * cut to two tick periods and a call returns at most maxPerCall. */
 export class RateAccumulator {
   private acc = 0;

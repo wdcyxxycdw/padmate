@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/haptic"
 )
 
-// This file connects the effect channel (internal/haptic, ADR-0065) to the
+// This file connects the effect channel (internal/haptic, ADR-0015) to the
 // gamepads: T-input owns a haptic.Mixer, registers each open gamepad with it
 // through an Effector that wraps the *sdl.Gamepad and the capabilities SDL
 // reports, and drives it from its loop with the wall clock. The three ways

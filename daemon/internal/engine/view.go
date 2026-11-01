@@ -16,7 +16,7 @@ type View struct {
 	// FunctionKey is the function key (control.Back, control.Start or
 	// control.Guide) while it is held and a press looks its control up in the
 	// function set first (ActiveFunctionKey), control.Invalid when it is not
-	// held (profiles.explain, ADR-0071).
+	// held (profiles.explain, ADR-0016).
 	FunctionKey control.Control
 }
 

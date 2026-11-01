@@ -177,7 +177,7 @@ func (f *fakeWindowReader) Window(hwnd uintptr) (windowInfo, error) {
 	return w, nil
 }
 
-// overlayLike is a window that looks like the overlay of ADR-0063: topmost,
+// overlayLike is a window that looks like the overlay of ADR-0014: topmost,
 // click-through, layered and never activated.
 var overlayLike = windowInfo{
 	HWND:    0x40B8E,

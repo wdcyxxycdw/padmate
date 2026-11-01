@@ -1,7 +1,7 @@
 # The Windows installer (PKG-03, PKG-06). `task package:installer VERSION=v0.14.0`
 # stages the daemon, the CLI, SDL3.dll and the documents in ../dist/installer-stage
 # (daemon/tools/packageinstaller), builds the app, and runs electron-builder with
-# the version from VERSION (app/scripts/package-installer.mjs). docs/build-installer.md.
+# the version from VERSION (app/scripts/package-installer.mjs).
 #
 # Paths are relative to app/. The version is not here: the script passes
 # extraMetadata.version, so no file has to be edited for a release.
@@ -11,7 +11,7 @@ executableName: padmate
 copyright: Copyright (c) 2026 padmate contributors
 directories:
   output: ../dist/installer
-# The source of the automatic update (PKG-10, ADR-0078): the download site,
+# The source of the automatic update (PKG-10, ADR-0018): the download site,
 # which holds latest.yml and the installers in its root. With --publish never
 # this only makes electron-builder write resources\app-update.yml and
 # latest.yml next to the installer; nothing is uploaded from here, and the
@@ -51,7 +51,7 @@ extraResources:
 # and before NSIS packs it. electron-builder reads the numeric file version out
 # of the string "0.15.1-rc.1" as 0.15.0.1, so this writes MAJOR.MINOR.PATCH.0
 # (PKG-06); that edit drops the signature, so the hook signs the file again
-# (PKG-09, docs/build-installer.md).
+# (PKG-09).
 afterSign: ./scripts/stamp-exe-version.mjs
 win:
   target:
@@ -60,7 +60,7 @@ win:
   icon: ../dist/installer-stage/icon.ico
   requestedExecutionLevel: asInvoker
   # Whether and how to sign is chosen by PADMATE_SIGN in the environment of
-  # scripts/package-installer.mjs (none, store, pfx or azure; ADR-0073), never
+  # scripts/package-installer.mjs (none, store, pfx or azure; ADR-0018), never
   # here: no certificate file, password, thumbprint or Azure account belongs in
   # this file (TestElectronBuilderConfig). A signing mode makes the script pass
   # forceCodeSigning=true, so that a build that cannot sign fails. The default
@@ -76,7 +76,7 @@ win:
       - sha256
     rfc3161TimeStampServer: http://timestamp.digicert.com
 nsis:
-  # A wizard: folder page, progress, finish page with "run padmate" (ADR-0068).
+  # A wizard: folder page, progress, finish page with "run padmate" (ADR-0018).
   # electron-builder's assisted installer offers an all-users install, which
   # needs administrator rights; padmate installs for the current user only
   # and never asks for elevation: build/installer.nsh skips that page for good
@@ -102,7 +102,7 @@ nsis:
     - en_US
   differentialPackage: false
   runAfterFinish: true
-  # A desktop shortcut as well (ADR-0074). "always" also makes it when an
+  # A desktop shortcut as well (ADR-0018). "always" also makes it when an
   # installer runs over an installation that has none (every one before
   # v1.0.2), and again when the user deleted it, but not in an automatic
   # update (--updated), which keeps the shortcuts as they are. The uninstaller

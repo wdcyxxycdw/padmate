@@ -1,4 +1,4 @@
-# Sequence and text actions (MAP-22, OUT-21, ADR-0070) on four gestures. The
+# Sequence and text actions (MAP-22, OUT-21, ADR-0012) on four gestures. The
 # press time is 10 ms and the gap 15 ms.
 # A press: Ctrl+A, a wait of 100 ms from the release, a text a character every
 # 15 ms, then Enter 15 ms after the last character.

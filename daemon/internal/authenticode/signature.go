@@ -1,6 +1,6 @@
 // Package authenticode reads the Authenticode signature of a Windows
 // executable, to check that a release is signed by the right publisher
-// (PKG-09, ADR-0073).
+// (PKG-09, ADR-0018).
 //
 // Two questions are answered in two ways. Who signed it, whether it is
 // timestamped and with which hash is read here in pure Go from the PE file's

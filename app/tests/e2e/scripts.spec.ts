@@ -125,7 +125,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     await expect.poll(() => opened(f)).toEqual([join(macros, "复制全部.ts")]);
 
     // 2. The drawer binds it to A's 点按 (the key's only mapping, so a press
-    // in the file: ADR-0076), replacing its shortcut, saved at once (UI-43);
+    // in the file: ADR-0013), replacing its shortcut, saved at once (UI-43);
     // the fake controller runs it, and the mapping page's key preview names
     // it.
     await page.getByRole("button", { name: "映射", exact: true }).click();
@@ -164,7 +164,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
       await expect(preview).toHaveText("S → 复制全部");
       // One drawing of the control (UI-44) and one of the script (SCR-50).
       // The fake pad is a standard one: its face keys are drawn by position,
-      // with the pressed one lit (ADR-0079 §7).
+      // with the pressed one lit (ADR-0013).
       const control = preview.locator(".control-icon");
       await expect(control).toHaveCount(1);
       await expect(control).toHaveAttribute("data-kind", "art");

@@ -16,13 +16,13 @@
 //     names and the targets of layer actions must exist, every action obeys
 //     the action rules that engine.Compile checks too (ARCHITECTURE §7.7),
 //     and a binding without an action is a warning. The set of bindings
-//     used while the function key is held (MAP-27, ADR-0075), FunctionSet,
+//     used while the function key is held (MAP-27, ADR-0012), FunctionSet,
 //     and the old format's sets, FunctionKeys, are resolved like layers;
 //     which control is the function key is config.json's choice, so a
 //     binding on back, start or guide is kept here and engine.Compile
 //     ignores the one that is.
 //
-// A profile of the library may extend another (PRO-19, ADR-0070): Resolve
+// A profile of the library may extend another (PRO-19, ADR-0012): Resolve
 // merges the chain of parents into one document first (extends.go) and checks
 // that, so a merged profile passes the same three stages, and a diagnostic
 // is reported in the file of the profile that has the problem. Parse is
@@ -35,7 +35,7 @@
 //
 // The profile format is defined by the JSON Schema in
 // schema/profile.schema.json at the repository root, its single source
-// (ADR-0008). go:embed cannot reach outside the daemon module, so go
+// (ADR-0007). go:embed cannot reach outside the daemon module, so go
 // generate (task gen) copies it byte for byte to profile.schema.json in this
 // directory, which the package embeds. The copy is a generated file: edit the
 // root schema and run task gen. TestSchemaCopyCurrent and CI's go generate

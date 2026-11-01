@@ -26,7 +26,7 @@
 // fake clock and file system. A file system with a coarse modification
 // time (FAT) can hide a save of the same size within one tick of it.
 //
-// Ignore is for the daemon's own writes of the file (ADR-0002): when the
+// Ignore is for the daemon's own writes of the file (ADR-0007): when the
 // next read of the settled file finds content with an ignored sum, it is
 // taken as seen without a change. Each such read forgets every sum
 // ignored, so an own write that a save overwrote within the debounce

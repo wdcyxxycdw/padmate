@@ -1,5 +1,5 @@
 // Package output turns keys into keyboard events and injects them. The mouse
-// wheel keys are events too (ADR-0062): a notch is momentary, so its press is
+// wheel keys are events too (ADR-0004): a notch is momentary, so its press is
 // the whole action and its release (KeyEvent.Silent) injects nothing. The
 // mouse buttons are held like keys, with a button down and a button up, and
 // are never pressed again while they are down.

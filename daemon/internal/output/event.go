@@ -22,7 +22,7 @@ type KeyEvent struct {
 	// be the zero Key.
 	Key keys.Key
 	// Mouse is the mouse input of a mouse event, and keys.MouseNone for a
-	// keyboard event. KeyEventFor sets it for a mouse key (ADR-0062). It
+	// keyboard event. KeyEventFor sets it for a mouse key (ADR-0004). It
 	// decides what is injected: the press of a wheel key turns the wheel one
 	// notch, and its release injects nothing (Silent); a button's press and
 	// release are its down and up.
@@ -52,10 +52,10 @@ type KeyEvent struct {
 	// absolute position, 0 to 65535 across the virtual desktop. Both are 0 for
 	// every other event. The injection tests' mouse canary is a pair of moves,
 	// Dx +1 then Dx -1, that a mouse hook can see and that leaves the cursor
-	// where it was even if it leaks (ADR-0062).
+	// where it was even if it leaks (ADR-0004).
 	Dx, Dy int32
 	// Unicode marks an event that types a character instead of pressing a key
-	// (ADR-0070, OUT-21): the injection sets KEYEVENTF_UNICODE, with wVk 0 and the
+	// (ADR-0012, OUT-21): the injection sets KEYEVENTF_UNICODE, with wVk 0 and the
 	// UTF-16 code unit Unit in wScan. The system hands the foreground thread a
 	// VK_PACKET key, which the application turns into the character. Nothing of
 	// the layout, the IME or the modifier state of padmate comes into it. A
@@ -156,7 +156,7 @@ func (e KeyEvent) release() KeyEvent {
 func (e KeyEvent) sameKey(o KeyEvent) bool { return e.ID() == o.ID() }
 
 // momentary reports whether e is an event of a key with no held state: a
-// wheel notch, whose press is the whole action (ADR-0062). A mouse button is
+// wheel notch, whose press is the whole action (ADR-0004). A mouse button is
 // not: it is held like a key.
 func (e KeyEvent) momentary() bool { return e.Mouse.IsWheel() }
 
@@ -253,7 +253,7 @@ func (id KeyID) String() string {
 //     translated like the physical key, so it gives VK_NUMPAD7 for 0x47
 //     with NumLock on and VK_HOME with NumLock off. By VK they always
 //     arrive as VK_NUMPAD0–9 and VK_DECIMAL, whatever the NumLock state.
-//   - The media and volume keys (VolumeUp and its kin, ADR-0070, OUT-20): the
+//   - The media and volume keys (VolumeUp and its kin, ADR-0012, OUT-20): the
 //     VK of VK_VOLUME_UP, VK_MEDIA_PLAY_PAUSE and the like, with the E0 scan
 //     code in wScan and KEYEVENTF_EXTENDEDKEY, as the physical key sends them.
 //     Whatever the layout, the key is the key; what the hook sees of it has not

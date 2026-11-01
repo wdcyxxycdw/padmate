@@ -7,7 +7,7 @@ import {
   LOG_LIMIT,
   type PadmateState,
   type PadmateStore,
-} from "../store";
+} from "../state/store";
 import { Segmented } from "../ui/controls";
 import { Icon } from "../ui/Icon";
 import { EmptyState } from "./EmptyState";

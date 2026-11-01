@@ -11,7 +11,7 @@ import (
 
 // The decision at the end of a multi-tap window with no action for its taps
 // answers a press that waited: it exists so that the row of an unbound press
-// that is only waiting (ADR-0071) does not stay unanswered. A cycle that
+// that is only waiting (ADR-0016) does not stay unanswered. A cycle that
 // something else has already answered, with a press or release action that
 // ran or a script that took the gesture, has its decisions, and the end of its
 // window says nothing more: "no action for one tap" would contradict the key

@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The mouse buttons of ADR-0062 (second batch) are held like keys: unlike the
+// The mouse buttons of ADR-0004 (second batch) are held like keys: unlike the
 // wheel keys they go down with their first reference and up with their last,
 // keep the minimum press, the gap between taps and the event gap, and every
 // release is injected. What they never get is a second press while they are

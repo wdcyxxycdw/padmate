@@ -1,5 +1,5 @@
 // What Main, the main window's page and the overlay's page share (HUD-04,
-// HUD-05, HUD-03, SCR-22, ADR-0063): the channels Main sends on, the page-side
+// HUD-05, HUD-03, SCR-22, ADR-0014): the channels Main sends on, the page-side
 // API the overlay's preload exposes, the preferences the UI pushes to Main and
 // the rules for what crosses. Main -> overlay only; the overlay can send
 // nothing back.

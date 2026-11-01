@@ -30,8 +30,8 @@ import (
 // benchPads are the virtual gamepads of TestLatencyLive: the first for
 // every row, all four for row H. Their names differ in the first 9 bytes,
 // from each other and from liveTestPad, so that each gets a GUID and a
-// name of its own (docs/PITFALLS.md "DeviceKey 的依据"), and --device bench selects them only: not
-// the idle "XInput Controller #1" (docs/hardware-matrix.md), nor a key's GUID, which is hex.
+// name of its own (docs/PITFALLS.md "What DeviceKey rests on"), and --device bench selects them only: not
+// the idle "XInput Controller #1", nor a key's GUID, which is hex.
 var benchPads = [benchPadsMax]string{"lat1bench pad", "lat2bench pad", "lat3bench pad", "lat4bench pad"}
 
 // benchControls are the buttons benchProfile binds to benchKeys, each to

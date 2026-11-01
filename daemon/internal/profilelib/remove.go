@@ -39,7 +39,7 @@ func (e *UnsupportedError) Error() string {
 
 // ConfigReferences lists every config.json rule that selects id, including
 // disabled rules, which would select it again once enabled. The retired
-// defaultProfile member selects nothing (ADR-0053), so it is no reference.
+// defaultProfile member selects nothing (ADR-0008), so it is no reference.
 func ConfigReferences(c *profile.Config, id string) []string {
 	var refs []string
 	for i, rule := range c.Rules {
@@ -82,7 +82,7 @@ func (l *Library) SetRemoveHook(hook func(tmp string)) {
 // inside the folder is deleted itself, never followed (os.Root). config.json
 // must not select the profile. The caller makes sure the profile is not the
 // active one. The fixed default profile is never deleted (*FixedError).
-// The profiles that extend this one (PRO-19, ADR-0070) are written whole
+// The profiles that extend this one (PRO-19, ADR-0012) are written whole
 // first, the merge of their chain without extends, so that they keep what
 // they inherited (RemoveFlattening).
 //

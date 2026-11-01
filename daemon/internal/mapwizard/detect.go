@@ -1,5 +1,5 @@
 // Package mapwizard is the logic of the controller mapping wizard (IN-19,
-// ADR-0072): from the raw events of one joystick it finds the element the
+// ADR-0012): from the raw events of one joystick it finds the element the
 // user pressed or pushed for each control that the wizard asks for, and
 // builds the SDL mapping string from the answers.
 //

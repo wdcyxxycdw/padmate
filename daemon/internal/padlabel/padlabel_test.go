@@ -12,7 +12,7 @@ import (
 )
 
 // uiLabels is the UI's own table: controllerLabels of the mapping page.
-const uiLabels = "../../../app/src/renderer/controller-model.ts"
+const uiLabels = "../../../app/src/renderer/controller/controller-model.ts"
 
 // labelDriver prints controllerLabels of each case it gets, or exits 3
 // when node cannot run TypeScript.

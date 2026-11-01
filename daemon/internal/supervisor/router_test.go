@@ -625,7 +625,7 @@ func TestRehomeFree(t *testing.T) {
 
 // TestReclaimFull drives the router over two slots, both taken: a gamepad
 // that reconnects takes its home slot back from the stand-in there, which
-// waits again, first; the other slot gets nothing (ADR-0019 decision 4).
+// waits again, first; the other slot gets nothing (ADR-0003).
 func TestReclaimFull(t *testing.T) {
 	const a, b, c = "0a0a", "0b0b", "0c0c"
 	r := newTestRouter(2)
@@ -869,7 +869,7 @@ func TestPolicySlots(t *testing.T) {
 }
 
 // TestDropWhileBehind pins a drop counted after a Sync's barriers went out
-// (ADR-0023): a slot that is not behind gets the reset after its barrier,
+// (ADR-0003): a slot that is not behind gets the reset after its barrier,
 // whose Want is the state before the reset; a slot that is behind gets it
 // in pending, before the Resync and its waiting barrier.
 func TestDropWhileBehind(t *testing.T) {

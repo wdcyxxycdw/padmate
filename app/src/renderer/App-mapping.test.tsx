@@ -17,13 +17,13 @@ import type {
   StatusResult,
 } from "../shared/api";
 import { App } from "./App";
-import { editorAPIFixture } from "./editor-api-fixture";
-import { createPadmateStore } from "./store";
+import { createPadmateStore } from "./state/store";
+import { editorAPIFixture } from "./testing/editor-api-fixture";
 
-// Settings → 手柄调校 (IN-18, IN-19, ADR-0072): a controller SDL does not
+// Settings → 手柄调校 (IN-18, IN-19, ADR-0012): a controller SDL does not
 // know says so and offers 建立映射…; a known one has 重新映射… in the menu of
 // its row; one with a mapping of its own can have the default back, after a
-// confirm. The wizard itself is covered in pages/MappingWizardDialog.test.tsx.
+// confirm. The wizard itself is covered in pages/settings/MappingWizardDialog.test.tsx.
 
 const guid = "ff00aabb000000000000000000007600";
 

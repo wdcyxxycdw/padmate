@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The wheel keys of ADR-0062 are momentary: a press turns the wheel one
+// The wheel keys of ADR-0004 are momentary: a press turns the wheel one
 // notch, a release injects nothing. The Arbiter still sends both (its ledger,
 // Repeat and the recorders rely on every press having its release); the
 // Sender leaves the silent release out. These tests check both views: the

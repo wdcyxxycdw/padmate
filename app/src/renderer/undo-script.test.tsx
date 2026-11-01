@@ -20,8 +20,8 @@ import type {
 } from "../shared/api";
 import type { Profile } from "../shared/generated/schema";
 import { App } from "./App";
-import { editorAPIFixture } from "./editor-api-fixture";
-import { createPadmateStore } from "./store";
+import { createPadmateStore } from "./state/store";
+import { editorAPIFixture } from "./testing/editor-api-fixture";
 
 afterEach(() => {
   cleanup();

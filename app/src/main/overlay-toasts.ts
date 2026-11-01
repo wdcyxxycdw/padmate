@@ -8,7 +8,7 @@ import {
   toastHoldFrom,
 } from "../shared/overlay";
 
-// What the overlay says when something changes (HUD-04, ADR-0063). The
+// What the overlay says when something changes (HUD-04, ADR-0014). The
 // daemon already tells the UI everything in its periodic engine.activity
 // state events; this takes the changes out of them. reduceToast is a pure
 // function of the last state, one event and what Main knows (is the editor

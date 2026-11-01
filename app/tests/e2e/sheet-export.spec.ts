@@ -1,5 +1,5 @@
 // OUT-18: shortcuts are recorded in the drawer, and the table lists them. The
-// starter templates this file once tested are gone (ADR-0076).
+// starter templates this file once tested are gone (ADR-0013).
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -31,7 +31,7 @@ const tableProfile = {
   schemaVersion: 0,
   name: "录入测试",
   // Not on start: it is the function key unless the settings say otherwise,
-  // and what a file binds on it is not used (ADR-0075).
+  // and what a file binds on it is not used (ADR-0012).
   common: {
     leftstick: {
       label: "切换",

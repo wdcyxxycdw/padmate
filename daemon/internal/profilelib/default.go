@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultID is the library ID of the fixed default profile (PRO-28,
-// ADR-0053), the profile of every application no rule binds. An existing
+// ADR-0008), the profile of every application no rule binds. An existing
 // profiles/default folder is the default as it is.
 const DefaultID = profile.DefaultProfileID
 

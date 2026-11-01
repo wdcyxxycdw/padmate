@@ -127,7 +127,7 @@ test("a knob is set up with its step and ticks, and turning the stick sends a ti
 
     await panel.locator('.analog-row[data-control="rs.cw"]').click();
     const cw = panel.getByRole("region", { name: "顺时针一格", exact: true });
-    // A step is one shortcut: no mappings, sequence or script (ADR-0079 §8).
+    // A step is one shortcut: no mappings, sequence or script (ADR-0013).
     for (const name of ["添加其他动作", "增加动作序列", "脚本"])
       await expect(cw.getByRole("button", { name, exact: true })).toHaveCount(
         0,

@@ -1,11 +1,11 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// The constants of the automatic update (PKG-10, ADR-0073). Only Main uses
+// The constants of the automatic update (PKG-10, ADR-0018). Only Main uses
 // them; the window never names a URL or a folder.
 
 /**
- * The download site the updates are read from (ADR-0078): latest.yml and the
+ * The download site the updates are read from (ADR-0018): latest.yml and the
  * installers sit in its root. It ends in a slash, because latest.yml names the
  * installer by a relative path that is resolved against it. The same address
  * is in electron-builder.yml's publish block (which becomes

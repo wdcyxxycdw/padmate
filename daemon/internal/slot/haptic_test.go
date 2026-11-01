@@ -76,7 +76,7 @@ func TestOnHaptic(t *testing.T) {
 }
 
 // TestSwitchesAndRefreshFeedback: Config.Switches is the engine's source of the
-// global feedback switches (UI-27, ADR-0067). The rumble switch silences a
+// global feedback switches (UI-27, ADR-0015). The rumble switch silences a
 // haptic as soon as it is off, and RefreshFeedback has the engine publish the
 // layer and feedback state again with the switches as they are now.
 func TestSwitchesAndRefreshFeedback(t *testing.T) {

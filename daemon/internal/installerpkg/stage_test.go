@@ -13,12 +13,11 @@ func TestStagedName(t *testing.T) {
 		"SDL3.dll":                         "resources/bin/SDL3.dll",
 		"LICENSE":                          "resources/LICENSE",
 		"README.md":                        "resources/README.md",
-		"README.en.md":                     "resources/README.en.md",
-		"docs/guide/00-index.en.md":        "resources/docs/guide/00-index.en.md",
+		"README.zh-CN.md":                  "resources/README.zh-CN.md",
+		"docs/guide/00-index.zh-CN.md":     "resources/docs/guide/00-index.zh-CN.md",
 		"examples/profiles/basic.json":     "resources/examples/profiles/basic.json",
 		"licenses/go/x@v1/LICENSE":         "resources/licenses/go/x@v1/LICENSE",
 		"schema/profile.schema.json":       "resources/schema/profile.schema.json",
-		"docs/known-limitations.en.md":     "resources/docs/known-limitations.en.md",
 		"licenses/THIRD-PARTY.txt":         "resources/licenses/THIRD-PARTY.txt",
 		"licenses/SDL3-LICENSE.txt":        "resources/licenses/SDL3-LICENSE.txt",
 		"examples/scripts/tabmate/main.ts": "resources/examples/scripts/tabmate/main.ts",
@@ -27,10 +26,7 @@ func TestStagedName(t *testing.T) {
 			t.Errorf("stagedName(%q) = %q, %v; want %q", name, got, ok, want)
 		}
 	}
-	if got, ok := stagedName("README-PORTABLE.md"); ok {
-		t.Errorf("README-PORTABLE.md is staged as %q: it is about the zip", got)
-	}
-	for _, name := range []string{"docs/build-installer.md", "docs/adr/0060-installer.md", "examples/scripts/tabmate/README.md"} {
+	for _, name := range []string{"docs/ARCHITECTURE.md", "docs/adr/0018-installer-and-updates.md", "examples/scripts/tabmate/README.md"} {
 		if got, ok := stagedName(name); ok {
 			t.Errorf("%s is staged as %q: it is not a user document", name, got)
 		}

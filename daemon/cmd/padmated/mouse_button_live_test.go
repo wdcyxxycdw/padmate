@@ -17,7 +17,7 @@ import (
 )
 
 // mouseProfile binds east to MouseLeft and south to Shift+MouseRight as holds
-// (ADR-0062).
+// (ADR-0004).
 const mouseProfile = "testdata/mouse-hold.json"
 
 // mouseLive starts live mode with --inject on a fakeSource, with the

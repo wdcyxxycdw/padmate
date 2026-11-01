@@ -24,7 +24,7 @@ const HostGlobal = "__padmate"
 const BundleGlobal = "__padmate_bundle"
 
 // MacroGlobal is the global variable that receives a macro's exports
-// (SCR-50, ADR-0055). esbuild declares it with a top-level var, which a
+// (SCR-50, ADR-0011). esbuild declares it with a top-level var, which a
 // script cannot delete: each macro the host loads overwrites it, and the
 // host reads its default export, the macro's function, after each.
 const MacroGlobal = "__padmate_macro"
@@ -36,7 +36,7 @@ const MacroAPIGlobal = "__padmate_macro_api"
 
 // MacroExports are the members of the padmate module in a macro, in the
 // order the module exports them. A macro cannot import the members that
-// take over input or outlive a run (ADR-0055 decision 1).
+// take over input or outlive a run (ADR-0011).
 var MacroExports = []string{"host", "key", "sleep", "now", "log", "pad", "session"}
 
 // BuildOptions says what to bundle.

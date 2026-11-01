@@ -72,7 +72,7 @@ type Options struct {
 	// ComboHold replaces ComboHold as the hold time of the combos, for
 	// tests; 0 or less keeps ComboHold.
 	ComboHold time.Duration
-	// ReceiverTimeout turns on the receiver watchdog (IN-30, ADR-0029)
+	// ReceiverTimeout turns on the receiver watchdog (IN-30, ADR-0002)
 	// with this timeout: T-input reads the HID reports of every Switch Pro
 	// protocol device on USB (057e:2009, SDL's HIDAPI driver), and once one
 	// has proven that it reports while its input does not change, reports
@@ -93,7 +93,7 @@ type Options struct {
 	// PowerPollEvery is how often T-input reads the power with
 	// PowerEvents on; 0 means every 30 s. Tests shorten it.
 	PowerPollEvery time.Duration
-	// Mappings are the custom gamepad mappings (IN-18, ADR-0072): SDL mapping
+	// Mappings are the custom gamepad mappings (IN-18, ADR-0012): SDL mapping
 	// strings, at most one for each GUID, that SDL is to read joysticks with.
 	// nil leaves them alone, as "padmatectl monitor" and "record" do. A non-nil
 	// list, also an empty one, makes Open write them to a database file in the
@@ -105,7 +105,7 @@ type Options struct {
 	// and Open adds the mappings through the API instead.
 	Mappings []string
 	// Log gets T-input's records: the receiver watchdog's (ARCHITECTURE
-	// §5, "日志"), at the watchdog's transitions, and at debug level once
+	// §5.15), at the watchdog's transitions, and at debug level once
 	// a second per watched device. T-input never waits for Log: it queues
 	// each record, up to 256, and a goroutine of the Source writes them
 	// to Log's handler in order. A record that does not fit is dropped;
@@ -942,7 +942,7 @@ func (s *Source) downgrade(d *device, t uint64) {
 	s.forgetEffects(d)
 	// Closing the gamepad of a USB Switch device that the receiver watchdog
 	// gave up puts it in simple mode, where it does not come back (PITFALLS,
-	// "2.4G 接收器"); a dormant device keeps its handle until SDL_Quit.
+	// "2.4 GHz receivers"); a dormant device keeps its handle until SDL_Quit.
 	if d.gp != nil && !d.dormant {
 		d.gp.Close()
 	}

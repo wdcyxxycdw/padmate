@@ -173,7 +173,7 @@ func parseChords(specs []string, stderr io.Writer) ([]sendChord, bool) {
 			continue
 		}
 		// send is a keyboard tool: a wheel notch or a button goes out only through
-		// the daemon (ADR-0062).
+		// the daemon (ADR-0004).
 		if _, isMouse := c.Key().Mouse(); isMouse {
 			fmt.Fprintf(stderr, "padmatectl send: %s: %s is a mouse key; send only taps keyboard keys\n", spec, c.Key())
 			ok = false

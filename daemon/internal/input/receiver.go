@@ -10,7 +10,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is the receiver watchdog on T-input (IN-30, ADR-0029); its
+// This file is the receiver watchdog on T-input (IN-30, ADR-0002); its
 // pure logic is in watchdog.go, its heartbeat sources in hidbeat.go.
 //
 // A watched device lives until its watchdog is lost: T-input then reports

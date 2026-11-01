@@ -35,7 +35,7 @@ const binFolder = "resources/bin"
 // third-party notices, the examples and the schema. The documents are checked
 // apart (documentProblems), since an earlier build has others.
 var RequiredResources = []string{
-	"LICENSE", "README.md", "README.en.md",
+	"LICENSE", "README.md",
 	"licenses/README.md", "licenses/THIRD-PARTY.txt", UIIndexFile, "licenses/SDL3-LICENSE.txt", "licenses/Go/LICENSE",
 	"schema/profile.schema.json", "examples/profiles/basic.json", "examples/traces/basic.jsonl",
 }

@@ -19,7 +19,7 @@ import (
 )
 
 // These tests are the daemon half of the mapping wizard and the custom
-// gamepad mappings (IN-17, IN-18, IN-19, ADR-0072). A fake input stands in for
+// gamepad mappings (IN-17, IN-18, IN-19, ADR-0012). A fake input stands in for
 // SDL; the SDL side is tested in internal/input and in
 // TestMappingWizardWithVirtualJoystick.
 

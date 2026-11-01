@@ -40,7 +40,7 @@ const kept = {
   timing: { holdMs: 320 },
   output: { sendToOwnWindow: false },
 };
-// An older file also has what ADR-0053 retired: the page shows none of it
+// An older file also has what ADR-0008 retired: the page shows none of it
 // and its first write drops it.
 const seed = {
   $schema: kept.$schema,
@@ -264,7 +264,7 @@ test("配置 page creates, binds, moves, switches and deletes profiles through c
       icon("other", "notepad.exe").locator(".app-icon-generic svg"),
     ).toBeVisible();
     await expect(icon("other", "notepad.exe")).not.toContainText("N");
-    // Nothing of what ADR-0053 retired: no list of other apps, no apps
+    // Nothing of what ADR-0008 retired: no list of other apps, no apps
     // where padmate is off, no apps that never switch, no default tag.
     for (const text of ["其他软件", "停用 padmate", "不切换", "高级"])
       await expect(p.getByText(text)).toHaveCount(0);
@@ -296,7 +296,7 @@ test("配置 page creates, binds, moves, switches and deletes profiles through c
 
     // 新建配置 asks for a name only and makes a blank profile: a non-ASCII
     // name gets the fallback library ID. The name field has no placeholder,
-    // and a name in use is refused (ADR-0076).
+    // and a name in use is refused (ADR-0013).
     await p.getByRole("button", { name: "新建配置", exact: true }).click();
     const create = p.getByRole("dialog", { name: "新建配置" });
     await expect(create).toBeVisible();

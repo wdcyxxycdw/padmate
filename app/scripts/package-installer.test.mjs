@@ -16,7 +16,6 @@ import {
   runElectronBuilder,
   signingPlan,
 } from "./package-installer.mjs";
-import { isMirror } from "./public-mirror.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const app = resolve(here, "..");
@@ -833,15 +832,11 @@ describe("an electron-builder.env file cannot bring a certificate back", () => {
   });
 });
 
-// The public code mirror refuses `task package:installer` (and so `task --dry`
-// of it): these tests run in the development repository.
-const describeUnlessMirror = describe.skipIf(isMirror());
-
 // `task package:installer` ends with packageinstaller verify. A signing build
 // must be checked for its signatures without anyone remembering a flag, or the
 // task ends green on a package nobody looked at. `task --dry` prints the
 // commands and runs none.
-describeUnlessMirror("task package:installer verifies what it signed", () => {
+describe("task package:installer verifies what it signed", () => {
   const repoRoot = resolve(app, "..");
   // A cold start of task and of the machine can take far longer than vitest's 5 s.
   const taskTimeout = 70_000;

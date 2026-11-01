@@ -20,7 +20,7 @@ import (
 const maxMacroChecks = 1024
 
 // macroChecks finds the build and load problems of macros for macros.list
-// (design §7) without a gamepad: it builds them and runs their top level
+// without a gamepad: it builds them and runs their top level
 // in a describe-mode runtime, which has no output. It keeps each result by
 // its bundle (checkKey), so a listing runs again only the top level of the
 // macros whose bundle changed: their file or a module they import. It is

@@ -3,7 +3,7 @@ import type { ConnectionState } from "../shared/api";
 type Phase = ConnectionState["phase"];
 
 /**
- * Whether closing the main window only hides it (ADR-0077). While the daemon
+ * Whether closing the main window only hides it (ADR-0013). While the daemon
  * is connected, padmate.exe stays with the page and the controller's model
  * loaded, so a second start (the tray's 打开, the shortcuts) shows the window
  * at once. The window closes for real, and the application quits as before,
@@ -26,7 +26,7 @@ export function closeHides(state: {
 }
 
 /**
- * Whether a window hidden by its close quits the application now (ADR-0077):
+ * Whether a window hidden by its close quits the application now (ADR-0013):
  * once the daemon's connection has ended, a UI nobody sees has nothing left
  * to do, and a second start begins afresh.
  */

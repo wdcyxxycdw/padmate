@@ -22,7 +22,7 @@ const mainWindowMinimized = (app: ElectronApplication) =>
         ?.isMinimized() ?? null,
   );
 
-// PKG-10 (ADR-0073): one window of padmate per set of browser data. After an
+// PKG-10 (ADR-0018): one window of padmate per set of browser data. After an
 // update the installer starts padmate again, and a click on the shortcut twice
 // would otherwise open two. Electron keys the lock by the userData folder, and
 // the tests give each run a folder of its own, so the runs of the other specs
@@ -96,7 +96,7 @@ async function startAgain(env: NodeJS.ProcessEnv): Promise<number | null> {
   });
 }
 
-// ADR-0077: closing the window hides it while the daemon is connected, so the
+// ADR-0013: closing the window hides it while the daemon is connected, so the
 // page and the controller's model stay loaded and the next start shows them
 // at once; the hidden application quits once the daemon goes away.
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.

@@ -156,7 +156,7 @@ type Output interface {
 	Tap(o OwnerID, c keys.Chord, hold time.Duration)
 	Repeat(o OwnerID, c keys.Chord)
 	TapSequence(o OwnerID, items []keys.Chord, hold, gap time.Duration)
-	// Sequence runs the steps of a sequence action (MAP-22, ADR-0070): taps a
+	// Sequence runs the steps of a sequence action (MAP-22, ADR-0012): taps a
 	// shortcut, waits, types a text, one after another, hold being the press time
 	// of a tap and gap the least time between two steps and between the characters
 	// of a text. steps is the action's own slice: the output copies what it keeps.
@@ -168,7 +168,7 @@ type Output interface {
 	RepeatTap(o OwnerID, c keys.Chord, hold time.Duration)
 	StopRepeat(o OwnerID, c keys.Chord)
 	// Move moves the pointer by dx pixels right and dy down, relative to where
-	// it is, for a stick in mode "mouse" (ADR-0062, section 5). It holds
+	// it is, for a stick in mode "mouse" (ADR-0004, section 5). It holds
 	// nothing, so there is nothing to release.
 	Move(o OwnerID, dx, dy int32)
 	// Jump puts the pointer at x, y, each 0 to 65535 across the virtual
@@ -193,7 +193,7 @@ type Options struct {
 	// off (Switches) or the profile's feedback has a strength of 0, while the
 	// engine is paused, or by an input preview.
 	Haptic func(Haptic)
-	// Switches returns the global feedback switches (UI-27, ADR-0067: rumble,
+	// Switches returns the global feedback switches (UI-27, ADR-0015: rumble,
 	// led and pause shape what the engine publishes and plays). The engine asks
 	// each time it publishes a feedback state or plays a haptic, so a change of
 	// config.json applies at once; RefreshFeedback publishes the state again
@@ -262,7 +262,7 @@ type Feedback struct {
 	// and it is not limited to 1 to 4: whoever shows it on four player lights
 	// takes that into account (HUD-08).
 	Mode int
-	// LED is the global led switch (ADR-0067): padmate manages the LED and the
+	// LED is the global led switch (ADR-0015): padmate manages the LED and the
 	// player lights of the controller. When it is false the lights are released.
 	LED bool
 }
@@ -552,7 +552,7 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 		e.physicalReleased[c] = t
 	}
 	if c == e.prog.fnKey {
-		// The function key (MAP-27, ADR-0069, ADR-0075) never enters gesture
+		// The function key (MAP-27, ADR-0012) never enters gesture
 		// recognition: no cycle, no buffering, no script, and it does not
 		// interrupt a pending gesture.
 		e.stepFunctionKey(t, down)
@@ -575,7 +575,7 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 	}
 	if in.Down && in.SuppressActions {
 		// A press the script's button handler consumed starts no cycle: it
-		// has no cycle id and no binding, and the script has it (ADR-0071).
+		// has no cycle id and no binding, and the script has it (ADR-0016).
 		if consumed && e.trace != nil {
 			e.trace(Decision{T: t, Control: c, Edge: EdgeDown, Gesture: GesturePress, Reason: ReasonScript})
 		}
@@ -1605,7 +1605,7 @@ func (e *Engine) Paused() bool { return e.paused }
 // after a pause.
 //
 // A prog with another function key (config.json's functionKey changed,
-// ADR-0075) makes the old key an ordinary control and the new one the
+// ADR-0012) makes the old key an ordinary control and the new one the
 // function key. Nothing is held then: the engine forgets that the function key
 // is held, whichever of the two it was, and the new key, even if it is down
 // now, selects the function set only from its next press. The old key, if it
@@ -1924,7 +1924,7 @@ func (e *Engine) decide(t clock.Time, c control.Control, edge Edge, st *ctlState
 
 // decideNoTapAction records the end of a multi-tap window whose number of
 // taps (g, from tapActionForCount) the binding has no action for, such as a
-// single tap of a binding that has only a double tap (ADR-0071). The press
+// single tap of a binding that has only a double tap (ADR-0016). The press
 // that began the count was unbound and waiting; this is the answer, and says
 // the wait ended with nothing to run. Like the press, it has the binding and
 // level the press resolved, and no action or owner. The edge is EdgeDown, as
@@ -1964,7 +1964,7 @@ func waitsAfterPress(b *profile.Binding) bool {
 }
 
 // decideUnresolved records a gesture g that resolveGesture found no action
-// for, under a script's gesture registry (ADR-0071). It says what happened
+// for, under a script's gesture registry (ADR-0016). It says what happened
 // to it, as the declarations alone would have: a handler or a claim took it
 // (ReasonScript, with no level, binding or action), a binding blocks the
 // control (ReasonBlocked, with that binding and its level), or nothing answers

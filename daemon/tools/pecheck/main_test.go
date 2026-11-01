@@ -12,7 +12,6 @@ import (
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/buildtool"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/exeresources"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 )
 
 func runTool(args ...string) (code int, stdout, stderr string) {
@@ -155,9 +154,7 @@ func TestPECheckRunsWhereTheBuildsAre(t *testing.T) {
 
 }
 
-// The remote workflow is not part of the public code mirror.
 func TestPECheckRunsInTheRemoteWorkflow(t *testing.T) {
-	publicmirror.SkipIfMirror(t, ".github/workflows/ci.yml")
 	data, err := os.ReadFile(filepath.Join("..", "..", "..", ".github", "workflows", "ci.yml"))
 	if err != nil {
 		t.Fatal(err)

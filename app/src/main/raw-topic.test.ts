@@ -26,7 +26,7 @@ function topics(call: { mock: { calls: unknown[][] } }, n: number): string[] {
 
 const settle = () => vi.advanceTimersByTimeAsync(0);
 
-describe("subscribe with the raw topic (IN-17, ADR-0072)", () => {
+describe("subscribe with the raw topic (IN-17, ADR-0012)", () => {
   it("adds input.raw last when the wizard is open, and leaves it out otherwise", async () => {
     const plain = vi.fn(async () => ({}));
     await subscribe(plain);

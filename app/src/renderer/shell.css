@@ -1,4 +1,4 @@
-/* App shell: navigation rail, top bar, page frame (ADR-0045). */
+/* App shell: navigation rail, top bar, page frame (ADR-0012). */
 .app-shell {
   display: flex;
   height: 100%;
@@ -440,7 +440,7 @@
 .bindings-list button:hover {
   background: var(--surface-2);
 }
-/* The icon of the key, then its name (ADR-0076). */
+/* The icon of the key, then its name (ADR-0013). */
 .bindings-control {
   display: flex;
   align-items: center;
@@ -459,7 +459,7 @@
   color: var(--text-3);
   font-size: 12px;
 }
-/* View and Menu: listed, with nothing to open (ADR-0069). */
+/* View and Menu: listed, with nothing to open (ADR-0012). */
 .bindings-list .bindings-fixed {
   min-height: 44px;
   padding: 8px 14px;

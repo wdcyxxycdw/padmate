@@ -135,7 +135,7 @@ func TestNoAllocs(t *testing.T) {
 // dpad.left, a sequence action on leftstick and a text action, and a sequence
 // on hold, on rightstick (MAP-22, OUT-21), and the function set (MAP-27, start
 // is the function key): it rebinds south and west. misc1 has only a
-// double tap, so a single tap ends its window with no action (ADR-0071).
+// double tap, so a single tap ends its window with no action (ADR-0016).
 const gestureAllocProfile = `{"schemaVersion": 0, "name": "alloc", "layers": {
   "base": {
     "west": {"tap": {"type": "keys", "keys": "F13"}, "doubleTap": {"type": "keys", "keys": "F14"}, "hold": {"type": "keys", "keys": "E"}},
@@ -415,7 +415,7 @@ func TestNoAllocsGestures(t *testing.T) {
 }
 
 // TestNoAllocsUnmatchedMultiTap checks that the decision of a multi-tap window
-// that ends with no action for its taps (ADR-0071) allocates nothing with a
+// that ends with no action for its taps (ADR-0016) allocates nothing with a
 // trace, whether the window runs out or another press ends it. Each run of
 // the single tap of misc1, which has only a double tap, makes that one
 // decision; the press that starts the wait is another.

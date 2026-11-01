@@ -243,11 +243,11 @@ func (c Control) String() string {
 func (c Control) IsValid() bool { return c >= South && c <= lastControl }
 
 // DefaultFunctionKey is the function key when config.json does not choose
-// one: Start (Menu, Options, Plus; MAP-27, ADR-0075).
+// one: Start (Menu, Options, Plus; MAP-27, ADR-0012).
 const DefaultFunctionKey = Start
 
 // CanBeFunctionKey reports whether c is one of the controls that config.json
-// can make the function key: Back, Start and Guide (MAP-27, ADR-0075). There
+// can make the function key: Back, Start and Guide (MAP-27, ADR-0012). There
 // is only one function key at a time, the same for every profile: it sends
 // nothing and cannot be bound, and while it is held the other controls use
 // the profile's function set first. Every other control, these two included,

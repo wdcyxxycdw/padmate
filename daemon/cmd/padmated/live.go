@@ -41,7 +41,7 @@ import (
 const liveMaxMs = uint64(24 * time.Hour / time.Millisecond)
 
 // emergencyEvent is the named event that padmatectl release-all signals
-// (DMN-20, ADR-0028). The tests' TestMain sets a name of their own, so that
+// (DMN-20, ADR-0006). The tests' TestMain sets a name of their own, so that
 // no test takes a release-all meant for a padmated that runs.
 var emergencyEvent = emergency.Name
 
@@ -167,7 +167,7 @@ type liveConfig struct {
 	// code to 1. nil leaves the log open.
 	closeLog func(code *int)
 	// heldFile is the path of the held-key log of --inject (OUT-14,
-	// ADR-0027), which T-output sweeps at the start; empty keeps none. live
+	// ADR-0006), which T-output sweeps at the start; empty keeps none. live
 	// sets it to %LOCALAPPDATA%\padmate\run\held.bin. The dry run never
 	// uses it. Most tests leave it empty, so that they never touch the
 	// user's log; TestLatencyLive and the held-key tests put it in a
@@ -314,7 +314,7 @@ type liveRun struct {
 	diagnosticsDone chan struct{}
 	// decisions publishes the engine's decisions and the unrouted button
 	// edges as engine.activity events, on a goroutine of its own
-	// (decision_feed.go, ADR-0071); decisionsStop ends it and decisionsDone
+	// (decision_feed.go, ADR-0016); decisionsStop ends it and decisionsDone
 	// is closed once it has returned.
 	decisions     *decisionFeed
 	decisionsStop context.CancelFunc
@@ -389,7 +389,7 @@ type liveRun struct {
 	// recent lists the latest foreground programs for apps.recent (PRO-16).
 	recent recentApps
 	// startup is the login startup entry, shared by the tray and the
-	// startup RPCs (UI-19, ADR-0052).
+	// startup RPCs (UI-19, ADR-0001).
 	startup *startupControl
 	// configNotice is the repair of config.json the UI has not shown yet
 	// (PRO-29), nil when there is none: status.get reports it until
@@ -455,7 +455,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	// has started finds nothing held; the router's pause, or resume, sets
 	// the gate.
 	//
-	// T-input also watches the receivers (IN-30, ADR-0029): a Switch Pro
+	// T-input also watches the receivers (IN-30, ADR-0002): a Switch Pro
 	// protocol gamepad behind a USB receiver whose heartbeat stops is
 	// reported removed, so its slot releases every key. It logs to log.
 	//
@@ -622,7 +622,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	// The stick calibration of each controller (IN-14) applies at once: a
 	// slot asks for it through the effective config.
 	scfg.Calibration = r.deviceCalibration
-	// The feedback switches (UI-27, ADR-0067) are global and apply at once, as
+	// The feedback switches (UI-27, ADR-0015) are global and apply at once, as
 	// the stick calibration does: the engines read the effective config.
 	scfg.Switches = r.feedbackSwitches
 	pr := r.pr
@@ -632,7 +632,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	}
 	// The decisions and the unrouted button edges go to the IPC clients
 	// through a bounded feed with a publisher goroutine, so that no slot or
-	// router goroutine encodes JSON (ADR-0071).
+	// router goroutine encodes JSON (ADR-0016).
 	r.decisions = newDecisionFeed(r.events, clk, log, 0)
 	printDecision, printEvent := scfg.Trace, scfg.OnEvent
 	scfg.Trace = func(index uint8, decision engine.Decision) {
@@ -791,7 +791,7 @@ func keyNames(evs []output.KeyEvent) []string {
 	return names
 }
 
-// startEmergency listens for padmatectl release-all (DMN-20, ADR-0028):
+// startEmergency listens for padmatectl release-all (DMN-20, ADR-0006):
 // it creates the named event on startLive's goroutine, so that a
 // release-all right after startLive returns reaches it, and waits on it on
 // a goroutine of its own. Each signal releases every key through

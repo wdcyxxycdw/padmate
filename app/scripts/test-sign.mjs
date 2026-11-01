@@ -1,5 +1,5 @@
 // task test:sign: the signing pipeline end to end on this machine with a
-// throwaway certificate (PKG-09, ADR-0073). Opt-in, Windows only, not part of
+// throwaway certificate (PKG-09, ADR-0018). Opt-in, Windows only, not part of
 // task ci. It builds into .cache/signtest and installs, runs and trusts nothing.
 //
 //   node scripts/test-sign.mjs
@@ -41,7 +41,6 @@ import { copyFile, lstat, mkdir, readFile, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findSignTool } from "./package-installer.mjs";
-import { refusePackaging } from "./public-mirror.mjs";
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repo = resolve(app, "..");
@@ -537,8 +536,6 @@ async function snapshot() {
 }
 
 async function main() {
-  // The public code mirror has no documentation to pack.
-  refusePackaging();
   if (process.platform !== "win32") throw new Error("test:sign needs Windows");
   const { work, pfx, bin, out } = folders();
   if (!findSignTool())

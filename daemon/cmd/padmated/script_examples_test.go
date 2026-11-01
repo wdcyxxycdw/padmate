@@ -18,7 +18,6 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script/dtsgen"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
@@ -512,32 +511,18 @@ func TestM6ExamplesTypecheck(t *testing.T) {
 	}
 }
 
-// docsFeedbackExample is the script of docs/SCRIPTING.md section 8.7 (SCR-23):
-// the first ts code block after its heading.
+// docsFeedbackExample is the controller feedback example script (SCR-23):
+// rumble, the light and the battery, each on a button.
 func docsFeedbackExample(t *testing.T) string {
 	t.Helper()
-	publicmirror.SkipIfMirror(t, "docs/SCRIPTING.md")
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "docs", "SCRIPTING.md"))
+	data, err := os.ReadFile(filepath.Join("testdata", "feedback-example.ts"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	text := strings.ReplaceAll(string(data), "\r\n", "\n")
-	_, after, ok := strings.Cut(text, "\n### 8.7 ")
-	if !ok {
-		t.Fatal("SCRIPTING.md has no section 8.7")
-	}
-	_, code, ok := strings.Cut(after, "```ts\n")
-	if !ok {
-		t.Fatal("section 8.7 has no ts code block")
-	}
-	code, _, ok = strings.Cut(code, "```")
-	if !ok {
-		t.Fatal("the ts code block of section 8.7 does not end")
-	}
-	return code
+	return string(data)
 }
 
-// The example of SCRIPTING 8.7 runs as written: each button shows its member on
+// The feedback example runs as written: each button shows its member on
 // a gamepad that can, and a gamepad that cannot gets nothing, whether the
 // script asked first (host.has) or not (the haptic preset).
 func TestScriptingDocFeedbackExample(t *testing.T) {
@@ -612,7 +597,7 @@ func TestScriptingDocFeedbackExample(t *testing.T) {
 	}
 }
 
-// The example of SCRIPTING 8.7 type-checks against the declarations of the
+// The feedback example type-checks against the declarations of the
 // current API, with the real compiler (PADMATE_TEST_TSC).
 func TestScriptingDocFeedbackExampleTypechecks(t *testing.T) {
 	tsc := os.Getenv("PADMATE_TEST_TSC")
@@ -634,7 +619,7 @@ func TestScriptingDocFeedbackExampleTypechecks(t *testing.T) {
 
 // A gesture that a script's handler takes leaves a decision with reason
 // script, and a press that waits for its tap or hold leaves an unbound one
-// that says what it waits for (ADR-0071, ENG-20): the decisions of the
+// that says what it waits for (ADR-0016, ENG-20): the decisions of the
 // production engine, Slot and script runtime over the shipped tabmate example.
 func TestM6ExampleTabmateDecisions(t *testing.T) {
 	var got []string

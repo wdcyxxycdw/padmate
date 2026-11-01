@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// The global feedback switches (UI-27, ADR-0067) and the player lights (HUD-08)
+// The global feedback switches (UI-27, ADR-0015) and the player lights (HUD-08)
 // reach the controller as the ambient state of input.Feedback: PlayerMode is
 // the mode number while the lights switch is on, and 0 otherwise. A fake source
 // stands in for the Source, so no controller is reached and no SDL is needed.
@@ -126,7 +126,7 @@ func TestLiveRumbleOffKeepsTheLights(t *testing.T) {
 // TestLivePauseSwitch (UI-27): pausing and resuming the mapping asks for the
 // pause pulse and color with the default profile, and for nothing but the
 // state with the pause switch off: no pulse, and the color of the layer. The
-// profile's retired pause member does nothing (ADR-0067).
+// profile's retired pause member does nothing (ADR-0015).
 func TestLivePauseSwitch(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
@@ -168,7 +168,7 @@ func TestLivePauseSwitch(t *testing.T) {
 	}
 }
 
-// TestLiveLightsOffAppliesWithoutReload (UI-27, ADR-0067): turning the lights
+// TestLiveLightsOffAppliesWithoutReload (UI-27, ADR-0015): turning the lights
 // switch off in config.json re-publishes the state of the slot without a color
 // and without a mode, so the Source releases the LED and the player lights;
 // the profile is not reloaded (no key is let go, no script restarts), and the

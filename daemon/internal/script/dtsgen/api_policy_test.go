@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The script API policy (M14, docs/SCRIPTING.md §6): the host runs the
+// The script API policy (M14): the host runs the
 // current script API and the previous 0.N, and script.api in profile.json
 // names one of them.
 
@@ -133,7 +133,7 @@ func TestMacroMembersAreStable(t *testing.T) {
 			t.Errorf("macro member %q is not stable", name)
 		}
 	}
-	// The core the documentation names (SCRIPTING §6).
+	// The core the documentation names.
 	for _, name := range []string{"on", "key", "layers", "pad"} {
 		if !slices.Contains(StableMembers, name) {
 			t.Errorf("core member %q is not stable", name)

@@ -21,7 +21,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 )
 
-// startupReportKeys are the fields every report has (UI-45, ADR-0056).
+// startupReportKeys are the fields every report has (UI-45, ADR-0001).
 var startupReportKeys = []string{"cause", "col", "dataDir", "errors", "file", "kind", "line", "message", "pointer", "version"}
 
 // runReport runs padmated with args and --startup-report, first, as the UI

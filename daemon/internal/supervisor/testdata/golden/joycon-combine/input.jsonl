@@ -1,6 +1,6 @@
 # Two Joy-Cons under --hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1, the
 # stream the Source delivers with the fix for gone devices (IN-07,
-# ADR-0022). Joy-Con (L) holds east. Joy-Con (R) wakes: SDL reports R
+# ADR-0002). Joy-Con (L) holds east. Joy-Con (R) wakes: SDL reports R
 # added, L removed, R removed and the pair added. The Source skips R's
 # add (id 2), since R is already gone, and R's removal finds no device;
 # without the fix the stream would also carry a DeviceAdded and a

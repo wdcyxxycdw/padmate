@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// The wheel keys and mouse buttons came with API 0.8 (ADR-0062): MouseKey is declared from 0.8,
+// The wheel keys and mouse buttons came with API 0.8 (ADR-0004): MouseKey is declared from 0.8,
 // and Key is the union with it from 0.8 and the old one before, as two
 // declarations of which the filter keeps one.
 func TestMouseKeyAPIBoundary(t *testing.T) {
@@ -41,7 +41,7 @@ func TestMouseKeyAPIBoundary(t *testing.T) {
 }
 
 // A bare wheel key or mouse button type-checks wherever a KeySpec does, and a
-// chord that ends in one; names it does not have do not (ADR-0062).
+// chord that ends in one; names it does not have do not (ADR-0004).
 func TestMouseKeyTypesWithTSC(t *testing.T) {
 	tsc := os.Getenv("PADMATE_TEST_TSC")
 	if tsc == "" {

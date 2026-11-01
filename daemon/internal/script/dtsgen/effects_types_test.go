@@ -9,7 +9,7 @@ import (
 )
 
 // The rumble and LED members of pad and the battery of pad.info came with API
-// 0.17 (SCR-23, ADR-0066): 0.16's declarations have none of them, 0.17's have
+// 0.17 (SCR-23, ADR-0010): 0.16's declarations have none of them, 0.17's have
 // all, and the gyro, the accelerometer and the touchpad stay 1.3.
 func TestEffectsAPIBoundary(t *testing.T) {
 	for _, tc := range []struct {

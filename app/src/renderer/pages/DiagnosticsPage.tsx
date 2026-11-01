@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { LatencyResult, PadmateAPI } from "../../shared/api";
+import { ControlIcon, controlIcon } from "../controller/control-icon";
+import { controllerLabels, familyName } from "../controller/controller-model";
 import {
   type ActivityRow,
   activityTime,
@@ -12,10 +14,8 @@ import {
   rowKeyName,
   rowResult,
   rowWhere,
-} from "../activity-model";
-import { ControlIcon, controlIcon } from "../control-icon";
-import { controllerLabels, familyName } from "../controller-model";
-import type { Language, PadmateState, PadmateStore } from "../store";
+} from "../state/activity-model";
+import type { Language, PadmateState, PadmateStore } from "../state/store";
 import { Icon } from "../ui/Icon";
 import {
   type Conflict,
@@ -436,7 +436,7 @@ function ConflictsSection({
 }
 
 /**
- * Diagnostics (UI-20, UI-21, UI-22, IN-24, ADR-0071), a view inside Settings
+ * Diagnostics (UI-20, UI-21, UI-22, IN-24, ADR-0016), a view inside Settings
  * like the logs: what happened to the latest presses and why a press did
  * nothing, how long padmate took to send the keys, and software that may
  * hold the controller.

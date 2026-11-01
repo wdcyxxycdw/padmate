@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// The folder page of the installer's wizard (PKG-13, ADR-0068), run in a
+// The folder page of the installer's wizard (PKG-13, ADR-0018), run in a
 // wizard of its own and driven through its windows. The page's functions are
 // the ones of app/build/padmate-wizard.nsh that the installer expands too
 // (PadmatePageFunctions), so what is checked here is the code of the installer

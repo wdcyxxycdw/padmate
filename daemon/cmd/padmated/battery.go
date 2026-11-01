@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/tray"
 )
 
-// The low-battery alert (IN-12, ADR-0065): a controller that discharges down to
+// The low-battery alert (IN-12, ADR-0015): a controller that discharges down to
 // lowBatteryPercent is announced once, on the controller itself, in the tray and
 // on the overlay, and is announced again only after it was charged, plugged in
 // or has climbed to batteryRearmPercent. The thresholds are fixed: the owner
@@ -78,7 +78,7 @@ func newBatteryTracker() *batteryTracker {
 // update takes the power p of the controller key and reports whether an alert
 // is due now, with the number of the episode (unique within a run, for the
 // tray's notice key). enabled is the global lowBattery switch (UI-27,
-// ADR-0067), the same for every controller, with or without a slot.
+// ADR-0015), the same for every controller, with or without a slot.
 //
 //   - Due: the controller discharges, reports a charge of 0 to lowBatteryPercent,
 //     is armed and enabled. One alert per episode.

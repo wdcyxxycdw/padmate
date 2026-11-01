@@ -68,7 +68,7 @@ func TestTooltipUTF16BoundAndFullDetails(t *testing.T) {
 // the menu, by the pad's DeviceKey, and is not in the tooltip, whose 127 units
 // the name and the profile fill. A pad whose power is unknown, that is plugged
 // in (wired) or that has none keeps its line: the menu shows a battery only
-// for a pad that discharges or charges (ADR-0067).
+// for a pad that discharges or charges (ADR-0015).
 func TestPresentWithPower(t *testing.T) {
 	views := []slot.View{
 		{Index: 0, Device: 8, Key: "a", Info: input.DeviceInfo{Name: "Nova"}, Mapping: engine.View{Profile: "绘画"}},

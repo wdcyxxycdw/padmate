@@ -138,7 +138,7 @@ func TestBatteryNotice(t *testing.T) {
 }
 
 // batteryCue is the Alert-class effect on the controller: pulses of three for
-// rumble, the blink for the lights, each gated by its global switch (ADR-0067).
+// rumble, the blink for the lights, each gated by its global switch (ADR-0015).
 func TestBatteryCue(t *testing.T) {
 	update := func(mod func(*profile.Feedback)) supervisor.PowerUpdate {
 		f := profile.DefaultFeedback()

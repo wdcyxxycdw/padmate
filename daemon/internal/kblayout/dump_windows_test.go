@@ -11,7 +11,7 @@ import (
 )
 
 // layoutsEnv enables the tests that load the real keyboard layouts of
-// this machine (ADR-0003).
+// this machine (ADR-0004).
 const layoutsEnv = "PADMATE_TEST_LAYOUTS"
 
 // TestDumpMatchesFixtures dumps the layouts of the fixtures on this

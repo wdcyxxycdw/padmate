@@ -17,7 +17,7 @@ import {
   setBaseBinding,
   setBinding,
   usedGestures,
-} from "../editor-model";
+} from "../editor/editor-model";
 
 export type AnalogGroup = "ls" | "rs" | "lt" | "rt" | "dpad";
 export type DirectionGroup = "ls" | "rs" | "dpad";
@@ -181,7 +181,7 @@ export function setAnalogSettings<K extends AnalogGroup>(
 
 /**
  * The name of a stick's movement on its controller label (analog.ls.label,
- * ADR-0079 §8), or undefined when it has none and the label is generated.
+ * ADR-0013), or undefined when it has none and the label is generated.
  */
 export function stickLabel(
   profile: Profile | null | undefined,

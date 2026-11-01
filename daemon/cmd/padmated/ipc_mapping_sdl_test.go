@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// TestMappingWizardWithVirtualJoystick (IN-17, IN-18, IN-19, ADR-0072) goes
+// TestMappingWizardWithVirtualJoystick (IN-17, IN-18, IN-19, ADR-0012) goes
 // through the wizard's calls against SDL's own virtual joystick, which SDL
 // reads as no gamepad until it has a mapping: the elements come as input.raw
 // events and no key is sent; a mapping turns it into a gamepad that maps like

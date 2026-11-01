@@ -24,7 +24,7 @@ type PowerUpdate struct {
 	// the router's program of this moment (a reload is ordered with the
 	// events): the strength and the pulse times of the alert's buzz. A gamepad
 	// that holds no slot has no profile, and gets the defaults. The switches
-	// (UI-27) are not in it: they are global (config.json feedback, ADR-0067).
+	// (UI-27) are not in it: they are global (config.json feedback, ADR-0015).
 	Feedback profile.Feedback
 }
 

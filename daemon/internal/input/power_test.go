@@ -18,7 +18,7 @@ import (
 
 // TestPowerStateMapping maps every SDL power state, with the percents that
 // go with it, to the four states of the script API (IN-12). SDL_POWERSTATE_ERROR
-// is 4294967295 in go-sdl3 (ADR-0010) and is unknown; so is a state that a
+// is 4294967295 in go-sdl3 (ADR-0002) and is unknown; so is a state that a
 // newer SDL adds. A percent below 0 is not reported, and one above 100 is
 // 100.
 func TestPowerStateMapping(t *testing.T) {
@@ -54,11 +54,11 @@ func TestPowerStateMapping(t *testing.T) {
 		}
 	}
 	if sdl.POWERSTATE_ERROR != 4294967295 {
-		t.Errorf("SDL_POWERSTATE_ERROR = %d, want 4294967295 (ADR-0010)", uint32(sdl.POWERSTATE_ERROR))
+		t.Errorf("SDL_POWERSTATE_ERROR = %d, want 4294967295 (ADR-0002)", uint32(sdl.POWERSTATE_ERROR))
 	}
 }
 
-// TestPowerFromXInput (IN-12, ADR-0067): SDL reports XInput's
+// TestPowerFromXInput (IN-12, ADR-0015): SDL reports XInput's
 // BATTERY_TYPE_WIRED as SDL_POWERSTATE_CHARGING at 100 % (SDL_xinputjoystick.c,
 // and the same code for an XInput-correlated device in SDL_rawinputjoystick.c),
 // and XInput cannot tell charging from wired. A 2.4G receiver for a wireless

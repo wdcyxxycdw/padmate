@@ -471,7 +471,7 @@ func TestReceiverRestBeforeArm(t *testing.T) {
 // TestReceiverChangesNeverArm: a gamepad that reports only when its input
 // changes, here every report with a small change of its left stick and
 // an SDL event inside the band, as a thumb that rests on the stick makes,
-// never arms (ADR-0029 decision 5). So when it holds a button still and
+// never arms (ADR-0002). So when it holds a button still and
 // sends nothing, it is not reported removed.
 func TestReceiverChangesNeverArm(t *testing.T) {
 	s, _ := openReceiver(t, recvTimeout)
@@ -602,7 +602,7 @@ func (w blockedLog) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// TestReceiverLogBlocked: T-input never waits for its log (ADR-0029
+// TestReceiverLogBlocked: T-input never waits for its log (ADR-0002
 // decision 11). With a log that blocks from the first record on, the
 // watchdog still arms, reports the silent gamepad removed and brings it
 // back, and Close waits for the log a bounded time only.

@@ -13,7 +13,6 @@ import (
 	"runtime/debug"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/exeresources"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/sdlpin"
 )
 
@@ -75,9 +74,6 @@ func Collect(ctx context.Context, opts Options) ([]File, error) {
 }
 
 func collect(ctx context.Context, opts Options) ([]entry, error) {
-	if err := publicmirror.RefusePackagingAt(opts.Root); err != nil {
-		return nil, err
-	}
 	if _, err := exeresources.FixedVersion(opts.Version); err != nil {
 		return nil, err
 	}

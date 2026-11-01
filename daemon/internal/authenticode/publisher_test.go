@@ -12,7 +12,7 @@ import (
 // windows-subjects.json: distinguished names as DER and the string Windows'
 // X500DistinguishedName.Name prints for them after decoding, which is what
 // Get-AuthenticodeSignature's SignerCertificate.Subject is. The file was made
-// by Windows PowerShell 5.1 on Windows 11 (docs/build-installer.md, "测试夹具").
+// by Windows PowerShell 5.1 on Windows 11.
 func TestWindowsSubjectIsWhatWindowsPrints(t *testing.T) {
 	var cases []struct {
 		Input   string `json:"input"`

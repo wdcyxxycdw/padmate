@@ -17,7 +17,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// TestLiveInjectVirtual is the automatic acceptance of --inject (ADR-0018;
+// TestLiveInjectVirtual is the automatic acceptance of --inject (ADR-0006;
 // TestPadToProbe is the end-to-end test of M1b): the presses of a virtual
 // gamepad go through live mode with --inject, and a low-level
 // hook sees the keys injected by SendInput, tagged with padmated's nonce,

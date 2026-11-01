@@ -9,7 +9,7 @@ import {
   type OverlayPrefs,
 } from "../shared/overlay";
 
-// The key hints (HUD-03, ADR-0063). While a button bound to the hints action
+// The key hints (HUD-03, ADR-0014). While a button bound to the hints action
 // is held, the daemon's periodic engine.activity state event gives the slot a
 // "hints" list: for each control of the slot's current layer stack, what it
 // does. This takes that list out of the event and hands it to the overlay,

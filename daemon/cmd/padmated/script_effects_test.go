@@ -47,7 +47,7 @@ func effectRig(t *testing.T, fb profile.Feedback, off ...string) (scriptEffects,
 	return scriptEffects{run: r}, r, rec
 }
 
-// The switches of a script's effects are the global ones (ADR-0067): rumble
+// The switches of a script's effects are the global ones (ADR-0015): rumble
 // needs a strength above 0 in the profile as well, and the LED has its own
 // switch. The pause and low-battery switches are not the scripts'.
 func TestScriptEffectsSwitches(t *testing.T) {
@@ -434,7 +434,7 @@ on("south", "press", () => { throw new Error("boom"); });
 
 // The runtime that the lifecycle restarts by itself after an interruption is
 // not a reload: the errors stay, and the same failing script does not buzz
-// again for failing again after its restart (SCRIPTING 4.2).
+// again for failing again after its restart.
 func TestScriptRuntimeBackoffRestartKeepsTheFailureEpisode(t *testing.T) {
 	dir := t.TempDir()
 	const source = `import { on } from "padmate";

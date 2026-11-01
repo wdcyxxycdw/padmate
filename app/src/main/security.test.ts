@@ -24,7 +24,7 @@ import {
 } from "./security";
 
 describe("renderer boundaries", () => {
-  it("gives every window a sandboxed renderer without Node (ADR-0039, ADR-0063)", () => {
+  it("gives every window a sandboxed renderer without Node (ADR-0001, ADR-0014)", () => {
     expect(baseWebPreferences).toEqual({
       contextIsolation: true,
       sandbox: true,
@@ -313,7 +313,7 @@ describe("renderer boundaries", () => {
   });
 });
 
-describe("the overlay's preload (HUD-04, HUD-03, SCR-22, ADR-0063)", () => {
+describe("the overlay's preload (HUD-04, HUD-03, SCR-22, ADR-0014)", () => {
   const read = (path: string) =>
     readFileSync(new URL(path, import.meta.url), "utf8");
   const preload = read("../preload/overlay.ts");

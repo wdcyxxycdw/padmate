@@ -3,8 +3,8 @@ import {
   mediaKeyLabel,
   mediaKeyName,
   mouseKeyName,
-} from "../shortcut-keys";
-import type { Language } from "../store";
+} from "../editor/shortcut-keys";
+import type { Language } from "../state/store";
 
 const display: Record<string, string> = {
   lctrl: "Ctrl",
@@ -35,7 +35,7 @@ const display: Record<string, string> = {
   delete: "Del",
 };
 
-// The mouse buttons and wheel keys (ADR-0062) in Chinese and English.
+// The mouse buttons and wheel keys (ADR-0004) in Chinese and English.
 const mouseDisplay: Record<MouseKey, readonly [zh: string, en: string]> = {
   MouseLeft: ["左键", "LMB"],
   MouseRight: ["右键", "RMB"],

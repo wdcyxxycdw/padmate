@@ -1,5 +1,5 @@
 # A window that ends with no action for its taps is one decision: unbound, the
-# gesture of the count, the binding of the press (ADR-0071). Nothing is sent.
+# gesture of the count, the binding of the press (ADR-0016). Nothing is sent.
 # A cycle that a press or release action answered has no such decision.
 {"t":0,"control":"west","edge":"down","cycle":1,"gesture":"press","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}
 {"t":250,"control":"west","edge":"down","cycle":1,"gesture":"tap","level":"base","binding":"/layers/base/west","label":"二连击","reason":"unbound"}

@@ -21,9 +21,9 @@ import {
   type DecisionActivity,
   decisionRow,
   unroutedRow,
-} from "../activity-model";
-import { editorAPIFixture } from "../editor-api-fixture";
-import { createPadmateStore, type PadmateStore } from "../store";
+} from "../state/activity-model";
+import { createPadmateStore, type PadmateStore } from "../state/store";
+import { editorAPIFixture } from "../testing/editor-api-fixture";
 import { DiagnosticsPage, LATENCY_POLL_MS } from "./DiagnosticsPage";
 
 function pad(

@@ -16,7 +16,7 @@ import (
 
 // buildMacroPrograms builds the macros files, names in the macros folder of
 // root (the data folder's script library, SCR-51, or the folder of a
-// --profile file), with the script API api (SCR-50, design §5.1). A
+// --profile file), with the script API api (SCR-50). A
 // file that is not in the folder under exactly its name is
 // script.ErrMacroNotFound: a binding never runs a file whose name differs
 // in case, or an 8.3 short name of another. Each program is compiled with

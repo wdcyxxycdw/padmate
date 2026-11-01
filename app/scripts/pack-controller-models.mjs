@@ -1,6 +1,6 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 
-const out = "app/src/renderer/assets";
+const out = "app/src/renderer/controller/assets";
 await mkdir(out, { recursive: true });
 const dir = ".cache/asset-candidates/xbox";
 const j = JSON.parse(await readFile(`${dir}/scene.gltf`, "utf8"));

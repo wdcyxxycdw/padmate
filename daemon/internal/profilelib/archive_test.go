@@ -240,7 +240,7 @@ func TestArchivePathProblem(t *testing.T) {
 	}
 }
 
-// Every macro the scripts page can create exports (ADR-0054, ADR-0055):
+// Every macro the scripts page can create exports (ADR-0008, ADR-0011):
 // the macro rule refuses whatever name the archive refuses below macros/.
 // The seeds include the shared cases of daemon/testdata/macro-names.json.
 func FuzzMacroFileExports(f *testing.F) {

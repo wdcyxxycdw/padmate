@@ -8,7 +8,7 @@ import {
 import type { OverlayHost } from "./overlay";
 
 /**
- * The Electron side of the overlay (HUD-01, ADR-0063). The window is only
+ * The Electron side of the overlay (HUD-01, ADR-0014). The window is only
  * ever shown by showInactive() (overlay.ts); this file adds nothing that
  * could activate it. Its page cannot navigate, open windows or attach
  * webviews, like the main window's. A toast (HUD-04) is a message to the page

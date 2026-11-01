@@ -21,10 +21,10 @@ const maxBatchRequests = 64
 
 // Topics are the subscription topics. daemon.exiting is published, with
 // PublishSync, right before the daemon stops at the user's request (DMN-22,
-// ADR-0056). hud carries the scripts' toasts (SCR-22); a client subscribing
+// ADR-0001). hud carries the scripts' toasts (SCR-22); a client subscribing
 // to it is an overlay, so scripts see host.has("hud") true. input.raw carries
 // the raw joystick events of the controllers that devices.rawInfo asked for
-// (IN-17, ADR-0072); the mapping wizard subscribes to it while it is open.
+// (IN-17, ADR-0012); the mapping wizard subscribes to it while it is open.
 var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "hud", "input.raw"}
 
 type event struct {

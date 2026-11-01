@@ -25,7 +25,7 @@ type WatchdogOptions struct {
 	Poll, Budget, Wall time.Duration
 }
 
-// Standard budgets from SCRIPTING §4.1.
+// Standard budgets of a script call.
 var (
 	HandlerWatchdog  = WatchdogOptions{Poll: 2 * time.Millisecond, Budget: 100 * time.Millisecond, Wall: 2 * time.Second}
 	SetupWatchdog    = WatchdogOptions{Poll: 2 * time.Millisecond, Budget: time.Second, Wall: 2 * time.Second}

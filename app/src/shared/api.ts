@@ -19,7 +19,7 @@ export interface ConnectionState {
   failure?: StartFailure;
 }
 
-// What padmated's --startup-report says (UI-45, ADR-0056), as Main checked
+// What padmated's --startup-report says (UI-45, ADR-0001), as Main checked
 // it: unknown values become "internal" and "other", a missing text or
 // number "" and 0. message is padmated's own English words; file and
 // dataDir are absolute paths, for display only.
@@ -244,7 +244,7 @@ export interface StatusResult {
     message: string;
     document: string;
     /**
-     * Only for kind "steamInput" (IN-24, ADR-0071): the kinds of controller
+     * Only for kind "steamInput" (IN-24, ADR-0016): the kinds of controller
      * whose Steam Input setting may manage a connected pad, in this order and
      * each once: "xbox", "playstation", "switch", "steamHardware".
      */
@@ -269,7 +269,7 @@ export interface ConfigRepair {
   reset: boolean;
 }
 
-// Start at sign-in (UI-19, ADR-0052): the daemon's own HKCU Run entry.
+// Start at sign-in (UI-19, ADR-0001): the daemon's own HKCU Run entry.
 // enabled: Run has a padmate value; current: it is the command this daemon
 // writes (not another copy or mode of padmate). mode is how that command
 // starts padmate, the daemon's own mode; it says nothing about another
@@ -342,7 +342,7 @@ export interface MacroUse {
   control: string;
   gesture: string;
 }
-// A file of the script library (SCR-51, ADR-0057), shared by every profile.
+// A file of the script library (SCR-51, ADR-0013), shared by every profile.
 // name is file without the extension. actions is how many actions run it,
 // in every layer and common of every profile: as many as deleting it
 // clears, where usedBy merges them (a fixture without it counts usedBy).
@@ -398,7 +398,7 @@ export interface ProfileEntry {
   // profiles page lists by it. Absent when the platform does not say.
   created?: number;
   revision?: string;
-  // The parent this profile's text names (PRO-19, ADR-0070): the library ID
+  // The parent this profile's text names (PRO-19, ADR-0012): the library ID
   // of the profile it is based on. Absent for a profile that stands alone.
   extends?: string;
   diagnostics?: ProfileDiagnostic[];
@@ -499,7 +499,7 @@ export interface LayerExplanation {
   actions: Record<string, string>;
 }
 /**
- * The function set (MAP-27, ADR-0071, ADR-0075), shaped like a layer: layer is
+ * The function set (MAP-27, ADR-0016, ADR-0012), shaped like a layer: layer is
  * the level's name in decisions, "function:<function key>" (such as
  * "function:start"); resolution also has "inactive" (the key is not held),
  * "fallthrough" (held, but the set does not bind the control) and "ignored"
@@ -529,7 +529,7 @@ export interface ProfileExplanation {
     functionSet: FunctionSetExplanation;
   }[];
 }
-// The latency statistics of the diagnostics page (DMN-15, ADR-0071): the time
+// The latency statistics of the diagnostics page (DMN-15, ADR-0016): the time
 // from padmate receiving a controller's input edge to the return of the Send
 // call, over the controller's latest samples, in microseconds.
 export interface LatencyDevice {
@@ -869,7 +869,7 @@ export interface PadmateAPI {
   // whatever the profile and the pause say. The answer says which cues it
   // gave. Rejects with code -32004 when it is not connected any more.
   identifyDevice(key: string): Promise<DeviceIdentify>;
-  // The mapping wizard (IN-17, IN-18, IN-19, ADR-0072). device is a
+  // The mapping wizard (IN-17, IN-18, IN-19, ADR-0012). device is a
   // connection ID (DeviceEntry.info.id as text) or a key; use the ID for a
   // controller SDL does not know, whose keys are all the same.
   // rawWatchStart asks for the controller's raw joystick events: they arrive
@@ -1002,7 +1002,7 @@ export interface PadmateAPI {
   // Opens the Game Bar page of Windows Settings (ms-settings:gaming-gamebar,
   // the only address Main opens), where the user turns off "Allow your
   // controller to open Game Bar" when the Xbox button is the function key
-  // (UI-30, ADR-0075). It takes no address.
+  // (UI-30, ADR-0012). It takes no address.
   openGameBarSettings(): Promise<void>;
   // Closing the window (UI-43): Main asks the renderer once, which commits
   // the field being typed in, waits for its saves and then calls
@@ -1042,7 +1042,7 @@ export interface PadmateAPI {
   // Main checks every field and ignores an invalid one; the call takes no
   // part in anything the daemon does.
   setOverlayPrefs(prefs: OverlayPrefs): Promise<void>;
-  // The automatic update (PKG-10, ADR-0073). Main owns the state and pushes
+  // The automatic update (PKG-10, ADR-0018). Main owns the state and pushes
   // each change to onUpdateState; the calls answer with the state they led
   // to. The window sends no version and no address.
   getUpdateState(): Promise<UpdateState>;

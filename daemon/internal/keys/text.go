@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 )
 
-// MaxTextUnits is the longest text a text action or step types (ADR-0070): 256
+// MaxTextUnits is the longest text a text action or step types (ADR-0012): 256
 // UTF-16 code units. A character outside the Basic Multilingual Plane is two
 // units; a newline and a tab are one each.
 const MaxTextUnits = 256
@@ -23,7 +23,7 @@ type TextError struct {
 // Error returns the message.
 func (e *TextError) Error() string { return e.Msg }
 
-// ValidateText checks a text a binding types (ADR-0070, OUT-21): 1 to
+// ValidateText checks a text a binding types (ADR-0012, OUT-21): 1 to
 // MaxTextUnits UTF-16 code units of valid UTF-8, with no control character but
 // the newline (typed as an Enter tap) and the tab (typed as a Tab tap). Control
 // characters are the C0 and C1 ranges and DEL, so a carriage return is refused:

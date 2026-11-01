@@ -90,7 +90,7 @@ linters:
             - "!**/tools/spk03/**"
           deny:
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script/spike
-              desc: the SPK-03 spike is throwaway; write M5 code from docs/SCRIPTING.md instead
+              desc: the SPK-03 spike is throwaway; write production code in internal/script instead
         # simtest is the test harness (ENG-19, ARCHITECTURE §14): only tests
         # import it.
         simtest:
@@ -102,7 +102,7 @@ linters:
           deny:
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/simtest
               desc: simtest is a test harness; import it from _test.go files only
-        # injecttest constructs output.SendInput (invariant 6, ADR-0011):
+        # injecttest constructs output.SendInput (invariant 6, ADR-0004):
         # only tests import it, so that no command injects through it.
         injecttest:
           list-mode: lax

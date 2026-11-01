@@ -1,4 +1,4 @@
-# A mouse button is held like a key (ADR-0062), and a removed device lets go
+# A mouse button is held like a key (ADR-0004), and a removed device lets go
 # of it: Pad A holds east (MouseLeft) and south (Shift+MouseRight) when it is
 # unplugged with no up for either. The removal lets go of both buttons and of
 # Shift. The pad comes back with a new id and its east works again.

@@ -29,7 +29,7 @@ func (r *scriptRuntime) rememberError(err error) {
 		r.lastError = errorText(rest)
 	}
 	// A failure episode lasts until forgetErrors clears the errors (lastError,
-	// macroErrors): its first error buzzes once (SCRIPTING 4.2).
+	// macroErrors): its first error buzzes once.
 	if !failing && r.def.errorCue != nil && r.pad.Connected && r.pad.Info.ID != 0 {
 		r.def.errorCue(r.index, r.pad.Info.ID)
 	}
@@ -40,7 +40,7 @@ func (r *scriptRuntime) rememberError(err error) {
 // reload does it when it is requested, and so does every other way a runtime
 // is installed on purpose: a profile reload, a saved script file. The runtime
 // that the lifecycle restarts by itself after an interruption is not one, so
-// it keeps the errors of the runtime it replaces (ADR-0066).
+// it keeps the errors of the runtime it replaces (ADR-0010).
 func (r *scriptRuntime) forgetErrors() {
 	r.lastError = ""
 	r.macroErrors = nil

@@ -23,6 +23,8 @@ import {
   exceptionsFor,
 } from "../../tests/a11y/exceptions";
 import type { UpdateDialogKind, UpdateState } from "../shared/update";
+import { clearParameterClipboard } from "./analog/analog-parts";
+import { BindConflictDialog } from "./pages/profiles/ProfileDialogs";
 import {
   axeReport,
   controller,
@@ -31,11 +33,9 @@ import {
   pageStructure,
   renderApp,
   rulesThatFailed,
-} from "./a11y-harness";
-import { clearParameterClipboard } from "./analog/analog-parts";
-import { BindConflictDialog } from "./pages/ProfileDialogs";
-import { UpdateDialogs } from "./UpdateDialogs";
-import { supportedUpdateState, updateApi } from "./update-api-fixture";
+} from "./testing/a11y-harness";
+import { UpdateDialogs } from "./update/UpdateDialogs";
+import { supportedUpdateState, updateApi } from "./update/update-api-fixture";
 
 beforeEach(() => localStorage.clear());
 afterEach(cleanup);

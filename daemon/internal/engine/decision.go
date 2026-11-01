@@ -162,11 +162,11 @@ const (
 	ReasonPaused
 	// ReasonBlocked is a layer binding that consumes an input without an action.
 	ReasonBlocked
-	// ReasonFunction is an edge of the function key (MAP-27, ADR-0069,
-	// ADR-0075): it starts no cycle and sends nothing, and only changes which
+	// ReasonFunction is an edge of the function key (MAP-27, ADR-0012,
+	// ADR-0012): it starts no cycle and sends nothing, and only changes which
 	// set the next presses look up first. It has no cycle, level or binding.
 	ReasonFunction
-	// ReasonScript is a gesture that a script took (ADR-0071): a handler of
+	// ReasonScript is a gesture that a script took (ADR-0016): a handler of
 	// the script's gesture registry ran it, a claim of the script ended it,
 	// or the script's button handler consumed the press, or the release of a
 	// cycle that was waiting for a tap, a multi-tap, a hold or a release action

@@ -30,7 +30,7 @@ export const daemonTopics = [
 ] as const satisfies readonly DaemonEvent["topic"][];
 /**
  * The raw joystick events of the controllers the mapping wizard asked for with
- * devices.rawInfo (IN-17, ADR-0072). The one topic of ipc.Topics that is not in
+ * devices.rawInfo (IN-17, ADR-0012). The one topic of ipc.Topics that is not in
  * daemonTopics: the wizard subscribes to it while it is open (a new subscribe
  * call replaces the list), and the default subscription, which a daemon from
  * before this topic must accept, leaves it out.

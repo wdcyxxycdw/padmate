@@ -38,7 +38,7 @@ type Program struct {
 	// Response curves (ANA-13), indexed by curveLS, curveRS, curveLT, curveRT.
 	curves [4]curveKind
 
-	// fnKey is the function key of this Program (MAP-27, ADR-0075): back,
+	// fnKey is the function key of this Program (MAP-27, ADR-0012): back,
 	// start or guide, never control.Invalid. fnSet is the profile's function
 	// set, nil when it has none, and fnLevel the name that set has in lookups
 	// and decisions, profile.FunctionLevel(fnKey).
@@ -55,7 +55,7 @@ type CompileOption func(*compileOptions)
 
 type compileOptions struct{ functionKey control.Control }
 
-// WithFunctionKey makes c the function key of the Program (ADR-0075): back,
+// WithFunctionKey makes c the function key of the Program (ADR-0012): back,
 // start or guide, the one control that sends nothing, cannot be bound and
 // selects the function set while it is held. Any other control, and without
 // this option, means control.DefaultFunctionKey (start). The key comes from
@@ -258,7 +258,7 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 		return nil, fmt.Errorf("engine: default layer %q does not exist", prog.defaultLayer)
 	}
 	// A binding on the function key sends nothing and is not looked up
-	// (ADR-0075): Compile does not even check it, and remembers it for the
+	// (ADR-0012): Compile does not even check it, and remembers it for the
 	// log. Every other control, back, start and guide too, is an ordinary one.
 	for _, l := range p.Layers {
 		for i, b := range l.Bindings {

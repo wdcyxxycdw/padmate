@@ -96,7 +96,7 @@ func TestFeatureTable(t *testing.T) {
 	}
 }
 
-// TestScriptingExpectations pins the features SCRIPTING §3 names.
+// TestScriptingExpectations pins the features names.
 func TestScriptingExpectations(t *testing.T) {
 	results := probeFeatures(features)
 	for name, want := range map[string]bool{

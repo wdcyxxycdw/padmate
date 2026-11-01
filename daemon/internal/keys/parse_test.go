@@ -274,7 +274,7 @@ func TestKeyProperties(t *testing.T) {
 		{"Win", keys.KindModifier, true, keys.ModWin, keys.USMapping{Scan: 0x5B, Ext: true, VK: 0x5B}},
 		{"Pause", keys.KindNamed, false, 0, keys.USMapping{Scan: 0x45, E1: true, VK: 0x13}},
 		// Media keys are E0 keys with the VK of their VK_VOLUME_* or VK_MEDIA_*
-		// constant (ADR-0070).
+		// constant (ADR-0012).
 		{"VolumeUp", keys.KindMedia, false, 0, keys.USMapping{Scan: 0x30, Ext: true, VK: 0xAF}},
 		{"audiovolumemute", keys.KindMedia, false, 0, keys.USMapping{Scan: 0x20, Ext: true, VK: 0xAD}},
 		{"MediaPlayPause", keys.KindMedia, false, 0, keys.USMapping{Scan: 0x22, Ext: true, VK: 0xB3}},

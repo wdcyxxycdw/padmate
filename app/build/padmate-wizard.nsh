@@ -1,4 +1,4 @@
-; The folder page of padmate's installation wizard (PKG-13, ADR-0068), apart
+; The folder page of padmate's installation wizard (PKG-13, ADR-0018), apart
 ; from installer.nsh so that tests can compile and run it by themselves
 ; (daemon/internal/installerpkg/wizard_nsis_windows_test.go runs the rule,
 ; daemon/internal/installersmoke/wizardpage_windows_test.go the page). The Go

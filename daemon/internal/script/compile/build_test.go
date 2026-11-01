@@ -110,7 +110,7 @@ func TestBuild(t *testing.T) {
 			},
 		},
 		{
-			// A known limitation (ADR-0012): the lowered code needs
+			// A known limitation (ADR-0010): the lowered code needs
 			// Symbol.dispose, which goja lacks.
 			name: "using is lowered but fails in goja", root: "using", entry: "main.ts",
 			check: func(t *testing.T, js []byte) {
@@ -398,7 +398,7 @@ func TestDiagnosticString(t *testing.T) {
 	}
 }
 
-// TestFeatureTable checks the embedded table against SCRIPTING §3.
+// TestFeatureTable checks the embedded table against the features scripts may use.
 func TestFeatureTable(t *testing.T) {
 	for name, want := range map[string]bool{
 		"bigint":             true,

@@ -1,5 +1,5 @@
 // Package sdlpin pins the SDL3 release that padmate ships next to its
-// executables (PKG-01, ADR-0007). It is the single source of truth for the
+// executables (PKG-01, ADR-0002). It is the single source of truth for the
 // version and the hashes: tools/sdlfetch (`task sdl`) downloads and checks
 // the DLL against them, and internal/input checks the loaded library's
 // version against Major, Minor and Patch.
@@ -15,7 +15,7 @@
 //  2. Download the zip, check it against those values, and set DLLSHA256
 //     to the SHA-256 of the SDL3.dll inside it.
 //  3. Run `task sdl`, then rerun the hardware matrix
-//     (docs/hardware-matrix.md, ENG-05) with the new DLL.
+//     (ENG-05) with the new DLL.
 package sdlpin
 
 // The pinned SDL release.

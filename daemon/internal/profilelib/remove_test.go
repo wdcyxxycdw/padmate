@@ -135,7 +135,7 @@ func TestRemoveRefusals(t *testing.T) {
 		}
 	}
 	// The retired defaultProfile selects nothing, so it is no reference
-	// (ADR-0053); a null rule names no profile.
+	// (ADR-0008); a null rule names no profile.
 	writeConfig(t, dir, `{"schemaVersion":0,"defaultProfile":"paint","onUnmatched":"default","rules":[
 		{"exe":"a.exe","profile":"other"},
 		{"exe":"b.exe","profile":"paint","enabled":false},

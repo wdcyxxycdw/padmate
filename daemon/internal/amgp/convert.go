@@ -51,7 +51,7 @@ type converter struct {
 	// before the conversion.
 	heldTarget map[int]bool
 	// fn is the set that View (back) and Menu (start) hold in set 1, by
-	// control: the sets that become the function set (ADR-0075).
+	// control: the sets that become the function set (ADR-0012).
 	fn map[string]int
 	// startBound says that a binding on start was imported, which is the
 	// default function key of padmate.
@@ -67,7 +67,7 @@ type converter struct {
 }
 
 // functionKeyControls are the center keys whose hold of a set in set 1 becomes
-// the function set (ADR-0075), with the names the report calls them. Any other
+// the function set (ADR-0012), with the names the report calls them. Any other
 // binding on them is an ordinary one.
 var functionKeyControls = map[string]string{"back": "View（Back）", "start": "Menu（Start）"}
 
@@ -378,7 +378,7 @@ func (cv *converter) convertSet(set *setModel) map[string]*binding {
 
 // functionKey handles a button on back or start. It reports whether the button
 // needs no binding: it holds a set of set 1, which becomes the function set
-// (ADR-0075), or it is the way back that AntiMicroX writes into that set. Any
+// (ADR-0012), or it is the way back that AntiMicroX writes into that set. Any
 // other button on them is an ordinary binding.
 func (cv *converter) functionKey(at loc, set *setModel, name string, btn *buttonModel) bool {
 	// AntiMicroX writes the way back itself where a button holds a set: the

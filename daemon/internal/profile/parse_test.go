@@ -553,7 +553,7 @@ func TestParseM15AnalogErrors(t *testing.T) {
 }
 
 // TestParseStickLabel checks the name of a stick's movement (analog.ls.label,
-// ADR-0079): an optional string the editor shows and the engine ignores.
+// ADR-0013): an optional string the editor shows and the engine ignores.
 func TestParseStickLabel(t *testing.T) {
 	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"named","analog":{"ls":{"label":"画笔大小","mode":"knob"},"rs":{"label":"缩放"}},"layers":{"base":{}}}`))
 	if p == nil || len(ds) != 0 {

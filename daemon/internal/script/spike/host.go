@@ -20,7 +20,7 @@ const (
 	randSeed2 = 0x7061_646d    // "padm"
 )
 
-// MaxCallStackSize is the call depth limit of SCRIPTING §4.1.
+// MaxCallStackSize is the call depth limit of a script call.
 const MaxCallStackSize = 2000
 
 // Host is the SPK-03 stand-in for the M5 script host (SCR-01): the least
@@ -61,7 +61,7 @@ type Registration struct {
 }
 
 // NewHost returns a Host whose runtime has the padmate global, a fixed
-// time and random source and the SCRIPTING §4.1 call depth limit.
+// time and random source and the call depth limit.
 func NewHost() *Host {
 	vm := goja.New()
 	vm.SetTimeSource(func() time.Time { return FixedTime })
@@ -160,7 +160,7 @@ func (h *Host) Handler(control, gesture, layer string) (goja.Callable, error) {
 	return nil, fmt.Errorf("no handler for %s %s on layer %q", control, gesture, layer)
 }
 
-// Event is the part of InputEvent (SCRIPTING §2.1) the spike host fills in.
+// Event is the part of InputEvent the spike host fills in.
 type Event struct {
 	Control, Gesture, Scope string
 	// Time and Duration are in milliseconds.

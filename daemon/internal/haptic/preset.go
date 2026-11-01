@@ -1,4 +1,4 @@
-// Package haptic is the effect channel of a controller (M17, ADR-0065): the
+// Package haptic is the effect channel of a controller (M17, ADR-0015): the
 // presets of the haptics a controller can give, and the Mixer that decides,
 // per controller, which request owns the motors, the LED and the player
 // lights at each moment.

@@ -128,7 +128,7 @@ describe("control boundaries (WCAG 1.4.11, 3:1)", () => {
       declared(css, selector, property);
     expect(uses(ui, ".input,\n.select")).toContain("var(--control-border)");
     expect(uses(ui, ".segmented")).toContain("var(--control-border)");
-    expect(uses(read("drawer.css"), ".drawer-capture")).toContain(
+    expect(uses(read("drawer/drawer.css"), ".drawer-capture")).toContain(
       "var(--control-border)",
     );
   });
@@ -163,7 +163,8 @@ describe("placeholders", () => {
 // listed with the reason.
 const lightest = token("--surface-3");
 const inkOnBright: Record<string, string> = {
-  "controller-3d.css": "dark ink on the face color of a pressed chip glyph",
+  "controller/controller-3d.css":
+    "dark ink on the face color of a pressed chip glyph",
 };
 describe("literal text colors in the stylesheets", () => {
   for (const file of files) {
@@ -202,15 +203,18 @@ const dimmed: Record<string, string> = {
   "analog/analog-editor.css:.analog-v-sector": "an arc of the stick diagram",
   "analog/analog-editor.css:.analog-number:disabled, .analog-range:disabled":
     "a control that is switched off",
-  "controller-3d.css:.stage-line-halo": "a line of the controller diagram",
-  "controller-3d.css:.stage-gauge-hub": "a mark of the controller diagram",
-  "controller-3d.css:.stage-gauge-halo": "a line of the controller diagram",
-  "drawer.css:50%": "the pulse of the recording dot (a keyframe)",
+  "controller/controller-3d.css:.stage-line-halo":
+    "a line of the controller diagram",
+  "controller/controller-3d.css:.stage-gauge-hub":
+    "a mark of the controller diagram",
+  "controller/controller-3d.css:.stage-gauge-halo":
+    "a line of the controller diagram",
+  "drawer/drawer.css:50%": "the pulse of the recording dot (a keyframe)",
   "pages/pages.css:.calibration-range:disabled, .page-range-input:disabled":
     "a control that is switched off",
-  'pages/profiles.css:.app-icon[data-enabled="false"] .app-icon-image, .app-icon[data-enabled="false"] .app-icon-generic':
+  'pages/profiles/profiles.css:.app-icon[data-enabled="false"] .app-icon-image, .app-icon[data-enabled="false"] .app-icon-generic':
     "the icon of an app that is switched off",
-  'pages/profiles.css:.page-column-profiles[data-switching="off"] .app-icon':
+  'pages/profiles/profiles.css:.page-column-profiles[data-switching="off"] .app-icon':
     "icons only, while switching by app is off",
   "theme.css:button:disabled": "a control that is switched off",
 };
@@ -234,7 +238,7 @@ describe("opacity below 1", () => {
     expect(declared(analog, ".analog-change-old", "color")).toBe(
       "var(--text-3)",
     );
-    const chips = read("controller-3d.css");
+    const chips = read("controller/controller-3d.css");
     expect(
       declared(
         chips,

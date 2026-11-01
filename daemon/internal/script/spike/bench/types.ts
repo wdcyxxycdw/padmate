@@ -1,5 +1,5 @@
 // The event shapes the spike host passes to handlers: a subset of
-// InputEvent (SCRIPTING §2.1), and a stick sample standing in for the
+// InputEvent, and a stick sample standing in for the
 // StickState and dt that onStick would pass.
 
 export interface InputEvent {
@@ -30,6 +30,6 @@ export type Handler<E> = (e: E) => void | Promise<void>;
 
 export interface GestureOptions {
   label?: string;
-  /** Set by layer(); the spike host resolves it (SCRIPTING §1.5). */
+  /** Set by layer(); the spike host resolves it. */
   layer?: string;
 }

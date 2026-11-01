@@ -29,7 +29,7 @@ const (
 	// so Go would never see it.
 	HintNoSignalHandlers = "SDL_NO_SIGNAL_HANDLERS"
 	// HintCombineJoyCons is set to "0" by Open, after the two hints above
-	// and before any other (IN-07, ADR-0022): each Joy-Con is its own
+	// and before any other (IN-07, ADR-0002): each Joy-Con is its own
 	// gamepad, whether or not its partner is connected. A lone Joy-Con is
 	// a gamepad under either value; with "1", which
 	// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1" restores, SDL

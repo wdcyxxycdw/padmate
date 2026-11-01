@@ -26,7 +26,7 @@ function startupState(value: unknown): StartupState {
   };
 }
 
-// Start at sign-in (UI-19, ADR-0052). The renderer passes only a boolean:
+// Start at sign-in (UI-19, ADR-0001). The renderer passes only a boolean:
 // the daemon registers its own executable and startup arguments, and a
 // development or test daemon refuses (-32017). locked is a packaged
 // application started by a test (PKG-03): it never asks, whatever its daemon

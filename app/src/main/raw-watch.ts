@@ -38,7 +38,7 @@ function rawInfoResult(value: unknown): RawInfo {
 
 /**
  * The raw joystick events of the controllers the mapping wizard watches (IN-17,
- * IN-19, ADR-0072). The daemon sends them as input.raw events to the
+ * IN-19, ADR-0012). The daemon sends them as input.raw events to the
  * connections that asked for a controller with devices.rawInfo and subscribe
  * to the topic, so a watch is both: the topic first (an event published before
  * the subscription is lost), then the request. The UI's one bridge connection

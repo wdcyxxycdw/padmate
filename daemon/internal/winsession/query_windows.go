@@ -87,7 +87,7 @@ func readSession() (SessionInfo, error) {
 //
 // UOI_IO of the thread's desktop says whether it receives input. A TRUE
 // answer is trusted; a FALSE one, or a failure, is confirmed by opening the
-// input desktop (ADR-0026): access denied means a desktop this process may
+// input desktop (ADR-0006): access denied means a desktop this process may
 // not open, the secure desktop of UAC or Ctrl+Alt+Del; otherwise the names
 // decide.
 func readDesktop() (other bool, err error) {

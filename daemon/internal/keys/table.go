@@ -114,7 +114,7 @@ var namedRows = [...]row{
 	{"KanaMode", 0x70, 0xF2, nil},      // VK_DBE_HIRAGANA (VK_OEM_COPY) on kbd106, KBDSPECIAL
 }
 
-// mediaRows are the volume and media keys (ADR-0070, OUT-20). Their scan codes
+// mediaRows are the volume and media keys (ADR-0012, OUT-20). Their scan codes
 // are the E0 codes of the Microsoft set-1 table (Volume Up E0 30, Volume Down
 // E0 2E, Mute E0 20, Play/Pause E0 22, Next Track E0 19, Previous Track E0 10,
 // Stop E0 24) and their VKs the VK_VOLUME_* and VK_MEDIA_* constants of
@@ -132,7 +132,7 @@ var mediaRows = [...]row{
 	{"MediaStop", 0xE024, 0xB2, nil},                                // VK_MEDIA_STOP
 }
 
-// mouseRow is one mouse input that stands in a key's place (ADR-0062). It has
+// mouseRow is one mouse input that stands in a key's place (ADR-0004). It has
 // no scan code and no VK. The rows come last in the table, so that the
 // indices of the keyboard keys never change.
 type mouseRow struct {

@@ -14,7 +14,7 @@ import (
 )
 
 // Tests of the stick that moves the pointer (MOU-01, MOU-04, MOU-05, MOU-06,
-// MOU-08; ADR-0062, section 5).
+// MOU-08; ADR-0004, section 5).
 
 // moveEvent is a Move or Jump the engine sent.
 type moveEvent struct {

@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// A script taps the wheel keys with key.tap like any key (ADR-0062): one
+// A script taps the wheel keys with key.tap like any key (ADR-0004): one
 // notch each, a chord's modifier around it, and the release the Arbiter sends
 // for a wheel key is one a Sender drops.
 func TestScriptTapsWheelKeys(t *testing.T) {

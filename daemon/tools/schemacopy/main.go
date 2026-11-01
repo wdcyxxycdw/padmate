@@ -1,6 +1,6 @@
 // Command schemacopy copies the canonical profile schema into the profile
 // package (PRO-02). The schema's single source is schema/profile.schema.json
-// at the repository root (ADR-0008), which go:embed cannot reach from the
+// at the repository root (ADR-0007), which go:embed cannot reach from the
 // daemon module. `task gen` runs this command through the go:generate
 // directive in internal/profile:
 //

@@ -112,7 +112,7 @@ func TestGUIDString(t *testing.T) {
 	if d := DriverName(g, "windows"); d != "virtual" {
 		t.Errorf("DriverName = %q, want virtual", d)
 	}
-	// The GameSir Nova 2 Lite of docs/hardware-matrix.md in Xbox mode, as
+	// The GameSir Nova 2 Lite in Xbox mode, as
 	// SDL 3.4.16 reported it: SDL names it after its XInput slot, and the
 	// GUID has the name's CRC.
 	const nova = "0300fa67373500009810000000017801"

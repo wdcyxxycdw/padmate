@@ -58,7 +58,7 @@ export async function fixture(): Promise<Fixture> {
       },
     }),
   );
-  // padmated resumes state.json's last profile (ADR-0053). Switching by app
+  // padmated resumes state.json's last profile (ADR-0008). Switching by app
   // is off, so paint stays in use whatever window is in front during a
   // test: an app no rule binds would switch to the fixed default.
   await writeFile(
@@ -98,7 +98,7 @@ export async function fixture(): Promise<Fixture> {
  * computer keeps the primary display. Tests that need the real foreground
  * (keyboard capture, the key preview) still need the window focused.
  *
- * The main window is the one that is not the overlay (ADR-0063, title
+ * The main window is the one that is not the overlay (ADR-0014, title
  * "padmate overlay"). BrowserWindow.getAllWindows() has no order to rely on:
  * Electron 44 lists the newest window first, so [0] is the overlay.
  */
@@ -215,7 +215,7 @@ export async function rpc(
  * way the user does, since shortcuts cannot be typed (OUT-18): 录入 starts
  * the real native capture, and the chord arrives as the capture helper
  * reports it. The first key that is not a modifier ends the capture and
- * commits it, so there is nothing to stop (ADR-0076): chord must have one.
+ * commits it, so there is nothing to stop (ADR-0013): chord must have one.
  * Main hands the renderer the chord, because a test must not press real keys
  * (invariant 6). The renderer keeps only the event of its own capture
  * session, so it goes out for each session this app may have started, and
@@ -269,7 +269,7 @@ export function mainWindowVisible(
 
 /**
  * Closes the main window as its close button does. While the daemon is
- * connected that only hides it (ADR-0077): the application stays.
+ * connected that only hides it (ADR-0013): the application stays.
  */
 export async function closeWindow(app: ElectronApplication): Promise<void> {
   await app.evaluate(({ BrowserWindow }) => {
@@ -283,7 +283,7 @@ export async function closeApplication(
   app: ElectronApplication,
 ): Promise<void> {
   if (app.process().exitCode !== null) return;
-  // Closing the window only hides it (ADR-0077), so the application quits,
+  // Closing the window only hides it (ADR-0013), so the application quits,
   // as the tray's 退出 makes it; the quit closes the window first, which
   // waits for the saves. Playwright 1.63's Electron close path waits for an
   // obsolete Node inspector shutdown message. Schedule the quit, then detach
@@ -375,7 +375,7 @@ export async function cleanup(
   });
 }
 
-/** What `padmate-probe window --json` prints (SPK-09, ADR-0063). */
+/** What `padmate-probe window --json` prints (SPK-09, ADR-0014). */
 export interface WindowInfo {
   /** GetForegroundWindow, "0x" and hexadecimal. */
   foreground: string;

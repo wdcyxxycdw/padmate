@@ -36,7 +36,7 @@ const (
 type Effects interface {
 	// Switches reports whether the global rumble switch (with a strength above 0
 	// in the profile that the slot runs) and the global led switch are on
-	// (ADR-0067). A script's calls reach the gamepad only through them.
+	// (ADR-0015). A script's calls reach the gamepad only through them.
 	Switches(slot uint8) (rumble, led bool)
 	// Rumble plays steps on the gamepad as the script's rumble, in place of the
 	// one it played before.
@@ -178,7 +178,7 @@ func (h *Host) effectTarget(name string) (sink Effects, dev input.DeviceID, ok b
 
 // effectsAvailable is host.has("rumble") and host.has("led"): the effects are
 // connected, the gamepad in the slot can do it, and the global switch
-// (config.json feedback, ADR-0067) is on. A describe runtime never reaches a
+// (config.json feedback, ADR-0015) is on. A describe runtime never reaches a
 // gamepad, so it has none.
 func (h *Host) effectsAvailable(feature Feature) bool {
 	if h.mode == "describe" || !h.padState.Connected {

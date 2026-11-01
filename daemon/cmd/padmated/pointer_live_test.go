@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// profilePointer has the left stick in mode "mouse" (ADR-0062, section 5) at
+// profilePointer has the left stick in mode "mouse" (ADR-0004, section 5) at
 // 1000 pixels a second and nothing else: no button is bound, so nothing but the
 // stick can make padmated send anything. The real-injection test
 // TestLiveInjectPointer and TestLivePointerStick share it.
@@ -105,7 +105,7 @@ func (tl *testLive) waitStill(t *testing.T, s *pointerSender, quiet time.Duratio
 	return last
 }
 
-// TestLivePointerStick (ADR-0062, section 5) runs the stick of profilePointer
+// TestLivePointerStick (ADR-0004, section 5) runs the stick of profilePointer
 // through live mode with --inject, on the clock of the daemon, with a Sender that
 // injects nothing: pushed to the right the stick sends moves that go right and
 // no further, at the tick of the engine; back in the center it stops; pushed to

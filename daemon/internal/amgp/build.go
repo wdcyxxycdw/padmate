@@ -205,7 +205,7 @@ func firstLine(s string) string {
 	return s
 }
 
-// functionSet returns the function set (ADR-0075): padmate has one function
+// functionSet returns the function set (ADR-0012): padmate has one function
 // key, chosen in its settings (Menu by default), so the sets that View and Menu
 // hold in AntiMicroX become one. Menu's comes first, and View's fills the
 // controls Menu's does not bind. Like a held layer, the controls the set does

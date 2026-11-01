@@ -3,7 +3,7 @@ package supervisor
 import "github.com/wdcyxxycdw/padmate/daemon/internal/input"
 
 // The reasons Config.OnUnrouted gives for a button edge of a gamepad that no
-// slot maps (ADR-0071). They are the words of padmated's unrouted event.
+// slot maps (ADR-0016). They are the words of padmated's unrouted event.
 const (
 	// UnroutedQueued is a gamepad that waits for a slot: every slot is taken.
 	UnroutedQueued = "queued"

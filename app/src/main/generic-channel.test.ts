@@ -8,7 +8,7 @@ import { UPDATE_CHANNEL, UPDATE_URL } from "./update-config";
 // UpdateController (update-controller.ts) is written around: the generic
 // provider is driven by the real code with canned answers in place of the
 // network. A new version of the package that behaves otherwise fails here,
-// before it reaches the application (ADR-0078, PKG-10).
+// before it reaches the application (ADR-0018, PKG-10).
 const require = createRequire(import.meta.url);
 const updaterRequire = createRequire(require.resolve("electron-updater"));
 const semver = updaterRequire("semver") as { parse(version: string): unknown };
@@ -85,7 +85,7 @@ function providerFor(
   );
 }
 
-describe("electron-updater's generic provider, as the controller relies on it (PKG-10, ADR-0078)", () => {
+describe("electron-updater's generic provider, as the controller relies on it (PKG-10, ADR-0018)", () => {
   it.each(["1.0.2", "1.0.3-rc.1"])(
     "asks for latest.yml once, whichever version %s is running",
     async (current) => {

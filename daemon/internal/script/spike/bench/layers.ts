@@ -1,4 +1,4 @@
-// layer() and layers from SCRIPTING §2.1, reduced. In M5 layers are host
+// layer() and layers of the script API, reduced. In M5 layers are host
 // state; the M0d stub has only on, key and sleep, so layer(name).on tags
 // the registration with opts.layer for the spike host to resolve, and
 // layers keeps the set of toggled layers in the script.

@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script"
 )
 
-// The rumble and LED calls of scripts (SCR-23, ADR-0066) reach a controller
+// The rumble and LED calls of scripts (SCR-23, ADR-0010) reach a controller
 // through the effect queue, as every other effect does, in the Script class of
 // the Mixer: a script's buzz never cuts the pulses of a layer, and it ends
 // with the runtime that asked for it.
@@ -29,7 +29,7 @@ func (d *scriptDefinition) feedbackSettings() profile.Feedback {
 }
 
 // scriptEffects is the script.Effects of a live padmated: the switches are the
-// global ones of config.json (ADR-0067), and the requests go to the effect
+// global ones of config.json (ADR-0015), and the requests go to the effect
 // queue, which never blocks.
 type scriptEffects struct{ run *liveRun }
 
@@ -73,8 +73,8 @@ func (e scriptEffects) Cancel(_ uint8, dev input.DeviceID) {
 	e.run.effects.postStop(input.Stop{Device: dev, Class: haptic.Script, Everything: true})
 }
 
-// scriptErrorCue is the error buzz of a script that starts failing
-// (SCRIPTING 4.2): the "error" preset in the Alert class, which is a warning
+// scriptErrorCue is the error buzz of a script that starts failing:
+// the "error" preset in the Alert class, which is a warning
 // the daemon raises and so outranks the layer's pulses, and which a stop of the
 // script's own class, when its runtime is released for the failure, does not
 // end. The global rumble switch silences it, and so does a strength of 0 in

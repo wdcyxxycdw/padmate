@@ -98,7 +98,7 @@ func TestIPCDeleteProfile(t *testing.T) {
 	if err := client.CallResult(ctx, "profiles.list", nil, &items); err != nil || len(items) != 3 || items[0].ID != profilelib.DefaultID || !items[0].Default || items[1].Default {
 		t.Fatal(items, err)
 	}
-	// The fixed default is never deleted (PRO-28, ADR-0053).
+	// The fixed default is never deleted (PRO-28, ADR-0008).
 	if data := rpcErrorData(t, del(profilelib.DefaultID, items[0].Revision), rpcCodeProfileFixed); data != `{"op":"delete"}` {
 		t.Fatal(data)
 	}
@@ -107,7 +107,7 @@ func TestIPCDeleteProfile(t *testing.T) {
 	}
 
 	// Switching away allows the delete: the retired defaultProfile is no
-	// reference (ADR-0053). The last profile reaches state.json before
+	// reference (ADR-0008). The last profile reaches state.json before
 	// the folder goes.
 	if err := client.CallResult(ctx, "profiles.activate", map[string]string{"id": "second"}, new(any)); err != nil {
 		t.Fatal(err)

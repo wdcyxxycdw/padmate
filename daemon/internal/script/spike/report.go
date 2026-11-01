@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// The performance targets of SCRIPTING §7.
+// The performance targets of the script runtime.
 const (
 	TargetDispatchP50 = 20 * time.Microsecond
 	TargetDispatchP99 = 200 * time.Microsecond
@@ -93,7 +93,7 @@ type Row struct {
 	// row has none: a one-off, or a part of the cold activation pass,
 	// whose count is on the "activation cold" row.
 	GCs int
-	// Target is the SCRIPTING §7 target, "" for none.
+	// Target is the performance target, "" for none.
 	Target string
 	// Pass is the verdict against Target.
 	Pass bool
@@ -243,7 +243,7 @@ func (r *Report) WriteMarkdown(w io.Writer) error {
 
 func (rep *WatchdogReport) writeMarkdown(m *mdWriter) {
 	o := rep.Options
-	m.printf("\n### Watchdog (SCRIPTING §4.1)\n\n")
+	m.printf("\n### Watchdog\n\n")
 	m.printf("- Clock: %s. Poll every %s requested, %s achieved on average.\n", rep.Clock, o.Watchdog.Poll, fmtDuration(rep.Poll))
 	var over, lat, stop, call []time.Duration
 	clocks := map[string]int{}

@@ -8,7 +8,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/supervisor"
 )
 
-// A mouse button (ADR-0062) held by a hold binding is let go of on the same
+// A mouse button (ADR-0004) held by a hold binding is let go of on the same
 // exit paths of Run as a key: the context ending Run, the end of the events,
 // the removal of the pad, the pause and a reload (TestHoldReleasedOnCancel and
 // its relatives). The pause combo and the system's suspension have golden

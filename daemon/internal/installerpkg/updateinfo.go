@@ -17,7 +17,7 @@ import (
 // the installer (always latest.yml, even for a release candidate, because the
 // publish block pins channel: latest, UpdateChannel) and that a release
 // uploads to the download site, last, after the installer and its .sha256
-// (PKG-10, ADR-0078). It is the contract with the Worker that redirects the
+// (PKG-10, ADR-0018). It is the contract with the Worker that redirects the
 // address of the site to the installer it names (its path), and with the
 // application that reads it.
 const UpdateFile = "latest.yml"

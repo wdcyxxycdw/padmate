@@ -6,7 +6,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The function key (MAP-27, ADR-0069 and ADR-0075): of back (View), start
+// The function key (MAP-27, ADR-0012): of back (View), start
 // (Menu) and guide (the Xbox, PS or Home button) one control is the function
 // key, the same in every profile; config.json chooses it (WithFunctionKey of
 // Compile; start by default). It sends nothing and is not bindable: a binding

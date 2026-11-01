@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// The mouse side of the Recorder (ADR-0062). A test that injects a mouse
+// The mouse side of the Recorder (ADR-0004). A test that injects a mouse
 // event installs the mouse hook on the Recorder's hook thread first, and
 // proves it live with a mouse canary, as the keyboard hook is proven with
 // the keyboard one. A mouse event that got past the hook would scroll or
@@ -75,7 +75,7 @@ func SendMouseCanary(t testing.TB, nonce uint32) {
 	}
 }
 
-// The mouse buttons (ADR-0062, second batch). A button, unlike a wheel notch,
+// The mouse buttons (ADR-0004, second batch). A button, unlike a wheel notch,
 // is held: a press that was not released stays down on the machine the test
 // runs on. So a test never injects one on its own. Every press goes out with
 // its release in the same batch (InjectFencedMixed refuses any other, see

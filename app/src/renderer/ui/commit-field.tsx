@@ -1,6 +1,6 @@
 import { type ChangeEvent, type KeyboardEvent, useId, useState } from "react";
 
-import type { Language } from "../store";
+import type { Language } from "../state/store";
 
 /** What a field's text means: the value to commit, or why it cannot be one. */
 export type Parsed<T> = { value: T } | { error: string };

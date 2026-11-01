@@ -23,7 +23,7 @@ func KeyGUID(key string) string {
 }
 
 // checkMappings reports the custom gamepad mappings of the devices of c
-// (IN-18, ADR-0072) that cannot work: one that is no mapping string, whose
+// (IN-18, ADR-0012) that cannot work: one that is no mapping string, whose
 // GUID is not the one of its device key, or that differs from the mapping of
 // another key with the same GUID. SDL applies a mapping to every device with
 // its GUID, so keys with one GUID must agree; the wizard writes them together.

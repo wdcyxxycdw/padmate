@@ -10,7 +10,7 @@ import (
 )
 
 // switchesOff returns the Options.Switches source of the global feedback
-// switches (UI-27, ADR-0067) with the named ones off: "rumble", "led", "pause"
+// switches (UI-27, ADR-0015) with the named ones off: "rumble", "led", "pause"
 // and "lowBattery".
 func switchesOff(off ...string) func() profile.FeedbackSwitches {
 	sw := profile.DefaultFeedbackSwitches()
@@ -56,7 +56,7 @@ func collectFeedback(t testing.TB, prog *engine.Program, off ...string) (*engine
 }
 
 // TestPauseSwitchSuppressesPulseAndColor pins the global pause switch (UI-27,
-// ADR-0067): with it off, pausing and resuming the mapping neither pulses nor
+// ADR-0015): with it off, pausing and resuming the mapping neither pulses nor
 // shows the pause color, and the layer color stays; it works through rumble
 // and led, so with either of those off the matching part is not shown with it
 // on either. The pulses and colors of layer changes do not depend on it.
@@ -248,7 +248,7 @@ func TestFeedbackModeIsKeptWhilePaused(t *testing.T) {
 
 // TestSwitchesAreReadAtEachState: the engine asks Options.Switches each time it
 // publishes, so a change of config.json applies to the next state, and
-// RefreshFeedback gives the state again with the new switches (ADR-0067).
+// RefreshFeedback gives the state again with the new switches (ADR-0015).
 func TestSwitchesAreReadAtEachState(t *testing.T) {
 	sw := profile.DefaultFeedbackSwitches()
 	var got []engine.Feedback

@@ -52,7 +52,7 @@ func stampedButton(src *fakeSource, control string, down bool) {
 	src.events <- input.Event{Device: 1, Kind: kind, Control: control, Stamp: latency.Now()}
 }
 
-// TestIPCLatency (DMN-15, ADR-0071): padmated measures, for each device, the
+// TestIPCLatency (DMN-15, ADR-0016): padmated measures, for each device, the
 // time from T-input's receipt of an input edge to the return of the Send of its
 // keys, and latency.get gives the distribution in microseconds. Under
 // --dry-run the Sender is the printer: it counts, and the result says so
@@ -147,7 +147,7 @@ func TestIPCLatency(t *testing.T) {
 	}
 }
 
-// TestIPCLatencyOwnWindow (DMN-15, ADR-0071): while padmate's own window is in
+// TestIPCLatencyOwnWindow (DMN-15, ADR-0016): while padmate's own window is in
 // front the keys go to the local dry run and no Sender is called, so they are
 // not measured; with --inject the result says dryRun false. Back in the
 // application's front, the keys are measured again.

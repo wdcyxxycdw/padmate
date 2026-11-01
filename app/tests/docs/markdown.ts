@@ -5,7 +5,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, posix, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { inMirror } from "../mirror";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -20,47 +19,23 @@ export interface DocPair {
 
 const guideDir = join(repoRoot, "docs", "guide");
 
-/**
- * The README of the public code mirror, in both languages. It is written for
- * the root of the mirror, where it is README.md; the development repository
- * keeps its source in daemon/tools/mirror, and it is not a user document that
- * the installer ships, so userDocPairs does not list it.
- */
-export const mirrorReadmePair: DocPair = {
-  zh: "daemon/tools/mirror/README.md",
-  en: "daemon/tools/mirror/README.en.md",
-};
-
-/**
- * The files of docs/guide, relative to the repository root, in name order. The
- * public code mirror has no documents, and the tests that read them skip
- * there: the list is empty.
- */
+/** The files of docs/guide, relative to the repository root, in name order. */
 export function guideFiles(): string[] {
-  if (inMirror) return [];
   return readdirSync(guideDir)
     .sort()
     .map((name) => posix.join("docs", "guide", name));
 }
 
-/** The Chinese file of each pair in docs/guide, with its English twin. */
+/** The English file of each pair in docs/guide (X.md), with its Chinese twin (X.zh-CN.md). */
 export function guidePairs(): DocPair[] {
   return guideFiles()
-    .filter((file) => file.endsWith(".md") && !file.endsWith(".en.md"))
-    .map((zh) => ({ zh, en: zh.replace(/\.md$/, ".en.md") }));
+    .filter((file) => file.endsWith(".md") && !file.endsWith(".zh-CN.md"))
+    .map((en) => ({ en, zh: en.replace(/\.md$/, ".zh-CN.md") }));
 }
 
 /** Every user document that has two languages. */
 export function userDocPairs(): DocPair[] {
-  return [
-    { zh: "README.md", en: "README.en.md" },
-    { zh: "docs/known-limitations.md", en: "docs/known-limitations.en.md" },
-    {
-      zh: "docs/troubleshooting-input.md",
-      en: "docs/troubleshooting-input.en.md",
-    },
-    ...guidePairs(),
-  ];
+  return [{ zh: "README.zh-CN.md", en: "README.md" }, ...guidePairs()];
 }
 
 export function read(file: string): string {
@@ -167,10 +142,10 @@ export function isExternal(target: string): boolean {
 
 /**
  * The link target as it would be in the other language: a link to a file
- * that has an English twin names the twin, so `.en` is taken out.
+ * that has a Chinese twin names the twin, so `.zh-CN` is taken out.
  */
-export function withoutEn(target: string): string {
-  return target.replace(/\.en\.md(?=$|#)/, ".md");
+export function withoutZh(target: string): string {
+  return target.replace(/\.zh-CN\.md(?=$|#)/, ".md");
 }
 
 /** One block of a document: its kind (see blockKinds) and its text. */

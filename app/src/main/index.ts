@@ -102,9 +102,9 @@ app.setPath("userData", browserData);
 const firstInstance = claimSingleInstance(app, showExistingWindow);
 
 let window: BrowserWindow | undefined;
-// PKG-10 (ADR-0073): the automatic update, made when the app is ready.
+// PKG-10 (ADR-0018): the automatic update, made when the app is ready.
 let updates: UpdateController | undefined;
-// HUD-01 (ADR-0063): the overlay is a second window, made once after this one
+// HUD-01 (ADR-0014): the overlay is a second window, made once after this one
 // is ready, never shown actively and destroyed with this one.
 let overlay: OverlayController | undefined;
 let manager: DaemonManager | undefined;
@@ -122,7 +122,7 @@ let failureDialog = false;
 // installer's, PKG-04): the window finishes its saves, tells the daemon and
 // quits, and a close in between waits for that.
 let trayExiting = false;
-// ADR-0077: closing the window hid it, and padmate.exe stays with the page
+// ADR-0013: closing the window hid it, and padmate.exe stays with the page
 // and the controller's model loaded until a second start shows it again.
 let hiddenByClose = false;
 // A quit waits for the saves (before-quit): the close it makes goes through.
@@ -175,7 +175,7 @@ const events = new EventBuffer((batch) => {
   if (window && !window.isDestroyed())
     window.webContents.send("padmate:eventBatch", batch);
 });
-// HUD-04 (ADR-0063): the daemon's state events, as they arrive, tell the
+// HUD-04 (ADR-0014): the daemon's state events, as they arrive, tell the
 // overlay what changed. Not while the main window is focused: the user is
 // looking at the editor then. Whether there are toasts and in which language
 // is the UI's choice, pushed by the page (HUD-05, overlayPreferences).
@@ -183,7 +183,7 @@ const toasts = new OverlayToaster({
   mainFocused: () => !!window && !window.isDestroyed() && window.isFocused(),
   show: (text, ms) => overlay?.toast(text, ms),
 });
-// HUD-03 (ADR-0063): the key hints the daemon lists in its state events while
+// HUD-03 (ADR-0014): the key hints the daemon lists in its state events while
 // the hints button is held. They show also while the main window is focused
 // and do not depend on the toast switch. What kind of pad the names are for
 // comes from the daemon's device list, asked once per device.
@@ -201,7 +201,7 @@ const hints = new OverlayHints({
       : undefined;
   },
 });
-// SCR-22 (ADR-0063): the panels a script keeps with hud.panel, which the daemon
+// SCR-22 (ADR-0014): the panels a script keeps with hud.panel, which the daemon
 // lists in its state events. They show also while the main window is focused
 // and do not depend on the toast switch; the page keeps them back while the
 // hints show.
@@ -222,7 +222,7 @@ const hud = new HudSubscription((method, params) =>
     ? manager.call(method, params)
     : Promise.reject(new Error(managerDisconnected)),
 );
-// IN-17, IN-19 (ADR-0072): the raw joystick events of the controller the
+// IN-17, IN-19 (ADR-0012): the raw joystick events of the controller the
 // mapping wizard watches. The input.raw topic is on the same subscription as
 // hud, wished up while a watch lasts; the watch ends when the wizard says so,
 // and here when its page goes away.
@@ -242,7 +242,7 @@ const rendererURL = process.env.ELECTRON_RENDERER_URL;
 const developmentServer = !app.isPackaged && !!rendererURL;
 
 /**
- * A close while the daemon is connected (ADR-0077): the window hides, and a
+ * A close while the daemon is connected (ADR-0013): the window hides, and a
  * field still being typed in is committed, as when it closes (UI-43). The
  * page stays, so nothing waits for the saves.
  */
@@ -805,7 +805,7 @@ app
     window.on("closed", () => {
       window = undefined;
       // With the overlay alive, window-all-closed would not follow this
-      // close: the optional window never keeps the app running (ADR-0063).
+      // close: the optional window never keeps the app running (ADR-0014).
       overlay?.stop();
       if (!quitting) app.quit();
     });

@@ -217,10 +217,10 @@ describe("controller capture for the emergency combo", () => {
     expect(source("../shared/api.ts")).toContain(
       "padCaptureStart(stays?: boolean): Promise<void>;",
     );
-    expect(source("../renderer/pages/MappingWizardDialog.tsx")).not.toMatch(
-      /padCaptureStart\(\)/,
-    );
-    expect(source("../renderer/pages/PanicComboDialog.tsx")).toContain(
+    expect(
+      source("../renderer/pages/settings/MappingWizardDialog.tsx"),
+    ).not.toMatch(/padCaptureStart\(\)/);
+    expect(source("../renderer/pages/settings/PanicComboDialog.tsx")).toContain(
       "api.padCaptureStart()",
     );
     expect(main).toContain(
@@ -258,7 +258,7 @@ describe("controller capture for the emergency combo", () => {
   });
 });
 
-describe("a capture that stays while the window is away (the mapping wizard, ADR-0076)", () => {
+describe("a capture that stays while the window is away (the mapping wizard, ADR-0013)", () => {
   it("is not ended by the window losing the front, only by a stop", async () => {
     const t = setup();
     const started = t.capture.start(true);

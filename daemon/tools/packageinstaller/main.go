@@ -36,14 +36,9 @@ import (
 	"strings"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/installerpkg"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 )
 
 func main() {
-	if err := publicmirror.RefusePackagingHere(); err != nil {
-		fmt.Fprintln(os.Stderr, "packageinstaller:", err)
-		os.Exit(1)
-	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	code := run(ctx, os.Args[1:], os.Stdout, os.Stderr)
 	stop()
@@ -91,17 +86,6 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stderr, "packageinstaller:", err)
 		return 1
-	}
-	// A package is built from the development repository, which has the
-	// documentation that ships in it. main has refused in the mirror already;
-	// this covers the root that was named. It comes after the check of the
-	// version so that the tests, which run in whatever tree they are in, see
-	// the same errors in both.
-	if root != nil {
-		if err := publicmirror.RefusePackagingAt(*root); err != nil {
-			fmt.Fprintln(stderr, "packageinstaller:", err)
-			return 1
-		}
 	}
 	switch args[0] {
 	case "version":

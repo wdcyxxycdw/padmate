@@ -31,7 +31,7 @@
 // ComboHeld; ExpandCombos inserts it into a replay with the same watch.
 //
 // With Options.ReceiverTimeout, T-input also watches the receivers
-// (IN-30, ADR-0029): a Switch Pro protocol gamepad behind a USB receiver,
+// (IN-30, ADR-0002): a Switch Pro protocol gamepad behind a USB receiver,
 // such as GameSir's Nova 2 Lite in Switch mode, stays listed by SDL when
 // it is switched off, and SDL reports no removal. T-input reads the HID
 // reports of such a device through a handle of its own; once it has seen
@@ -43,7 +43,7 @@
 // DeviceID. T-input's log records go through a queue to a goroutine of
 // the Source, so that a log that blocks never holds up T-input.
 //
-// T-input also drives the effects of the gamepads (M17, ADR-0065): rumble,
+// T-input also drives the effects of the gamepads (M17, ADR-0015): rumble,
 // the LED and the player lights. A haptic.Mixer, which T-input advances in
 // each turn of its loop, decides which request owns them; SetFeedback (the
 // layer's color and pulses), Play (a preset) and Identify (the cues that tell

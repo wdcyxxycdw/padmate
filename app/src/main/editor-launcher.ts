@@ -24,7 +24,7 @@ async function regularFile(path: string): Promise<boolean> {
 }
 
 /**
- * Opens a file in an editor (SCR-50, design §10): VS Code when Windows
+ * Opens a file in an editor (SCR-50): VS Code when Windows
  * names it as the handler of vscode:// (as Explorer's "Open with Code"
  * does: its executable with the file as the argument), otherwise Notepad.
  * Neither goes through a shell or the file's association, which often

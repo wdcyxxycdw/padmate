@@ -141,7 +141,7 @@ func TestKeysParseJSON(t *testing.T) {
 }
 
 // A mouse key has no scan code and VK: "keys parse --json" gives it "mouse"
-// and no "us" (ADR-0062).
+// and no "us" (ADR-0004).
 func TestKeysParseJSONMouse(t *testing.T) {
 	code, stdout, stderr := runCmd(t, "keys", "parse", "--json", "ctrl+wheelup", "WheelRight", "Z", "WheelUp+Ctrl")
 	if code != 1 {
@@ -186,7 +186,7 @@ func TestKeysParseJSONMedia(t *testing.T) {
 }
 
 // The mouse buttons are shown like the wheel keys, with the canonical name
-// whatever alias was written (ADR-0062).
+// whatever alias was written (ADR-0004).
 func TestKeysParseJSONButtons(t *testing.T) {
 	code, stdout, stderr := runCmd(t, "keys", "parse", "--json", "lbutton", "Shift+MouseRight", "xbutton2", "MouseLeft+Ctrl")
 	if code != 1 {

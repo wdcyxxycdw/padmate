@@ -25,7 +25,7 @@ import { closeApplication, placeWindow } from "./helpers";
 
 const run = promisify(execFile);
 
-// PKG-10 (ADR-0073): the automatic update of the installed application, in its
+// PKG-10 (ADR-0018): the automatic update of the installed application, in its
 // test mode, against a feed on this machine. PADMATE_TEST_PACKAGED_APP names an
 // installed or unpacked padmate.exe, as for packaged.spec.ts; without it the
 // tests are skipped. The application keeps to private folders, starts its
@@ -39,7 +39,7 @@ const run = promisify(execFile);
 //
 // It works for any version of the build, a release or a test build such as
 // 0.0.0-m28b.1: what depends on the version is derived from it. Every build
-// looks once, at latest.yml (ADR-0078: the download site holds releases only,
+// looks once, at latest.yml (ADR-0018: the download site holds releases only,
 // and one channel file), so the feed is asked for latest.yml once (looks()),
 // and the installer of an update "installed long ago" is named 0.0.0-0, the
 // lowest version there is.

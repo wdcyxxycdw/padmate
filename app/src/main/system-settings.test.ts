@@ -10,7 +10,7 @@ import {
 const source = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("the Windows Settings page the window can have opened (UI-30, ADR-0075)", () => {
+describe("the Windows Settings page the window can have opened (UI-30, ADR-0012)", () => {
   it("is the Xbox Game Bar page, which holds the button's switch", () => {
     expect(GAME_BAR_SETTINGS_URL).toBe("ms-settings:gaming-gamebar");
     expect(isAllowedSettingsURL("ms-settings:gaming-gamebar")).toBe(true);
@@ -113,8 +113,8 @@ describe("the window's side of it", () => {
     );
     // The page the window ships has no way to ask for another address.
     expect(source("../preload/index.ts")).not.toContain("ms-settings");
-    expect(source("../renderer/pages/SettingsFunctionKey.tsx")).not.toContain(
-      "ms-settings",
-    );
+    expect(
+      source("../renderer/pages/settings/SettingsFunctionKey.tsx"),
+    ).not.toContain("ms-settings");
   });
 });

@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// The tests in this file inject the pointer moves of a stick (ADR-0062, section
+// The tests in this file inject the pointer moves of a stick (ADR-0004, section
 // 5). A move is not held, but a move that got past the hook would take the
 // cursor of the machine the test runs on somewhere else, so these tests are
 // stricter than the wheel ones in inject_windows_test.go:
@@ -127,7 +127,7 @@ func pointsOf(want []output.KeyEvent, got []winhook.MouseEvent) string {
 	return strings.Join(parts, "; ")
 }
 
-// TestInjectPointerMoves (ADR-0062, section 5) injects batches of relative
+// TestInjectPointerMoves (ADR-0004, section 5) injects batches of relative
 // pointer moves that add up to no distance and checks what the mouse hook sees:
 // one WM_MOUSEMOVE for each move, LLMHF_INJECTED, the nonce of the batch, that
 // the hook swallowed it, and in the order of the batch. The mouse hook is proven

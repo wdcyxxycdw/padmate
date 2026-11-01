@@ -3,21 +3,17 @@ package installerpkg
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	"path"
 	"path/filepath"
-	"slices"
 	"strings"
 )
 
 // UserDocuments are the documents an installation has besides the user
-// guide (ENG-17): the pages that the README and the guide send the reader to,
-// in both languages. The rest of docs/ is about how padmate is made and stays
-// in the development repository, like the READMEs of the examples, which are
-// notes for developing them (docs/build-installer.md, "安装包带哪些文档").
-var UserDocuments = []string{
-	"docs/known-limitations.md", "docs/known-limitations.en.md",
-	"docs/troubleshooting-input.md", "docs/troubleshooting-input.en.md",
-}
+// guide (ENG-17): the README, in English and in Chinese. The rest of docs/
+// (the architecture, the pitfalls, the decision records) is about how padmate
+// is made, and the READMEs of the examples are notes for developing them.
+var UserDocuments = []string{"README.md", "README.zh-CN.md"}
 
 // UserGuide is the folder of the user guide, which an installation has whole.
 const UserGuide = "docs/guide/"
@@ -31,21 +27,12 @@ const userGuideIndex = UserGuide + "00-index.md"
 // portablezip.Collect names them.
 func shipsFile(name string) bool {
 	switch {
-	case name == "README-PORTABLE.md":
-		// About unzipping the preview; the installer has no such step.
-		return false
 	case strings.HasPrefix(name, "docs/"):
-		return isUserDocument(name)
+		return strings.HasPrefix(name, UserGuide)
 	case strings.HasPrefix(name, "examples/") && path.Base(name) == "README.md":
 		return false
 	}
 	return true
-}
-
-// isUserDocument reports whether the file of docs/ called name is one that an
-// installation has.
-func isUserDocument(name string) bool {
-	return strings.HasPrefix(name, UserGuide) || slices.Contains(UserDocuments, name)
 }
 
 // missingUserDocuments returns the user documents that are not among staged,
@@ -90,6 +77,11 @@ func documentProblems(root string) []string {
 		})
 		if err != nil {
 			problems = append(problems, fmt.Sprintf("%s/%s: %v", ResourcesFolder, tree, err))
+		}
+	}
+	for _, name := range UserDocuments {
+		if info, err := os.Stat(filepath.Join(resources, filepath.FromSlash(name))); err == nil && info.Mode().IsRegular() {
+			have[name] = true
 		}
 	}
 	for _, name := range missingUserDocuments(have) {

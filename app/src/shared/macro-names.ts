@@ -1,4 +1,4 @@
-// Macro file names (SCR-50, ADR-0055): the rule of the daemon's
+// Macro file names (SCR-50, ADR-0011): the rule of the daemon's
 // profile.CheckMacroFile, which Main and the renderer share. The cases in
 // daemon/testdata/macro-names.json are checked by both.
 

@@ -20,7 +20,7 @@ import (
 var configSchemaJSON []byte
 
 // DefaultProfileID is the library ID of the fixed default profile (PRO-28,
-// ADR-0053): automatic selection uses it for every application no rule
+// ADR-0008): automatic selection uses it for every application no rule
 // binds. The library creates it, with no mapping, when it is missing; it
 // cannot be deleted or renamed, but it can be edited like any profile.
 const DefaultProfileID = "default"
@@ -28,7 +28,7 @@ const DefaultProfileID = "default"
 // Config contains global settings. Enabled controls automatic selection only;
 // the user's pause and system suspension are separate runtime state.
 //
-// config.json members that ADR-0053 retired (defaultProfile, onUnmatched,
+// config.json members that ADR-0008 retired (defaultProfile, onUnmatched,
 // ignore) still parse, so older files load, but Config does not keep them.
 type Config struct {
 	Enabled           bool
@@ -40,11 +40,11 @@ type Config struct {
 	Output            OutputSettings
 	Safety            SafetySettings
 	// FunctionKey is the one function key, back, start or guide (MAP-27,
-	// ADR-0075), the same for every profile and controller. DefaultConfig has
+	// ADR-0012), the same for every profile and controller. DefaultConfig has
 	// control.DefaultFunctionKey; the zero value, such as a Config built by
 	// hand, means the same (FunctionKeyOrDefault).
 	FunctionKey control.Control
-	// Feedback holds the four controller feedback switches (UI-27, ADR-0067),
+	// Feedback holds the four controller feedback switches (UI-27, ADR-0015),
 	// global for every profile and controller.
 	Feedback FeedbackSwitches
 }
@@ -222,7 +222,7 @@ type Selection struct {
 
 // Select evaluates rules in file order: the first enabled rule that matches
 // exe and names a profile selects it, and an application no rule binds
-// gets DefaultProfileID (ADR-0053). A disabled automatic selector preserves
+// gets DefaultProfileID (ADR-0008). A disabled automatic selector preserves
 // the current profile without releasing it.
 func (c *Config) Select(exe, current string) Selection {
 	r := Selection{Profile: current, Reason: "disabled", Rule: -1}

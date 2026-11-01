@@ -59,7 +59,7 @@ type ArbiterOptions struct {
 // are distinct chords on one key. A key is released with the event that
 // pressed it.
 //
-// A wheel key (keys.WheelUp and its kin, ADR-0062) is momentary: its press
+// A wheel key (keys.WheelUp and its kin, ADR-0004) is momentary: its press
 // turns the wheel one notch and its release injects nothing (KeyEvent.Silent).
 // The Arbiter still counts it like any key, so that Up, Repeat, ReleaseAll
 // and the ledger need no special case, with three differences. A press always
@@ -97,10 +97,10 @@ type ArbiterOptions struct {
 //
 // Sequence runs a list of steps that tap a shortcut, wait or type a text, in one
 // queue that the owner's release, the gate and the end of the loop cancel as a
-// whole (MAP-22, ADR-0070). See arbiter_sequence.go.
+// whole (MAP-22, ADR-0012). See arbiter_sequence.go.
 //
 // TypeText types a text with KEYEVENTF_UNICODE events, a character per Send
-// (OUT-21, ADR-0070). Such an event is not held: it has no keyState and no bit
+// (OUT-21, ADR-0012). Such an event is not held: it has no keyState and no bit
 // in the held-key log, and its release is in the batch of its press. Only a
 // release that failed twice is kept, as a pending release (Arbiter.stuck, in
 // Held, PendingReleases and the retries). See arbiter_text.go.
@@ -173,7 +173,7 @@ type keyState struct {
 
 	// With an event gap only (pace.go), the flags, which fit in the padding
 	// after the ones above; issued, users and group below grow the struct
-	// from 64 to 96 bytes, also without a gap (ADR-0049 decision 7):
+	// from 64 to 96 bytes, also without a gap (ADR-0004):
 	waitPress   bool // the press is queued and was never sent
 	waitRelease bool // a release of the key is queued
 	// mayBeDown: the key may be down before the press is sent: the press
@@ -829,7 +829,7 @@ func (a *Arbiter) take(o Owner, e KeyEvent, minPress time.Duration, main bool) b
 			ks.usedBy(o)
 			// A wheel notch is the whole action of its press, so it goes out
 			// whoever else references the key: two overlapping holds of
-			// WheelUp turn the wheel twice (ADR-0062).
+			// WheelUp turn the wheel twice (ADR-0004).
 			return e.momentary()
 		}
 		// The release of a wheel key injects nothing, so there is none to

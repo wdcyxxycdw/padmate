@@ -1,43 +1,56 @@
+// The stylesheets of the components, in their cascade order. The bundle keeps
+// the order in which a sheet is first imported, so they come before every
+// other import here: otherwise their order would follow how the imports below
+// happen to sort. theme.css, ui.css and shell.css come last, at the end.
+import "./controller/controller-3d.css";
+import "./analog/analog-editor.css";
+import "./drawer/drawer.css";
+import "./workspace/workspace.css";
+import "./pages/profiles/profiles.css";
+import "./pages/pages.css";
+import "./onboarding/onboarding.css";
+import "./pages/settings/model-licenses.css";
+import "./update/update.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { Config } from "../shared/generated/schema";
-import { BindingsListDialog } from "./BindingsListDialog";
-import { CardProfileSettings } from "./CardProfileSettings";
 import { ConfigRepairDialog } from "./ConfigRepairDialog";
-import { ControllerWorkspace } from "./ControllerWorkspace";
-import { createEditorStore, type EditorStore } from "./editor-store";
+import { createEditorStore, type EditorStore } from "./editor/editor-store";
 import { type Translate, translator } from "./i18n";
+import { Onboarding } from "./onboarding/Onboarding";
+import { shouldOffer } from "./onboarding/onboarding-model";
+import { DiagnosticsPage } from "./pages/DiagnosticsPage";
+import { EmptyState, NoController, NoProfile } from "./pages/EmptyState";
+import { LogsPage } from "./pages/LogsPage";
+import { CardProfileSettings } from "./pages/profiles/CardProfileSettings";
+import { NewProfileDialog } from "./pages/profiles/ProfileDialogs";
+import { ProfileSettingsDialog } from "./pages/profiles/ProfileSettingsDialog";
+import { ProfilesPage } from "./pages/profiles/ProfilesPage";
+import { ScriptsPage } from "./pages/ScriptsPage";
+import { SettingsPage } from "./pages/settings/SettingsPage";
+import { StartFailure } from "./StartFailure";
 import {
   defaultProfileName,
   isDefaultProfile,
   profileName,
   readConfig,
   sortProfilesByName,
-} from "./library-model";
-import { Onboarding } from "./Onboarding";
-import { shouldOffer } from "./onboarding-model";
-import { ProfileSettingsDialog } from "./ProfileSettingsDialog";
-import { DiagnosticsPage } from "./pages/DiagnosticsPage";
-import { EmptyState, NoController, NoProfile } from "./pages/EmptyState";
-import { LogsPage } from "./pages/LogsPage";
-import { NewProfileDialog } from "./pages/ProfileDialogs";
-import { ProfilesPage } from "./pages/ProfilesPage";
-import { ScriptsPage } from "./pages/ScriptsPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { StartFailure } from "./StartFailure";
-import { configuredFunctionKey } from "./settings-model";
-import { useSheetExport } from "./sheet-export";
+} from "./state/library-model";
+import { configuredFunctionKey } from "./state/settings-model";
 import {
   activeProfileId,
   type Language,
   type PadmateState,
   type PadmateStore,
   type Page,
-} from "./store";
-import { UpdateDialogs } from "./UpdateDialogs";
+} from "./state/store";
 import { Dialog, MenuButton, type MenuEntry, Segmented } from "./ui/controls";
 import { Icon, type IconName } from "./ui/Icon";
+import { UpdateDialogs } from "./update/UpdateDialogs";
+import { BindingsListDialog } from "./workspace/BindingsListDialog";
+import { ControllerWorkspace } from "./workspace/ControllerWorkspace";
+import { useSheetExport } from "./workspace/sheet-export";
 import "./theme.css";
 import "./ui/ui.css";
 import "./shell.css";
@@ -520,7 +533,7 @@ export function App({ store }: { store: PadmateStore }) {
       editor.getState().setGlobalTiming({});
     }
   }, [editor, state.config]);
-  // The function key the settings choose (UI-30, ADR-0075): the mapping
+  // The function key the settings choose (UI-30, ADR-0012): the mapping
   // page names it and does not edit its own bindings.
   useEffect(() => {
     editor

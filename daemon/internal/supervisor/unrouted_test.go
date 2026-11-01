@@ -33,7 +33,7 @@ func (u *unroutedLog) list() []string {
 	return slices.Clone(u.got)
 }
 
-// TestUnrouted (ADR-0071): the button edges of a gamepad that no slot maps
+// TestUnrouted (ADR-0016): the button edges of a gamepad that no slot maps
 // are reported with why, for the diagnostics page: it waits for a slot
 // ("queued"), the device filter or the ignore setting leaves it out
 // ("ignored"), it has no gamepad mapping ("notGamepad"), or its slot is

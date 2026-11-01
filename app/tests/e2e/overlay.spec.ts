@@ -19,7 +19,7 @@ import {
   rpc,
 } from "./helpers";
 
-// SPK-09 and HUD-01 (ADR-0063): the overlay window never takes the
+// SPK-09 and HUD-01 (ADR-0014): the overlay window never takes the
 // foreground, and its window has the styles that keep it from doing so.
 //
 // Focus-dependent, like the key preview and the native capture specs: padmate's
@@ -286,7 +286,7 @@ test("closing the main window keeps the overlay, and quitting ends the app altho
     const opened = await launch(f);
     app = opened.app;
     const handle = await overlayShown(app);
-    // Closing the main window only hides it (ADR-0077): the overlay stays.
+    // Closing the main window only hides it (ADR-0013): the overlay stays.
     await closeWindow(app);
     await expect
       .poll(() => mainWindowVisible(app as ElectronApplication))
@@ -360,7 +360,7 @@ test("the overlay window is made again once after its renderer crashed, and not 
   }
 });
 
-// HUD-04 (ADR-0063): the overlay tells, for a moment, what just changed. The
+// HUD-04 (ADR-0014): the overlay tells, for a moment, what just changed. The
 // daemon's state events make a toast when the active profile changes, mapping
 // is paused or resumed, or the layer changes (here: profile and pause; the
 // fixture's profile has one layer). Not while padmate's own window is
@@ -557,7 +557,7 @@ test("the overlay shows a toast for a profile switch, a pause and a resume, but 
   }
 });
 
-// IN-12 (ADR-0065): a controller that discharges to 15% is announced on the
+// IN-12 (ADR-0015): a controller that discharges to 15% is announced on the
 // overlay, once per episode and also while the main window is in front (the
 // editor shows the battery only on the settings page); charging and a new drop
 // is announced again. The fixture daemon has no battery and no motors:
@@ -667,7 +667,7 @@ test("the overlay tells a low battery once per episode, and the fake controller 
   }
 });
 
-// HUD-05 (ADR-0063): Settings → 浮层 has three rows: 提示消息 (on or off),
+// HUD-05 (ADR-0014): Settings → 浮层 has three rows: 提示消息 (on or off),
 // 位置 (底部 or 顶部) and 不透明度 (40-100 %). They are the UI's own, kept in
 // its localStorage, and the page pushes them to Main, which moves the window
 // (setBounds only), gates the toasts and tells the overlay's page the opacity.
@@ -920,7 +920,7 @@ test("the overlay follows the position, toast and opacity settings (HUD-05)", as
   }
 });
 
-// HUD-03 (ADR-0063): the 按键提示 action lists, while its button is held, what
+// HUD-03 (ADR-0014): the 按键提示 action lists, while its button is held, what
 // the other controls of the current layer do. The daemon puts the list in its
 // state events (every 250 ms), Main passes it to the overlay's page, and the
 // window grows for the panel (setBounds only: the bottom edge stays, the toast
@@ -1069,7 +1069,7 @@ test("holding the button bound to the key hints lists the layer's bindings in th
   }
 });
 
-// SCR-22 (ADR-0063): a script's hud.toast and hud.panel reach the overlay. The
+// SCR-22 (ADR-0014): a script's hud.toast and hud.panel reach the overlay. The
 // UI subscribes to the daemon's hud topic while its overlay exists (the daemon
 // then tells scripts so: host.has("hud")), shows a script's toast as the pill,
 // and draws the panels the daemon lists in its state events where the key
@@ -1181,7 +1181,7 @@ on("north", "press", () => {
 
     // padmate's own window coming to the front and leaving it each release
     // the slot (M10), which drops the script's runtime; the next press asks
-    // for a new one (SCRIPTING §4.3), and a press before its setup is done
+    // for a new one, and a press before its setup is done
     // is dropped. So press east, which the script does not use and the
     // profile does not bind, until the script runs, before the first press
     // that counts.

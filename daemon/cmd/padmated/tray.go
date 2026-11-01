@@ -35,7 +35,7 @@ func devBuild(instance, pipe string) bool { return instance != "" || pipe != "" 
 // from executable and create (autostart.New), or nil and why there is
 // none. A development or test build gets none (errDevelopmentBuild) and
 // calls neither: its entry would replace the user's real one with the
-// development build (UI-19, ADR-0051, ADR-0052).
+// development build (UI-19, ADR-0017, ADR-0001).
 func newStartup(opts options, executable func() (string, error), create func(string, []string) (startupSetting, error)) (startupSetting, error) {
 	if developmentBuild() {
 		return nil, errDevelopmentBuild

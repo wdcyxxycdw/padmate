@@ -19,7 +19,7 @@ import {
 import { UPDATE_SETTINGS_FILE, UpdateSettingsStore } from "./update-settings";
 import { createElectronUpdater } from "./updater-electron";
 
-// The automatic update (PKG-10, ADR-0073) as Main holds it: the pieces of
+// The automatic update (PKG-10, ADR-0018) as Main holds it: the pieces of
 // update-controller.ts, update-settings.ts and updater-electron.ts put together
 // with the window's close guard and the browser. index.ts only calls this.
 

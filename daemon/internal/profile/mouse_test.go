@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The stick in mode "mouse" and the mouse actions (ADR-0062, section 5): the
+// The stick in mode "mouse" and the mouse actions (ADR-0004, section 5): the
 // optional fields resolve to their defaults, and the values written survive.
 func TestMouseStickAndActions(t *testing.T) {
 	const src = `{

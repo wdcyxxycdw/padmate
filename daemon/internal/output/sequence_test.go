@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The sequence (MAP-22, ADR-0070): steps that tap a shortcut, wait or type a
+// The sequence (MAP-22, ADR-0012): steps that tap a shortcut, wait or type a
 // text, run by one owner-cancellable queue of the Arbiter.
 
 func kstep(spec string) keys.Step { return keys.KeysStep(keys.MustParse(spec)) }

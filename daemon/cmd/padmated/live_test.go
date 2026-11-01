@@ -485,7 +485,7 @@ func TestLiveVirtualReconnect(t *testing.T) {
 // and waits. Its first press takes the slot over and is mapped (IN-05), and
 // the idle one's presses then map nothing. The header and the rows have
 // no slots then. With padmated's 4 slots the idle one keeps a slot of its
-// own, and is mapped (ROADMAP §5.2).
+// own, and is mapped (docs/adr/0003-devices-and-slots.md).
 func TestLiveVirtualTakeOver(t *testing.T) {
 	tl := &testLive{}
 	cfg := testConfig(t, tl, inputtest.Library(t), nil, "--dry-run")
@@ -549,7 +549,7 @@ func TestLiveVirtualTakeOver(t *testing.T) {
 // of its own (IN-08), and each row names the slot of its pad. The pads
 // share the keyboard: Space held by both goes down once, and up once the
 // second lets go. That second release is by unplugging the pad, but SDL
-// lifts east before it reports the removal (docs/PITFALLS.md "SDL 行为"), so it
+// lifts east before it reports the removal (docs/PITFALLS.md "SDL behavior"), so it
 // is the release of the button; the supervisor's TestSlotsSharedKey and
 // TestSlotsRehomeReleases cover the release by a removal.
 func TestLiveVirtualTwoPads(t *testing.T) {

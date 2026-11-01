@@ -48,7 +48,7 @@ var fbStart = fbShown{mode: 1, led: true}
 // "feedback slot=0 mode=1 paused pulse x1 210ms gap=100 color=#FFAA00" under
 // the decision or note that caused it, at the time of the clock. The pulse and
 // the color are what the global feedback switches leave of the state
-// (config.json feedback.rumble, led and pause; ADR-0067), so a pause that is
+// (config.json feedback.rumble, led and pause; ADR-0015), so a pause that is
 // not shown prints no pulse and the color of the layer; "led=off" says the
 // lights are not padmate's. A line is printed when a pulse starts or one of these changes, so
 // a refresh that changes nothing is silent. The JSON lines of --decisions have

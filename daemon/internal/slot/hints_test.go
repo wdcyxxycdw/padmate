@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The key hints (HUD-03, ADR-0063) through a Slot: the slot's View carries the
+// The key hints (HUD-03, ADR-0014) through a Slot: the slot's View carries the
 // list while a hints action is held, and the paths that end what a slot holds
 // end it, like the pointer of a stick (mouse_move_test.go).
 

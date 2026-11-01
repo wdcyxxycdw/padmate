@@ -19,7 +19,7 @@ import (
 )
 
 // macroSlotRuntime is a slot's runtime that only runs macros, as padmated's
-// is for a profile without a legacy entry (design §5.2), on a real
+// is for a profile without a legacy entry, on a real
 // Lifecycle: a safety release stops it, and a resume or a reload builds
 // a new runtime. It builds synchronously, so a test has no cold start.
 type macroSlotRuntime struct {

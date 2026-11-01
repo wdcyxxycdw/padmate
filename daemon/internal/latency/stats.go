@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// The product statistics of padmated (DMN-15, ADR-0071).
+// The product statistics of padmated (DMN-15, ADR-0016).
 //
 // A Recorder keeps the latest RingSize latencies of each device: L is the time
 // from T-input receiving the event of an input edge (input.Event.Stamp) to the

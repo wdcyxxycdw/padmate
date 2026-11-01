@@ -1,6 +1,6 @@
 // Package supervisor runs padmated's slots (DMN-02): the router, which
 // hands each slot the events of its gamepad, and the supervision of the
-// slot loops. It is what ADR-0016 decision 7 calls the supervisor: T-input
+// slot loops. It is what ADR-0005 calls the supervisor: T-input
 // (input.Source) feeds one channel, and the router, the goroutine of Run,
 // reads it.
 //

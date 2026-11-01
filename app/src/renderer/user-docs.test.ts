@@ -25,7 +25,6 @@ import {
   isExternal,
   isFolder,
   linkTargets,
-  mirrorReadmePair,
   numbers,
   quotedSpans,
   read,
@@ -33,7 +32,7 @@ import {
   strayQuotes,
   tableShapes,
   userDocPairs,
-  withoutEn,
+  withoutZh,
 } from "../../tests/docs/markdown";
 import {
   chineseInEnglish,
@@ -42,7 +41,6 @@ import {
   names,
   trayNames,
 } from "../../tests/docs/names";
-import { inMirror } from "../../tests/mirror";
 
 /** The Chinese texts of the app and what each is called in English. */
 const known = new Map<string, Set<string>>();
@@ -55,16 +53,12 @@ for (const [zh, en] of names) know(zh, en);
 for (const name of trayNames) know(name, name);
 for (const { zh, en } of external) know(zh, en);
 
-// The public code mirror has no documents (daemon/internal/publicmirror): every
-// test that reads one is skipped there, and only there. Its factories still run
-// when the tests are collected, so they must not read anything in the mirror.
-const docs = describe.skipIf(inMirror);
+const docs = describe;
 
-// The README of the public code mirror says the same as the others do.
-const pairs = [...userDocPairs(), ...(inMirror ? [] : [mirrorReadmePair])];
+const pairs = userDocPairs();
 
 /** The English twin of a Chinese document. */
-const twin = (zh: string) => zh.replace(/\.md$/, ".en.md");
+const twin = (zh: string) => zh.replace(/\.zh-CN\.md$/, ".md");
 
 /**
  * The shortest an English block may be, as a share of the characters of its
@@ -91,7 +85,7 @@ const installedDocuments = new Set(
  */
 const packaged = (file: string) =>
   file === "README.md" ||
-  file === "README.en.md" ||
+  file === "README.zh-CN.md" ||
   file === "LICENSE" ||
   file === "docs/guide" ||
   file.startsWith("docs/guide/") ||
@@ -116,7 +110,7 @@ describe("the table of names", () => {
       ).toBe(false);
   });
 
-  it.skipIf(inMirror)("has no outside name that no document quotes", () => {
+  it("has no outside name that no document quotes", () => {
     const zhSpans = new Set(
       pairs.flatMap((pair) => quotedSpans(read(pair.zh))),
     );
@@ -137,8 +131,8 @@ describe("the table of names", () => {
 });
 
 docs("the lists of exceptions", () => {
-  const zhDocs = inMirror ? [] : pairs.map((pair) => read(pair.zh));
-  const enDocs = inMirror ? [] : pairs.map((pair) => read(pair.en));
+  const zhDocs = pairs.map((pair) => read(pair.zh));
+  const enDocs = pairs.map((pair) => read(pair.en));
 
   it("keeps a heading for every section that a document sends the reader to", () => {
     for (const entry of external) {
@@ -182,26 +176,26 @@ docs("the guide folder", () => {
   it("has a Chinese and an English file for every chapter and nothing else", () => {
     const files = guideFiles();
     expect(files.length).toBeGreaterThan(2);
-    const zh = files.filter((f) => !f.endsWith(".en.md")).map((f) => f);
-    const en = files
-      .filter((f) => f.endsWith(".en.md"))
-      .map((f) => f.replace(/\.en\.md$/, ".md"));
-    expect(en).toEqual(zh);
-    for (const file of zh)
+    const en = files.filter((f) => !f.endsWith(".zh-CN.md"));
+    const zh = files
+      .filter((f) => f.endsWith(".zh-CN.md"))
+      .map((f) => f.replace(/\.zh-CN\.md$/, ".md"));
+    expect(zh).toEqual(en);
+    for (const file of en)
       expect(file, "chapters are NN-slug.md").toMatch(
         /^docs\/guide\/\d\d-[a-z0-9]+(-[a-z0-9]+)*\.md$/,
       );
   });
 
   it("starts with an index, and the index names every chapter in order", () => {
-    const chapters = guidePairs().map((pair) => pair.zh);
+    const chapters = guidePairs().map((pair) => pair.en);
     expect(chapters[0]).toBe("docs/guide/00-index.md");
     for (const [file, suffix] of [
       ["docs/guide/00-index.md", ".md"],
-      ["docs/guide/00-index.en.md", ".en.md"],
+      ["docs/guide/00-index.zh-CN.md", ".zh-CN.md"],
     ] as const) {
       const linked = linkTargets(read(file))
-        .filter((target) => /^\d\d-[a-z0-9-]+(\.en)?\.md$/.test(target))
+        .filter((target) => /^\d\d-[a-z0-9-]+(\.zh-CN)?\.md$/.test(target))
         .filter((target) => !target.startsWith("00-"));
       expect(linked).toEqual(
         chapters
@@ -296,8 +290,8 @@ ${enBlocks[i].text}`,
   });
 
   it("have the same links, bar the .en of a twin", () => {
-    expect(linkTargets(enText).map(withoutEn)).toEqual(
-      linkTargets(zhText).map(withoutEn),
+    expect(linkTargets(enText).map(withoutZh)).toEqual(
+      linkTargets(zhText).map(withoutZh),
     );
   });
 
@@ -339,8 +333,6 @@ ${enBlocks[i].text}`,
 });
 
 docs("links of the user documents", () => {
-  // The README of the mirror is written for its root; the installer does not
-  // ship it, and a Go test (daemon/tools/mirror) checks its links.
   const files = userDocPairs()
     .flatMap((pair) => [pair.zh, pair.en])
     .filter(exists);
@@ -370,8 +362,9 @@ docs("links of the user documents", () => {
   it.each(files)(
     "%s links to the repository only for its releases and issues",
     (file) => {
-      // The public repository has the code only (daemon/tools/mirror), so no
-      // document is there to link to; its releases and issues are.
+      // The documents link to each other by relative paths, which work in the
+      // installed program too; a link into the repository is for its releases
+      // and issues.
       for (const target of linkTargets(read(file)).filter(isExternal))
         if (/github\.com\/wdcyxxycdw\/padmate\b/.test(target))
           expect(target, `${file}: a link into the repository`).toMatch(
@@ -408,7 +401,7 @@ describe("the reader of the documents", () => {
     "“code” [x](y.md)",
     "```",
     "",
-    "See [guide](b.en.md) and [site](https://example.com/x).",
+    "See [guide](b.zh-CN.md) and [site](https://example.com/x).",
   ].join("\n");
 
   it("takes quoted names from prose only", () => {
@@ -420,13 +413,13 @@ describe("the reader of the documents", () => {
     expect(strayQuotes("Press “A” and go")).toEqual([]);
   });
 
-  it("takes links from prose only, and sees a twin through .en", () => {
+  it("takes links from prose only, and sees a twin through .zh-CN", () => {
     expect(linkTargets(sample)).toEqual([
       "a.md",
-      "b.en.md",
+      "b.zh-CN.md",
       "https://example.com/x",
     ]);
-    expect(withoutEn("b.en.md")).toBe("b.md");
+    expect(withoutZh("b.zh-CN.md")).toBe("b.md");
   });
 
   it("lists the blocks, so a missing item shows", () => {
@@ -454,8 +447,8 @@ describe("the reader of the documents", () => {
   });
 
   it("resolves a link from the folder of the file", () => {
-    expect(resolveLink("docs/guide/01.md", "../known-limitations.md")).toBe(
-      "docs/known-limitations.md",
+    expect(resolveLink("docs/guide/01.md", "../ARCHITECTURE.md")).toBe(
+      "docs/ARCHITECTURE.md",
     );
     expect(resolveLink("README.md", "docs/guide/00-index.md")).toBe(
       "docs/guide/00-index.md",

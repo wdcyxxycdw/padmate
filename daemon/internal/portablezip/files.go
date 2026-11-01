@@ -11,7 +11,7 @@ import (
 )
 
 var requiredRepoFiles = []string{
-	"README.md", "README.en.md", "README-PORTABLE.md", "LICENSE", "licenses/README.md", "licenses/SDL3-LICENSE.txt",
+	"README.md", "README.zh-CN.md", "LICENSE", "licenses/README.md", "licenses/SDL3-LICENSE.txt",
 	"schema/profile.schema.json", "examples/traces/basic.jsonl", "examples/profiles/basic.json",
 	"examples/scripts/README.md",
 	"examples/scripts/stick-rate/profile.json", "examples/scripts/stick-rate/main.ts", "examples/scripts/stick-rate/README.md",

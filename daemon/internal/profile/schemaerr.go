@@ -18,8 +18,8 @@ import (
 
 // Schema locations, as fragments of a ValidationError's SchemaURL, that
 // get their own messages. TestSchemaMessages checks that each exists.
-// schemaFunctionBindings is the profile's functionSet (ADR-0075) and
-// schemaFunctionSet a set of the old functionKeys (ADR-0069).
+// schemaFunctionBindings is the profile's functionSet (ADR-0012) and
+// schemaFunctionSet a set of the old functionKeys (ADR-0012).
 const (
 	schemaRoot             = ""
 	schemaVersionProp      = "/properties/schemaVersion"
@@ -336,7 +336,7 @@ func unknownProperty(where, p string) string {
 }
 
 // legacyFunctionKey reports whether c is back or start, the two keys that the
-// old functionKeys format (ADR-0069) has sets for.
+// old functionKeys format (ADR-0012) has sets for.
 func legacyFunctionKey(c control.Control) bool { return c == control.Back || c == control.Start }
 
 // functionKeyNamed returns the function key of the old functionKeys format,
@@ -369,14 +369,14 @@ func unknownFunctionKey(p string) string {
 
 // functionSetProperty words the diagnostic for property p that a set of the
 // old functionKeys does not allow: back and start (and the names printed on
-// them, which a layer would hint at), which only functionSet (ADR-0075) can
+// them, which a layer would hint at), which only functionSet (ADR-0012) can
 // bind, a color, which only a layer has, or a name that is no control.
 func functionSetProperty(p string) string {
 	if c, ok := control.Parse(p); ok && legacyFunctionKey(c) {
-		return quote(p) + " cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can"
+		return quote(p) + " cannot be bound in a functionKeys set; functionSet can"
 	}
 	if c, ok := controlNicknames[strings.ToLower(p)]; ok && (c == "back" || c == "start") {
-		return quote(p) + " cannot be bound in a functionKeys set (ADR-0069); functionSet (ADR-0075) can"
+		return quote(p) + " cannot be bound in a functionKeys set; functionSet can"
 	}
 	if p == "color" {
 		return "a function key set has no color: it is not a layer"

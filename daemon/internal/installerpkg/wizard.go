@@ -6,7 +6,7 @@ import (
 )
 
 // FolderName is the name of the folder padmate is installed in: the install
-// folder is a folder with this name (app/build/padmate-wizard.nsh, ADR-0068).
+// folder is a folder with this name (app/build/padmate-wizard.nsh, ADR-0018).
 const FolderName = ProductName
 
 // MaxRelativePath is the length the wizard allows for the longest path inside

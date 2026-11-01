@@ -7,7 +7,7 @@ import (
 )
 
 // MenuMaskVK is the virtual-key code of the menu mask key (OUT-08,
-// ADR-0021): 0xE8, which Microsoft's virtual-key table lists as
+// ADR-0004): 0xE8, which Microsoft's virtual-key table lists as
 // unassigned.
 const MenuMaskVK = 0xE8
 
@@ -50,7 +50,7 @@ func menuKey(e KeyEvent) int {
 }
 
 // MenuMask is a Sender that keeps a lone Alt or Win from opening the menu
-// bar or the Start menu (OUT-08, ADR-0021). Before the release of LAlt,
+// bar or the Start menu (OUT-08, ADR-0004). Before the release of LAlt,
 // RAlt, LWin or RWin, when no other key was pressed since that key's last
 // press, it inserts a press and a release of the mask key, in the same
 // batch. It sees only the events it forwards, and only those the Sender

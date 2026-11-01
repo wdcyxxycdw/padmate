@@ -1,4 +1,4 @@
-# The wheel keys are momentary (ADR-0062): a press turns the wheel one notch,
+# The wheel keys are momentary (ADR-0004): a press turns the wheel one notch,
 # and the release after it is one the Sender drops (SendInput injects nothing
 # for it, and the dry-run printer leaves it out). The Arbiter still sends it,
 # so every press has its release in this trace.

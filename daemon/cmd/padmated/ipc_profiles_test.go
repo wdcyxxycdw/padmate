@@ -184,7 +184,7 @@ export default defineScript({params:{amount:param.number({default:1,max:2})},set
 }
 
 // TestIPCDefaultProfileEditableNotRenamable: the fixed default (PRO-28,
-// ADR-0053) saves and applies an edit at once, refuses a new name with
+// ADR-0008) saves and applies an edit at once, refuses a new name with
 // rpcCodeProfileFixed, and copies to an ordinary profile that renames.
 func TestIPCDefaultProfileEditableNotRenamable(t *testing.T) {
 	dir := t.TempDir()

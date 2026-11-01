@@ -47,7 +47,7 @@ describe("isolated development runtime", () => {
       resolveRuntimeOptions({ ...context, packaged: true, env }).appsFile,
     ).toBe("");
   });
-  it("puts the overlay on the secondary display only in an isolated run that asks (ADR-0063)", () => {
+  it("puts the overlay on the secondary display only in an isolated run that asks (ADR-0014)", () => {
     const env = { PADMATE_E2E_DISPLAY: "secondary" };
     expect(resolveRuntimeOptions(context).e2eDisplay).toBe("primary");
     expect(resolveRuntimeOptions({ ...context, env }).e2eDisplay).toBe(
@@ -134,7 +134,7 @@ describe("isolated development runtime", () => {
       "C:\\Installed\\padmate\\resources\\bin\\padmated.exe",
     );
     expect(options.ipcDir).toBe("C:\\RealUser\\AppData\\Local\\padmate\\run");
-    // A packaged UI's daemon sends real keys (ADR-0052); the harness
+    // A packaged UI's daemon sends real keys (ADR-0001); the harness
     // variable does not turn it into a test binary.
     const launch = options.daemonLaunch(report);
     expect(launch.args).toEqual([

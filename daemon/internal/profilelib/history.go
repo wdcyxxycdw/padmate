@@ -86,7 +86,7 @@ type Saved struct {
 // without any is an empty list; a missing profile folder is fs.ErrNotExist
 // and a linked one, or a HistoryDir that is not a folder, an
 // UnsupportedError. It reads under the writer lock, so a save does not
-// prune a snapshot that History holds open (PITFALLS "rename 替换文件").
+// prune a snapshot that History holds open (PITFALLS "Replacing a file by rename").
 func (l *Library) History(id string) ([]Snapshot, error) {
 	if !ValidID(id) {
 		return nil, fmt.Errorf("profile library: invalid id %q", id)

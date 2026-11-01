@@ -278,7 +278,7 @@ var frSeeds = [][]byte{
 	{0, frSuspend, 1, 0, frAdd, 0, 0, frAxis, 0, 0x40, frAxis, 3, 0x7f, frSuspend, 0, 0, frAxis, 0, 0x50, frAxis, 3, 0, frSync, 0, 0,
 		frAxis, 3, 0x7f, frAxis, 0, 0, frAxis, 0, 0x50, frSync, 0, 0},
 
-	// A remap leaves the suspension's quarantine as it is (IN-18, ADR-0033).
+	// A remap leaves the suspension's quarantine as it is (IN-18, ADR-0006).
 	// The router's reset of a gamepad (remapped) clears its state and the
 	// resume sample, not d.recovery, and only these tell that from a reset that
 	// clears the quarantine too: the late report of a control that was held
@@ -326,7 +326,7 @@ var frSeeds = [][]byte{
 // system gate closed just while suspended and its user gate just while
 // paused, and nothing is held while suspended. A stick or trigger that is
 // deflected at the start of a suspension or moves during it is masked in the
-// router's state after the resume, as a button is (ADR-0033), until the
+// router's state after the resume, as a button is (ADR-0006), until the
 // report that ends its quarantine (axisApplies). A DeviceRemapped (IN-18) of
 // a connected gamepad resets it, as a drop does every one: its controls count
 // as up in the router and in its slot, and one that is still held counts
@@ -442,7 +442,7 @@ type frPad struct {
 	// quarantined across handoffs until a resumed release is established.
 	quarantine [control.Count]bool
 	needDown   [control.Count]bool
-	// The axes have the same quarantine (ADR-0033): one that is deflected at
+	// The axes have the same quarantine (ADR-0006): one that is deflected at
 	// the start of a suspension, or moves during it, is masked after the
 	// resume until a neutral report ends it, and needActive is set when
 	// the suspension saw it go neutral, so that it must be deflected again
@@ -629,7 +629,7 @@ func (fz *routerFuzzer) step(op, a, b byte) {
 	case frRemap:
 		// Like a drop, for one gamepad: its controls count as up, in the router and
 		// in its slot, and a slot behind catches up to that. The router's quarantine
-		// of the suspension (ADR-0033) is not touched by it, nor the model's: a
+		// of the suspension (ADR-0006) is not touched by it, nor the model's: a
 		// control held through a suspension stays masked until it was released and
 		// pressed, and an axis until it was neutral and deflected again.
 		if p.connected {

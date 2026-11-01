@@ -33,7 +33,7 @@ func TestFeedbackSchemaRejectsBadValues(t *testing.T) {
 	}
 }
 
-// TestFeedbackSwitchesAreIgnored pins ADR-0067: the four switches that a
+// TestFeedbackSwitchesAreIgnored pins ADR-0015: the four switches that a
 // profile's feedback once held (rumble, led, pause, lowBattery) are global
 // settings now. A file that has them stays valid, with no diagnostic at all
 // (not even a warning), and parses to the same feedback as a file without

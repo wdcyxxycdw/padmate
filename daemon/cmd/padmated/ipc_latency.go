@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/latency"
 )
 
-// The latency statistics (DMN-15, ADR-0071): T-output measures, for each key
+// The latency statistics (DMN-15, ADR-0016): T-output measures, for each key
 // it sends for an input edge, the time from T-input's receipt of the edge to
 // the return of the Send call (liveRun.latencyStats, filled through
 // output.ArbiterOptions.Latency), and keeps the latest 1000 per device.

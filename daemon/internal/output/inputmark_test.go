@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// These tests are the output half of the latency statistics (DMN-15, ADR-0071):
+// These tests are the output half of the latency statistics (DMN-15, ADR-0016):
 // the Arbiter ends the measurement of an input edge (output.InputMark) at the
 // first Send that really went out for the command under way, and tells the
 // ArbiterOptions.Latency sink, on T-output.
@@ -319,7 +319,7 @@ func TestRemoteInputMarkOtherCommands(t *testing.T) {
 	}
 }
 
-// TestRemoteInputMarkLaterSteps (DMN-15, ADR-0071): of a sequence, only the first
+// TestRemoteInputMarkLaterSteps (DMN-15, ADR-0016): of a sequence, only the first
 // step is the input edge's; the steps behind it go out at the Arbiter's
 // deadlines, from the Loop, where no mark is.
 func TestRemoteInputMarkLaterSteps(t *testing.T) {

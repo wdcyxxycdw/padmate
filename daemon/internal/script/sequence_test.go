@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// key.sequence and key.type (SCR-26, API 0.21, ADR-0070).
+// key.sequence and key.type (SCR-26, API 0.21, ADR-0012).
 
 // seqSender records the key and the Unicode events a Loop injects, as "+Z",
 // "-Z" and "'a'" for a typed unit.

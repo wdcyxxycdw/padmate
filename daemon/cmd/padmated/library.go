@@ -35,7 +35,7 @@ func resolveDataDir(opts *options) (err error) {
 // to log and tell the UI), and state.json, where errors start an empty
 // state (stateErr; live mode resets the file, a state.json it cannot
 // read stays), creates the fixed default profile when it is missing
-// (PRO-28, ADR-0053; a failure is kept in defaultErr, not fatal), moves
+// (PRO-28, ADR-0008; a failure is kept in defaultErr, not fatal), moves
 // the profiles' macros folders into the script library (SCR-51,
 // MigrateMacros; what it did is kept for live mode to log, and a failure
 // is not fatal either; a replay only reads, so it finds unmoved macros
@@ -102,7 +102,7 @@ func resolveLibrary(opts *options) error {
 const disabledProfile = `{"schemaVersion":1,"name":"Mapping disabled","layers":{"base":{}}}`
 
 // readLibraryProfile reads library profile id for selection. The fixed
-// default never stops a selection (ADR-0053): when it is missing, create
+// default never stops a selection (ADR-0008): when it is missing, create
 // (live mode) writes it again (deleted by hand while padmated runs); when
 // it still cannot be read, or does not parse, it runs as
 // DefaultProfileText, so an application no rule binds never keeps the

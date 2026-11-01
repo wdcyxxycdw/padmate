@@ -580,7 +580,7 @@ func replayDryRun(ctx context.Context, opts options, p *profile.Profile, prog *e
 		Feedback: func(f engine.Feedback) { pr.feedback(0, f) },
 	}
 	if st := opts.settings; st != nil {
-		// The feedback switches of config.json (UI-27, ADR-0067) shape the
+		// The feedback switches of config.json (UI-27, ADR-0015) shape the
 		// printed haptics and feedback states as they do the live ones.
 		sw := st.Feedback
 		sc.Switches = func() profile.FeedbackSwitches { return sw }
@@ -664,7 +664,7 @@ func parseProfile(path string, data []byte, stderr io.Writer, settings ...*profi
 }
 
 // parseProfileIn is parseProfile for library profile id when lib is not
-// nil: its extends is resolved with the library (PRO-19, ADR-0070), and a
+// nil: its extends is resolved with the library (PRO-19, ADR-0012), and a
 // problem in a parent's file is printed with that file's path. Without a
 // library, or an id (the file that --profile names, the disabled profile),
 // extends is an error.
@@ -696,7 +696,7 @@ func parseProfileIn(lib *profilelib.Library, id, path string, data []byte, stder
 	if cfg != nil {
 		p = cfg.WithDefaults(p)
 	}
-	// The function key is config.json's (ADR-0075); without settings it is the
+	// The function key is config.json's (ADR-0012); without settings it is the
 	// default, start.
 	prog, err = engine.Compile(p, engine.WithFunctionKey(cfg.FunctionKeyOrDefault()))
 	if err != nil {

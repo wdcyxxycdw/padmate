@@ -17,7 +17,7 @@ type actionRuntime interface {
 	InvokeAction(string, map[string]any, ScriptEvent) error
 }
 
-// macroRuntime runs macros (SCR-50, ADR-0055). RunMacro starts one run of
+// macroRuntime runs macros (SCR-50, ADR-0011). RunMacro starts one run of
 // the macro file, or remembers it until the runtime is ready; the runtime
 // reports a missing or broken macro and ignores a macro that is running.
 type macroRuntime interface {

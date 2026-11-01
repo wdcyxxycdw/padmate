@@ -8,7 +8,7 @@ const open = {
   pageReady: true,
 };
 
-describe("closing the main window (ADR-0077)", () => {
+describe("closing the main window (ADR-0013)", () => {
   it("hides the window while the daemon is connected, so the page and its model stay loaded", () => {
     expect(closeHides(open)).toBe(true);
   });
@@ -28,7 +28,7 @@ describe("closing the main window (ADR-0077)", () => {
   });
 });
 
-describe("a hidden window when the daemon goes away (ADR-0077)", () => {
+describe("a hidden window when the daemon goes away (ADR-0013)", () => {
   it("quits the application once the connection has ended", () => {
     expect(quitsWhileHidden(true, "disconnected")).toBe(true);
     expect(quitsWhileHidden(true, "failed")).toBe(true);

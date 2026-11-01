@@ -139,7 +139,7 @@ func TestRecorderConcurrent(t *testing.T) {
 	wg.Wait()
 }
 
-// TestWarn (DMN-15, ADR-0071): a p99 above 1.5 ms warns, but only from 50
+// TestWarn (DMN-15, ADR-0016): a p99 above 1.5 ms warns, but only from 50
 // samples on; exactly 1.5 ms does not warn, as the bench's gate is p99 < 1.5 ms.
 func TestWarn(t *testing.T) {
 	if WarnP99 != 1500*time.Microsecond || WarnMinSamples != 50 {

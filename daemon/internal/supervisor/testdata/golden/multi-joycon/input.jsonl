@@ -1,4 +1,4 @@
-# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0022), on
+# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0002), on
 # two slots (IN-08): the events of joycon-separate. Joy-Con (L) takes
 # slot 0 and holds east. Joy-Con (R) wakes and gets slot 1 at once,
 # provisionally, and its tap of south, which confirms the slot, maps

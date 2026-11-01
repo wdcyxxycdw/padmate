@@ -7,7 +7,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// The raw joystick stream (IN-17, ADR-0072). SDL gives a joystick that it
+// The raw joystick stream (IN-17, ADR-0012). SDL gives a joystick that it
 // has no gamepad mapping for no gamepad events, and the controls of a
 // gamepad are the ones of its mapping. The mapping wizard and "padmatectl
 // monitor --raw" need the elements as the device has them: buttons, axes and

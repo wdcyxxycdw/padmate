@@ -5,7 +5,7 @@ import (
 )
 
 // InputMark is the input edge that a slot is handling, for the latency
-// statistics (DMN-15, ADR-0071): the Stamp that T-input read when it received
+// statistics (DMN-15, ADR-0016): the Stamp that T-input read when it received
 // the edge (input.Event.Stamp), and the key of the device it came from
 // (input.DeviceKey), which the statistics are kept under. A zero Stamp is no
 // edge.

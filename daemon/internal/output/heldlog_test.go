@@ -847,7 +847,7 @@ func TestLoopSweepPanics(t *testing.T) {
 
 // A wheel notch leaves nothing down, so the held-key log never has a wheel
 // key, though the Loop sends the press and the release of it like any key's:
-// the modifier of Ctrl+WheelUp is the only key the log keeps (ADR-0062).
+// the modifier of Ctrl+WheelUp is the only key the log keeps (ADR-0004).
 func TestLoopHeldLogSkipsWheelKeys(t *testing.T) {
 	path := heldPath(t)
 	lt := startLoopWith(t, output.LoopOptions{HeldFile: path, KeyDown: func(output.KeyEvent) bool { return false }}, nil, nil)

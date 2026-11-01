@@ -13,7 +13,6 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { quotedSpans, read, userDocPairs } from "../../tests/docs/markdown";
 import { names, type Source, trayNames } from "../../tests/docs/names";
-import { inMirror } from "../../tests/mirror";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..", "..");
@@ -131,9 +130,7 @@ const tray = readFileSync(
   "utf8",
 );
 
-// The public code mirror has no documents (daemon/internal/publicmirror): the
-// tests that check them are skipped there, and only there.
-const docPairs = inMirror ? [] : userDocPairs();
+const docPairs = userDocPairs();
 const zhSpans = new Set(docPairs.flatMap((pair) => quotedSpans(read(pair.zh))));
 const enSpans = new Set(docPairs.flatMap((pair) => quotedSpans(read(pair.en))));
 
@@ -162,11 +159,11 @@ describe("the names of the app that the documents quote", () => {
     ).toBe(true);
   });
 
-  it.skipIf(inMirror).each(rows)("a Chinese document uses %s", (zh) => {
+  it.each(rows)("a Chinese document uses %s", (zh) => {
     expect(zhSpans.has(zh), `no Chinese document quotes “${zh}”`).toBe(true);
   });
 
-  it.skipIf(inMirror).each(rows)("an English document uses %s", (_zh, en) => {
+  it.each(rows)("an English document uses %s", (_zh, en) => {
     expect(enSpans.has(en), `no English document quotes “${en}”`).toBe(true);
   });
 
@@ -174,7 +171,7 @@ describe("the names of the app that the documents quote", () => {
     expect(tray).toContain(`"${name}"`);
   });
 
-  it.skipIf(inMirror).each(trayNames)("the documents name %s", (name) => {
+  it.each(trayNames)("the documents name %s", (name) => {
     expect(zhSpans.has(name)).toBe(true);
     expect(enSpans.has(name)).toBe(true);
   });

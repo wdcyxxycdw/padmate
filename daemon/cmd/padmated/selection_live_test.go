@@ -166,7 +166,7 @@ func TestConfigPutAppliesSelectionLive(t *testing.T) {
 	tl.waitFor(t, tl.stdout, "send -Space")
 	button(src, "east", false)
 
-	// No rule binds game.exe any more: the fixed default (ADR-0053).
+	// No rule binds game.exe any more: the fixed default (ADR-0008).
 	put(`{"schemaVersion":0,"rules":[{"exe":"paint.exe","profile":"second"}]}`)
 	tl.waitProfile(t, profilelib.DefaultID)
 	// A null rule an older file kept binds nothing.
@@ -235,7 +235,7 @@ func TestConfigRestartRequiredOnlyForStartupFields(t *testing.T) {
 		{`,"enabled":false`, false},
 		{`,"releaseOnSwitch":"always"`, false},
 		{`,"rules":[{"exe":"game.exe","profile":"first"},{"exe":"paint.exe","profile":"second","enabled":false}]`, false},
-		// Members ADR-0053 retired change nothing.
+		// Members ADR-0008 retired change nothing.
 		{`,"onUnmatched":"none","defaultProfile":"first","ignore":["explorer.exe"]`, false},
 		{`,"rules":[{"exe":"game.exe","profile":null}]`, false},
 		{`,"output":{"sendToOwnWindow":true}`, false},

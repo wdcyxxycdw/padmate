@@ -343,7 +343,7 @@ func TestHasDepth(t *testing.T) {
 }
 
 // Back, Guide and Start are the controls that can be the function key
-// (MAP-27, ADR-0075), and only they; Start is the default.
+// (MAP-27, ADR-0012), and only they; Start is the default.
 func TestCanBeFunctionKey(t *testing.T) {
 	for _, c := range control.All() {
 		want := c == control.Back || c == control.Guide || c == control.Start

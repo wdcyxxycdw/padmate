@@ -405,7 +405,7 @@ describe("the update controller: what a check finds", () => {
   });
 });
 
-describe("the update controller: one look per check, release candidates too (ADR-0078)", () => {
+describe("the update controller: one look per check, release candidates too (ADR-0018)", () => {
   // The download site holds releases only, and every build reads the same
   // latest.yml: a release candidate is offered the release when it is higher,
   // and never a newer candidate.
@@ -714,7 +714,7 @@ describe("the update controller: the download", () => {
   });
 });
 
-describe("the update controller: the install (PKG-10, ADR-0073)", () => {
+describe("the update controller: the install (PKG-10, ADR-0018)", () => {
   async function downloaded() {
     const t = setup();
     t.answers.push("1.0.1");

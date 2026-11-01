@@ -1,4 +1,4 @@
-// SCRIPTING §8.1, stick-controlled repeat, on a stick sample instead of
+// Stick-controlled repeat, on a stick sample instead of
 // onStick's StickState.
 import { key, on } from "padmate";
 import { direction, RateAccumulator, remap } from "./math";

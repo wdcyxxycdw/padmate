@@ -23,19 +23,19 @@ import {
   maxMacros,
   sameMacroName,
 } from "../../shared/macro-names";
-import { listControlName } from "../control-names";
-import { controllerLabels } from "../controller-model";
+import { listControlName } from "../controller/control-names";
+import { controllerLabels } from "../controller/controller-model";
 import {
   editorError,
   type Gesture,
   gestureName,
   gestures,
-} from "../editor-model";
-import type { EditorStore } from "../editor-store";
+} from "../editor/editor-model";
+import type { EditorStore } from "../editor/editor-store";
 import type { Translate } from "../i18n";
-import { sortMacros } from "../library-model";
-import { macroRunProblems } from "../macro-context";
-import type { Language, PadmateState } from "../store";
+import { sortMacros } from "../state/library-model";
+import { macroRunProblems } from "../state/macro-context";
+import type { Language, PadmateState } from "../state/store";
 import { Dialog, MenuButton, type MenuEntry, Notice } from "../ui/controls";
 import { Icon } from "../ui/Icon";
 import "./pages.css";
@@ -169,7 +169,7 @@ export function scriptActionCount(text: string): number {
   const root = profile as Record<string, unknown> | null;
   visit(root?.layers);
   visit(root?.common);
-  // The daemon ignores functionKeys when functionSet is there (ADR-0075).
+  // The daemon ignores functionKeys when functionSet is there (ADR-0012).
   visit(root?.functionSet ?? root?.functionKeys);
   return count;
 }
@@ -653,7 +653,7 @@ export function ScriptsPage({
    * new revision would save the old names or the removed actions back.
    * These edits are not undo steps, and the steps before them hold the old
    * names, so the open profile's undo history goes when the edit wrote it
-   * (ADR-0054, ADR-0055). task resolves to the IDs of the profiles it wrote.
+   * (ADR-0008, ADR-0011). task resolves to the IDs of the profiles it wrote.
    */
   const rewrite = async (task: () => Promise<readonly string[]>) => {
     if (!(await editor.getState().flush())) throw new UnsavedEdits();

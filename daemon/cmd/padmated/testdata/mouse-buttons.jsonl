@@ -1,4 +1,4 @@
-# A mouse button is held like a key (ADR-0062): +MouseLeft is the button
+# A mouse button is held like a key (ADR-0004): +MouseLeft is the button
 # down and -MouseLeft the button up, in the same sends as the keys around
 # it. Repeated clicks are a tap repeat; typematic repeat is rejected for a
 # button. The side button on the trigger is still down when the trace ends,

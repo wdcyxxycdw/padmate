@@ -89,7 +89,7 @@ type Config struct {
 	// be safe for concurrent use; it returns what the last committed
 	// config.json says. Nil means no gamepad is calibrated.
 	Calibration func(key string) *profile.Calibration
-	// Switches returns the global feedback switches (UI-27, ADR-0067) of every
+	// Switches returns the global feedback switches (UI-27, ADR-0015) of every
 	// slot's engine (engine.Options.Switches). It is called on the slots'
 	// goroutines, concurrently, so it must not block and must be safe for
 	// concurrent use; it returns what the last committed config.json says. A
@@ -113,7 +113,7 @@ type Config struct {
 	OnInput func(e input.Event)
 	// OnUnrouted, when set, is called on the router's goroutine with each
 	// ButtonDown and ButtonUp of a gamepad that no slot maps, and why, one of
-	// the Unrouted constants (padmated's diagnostics events, ADR-0071). A
+	// the Unrouted constants (padmated's diagnostics events, ADR-0016). A
 	// press that takes a slot over (IN-05) is routed, so it is not one. It
 	// must not block or call the Supervisor.
 	OnUnrouted func(e input.Event, why string)
@@ -537,7 +537,7 @@ func (s *Supervisor) Pause(ctx context.Context, on bool) error {
 }
 
 // Suspend sets the reasons the system suspends the mapping for (DMN-09,
-// ADR-0026), none to end the suspension; bits outside
+// ADR-0006), none to end the suspension; bits outside
 // winsession.AllReasons are ignored. The mapping is held while it is
 // suspended or paused (Pause): the two are apart, and neither ends the
 // other.

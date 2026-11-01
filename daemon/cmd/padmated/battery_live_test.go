@@ -18,7 +18,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/tray"
 )
 
-// The low-battery alert (IN-12, ADR-0065) end to end on a fake source: the power
+// The low-battery alert (IN-12, ADR-0015) end to end on a fake source: the power
 // of a gamepad goes through the router's OnPower to the tracker, which asks for
 // the cue on the controller (the effect queue), the tray's notice and the
 // overlay's batteries. No controller is reached and no SDL is needed.
@@ -170,7 +170,7 @@ func TestBatteryNoticeKeysRepeatPerEpisode(t *testing.T) {
 	}
 }
 
-// TestLiveLowBatterySwitches (UI-27, ADR-0067): the global lowBattery switch
+// TestLiveLowBatterySwitches (UI-27, ADR-0015): the global lowBattery switch
 // off is silent everywhere; rumble off keeps the flash and the notice but not
 // the pulses; led off the pulses but not the flash. The profile's retired
 // members do nothing.
@@ -322,7 +322,7 @@ func TestLiveLowBatterySilentEpisodeIsNotAnnouncedLater(t *testing.T) {
 	tl.waitUntil(t, "the next episode's alert", func() bool { return len(alerts(src, padOne)) == 1 })
 }
 
-// TestLiveLowBatteryAppliesToEveryPad (UI-27, ADR-0067): the switches are the
+// TestLiveLowBatteryAppliesToEveryPad (UI-27, ADR-0015): the switches are the
 // same for a gamepad that holds a slot and one that waits for it: the alert is
 // off for both or on for both, and the controller's part follows rumble and
 // lights for both. Strength and pulse times are the profile's for the mapped

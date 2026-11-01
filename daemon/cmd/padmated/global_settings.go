@@ -19,11 +19,11 @@ import (
 )
 
 // comboSource is the part of an *input.Source that a change of the
-// emergency combos needs (UI-19, ADR-0051). A source without it, such as
+// emergency combos needs (UI-19, ADR-0017). A source without it, such as
 // a test's fake, keeps the combos it picked.
 type comboSource interface {
 	// RepickCombos picks every gamepad's combo again on T-input, where the
-	// combos are detected (ADR-0025).
+	// combos are detected (ADR-0006).
 	RepickCombos() error
 	// VerticalJoyCons is the grip ComboFor gets.
 	VerticalJoyCons() bool
@@ -66,7 +66,7 @@ func (r *liveRun) combos(infos []input.DeviceInfo) []rpcCombo {
 // applyLiveSettings applies the global timing, the function key, the emergency
 // combos, the stick calibrations, the gamepad mappings and the feedback
 // switches of next, the effective config just stored, where they differ from
-// prev, the one before (UI-19, ADR-0051, IN-14, UI-27, ADR-0067, ADR-0075).
+// prev, the one before (UI-19, ADR-0017, IN-14, UI-27, ADR-0015, ADR-0012).
 // The caller holds configApplyMu; this takes profileMu after it, the only
 // order the two are taken in.
 func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
@@ -118,7 +118,7 @@ const calibrationTimeout = 10 * time.Second
 // its layer and pause state again, which gives the lights and the player lights
 // back to the controller or takes them over, and what a switch gates and that
 // is still going on is stopped, as switching the profile's switch off did
-// before ADR-0067: with rumble off the rumble programs of scripts, haptics and
+// before ADR-0015: with rumble off the rumble programs of scripts, haptics and
 // the alert end, with lights off a script's color is given up. Turning a
 // switch on starts nothing by itself; it applies from the next event.
 func (r *liveRun) applyFeedbackSwitches(prev, next profile.FeedbackSwitches) error {
@@ -195,7 +195,7 @@ func (r *liveRun) reapplyProfileSettingsLocked(settings *profile.Config) error {
 
 // logIgnoredFunctionKeyBindings says once, at info level, for the Program that
 // was just installed, that bindings on its function key are left out
-// (ADR-0075): they stay in the file, and take effect if the function key is
+// (ADR-0012): they stay in the file, and take effect if the function key is
 // changed in the settings. It is no warning: the profile is not wrong.
 func (r *liveRun) logIgnoredFunctionKeyBindings(prog *engine.Program, profileID string) {
 	ignored := prog.IgnoredFunctionKeyBindings()

@@ -26,18 +26,18 @@ type Profile struct {
 	Script         *ScriptConfig
 	Common         *Layer
 	Layers         []*Layer
-	// FunctionSet is the function set the file writes (MAP-27, ADR-0075): the
+	// FunctionSet is the function set the file writes (MAP-27, ADR-0012): the
 	// bindings used while the function key is held; nil when the file has no
 	// functionSet. Unlike a function key's set of FunctionKeys it may bind back,
 	// start and guide. The engine reads EffectiveFunctionSet, not this.
 	FunctionSet *Layer
-	// FunctionKeys is the old format of the function key bindings (ADR-0069)
+	// FunctionKeys is the old format of the function key bindings (ADR-0012)
 	// as the file writes it; nil when the file has no functionKeys. It stays
 	// valid, and EffectiveFunctionSet merges it into the one set when
 	// there is no FunctionSet.
 	FunctionKeys *FunctionKeys
 	// Extends is the library ID of the profile this one builds on (PRO-19,
-	// ADR-0070), "" for a profile that does not. The profile is already the
+	// ADR-0012), "" for a profile that does not. The profile is already the
 	// merge of the whole chain: every member is the child's own or inherited.
 	Extends string
 	// Parents are the profiles of the chain, nearest first, with the sum of
@@ -45,10 +45,10 @@ type Profile struct {
 	Parents []ParentRef
 }
 
-// FunctionKeys is the old format of the function key bindings (ADR-0069):
+// FunctionKeys is the old format of the function key bindings (ADR-0012):
 // the sets of bindings of back (View, Create, Share, Minus) and start (Menu,
 // Options, Plus), each written like a layer without a color. Back and Start
-// are nil for a key without a set. The sets cannot bind back or start: ADR-0075
+// are nil for a key without a set. The sets cannot bind back or start: ADR-0012
 // made the function key one control, chosen in config.json, so a profile
 // states one set (Profile.FunctionSet) and Profile.EffectiveFunctionSet folds
 // these two into it.
@@ -91,7 +91,7 @@ func (p *Profile) FunctionSets() []*Layer {
 }
 
 // EffectiveFunctionSet returns the bindings used while the function key is
-// held (ADR-0075 section 2): FunctionSet when the file writes one, else the
+// held (ADR-0012): FunctionSet when the file writes one, else the
 // old format's start set with the back set's bindings for the controls
 // start's does not bind (start wins, because it is the default function key).
 // It is nil when the profile has neither. The bindings are the file's own, so
@@ -123,7 +123,7 @@ func (p *Profile) EffectiveFunctionSet() *Layer {
 
 // CurrentScriptAPI is the script API of this release, dtsgen.HostAPI (its
 // tests check the two agree). script.api also takes the previous version,
-// with a warning (SCRIPTING §6).
+// with a warning.
 const CurrentScriptAPI = "0.21"
 
 // ScriptConfig selects the TypeScript runtime for a profile. Entry is
@@ -171,7 +171,7 @@ type Stick struct {
 	// (ANA-11).
 	KnobStepDeg int
 	// KnobTick gives a haptic tick for each knob step that sends a key (HUD-10,
-	// ADR-0065). It does nothing without mode "knob", and the file may still
+	// ADR-0015). It does nothing without mode "knob", and the file may still
 	// set it: the editor keeps a stick's other settings when its mode changes.
 	KnobTick bool
 	// Curve shapes the push depth that a repeat with MinRateHz follows
@@ -244,7 +244,7 @@ func DefaultAnalog() Analog {
 // ticks (HUD-10), the player lights (HUD-08) and the low-battery alert (IN-12).
 // It holds their times, strength and pause color only. The switches that
 // turn them off (rumble, led, pause and lowBattery) are global since
-// ADR-0067: they are Config.Feedback, and a profile's feedback object that
+// ADR-0015: they are Config.Feedback, and a profile's feedback object that
 // still has them is parsed and ignored.
 type Feedback struct {
 	ShortMs     int
@@ -315,7 +315,7 @@ type Binding struct {
 	Latch     bool
 	Block     bool
 	// Haptic is the haptic the controller gives each time a gesture of the
-	// binding runs (MAP-25, ADR-0065); 0 for none. It is the binding's, not
+	// binding runs (MAP-25, ADR-0015); 0 for none. It is the binding's, not
 	// an action's, so it plays for every gesture, once per dispatch. A block
 	// binding runs nothing and plays none.
 	Haptic haptic.Preset
@@ -413,7 +413,7 @@ type Action struct {
 	Type     ActionType
 	Keys     keys.Chord // for ActionKeys
 	Sequence []keys.Chord
-	// Steps are the steps of an ActionSequence (MAP-22, ADR-0070): shortcuts to
+	// Steps are the steps of an ActionSequence (MAP-22, ADR-0012): shortcuts to
 	// tap, waits and texts to type, in order. ActionText has none: its Text is the
 	// one text.
 	Steps   []keys.Step
@@ -546,21 +546,21 @@ const (
 	// ActionProfile requests a switch to a library profile.
 	ActionProfile
 	// ActionMacro runs a macro, a file in the profile's MacroDir, once
-	// (SCR-50, ADR-0055).
+	// (SCR-50, ADR-0011).
 	ActionMacro
 	// ActionMouse changes how the pointer moves: precision (MOU-05) slows the
 	// sticks in mode "mouse" while the gesture is held, jump (MOU-08) puts the
-	// pointer somewhere (ADR-0062, section 5).
+	// pointer somewhere (ADR-0004, section 5).
 	ActionMouse
 	// ActionHUD controls the overlay: hints (HUD-03) shows the labels of the
-	// bindings of the current layer stack while the gesture is held (ADR-0063).
+	// bindings of the current layer stack while the gesture is held (ADR-0014).
 	// It sends no key.
 	ActionHUD
 	// ActionSequence runs steps one after the other when its gesture fires: taps
-	// a shortcut, waits, types a text (MAP-22, ADR-0070). It holds nothing, so it
+	// a shortcut, waits, types a text (MAP-22, ADR-0012). It holds nothing, so it
 	// fits every gesture, like a macro.
 	ActionSequence
-	// ActionText types a text when its gesture fires (OUT-21, ADR-0070). It holds
+	// ActionText types a text when its gesture fires (OUT-21, ADR-0012). It holds
 	// nothing, so it fits every gesture.
 	ActionText
 )

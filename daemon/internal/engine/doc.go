@@ -112,8 +112,8 @@
 //
 // # Function keys
 //
-// One of back, start and guide is the function key (MAP-27, ADR-0069,
-// ADR-0075, function_keys.go): start unless Compile is given another with
+// One of back, start and guide is the function key (MAP-27, ADR-0012,
+// ADR-0012, function_keys.go): start unless Compile is given another with
 // WithFunctionKey. Its edges never enter gesture recognition: it starts no
 // cycle, is not buffered, interrupts nothing, sends nothing and is not shown
 // to a script, so it adds no delay to any key. It only decides which set of

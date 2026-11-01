@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
 )
 
-// The dry-run text for typed text (OUT-21, ADR-0070). TypeText sends a character
+// The dry-run text for typed text (OUT-21, ADR-0012). TypeText sends a character
 // at a time, a press and a release of its UTF-16 unit or units, which as one line
 // each would bury the rest of the output, so the printer joins the characters of
 // a text into one line, such as `text "你好"`, at the time of the first. The

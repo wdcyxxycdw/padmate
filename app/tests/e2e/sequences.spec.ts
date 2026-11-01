@@ -8,7 +8,7 @@ import type { ProfileDocument } from "../../src/shared/api";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, fixture, launch, recordShortcut } from "./helpers";
 
-// UI-31, MAP-22, OUT-20 (ADR-0070, ADR-0076): the steps of a sequence (a
+// UI-31, MAP-22, OUT-20 (ADR-0012, ADR-0013): the steps of a sequence (a
 // shortcut or a wait) and the media keys, in the key drawer. The fake pad is a
 // standard one: south is printed S. The fixture's south taps Ctrl+Z.
 
@@ -150,7 +150,7 @@ test("a profile file that extends another shows what it takes as plain keys, wri
     const chip = (control: string) =>
       page.locator(`button[data-callout="${control}"]`);
     const sketch = () => onDisk(live, "sketch");
-    // The UI does not write extends any more (ADR-0076), so the profile is
+    // The UI does not write extends any more (ADR-0013), so the profile is
     // made in the UI and the extends is written into its file, as a person
     // editing the file by hand would. The parent binds south and east.
     const paint = await live.call<ProfileDocument>("profiles.get", {

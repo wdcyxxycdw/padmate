@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/latency"
 )
 
-// TestEventStamp (DMN-15, ADR-0071): T-input reads latency.Now right after SDL
+// TestEventStamp (DMN-15, ADR-0016): T-input reads latency.Now right after SDL
 // returns the event of a button or an axis, and the Event carries it as Stamp.
 // The reading lies between the counter before the virtual gamepad was driven
 // and the counter after the event came out of Events. The events of devices
@@ -62,7 +62,7 @@ func TestEventStamp(t *testing.T) {
 	}
 }
 
-// TestReenumerateEventsHaveNoStamp (DMN-15, ADR-0071): the events that a
+// TestReenumerateEventsHaveNoStamp (DMN-15, ADR-0016): the events that a
 // reenumeration drains from SDL after a sleep were queued at an unknown time,
 // not when T-input last woke up, so they carry no Stamp. They must not take
 // the reading of the last event the loop handled, which can be hours old: a

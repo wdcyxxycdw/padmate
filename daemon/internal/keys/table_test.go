@@ -213,7 +213,7 @@ var wantTable = []pin{
 	{name: "Key.", kind: phys, scan: 0x34, vk: 0xBE},
 	{name: "Key/", kind: phys, scan: 0x35, vk: 0xBF},
 
-	// Media and volume keys (ADR-0070, OUT-20): E0-extended scan codes of the
+	// Media and volume keys (ADR-0012, OUT-20): E0-extended scan codes of the
 	// Microsoft set-1 table and the VK_VOLUME_* and VK_MEDIA_* constants.
 	{name: "VolumeUp", kind: med, scan: 0x30, ext: true, vk: 0xAF},
 	{name: "VolumeDown", kind: med, scan: 0x2E, ext: true, vk: 0xAE},
@@ -223,7 +223,7 @@ var wantTable = []pin{
 	{name: "MediaPrevious", kind: med, scan: 0x10, ext: true, vk: 0xB1},
 	{name: "MediaStop", kind: med, scan: 0x24, ext: true, vk: 0xB2},
 
-	// Mouse keys (ADR-0062): no scan code and no VK. The buttons come after
+	// Mouse keys (ADR-0004): no scan code and no VK. The buttons come after
 	// the wheel keys, which keep their values.
 	{name: "WheelUp", kind: msk, mouse: keys.WheelUp},
 	{name: "WheelDown", kind: msk, mouse: keys.WheelDown},
@@ -270,7 +270,7 @@ func TestMouseValues(t *testing.T) {
 
 // MouseMove and MouseJump are appended behind the buttons and are not keys: no
 // table row has them, and they do not parse as a key name, alone or in a chord
-// (ADR-0062, section 5).
+// (ADR-0004, section 5).
 func TestPointerMouseValues(t *testing.T) {
 	for i, m := range []keys.Mouse{keys.MouseMove, keys.MouseJump} {
 		if int(m) != int(keys.MouseX2)+1+i {
@@ -365,7 +365,7 @@ func TestMouseKeys(t *testing.T) {
 	}
 }
 
-// The media and volume keys (ADR-0070, OUT-20) are keyboard keys of their own
+// The media and volume keys (ADR-0012, OUT-20) are keyboard keys of their own
 // kind. They sit behind the character and physical keys and before the mouse
 // keys, so that no keyboard key moves; each has an E0 scan code and the VK of
 // its VK_VOLUME_* or VK_MEDIA_* constant, and the W3C name as an alias.

@@ -15,10 +15,10 @@ import type {
   ScriptStatusEntry,
 } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
-import { fakeCapture } from "../capture-fixture";
-import { editorAPIFixture } from "../editor-api-fixture";
-import { createEditorStore, MERGE_IDLE_MS } from "../editor-store";
-import { KeyDrawer } from "../KeyDrawer";
+import { KeyDrawer } from "../drawer/KeyDrawer";
+import { createEditorStore, MERGE_IDLE_MS } from "../editor/editor-store";
+import { fakeCapture } from "../testing/capture-fixture";
+import { editorAPIFixture } from "../testing/editor-api-fixture";
 
 // The analog panels inside the real key drawer, editor store and gesture
 // editor: what a stick or trigger drawer shows and what saving writes.

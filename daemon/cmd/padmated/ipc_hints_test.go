@@ -10,7 +10,7 @@ import (
 	"github.com/creachadair/jrpc2"
 )
 
-// The key hints (HUD-03, ADR-0063) reach the UI in the slot object of the
+// The key hints (HUD-03, ADR-0014) reach the UI in the slot object of the
 // engine.activity state event, and of status.get: an array of the control and
 // its label while a hints action is held, and no field at all when it is not.
 func TestIPCStateEventCarriesTheKeyHints(t *testing.T) {

@@ -337,7 +337,7 @@ test("edits save at once: a capture without a key saves nothing, undo and redo s
     expect(error).toEqual({ rejected: true, code: -32009 });
 
     // Closing the window saves the field being typed in, without asking;
-    // the window only hides (ADR-0077).
+    // the window only hides (ADR-0013).
     const label = page.getByRole("textbox", {
       name: "功能",
       exact: true,
@@ -454,7 +454,7 @@ test("UI deadzone save is applied to fake input within 100 ms", async ({}, info)
   }
 });
 
-test("the mouse is recorded as a key inside the window, and a click or a notch of the wheel ends the capture (ADR-0076)", async () => {
+test("the mouse is recorded as a key inside the window, and a click or a notch of the wheel ends the capture (ADR-0013)", async () => {
   const f = await editorFixture();
   let app: ElectronApplication | undefined;
   let client: FixtureClient | undefined;
@@ -596,7 +596,7 @@ test("single-layer editing keeps the rest of a layered file and locks profiles t
     schemaVersion: 0,
     name: "Layered file",
     defaultLayer: "base",
-    // The four switches that moved to config.json (ADR-0067) and the members
+    // The four switches that moved to config.json (ADR-0015) and the members
     // that stayed in the profile: an edit of the mapping drops the first and
     // rewrites none of the others (UI-27).
     feedback: {
@@ -799,7 +799,7 @@ test("触感 in the key drawer is saved, and a press of the key plays it once on
   }
 });
 
-// UI-27 (ADR-0067): the four switches of Settings · 反馈 are saved as
+// UI-27 (ADR-0015): the four switches of Settings · 反馈 are saved as
 // config.json's feedback, and the daemon follows them as soon as the file is
 // saved, with no reload of the profile. The fake input daemon has no motors or
 // lights: fake.effects lists the ambient state it was asked for, with the pulse

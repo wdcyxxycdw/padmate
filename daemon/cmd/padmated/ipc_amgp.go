@@ -20,7 +20,7 @@ import (
 // why in words for the user. Nothing was written.
 const rpcCodeAmgpInvalid = -32024
 
-// amgpMethods adds the import of AntiMicroX profiles (PRO-21, ADR-0072).
+// amgpMethods adds the import of AntiMicroX profiles (PRO-21, ADR-0012).
 func (r *liveRun) amgpMethods(methods handler.Map) {
 	methods["profiles.importAmgp"] = r.rpcImportAmgp
 }

@@ -1,4 +1,4 @@
-// Publishes a release to the download site (ADR-0078): the installer, its
+// Publishes a release to the download site (ADR-0018): the installer, its
 // .sha256 and latest.yml go to the root of the Cloudflare R2 bucket that
 // https://padmate.download/ serves. The installed application reads latest.yml
 // there (the generic provider of electron-updater), and a Worker on the path /
@@ -17,7 +17,6 @@
 //
 // The rules, each of them a refusal before anything is written:
 //   - a version with a prerelease part (v1.0.3-rc.1) never goes to the site;
-//   - the public code mirror (.padmate-public) has no release to publish;
 //   - latest.yml must name this version and this installer, and carry its
 //     SHA-512, which is all an unsigned build is checked by;
 //   - a published installer never changes (the CDN caches it for a year, and
@@ -36,9 +35,11 @@ import { createReadStream, existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { refusePackaging, repoRoot } from "./public-mirror.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/** The repository root. */
+export const repoRoot = resolve(here, "..", "..");
 
 /** The address of the download site; app/src/main/update-config.ts and Go's installerpkg.UpdateURL say the same. */
 export const SITE = "https://padmate.download/";
@@ -508,7 +509,6 @@ export async function verifyPublished({
  *   now?: () => number,
  *   log?: (line: string) => void,
  *   repoRoot?: string,
- *   exists?: (file: string) => boolean,
  * }} [deps]
  * @returns {Promise<{ plan: ReturnType<typeof planUpload>, uploaded: string[] }>}
  */
@@ -522,11 +522,8 @@ export async function publish(
     now = Date.now,
     log = (line) => console.log(line),
     repoRoot: root = repoRoot,
-    exists = existsSync,
   } = {},
 ) {
-  // The public code mirror has no release to publish.
-  refusePackaging(root, exists);
   const { version, installerName } = checkTag(label);
   const folder = resolve(dist ?? join(root, "dist", "installer"));
   const plan = planUpload(label, folder);

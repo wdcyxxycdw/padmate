@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// Bindings of the mouse-button tests (ADR-0062): a drag, a drag under Shift
+// Bindings of the mouse-button tests (ADR-0004): a drag, a drag under Shift
 // and a click.
 const (
 	eastDrag   = `"east": {"label": "拖动", "press": {"type": "keys", "keys": "MouseLeft", "mode": "hold"}}`

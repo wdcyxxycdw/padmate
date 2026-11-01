@@ -22,9 +22,13 @@ import type {
   UIErrorData,
 } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
-import { editorAPIFixture } from "../editor-api-fixture";
-import { createEditorStore, type EditorStore } from "../editor-store";
-import { createPadmateStore, type Language, type PadmateStore } from "../store";
+import { createEditorStore, type EditorStore } from "../editor/editor-store";
+import {
+  createPadmateStore,
+  type Language,
+  type PadmateStore,
+} from "../state/store";
+import { editorAPIFixture } from "../testing/editor-api-fixture";
 import {
   failureText,
   nameProblem,

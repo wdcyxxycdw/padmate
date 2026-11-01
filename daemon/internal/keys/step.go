@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// The limits of a sequence (ADR-0070, MAP-22): at least one and at most MaxSteps
+// The limits of a sequence (ADR-0012, MAP-22): at least one and at most MaxSteps
 // steps, and a wait of MinWait to MaxWait.
 const (
 	MaxSteps = 64
@@ -33,7 +33,7 @@ const (
 	StepText
 )
 
-// Step is one step of a sequence action (ADR-0070, MAP-22), of the
+// Step is one step of a sequence action (ADR-0012, MAP-22), of the
 // key.sequence of a script (SCR-26), and the one step of a text action. It is
 // plain data, shared by the profile, the engine and the output layer: only the
 // member of its Kind is used. Build one with KeysStep, WaitStep or TextStep.
@@ -103,7 +103,7 @@ func FormatSteps(steps []Step) string {
 	return strings.Join(parts, ", ")
 }
 
-// ValidateStep checks a step by the rules a profile applies (ADR-0070): a keys
+// ValidateStep checks a step by the rules a profile applies (ADR-0012): a keys
 // step has a valid chord, a wait lies in MinWait to MaxWait, a text passes
 // ValidateText, and a step has nothing of the other kinds. It returns an error
 // whose text names what is wrong, not where; a *TextError for a bad text.

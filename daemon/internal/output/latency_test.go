@@ -173,7 +173,7 @@ func reportLatency(b *testing.B, lat []time.Duration) {
 }
 
 // BenchmarkLatencyDo measures one command through the T-output Loop (ENG-11,
-// the Do hop of ADR-0016) from a caller locked to its thread, as a slot
+// the Do hop of ADR-0005) from a caller locked to its thread, as a slot
 // loop is: noop is the bare round trip, and downup alternates
 // Remote().Down and Up of F13, which make one Send each. downup-held is
 // downup with a held-key log (OUT-14) in a temporary directory: each op

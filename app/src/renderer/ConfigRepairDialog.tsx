@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { ConfigRepair, PadmateAPI } from "../shared/api";
-import type { Language } from "./store";
+import type { Language } from "./state/store";
 import { Dialog } from "./ui/controls";
 
 const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * The one dialog for a repaired config.json (PRO-29, ADR-0057): the daemon
+ * The one dialog for a repaired config.json (PRO-29, ADR-0013): the daemon
  * found errors, backed the file up and reset what had them. It blocks the
  * window until the user confirms; 打开文件夹 selects the backup and leaves
  * the dialog open. Esc and × confirm too: there is nothing else to decide.

@@ -15,10 +15,10 @@ import type {
   ProfileSaveResult,
 } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
-import { fakeCapture } from "../capture-fixture";
-import { editorAPIFixture } from "../editor-api-fixture";
-import { createEditorStore } from "../editor-store";
-import { KeyDrawer } from "../KeyDrawer";
+import { KeyDrawer } from "../drawer/KeyDrawer";
+import { createEditorStore } from "../editor/editor-store";
+import { fakeCapture } from "../testing/capture-fixture";
+import { editorAPIFixture } from "../testing/editor-api-fixture";
 
 // The two ticks of a knob, recorded one after the other in the real key
 // drawer (UI-28) while the daemon is slow to answer the first save, as in

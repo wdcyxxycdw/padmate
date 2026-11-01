@@ -1,0 +1,206 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: daemon
+
+env:
+  GO_VERSION: "1.27.x"
+
+jobs:
+  go-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - run: go vet ./...
+      - run: go build ./...
+      # PKG-11, as task pe:check does after task build: the layout, the imports
+      # and the Windows functions of the built daemon and CLI against the lists
+      # in internal/pecheck/testdata. The build is a real one (bin/), not go build.
+      - name: Build the daemon and the CLI
+        run: go run ./tools/build -version ci -out ../bin -targets padmated,padmatectl
+      - name: PE check
+        run: go run ./tools/pecheck -bin ../bin
+      # The key changes whenever the pin (and so the zip's SHA-256) does;
+      # sdlfetch verifies a cached zip before using it anyway.
+      - name: Cache the pinned SDL3 zip
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/sdl
+          key: sdl3-zip-${{ hashFiles('daemon/internal/sdlpin/sdlpin.go') }}
+      - name: Fetch SDL3.dll
+        run: go run ./tools/sdlfetch -out ../bin -cache "${{ runner.temp }}/sdl"
+      # The SDL-backed tests (internal/input, padmatectl monitor and
+      # record, the tools/spk01 spike) drive an SDL virtual gamepad; with
+      # the DLL fetched they must not skip. The spike's binary test does
+      # not require the tray, which a runner session may not have.
+      - run: go test ./...
+        env:
+          PADMATE_REQUIRE_SDL: "1"
+      - name: Generated files are up to date
+        shell: bash
+        run: go generate ./... && git diff --exit-code && test -z "$(git status --porcelain)"
+      # The end-to-end injection tests (ENG-10, ENG-11, OUT-08, ADR-0004,
+      # ADR-0006): real SendInput on the runner, a throwaway VM, and still
+      # every key is swallowed by a hook that a canary proved live first.
+      # One package at a time, so that one test's hooks never see
+      # another's keys. After every other check but the latency smoke,
+      # which only publishes numbers, so that its failure skips none of
+      # them. -v shows in the log that they ran rather than skipped.
+      - name: Injection tests
+        shell: bash
+        run: go test -p 1 -count=1 -v -run '^(TestPadToProbe|TestPadsToProbe|TestMenuMaskToProbe|TestComboToProbe|TestSessionToProbe|TestOwnWindowToProbe|TestLiveInjectVirtual|TestSendRecordedByProbe|TestWaitOwn|TestHookInjected|TestHookStackGrowth)$' ./cmd/padmated ./cmd/padmatectl ./internal/injecttest ./internal/winhook
+        env:
+          PADMATE_TEST_INJECT: "1"
+          PADMATE_REQUIRE_SDL: "1"
+          PADMATE_REQUIRE_SESSION: "1"
+      # The latency harness (ENG-11) on few samples: the hot-path
+      # benchmarks, SendInput alone, and a virtual gamepad driving live mode,
+      # with every key swallowed by the test's own hook. It fails only when
+      # the harness does, and publishes the numbers with no target: a shared
+      # runner's timers and SendInput are not the dev machine's. After the
+      # injection tests, whose failure skips it; the report step runs either
+      # way. It takes about 15 s on the dev machine.
+      - name: Latency benchmark (smoke, not a gate)
+        shell: bash
+        run: |
+          go test -p 1 -count=1 -run '^$' -bench 'Latency|Gestures' -benchtime 20x ./internal/engine ./internal/slot ./internal/output ./internal/supervisor
+          go test -count=1 -v -run '^TestInjectLatency$' ./internal/output
+          go test -count=1 -v -run '^TestLatencyLive$' ./cmd/padmated
+        env:
+          PADMATE_BENCH: "1"
+          PADMATE_BENCH_SCALE: "0.02"
+          PADMATE_BENCH_GATE: "0"
+          PADMATE_TEST_INJECT: "1"
+          PADMATE_REQUIRE_SDL: "1"
+          PADMATE_BENCH_DIR: ${{ runner.temp }}
+      - name: Latency report
+        if: always()
+        shell: bash
+        run: for f in sendinput latency; do test -f "$RUNNER_TEMP/$f.md" && cat "$RUNNER_TEMP/$f.md" >> "$GITHUB_STEP_SUMMARY"; done; true
+
+  go-race-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - run: go test -race ./...
+
+  lint:
+    # Windows, so that _windows.go files are linted too.
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13
+          working-directory: daemon
+
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - run: go test -run '^$' -fuzz '^FuzzParseChord$' -fuzztime 60s ./internal/keys
+      - run: go test -run '^$' -fuzz '^FuzzValidateText$' -fuzztime 60s ./internal/keys
+      - run: go test -run '^$' -fuzz '^FuzzArbiter$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzArbiterTiming$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzTypeText$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzSequence$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzMenuMask$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzHeldLog$' -fuzztime 60s ./internal/output
+      - run: go test -run '^$' -fuzz '^FuzzParseTrace$' -fuzztime 60s ./internal/simtest
+      - run: go test -run '^$' -fuzz '^FuzzParse$' -fuzztime 60s ./internal/profile
+      - run: go test -run '^$' -fuzz '^FuzzResolve$' -fuzztime 60s ./internal/profile
+      - run: go test -run '^$' -fuzz '^FuzzReplay$' -fuzztime 60s ./internal/slot
+      - run: go test -run '^$' -fuzz '^FuzzResync$' -fuzztime 60s ./internal/slot
+      - run: go test -run '^$' -fuzz '^FuzzRouter$' -fuzztime 60s ./internal/supervisor
+      - run: go test -run '^$' -fuzz '^FuzzReadEvents$' -fuzztime 60s ./internal/input
+      - run: go test -run '^$' -fuzz '^FuzzFromMessage$' -fuzztime 60s ./internal/winsession
+      - run: go test -run '^$' -fuzz '^FuzzSessionTracker$' -fuzztime 60s ./internal/winsession
+      - run: go test -run '^$' -fuzz '^FuzzGestures$' -fuzztime 60s ./internal/engine
+      - run: go test -run '^$' -fuzz '^FuzzMouseStick$' -fuzztime 60s ./internal/engine
+      - run: go test -run '^$' -fuzz '^FuzzKeyHints$' -fuzztime 60s ./internal/engine
+      - run: go test -run '^$' -fuzz '^FuzzHUD$' -fuzztime 60s ./internal/script
+      - run: go test -run '^$' -fuzz '^FuzzEffects$' -fuzztime 60s ./internal/script
+      - run: go test -run '^$' -fuzz '^FuzzMixer$' -fuzztime 60s ./internal/haptic
+      - run: go test -run '^$' -fuzz '^FuzzImport$' -fuzztime 60s ./internal/amgp
+      - run: go test -run '^$' -fuzz '^FuzzParse$' -fuzztime 60s ./internal/sdlmapping
+      - run: go test -run '^$' -fuzz '^FuzzDetector$' -fuzztime 60s ./internal/mapwizard
+      - run: go test -run '^$' -fuzz '^FuzzSetDeviceMappings$' -fuzztime 60s ./internal/profile
+      - name: Upload failing fuzz inputs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-corpus
+          path: |
+            daemon/internal/keys/testdata/fuzz/
+            daemon/internal/output/testdata/fuzz/
+            daemon/internal/simtest/testdata/fuzz/
+            daemon/internal/profile/testdata/fuzz/
+            daemon/internal/slot/testdata/fuzz/
+            daemon/internal/supervisor/testdata/fuzz/
+            daemon/internal/input/testdata/fuzz/
+            daemon/internal/winsession/testdata/fuzz/
+            daemon/internal/engine/testdata/fuzz/
+            daemon/internal/script/testdata/fuzz/
+            daemon/internal/haptic/testdata/fuzz/
+            daemon/internal/amgp/testdata/fuzz/
+            daemon/internal/sdlmapping/testdata/fuzz/
+            daemon/internal/mapwizard/testdata/fuzz/
+          if-no-files-found: ignore
+
+  frontend:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: daemon/go.mod
+      - run: npm ci
+      - run: npm run ci
+      - name: Schema-generated frontend and Go types are current
+        working-directory: daemon
+        run: go run ./tools/codegen -check
+      - name: Real Electron and Go IPC E2E
+        run: npm run test:e2e

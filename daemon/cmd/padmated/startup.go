@@ -25,7 +25,7 @@ var errDevelopmentBuild = errors.New("development build")
 var errStartupUnavailable = errors.New("login startup is unavailable")
 
 // startupState is what startup.get and startup.set return (UI-19,
-// ADR-0052). Enabled is any padmate value in Run; Current that it is the
+// ADR-0001). Enabled is any padmate value in Run; Current that it is the
 // command this padmated would write. Mode is how that command starts
 // padmated: "inject" or "dry-run", this padmated's own mode. Reason says
 // why it is not available: "development" or "unsupported".

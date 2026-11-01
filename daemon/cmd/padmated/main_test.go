@@ -101,7 +101,7 @@ func TestGolden(t *testing.T) {
 }
 
 // TestGoldenFeedbackSwitchesOfConfig: a replay obeys the feedback switches of
-// the config.json in --data-dir (UI-27, ADR-0067), as live mode does. The
+// the config.json in --data-dir (UI-27, ADR-0015), as live mode does. The
 // profile of feedback-pause.json still holds the retired pause switch, set to
 // false, and its golden shows that it is ignored: the pause is shown.
 // Here config.json turns the pause indication off, which the replay then
@@ -198,7 +198,7 @@ func TestReplayCombo(t *testing.T) {
 		// back is an ordinary, unbound control here; its press is "paused" as
 		// any press is.
 		{"presses while paused", paused, []string{"3500.000 south down", "4000.000 back down", "5000.000 east down"}},
-		// start is the function key (MAP-27, ADR-0075; the default): every
+		// start is the function key (MAP-27, ADR-0012; the default): every
 		// edge of it, paused or not, is a decision with that reason and
 		// nothing else.
 		{"function key edges", function, []string{

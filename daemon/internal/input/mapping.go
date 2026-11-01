@@ -12,12 +12,12 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/sdlmapping"
 )
 
-// Custom gamepad mappings (IN-18, ADR-0072). A mapping is an SDL mapping
+// Custom gamepad mappings (IN-18, ADR-0012). A mapping is an SDL mapping
 // string, "GUID,name,a:b0,…": it makes SDL read a joystick that it does not
 // know as a gamepad, or reads a known one differently.
 //
-// Facts of SDL 3.4.16 that this file relies on (docs/PITFALLS.md, "SDL 与
-// 手柄"):
+// Facts of SDL 3.4.16 that this file relies on (docs/PITFALLS.md, "SDL and
+// controllers"):
 //
 //   - A mapping applies to every device with its GUID, not to one device.
 //   - SDL_AddGamepadMapping takes effect at once, with no reopening: the

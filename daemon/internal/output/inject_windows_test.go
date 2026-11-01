@@ -59,7 +59,7 @@ type injectCase struct {
 // saw, and proves the hook still live before the next key. The test stops
 // at the first batch the hook does not fully swallow.
 //
-// The mouse keys of the table (the wheel keys and the buttons, ADR-0062) are
+// The mouse keys of the table (the wheel keys and the buttons, ADR-0004) are
 // mouse inputs. They go out the same way, after a mouse canary has proven the
 // mouse hook live, as batches of injecttest.InjectFencedMixed, and the mouse
 // hook checks what it sees: the message, the delta or the side button number,
@@ -298,7 +298,7 @@ func checkInjected(t *testing.T, c injectCase, hkl windows.Handle, numLock bool,
 }
 
 // wheelWant returns the window message and the delta a mouse hook must report
-// for one notch of m (ADR-0062): WM_MOUSEWHEEL for up (+120) and down (-120),
+// for one notch of m (ADR-0004): WM_MOUSEWHEEL for up (+120) and down (-120),
 // WM_MOUSEHWHEEL for right (+120) and left (-120).
 func wheelWant(m keys.Mouse) (msg uint32, delta int) {
 	switch m {
@@ -353,7 +353,7 @@ func checkInjectedWheel(t *testing.T, m keys.Mouse, nonce uint32, n int, got []i
 	}
 }
 
-// TestInjectWheelKeys (ADR-0062) injects a notch of each wheel key and checks
+// TestInjectWheelKeys (ADR-0004) injects a notch of each wheel key and checks
 // what the mouse hook sees: the message, +-120 in the high word of mouseData,
 // LLMHF_INJECTED, the nonce, and that the hook swallowed it. The release of a
 // wheel key injects nothing: a press and a release make one notch, a release
@@ -403,7 +403,7 @@ func TestInjectWheelKeys(t *testing.T) {
 	}
 }
 
-// TestInjectWheelChord (ADR-0062) injects Ctrl+WheelUp and Ctrl+Shift+WheelLeft
+// TestInjectWheelChord (ADR-0004) injects Ctrl+WheelUp and Ctrl+Shift+WheelLeft
 // as the Arbiter sends them, modifiers around the notch, in one SendInput
 // call, and checks the order in which the two hooks saw the events: the
 // modifier presses, the notch, the modifier releases in reverse. The keyboard

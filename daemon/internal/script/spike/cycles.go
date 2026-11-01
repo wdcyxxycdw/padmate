@@ -226,8 +226,7 @@ func (r SpinResult) CyclesPerMicrosecond() Stats {
 	return Summarize(xs)
 }
 
-// WriteMarkdown writes the report as Markdown for
-// docs/bench/scripting.md.
+// WriteMarkdown writes the report as Markdown (task spk03).
 func (r *CycleReport) WriteMarkdown(w io.Writer) error {
 	m := &mdWriter{w: w}
 	m.printf("- CPU: %s; ~MHz of CPU 0: %d; %d logical CPUs\n", r.CPU, r.NominalMHz, r.LogicalCPUs)

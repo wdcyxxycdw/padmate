@@ -166,7 +166,7 @@ func effectView(c effectCall) rpcEffect {
 	return e
 }
 
-// fakeEffectsMethod adds fake.effects {clear?: bool} (IN-13, ADR-0065): the
+// fakeEffectsMethod adds fake.effects {clear?: bool} (IN-13, ADR-0015): the
 // effect calls the fake input received, oldest first, as {effects: [...]}.
 // With clear they are forgotten as they are returned. An E2E reads them to
 // see what padmated asked of the controller, which the fake does not have.
@@ -191,7 +191,7 @@ func (r *liveRun) fakeEffectsMethod(methods handler.Map) {
 	}
 }
 
-// fakeBatteryMethod adds fake.battery {state, percent?} (IN-12, ADR-0065): the
+// fakeBatteryMethod adds fake.battery {state, percent?} (IN-12, ADR-0015): the
 // fake gamepad reports that power, as a real one's driver does. state is one of
 // wired, charging, discharging and unknown; percent is 0 to 100 and is left out
 // when the gamepad does not report a charge, which unknown always is. The

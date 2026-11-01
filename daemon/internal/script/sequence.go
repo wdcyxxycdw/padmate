@@ -17,7 +17,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// key.sequence and key.type (SCR-26, API 0.21, ADR-0070). They take the steps of
+// key.sequence and key.type (SCR-26, API 0.21, ADR-0012). They take the steps of
 // the profile's sequence action: tap a shortcut, wait, type a text. The host
 // runs them one step at a time, like a key.tap array: it asks the output for the
 // tap of a step, or for one character, and starts the next when the output has

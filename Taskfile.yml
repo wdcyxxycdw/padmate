@@ -33,10 +33,6 @@ tasks:
     desc: Build and check the Windows x64 portable preview with examples, docs and runtime licenses in dist/
     dir: daemon
     platforms: [windows]
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     cmds:
       # Sequential: a console build must not overwrite the GUI daemon.
       - go run ./tools/build -version "{{.VERSION}}" -out ../bin -targets padmated,padmatectl -gui
@@ -44,13 +40,9 @@ tasks:
       - go run ./tools/packagezip -version "{{.VERSION}}" -root .. -bin ../bin -out ../dist
 
   package:installer:
-    desc: "Build the Windows x64 installer (NSIS, per user, no administrator) of VERSION=vX.Y.Z in dist/installer, and check that every part has that version (PKG-03, PKG-06). Run task app:install first; the first run downloads electron-builder's NSIS tools. INSTALLER_BIN=DIR builds the daemon and CLI there instead of bin/; INSTALLER_OUT=ABSOLUTE_DIR (inside .cache or dist) writes the installer there; PADMATE_SIGN=store|pfx|azure signs it (docs/build-installer.md) and verify then demands the signatures of PADMATE_SIGN_SUBJECT (-signed); VERIFY_FLAGS adds flags to verify, for example '-update-info' (PKG-09)"
+    desc: "Build the Windows x64 installer (NSIS, per user, no administrator) of VERSION=vX.Y.Z in dist/installer, and check that every part has that version (PKG-03, PKG-06). Run task app:install first; the first run downloads electron-builder's NSIS tools. INSTALLER_BIN=DIR builds the daemon and CLI there instead of bin/; INSTALLER_OUT=ABSOLUTE_DIR (inside .cache or dist) writes the installer there; PADMATE_SIGN=store|pfx|azure signs it and verify then demands the signatures of PADMATE_SIGN_SUBJECT (-signed); VERIFY_FLAGS adds flags to verify, for example '-update-info' (PKG-09)"
     dir: daemon
     platforms: [windows]
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     vars:
       INSTALLER_BIN: '{{.INSTALLER_BIN | default "../bin"}}'
       INSTALLER_DIST: '{{.INSTALLER_OUT | default "../dist/installer"}}'
@@ -72,13 +64,9 @@ tasks:
       - go run ./tools/packageinstaller verify -version "{{.VERSION}}" -dist "{{.INSTALLER_DIST}}" {{.SIGNED_FLAG}} {{.VERIFY_FLAGS}}
 
   test:installer:
-    desc: "Install, upgrade and uninstall the built installer under the test override (SPK-07, Windows); with PADMATE_TEST_INSTALLER_INTERACTIVE=1 in the environment it also drives the wizard and uninstaller windows (PKG-13). INSTALLER=ABSOLUTE_PATH of the installer (default: the one of VERSION in dist/installer); UPGRADE=ABSOLUTE_PATH of a second build to install over it (may be the same file). Needs no padmate installed; see docs/build-installer.md"
+    desc: "Install, upgrade and uninstall the built installer under the test override (SPK-07, Windows); with PADMATE_TEST_INSTALLER_INTERACTIVE=1 in the environment it also drives the wizard and uninstaller windows (PKG-13). INSTALLER=ABSOLUTE_PATH of the installer (default: the one of VERSION in dist/installer); UPGRADE=ABSOLUTE_PATH of a second build to install over it (may be the same file). Needs no padmate installed; see"
     dir: daemon
     platforms: [windows]
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     vars:
       INSTALLER: '{{.INSTALLER | default (printf "%s/dist/installer/padmate-%s-windows-amd64-setup.exe" .ROOT_DIR .VERSION)}}'
       UPGRADE: '{{.UPGRADE | default ""}}'
@@ -89,13 +77,9 @@ tasks:
       - go test -count=1 -v -timeout 30m -run '^TestInstaller(Smoke|Wizard)$' ./internal/installersmoke
 
   release:r2:
-    desc: "Publish VERSION=vX.Y.Z (a stable tag) to the download site https://padmate.download/ (Cloudflare R2, ADR-0078): the installer and its .sha256 of dist/installer, then latest.yml last, then read the site back. Run task package:installer first. The upload is wrangler (pinned) with the login of this machine; no credential is read from the repository. Refuses a prerelease, an installer that is on the site already, and a version that is not newer than the site's latest.yml. Windows; flags after --: --dry-run prints the plan and does nothing, --force skips the order check only, --dist DIR reads another folder"
+    desc: "Publish VERSION=vX.Y.Z (a stable tag) to the download site https://padmate.download/ (Cloudflare R2, ADR-0018): the installer and its .sha256 of dist/installer, then latest.yml last, then read the site back. Run task package:installer first. The upload is wrangler (pinned) with the login of this machine; no credential is read from the repository. Refuses a prerelease, an installer that is on the site already, and a version that is not newer than the site's latest.yml. Windows; flags after --: --dry-run prints the plan and does nothing, --force skips the order check only, --dist DIR reads another folder"
     dir: app
     platforms: [windows]
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     cmds:
       - node scripts/publish-r2.mjs --version "{{.VERSION}}" {{.CLI_ARGS}}
 
@@ -103,10 +87,6 @@ tasks:
     desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (PKG-09, opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
     platforms: [windows]
     dir: app
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     env:
       TASK_BIN: '{{.TASK_EXE}}'
     cmds:
@@ -300,20 +280,6 @@ tasks:
     cmds:
       - go vet ./...
 
-  roadmap:check:
-    desc: Check ROADMAP.md IDs, references, milestone status and the §0 当前里程碑 line, then CLAUDE.md (TestClaudeMD); both are skipped in the public code mirror, which has neither. Also runs, uncached, the tests that read git, the marker and this Taskfile (TestRepo* of tools/mirror, internal/publicmirror)
-    dir: daemon
-    cmds:
-      - go run ./tools/roadmapcheck
-      # Uncached: go test does not recheck files outside daemon/.
-      - go test -count=1 -run '^TestClaudeMD$' ./tools/roadmapcheck
-      # Uncached: go test neither sees git nor files outside daemon/ (the
-      # Taskfile, the marker), so a new document or an edited precondition
-      # would pass from the cache. The export tool is not in the mirror.
-      - cmd: go test -count=1 -run '^TestRepo' ./tools/mirror
-        if: test -d tools/mirror
-      - go test -count=1 ./internal/publicmirror
-
   app:install:
     desc: Install the pinned frontend dependencies and Electron runtime
     dir: app
@@ -356,10 +322,6 @@ tasks:
     desc: Run electron-builder on app/out and the staged files for VERSION (called by package:installer, which stages them first); INSTALLER_OUT=ABSOLUTE_DIR for a test build
     dir: app
     platforms: [windows]
-    preconditions:
-      # The public code mirror has no documentation to pack (docs/build-installer.md).
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: packages are built from the development repository, which has the documentation that ships with them"
     vars:
       INSTALLER_OUT: '{{.INSTALLER_OUT | default ""}}'
     cmds:
@@ -378,7 +340,6 @@ tasks:
       - task: vet
       - task: lint
       - task: test
-      - task: roadmap:check
       - task: build
       - task: pe:check
       - task: app:gen-check
@@ -389,13 +350,3 @@ tasks:
     cmds:
       - rm -rf bin
 
-  mirror:export:
-    desc: "Export the public code mirror (no documentation) of COMMIT (default HEAD) to OUT, an absolute path: a missing or empty folder, or an existing mirror checkout whose tree is replaced and whose .git is kept. Uses the files of the commit, not the working tree; prints what it kept and left out (docs/build-installer.md, 公开的代码仓库)"
-    dir: daemon
-    preconditions:
-      - sh: 'test ! -e "{{.ROOT_DIR}}/.padmate-public"'
-        msg: "this is the public code mirror: it is exported from the development repository, which has the export tool"
-    requires:
-      vars: [OUT]
-    cmds:
-      - go run ./tools/mirror -out "{{.OUT}}"{{if .COMMIT}} -commit "{{.COMMIT}}"{{end}}

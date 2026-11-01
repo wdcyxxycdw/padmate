@@ -11,14 +11,9 @@ import (
 	"os/signal"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/portablezip"
-	"github.com/wdcyxxycdw/padmate/daemon/internal/publicmirror"
 )
 
 func main() {
-	if err := publicmirror.RefusePackagingHere(); err != nil {
-		fmt.Fprintln(os.Stderr, "packagezip:", err)
-		os.Exit(1)
-	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	code := run(ctx, os.Args[1:], os.Stdout, os.Stderr)
 	stop()
@@ -41,10 +36,6 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if fs.NArg() != 0 {
 		fmt.Fprintln(stderr, "packagezip: unexpected positional argument")
 		return 2
-	}
-	if err := publicmirror.RefusePackagingAt(*root); err != nil {
-		fmt.Fprintln(stderr, "packagezip:", err)
-		return 1
 	}
 	if _, err := portablezip.Pack(ctx, portablezip.Options{Version: *label, Root: *root, BinDir: *bin, OutDir: *out, Log: stdout}); err != nil {
 		fmt.Fprintln(stderr, "packagezip:", err)

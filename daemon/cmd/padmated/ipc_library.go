@@ -32,11 +32,11 @@ const (
 	// special files, or exceeds the copy limits; data.path names it.
 	rpcCodeProfileUnsupported = -32015
 	// rpcCodeProfileFixed: profiles.delete of the fixed default profile, or
-	// a profiles.put that changes its name (PRO-28, ADR-0053); data.op is
+	// a profiles.put that changes its name (PRO-28, ADR-0008); data.op is
 	// "delete" or "rename". It follows the startup code (-32017).
 	rpcCodeProfileFixed = -32018
 	// rpcCodeProfileChild: profiles.delete of a profile that others extend
-	// (PRO-19, ADR-0070), when one of them cannot be written whole first;
+	// (PRO-19, ADR-0012), when one of them cannot be written whole first;
 	// data is {id, reason, diagnostics?}: the profile that cannot, why
 	// ("invalid": it has errors, in diagnostics; "script": it inherits the
 	// parent's script).
@@ -155,7 +155,7 @@ func (r *liveRun) rpcDeleteProfile(ctx context.Context, req *jrpc2.Request) (any
 		r.log.Info("profile deleted", "profile", p.ID)
 	}
 	// The profiles that extended it were written whole, with their parent's
-	// content, before it went (PRO-19, ADR-0070): they are saved like any
+	// content, before it went (PRO-19, ADR-0012): they are saved like any
 	// other write, and the running one is merged again.
 	result := rpcDeleted{}
 	for _, f := range flattened {

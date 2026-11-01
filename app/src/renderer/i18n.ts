@@ -1,4 +1,4 @@
-import type { Language } from "./store";
+import type { Language } from "./state/store";
 
 const zh = {
   overview: "映射",

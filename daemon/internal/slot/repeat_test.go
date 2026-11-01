@@ -97,7 +97,7 @@ func TestRepeatStopsAfterRelease(t *testing.T) {
 	})
 	// east's release comes after south's press, which waits in the buffer
 	// for west's gesture until 350 ms, so the release waits too and F13
-	// comes up at 350 ms, after Ctrl+Z (ROADMAP §5.2). The repeat stops at
+	// comes up at 350 ms, after Ctrl+Z (ARCHITECTURE §7.7). The repeat stops at
 	// the release all the same.
 	t.Run("buffered", func(t *testing.T) {
 		const others = `"west": {"tap": {"type": "keys", "keys": "F14"}, "hold": {"type": "keys", "keys": "E"}},

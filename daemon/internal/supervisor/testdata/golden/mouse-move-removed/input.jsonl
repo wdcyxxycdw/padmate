@@ -1,4 +1,4 @@
-# The left stick is the pointer (ADR-0062). Pad A pushes it to the right and is
+# The left stick is the pointer (ADR-0004). Pad A pushes it to the right and is
 # unplugged 40 ms later with the stick still pushed: the removal stops the
 # pointer, with no further move. The pad comes back with a new id; a push of the
 # stick moves the pointer again, and releasing it stops it.

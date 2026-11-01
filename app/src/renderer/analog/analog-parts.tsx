@@ -15,16 +15,16 @@ import type {
   ProfileTiming,
   ProfileTrigger,
 } from "../../shared/generated/schema";
-import { BindingFields, SingleShortcutField } from "../BindingEditor";
+import { BindingFields, SingleShortcutField } from "../drawer/BindingEditor";
 import {
   actionText,
   isFileOnlyAction,
   registrationsFor,
   usedGestures,
-} from "../editor-model";
-import type { EditOptions } from "../editor-store";
-import { MacroContext, missingMacros } from "../macro-context";
-import type { Language } from "../store";
+} from "../editor/editor-model";
+import type { EditOptions } from "../editor/editor-store";
+import { MacroContext, missingMacros } from "../state/macro-context";
+import type { Language } from "../state/store";
 import { FieldError, numberParser, useCommitField } from "../ui/commit-field";
 import { Dialog, MenuButton } from "../ui/controls";
 import { Icon } from "../ui/Icon";
@@ -564,7 +564,7 @@ export function BindingCard({
 }
 
 /**
- * The expanded editor of a knob step (ADR-0079 §8): one shortcut, sent once
+ * The expanded editor of a knob step (ADR-0013): one shortcut, sent once
  * per step. The row above names it and collapses it.
  */
 export function TickCard({

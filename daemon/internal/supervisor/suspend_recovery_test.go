@@ -167,7 +167,7 @@ func TestSuspendSyntheticCenterLateAxis(t *testing.T) {
 
 // A stick or trigger that moves while the system is suspended is active
 // like a button pressed then, also for a gamepad that connected meanwhile
-// (ADR-0033 decision 1): the resume masks it, so the router's state of the
+// (ADR-0006): the resume masks it, so the router's state of the
 // gamepad has the axis at 0 and nothing is mapped from it, whatever is sent
 // while it stays deflected. It is released again by a neutral report, and
 // the next deflection counts. FuzzRouter's model lacked this for axes; its
@@ -236,7 +236,7 @@ func TestSuspendAxisMovedDuringSuspendStaysMasked(t *testing.T) {
 }
 
 // A stick or trigger that the suspension saw centered must be deflected
-// again before a neutral report can end its quarantine (ADR-0033 decision 1):
+// again before a neutral report can end its quarantine (ADR-0006):
 // SDL's center while the input desktop is unavailable is synthetic, not
 // proof that the owner let go, so the first reports after the resume are
 // neutral or the late value of the same deflection, and neither maps. The

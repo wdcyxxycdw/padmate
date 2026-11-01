@@ -16,7 +16,7 @@ import (
 )
 
 // exitStartup is padmated's exit code when live mode does not start (UI-45,
-// ADR-0056): the arguments are fine, but a file it reads, the instance,
+// ADR-0001): the arguments are fine, but a file it reads, the instance,
 // SDL, the log, IPC or the output stopped it before mapping began. With
 // --startup-report FILE, FILE says why.
 const exitStartup = 3
@@ -25,7 +25,7 @@ const exitStartup = 3
 const maxReportedProblems = 20
 
 // startupReport is what --startup-report FILE gets when padmated does not
-// start (UI-45, ADR-0056): one JSON object, for the UI that started
+// start (UI-45, ADR-0001): one JSON object, for the UI that started
 // padmated to show. Every field is always there; "" and 0 mean unknown.
 // It never holds the IPC token.
 type startupReport struct {

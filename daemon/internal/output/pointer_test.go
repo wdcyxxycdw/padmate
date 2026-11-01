@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The pointer of ADR-0062, section 5: Move and Jump are not keys. They hold
+// The pointer of ADR-0004, section 5: Move and Jump are not keys. They hold
 // nothing, are never released, and go through the Arbiter in order with the key
 // events.
 

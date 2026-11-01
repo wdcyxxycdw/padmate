@@ -55,7 +55,7 @@ func TestResolveLibraryFallback(t *testing.T) {
 	}
 	got, err := ResolveLibrary()
 	if runtime.GOOS == "windows" {
-		// Never the DLL search path (ADR-0007).
+		// Never the DLL search path (ADR-0002).
 		if !errors.Is(err, ErrNoLibrary) {
 			t.Fatalf("ResolveLibrary() = %q, %v; want ErrNoLibrary", got, err)
 		}

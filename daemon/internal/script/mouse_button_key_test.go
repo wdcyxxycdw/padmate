@@ -10,10 +10,10 @@ import (
 )
 
 // A script clicks with key.tap and holds a button with key.down like any key
-// (ADR-0062): the button goes down once and up with key.up or the script's
+// (ADR-0004): the button goes down once and up with key.up or the script's
 // releaseAll, a chord's modifier is around it, and the names, aliases
 // included, parse. There is no script repeat in API 0.8; when the repeat
-// helper (SCRIPTING §5) arrives it follows the rule of the Arbiter, which
+// helper arrives it follows the rule of the Arbiter, which
 // never presses a button that is down.
 func TestScriptMouseButtons(t *testing.T) {
 	clk := clock.NewFake()

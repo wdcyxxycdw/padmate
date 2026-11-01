@@ -16,7 +16,7 @@ import (
 )
 
 // MacroRunLimit is how long a run of a macro may last: past it the run is
-// canceled and its keys are released (SCR-50, design §6.3).
+// canceled and its keys are released (SCR-50).
 const MacroRunLimit = 60 * time.Second
 
 var (
@@ -32,7 +32,7 @@ var (
 )
 
 // Programs is what a runtime runs: the legacy entry, if the profile has
-// one, and the macros its bindings use (design §5.3).
+// one, and the macros its bindings use.
 type Programs struct {
 	Entry  *goja.Program
 	Macros []MacroProgram
@@ -71,8 +71,8 @@ func programsOf(build BuildFunc) ProgramsFunc {
 	}
 }
 
-// MacroError is an error of one macro: of its build, its load or a run
-// (design §7). Each JavaScript call knows the scope it runs for, so the
+// MacroError is an error of one macro: of its build, its load or a run.
+// Each JavaScript call knows the scope it runs for, so the
 // file is that of the call, not guessed from a stack. Err is a diagnostic
 // *Error: its diagnostics without a file name the macro, and file names in
 // the macros folder are relative to it, as "复制全部.ts:3:9".
@@ -158,8 +158,8 @@ func cpuInterruption(err error) bool {
 	return errors.As(err, &overflow)
 }
 
-// DisabledMacros remembers the macros a slot stopped after an interruption
-// (design §7), by file and Version. It is safe for concurrent use: a
+// DisabledMacros remembers the macros a slot stopped after an interruption,
+// by file and Version. It is safe for concurrent use: a
 // lifecycle worker reads it while a runtime loads.
 type DisabledMacros struct {
 	mu       sync.Mutex
@@ -225,7 +225,7 @@ type macroFile struct {
 
 // installMacros records the macros and defines MacroAPIGlobal before any
 // script code runs: a frozen object whose member for each file is that
-// file's bridge, for the runtime's life (design §5.3).
+// file's bridge, for the runtime's life.
 func (h *Host) installMacros(programs []MacroProgram) {
 	programs = slices.Clone(programs)
 	slices.SortStableFunc(programs, func(a, b MacroProgram) int { return strings.Compare(a.File, b.File) })
@@ -348,7 +348,7 @@ func (h *Host) MacroErrors() []*MacroError {
 	return out
 }
 
-// RunMacro starts a run of the macro file (design §6.1): it calls the
+// RunMacro starts a run of the macro file: it calls the
 // default export under a handler watchdog, and a returned thenable keeps
 // the run going until it settles. A macro that is not there, did not load
 // or is disabled reports its error once per runtime. A macro already
@@ -436,7 +436,7 @@ func (h *Host) takeMacroErrs() error {
 	return errors.Join(errs...)
 }
 
-// endRun ends the run s normally (design §6.3): its timers are canceled,
+// endRun ends the run s normally: its timers are canceled,
 // its taps are abandoned, with only the step the Arbiter already has
 // finishing, and each key it holds goes up with Up, so the Arbiter keeps
 // every minimum press time and the references of other owners. Only if an

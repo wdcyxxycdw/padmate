@@ -107,27 +107,27 @@ const required: [string, string, string][] = [
   ["shell.css", ".status-dot", "status dot"],
   ["shell.css", ".connection-indicator", "connection dot"],
   [
-    "controller-3d.css",
+    "controller/controller-3d.css",
     '.stage-chip[aria-pressed="true"]',
     "selected chip: border color and shadow",
   ],
   [
-    "controller-3d.css",
+    "controller/controller-3d.css",
     '.stage-chip[data-active="true"]',
     "pressed control: border color",
   ],
   [
-    "controller-3d.css",
+    "controller/controller-3d.css",
     ".stage-glyph[data-icon] > svg",
     "a d-pad icon's lit arm was only a colour",
   ],
   [
-    "drawer.css",
+    "drawer/drawer.css",
     ".drawer-glyph[data-icon] > svg",
     "a d-pad icon's lit arm was only a colour",
   ],
   [
-    "workspace.css",
+    "workspace/workspace.css",
     '.control-icon[data-kind="art"] > svg',
     "a d-pad icon's lit arm was only a colour",
   ],
@@ -152,16 +152,16 @@ const required: [string, string, string][] = [
     "open cell: border color",
   ],
   [
-    "drawer.css",
+    "drawer/drawer.css",
     '.drawer-shortcut[data-active="true"] .drawer-capture',
     "recording: border color and shadow",
   ],
   [
-    "drawer.css",
+    "drawer/drawer.css",
     '.drawer-step[data-active="true"] .drawer-step-row',
     "recording a step",
   ],
-  ["drawer.css", ".drawer-rec-dot", "recording dot"],
+  ["drawer/drawer.css", ".drawer-rec-dot", "recording dot"],
   ["pages/pages.css", ".page-search:focus-within", "focus was a border color"],
   [
     "pages/pages.css",
@@ -179,9 +179,17 @@ const required: [string, string, string][] = [
     '.wizard-step[aria-current="step"]',
     "current step was a fill",
   ],
-  ["pages/profiles.css", ".app-choice:focus-visible", "focus was a faint fill"],
-  ["pages/profiles.css", '.profile-card[data-active="true"]', "active card"],
-  ["pages/profiles.css", '.profile-card[data-flash="true"]', "flash"],
+  [
+    "pages/profiles/profiles.css",
+    ".app-choice:focus-visible",
+    "focus was a faint fill",
+  ],
+  [
+    "pages/profiles/profiles.css",
+    '.profile-card[data-active="true"]',
+    "active card",
+  ],
+  ["pages/profiles/profiles.css", '.profile-card[data-flash="true"]', "flash"],
 ];
 
 describe("forced colors (Windows high contrast)", () => {
@@ -231,8 +239,8 @@ describe("forced colors (Windows high contrast)", () => {
 // get an outline in the forced one (checked above); the others are named here
 // once, so a new `outline: none` is a decision and not an accident.
 const ringless = [
-  "controller-3d.css:.controller-3d",
-  "drawer.css:.drawer-title:focus:not(:focus-visible)",
+  "controller/controller-3d.css:.controller-3d",
+  "drawer/drawer.css:.drawer-title:focus:not(:focus-visible)",
   "pages/pages.css:.page-search input",
   "ui/ui.css:.input:focus, .select:focus",
   "analog/analog-editor.css:.analog-number:focus",

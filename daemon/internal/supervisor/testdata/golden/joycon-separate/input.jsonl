@@ -1,4 +1,4 @@
-# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0022):
+# Two Joy-Cons under padmate's default, COMBINE=0 (IN-07, ADR-0002):
 # each is its own gamepad. Joy-Con (L) holds east. Joy-Con (R) wakes
 # while L has the slot: with one slot it waits, and its tap of south
 # maps nothing (multi-joycon gives it a second slot). L lets go of east,

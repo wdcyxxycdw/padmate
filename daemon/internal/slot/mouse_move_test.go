@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The stick that moves the pointer (ADR-0062, section 5) through a Slot and the
+// The stick that moves the pointer (ADR-0004, section 5) through a Slot and the
 // Arbiter. The pointer is not a key, so what these tests check is the ones the
 // moves share with keys: they stop on every path that ends a held thing
 // (invariant 1's sibling), and nothing is held after.

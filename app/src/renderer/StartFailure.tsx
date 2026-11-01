@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StartFailure as Failure, PadmateAPI } from "../shared/api";
 import { startFailureText } from "../shared/start-failure-text";
-import type { Language } from "./store";
+import type { Language } from "./state/store";
 import { Icon } from "./ui/Icon";
 
 const tx = (language: Language, zh: string, en: string) =>

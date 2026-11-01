@@ -35,7 +35,7 @@ func TestSecondInstanceForwardsProfile(t *testing.T) {
 				writeLibraryProfile(t, dir, "first", data)
 				writeLibraryProfile(t, dir, "second", second)
 				// Switching by app is off: the real foreground, which no
-				// rule binds, would select the fixed default (ADR-0053)
+				// rule binds, would select the fixed default (ADR-0008)
 				// while the test checks the forwarded selection.
 				if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"schemaVersion":0,"enabled":false}`), 0o600); err != nil {
 					t.Fatal(err)

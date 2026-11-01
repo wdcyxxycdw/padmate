@@ -32,7 +32,7 @@ func bindingHapticSchema(t *testing.T) []string {
 
 // The names of binding.haptic are the names of haptic.Preset, in the same
 // order: the schema, the model and the script API share one list (MAP-25,
-// ADR-0065).
+// ADR-0015).
 func TestBindingHapticEnumIsThePresetList(t *testing.T) {
 	if got, want := bindingHapticSchema(t), haptic.PresetNames(); !slices.Equal(got, want) {
 		t.Errorf("schema enum = %v; haptic.PresetNames() = %v", got, want)

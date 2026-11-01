@@ -82,7 +82,7 @@ func TestLibraryStartupSelection(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	// The retired defaultProfile no longer chooses the start (ADR-0053).
+	// The retired defaultProfile no longer chooses the start (ADR-0008).
 	write("config.json", `{"schemaVersion":0,"defaultProfile":"paint","onUnmatched":"default","timing":{"holdMs":500}}`)
 	writeLibraryProfile(t, dir, "paint", `{"schemaVersion":0,"name":"paint","layers":{"base":{}}}`)
 	lib := profilelib.New(dir)

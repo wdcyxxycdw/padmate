@@ -7,7 +7,7 @@
 // The version is the release tag: the app and the installer get it without the
 // "v" (extraMetadata.version), so no file is edited for a release.
 //
-// Code signing (PKG-09, ADR-0073) is chosen by PADMATE_SIGN, never by a file in
+// Code signing (PKG-09, ADR-0018) is chosen by PADMATE_SIGN, never by a file in
 // the repository: none (the default), store, pfx or azure. signingPlan turns the
 // environment into electron-builder flags and an environment patch; no
 // certificate, password or thumbprint is written anywhere, and none is printed.
@@ -17,7 +17,6 @@ import { rm } from "node:fs/promises";
 import { dirname, relative, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertMainBundle } from "./main-bundle-guard.mjs";
-import { refusePackaging } from "./public-mirror.mjs";
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repo = resolve(app, "..");
@@ -164,7 +163,7 @@ function pfxFile(env) {
 
 /**
  * Turns the environment into what electron-builder needs to sign, or to not
- * sign (ADR-0073). Pure but for the one search for signtool.exe, which a test
+ * sign (ADR-0018). Pure but for the one search for signtool.exe, which a test
  * replaces.
  *
  * - PADMATE_SIGN: none (default), store, pfx or azure.
@@ -424,8 +423,6 @@ export function runElectronBuilder(
 }
 
 async function main() {
-  // The public code mirror has no documentation to pack.
-  refusePackaging();
   const { label, output: requested } = parse(process.argv.slice(2));
   const version = appVersion(label);
   const output = outputFolder(requested);

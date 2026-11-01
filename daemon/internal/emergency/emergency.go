@@ -1,5 +1,5 @@
 // Package emergency provides the out-of-band release signal of DMN-20
-// (ADR-0028): padmatectl release-all signals a named event of the
+// (ADR-0006): padmatectl release-all signals a named event of the
 // interactive session, which a running padmated waits on. It does not
 // depend on IPC.
 //

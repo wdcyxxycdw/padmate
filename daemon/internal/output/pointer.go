@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// The pointer (ADR-0062, section 5): a stick in mode "mouse" moves the pointer
+// The pointer (ADR-0004, section 5): a stick in mode "mouse" moves the pointer
 // through Move, and the "jump" action puts it somewhere through Jump. Neither is
 // a key. They have no owner's hold, no release and no minimum press, are never
 // in the ledger or the held-key log, and a ReleaseAll has nothing to let go of;

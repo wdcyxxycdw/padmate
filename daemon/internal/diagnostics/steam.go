@@ -2,12 +2,12 @@ package diagnostics
 
 // SteamClass is the kind of gamepad setting in Steam (Settings, Controller)
 // that may govern a gamepad: Steam Input is switched on or off for a class of
-// gamepads, not for one (IN-24, ADR-0071).
+// gamepads, not for one (IN-24, ADR-0016).
 //
 // padmate cannot tell that Steam really took a gamepad over. SDL hides
 // Steam's virtual gamepad on every Windows backend, the virtual gamepad exists
 // in the processes Steam starts only, and Steam Input reads the real gamepad
-// beside padmate (hardware matrix, ADR-0071). Reading Steam's own files would
+// beside padmate (hardware matrix, ADR-0016). Reading Steam's own files would
 // read another program's internal state, which padmate does not do. So the
 // class says which setting could affect the gamepad, and the notice says
 // "may".

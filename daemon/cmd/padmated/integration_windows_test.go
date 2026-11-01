@@ -166,7 +166,7 @@ func (pt *probeTest) finish(want []output.KeyEvent) {
 func TestPadToProbe(t *testing.T) {
 	pt := newProbeTest(t)
 	resolve := keyResolver(t)
-	// F13's scan code, 0x64, is the same on every layout (ADR-0003); the
+	// F13's scan code, 0x64, is the same on every layout (ADR-0004); the
 	// expected events come from the Resolver all the same, as Ctrl+Z's
 	// and Space's do.
 	undo, space, f13 := resolve("Ctrl+Z"), resolve("Space"), resolve("F13")
@@ -219,7 +219,7 @@ func TestPadToProbe(t *testing.T) {
 
 	// d. A save of the profile while east holds Space releases it
 	// (PRO-03). Space released, the slot runs the saved profile: the
-	// release of east does nothing (ADR-0020), and its next press holds
+	// release of east does nothing (ADR-0007), and its next press holds
 	// F13.
 	press(t, a2, "east", true)
 	n += len(space)
@@ -326,7 +326,7 @@ const profileMenuMask = `{"schemaVersion": 0, "name": "menu mask", "layers": {"b
 	`"west": {"press": {"type": "keys", "keys": "Alt+Tab", "mode": "tap"}}, ` +
 	`"north": {"press": {"type": "keys", "keys": "F13", "mode": "tap"}}}}}` + "\n"
 
-// TestMenuMaskToProbe is the automatic acceptance of OUT-08 (ADR-0021):
+// TestMenuMaskToProbe is the automatic acceptance of OUT-08 (ADR-0004):
 // the release of a lone Alt or LWin of a virtual gamepad goes through
 // live mode with --inject and SendInput to padmate-probe (probeTest)
 // right after a press and a release of the mask key, vk 0xE8 (the probe
@@ -342,7 +342,7 @@ const profileMenuMask = `{"schemaVersion": 0, "name": "menu mask", "layers": {"b
 func TestMenuMaskToProbe(t *testing.T) {
 	pt := newProbeTest(t)
 	resolve := keyResolver(t)
-	// F13's scan code is the same on every layout (ADR-0003). RAlt is left
+	// F13's scan code is the same on every layout (ADR-0004). RAlt is left
 	// out: on an AltGr layout the system may add a fake LCtrl to it.
 	alt, win, altTab, f13 := resolve("Alt"), resolve("LWin"), resolve("Alt+Tab"), resolve("F13")
 	mask := []output.KeyEvent{output.MenuMaskEvent(false), output.MenuMaskEvent(true)}

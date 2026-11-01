@@ -51,8 +51,7 @@ type scriptDefinition struct {
 	// its presets.
 	feedback profile.Feedback
 	// errorCue, when set, is called on the slot goroutine when the script of the
-	// slot starts failing, with the gamepad the slot has: the error buzz of
-	// SCRIPTING 4.2.
+	// slot starts failing, with the gamepad the slot has: the error buzz.
 	errorCue func(slot uint8, dev input.DeviceID)
 }
 
@@ -68,12 +67,11 @@ type scriptSpec struct {
 }
 
 // needed reports whether the profile needs a runtime: it has a legacy
-// script, or an action runs a macro (design §5.2).
+// script, or an action runs a macro.
 func (s scriptSpec) needed() bool { return s.cfg != nil || len(s.macros) > 0 }
 
 // api is the script API the macros build with: the legacy script's, or
-// the host's when the profile has none. A macro has no version of its own
-// (design §12).
+// the host's when the profile has none. A macro has no version of its own.
 func (s scriptSpec) api() string {
 	if s.cfg != nil && s.cfg.API != "" {
 		return s.cfg.API
@@ -175,7 +173,7 @@ func (d *scriptDefinition) rootDir() string {
 }
 
 // scriptRootLocked returns the folder of the legacy script's files: the
-// profile's own, or, for a script it inherits (PRO-19, ADR-0070), the
+// profile's own, or, for a script it inherits (PRO-19, ADR-0012), the
 // folder of the parent that has it; the caller holds mu.
 func (d *scriptDefinition) scriptRootLocked() string {
 	if d.cfg != nil && d.cfg.Origin != "" && d.library != "" {
@@ -249,7 +247,7 @@ type scriptRuntime struct {
 	// buildMacroPrograms. Tests hold or count it.
 	macroBuild func(ctx context.Context, root string, files []string, api string) []script.MacroProgram
 	// disabled are the macros this slot stopped after an interruption; every
-	// lifecycle of the runtime shares it (design §7).
+	// lifecycle of the runtime shares it.
 	disabled *script.DisabledMacros
 	// macroErrors are the latest run error of each macro, by file, for
 	// script.status; forgetErrors clears them, as lastError.
@@ -353,7 +351,7 @@ func (r *scriptRuntime) build(ctx context.Context, root string, cfg *profile.Scr
 
 // programs builds what the runtime of spec runs, on a lifecycle worker:
 // the legacy entry, if any, and the macros the profile's actions run. A
-// macro that does not build only fails itself (design §5.1).
+// macro that does not build only fails itself.
 func (r *scriptRuntime) programs(ctx context.Context, spec scriptSpec) (script.Programs, error) {
 	var ps script.Programs
 	if spec.cfg != nil {
@@ -447,7 +445,7 @@ func (r *scriptRuntime) Dispatch(e slot.ScriptEvent) (consumed bool, dispatchErr
 // whatever the runtime's state; the slot itself drops a trigger while it is
 // paused or waits for its Resync. While a runtime builds, at the start,
 // after a release or for a reload, the building lifecycle remembers each
-// file once and runs it once installed (design §5.2): a reload has ended
+// file once and runs it once installed: a reload has ended
 // the installed runtime's runs, and its profile may not have the file, or
 // have another file of the same name. A stopped runtime drops it, as does
 // the old profile's runtime left installed by a failed switch.
@@ -674,8 +672,8 @@ func (r *scriptRuntime) Reload(gen uint32) error {
 	}
 	// A newer profile generation supersedes an in-flight candidate. The old
 	// active lifecycle and watcher remain until the new candidate is ready
-	// and has a watcher of its own, but the runs of its macros end now
-	// (design §6.3): the slot has just released their keys, and they must
+	// and has a watcher of its own, but the runs of its macros end now:
+	// the slot has just released their keys, and they must
 	// not press more for the new profile. Its legacy script keeps running.
 	r.cancelPending()
 	r.reloadErr = nil

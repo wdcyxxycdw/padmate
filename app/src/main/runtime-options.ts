@@ -106,7 +106,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
   const startupReports = join(userData, "startup-reports");
   const harness = !packaged && env.PADMATE_UI_TEST_HARNESS === "1";
   // The command of one start, whose report goes to report. A packaged UI
-  // starts the daemon like a normal app, sending real keys (ADR-0052);
+  // starts the daemon like a normal app, sending real keys (ADR-0001);
   // padmate's own window in front still only previews them (OUT-25).
   // Development builds and tests keep the dry run. --startup-report comes
   // first, so a usage error after it is reported too; the test harness, a
@@ -138,7 +138,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
   // E2E runs that moved their window to the secondary display
   // (PADMATE_E2E_DISPLAY=secondary, tests/e2e/helpers.ts placeWindow) put
   // the overlay there too, so that no test covers the person's primary
-  // display (ADR-0063). Only isolated runs: the installed application
+  // display (ADR-0014). Only isolated runs: the installed application
   // ignores the variable.
   const e2eDisplay: "primary" | "secondary" =
     isolated && env.PADMATE_E2E_DISPLAY === "secondary"

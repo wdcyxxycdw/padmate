@@ -14,7 +14,7 @@ import (
 )
 
 // markRig is a Slot over a Loop's RemoteArbiter on a fake clock, with the
-// latency sink of the Arbiter (DMN-15, ADR-0071): which input edges end in a
+// latency sink of the Arbiter (DMN-15, ADR-0016): which input edges end in a
 // measurement, and under which key.
 type markRig struct {
 	t    *testing.T
@@ -201,7 +201,7 @@ func TestSlotMarkEveryEdgeOnce(t *testing.T) {
 }
 
 // coldRuntime is a script runtime that is not ready: the slot queues the
-// input (ADR-0044) and replays it once the runtime is.
+// input (ADR-0010) and replays it once the runtime is.
 type coldRuntime struct {
 	fakeScriptRuntime
 	pending, ready bool
@@ -212,7 +212,7 @@ func (c *coldRuntime) InputStatus() (bool, bool) {
 	return c.pending, c.ready
 }
 
-// TestSlotReplayedScriptInputUnmarked (DMN-15, ADR-0071): an edge that the slot
+// TestSlotReplayedScriptInputUnmarked (DMN-15, ADR-0016): an edge that the slot
 // queued while the script starts, and replays later, is not measured: its
 // Stamp is old, and the user waited for the script, not for padmate. The
 // first edge after the replay is.

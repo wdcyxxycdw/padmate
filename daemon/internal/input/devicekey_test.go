@@ -200,7 +200,7 @@ func TestRegistryReconnect(t *testing.T) {
 	connect(t, r, pad(2, guidXbox, "A", "p2"), a, true)
 	connect(t, r, pad(3, guidXbox, "B", "p1"), b, false)
 	// Another GUID with the same serial is another gamepad too, such as
-	// the same pad through another SDL backend (ADR-0009).
+	// the same pad through another SDL backend (ADR-0002).
 	disconnect(t, r, 2, a)
 	connect(t, r, pad(4, guidVirtual, "A", ""), input.DeviceKey{GUID: guidVirtual, Serial: "A"}, false)
 	connect(t, r, pad(5, guidXbox, "A", ""), a, true)
@@ -211,8 +211,7 @@ func TestRegistryReconnect(t *testing.T) {
 // another slot, as another XInput device took its slot meanwhile: it gets
 // its key back.
 func TestRegistryXInput(t *testing.T) {
-	// The GameSir Nova 2 Lite of docs/hardware-matrix.md, named after its
-	// slot.
+	// The GameSir Nova 2 Lite, named after its slot.
 	const guidNova = "0300fa67373500009810000000017801"
 	r := input.NewRegistry()
 	k := func(n int) input.DeviceKey { return input.DeviceKey{GUID: guidXInput, N: n} }

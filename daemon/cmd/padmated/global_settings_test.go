@@ -41,7 +41,7 @@ func (tl *testLive) timing() profile.Timing {
 }
 
 // TestConfigPutAppliesTimingLive: config.json's timing applies on
-// config.put without a restart (UI-19, ADR-0051). The running profile is
+// config.put without a restart (UI-19, ADR-0017). The running profile is
 // compiled again and reloaded, which releases the keys it holds
 // (invariant 1); a profile whose timing does not change keeps running, and
 // the next profile activated uses the new defaults.
@@ -316,7 +316,7 @@ func startLibraryLiveOpen(t *testing.T, config string, opts options, open func(i
 	return tl
 }
 
-// TestConfigPutAppliesFeedbackSwitchesLive (UI-27, ADR-0067): config.json's
+// TestConfigPutAppliesFeedbackSwitchesLive (UI-27, ADR-0015): config.json's
 // feedback switches apply on config.put without a restart and without
 // reloading the profile. The lights switch off gives the lights back to the
 // controller at once; the same file read by config.get does not ask for a

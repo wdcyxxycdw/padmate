@@ -15,7 +15,7 @@ import {
 } from "../shared/overlay";
 import { baseWebPreferences } from "./security";
 
-// The overlay window (HUD-01, SPK-09, ADR-0063): a second window of the UI
+// The overlay window (HUD-01, SPK-09, ADR-0014): a second window of the UI
 // that is made once, never takes the foreground and lets the mouse through.
 // This file is plain logic over a small window interface, so that the
 // options, the placement and the lifecycle are tested without Electron;
@@ -71,7 +71,7 @@ export const overlayTopGap = 48;
  * window. They are not: the overlay has nothing to hover, and on Windows
  * Electron implements forwarding with a process-wide WH_MOUSE_LL hook on the
  * main thread, which would put every mouse and pen move of the machine
- * behind the UI process (ADR-0063). Ignoring the mouse without forwarding
+ * behind the UI process (ADR-0014). Ignoring the mouse without forwarding
  * still sets WS_EX_TRANSPARENT and WS_EX_LAYERED.
  */
 export const overlayForwardMouse = false;

@@ -112,7 +112,7 @@ func TestTextUnits(t *testing.T) {
 		}
 	}
 	if keys.MaxTextUnits != 256 {
-		t.Errorf("MaxTextUnits = %d, want 256 (ADR-0070)", keys.MaxTextUnits)
+		t.Errorf("MaxTextUnits = %d, want 256 (ADR-0012)", keys.MaxTextUnits)
 	}
 }
 

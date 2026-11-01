@@ -1,5 +1,5 @@
 // Package compile bundles a padmate TypeScript script into one IIFE script
-// for goja, with esbuild (SCRIPTING §3).
+// for goja, with esbuild.
 //
 // Build resolves imports through a plugin that serves the virtual padmate
 // modules, rejects Node.js built-in modules and imports outside the script
@@ -8,7 +8,7 @@
 // tool generates by probing the linked goja; lib.padmate-goja.d.ts, generated
 // with it, is the TypeScript standard library to type-check scripts against.
 //
-// BuildOptions.Macro builds a macro (SCR-50, ADR-0055), a top-level file
+// BuildOptions.Macro builds a macro (SCR-50, ADR-0011), a top-level file
 // of a macros folder, the build's root (the script library's, SCR-51): its
 // padmate module has only the members of MacroExports, read from the
 // macro's own bridge, and using another one is a build error. A legacy

@@ -17,7 +17,7 @@ import {
 const text = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("the update source (PKG-10, ADR-0078)", () => {
+describe("the update source (PKG-10, ADR-0018)", () => {
   it("is the download site electron-builder.yml publishes to", () => {
     const config = text("../../electron-builder.yml");
     expect(config).toMatch(/^publish:\s*$/m);

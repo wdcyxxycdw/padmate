@@ -55,7 +55,7 @@ func TestIPCImportAmgp(t *testing.T) {
 	if imported.ID != "from-a-pad" || imported.Name != "From a pad" || imported.Applied {
 		t.Fatalf("%+v", imported)
 	}
-	// The report says what it did. View is an ordinary control since ADR-0075,
+	// The report says what it did. View is an ordinary control since ADR-0012,
 	// so its key is imported and nothing is dropped.
 	if len(imported.Report) == 0 || imported.Report[len(imported.Report)-1].Message == "" {
 		t.Fatalf("report %+v", imported.Report)

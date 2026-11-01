@@ -33,7 +33,7 @@ func TestTraceJSON(t *testing.T) {
 }
 
 // padmatectl trace prints every move of a stick that moves the pointer
-// (ADR-0062), where padmated's dry run sums them, and the jump of a mouse
+// (ADR-0004), where padmated's dry run sums them, and the jump of a mouse
 // action.
 func TestTracePointer(t *testing.T) {
 	dir := t.TempDir()
@@ -82,7 +82,7 @@ func TestTracePointer(t *testing.T) {
 
 // A trace may end with the stick still pushed, like a key held at the end: the
 // replay does not wait for the pointer, which would never stop, and the
-// ReleaseAll after it ends it (ADR-0062).
+// ReleaseAll after it ends it (ADR-0004).
 func TestTracePointerEndingPushed(t *testing.T) {
 	dir := t.TempDir()
 	profilePath := filepath.Join(dir, "pointer.json")

@@ -20,7 +20,7 @@ import (
 
 // The script library (SCR-51): one macros folder in the data folder,
 // <data>/macros, that every profile's macro actions run from (SCR-50,
-// ADR-0055). Every edit runs under the library's writer lock through
+// ADR-0011). Every edit runs under the library's writer lock through
 // os.Root, as UpdateFolder's do, and touches a macro only under a name that
 // ReadDir lists exactly, so another case or an 8.3 short name never reaches
 // another file. A rename or a deletion edits the references in every

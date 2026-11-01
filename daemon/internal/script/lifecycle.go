@@ -51,7 +51,7 @@ type Lifecycle struct {
 	beforeSetup    func(*Host) // deterministic worker setup failure seam for tests
 	beforeTeardown func()      // deterministic worker teardown hold seam for tests
 	// queued are the macros triggered while the runtime builds, each file
-	// once; they run once it is installed (design §5.2).
+	// once; they run once it is installed.
 	queued []queuedMacro
 }
 
@@ -342,7 +342,7 @@ func (l *Lifecycle) RunMacro(file string, e Event) error {
 // EndMacroRuns ends every run of a macro on the active runtime at once,
 // releasing its keys, and forgets the macros triggered while it builds. A
 // profile reload calls it when it starts building the replacement: the
-// runs end then (design §6.3), while the legacy script keeps running until
+// runs end then, while the legacy script keeps running until
 // the replacement is installed. It returns the errors of the runs.
 func (l *Lifecycle) EndMacroRuns() error {
 	l.queued = nil
@@ -405,7 +405,7 @@ func budgetFailure(err error) *BudgetError {
 // handleRuntimeFailure applies the two budget policies and treats uncatchable
 // stack overflow as an interruption. A wall wedge is terminal until reload.
 // A macro interrupted for its CPU use or its stack is disabled first: the
-// restarted runtime does not load it (design §7).
+// restarted runtime does not load it.
 func (l *Lifecycle) handleRuntimeFailure(err error) {
 	if err == nil {
 		return

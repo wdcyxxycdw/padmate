@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// The pointer moves (ADR-0062, section 5). A move is not held, so a lost move
+// The pointer moves (ADR-0004, section 5). A move is not held, so a lost move
 // cannot leave anything down; what a leak costs is a cursor that is somewhere
 // else. So a test injects relative moves only in batches that add up to no
 // distance at all, the way the mouse canary is a move of +1 and one of -1, and

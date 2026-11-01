@@ -65,11 +65,11 @@ func FuzzMainBundleRequires(f *testing.F) {
 	})
 }
 
-// The update source of the application (ADR-0078): the download site, in the
+// The update source of the application (ADR-0018): the download site, in the
 // form electron-builder writes into resources\app-update.yml.
 const goodUpdateConfig = "provider: generic\nurl: https://padmate.download/\nchannel: latest\nupdaterCacheDirName: padmate-updater\n"
 
-// The source of the builds up to v1.0.2: GitHub (ADR-0073).
+// The source of the builds up to v1.0.2: GitHub (ADR-0018).
 const formerUpdateConfig = "provider: github\nowner: wdcyxxycdw\nrepo: padmate\nupdaterCacheDirName: padmate-updater\n"
 
 func TestUpdateSourceConstants(t *testing.T) {

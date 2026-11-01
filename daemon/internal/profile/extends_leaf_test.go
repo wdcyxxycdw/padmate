@@ -8,7 +8,7 @@ import (
 )
 
 // merger.leaf keeps what a parent that is a merge itself knows about the
-// values it copies (PRO-19, ADR-0070). It finds the origins below a value by
+// values it copies (PRO-19, ADR-0012). It finds the origins below a value by
 // the sorted pointers, not by looking at all of them for every value: a chain
 // of large profiles must not take time in the product of the two.
 func TestMergerLeafScalesWithTheOriginsBelowIt(t *testing.T) {

@@ -62,16 +62,12 @@ export const names: Name[] = [
   ["立即松开", "Release now"],
   ["手柄调校", "Controller calibration"],
   ["调校", "Calibrate"],
-  ["识别", "Identify"],
   ["死区", "Dead zone"],
   ["推到底", "Full push"],
   ["通用", "General"],
   ["语言", "Language"],
-  ["登录时启动", "Start at sign-in"],
   ["高级", "Advanced"],
-  ["按键间隔", "Key gap"],
   ["关于", "About"],
-  ["日志", "Logs"],
   ["查看", "View"],
   // Start-up trouble.
   ["设置已恢复", "Settings reset"],
@@ -79,9 +75,6 @@ export const names: Name[] = [
   ["确定", "OK"],
   // Guide 1: the controller picture and the key drawer
   ["由脚本接管", "Handled by a script"],
-  ["按键名称显示", "Key labels"],
-  ["动作名称", "Action names"],
-  ["快捷键", "Shortcuts"],
   ["重命名此按键", "Rename this key"],
   ["功能", "Function"],
   ["映射", "Mappings"],
@@ -90,12 +83,10 @@ export const names: Name[] = [
   ["关闭按键编辑", "Close key editor"],
   ["复制此按键的设置", "Copy this key's settings"],
   ["粘贴…", "Paste…"],
-  ["重命名按键…", "Rename key…"],
   ["清空此按键…", "Clear this key…"],
   ["查看所有按键", "List all keys"],
   // Guide 2: gestures
   ["反馈", "Feedback"],
-  ["震动", "Rumble"],
   ["点按", "Tap"],
   ["长按", "Hold"],
   ["按键判定", "Key timing"],
@@ -144,7 +135,6 @@ export const names: Name[] = [
   ["更改", "Change"],
   ["替换", "Replace"],
   ["另存为", "Save as new"],
-  ["都保留", "Keep both"],
   // Guide 7: sticks and triggers
   ["旋钮", "Knob"],
   ["轻推", "Light push"],
@@ -156,24 +146,15 @@ export const names: Name[] = [
   ["四方向", "4 directions"],
   ["方向键", "Arrow keys"],
   ["灵敏度", "Sensitivity"],
-  ["本手柄已单独调校", "Calibrated for this controller"],
   ["旋转", "Move"],
   ["点按", "Press"],
   ["触发幅度", "Trigger point"],
-  ["角度滞回", "Angle hysteresis"],
   ["线性", "Linear"],
   ["二次", "Quadratic"],
   ["三次", "Cubic"],
   ["其他输入", "Other inputs"],
   ["重推的位置", "Hard push from"],
-  ["原始轴", "Raw axes"],
-  ["原始轴阈值", "Raw axis threshold"],
-  ["参数操作", "Parameter actions"],
-  ["复制参数", "Copy parameters"],
-  ["粘贴参数…", "Paste parameters…"],
-  ["恢复默认参数…", "Reset parameters…"],
   ["每格角度", "Step"],
-  ["刻度震动", "Tick haptic"],
   ["顺时针一格", "Clockwise step"],
   ["逆时针一格", "Counter-clockwise step"],
   ["速度", "Speed"],
@@ -182,7 +163,6 @@ export const names: Name[] = [
   ["两段扳机", "Two-stage trigger"],
   ["按到底：按下", "Full pull: press"],
   ["按到底：松开", "Full pull: release"],
-  ["半按", "Half press"],
   // Guide 8: scripts
   ["重新加载", "Reload"],
   ["新建", "New"],
@@ -192,8 +172,6 @@ export const names: Name[] = [
   ["重命名", "Rename"],
   ["删除", "Delete"],
   ["出错", "Error"],
-  ["随配置持续运行", "Runs with the profile"],
-  ["移除", "Remove"],
   ["选择脚本", "Choose a script"],
   ["暂无脚本", "No scripts yet"],
   ["前往脚本页", "Go to Scripts"],
@@ -218,16 +196,11 @@ export const names: Name[] = [
     "按下时没有动作，要等松开、长按或连按后才能确定",
     "Nothing happens on press; the action waits for release, hold or repeated taps.",
   ],
-  ["这个键只有名称，没有设置动作", "This key has a name but no action."],
-  ["这个映射没有设置动作", "No action is set for this mapping."],
   ["映射已暂停", "Mapping is paused."],
   [
     "系统暂停中（锁屏、睡眠或安全桌面）",
     "The system has suspended mapping (lock screen, sleep or secure desktop).",
   ],
-  ["正在录入快捷键，映射暂停", "Recording a shortcut; mapping is paused."],
-  ["这个键在当前层被屏蔽", "This key is blocked in the current layer."],
-  ["脚本处理了这个键", "A script handled this key."],
   ["这只手柄被设为忽略", "This controller is set to be ignored."],
   ["这只手柄没有标准映射", "This controller has no standard mapping."],
   ["最大", "Max"],
@@ -254,7 +227,6 @@ export const names: Name[] = [
   ["跳过", "Skip"],
   ["取消", "Cancel"],
   ["重新映射…", "Remap…"],
-  ["重新映射", "Remap"],
   ["自定义映射", "Custom mapping"],
   ["恢复默认映射？", "Restore the default mapping?"],
   // Guide 12: tray and emergency release
@@ -281,11 +253,7 @@ export const names: Name[] = [
   ["无法下载更新", "Could not download the update"],
   ["无法安装更新", "Could not install the update"],
   // Known limitations
-  ["灯光", "Lights"],
-  ["改用按到底", "Use full pull"],
-  ["最近使用", "Recent"],
   // FAQ.
-  ["该手柄无法震动或闪灯", "This controller cannot rumble or flash."],
   // The question of the uninstaller (app/build/installer.nsh).
   ["是否保留配置和脚本？", "Keep your profiles and scripts?", "installer"],
 ];
@@ -363,21 +331,6 @@ export const external: External[] = [
     reason: "page of Windows Security",
   },
   {
-    zh: "请勿打扰",
-    en: "Do not disturb",
-    reason: "setting of Windows that hides notifications",
-  },
-  {
-    zh: "设置 → 配置 Krita → 常规 → 杂项",
-    en: "Settings → Configure Krita → General → Miscellaneous",
-    reason: "menu path in Krita, not in padmate",
-  },
-  {
-    zh: "忽略 F13–F24",
-    en: "Ignore high function keys",
-    reason: "option in Krita, not in padmate",
-  },
-  {
     zh: "WASD",
     en: "WASD",
     reason: "text on a button of the app: the four letter keys, not translated",
@@ -439,31 +392,13 @@ export const external: External[] = [
     en: "Steam is running",
     reason: "built by the app with the name of the software that runs",
   },
-  {
-    zh: "绘画软件",
-    en: "Painting apps",
-    reason: "heading of a section of the known limitations page",
-    heading: "docs/known-limitations.md",
-  },
-  {
-    zh: "杀毒软件和 SmartScreen",
-    en: "Antivirus programs and SmartScreen",
-    reason: "heading of a section of the known limitations page",
-    heading: "docs/known-limitations.md",
-  },
 ];
 
 /**
  * Text that stays Chinese in the English documents, outside the quoted names
  * above: the tray menu (`trayNames`) is always allowed. Every entry says why.
  */
-export const chineseInEnglish: { text: string; reason: string }[] = [
-  {
-    text: "背键 1",
-    reason:
-      "the Mapping page prints the back buttons of most controllers in Chinese in both languages (controller-model.ts), and the page quotes it as the page shows it",
-  },
-];
+export const chineseInEnglish: { text: string; reason: string }[] = [];
 
 /**
  * Inline code that is translated in the English document: a placeholder for
@@ -474,10 +409,6 @@ export const codePlaceholders: { zh: string; en: string }[] = [
   {
     zh: String.raw`Get-FileHash .\安装程序.exe -Algorithm SHA256`,
     en: String.raw`Get-FileHash .\installer.exe -Algorithm SHA256`,
-  },
-  {
-    zh: "padmatectl profile import-amgp 文件",
-    en: "padmatectl profile import-amgp file",
   },
   {
     zh: String.raw`.\padmatectl.exe profile import-amgp 文件`,

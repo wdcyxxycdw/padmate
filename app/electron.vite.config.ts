@@ -12,7 +12,7 @@ export default defineConfig(({ command }) => ({
   preload: {
     build: {
       rollupOptions: {
-        // The overlay's preload (HUD-04, ADR-0063) is a second, separate
+        // The overlay's preload (HUD-04, ADR-0014) is a second, separate
         // entry: a sandboxed preload cannot require a shared chunk.
         input: {
           index: resolve("src/preload/index.ts"),
@@ -27,7 +27,7 @@ export default defineConfig(({ command }) => ({
     plugins: command === "build" ? [react()] : [],
     server: { host: "127.0.0.1" },
     esbuild: { jsx: "automatic" },
-    // The overlay (HUD-01, ADR-0063) is a second page of the same renderer
+    // The overlay (HUD-01, ADR-0014) is a second page of the same renderer
     // root, served the same way (padmate://app/overlay.html) with the same CSP.
     build: {
       rollupOptions: {

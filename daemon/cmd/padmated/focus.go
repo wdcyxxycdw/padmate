@@ -220,7 +220,7 @@ func (r *liveRun) selectForeground(ctx context.Context, app *winfocus.App) error
 
 // selectApp applies the selection settings to app, the current foreground:
 // its rule's profile, or the fixed default when no rule binds it
-// (ADR-0053). A padmate UI keeps the current profile without a release
+// (ADR-0008). A padmate UI keeps the current profile without a release
 // (UI-18). switched is false when a config change, not a foreground
 // change, asks for the evaluation: releaseOnSwitch "always" then does not
 // release a profile that stays; a profile change still releases, through

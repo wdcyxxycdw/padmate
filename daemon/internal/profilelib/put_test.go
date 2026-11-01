@@ -149,7 +149,7 @@ func TestPutConfinesLinksAndLeavesNoTemporaryFiles(t *testing.T) {
 
 // A binding that holds a mouse button with typematic repeat is refused before
 // anything is written, with the message that suggests repeated clicks; the same
-// binding as a tap repeat, and a wheel key's repeat, are saved (ADR-0062).
+// binding as a tap repeat, and a wheel key's repeat, are saved (ADR-0004).
 func TestPutRefusesTypematicMouseButton(t *testing.T) {
 	const template = `{"schemaVersion":1,"name":"clicks","layers":{"base":{"south":{"press":{"type":"keys","keys":%q,"mode":%q,"repeat":{"delayMs":100}}}}}}`
 	for _, tc := range []struct {

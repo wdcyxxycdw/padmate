@@ -16,7 +16,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The tests of this file are the release points of design §6.4: each
+// The tests of this file are the release points of a macro run: each
 // path that ends a run of a macro releases the keys it holds, and the
 // Sim's cleanup checks that nothing is left held.
 

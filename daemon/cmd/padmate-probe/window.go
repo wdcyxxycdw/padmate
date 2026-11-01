@@ -36,7 +36,7 @@ flags:
 `
 
 // Extended window styles (WS_EX_*) that padmate cares about, and the names
-// the human format gives them. The overlay window (ADR-0063) must have
+// the human format gives them. The overlay window (ADR-0014) must have
 // NOACTIVATE, TRANSPARENT and TOPMOST.
 const (
 	wsExDlgModalFrame     uint32 = 0x00000001

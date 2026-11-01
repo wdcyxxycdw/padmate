@@ -59,7 +59,7 @@ func decisionOf(ev map[string]any) map[string]any {
 }
 
 // A decision event that the IPC client gets carries the wall time, what an
-// unbound press waits for, and how long the tap waited (ADR-0071), whole
+// unbound press waits for, and how long the tap waited (ADR-0016), whole
 // through the production wiring: the slot, the feed's publisher, the Hub.
 func TestLiveDecisionEventsCarryTimeAndWaiting(t *testing.T) {
 	dir := t.TempDir()
@@ -109,7 +109,7 @@ func TestLiveDecisionEventsCarryTimeAndWaiting(t *testing.T) {
 }
 
 // The button edges of a gamepad that waits for a slot reach the IPC clients as
-// unrouted events (ADR-0071), and a mapped gamepad's do not.
+// unrouted events (ADR-0016), and a mapped gamepad's do not.
 func TestLiveUnroutedEvents(t *testing.T) {
 	dir := t.TempDir()
 	writeLibraryProfile(t, dir, "paint", `{"schemaVersion":0,"name":"paint","layers":{"base":{"east":{"press":{"type":"keys","keys":"F15"}}}}}`)

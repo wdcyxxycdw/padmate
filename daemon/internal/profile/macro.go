@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// MacroDir is the folder that holds macros (SCR-50, ADR-0055): each
+// MacroDir is the folder that holds macros (SCR-50, ADR-0011): each
 // top-level .ts or .js file in it, not a .d.ts declaration, is one macro.
 // The script library is the one in the data folder, which every library
 // profile runs its macros from (SCR-51); a --profile file without a

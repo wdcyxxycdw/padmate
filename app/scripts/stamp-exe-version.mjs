@@ -9,7 +9,7 @@
 // v0.15.1-rc.1 got the numeric file version 0.15.0.1 and v0.15.1-rc.2 got
 // 0.15.0.2: only a prerelease of a version with PATCH 0 came out right, by
 // luck. The string FileVersion cannot be changed to avoid this, because it is
-// the same string, and it must stay the app's version (docs/build-installer.md).
+// the same string, and it must stay the app's version.
 // So the hook rewrites only the fixed FILEVERSION numbers and leaves every
 // string as electron-builder wrote it. The ProductVersion needs no fix: it is
 // written from "0.15.1.0", which parses.

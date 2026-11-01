@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/installerpkg"
 )
 
-// The wizard of the installer (PKG-13, ADR-0068), driven through its real
+// The wizard of the installer (PKG-13, ADR-0018), driven through its real
 // windows as a person would: the folder page, the progress and the finish page.
 // The windows appear on screen for a moment, so this runs only with
 // PADMATE_TEST_INSTALLER_INTERACTIVE=1, like the uninstaller's questions. It
@@ -420,7 +420,7 @@ func TestInstallerWizard(t *testing.T) {
 		}
 		s.checkInstalled(tag, false)
 		s.requireFiles(files.kept, true, "after moving")
-		// The login startup value is not rewritten (ADR-0060): it still names the old folder.
+		// The login startup value is not rewritten (ADR-0018): it still names the old folder.
 		if got, err := registryString(installerpkg.TestRunKey, "padmate"); err != nil || got != runValue {
 			t.Errorf("the startup value is %q, %v; want it unchanged, %q", got, err, runValue)
 		}

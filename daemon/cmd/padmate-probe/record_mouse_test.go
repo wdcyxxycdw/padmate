@@ -333,7 +333,7 @@ func buttonEvent(seq uint64, time uint32, msg uint32, xbutton uint32, nonce uint
 	}
 }
 
-// The injected mouse buttons of padmate (ADR-0062, second batch) are printed
+// The injected mouse buttons of padmate (ADR-0004, second batch) are printed
 // and swallowed like its wheel notches: the physical mouse's buttons are
 // printed and never swallowed, and a side button shows its number.
 func TestMouseButtonEvents(t *testing.T) {

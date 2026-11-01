@@ -15,10 +15,14 @@ import type {
   ProfileTiming,
   ProfileTrigger,
 } from "../../shared/generated/schema";
-import { axisPosition } from "../controller-model";
-import { baseBinding, canonicalControl, setBaseBinding } from "../editor-model";
-import type { EditOptions } from "../editor-store";
-import type { Language, PadInput } from "../store";
+import { axisPosition } from "../controller/controller-model";
+import {
+  baseBinding,
+  canonicalControl,
+  setBaseBinding,
+} from "../editor/editor-model";
+import type { EditOptions } from "../editor/editor-store";
+import type { Language, PadInput } from "../state/store";
 import { Disclosure, Segmented, Switch } from "../ui/controls";
 import { Keycaps } from "../ui/Keycaps";
 import {
@@ -81,7 +85,7 @@ import "./analog-editor.css";
 /**
  * Props shared by the analog panels that the key drawer embeds.
  * The drawer owns the header and notices; panels only edit the draft, which
- * the editor saves at once, and only its base key set (ADR-0045, UI-43).
+ * the editor saves at once, and only its base key set (ADR-0012, UI-43).
  */
 export interface AnalogPanelProps {
   profile: Profile;

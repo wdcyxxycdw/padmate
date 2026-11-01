@@ -31,7 +31,7 @@ func fixture(t testing.TB, name string) []byte {
 func readBytes(data []byte) (*Signature, error) { return Read(bytes.NewReader(data), int64(len(data))) }
 
 // signed.pe is a 1 KB PE file signed by signtool with a throwaway self-signed
-// certificate (see docs/build-installer.md), without a timestamp.
+// certificate, without a timestamp.
 func TestReadsWhatSigntoolWrote(t *testing.T) {
 	sig, err := readBytes(fixture(t, "signed.pe"))
 	if err != nil {

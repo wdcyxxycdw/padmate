@@ -14,7 +14,7 @@
 // WaitOwn instead, in O(1): it waits for a count of owned events and fails
 // at the first one the hook let through (ErrUnswallowed).
 //
-// Mouse events follow the same rules with a second hook (ADR-0062). Before
+// Mouse events follow the same rules with a second hook (ADR-0004). Before
 // the first real mouse event, MouseCanary installs a WH_MOUSE_LL hook on the
 // Recorder's hook thread and proves it live with a mouse canary: a tagged
 // relative move of +1 along x and one of -1, both of which the hook must see
@@ -28,7 +28,7 @@
 // events with the canaries behind it in one SendInput call, and InjectFenced
 // refuses such a batch.
 //
-// A pointer move (ADR-0062, section 5) is not held, but a move that got past
+// A pointer move (ADR-0004, section 5) is not held, but a move that got past
 // the hook would take the cursor somewhere else. InjectFencedMoves injects
 // relative moves only in batches that add up to no distance and never take the
 // cursor more than a few pixels (MaxPointerExcursion) from where it began, in
@@ -51,7 +51,7 @@
 // hook swallows both, so the application sees no click. ButtonMessage and
 // ButtonProblems say what the mouse hook must report for a button event.
 //
-// A typed text (OUT-21, ADR-0070) is Unicode events: KEYEVENTF_UNICODE, which
+// A typed text (OUT-21, ADR-0012) is Unicode events: KEYEVENTF_UNICODE, which
 // the system turns into VK_PACKET keys carrying a UTF-16 unit, and which would be
 // characters typed into the foreground window if the hook let them through. The
 // hook swallows them by the tag and the nonce like any key, but that Windows

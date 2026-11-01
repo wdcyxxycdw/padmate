@@ -130,7 +130,7 @@ func TestArchiveFailurePreservesPublishedFile(t *testing.T) {
 
 func TestCollectRepoFilesUsesAllowlist(t *testing.T) {
 	root := t.TempDir()
-	for _, name := range append(slices.Clone(requiredRepoFiles), "docs/SCRIPTING.md", "examples/profiles/basic.json", "daemon/private.txt", ".git/config") {
+	for _, name := range append(slices.Clone(requiredRepoFiles), "docs/ARCHITECTURE.md", "examples/profiles/basic.json", "daemon/private.txt", ".git/config") {
 		writeFixture(t, root, name, name)
 	}
 	entries, err := collectRepoFiles(root)
@@ -144,7 +144,7 @@ func TestCollectRepoFilesUsesAllowlist(t *testing.T) {
 			t.Fatalf("private file included: %s", e.name)
 		}
 	}
-	for _, name := range append(slices.Clone(requiredRepoFiles), "docs/SCRIPTING.md", "examples/profiles/basic.json") {
+	for _, name := range append(slices.Clone(requiredRepoFiles), "docs/ARCHITECTURE.md", "examples/profiles/basic.json") {
 		if !names[name] {
 			t.Errorf("missing required file %s", name)
 		}
@@ -191,7 +191,7 @@ func writeFixture(t *testing.T, root, name, data string) {
 // ENG-17: the README comes in two languages, and the documents link between
 // them, so a package that has one must have the other.
 func TestRequiredRepoFilesHaveBothReadmes(t *testing.T) {
-	for _, name := range []string{"README.md", "README.en.md"} {
+	for _, name := range []string{"README.md", "README.zh-CN.md"} {
 		if !slices.Contains(requiredRepoFiles, name) {
 			t.Errorf("%s is not a required package file", name)
 		}

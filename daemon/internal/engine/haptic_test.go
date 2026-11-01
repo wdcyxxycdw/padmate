@@ -16,7 +16,7 @@ import (
 )
 
 // Tests of the haptics a binding gives (MAP-25) and of the knob tick
-// (HUD-10), ADR-0065: Options.Haptic is called once per declarative dispatch
+// (HUD-10), ADR-0015: Options.Haptic is called once per declarative dispatch
 // of a binding with "haptic", and once per knob step with knobTick.
 
 // compileHaptic compiles a profile with the given feedback, analog and base
@@ -208,7 +208,7 @@ func TestHapticNotWhilePaused(t *testing.T) {
 
 // The global rumble switch off, or a strength of 0 in the profile, silences
 // every haptic of the profile: the bindings and the knob. The LED switch does
-// not, and neither do the switches a profile's feedback once held (ADR-0067).
+// not, and neither do the switches a profile's feedback once held (ADR-0015).
 func TestHapticSilencedByRumbleOff(t *testing.T) {
 	bindings := []string{
 		`"south":{"haptic":"tick","press":{"type":"keys","keys":"A","mode":"tap"}}`,

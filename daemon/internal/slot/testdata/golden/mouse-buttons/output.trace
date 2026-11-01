@@ -1,4 +1,4 @@
-# The mouse buttons are held like keys (ADR-0062): +MouseLeft is the button
+# The mouse buttons are held like keys (ADR-0004): +MouseLeft is the button
 # down and -MouseLeft the button up, both injected. A click is a tap: down,
 # and up 20 ms later. The drag held by two bindings (200 to 400) goes down once
 # and up with the last. The click during the drag at 520 sends nothing, as the

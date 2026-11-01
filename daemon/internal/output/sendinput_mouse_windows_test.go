@@ -10,7 +10,7 @@ import (
 
 // A wheel press is an INPUT_MOUSE of one notch: no movement, no position, the
 // wheel flag of its axis and mouseData of +-120 as a DWORD, and the same
-// dwExtraInfo tag as the keys (ADR-0062).
+// dwExtraInfo tag as the keys (ADR-0004).
 func TestMakeMouseInput(t *testing.T) {
 	const extra = uintptr(0x7061646D_00001234)
 	tests := []struct {
