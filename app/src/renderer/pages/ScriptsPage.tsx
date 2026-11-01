@@ -376,7 +376,7 @@ function ScriptCard({
 }
 
 /** The 新建 and 重命名 dialog: one name field, checked while typing. */
-function NameDialog({
+export function NameDialog({
   open,
   title,
   confirm,
@@ -408,11 +408,19 @@ function NameDialog({
   // The name last confirmed: failure is about it, not a name typed since.
   const [tried, setTried] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Starts over each time the dialog opens.
+  // The dialog starts over in the render that opens it, not in an effect after
+  // it: its first frame already holds the name, so the confirm button is never
+  // drawn disabled (nor a name problem shown) for a frame as it opens.
+  const [shownOpen, setShownOpen] = useState(open);
+  if (shownOpen !== open) {
+    setShownOpen(open);
+    if (open) {
+      setValue(initial);
+      setTried(null);
+    }
+  }
   useEffect(() => {
     if (!open) return;
-    setValue(initial);
-    setTried(null);
     // The dialog's own effect (a child) has run showModal already.
     input.current?.focus();
     input.current?.select();
