@@ -208,6 +208,12 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
     await expect(
       page.getByRole("heading", { name: "脚本", level: 1 }),
     ).toBeVisible();
+    // The list comes after the heading, and 新建 stays disabled (drawn at
+    // 45 % opacity) until it has: axe reads the page once it is there.
+    await expect(page.getByTestId("script-menu").first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "新建", exact: true }),
+    ).toBeEnabled();
     await check("scripts");
     await page.getByTestId("script-menu").first().click();
     await check("scripts: menu of a script");
