@@ -45,6 +45,16 @@ func TestRPCCommandRouting(t *testing.T) {
 		{[]string{"fake", "battery", "discharging", "0"}, "fake.battery", map[string]any{"state": "discharging", "percent": float64(0)}},
 		{[]string{"fake", "battery", "wired"}, "fake.battery", map[string]any{"state": "wired"}},
 		{[]string{"fake", "battery", "unknown"}, "fake.battery", map[string]any{"state": "unknown"}},
+		{[]string{"joycon2", "status"}, "joycon2.status", map[string]any{}},
+		{[]string{"joycon2", "pair"}, "joycon2.pair", map[string]any{}},
+		{[]string{"joycon2", "pair", "-seconds", "45"}, "joycon2.pair", map[string]any{"seconds": float64(45)}},
+		{[]string{"joycon2", "pair", "--seconds=600"}, "joycon2.pair", map[string]any{"seconds": float64(600)}},
+		{[]string{"joycon2", "pair", "-seconds=1"}, "joycon2.pair", map[string]any{"seconds": float64(1)}},
+		{[]string{"joycon2", "cancel"}, "joycon2.cancelPair", map[string]any{}},
+		{[]string{"joycon2", "forget", "XKW1234567890"}, "joycon2.forget", map[string]any{"serial": "XKW1234567890"}},
+		{[]string{"joycon2", "disconnect", "5001"}, "joycon2.disconnect", map[string]any{"id": float64(5001)}},
+		{[]string{"fake", "joycon2"}, "fake.joycon2", map[string]any{}},
+		{[]string{"fake", "joycon2", "R"}, "fake.joycon2", map[string]any{"side": "R"}},
 		{[]string{"identify", "--device", "1"}, "devices.identify", map[string]any{"device": "1"}},
 		{[]string{"identify", "--device=0300/p:x y"}, "devices.identify", map[string]any{"device": "0300/p:x y"}},
 		{[]string{"resume"}, "engine.resume", map[string]any{}},
@@ -113,6 +123,27 @@ func TestRPCProfilePutReadsBoundedUTF8File(t *testing.T) {
 		{"fake", "battery", "discharging", "lots"},
 		{"fake", "battery", "unknown", "50"},
 		{"fake", "battery", "wired", "5", "6"},
+		{"joycon2"},
+		{"joycon2", "scan"},
+		{"joycon2", "status", "extra"},
+		{"joycon2", "pair", "-seconds", "0"},
+		{"joycon2", "pair", "-seconds", "601"},
+		{"joycon2", "pair", "-seconds", "-5"},
+		{"joycon2", "pair", "-seconds", "soon"},
+		{"joycon2", "pair", "extra"},
+		{"joycon2", "status", "-seconds", "5"},
+		{"joycon2", "cancel", "extra"},
+		{"joycon2", "forget"},
+		{"joycon2", "forget", ""},
+		{"joycon2", "forget", "A", "B"},
+		{"joycon2", "disconnect"},
+		{"joycon2", "disconnect", "0"},
+		{"joycon2", "disconnect", "-1"},
+		{"joycon2", "disconnect", "abc"},
+		{"joycon2", "disconnect", "1", "2"},
+		{"fake", "joycon2", "X"},
+		{"fake", "joycon2", "l"},
+		{"fake", "joycon2", "L", "R"},
 		{"identify", "extra"},
 		{"identify", "--device", "1", "2"},
 		{"identify", "--clear"},
@@ -136,5 +167,41 @@ func TestRPCProfilePutReadsBoundedUTF8File(t *testing.T) {
 	}
 	if code, _, stderr := runCmd(t, "status"); code != 1 || stderr == "" {
 		t.Fatal(code, stderr)
+	}
+}
+
+// TestJoyCon2CommandPrintsTheStatus: the joycon2 commands print what the daemon
+// answered, as the other commands do, and an RPC error is a failure with the
+// error's data.
+func TestJoyCon2CommandPrintsTheStatus(t *testing.T) {
+	old := rpcInvoke
+	t.Cleanup(func() { rpcInvoke = old })
+	const status = `{"available":true,"autoConnect":true,"windowOpen":false,"scanning":false,"known":[],"links":[]}`
+	rpcInvoke = func(_ context.Context, _ string, method string, _ any, out io.Writer, compact bool) error {
+		if method != "joycon2.status" || !compact {
+			t.Errorf("method %s compact=%v", method, compact)
+		}
+		_, err := io.WriteString(out, status)
+		return err
+	}
+	code, stdout, stderr := runCmd(t, "joycon2", "status", "--json")
+	if code != 0 || stdout != status || stderr != "" {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+	rpcInvoke = func(context.Context, string, string, any, io.Writer, bool) error {
+		return errors.New("Joy-Con 2 over Bluetooth LE is not available")
+	}
+	if code, _, stderr := runCmd(t, "joycon2", "pair"); code != 1 || !strings.Contains(stderr, "not available") {
+		t.Fatalf("code=%d stderr=%q", code, stderr)
+	}
+	// The usage lists the commands.
+	code, stdout, _ = runCmd(t, "joycon2", "--help")
+	if code != 0 {
+		t.Fatal(code)
+	}
+	for _, want := range []string{"joycon2 status", "joycon2 pair [-seconds N]", "joycon2 cancel", "joycon2 forget SERIAL", "joycon2 disconnect ID", "fake joycon2 [L|R]"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("usage lacks %q", want)
+		}
 	}
 }

@@ -120,6 +120,12 @@
       "x-go-type": "*wireConfigFeedback",
       "x-go-field": "Feedback"
     },
+    "joycon2": {
+      "description": "Joy-Con 2 over Bluetooth LE. Applies at once.",
+      "$ref": "#/$defs/joycon2",
+      "x-go-type": "*wireConfigJoycon2",
+      "x-go-field": "JoyCon2"
+    },
     "safety": {
       "description": "Emergency button combinations by controller family.",
       "$ref": "#/$defs/safety",
@@ -296,6 +302,20 @@
         }
       },
       "x-go-name": "OutputSettings"
+    },
+    "joycon2": {
+      "title": "Joy-Con 2 settings",
+      "description": "Remembered Joy-Con 2 controllers are kept in state.json, not here.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoConnect": {
+          "description": "Whether a remembered Joy-Con 2 connects by itself when its SYNC button is held. On unless it is false; with it off, nothing is scanned outside the window that connects a new controller.",
+          "type": "boolean",
+          "x-go-type": "*bool"
+        }
+      },
+      "x-go-name": "wireConfigJoycon2"
     },
     "feedback": {
       "title": "Feedback switches",

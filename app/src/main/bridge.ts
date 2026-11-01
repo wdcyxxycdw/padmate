@@ -36,8 +36,19 @@ export const daemonTopics = [
  * before this topic must accept, leaves it out.
  */
 export const rawInputTopic = "input.raw" satisfies DaemonEvent["topic"];
+/**
+ * The Joy-Con 2 state (the result of joycon2.status) whenever it changes. Like
+ * input.raw it is not in daemonTopics: the page that connects Joy-Con 2
+ * controllers asks for it.
+ */
+export const joyCon2Topic = "joycon2.changed" satisfies DaemonEvent["topic"];
 // "dropped" reports events the daemon or the bridge could not deliver.
-const topics = new Set<string>([...daemonTopics, rawInputTopic, "dropped"]);
+const topics = new Set<string>([
+  ...daemonTopics,
+  rawInputTopic,
+  joyCon2Topic,
+  "dropped",
+]);
 const maxFrame = 8 * 1024 * 1024;
 const invalidParams = -32602;
 

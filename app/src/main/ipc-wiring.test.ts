@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { appIconHandlers } from "./app-icon-handlers";
 import { appPathHandlers } from "./app-paths";
 import { archiveHandlers } from "./archive-handlers";
-import { daemonTopics, rawInputTopic } from "./bridge";
+import { daemonTopics, joyCon2Topic, rawInputTopic } from "./bridge";
 import { configRepairHandlers } from "./config-repair-handlers";
 import { deviceHandlers } from "./device-handlers";
 import { installedAppHandlers } from "./installed-apps";
@@ -25,10 +25,12 @@ describe("Electron IPC wiring", () => {
     const list = /var Topics = \[\]string\{([^}]*)\}/.exec(server)?.[1];
     expect(list).toBeDefined();
     const published = [...(list ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-    // input.raw is the daemon's last topic and the mapping wizard's
-    // alone: the default subscription leaves it out (rawInputTopic).
-    expect(published.at(-1)).toBe(rawInputTopic);
-    expect([...daemonTopics]).toEqual(published.slice(0, -1));
+    // input.raw and joycon2.changed are the daemon's last two topics, each
+    // asked for by the page that needs it alone (the mapping wizard, the
+    // Joy-Con 2 connection): the default subscription leaves them out
+    // (rawInputTopic, joyCon2Topic).
+    expect(published.slice(-2)).toEqual([rawInputTopic, joyCon2Topic]);
+    expect([...daemonTopics]).toEqual(published.slice(0, -2));
     // subscribe (bridge.test.ts) asks for daemonTopics, hud included while
     // the overlay is up; each connection made subscribes through the one
     // HudSubscription (hud-subscription.test.ts).

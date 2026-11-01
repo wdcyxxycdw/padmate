@@ -52,8 +52,8 @@ func (r *liveRun) feedbackSwitches() profile.FeedbackSwitches {
 
 // liveSettings is the effective config after committing next: the fields
 // applied at once (automatic selection, output.sendToOwnWindow,
-// output.eventGapMs, timing, the function key, safety, the feedback switches and
-// the stick calibration of each device) come from next, everything captured at startup
+// output.eventGapMs, timing, the function key, safety, the feedback switches,
+// joycon2.autoConnect and the stick calibration of each device) come from next, everything captured at startup
 // (restoreLayerState, which devices are ignored and the rest of output)
 // stays as startup has it. Both inputs are immutable and may share slices and
 // maps with the result.
@@ -65,7 +65,7 @@ func liveSettings(startup, next *profile.Config) *profile.Config {
 	c.Timing, c.Safety = next.Timing, next.Safety
 	c.FunctionKey = next.FunctionKeyOrDefault()
 	c.Enabled, c.ReleaseOnSwitch, c.Rules = next.Enabled, next.ReleaseOnSwitch, next.Rules
-	c.Output, c.Feedback = next.Output, next.Feedback
+	c.Output, c.Feedback, c.JoyCon2 = next.Output, next.Feedback, next.JoyCon2
 	c.Devices = liveDevices(startup.Devices, next.Devices)
 	return &c
 }
@@ -107,6 +107,7 @@ func startupFields(c *profile.Config) profile.Config {
 	s.Enabled, s.ReleaseOnSwitch, s.Rules = false, "", nil
 	s.Output = profile.OutputSettings{}
 	s.Feedback = profile.FeedbackSwitches{}
+	s.JoyCon2 = profile.JoyCon2Settings{}
 	s.Devices = nil
 	for key, d := range c.Devices {
 		if d.Ignored {

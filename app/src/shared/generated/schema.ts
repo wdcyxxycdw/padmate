@@ -437,6 +437,7 @@ export type Config = {
   "feedback"?: ConfigFeedback;
   "functionKey"?: "start" | "back" | "guide";
   "ignore"?: never;
+  "joycon2"?: ConfigJoycon2;
   "onUnmatched"?: never;
   "output"?: ConfigOutput;
   "releaseOnSwitch"?: "profileChange" | "always" | "never";
@@ -468,6 +469,10 @@ export type ConfigFeedback = {
   "lowBattery"?: boolean;
   "pause"?: boolean;
   "rumble"?: boolean;
+};
+
+export type ConfigJoycon2 = {
+  "autoConnect"?: boolean;
 };
 
 export type ConfigOutput = {
@@ -506,6 +511,7 @@ export type ConfigTiming = {
 
 export type State = {
   "devices"?: Record<string, StateDevice>;
+  "joycon2"?: Array<StateJoycon2Controller>;
   "lastProfile"?: string;
   "lastProfileSet"?: boolean;
   "schemaVersion": 0;
@@ -513,6 +519,12 @@ export type State = {
 
 export type StateDevice = {
   "profiles": Record<string, StateLayers>;
+};
+
+export type StateJoycon2Controller = {
+  "addr": string;
+  "serial": string;
+  "side": "L" | "R";
 };
 
 export type StateLayers = {

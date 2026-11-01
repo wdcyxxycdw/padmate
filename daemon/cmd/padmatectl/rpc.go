@@ -36,6 +36,11 @@ const rpcUsage = `Daemon commands (flags precede positional arguments):
   devices mapping set [--device ID] MAPPING|@FILE
   devices mapping reset [--device ID]
   identify [--device ID]
+  joycon2 status
+  joycon2 pair [-seconds N]
+  joycon2 cancel
+  joycon2 forget SERIAL
+  joycon2 disconnect ID
   latency [--device ID] [--reset]
   pause | resume
   layer [--device ID] switch|enable|disable|toggle LAYER
@@ -68,6 +73,7 @@ const rpcUsage = `Daemon commands (flags precede positional arguments):
   fake axis AXIS INTEGER
   fake effects [--clear]
   fake battery STATE [PERCENT]
+  fake joycon2 [L|R]
   rpc METHOD [JSON-PARAMS]
 
 Common flags: --ipc-dir DIR, --timeout 10s, --json (compact output).
@@ -156,6 +162,19 @@ forgets them. fake battery makes the fake gamepad report a power, as a
 real one does: STATE is wired, charging, discharging or unknown, and
 PERCENT is 0 to 100 (an unknown state has none; leave it out for a
 gamepad that does not report a charge).
+joycon2 manages Joy-Con 2 controllers, which connect over Bluetooth LE
+without Windows pairing. status prints the backend's state: whether it is
+available, the pairing window, the remembered controllers (known) and the
+connections (links). pair opens the pairing window (30 seconds, or -seconds N,
+1 to 600): hold SYNC on the side of a Joy-Con 2 and the first one found is
+connected and remembered; cancel closes the window; forget SERIAL makes
+padmate forget a remembered controller and drops its connection; disconnect ID
+closes the connection of the gamepad with that connection ID (devices lists it;
+both controllers of a pair), and the controller stays remembered. All print the
+state as status does. -32027 means Joy-Con 2 support is not available in that
+daemon. fake joycon2 is the user holding SYNC on a simulated controller of
+the fake input, left by default; it connects and remembers one only while the
+window is open.
 latency prints, for each mapped controller, how long padmated took from
 receiving the input edge to the return of the call that sent its keys, over
 the last 1000 keys it sent: the number of samples and the p50, p90, p99 and
@@ -187,7 +206,7 @@ func rpcMain(ctx context.Context, name string, args []string, stdout, stderr io.
 		return 0
 	}
 	op := ""
-	if name == "profile" || name == "config" || name == "script" || name == "fake" || name == "macro" {
+	if name == "profile" || name == "config" || name == "script" || name == "fake" || name == "macro" || name == "joycon2" {
 		if len(args) == 0 {
 			fmt.Fprintln(stderr, rpcUsage)
 			return 2
@@ -237,6 +256,10 @@ func rpcMain(ctx context.Context, name string, args []string, stdout, stderr io.
 	}
 	if op == "put" || name == "profile" && (op == "delete" || op == "restore") {
 		fs.StringVar(&revision, "revision", "", "required original revision; empty only when the document is missing")
+	}
+	var pairSeconds int
+	if name == "joycon2" && op == "pair" {
+		fs.IntVar(&pairSeconds, "seconds", 0, "how long the window stays open (1 to 600; the daemon's 30 when not given)")
 	}
 	var after uint64
 	var limit int
@@ -377,8 +400,36 @@ func rpcMain(ctx context.Context, name string, args []string, stdout, stderr io.
 		case op == "delete" && len(args) == 1:
 			method, p["file"] = "macros.delete", args[0]
 		}
+	case "joycon2":
+		switch {
+		case op == "status" && len(args) == 0:
+			method = "joycon2.status"
+		case op == "pair" && len(args) == 0:
+			method = "joycon2.pair"
+			if flagGiven(fs, "seconds") {
+				if pairSeconds < 1 || pairSeconds > 600 {
+					method = ""
+				}
+				p["seconds"] = pairSeconds
+			}
+		case op == "cancel" && len(args) == 0:
+			method = "joycon2.cancelPair"
+		case op == "forget" && len(args) == 1 && args[0] != "":
+			method, p["serial"] = "joycon2.forget", args[0]
+		case op == "disconnect" && len(args) == 1:
+			if n, err := strconv.ParseUint(args[0], 10, 32); err == nil && n > 0 {
+				method, p["id"] = "joycon2.disconnect", n
+			}
+		}
 	case "fake":
 		switch {
+		case op == "joycon2" && len(args) <= 1:
+			if len(args) == 0 || args[0] == "L" || args[0] == "R" {
+				method = "fake.joycon2"
+				if len(args) == 1 {
+					p["side"] = args[0]
+				}
+			}
 		case (op == "press" || op == "release") && len(args) == 1:
 			method, p["control"] = "fake."+op, args[0]
 		case op == "axis" && len(args) == 2:

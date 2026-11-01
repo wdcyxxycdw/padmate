@@ -18,6 +18,12 @@ type DeviceSettings struct {
 	Mapping     string       `json:"mapping"`
 }
 
+type JoyCon2Controller struct {
+	Addr   string `json:"addr"`
+	Serial string `json:"serial"`
+	Side   string `json:"side"`
+}
+
 type LayerMemory struct {
 	Base    string         `json:"base"`
 	Cycles  map[string]int `json:"cycles,omitempty"`
@@ -40,6 +46,7 @@ type SafetySettings struct {
 
 type State struct {
 	Devices        map[string]DeviceMemory `json:"devices,omitempty"`
+	JoyCon2        []JoyCon2Controller     `json:"joycon2,omitempty"`
 	LastProfile    string                  `json:"lastProfile,omitempty"`
 	LastProfileSet bool                    `json:"lastProfileSet,omitempty"`
 	SchemaVersion  int                     `json:"schemaVersion"`
@@ -100,6 +107,7 @@ type wireConfig struct {
 	Enabled           *bool                     `json:"enabled"`
 	Feedback          *wireConfigFeedback       `json:"feedback"`
 	FunctionKey       string                    `json:"functionKey"`
+	JoyCon2           *wireConfigJoycon2        `json:"joycon2"`
 	Output            OutputSettings            `json:"output"`
 	ReleaseOnSwitch   string                    `json:"releaseOnSwitch"`
 	RestoreLayerState *bool                     `json:"restoreLayerState"`
@@ -114,6 +122,10 @@ type wireConfigFeedback struct {
 	LowBattery *bool `json:"lowBattery"`
 	Pause      *bool `json:"pause"`
 	Rumble     *bool `json:"rumble"`
+}
+
+type wireConfigJoycon2 struct {
+	AutoConnect *bool `json:"autoConnect"`
 }
 
 type wireConfigRule struct {

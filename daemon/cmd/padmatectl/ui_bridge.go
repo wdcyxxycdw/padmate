@@ -31,6 +31,10 @@ func bridgeMethod(method string) bool {
 		// Identify a controller: the daemon lets the controller buzz
 		// and flash; the selector is the DeviceKey of a row of the settings page.
 		"devices.identify",
+		// Joy-Con 2 over Bluetooth LE: the connect window, the remembered
+		// controllers and their connections (the topic joycon2.changed
+		// carries the status).
+		"joycon2.status", "joycon2.pair", "joycon2.cancelPair", "joycon2.forget", "joycon2.disconnect",
 		// The mapping wizard (ADR-0012): the elements of a
 		// controller, and a mapping for it that the daemon saves in config.json and
 		// gives to SDL.

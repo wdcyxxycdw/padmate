@@ -30,6 +30,16 @@
         "$ref": "#/$defs/device"
       },
       "x-go-type": "map[string]DeviceMemory"
+    },
+    "joycon2": {
+      "description": "Joy-Con 2 controllers that padmate remembers and connects to without the pairing window. Machine state, written by the daemon.",
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/joycon2Controller"
+      },
+      "x-go-type": "[]JoyCon2Controller",
+      "x-go-field": "JoyCon2"
     }
   },
   "$defs": {
@@ -52,6 +62,41 @@
         }
       },
       "x-go-name": "DeviceMemory"
+    },
+    "joycon2Controller": {
+      "title": "Remembered Joy-Con 2",
+      "description": "One remembered Joy-Con 2: its Bluetooth address, the serial number from its flash and its side.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addr",
+        "serial",
+        "side"
+      ],
+      "properties": {
+        "addr": {
+          "description": "Bluetooth address, AA:BB:CC:DD:EE:FF in upper case.",
+          "type": "string",
+          "pattern": "^([0-9A-F]{2}:){5}[0-9A-F]{2}$",
+          "x-go-type": "string"
+        },
+        "serial": {
+          "description": "Serial number.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "x-go-type": "string"
+        },
+        "side": {
+          "description": "L for a left Joy-Con, R for a right one.",
+          "enum": [
+            "L",
+            "R"
+          ],
+          "x-go-type": "string"
+        }
+      },
+      "x-go-name": "JoyCon2Controller"
     },
     "layers": {
       "title": "Persistent layers",

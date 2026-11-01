@@ -13,7 +13,8 @@ func TestUIBridgeMethodAllowlist(t *testing.T) {
 	for _, method := range []string{"status.get", "devices.list", "devices.identify", "devices.rawInfo", "devices.setMapping", "devices.resetMapping", "latency.get", "latency.reset", "engine.pause", "engine.resume", "engine.releaseAll", "config.get", "config.put", "profiles.get", "profiles.put", "profiles.validate", "profiles.explain", "profiles.list", "profiles.resolve", "script.describe", "script.registrations", "script.status", "script.reload", "script.logs", "subscribe", "ui.setOutput", "profiles.activate", "profiles.delete", "profiles.copy", "apps.recent", "script.init", "script.import", "profiles.folder", "profiles.history", "profiles.restore", "profiles.export", "profiles.import", "profiles.importAmgp", "capture.start", "capture.stop", "startup.get", "startup.set",
 		"macros.list", "macros.create", "macros.import", "macros.rename", "macros.delete", "macros.path", "script.path", "script.detach",
 		// The repaired config.json's notice and the answer to daemon.exiting.
-		"config.repairSeen", "ui.exitReady"} {
+		"config.repairSeen", "ui.exitReady",
+		"joycon2.status", "joycon2.pair", "joycon2.cancelPair", "joycon2.forget", "joycon2.disconnect"} {
 		if !bridgeMethod(method) {
 			t.Fatal("UI method missing", method)
 		}

@@ -13,6 +13,7 @@ func (s LayerMemory) Clone() LayerMemory {
 
 func (s State) Clone() State {
 	out := s
+	out.JoyCon2 = slices.Clone(s.JoyCon2)
 	if s.Devices != nil {
 		out.Devices = make(map[string]DeviceMemory, len(s.Devices))
 	}

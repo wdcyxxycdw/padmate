@@ -15,7 +15,7 @@ import (
 func runNativeTray(r *liveRun) (code int) {
 	// Establish a message queue even if systray initialization later fails.
 	endMainLoop := tray.MainLoopExit()
-	var pause, start *systray.MenuItem
+	var pause, start, joy2 *systray.MenuItem
 	var details [4]*systray.MenuItem
 	var previous tray.Presentation
 	var oldPaused, oldStartup bool
@@ -62,7 +62,10 @@ func runNativeTray(r *liveRun) (code int) {
 				details[i] = item
 			}
 			systray.AddSeparator()
-			// No tooltips: the titles say it all.
+			// No tooltips: the titles say it all. The Joy-Con 2 item is shown
+			// by update, once the daemon has Joy-Con 2 support.
+			joy2 = systray.AddMenuItem("连接新的 Joy-Con 2", "")
+			joy2.Hide()
 			pause = systray.AddMenuItemCheckbox("暂停映射", "", false)
 			start = systray.AddMenuItemCheckbox("登录时启动", "", false)
 			if !r.startup.available() {
@@ -72,7 +75,7 @@ func runNativeTray(r *liveRun) (code int) {
 				}
 			}
 			quit := systray.AddMenuItem("退出 padmate", "")
-			ui.pause, ui.startup, ui.quit = pause.ClickedCh, start.ClickedCh, quit.ClickedCh
+			ui.pause, ui.startup, ui.quit, ui.joycon2 = pause.ClickedCh, start.ClickedCh, quit.ClickedCh, joy2.ClickedCh
 			// A double click opens the window; a single left click shows the
 			// menu, once the double-click time has passed without a second
 			// one (tray.Taps). The right button shows it at once.
@@ -129,6 +132,13 @@ func runNativeTray(r *liveRun) (code int) {
 				} else {
 					item.Hide()
 				}
+			}
+		}
+		if first || p.JoyCon2 != previous.JoyCon2 {
+			if p.JoyCon2 {
+				joy2.Show()
+			} else {
+				joy2.Hide()
 			}
 		}
 		if first || paused != oldPaused {

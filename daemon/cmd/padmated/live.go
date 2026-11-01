@@ -202,6 +202,10 @@ type liveConfig struct {
 	// open opens SDL; nil means input.Open. The tests set the library, or
 	// return a fake.
 	open func(input.Options) (eventSource, error)
+	// joyCon2 makes startLive pass Options.JoyCon2 to open, as it always does
+	// when open is nil (the production source). Only tests set it, with an
+	// open that is a fake: no test scans Bluetooth.
+	joyCon2 bool
 	// newInject returns the Sender of --inject; nil means newInjectSender.
 	newInject func() (output.Sender, error)
 	// slots is how many gamepads are mapped at once; 0 means
@@ -405,6 +409,9 @@ type liveRun struct {
 	// the gamepad mappings found.
 	raw            rawFeed
 	mappingOutcome atomic.Pointer[mappingOutcome]
+	// joy is the Joy-Con 2 part: the status watcher and the tray's pairing
+	// window (ipc_joycon2.go).
+	joy joyCon2Run
 
 	once sync.Once
 	code int
@@ -477,7 +484,24 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 		}
 		return opts.settings
 	}
-	src, err := open(input.Options{Hints: opts.hints, OnCombo: func() {
+	// The Joy-Con 2 backend (Bluetooth LE) belongs to the production source:
+	// a fake input and a test's fake open never scan. The remembered
+	// controllers come from state.json, the switch from config.json.
+	var joy *input.JoyCon2Options
+	if (cfg.open == nil && opts.fakeInput != "ipc") || cfg.joyCon2 {
+		joy = &input.JoyCon2Options{
+			Known:       joyCon2Known(opts.memory, log),
+			AutoConnect: opts.settings == nil || opts.settings.JoyCon2.AutoConnect,
+			OnRemember: func(k input.KnownJoyCon2) {
+				if r := runRef.Load(); r != nil {
+					r.joyCon2Remembered(k)
+				} else if opts.memory != nil {
+					opts.memory.RememberJoyCon2(profile.JoyCon2Controller{Addr: k.AddrText(), Serial: k.Serial, Side: k.Side.String()})
+				}
+			},
+		}
+	}
+	src, err := open(input.Options{JoyCon2: joy, Hints: opts.hints, OnCombo: func() {
 		if l := loopRef.Load(); l != nil {
 			l.Block(true)
 		}
@@ -513,6 +537,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	}
 	r := &liveRun{cfg: cfg, log: log, src: src, sum: cfg.sum,
 		scriptDef: newProfileScriptDefinition(opts.profile, cfg.profile, opts.watch, log)}
+	r.joy.kick = make(chan struct{}, 1)
 	if opts.library != nil {
 		r.scriptDef.useLibrary(opts.library.Dir())
 	}
@@ -747,6 +772,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	r.startDiagnostics()
 	r.startDecisionFeed()
 	r.startRawFeed()
+	r.startJoyCon2()
 	if opts.watch && (opts.profile != "" || opts.librarySelection()) {
 		r.watchLibrary()
 	}
@@ -1257,6 +1283,7 @@ func (r *liveRun) shutdown(code int) int {
 	r.stopDiagnostics()
 	r.stopDecisionFeed()
 	r.stopRawFeed()
+	r.stopJoyCon2()
 	if r.ipcDone != nil {
 		<-r.ipcDone
 	}

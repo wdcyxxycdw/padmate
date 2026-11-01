@@ -62,6 +62,9 @@ type trayUI struct {
 	startup     <-chan struct{}
 	// open is a double click on the icon: open padmate's window.
 	open <-chan struct{}
+	// joycon2 is a click on 连接新的 Joy-Con 2, which the menu shows while
+	// Presentation.JoyCon2 is set; nil in a UI without the item.
+	joycon2 <-chan struct{}
 }
 
 func (r *liveRun) driveTray(ui *trayUI) (code int) {
@@ -151,7 +154,9 @@ func (r *liveRun) serveTray(ui *trayUI, done <-chan struct{}) {
 			r.log.Warn("cannot read startup entry", "err", err)
 		}
 		st := r.sup.Status()
-		ui.update(tray.PresentWithPower(st, views, r.devicePowers(ctx)), st.Paused, enabled)
+		p := tray.PresentWithPower(st, views, r.devicePowers(ctx))
+		p.JoyCon2 = r.joyCon2Available()
+		ui.update(p, st.Paused, enabled)
 		r.showNotice(ui, time.Now(), &nextNotice)
 	}
 	refresh()
@@ -174,6 +179,9 @@ func (r *liveRun) serveTray(ui *trayUI, done <-chan struct{}) {
 			refresh()
 		case <-ui.open:
 			r.openWindow()
+		case <-ui.joycon2:
+			r.trayJoyCon2()
+			refresh()
 		case <-ui.startup:
 			// The menu item is disabled without an entry; a click that comes
 			// anyway writes nothing.

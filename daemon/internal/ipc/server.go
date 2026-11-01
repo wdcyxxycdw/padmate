@@ -25,7 +25,9 @@ const maxBatchRequests = 64
 // to it is an overlay, so scripts see host.has("hud") true. input.raw carries
 // the raw joystick events of the controllers that devices.rawInfo asked for
 // (ADR-0012); the mapping wizard subscribes to it while it is open.
-var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "hud", "input.raw"}
+// joycon2.changed carries the status of the Joy-Con 2 backend (the result of
+// joycon2.status) whenever it changes.
+var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "hud", "input.raw", "joycon2.changed"}
 
 type event struct {
 	topic string

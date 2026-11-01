@@ -105,7 +105,25 @@ func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
 	if prev.Feedback != next.Feedback && r.sup != nil {
 		errs = append(errs, r.applyFeedbackSwitches(prev.Feedback, next.Feedback))
 	}
+	if prev.JoyCon2 != next.JoyCon2 {
+		errs = append(errs, r.applyJoyCon2(next.JoyCon2))
+	}
 	return errors.Join(errs...)
+}
+
+// applyJoyCon2 makes the Joy-Con 2 backend follow joycon2.autoConnect of the
+// config just stored. Controllers that are connected stay so; the scan follows
+// the switch. A source without the backend has nothing to apply.
+func (r *liveRun) applyJoyCon2(next profile.JoyCon2Settings) error {
+	if !r.joyCon2Available() {
+		return nil
+	}
+	if err := r.joyCon2Src().JoyCon2SetAutoConnect(next.AutoConnect); err != nil {
+		return fmt.Errorf("joy-con 2 auto-connect not applied: %w", err)
+	}
+	r.log.Info("joy-con 2 auto-connect applied", "autoConnect", next.AutoConnect)
+	r.joyCon2Kick()
+	return nil
 }
 
 // calibrationTimeout bounds how long a committed config.json waits for the

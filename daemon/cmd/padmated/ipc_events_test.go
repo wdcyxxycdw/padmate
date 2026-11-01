@@ -58,6 +58,9 @@ func TestIPCProductionTopicsIncludeLabelLatchAndProfile(t *testing.T) {
 		if topic == "input.raw" {
 			continue // only a controller asked for with devices.rawInfo sends it (ipc_mapping_test.go)
 		}
+		if topic == joyCon2Topic {
+			continue // only a change of the Joy-Con 2 status sends it (ipc_joycon2_test.go)
+		}
 		for !found[topic] {
 			select {
 			case e := <-events:

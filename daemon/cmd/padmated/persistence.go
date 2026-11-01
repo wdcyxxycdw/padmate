@@ -9,10 +9,14 @@ import (
 // stopPersistence after key release, so a slow file system cannot hold keys.
 func (r *liveRun) startPersistence() {
 	opts := r.cfg.opts
-	if !opts.librarySelection() || opts.memory == nil {
+	// The layer memory and the last profile belong to a library selection;
+	// the remembered Joy-Con 2 controllers to any start with a library.
+	if opts.library == nil || opts.memory == nil {
 		return
 	}
-	opts.memory.SetLastProfile(opts.profileID)
+	if opts.librarySelection() {
+		opts.memory.SetLastProfile(opts.profileID)
+	}
 	r.persistStop, r.persistDone = make(chan struct{}), make(chan struct{})
 	go func() {
 		defer close(r.persistDone)

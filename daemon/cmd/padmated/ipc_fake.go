@@ -39,6 +39,8 @@ type rpcInputSource struct {
 	// controller: tests and the fake input daemon read what was asked of it.
 	caps    input.Capabilities
 	effects effectLog
+	// joy is the simulated Joy-Con 2 backend (ipc_fake_joycon2.go).
+	joy fakeJoyCon2
 }
 
 func newRPCInputSource(opts input.Options) *rpcInputSource {
@@ -265,6 +267,7 @@ func (r *liveRun) fakeInput() (*rpcInputSource, error) {
 func (r *liveRun) fakeMethods(methods handler.Map) {
 	r.fakeEffectsMethod(methods)
 	r.fakeBatteryMethod(methods)
+	r.fakeJoyCon2Method(methods)
 	for _, method := range []string{"fake.press", "fake.release", "fake.axis"} {
 		methods[method] = func(ctx context.Context, req *jrpc2.Request) (any, error) {
 			src, err := r.fakeInput()

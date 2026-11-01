@@ -28,6 +28,12 @@ type rpcInput struct {
 }
 
 func (r *liveRun) publishInput(e input.Event) {
+	switch e.Kind {
+	case input.DeviceAdded, input.DeviceRemoved, input.DeviceRemapped:
+		// A Joy-Con 2 gamepad came, went or became a pair: the status of
+		// the backend may have changed (ipc_joycon2.go).
+		r.joyCon2Kick()
+	}
 	if !r.events.Listening("input") {
 		return
 	}

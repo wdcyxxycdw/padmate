@@ -690,6 +690,8 @@ export interface DaemonEvent {
     // The raw joystick events of a controller devices.rawInfo asked for:
     // data is `{ timeNs, device, kind, index, value }`.
     | "input.raw"
+    // The Joy-Con 2 state, as joycon2.status returns it, when it changes.
+    | "joycon2.changed"
     | "dropped";
   data: unknown;
 }

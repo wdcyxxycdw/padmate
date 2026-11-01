@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"slices"
 	"sync"
 	"time"
 
@@ -222,6 +223,52 @@ func (m *Memory) SetLastProfile(id string) {
 		m.state.LastProfileSet = true
 		m.version++
 	}
+}
+
+// MaxJoyCon2 is how many remembered Joy-Con 2 controllers state.json keeps
+// (the schema's maxItems); remembering one more drops the oldest.
+const MaxJoyCon2 = 64
+
+// JoyCon2 returns the remembered Joy-Con 2 controllers, oldest first.
+func (m *Memory) JoyCon2() []profile.JoyCon2Controller {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return slices.Clone(m.state.JoyCon2)
+}
+
+// RememberJoyCon2 keeps c as the newest entry, replacing the entry with the
+// same address or serial number (as the input package does). It takes the lock
+// for a moment and does no I/O, so it may run on T-input; the persistence
+// worker writes it.
+func (m *Memory) RememberJoyCon2(c profile.JoyCon2Controller) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if n := len(m.state.JoyCon2); n > 0 && m.state.JoyCon2[n-1] == c {
+		return
+	}
+	next := slices.DeleteFunc(slices.Clone(m.state.JoyCon2), func(o profile.JoyCon2Controller) bool {
+		return o.Addr == c.Addr || o.Serial == c.Serial
+	})
+	next = append(next, c)
+	if len(next) > MaxJoyCon2 {
+		next = next[len(next)-MaxJoyCon2:]
+	}
+	m.state.JoyCon2 = next
+	m.version++
+}
+
+// ForgetJoyCon2 drops the entry with the serial number and reports whether
+// there was one.
+func (m *Memory) ForgetJoyCon2(serial string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	i := slices.IndexFunc(m.state.JoyCon2, func(o profile.JoyCon2Controller) bool { return o.Serial == serial })
+	if i < 0 {
+		return false
+	}
+	m.state.JoyCon2 = slices.Delete(slices.Clone(m.state.JoyCon2), i, i+1)
+	m.version++
+	return true
 }
 
 func (m *Memory) Flush(l *Library) error {

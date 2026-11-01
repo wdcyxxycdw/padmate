@@ -15,6 +15,9 @@ type Presentation struct {
 	Details  []string
 	Badge    int
 	Inactive bool
+	// JoyCon2 says that the menu shows the item 「连接新的 Joy-Con 2」: the daemon
+	// has Joy-Con 2 support. The caller sets it; Present leaves it false.
+	JoyCon2 bool
 }
 
 // Present is PresentWithPower for pads whose power is not known.

@@ -27,6 +27,7 @@ func FuzzState(f *testing.F) {
 	f.Add([]byte(`{"schemaVersion":0,"devices":{"k":{"profiles":{"p":{"base":"base","cycles":{"a":1e0,"b":2.0}}}}}}`))
 	f.Add([]byte(`{"schemaVersion":0,"devices":{"k":{"profiles":{"p":{"base":"base","cycles":{"a":1E1000001}}}}}}`))
 	f.Add([]byte(`{"schemaVersion":0,"devices":{"k":{"profiles":{"p":{"base":"base","cycles":{"a":1E-1000001}}}}}}`))
+	f.Add([]byte(`{"schemaVersion":0,"joycon2":[{"addr":"C8:48:05:00:00:01","serial":"XKW1234567890","side":"L"}]}`))
 	f.Fuzz(func(t *testing.T, data []byte) {
 		s, ds := ParseState(data)
 		if ds.HasErrors() {

@@ -362,6 +362,40 @@ func TestConfigFeedbackSwitches(t *testing.T) {
 	}
 }
 
+// TestConfigJoyCon2: config.json joycon2.autoConnect is on unless it says
+// false. The remembered controllers are no setting (they live in state.json),
+// so the object takes nothing else.
+func TestConfigJoyCon2(t *testing.T) {
+	if got := DefaultConfig().JoyCon2; !got.AutoConnect || got != DefaultJoyCon2Settings() {
+		t.Errorf("DefaultConfig().JoyCon2 = %+v; want auto-connect on", got)
+	}
+	for _, tc := range []struct {
+		doc  string
+		want bool
+	}{
+		{`{"schemaVersion":0}`, true},
+		{`{"schemaVersion":0,"joycon2":{}}`, true},
+		{`{"schemaVersion":0,"joycon2":{"autoConnect":true}}`, true},
+		{`{"schemaVersion":0,"joycon2":{"autoConnect":false}}`, false},
+	} {
+		c, ds := ParseConfig([]byte(tc.doc))
+		if c == nil || ds.HasErrors() {
+			t.Fatalf("%s: config=%v diagnostics=%v", tc.doc, c, ds)
+		}
+		if c.JoyCon2.AutoConnect != tc.want {
+			t.Errorf("%s: AutoConnect = %v; want %v", tc.doc, c.JoyCon2.AutoConnect, tc.want)
+		}
+	}
+	for _, doc := range []string{
+		`{"schemaVersion":0,"joycon2":{"autoConnect":"yes"}}`, `{"schemaVersion":0,"joycon2":{"autoConnect":null}}`,
+		`{"schemaVersion":0,"joycon2":{"known":[]}}`, `{"schemaVersion":0,"joycon2":true}`,
+	} {
+		if c, ds := ParseConfig([]byte(doc)); c != nil || !ds.HasErrors() {
+			t.Errorf("%s: accepted: config=%v diagnostics=%v", doc, c, ds)
+		}
+	}
+}
+
 // TestConfigFunctionKey: config.json functionKey picks the one function key
 // (ADR-0012): start unless it says back. guide, which a file written
 // before the Xbox button was retired may hold, still loads and reads as start.

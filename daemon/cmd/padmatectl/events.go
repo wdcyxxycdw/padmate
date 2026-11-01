@@ -18,8 +18,10 @@ const eventsUsage = `usage: padmatectl subscribe [FLAGS] [TOPIC...]
 
 Prints JSON lines {topic,data} until Ctrl+C. Topics: input, engine.activity,
 log, script.status, profile.changed, output.preview, app.foreground,
-daemon.exiting, hud (subscribe defaults to all topics). Subscribing to hud
-makes scripts see an overlay (host.has("hud")) while the command runs.
+daemon.exiting, hud, input.raw, joycon2.changed (subscribe defaults to all
+topics; joycon2.changed carries the Joy-Con 2 status when it changes).
+Subscribing to hud makes scripts see an overlay (host.has("hud")) while the
+command runs.
 capture holds a mapping pause lease on this connection and prints input.
 Exiting releases only this capture lease; existing user pauses stay active.
 Server event loss is reported as a dropped notification; local overflow

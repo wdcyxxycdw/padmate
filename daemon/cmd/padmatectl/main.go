@@ -23,6 +23,7 @@ var commands = map[string]command{
 	"ui-bridge":        {summary: "private Electron main-process IPC bridge", run: runUIBridge},
 	"status":           {summary: "query daemon state", run: rpcCommand("status")},
 	"devices":          {summary: "query devices and capabilities", run: rpcCommand("devices")},
+	"joycon2":          {summary: "connect, list, forget and disconnect Joy-Con 2 controllers (Bluetooth LE)", run: rpcCommand("joycon2")},
 	"identify":         {summary: "make a controller buzz and flash to tell which it is", run: rpcCommand("identify")},
 	"latency":          {summary: "show how long padmated takes from a gamepad input to the key", run: rpcCommand("latency")},
 	"pause":            {summary: "pause daemon mapping", run: rpcCommand("pause")},

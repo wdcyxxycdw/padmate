@@ -47,7 +47,21 @@ type Config struct {
 	// Feedback holds the four controller feedback switches (ADR-0015),
 	// global for every profile and controller.
 	Feedback FeedbackSwitches
+	// JoyCon2 holds the settings of the Joy-Con 2 backend (Bluetooth LE).
+	JoyCon2 JoyCon2Settings
 }
+
+// JoyCon2Settings are the members of config.json's joycon2 object.
+// The remembered controllers are not settings: they are machine state, in
+// state.json (State.JoyCon2).
+type JoyCon2Settings struct {
+	// AutoConnect connects a remembered Joy-Con 2 whenever it advertises with
+	// its SYNC button held. It is on unless config.json says false.
+	AutoConnect bool
+}
+
+// DefaultJoyCon2Settings is auto-connect on.
+func DefaultJoyCon2Settings() JoyCon2Settings { return JoyCon2Settings{AutoConnect: true} }
 
 // FeedbackSwitches are the switches of config.json's feedback object: rumble
 // (the pulses, the haptics of bindings and knob ticks, the low-battery buzz,
@@ -87,7 +101,7 @@ func (r Rule) Matches(exe string) bool { return matchExe(r.Exe, exe) }
 // DefaultConfig is the config of a missing config.json: automatic selection
 // on, without rules, so every application uses the fixed default profile.
 func DefaultConfig() *Config {
-	return &Config{Enabled: true, RestoreLayerState: true, ReleaseOnSwitch: "profileChange", FunctionKey: control.DefaultFunctionKey, Feedback: DefaultFeedbackSwitches()}
+	return &Config{Enabled: true, RestoreLayerState: true, ReleaseOnSwitch: "profileChange", FunctionKey: control.DefaultFunctionKey, Feedback: DefaultFeedbackSwitches(), JoyCon2: DefaultJoyCon2Settings()}
 }
 
 // FunctionKeyOrDefault returns the function key of c: its FunctionKey, or
@@ -171,6 +185,9 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		if f.LowBattery != nil {
 			c.Feedback.LowBattery = *f.LowBattery
 		}
+	}
+	if j := w.JoyCon2; j != nil && j.AutoConnect != nil {
+		c.JoyCon2.AutoConnect = *j.AutoConnect
 	}
 	var ds Diagnostics
 	fail := func(ptr, msg string) {
