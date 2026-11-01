@@ -13,14 +13,19 @@ import {
   StickPanel,
   TriggerSettings,
 } from "../analog/AnalogPanels";
-import { setStickLabel, stickLabel } from "../analog/analog-editor";
+import {
+  setStickLabel,
+  stickLabel,
+  withoutOrphanStickLabels,
+} from "../analog/analog-editor";
 import { calloutOf, isStickPress } from "../controller/control-callout";
-import { relatedKeys } from "../controller/controller-chips";
+import { relatedKeys, stickMapped } from "../controller/controller-chips";
 import { controllerLabels, familyName } from "../controller/controller-model";
 import { PadIcon, padIcon, stickMoveIcon } from "../controller/pad-icon";
 import {
   actionText,
   baseBinding,
+  bindingMaps,
   canonicalControl,
   type Gesture,
   gestureName,
@@ -31,6 +36,7 @@ import {
   swapView,
   usedGestures,
   withoutMinRate,
+  withoutOrphanLabels,
 } from "../editor/editor-model";
 import type { EditOptions, EditorStore } from "../editor/editor-store";
 import { withInherited, writeBack } from "../editor/inheritance";
@@ -198,16 +204,21 @@ function KeyTitle({
   );
 }
 
-/** The text a key shows on the controller, committed like other fields. */
+/**
+ * The text a key shows on the controller, committed like other fields. A
+ * name belongs to a mapping: without one the field is off.
+ */
 function LabelField({
   value,
   placeholder,
+  mapped,
   onCommit,
   language,
 }: {
   value: string;
   /** What the controller shows without a label; none for an unset key. */
   placeholder?: string;
+  mapped: boolean;
   onCommit: (label: string) => void;
   language: Language;
 }) {
@@ -218,19 +229,11 @@ function LabelField({
       <input
         className="input drawer-label-input"
         placeholder={placeholder}
+        disabled={!mapped}
         {...field.props}
       />
     </label>
   );
-}
-
-/** What a stick's movement is called on its label without a name of its own. */
-function stickModeName(mode: string | undefined, language: Language): string {
-  return mode === "knob"
-    ? tx(language, "旋钮", "Knob")
-    : mode === "mouse"
-      ? tx(language, "鼠标", "Mouse")
-      : tx(language, "方向键", "Direction keys");
 }
 
 /** Drawer that edits one control of the profile draft (ADR-0012). */
@@ -280,9 +283,14 @@ export function KeyDrawer({
     () => (withParent ? swapView(withParent, view) : null),
     [withParent, view],
   );
+  // A name goes with the last mapping of the key or stick an edit changes.
   const edit = (next: Profile, options?: EditOptions) => {
-    if (usual)
-      state.edit(writeBack(usual, parent, swapView(next, view)), options);
+    if (!usual || !profile) return;
+    const settled = withoutOrphanStickLabels(
+      profile,
+      withoutOrphanLabels(profile, next),
+    );
+    state.edit(writeBack(usual, parent, swapView(settled, view)), options);
   };
   const registrations = useMemo(
     () => viewRegistrations(state.registrations, view),
@@ -700,9 +708,9 @@ export function KeyDrawer({
                     key={`${view}:${key}`}
                     value={stickLabel(profile, stickGroup) ?? ""}
                     language={language}
-                    placeholder={stickModeName(
-                      profile.analog?.[stickGroup]?.mode,
-                      language,
+                    mapped={stickMapped(
+                      profile,
+                      stickGroup === "ls" ? "leftstick" : "rightstick",
                     )}
                     onCommit={(label) =>
                       edit(setStickLabel(profile, stickGroup, label))
@@ -731,6 +739,7 @@ export function KeyDrawer({
                     key={`${view}:${key}`}
                     value={binding.label ?? ""}
                     language={language}
+                    mapped={bindingMaps(binding)}
                     placeholder={
                       used.length
                         ? actionText(

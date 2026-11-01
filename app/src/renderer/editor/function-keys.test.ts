@@ -3,7 +3,6 @@
 // other controls use the profile's function set (profile.functionSet). The
 // Xbox button (guide) is never mapped. These are the editor's rules for them.
 import { describe, expect, it } from "vitest";
-import type { ProfileDiagnostic } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
 import {
   asFunctionKey,
@@ -15,7 +14,6 @@ import {
   functionSetId,
   isFunctionKey,
   isIgnoredControl,
-  isLabelOnlyWarning,
   layerUsage,
   savedForm,
   setBinding,
@@ -466,40 +464,5 @@ describe("where a diagnostic points", () => {
       "/analog/ls",
     ])
       expect(diagnosticSet(pointer), pointer).toBeNull();
-  });
-});
-
-describe("the label-only warning in the function set", () => {
-  const warning = (pointer: string): ProfileDiagnostic => ({
-    severity: "warning",
-    pointer,
-    message: "binding has no action",
-    offset: 0,
-    line: 1,
-    col: 1,
-  });
-
-  it("is dropped for a control of the set that has only its label", () => {
-    const named: Profile = {
-      ...profile,
-      functionSet: { east: { label: "Brush" } },
-    };
-    expect(isLabelOnlyWarning(warning("/functionSet/east"), named)).toBe(true);
-    expect(isLabelOnlyWarning(warning("/functionSet/west"), named)).toBe(false);
-    // A warning of a file of the old format is about the same set.
-    expect(isLabelOnlyWarning(warning("/functionKeys/back/east"), named)).toBe(
-      true,
-    );
-    expect(isLabelOnlyWarning(warning("/layers/base/east"), named)).toBe(false);
-  });
-
-  it("is dropped for the old format too", () => {
-    const old: Profile = {
-      ...profile,
-      functionKeys: { start: { east: { label: "Brush" } } },
-    };
-    expect(isLabelOnlyWarning(warning("/functionKeys/start/east"), old)).toBe(
-      true,
-    );
   });
 });

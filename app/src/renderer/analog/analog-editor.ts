@@ -7,6 +7,7 @@ import type {
   ProfileStick,
   ProfileTrigger,
 } from "../../shared/generated/schema";
+import { relatedKeys, stickMapped } from "../controller/controller-chips";
 import {
   baseBinding,
   bindingAt,
@@ -16,6 +17,7 @@ import {
   hasDepth,
   setBaseBinding,
   setBinding,
+  stableStringify,
   usedGestures,
 } from "../editor/editor-model";
 
@@ -206,6 +208,36 @@ export function setStickLabel(
     group,
     name ? { ...stick, label: name } : stick,
   );
+}
+
+/**
+ * after, the result of one edit of before, without the name of a stick whose
+ * movement the edit changed and left mapping nothing (stickMapped): a name
+ * belongs to a mapping. A stick the edit did not touch keeps its name, one
+ * from the file included. after itself when nothing is taken.
+ */
+export function withoutOrphanStickLabels(
+  before: Profile,
+  after: Profile,
+): Profile {
+  let result = after;
+  for (const [group, control] of [
+    ["ls", "leftstick"],
+    ["rs", "rightstick"],
+  ] as const) {
+    if (stickLabel(after, group) === undefined) continue;
+    if (stickMapped(after, control)) continue;
+    const touched =
+      stableStringify(before.analog?.[group] ?? {}) !==
+        stableStringify(after.analog?.[group] ?? {}) ||
+      relatedKeys(control).some(
+        (key) =>
+          stableStringify(baseBinding(before, key)) !==
+          stableStringify(baseBinding(after, key)),
+      );
+    if (touched) result = setStickLabel(result, group, "");
+  }
+  return result;
 }
 
 /**

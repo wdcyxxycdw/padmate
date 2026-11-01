@@ -14,7 +14,6 @@ import {
   defaultFunctionKey,
   editorError,
   type FunctionKey,
-  isLabelOnlyWarning,
   type KeyView,
   type LayerUsage,
   layerUsage,
@@ -242,17 +241,15 @@ export function createEditorStore(api: PadmateAPI) {
     }
     return entry;
   };
-  // A key with only its label is not set yet, which the controller shows;
-  // the daemon's "binding has no action" about it is expected here. So is the
-  // one about a key the profile empties that its parent binds.
+  // The daemon's "binding has no action" about a key the profile empties
+  // that its parent binds is expected here. One about a key that
+  // has only its name is shown: a name belongs to a mapping.
   const shown = (
     diagnostics: ProfileDiagnostic[] | undefined,
     draft: Profile | null,
   ) =>
     (diagnostics ?? []).filter(
-      (diagnostic) =>
-        !isLabelOnlyWarning(diagnostic, draft) &&
-        !isClearedInherited(diagnostic, draft, heldParent),
+      (diagnostic) => !isClearedInherited(diagnostic, draft, heldParent),
     );
   // The function key the settings choose (setFunctionKey); the daemon ignores
   // a layer's bindings on it, so the usage does not count them.

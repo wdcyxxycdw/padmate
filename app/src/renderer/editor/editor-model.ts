@@ -1,4 +1,3 @@
-import type { ProfileDiagnostic } from "../../shared/api";
 import type {
   Profile,
   ProfileAction,
@@ -953,44 +952,42 @@ export function missingMacroText(file: string, language?: string): string {
   return text(language, { zh: `找不到「${name}」`, en: `“${name}” not found` });
 }
 
-/**
- * The daemon's "binding has no action" warning about a key of the base layer
- * (or of the function set) that has only its label: a key named but whose shortcut is not recorded
- * yet, or a stick click that holds
- * the stick's display name. The controller shows such a key as not set, so
- * the editor drops the warning.
- */
-export function isLabelOnlyWarning(
-  diagnostic: ProfileDiagnostic,
-  profile: Profile | null,
-): boolean {
-  if (
-    !profile ||
-    diagnostic.severity !== "warning" ||
-    diagnostic.message !== "binding has no action"
-  )
-    return false;
-  const found = diagnosticSet(diagnostic.pointer);
-  const key = found?.rest.length === 1 ? found.rest[0] : undefined;
-  if (!found || key === undefined) return false;
-  const binding =
-    found.view === "function"
-      ? bindingAt(
-          withNewFunctionSet(profile),
-          functionSetId,
-          canonicalControl(key),
-        )
-      : baseBinding(profile, canonicalControl(key));
-  return (
-    !!binding.label?.trim() &&
-    !binding.block &&
-    usedGestures(binding).length === 0
-  );
-}
-
 /** Gestures a binding uses, in the canonical order. */
 export function usedGestures(binding: ProfileBinding): Gesture[] {
   return gestures.filter((gesture) => binding[gesture]);
+}
+
+/**
+ * Whether a binding maps its key: it has an action, or it blocks the key. A
+ * name (label) belongs to a mapping and is not one by itself.
+ */
+export function bindingMaps(binding: ProfileBinding): boolean {
+  return !!binding.block || usedGestures(binding).length > 0;
+}
+
+/**
+ * after, the result of one edit of before, with the name taken from each key
+ * of the edited set (layers.base, the shown set) that the edit changed and
+ * left without a mapping (bindingMaps): deleting the last mapping deletes the
+ * name too, and a binding with nothing else goes. A key the edit did not
+ * change keeps what it has, a name alone from the file included, so the rest
+ * of the file stays as written. after itself when nothing is taken.
+ */
+export function withoutOrphanLabels(before: Profile, after: Profile): Profile {
+  let result = after;
+  for (const [key, value] of Object.entries(after.layers.base)) {
+    if (key === "color" || !value || typeof value !== "object") continue;
+    const binding = value as ProfileBinding;
+    if (binding.label === undefined || bindingMaps(binding)) continue;
+    if (
+      stableStringify(baseBinding(before, key)) ===
+      stableStringify(baseBinding(after, key))
+    )
+      continue;
+    const { label: _label, ...rest } = binding;
+    result = setBaseBinding(result, key, rest);
+  }
+  return result;
 }
 
 /** Script registrations that apply to a control in the edited (base) layer. */

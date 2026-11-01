@@ -17,7 +17,7 @@ The middle of the page shows a front-facing 3D controller. Each key has a tag be
 Click a tag and the key's settings open on the right. From top to bottom:
 
 1. The title is the name of the key. The pencil button next to it, “Rename this key”, changes the name.
-2. “Function”: the text shown on the tag. When it is empty, the tag shows the shortcut.
+2. “Function”: the text shown on the tag. When it is empty, the tag shows the shortcut. A name goes with a mapping: it cannot be filled in before the key has one, and deleting the last mapping deletes the name too.
 3. “Mappings”: what the key does, and when. Click “Add another action” to add one. See [Mappings](02-mappings.md).
 4. “Advanced”: timing, latch and haptic, also covered in [Mappings](02-mappings.md).
 

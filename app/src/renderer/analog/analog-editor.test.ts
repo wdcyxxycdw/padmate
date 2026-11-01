@@ -15,6 +15,7 @@ import {
   stickMagnitude,
   stickReading,
   toPercent,
+  withoutOrphanStickLabels,
 } from "./analog-editor";
 import { applyAnalogPreset, presetChanges, presetMode } from "./analog-presets";
 
@@ -347,6 +348,49 @@ describe("analog presets", () => {
     expect(next.layers.base["dpad.left"]).toEqual({
       label: "Off",
       press: { type: "keys", keys: "KeyA", mode: "hold" },
+    });
+  });
+});
+
+describe("a stick's name goes with its last mapping", () => {
+  const before: Profile = {
+    schemaVersion: 1,
+    name: "s",
+    analog: { ls: { label: "平移", deadzone: 0.2 }, rs: { label: "旋转" } },
+    layers: {
+      base: {
+        "ls.up": { press: { type: "keys", keys: "W" } },
+        // The right stick maps nothing in the file: not edited, it keeps it.
+      },
+    },
+  };
+
+  it("takes the name when an edit leaves the stick mapping nothing", () => {
+    const edited = setControlBinding(before, "ls.up", undefined);
+    const after = withoutOrphanStickLabels(before, edited);
+    expect(after.analog?.ls).toEqual({ deadzone: 0.2 });
+    expect(after.analog?.rs).toEqual({ label: "旋转" });
+  });
+
+  it("keeps it while the stick still maps something, or when the edit is elsewhere", () => {
+    const moved = setControlBinding(before, "ls.down", {
+      press: { type: "keys", keys: "S" },
+    });
+    expect(withoutOrphanStickLabels(before, moved)).toBe(moved);
+    const other = setControlBinding(before, "south", {
+      press: { type: "keys", keys: "A" },
+    });
+    expect(withoutOrphanStickLabels(before, other)).toBe(other);
+  });
+
+  it("takes it when the mode stops sending the keys there are", () => {
+    const knob = setAnalogSettings(before, "ls", {
+      ...before.analog?.ls,
+      mode: "knob",
+    });
+    expect(withoutOrphanStickLabels(before, knob).analog?.ls).toEqual({
+      deadzone: 0.2,
+      mode: "knob",
     });
   });
 });

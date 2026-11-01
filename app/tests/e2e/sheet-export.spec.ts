@@ -78,16 +78,16 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
     const shortcut = drawer.getByRole("group", { name: "快捷键", exact: true });
     const saved = async () => JSON.parse(await readFile(file, "utf8"));
 
-    // Two named keys, X and B. Neither has a shortcut, and there is nowhere
-    // to type one.
+    // Two unset keys, X and B. Neither has a shortcut, and there is nowhere
+    // to type one; a name waits for a mapping.
     await openControl(p, "west");
-    await label.fill("抓手");
+    await expect(label).toBeDisabled();
     await expect(shortcut).toHaveAttribute("data-keys", "");
     await expect(drawer.getByRole("textbox", { name: "快捷键" })).toHaveCount(
       0,
     );
     await openControl(p, "east");
-    await label.fill("画笔");
+    await expect(label).toBeDisabled();
     await expect(shortcut).toHaveAttribute("data-keys", "");
 
     // Nothing offers to fill them in: not 更多, not the export.
@@ -115,10 +115,13 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
       .click();
     await expect(exporting).toHaveCount(0);
 
-    // X gets its shortcut by recording; it is saved at once. B
-    // stays named only.
+    // X gets its shortcut by recording, then its name; each is saved at
+    // once. B stays unset.
     await openControl(p, "west");
     await recordShortcut(app, shortcut, "F16");
+    await expect(label).toBeEnabled();
+    await label.fill("抓手");
+    await label.press("Enter");
     await expect
       .poll(async () => (await saved()).layers.base.west)
       .toEqual({
@@ -126,7 +129,7 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
         press: { type: "keys", keys: "F16" },
       });
     const written = await saved();
-    expect(written.layers.base.east).toEqual({ label: "画笔" });
+    expect(written.layers.base.east).toBeUndefined();
     expect(written.layers.base.south).toEqual(tableProfile.layers.base.south);
     expect(written.layers.base.north).toEqual(tableProfile.layers.base.north);
     expect(written.layers.alt).toEqual(tableProfile.layers.alt);

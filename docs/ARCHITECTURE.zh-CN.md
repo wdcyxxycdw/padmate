@@ -978,7 +978,7 @@ JSON-RPC 标准码（如 -32602）之外：
 **自动保存**：
 
 - 每次提交立即保存并生效，没有保存按钮。文本框在回车或失焦时提交，不合格的输入不提交，Esc 恢复。毫秒框是 `type="text"`（原因见 PITFALLS“UI”）。
-- 草稿始终是整份 profile，界面只编辑 `layers.base`（或按住功能键时的一套）。其他层、common、层动作、block 保存时原样保留且只读；`defaultLayer` 不是 base 时整份只读。没填完的部分保存时略去（`savedForm`），草稿里保留；手柄图标签、“所有按键”列表和导出对照表读 `savedForm(draft)`。
+- 草稿始终是整份 profile，界面只编辑 `layers.base`（或按住功能键时的一套）。其他层、common、层动作、block 保存时原样保留且只读；`defaultLayer` 不是 base 时整份只读。没填完的部分保存时略去（`savedForm`），草稿里保留；手柄图标签、“所有按键”列表和导出对照表读 `savedForm(draft)`。名称跟着映射走：抽屉的 `edit` 让每次修改经过 `withoutOrphanLabels` 和 `withoutOrphanStickLabels`，前者从这次改过、又没有动作或屏蔽（`bindingMaps`）的键去掉 `label`，后者从这次碰过、又什么也不映射（`stickMapped`：移动鼠标，或当前模式的键、内外圈、原始半轴有动作）的摇杆去掉 `analog.ls/rs.label`。这次没改的键，文件里只有名称的照样保留；编辑器不再隐藏守护进程对它们的“binding has no action”。
 - 保存串行：先 `profiles.validate`，再带 revision 的 `profiles.put`。校验不过不写盘，底部提示“修改未保存”。revision 冲突时重读磁盘并丢弃未保存的修改。
 - 没收到回答（bridge 10 s 超时、断连）时守护进程可能已写入：`editor-store` 记下最近 4 次 put 的文本，读到的磁盘内容与其中一份逐字节相同就认作自己的写入，保留草稿；不同才以文件为准。
 - 关窗不弹确认框：Main 发 `padmate:closing`，渲染进程提交输入、等保存完成后调 `readyToClose`，Main 最多等 3 s（`CLOSE_WAIT_MS`）；退出路径等 1800 ms（`EXIT_WAIT_MS`，小于守护进程的 2 s）。

@@ -23,6 +23,8 @@ The editor is an Electron app (`app/`). Early on it showed too much, with intern
 ### 3. The button drawer
 - The action types are only "Shortcut" and "Script", and the mappings only tap, hold and double tap. Details are shown when opened.
 - Deleting really deletes. A button never set before gets an empty "tap" first, which is not written to the file until something is recorded.
+- A name belongs to a mapping. "Function" (the binding's `label`, or a stick's `analog.ls.label`) is off until the key has an action (or a block); an edit that leaves the key, or the stick, mapping nothing takes the name with it, and a binding with nothing else goes. A stick maps something when it moves the pointer, or when a key it sends in its mode (the directions, or a knob's ticks), a ring or a raw half axis has an action: exactly when its chip is not "Not set". The stick's "rotation" cell has no name of its own: without a `label` it is titled like a button, by its keys or what its action does, not by the mode ("Direction keys", "Knob").
+- A file may already have a name with no action (written by hand, or by an earlier version). It is not rewritten: the daemon warns ("binding has no action", which `padmatectl validate` prints) and the Mapping page now shows that warning instead of hiding it; the name goes the next time the user edits that key. Saving drops only what the edit touched, so the other keys stay byte for byte.
 - When the file has something the UI does not offer, the action type is shown unselected or with a lock; saving other buttons leaves it byte for byte unchanged, and replacing it needs a confirmation.
 - Profile settings hold the name, the bound apps, the default timing and the switches.
 
@@ -86,3 +88,4 @@ UI text that a document quotes in “…” must be in the name table of `app/te
 - **Replacing a broken settings file with defaults as a whole, or only telling the user to fix it.** One misspelled field would lose every setting, and users cannot be asked to edit the configuration file.
 - **Recording the creation time in profile.json.** The schema would change, while the file system has it already.
 - **Main reads and writes the profile folders directly.** The path checks would have to exist in both languages.
+- **Dropping every name without a mapping on save.** Keys the user did not touch would change; the warning says the same without rewriting them.

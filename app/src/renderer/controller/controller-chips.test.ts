@@ -10,6 +10,7 @@ import {
   inheritedChips,
   keyText,
   segmentText,
+  stickMapped,
 } from "./controller-chips";
 import { controllerLabels } from "./controller-model";
 
@@ -155,16 +156,16 @@ describe("controller chips", () => {
     expect(result.misc1.state).toBe("locked");
   });
 
-  it("shows stick directions as separate keycaps on the stick's movement cell", () => {
+  it("titles the stick's movement with its direction keys, as a button with its shortcut, and with no name of the mode", () => {
     const result = chips();
     // The label of the stick binding names the press cell, not the movement.
     expect(result.leftstick).toMatchObject({
-      title: "方向键",
-      detail: [{ chords: ["Up", "Down", "Left", "Right"] }],
-      summary: "↑ ↓ ← →",
+      title: "↑ ↓ ← →",
+      titleKeys: { chords: ["Up", "Down", "Left", "Right"] },
+      detail: [],
       state: "bound",
     });
-    expect(chips({ language: "en" }).leftstick.title).toBe("Direction keys");
+    expect(chips({ language: "en" }).leftstick.title).toBe("↑ ↓ ← →");
   });
 
   it("titles the stick's movement with its name, and leaves the press its own (ADR-0013)", () => {
@@ -195,9 +196,10 @@ describe("controller chips", () => {
       state: "bound",
     });
     // The movement cell does not list the click any more.
-    expect(chips({ profile: pressed }).leftstick.detail).toEqual([
-      { chords: ["Up", "Down", "Left", "Right"] },
-    ]);
+    expect(chips({ profile: pressed }).leftstick.titleKeys).toEqual({
+      chords: ["Up", "Down", "Left", "Right"],
+    });
+    expect(chips({ profile: pressed }).leftstick.detail).toEqual([]);
     // Labeled, it is titled by the label and then shows what it does.
     delete pressed.layers.base.l3;
     pressed.layers.base.leftstick = {
@@ -225,7 +227,7 @@ describe("controller chips", () => {
       detail: [{ keys: "Tab" }],
     });
     // The movement is not what that name is for.
-    expect(chips({ profile: renamed }).leftstick.title).toBe("方向键");
+    expect(chips({ profile: renamed }).leftstick.title).toBe("↑ ↓ ← →");
   });
 
   it("keeps a stick's movement and press apart in state, lock and script ownership", () => {
@@ -401,15 +403,14 @@ describe("controller chips", () => {
       language: "zh-CN",
       missing: ["旧.js"],
     });
-    expect(result.leftstick.detail).toContainEqual({
-      macro: true,
-      text: "复制全部",
-    });
+    // Titled by what it runs, as a button's macro is.
+    expect(result.leftstick.title).toBe("复制全部");
+    expect(result.leftstick.detail).toContainEqual({ macro: true });
     expect(result.leftstick.missing).toBeUndefined();
+    expect(result.rightstick.title).toBe("找不到「旧」");
     expect(result.rightstick.detail).toContainEqual({
       macro: true,
       missing: true,
-      text: "找不到「旧」",
     });
     expect(result.rightstick.missing).toBe(true);
   });
@@ -462,8 +463,9 @@ describe("controller chips", () => {
       },
     };
     expect(chips({ profile: diagonal }).leftstick).toMatchObject({
-      title: "方向键",
-      detail: [{ keys: "Q" }],
+      title: "Q",
+      titleKeys: { keys: "Q" },
+      detail: [],
       state: "bound",
     });
   });
@@ -681,14 +683,15 @@ describe("chips for the rings, the knob and the second stage", () => {
       { rs: { mode: "knob" } },
     );
     const result = chips({ profile: knob });
+    // Its keys are the title, as a button's shortcut is: no name of the mode.
     expect(result.rightstick).toMatchObject({
-      title: "旋钮",
-      detail: [{ chords: ["]", "["], divider: "/" }],
-      summary: "] / [",
+      title: "] / [",
+      titleKeys: { chords: ["]", "["], divider: "/" },
+      detail: [],
       state: "bound",
     });
     expect(chips({ profile: knob, language: "en" }).rightstick.title).toBe(
-      "Knob",
+      "] / [",
     );
     expect(chips({ profile: knob, display: "keys" }).rightstick).toMatchObject({
       title: "] / [",
@@ -696,9 +699,10 @@ describe("chips for the rings, the knob and the second stage", () => {
     });
     // Only one tick set: just that one.
     const half = file({ "rs.ccw": key("[") }, { rs: { mode: "knob" } });
-    expect(chips({ profile: half }).rightstick.detail).toEqual([
-      { chords: ["["], divider: "/" },
-    ]);
+    expect(chips({ profile: half }).rightstick.titleKeys).toEqual({
+      chords: ["["],
+      divider: "/",
+    });
     // The left stick is not a knob.
     expect(result.leftstick.state).toBe("unbound");
   });
@@ -715,9 +719,11 @@ describe("chips for the rings, the knob and the second stage", () => {
     );
     const result = chips({ profile: knob });
     // The click is the press cell's.
-    expect(result.rightstick.detail).toEqual([
-      { chords: ["]", "["], divider: "/" },
-    ]);
+    expect(result.rightstick.titleKeys).toEqual({
+      chords: ["]", "["],
+      divider: "/",
+    });
+    expect(result.rightstick.detail).toEqual([]);
     expect(result["rightstick.press"]).toMatchObject({
       title: "笔刷大小",
       detail: [{ keys: "Tab" }],
@@ -726,7 +732,7 @@ describe("chips for the rings, the knob and the second stage", () => {
     // the ticks it holds are not shown.
     const plain = structuredClone(knob);
     plain.analog = {};
-    expect(chips({ profile: plain }).rightstick.detail[0]).toEqual({
+    expect(chips({ profile: plain }).rightstick.titleKeys).toEqual({
       chords: ["Up"],
     });
   });
@@ -737,7 +743,7 @@ describe("chips for the rings, the knob and the second stage", () => {
       { rs: { mode: "knob" } },
     );
     const result = chips({ profile: knob }).rightstick;
-    expect(result.title).toBe("旋钮");
+    expect(result.title).toBe("放大");
     expect(result.detail[0]).toMatchObject({ macro: true });
   });
 
@@ -748,12 +754,12 @@ describe("chips for the rings, the knob and the second stage", () => {
       "ls.inner": key("F2"),
     });
     const result = chips({ profile: rings }).leftstick;
+    expect(result.title).toBe("↑");
     expect(result.detail).toEqual([
-      { chords: ["Up"] },
       { gesture: "轻推", keys: "F2" },
       { gesture: "重推", keys: "Shift", hold: true },
     ]);
-    expect(result.summary).toBe("↑ · 轻推 F2 · 重推 Shift 按住");
+    expect(result.summary).toBe("轻推 F2 · 重推 Shift 按住");
   });
 
   it("shows the rings of a stick that has nothing else set", () => {
@@ -864,7 +870,7 @@ describe("chips for a stick that moves the pointer", () => {
     expect(result.leftstick).toMatchObject({ title: "鼠标", detail: [] });
     // Without the mode, the same keys are the directions.
     const plain = file({ "ls.up": key("Up"), "ls.right": key("Right") }, {});
-    expect(chips({ profile: plain }).leftstick.title).toBe("方向键");
+    expect(chips({ profile: plain }).leftstick.title).toBe("↑ →");
   });
 
   it("lists the rings after the pointer, and the click on the press cell", () => {
@@ -1188,5 +1194,60 @@ describe("a control the function set leaves out", () => {
       state: "unbound",
       inherited: true,
     });
+  });
+});
+
+describe("whether a stick maps anything (a name needs it)", () => {
+  const keys = (value: string) => ({ press: { type: "keys", keys: value } });
+  const profile = (
+    base: Record<string, unknown>,
+    analog: Profile["analog"] = {},
+  ): Profile =>
+    ({ schemaVersion: 1, name: "s", analog, layers: { base } }) as Profile;
+
+  it("is so for a direction, a ring or a raw half axis with an action, and for the pointer", () => {
+    expect(stickMapped(profile({ "ls.up": keys("W") }), "leftstick")).toBe(
+      true,
+    );
+    expect(stickMapped(profile({ "ls.outer": keys("F2") }), "leftstick")).toBe(
+      true,
+    );
+    expect(stickMapped(profile({ "lefty-": keys("F3") }), "leftstick")).toBe(
+      true,
+    );
+    expect(
+      stickMapped(profile({}, { ls: { mode: "mouse" } }), "leftstick"),
+    ).toBe(true);
+    expect(
+      stickMapped(
+        profile({ "rs.cw": keys("]") }, { rs: { mode: "knob" } }),
+        "rightstick",
+      ),
+    ).toBe(true);
+  });
+
+  it("is not so for a mode alone, keys the mode does not send, names, or the click", () => {
+    expect(
+      stickMapped(profile({}, { ls: { mode: "fourWay" } }), "leftstick"),
+    ).toBe(false);
+    // A knob sends no direction; the other modes no tick.
+    expect(
+      stickMapped(
+        profile({ "ls.up": keys("W") }, { ls: { mode: "knob" } }),
+        "leftstick",
+      ),
+    ).toBe(false);
+    expect(stickMapped(profile({ "ls.cw": keys("]") }), "leftstick")).toBe(
+      false,
+    );
+    expect(
+      stickMapped(profile({ "ls.up": { label: "上" } }), "leftstick"),
+    ).toBe(false);
+    expect(stickMapped(profile({ leftstick: keys("Tab") }), "leftstick")).toBe(
+      false,
+    );
+    expect(stickMapped(profile({ "ls.up": keys("W") }), "rightstick")).toBe(
+      false,
+    );
   });
 });

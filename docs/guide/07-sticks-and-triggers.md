@@ -8,7 +8,7 @@ Sticks and triggers can be pushed to different depths. This chapter covers makin
 
 The tag of each stick has two cells, each with its own drawer:
 
-- The upper cell, “Move”: how the stick is pushed. Everything in the sections below is in its drawer. “Function” at the top names the push, for example brush size, and the cell then shows it; left empty, the cell shows a name made from the direction mode.
+- The upper cell, “Move”: how the stick is pushed. Everything in the sections below is in its drawer. “Function” at the top names the push, for example brush size, and the cell then shows it; left empty, the cell shows the keys it sends, as a button does. The push can be named only once the stick has a mapping (a direction or knob tick with a key, or moving the mouse), and removing every mapping removes the name too.
 - The lower cell, “Press”: the key you get by pressing the stick down, set like any other key; see [Mappings](02-mappings.md).
 
 ### Direction mode

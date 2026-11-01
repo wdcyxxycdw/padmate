@@ -126,7 +126,7 @@ describe("a chip", () => {
     expect(result.leftstick).toMatchObject({
       inherited: true,
       state: "unbound",
-      title: "平时：方向键",
+      title: "平时：W",
     });
     expect(result["leftstick.press"]).toMatchObject({
       inherited: true,

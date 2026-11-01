@@ -284,6 +284,28 @@ it("offers a ready empty 点按 for an unset key without touching the draft", as
   expect(screen.getByTestId("add-gesture")).toBeDefined();
 });
 
+it("takes the name away with the last mapping, and names a key only once it has one", async () => {
+  const { editor, record } = await setup(paint, "west");
+  const name = () =>
+    screen.getByRole("textbox", { name: "功能" }) as HTMLInputElement;
+  // Nothing to name yet.
+  expect(name().disabled).toBe(true);
+  await record("F9");
+  expect(name().disabled).toBe(false);
+  commit(name(), { target: { value: "保存" } });
+  expect(base(editor)?.west).toEqual({
+    label: "保存",
+    press: { type: "keys", keys: "F9" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "删除此映射" }));
+  // No binding with a name alone is left behind.
+  expect(base(editor)?.west).toBeUndefined();
+  expect(name().disabled).toBe(true);
+  expect(name().value).toBe("");
+  // The other keys are as they were.
+  expect(base(editor)?.south?.label).toBe("Undo");
+});
+
 it("runs a script of the library: one pick, one save, one undo step", async () => {
   const api = editorAPIFixture();
   api.getProfile = vi.fn(async (id: string) => ({
@@ -1138,12 +1160,13 @@ it("has no press row or rename in the stick's movement drawer, and its 功能 na
   expect(screen.queryByText("按下摇杆")).toBeNull();
   expect(screen.queryByRole("button", { name: "重命名此按键" })).toBeNull();
   // 功能 is the movement's name (analog.ls.label, ADR-0013), not the
-  // click's label; empty, it shows what the label is called without one.
+  // click's label; empty, it suggests no name of its own.
   const name = screen.getByRole("textbox", {
     name: "功能",
   }) as HTMLInputElement;
   expect(name.value).toBe("");
-  expect(name.placeholder).toBe("方向键");
+  expect(name.placeholder).toBe("");
+  expect(name.disabled).toBe(false);
   commit(name, { target: { value: "  画笔大小 " } });
   const draft = () => editor.getState().draft;
   expect(draft()?.analog?.ls).toEqual({ label: "画笔大小" });
@@ -1158,6 +1181,17 @@ it("has no press row or rename in the stick's movement drawer, and its 功能 na
   expect(
     document.querySelector('.analog-row[data-control="leftstick"]'),
   ).toBeNull();
+});
+
+it("names a stick's movement only while it maps something, with no name of its mode", async () => {
+  const { editor } = await setup(paint, "leftstick");
+  const name = screen.getByRole("textbox", {
+    name: "功能",
+  }) as HTMLInputElement;
+  // paint maps nothing on the left stick.
+  expect(name.disabled).toBe(true);
+  expect(name.placeholder).toBe("");
+  expect(editor.getState().draft?.analog?.ls?.label).toBeUndefined();
 });
 
 it("keeps what the stick drawers show apart: the script tag, the notice and the problems", async () => {

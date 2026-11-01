@@ -1,18 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { ProfileDiagnostic } from "../../shared/api";
 import type { Profile, ProfileAction } from "../../shared/generated/schema";
 import {
   actionSummary,
   actionText,
   bindingAt,
   bindingDelays,
+  bindingMaps,
   gestureName,
   hasDepth,
   holdShortcut,
   isFileOnlyAction,
   isHintsAction,
   isJumpAction,
-  isLabelOnlyWarning,
   isPrecisionAction,
   isReservedShortcut,
   jumpPercent,
@@ -28,6 +27,7 @@ import {
   stepSummary,
   tapGestureFor,
   withoutMinRate,
+  withoutOrphanLabels,
 } from "./editor-model";
 
 const source: Profile = {
@@ -533,65 +533,58 @@ describe("savedForm", () => {
   });
 });
 
-describe("label-only warning", () => {
-  const warning = (
-    pointer: string,
-    changes: Partial<ProfileDiagnostic> = {},
-  ): ProfileDiagnostic => ({
-    severity: "warning",
-    pointer,
-    offset: 0,
-    line: 1,
-    col: 1,
-    message: "binding has no action",
-    ...changes,
+describe("a name belongs to a mapping", () => {
+  const keys = (value: string) => ({ type: "keys", keys: value }) as const;
+  const before: Profile = {
+    schemaVersion: 1,
+    name: "t",
+    layers: {
+      base: {
+        south: { label: "撤销", press: keys("Ctrl+Z") },
+        east: { label: "抓手", haptic: "tick", tap: keys("Space") },
+        // Named in the file without an action: not edited, so it stays.
+        "dpad.up": { label: "画笔" },
+        west: { label: "已屏蔽", block: true },
+      },
+      alt: { south: { label: "别的层" } },
+    },
+  };
+
+  it("counts an action or a block as a mapping, and a name alone not", () => {
+    expect(bindingMaps({ press: keys("A") })).toBe(true);
+    expect(bindingMaps({ block: true })).toBe(true);
+    expect(bindingMaps({ label: "x" })).toBe(false);
+    expect(bindingMaps({ label: "x", haptic: "tick" })).toBe(false);
+    expect(bindingMaps({})).toBe(false);
   });
 
-  it("recognizes a key of the base layer that has only its label", () => {
-    const profile: Profile = {
-      schemaVersion: 1,
-      name: "t",
-      layers: {
-        base: {
-          // A key named but not recorded yet.
-          "dpad.up": { label: "画笔" },
-          leftstick: { label: "移动" },
-          r3: { label: "缩放" },
-          north: { label: " " },
-          south: { label: "x", block: true },
-          west: {},
-        },
-        alt: { east: { label: "y" } },
-      },
-    };
-    for (const pointer of [
-      "/layers/base/dpad.up",
-      "/layers/base/leftstick",
-      // An alias in the file names the same control.
-      "/layers/base/r3",
-    ])
-      expect(isLabelOnlyWarning(warning(pointer), profile), pointer).toBe(true);
-    for (const pointer of [
-      // No label, an empty one, or a block: the warning is about something else.
-      "/layers/base/north",
-      "/layers/base/south",
-      "/layers/base/west",
-      "/layers/alt/east",
-      "/layers/base/dpad.up/label",
-    ])
-      expect(isLabelOnlyWarning(warning(pointer), profile), pointer).toBe(
-        false,
-      );
-    for (const changes of [
-      { severity: "error" as const },
-      { message: "unknown control" },
-    ])
-      expect(
-        isLabelOnlyWarning(warning("/layers/base/dpad.up", changes), profile),
-      ).toBe(false);
-    expect(isLabelOnlyWarning(warning("/layers/base/dpad.up"), null)).toBe(
-      false,
-    );
+  it("goes with the last mapping of a key the edit changed", () => {
+    const edited = setBinding(before, "base", "south", { label: "撤销" });
+    const after = withoutOrphanLabels(before, edited);
+    expect("south" in after.layers.base).toBe(false);
+    // What is left besides the name stays.
+    const tapped = setBinding(before, "base", "east", {
+      label: "抓手",
+      haptic: "tick",
+    });
+    expect(withoutOrphanLabels(before, tapped).layers.base.east).toEqual({
+      haptic: "tick",
+    });
+  });
+
+  it("leaves the keys the edit did not change as the file has them", () => {
+    const edited = setBinding(before, "base", "south", { label: "撤销" });
+    const after = withoutOrphanLabels(before, edited);
+    expect(after.layers.base["dpad.up"]).toEqual({ label: "画笔" });
+    expect(after.layers.base.west).toEqual({ label: "已屏蔽", block: true });
+    expect(after.layers.alt).toEqual(before.layers.alt);
+    expect(Object.keys(after.layers.base)).toEqual(["east", "dpad.up", "west"]);
+    // A name given with a mapping, or an edit that keeps one, is kept.
+    const renamed = setBinding(before, "base", "south", {
+      label: "重做",
+      press: keys("Ctrl+Y"),
+    });
+    expect(withoutOrphanLabels(before, renamed)).toBe(renamed);
   });
 });
 

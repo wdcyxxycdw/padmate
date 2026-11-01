@@ -372,13 +372,17 @@ function describeStick(
         : [],
     );
     const plain = chords.length === ticks.length;
+    const keys: ChipSegment | undefined = plain
+      ? { chords, divider: "/" }
+      : undefined;
     return {
-      title: tx(language, "旋钮", "Knob"),
-      segment: plain
-        ? { chords, divider: "/" }
-        : actionSegment("press", ticks[0], undefined, language, names),
-      keys: plain ? { chords, divider: "/" } : undefined,
-      keysAsTitle: false,
+      title: keys
+        ? segmentText(keys, language)
+        : describeAction(ticks[0], language, names),
+      segment:
+        keys ?? actionSegment("press", ticks[0], undefined, language, names),
+      keys,
+      keysAsTitle: !!keys,
       extras,
     };
   }
@@ -409,13 +413,39 @@ function describeStick(
       : first
         ? actionSegment("press", first, undefined, language, names)
         : { text: describeAction(first, language, names) };
+  // Like a button's: the keys, or what the action does, and no name of the
+  // mode in their place (a name is the user's, analog.ls.label).
+  const keys: ChipSegment | undefined = chords.length
+    ? { chords }
+    : first?.type === "keys"
+      ? { keys: first.keys }
+      : undefined;
   return {
-    title: tx(language, "方向键", "Direction keys"),
+    title: keys
+      ? segmentText(keys, language)
+      : describeAction(first, language, names),
     segment,
-    keys: chords.length ? { chords } : undefined,
-    keysAsTitle: false,
+    keys,
+    keysAsTitle: !!keys,
     extras,
   };
+}
+
+/**
+ * Whether a stick's movement maps anything (its chip is set): it moves the
+ * pointer, or a key it reports in its mode has an action (the directions, or
+ * a knob's ticks), or a ring or a raw half axis has one. Only then can it have
+ * a name (analog.ls.label, ADR-0013).
+ */
+export function stickMapped(
+  profile: Profile,
+  control: "leftstick" | "rightstick",
+): boolean {
+  const names: ActionNames = { actions: [], profiles: [], missing: [] };
+  return !!(
+    describeStick(profile, control, "en", names) ??
+    describeRaw(profile, control, "en", names)
+  );
 }
 
 /**

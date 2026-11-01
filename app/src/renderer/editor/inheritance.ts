@@ -316,8 +316,7 @@ export function writeBack(
 /**
  * The daemon's warning "binding has no action" about a control the profile
  * leaves with an empty binding while its parent binds it: that is how a
- * profile says the key does nothing here, so the editor drops the warning, as
- * it does for a key that has only its label (isLabelOnlyWarning).
+ * profile says the key does nothing here, so the editor drops the warning.
  */
 export function isClearedInherited(
   diagnostic: { severity: string; pointer: string; message: string },
