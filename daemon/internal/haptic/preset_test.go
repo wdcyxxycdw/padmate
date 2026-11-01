@@ -76,7 +76,7 @@ func TestStepsTable(t *testing.T) {
 }
 
 func TestTrain(t *testing.T) {
-	// Not positive values are the defaults, as the pulse plan of M3 had them.
+	// Not positive values are the defaults, as the first pulse plan had them.
 	if got, want := Train(0, 0, 0, 0), []Step{{Low: 0x7000, High: 0x7000, Ms: 70}}; !slices.Equal(got, want) {
 		t.Errorf("Train(0, 0, 0, 0) = %+v, want %+v", got, want)
 	}

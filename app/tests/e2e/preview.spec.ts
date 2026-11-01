@@ -32,7 +32,7 @@ test("按键预览 says what a pad press sends while padmate is in front, then f
     await rpc(f, "fake.press", { control: "south" });
     await rpc(f, "fake.release", { control: "south" });
     await expect(line).toHaveText("S → Ctrl+Z");
-    // The control is drawn, not written (G6): a standard pad's face button
+    // The control is drawn, not written: a standard pad's face button
     // is its place among the four (ADR-0013); S is read out only.
     await expect(line.locator(".control-icon")).toHaveAttribute(
       "data-kind",

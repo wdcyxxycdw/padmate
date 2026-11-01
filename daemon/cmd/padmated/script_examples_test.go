@@ -25,7 +25,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/supervisor"
 )
 
-func readM6Example(t *testing.T, name string) (string, *engine.Program) {
+func readScriptExample(t *testing.T, name string) (string, *engine.Program) {
 	t.Helper()
 	path, err := filepath.Abs(filepath.Join("..", "..", "..", "examples", "scripts", name, "profile.json"))
 	if err != nil {
@@ -49,22 +49,22 @@ func readM6Example(t *testing.T, name string) (string, *engine.Program) {
 	return path, prog
 }
 
-type m6ExampleSim struct {
+type scriptExampleSim struct {
 	clk *clock.Fake
 	s   *slot.Slot
 	r   *simtest.Recorder
 }
 
-func newM6ExampleSim(t *testing.T, name string) *m6ExampleSim {
+func newScriptExampleSim(t *testing.T, name string) *scriptExampleSim {
 	t.Helper()
-	return newM6ExampleSimTraced(t, name, nil)
+	return newScriptExampleSimTraced(t, name, nil)
 }
 
-// newM6ExampleSimTraced is newM6ExampleSim with a Trace for the slot's
+// newScriptExampleSimTraced is newScriptExampleSim with a Trace for the slot's
 // decisions.
-func newM6ExampleSimTraced(t *testing.T, name string, trace func(engine.Decision)) *m6ExampleSim {
+func newScriptExampleSimTraced(t *testing.T, name string, trace func(engine.Decision)) *scriptExampleSim {
 	t.Helper()
-	path, prog := readM6Example(t, name)
+	path, prog := readScriptExample(t, name)
 	clk := clock.NewFake()
 	recorder := simtest.NewRecorder(clk)
 	arb := output.NewArbiter(clk, recorder, output.ArbiterOptions{MinPress: 20 * time.Millisecond, MinGap: 20 * time.Millisecond})
@@ -77,7 +77,7 @@ func newM6ExampleSimTraced(t *testing.T, name string, trace func(engine.Decision
 	if err != nil {
 		t.Fatal(err)
 	}
-	h := &m6ExampleSim{clk: clk, s: s, r: recorder}
+	h := &scriptExampleSim{clk: clk, s: s, r: recorder}
 	t.Cleanup(func() {
 		_ = s.ReleaseAll()
 		_ = s.Dispose()
@@ -87,7 +87,7 @@ func newM6ExampleSimTraced(t *testing.T, name string, trace func(engine.Decision
 	return h
 }
 
-func (h *m6ExampleSim) advance(t *testing.T, d time.Duration) {
+func (h *scriptExampleSim) advance(t *testing.T, d time.Duration) {
 	t.Helper()
 	for remaining := d; remaining > 0; {
 		step := min(remaining, 8*time.Millisecond)
@@ -100,7 +100,7 @@ func (h *m6ExampleSim) advance(t *testing.T, d time.Duration) {
 	}
 }
 
-func (h *m6ExampleSim) button(name string, down bool) {
+func (h *scriptExampleSim) button(name string, down bool) {
 	kind := input.ButtonUp
 	if down {
 		kind = input.ButtonDown
@@ -108,7 +108,7 @@ func (h *m6ExampleSim) button(name string, down bool) {
 	h.s.Handle(input.Event{Kind: kind, Device: 1, Control: name})
 }
 
-func (h *m6ExampleSim) downs() []string {
+func (h *scriptExampleSim) downs() []string {
 	var out []string
 	for _, edge := range h.r.Edges() {
 		if edge.Kind == simtest.Down {
@@ -120,7 +120,7 @@ func (h *m6ExampleSim) downs() []string {
 
 // These checks load the shipped profile and script and drive the production
 // engine, Slot, scriptRuntime and Arbiter, including physical press/gap limits.
-func TestM6ExampleStickRateAndDeadzone(t *testing.T) {
+func TestScriptExampleStickRateAndDeadzone(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		y    int16
@@ -133,7 +133,7 @@ func TestM6ExampleStickRateAndDeadzone(t *testing.T) {
 		{"full downward tilt", 32767, "F18", 20, 20},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			h := newM6ExampleSim(t, "stick-rate")
+			h := newScriptExampleSim(t, "stick-rate")
 			h.s.Handle(input.Event{Kind: input.AxisMotion, Device: 1, Control: "righty", Value: tc.y})
 			h.advance(t, time.Second)
 			got := h.downs()
@@ -159,8 +159,8 @@ func TestM6ExampleStickRateAndDeadzone(t *testing.T) {
 
 // Only the initial axis events are sent. The shipped script must continue
 // through the real slot/output deadlines, then stop after entering deadzone.
-func TestM6ExampleStickIdleSlot(t *testing.T) {
-	path, prog := readM6Example(t, "stick-rate")
+func TestScriptExampleStickIdleSlot(t *testing.T) {
+	path, prog := readScriptExample(t, "stick-rate")
 	clk := clock.Real()
 	recorder := simtest.NewSyncRecorder(clk)
 	out := output.StartLoop(clk, recorder, output.LoopOptions{Arbiter: output.ArbiterOptions{MinPress: 20 * time.Millisecond, MinGap: 20 * time.Millisecond}})
@@ -215,7 +215,7 @@ func TestM6ExampleStickIdleSlot(t *testing.T) {
 	}
 }
 
-func TestM6ScriptPhysicalTapRateCeiling(t *testing.T) {
+func TestScriptExamplePhysicalTapRateCeiling(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
 		gap      time.Duration
@@ -281,8 +281,8 @@ const acc=new RateAccumulator();onTick(dt=>{if(acc.step(100,dt)>0)void key.tap("
 	}
 }
 
-func TestM6ExampleTabmateGesturesAndLayers(t *testing.T) {
-	h := newM6ExampleSim(t, "tabmate")
+func TestScriptExampleTabmateGesturesAndLayers(t *testing.T) {
+	h := newScriptExampleSim(t, "tabmate")
 	h.button("west", true)
 	h.advance(t, 40*time.Millisecond)
 	h.button("west", false)
@@ -328,7 +328,7 @@ func TestM6ExampleTabmateGesturesAndLayers(t *testing.T) {
 	}
 }
 
-func TestM6ExampleTabmateHoldSafety(t *testing.T) {
+func TestScriptExampleTabmateHoldSafety(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		stop func(*slot.Slot) error
@@ -339,7 +339,7 @@ func TestM6ExampleTabmateHoldSafety(t *testing.T) {
 		{"disconnect", func(s *slot.Slot) error { s.Handle(input.Event{Kind: input.DeviceRemoved, Device: 1}); return nil }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			h := newM6ExampleSim(t, "tabmate")
+			h := newScriptExampleSim(t, "tabmate")
 			h.button("west", true)
 			h.advance(t, 250*time.Millisecond)
 			if got := h.r.Down(); len(got) != 1 || got[0].Key.String() != "F14" {
@@ -356,8 +356,8 @@ func TestM6ExampleTabmateHoldSafety(t *testing.T) {
 	}
 }
 
-func TestM6ExampleTabmateSingleTapWindow(t *testing.T) {
-	h := newM6ExampleSim(t, "tabmate")
+func TestScriptExampleTabmateSingleTapWindow(t *testing.T) {
+	h := newScriptExampleSim(t, "tabmate")
 	h.button("north", true)
 	h.advance(t, 20*time.Millisecond)
 	h.button("north", false)
@@ -371,12 +371,12 @@ func TestM6ExampleTabmateSingleTapWindow(t *testing.T) {
 	}
 }
 
-type m6ExampleSender struct {
+type scriptExampleSender struct {
 	recorder *simtest.SyncRecorder
 	events   chan reloadEvent
 }
 
-func (s *m6ExampleSender) Send(events []output.KeyEvent) (int, error) {
+func (s *scriptExampleSender) Send(events []output.KeyEvent) (int, error) {
 	n, err := s.recorder.Send(events)
 	for _, e := range events[:n] {
 		s.events <- reloadEvent{key: e.Key.String(), up: e.Up}
@@ -384,28 +384,28 @@ func (s *m6ExampleSender) Send(events []output.KeyEvent) (int, error) {
 	return n, err
 }
 
-type m6ReadyHandler struct{ ready chan struct{} }
+type scriptReadyHandler struct{ ready chan struct{} }
 
-func (h m6ReadyHandler) Enabled(context.Context, slog.Level) bool { return true }
-func (h m6ReadyHandler) Handle(_ context.Context, r slog.Record) error {
+func (h scriptReadyHandler) Enabled(context.Context, slog.Level) bool { return true }
+func (h scriptReadyHandler) Handle(_ context.Context, r slog.Record) error {
 	if r.Message == "cycleBrush ready" {
 		h.ready <- struct{}{}
 	}
 	return nil
 }
-func (h m6ReadyHandler) WithAttrs([]slog.Attr) slog.Handler { return h }
-func (h m6ReadyHandler) WithGroup(string) slog.Handler      { return h }
+func (h scriptReadyHandler) WithAttrs([]slog.Attr) slog.Handler { return h }
+func (h scriptReadyHandler) WithGroup(string) slog.Handler      { return h }
 
 // The actual profile's named action passes through the real supervisor,
 // engine and slot; reactivation and profile identity exercise session storage.
-func TestM6ExampleCycleBrushSessionAndAction(t *testing.T) {
-	path, prog := readM6Example(t, "cycle-brush")
+func TestScriptExampleCycleBrushSessionAndAction(t *testing.T) {
+	path, prog := readScriptExample(t, "cycle-brush")
 	clk := clock.Real()
 	recorder := simtest.NewSyncRecorder(clk)
-	sender := &m6ExampleSender{recorder: recorder, events: make(chan reloadEvent, 128)}
+	sender := &scriptExampleSender{recorder: recorder, events: make(chan reloadEvent, 128)}
 	out := output.StartLoop(clk, sender, output.LoopOptions{Arbiter: output.ArbiterOptions{MinPress: 20 * time.Millisecond, MinGap: 20 * time.Millisecond}})
 	ready := make(chan struct{}, 16)
-	def := newScriptDefinition(path, prog.Profile().Script, false, slog.New(m6ReadyHandler{ready: ready}))
+	def := newScriptDefinition(path, prog.Profile().Script, false, slog.New(scriptReadyHandler{ready: ready}))
 	events := make(chan input.Event, 16)
 	sup, err := supervisor.New(supervisor.Config{Clock: clk, Events: events, Output: out, Program: prog, ProfileKey: "example-a", ScriptFactory: def.Factory, ScriptConfigured: def.Configured, Slots: 1})
 	if err != nil {
@@ -485,7 +485,7 @@ func TestM6ExampleCycleBrushSessionAndAction(t *testing.T) {
 	press("south", "F13")
 }
 
-func TestM6ExamplesTypecheck(t *testing.T) {
+func TestScriptExamplesTypecheck(t *testing.T) {
 	tsc := os.Getenv("PADMATE_TEST_TSC")
 	if tsc == "" {
 		t.Skip("set PADMATE_TEST_TSC to the TypeScript compiler entry point")
@@ -621,9 +621,9 @@ func TestScriptingDocFeedbackExampleTypechecks(t *testing.T) {
 // script, and a press that waits for its tap or hold leaves an unbound one
 // that says what it waits for (ADR-0016): the decisions of the
 // production engine, Slot and script runtime over the shipped tabmate example.
-func TestM6ExampleTabmateDecisions(t *testing.T) {
+func TestScriptExampleTabmateDecisions(t *testing.T) {
 	var got []string
-	h := newM6ExampleSimTraced(t, "tabmate", func(d engine.Decision) {
+	h := newScriptExampleSimTraced(t, "tabmate", func(d engine.Decision) {
 		if d.Reason != engine.ReasonEnd {
 			got = append(got, d.Control.String()+" "+d.Gesture.String()+" "+d.Reason.String())
 		}

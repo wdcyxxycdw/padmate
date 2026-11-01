@@ -115,13 +115,13 @@ func expect(t *testing.T, e *recEffector, want ...string) {
 	e.calls = nil
 }
 
-const m3Both = "28672/28672" // 0x7000 on both motors
+const firstPlanBoth = "28672/28672" // 0x7000 on both motors
 
-// The pulse plan of M3 (the former TestFeedbackPulsePlan and
+// The first pulse plan (the former TestFeedbackPulsePlan and
 // TestFeedbackDefaults): the first pulse at once, the next ones Pulse+Gap
 // after each other, at the strength on both motors; the defaults are one
 // pulse of 70 ms at 0x7000.
-func TestSetFeedbackPulsesAsM3Did(t *testing.T) {
+func TestSetFeedbackFirstPulsePlan(t *testing.T) {
 	r := newEffectRig(t)
 	e := r.add(1, haptic.Caps{Rumble: true})
 	f := Feedback{Device: 1, Pulse: true, Pulses: 3, PulseMs: 70, GapMs: 100, Strength: 0x7000}
@@ -130,9 +130,9 @@ func TestSetFeedbackPulsesAsM3Did(t *testing.T) {
 	}
 	r.advance(600)
 	expect(t, e,
-		"@0 rumble "+m3Both+" 70ms",
-		"@170 rumble "+m3Both+" 70ms",
-		"@340 rumble "+m3Both+" 70ms",
+		"@0 rumble "+firstPlanBoth+" 70ms",
+		"@170 rumble "+firstPlanBoth+" 70ms",
+		"@340 rumble "+firstPlanBoth+" 70ms",
 		"@410 rumble stop",
 	)
 
@@ -140,7 +140,7 @@ func TestSetFeedbackPulsesAsM3Did(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.advance(r.now + 300)
-	expect(t, e, "@600 rumble "+m3Both+" 70ms", "@670 rumble stop")
+	expect(t, e, "@600 rumble "+firstPlanBoth+" 70ms", "@670 rumble stop")
 
 	// Not a pulse: no rumble.
 	if err := r.s.setFeedback(Feedback{Device: 1, Pulse: false, Pulses: 3}, at(r.now)); err != nil {
@@ -151,7 +151,7 @@ func TestSetFeedbackPulsesAsM3Did(t *testing.T) {
 }
 
 // A new pulse train replaces the one that runs, and stops its pulse first. A
-// request with a color only no longer cancels the train (the M3 shim did).
+// request with a color only no longer cancels the train (the first shim did).
 func TestSetFeedbackColorOnlyKeepsTheTrain(t *testing.T) {
 	r := newEffectRig(t)
 	e := r.add(1, haptic.Caps{Rumble: true, LED: true, RGBLED: true})
@@ -165,10 +165,10 @@ func TestSetFeedbackColorOnlyKeepsTheTrain(t *testing.T) {
 	}
 	r.advance(450)
 	expect(t, e,
-		"@0 rumble "+m3Both+" 70ms",
+		"@0 rumble "+firstPlanBoth+" 70ms",
 		"@100 led #112233",
-		"@170 rumble "+m3Both+" 70ms",
-		"@340 rumble "+m3Both+" 70ms",
+		"@170 rumble "+firstPlanBoth+" 70ms",
+		"@340 rumble "+firstPlanBoth+" 70ms",
 		"@410 rumble stop",
 	)
 
@@ -183,15 +183,15 @@ func TestSetFeedbackColorOnlyKeepsTheTrain(t *testing.T) {
 	r.advance(r.now + 500)
 	expect(t, e,
 		"@450 led #112233", // shown already, and written again: a request is (TestSetFeedbackWritesTheColorAgain)
-		"@450 rumble "+m3Both+" 70ms",
+		"@450 rumble "+firstPlanBoth+" 70ms",
 		"@550 led #445566",
-		"@550 rumble "+m3Both+" 210ms",
+		"@550 rumble "+firstPlanBoth+" 210ms",
 		"@760 rumble stop",
 	)
 }
 
 // Every SetFeedback with a color writes it, even when the LED shows it
-// already, as M3 did: SDL drops the repeat inside its window and sends it
+// already, as the first pulse plan did: SDL drops the repeat inside its window and sends it
 // after, which brings back a light that a receiver reset (a layer change, a
 // resume from pause, a reload and a refresh all end up here).
 func TestSetFeedbackWritesTheColorAgain(t *testing.T) {
@@ -299,7 +299,7 @@ func TestSetFeedbackTargets(t *testing.T) {
 
 // A gamepad whose LED write fails (the HOME light of the Nova in Switch mode,
 // if its receiver does not take the subcommand) still gives the pulses of a
-// layer, as it did in M3; only the LED is left alone for its cooldown.
+// layer, as it did at first; only the LED is left alone for its cooldown.
 func TestSetFeedbackLEDFailureKeepsThePulses(t *testing.T) {
 	r := newEffectRig(t)
 	e := r.add(1, haptic.Caps{Rumble: true, LED: true})
@@ -312,7 +312,7 @@ func TestSetFeedbackLEDFailureKeepsThePulses(t *testing.T) {
 	r.advance(300)
 	expect(t, e,
 		"@0 led #112233",
-		"@0 rumble "+m3Both+" 70ms", "@170 rumble "+m3Both+" 70ms", "@240 rumble stop",
+		"@0 rumble "+firstPlanBoth+" 70ms", "@170 rumble "+firstPlanBoth+" 70ms", "@240 rumble stop",
 	)
 	// The next layer: the color waits for the LED's cooldown, the pulses play.
 	layer.Color = "#445566"
@@ -321,7 +321,7 @@ func TestSetFeedbackLEDFailureKeepsThePulses(t *testing.T) {
 	}
 	r.advance(r.now + 300)
 	expect(t, e,
-		"@300 rumble "+m3Both+" 70ms", "@470 rumble "+m3Both+" 70ms", "@540 rumble stop",
+		"@300 rumble "+firstPlanBoth+" 70ms", "@470 rumble "+firstPlanBoth+" 70ms", "@540 rumble stop",
 	)
 	e.failLED = nil
 	r.advance(int(haptic.LEDCooldown/time.Millisecond) + 10)
@@ -367,7 +367,7 @@ func TestPlay(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.advance(r.now + 200)
-	expect(t, e, "@100 rumble "+m3Both+" 40ms", "@170 rumble "+m3Both+" 40ms", "@210 rumble stop")
+	expect(t, e, "@100 rumble "+firstPlanBoth+" 40ms", "@170 rumble "+firstPlanBoth+" 40ms", "@210 rumble stop")
 
 	// The new API wants a gamepad of its own, a class it serves, and a preset.
 	for name, bad := range map[string]Effect{
@@ -410,7 +410,7 @@ func TestPlayDoesNotCutAmbientPulses(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.advance(300)
-	expect(t, e, "@0 rumble "+m3Both+" 70ms", "@170 rumble "+m3Both+" 70ms", "@240 rumble stop")
+	expect(t, e, "@0 rumble "+firstPlanBoth+" 70ms", "@170 rumble "+firstPlanBoth+" 70ms", "@240 rumble stop")
 }
 
 // An alert plays its preset and flashes the lights side by side, each
@@ -430,8 +430,8 @@ func TestPlayAlert(t *testing.T) {
 	}
 	r.advance(1500)
 	expect(t, e,
-		"@5 rumble "+m3Both+" 40ms", "@5 led #FF0000",
-		"@75 rumble "+m3Both+" 40ms", "@115 rumble stop",
+		"@5 rumble "+firstPlanBoth+" 40ms", "@5 led #FF0000",
+		"@75 rumble "+firstPlanBoth+" 40ms", "@115 rumble stop",
 		"@255 led #102030", "@505 led #FF0000", "@755 led #102030", "@1005 led #FF0000", "@1255 led #102030",
 	)
 
@@ -452,11 +452,11 @@ func TestPlayAlert(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.advance(r.now + 30)
-	expect(t, e, "@3100 led #102030", "@3100 rumble "+m3Both+" 70ms")
+	expect(t, e, "@3100 led #102030", "@3100 rumble "+firstPlanBoth+" 70ms")
 	if err := r.s.play(Effect{Device: 1, Class: haptic.Alert, Preset: haptic.Pulse1}, at(r.now)); err != nil {
 		t.Fatal(err)
 	}
-	expect(t, e, "@3130 rumble stop", "@3130 rumble "+m3Both+" 70ms")
+	expect(t, e, "@3130 rumble stop", "@3130 rumble "+firstPlanBoth+" 70ms")
 
 	// Only an alert blinks, and a blink needs no preset but a plain effect does.
 	for name, bad := range map[string]Effect{
@@ -517,9 +517,9 @@ func TestIdentify(t *testing.T) {
 	}
 	r.advance(2000)
 	expect(t, full,
-		"@0 rumble "+m3Both+" 150ms", "@0 led #FFFFFF",
-		"@250 led #000000", "@300 rumble "+m3Both+" 150ms",
-		"@500 led #FFFFFF", "@600 rumble "+m3Both+" 150ms",
+		"@0 rumble "+firstPlanBoth+" 150ms", "@0 led #FFFFFF",
+		"@250 led #000000", "@300 rumble "+firstPlanBoth+" 150ms",
+		"@500 led #FFFFFF", "@600 rumble "+firstPlanBoth+" 150ms",
 		"@750 rumble stop", "@750 led #000000",
 		"@1000 led #FFFFFF",
 		"@1250 led #000000",
@@ -625,7 +625,7 @@ func TestEffectsStopOnEveryPath(t *testing.T) {
 
 func TestCapabilitiesHapticCaps(t *testing.T) {
 	// Not known (the properties could not be read): rumble and the LED are
-	// tried, as M3 did for every gamepad, but not what needs to be sure.
+	// tried, as the first pulse plan did for every gamepad, but not what needs to be sure.
 	if got, want := (Capabilities{}).HapticCaps(), (haptic.Caps{Rumble: true, LED: true}); got != want {
 		t.Errorf("unknown capabilities: %+v, want %+v", got, want)
 	}
@@ -720,7 +720,7 @@ func TestPlaySteps(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.advance(400)
-	expect(t, e, "@300 rumble "+m3Both+" 70ms", "@370 rumble stop")
+	expect(t, e, "@300 rumble "+firstPlanBoth+" 70ms", "@370 rumble stop")
 
 	for name, bad := range map[string]Effect{
 		"preset and steps": {Device: 1, Class: haptic.Script, Preset: haptic.Tick, Steps: []haptic.Step{{Low: 1, Ms: 5}}},

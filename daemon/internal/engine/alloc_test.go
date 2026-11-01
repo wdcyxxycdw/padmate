@@ -127,7 +127,7 @@ func TestNoAllocs(t *testing.T) {
 	}
 }
 
-// gestureAllocProfile has a binding for each M2 path of the engine:
+// gestureAllocProfile has a binding for each gesture path of the engine:
 // tap, double tap and hold with the balanced policy on west,
 // holdPreferred on north, timeOnly on dpad.up, typematic repeat on east, a
 // tap-mode sequence on leftshoulder, a latch on rightshoulder, and hold
@@ -198,7 +198,7 @@ func (d *gestureDriver) settle() {
 	d.wait(1)
 }
 
-// gestureScenario is one M2 path: run starts and ends with every control
+// gestureScenario is one gesture path: run starts and ends with every control
 // up and no deadline, and sends want each time.
 type gestureScenario struct {
 	name string
@@ -386,7 +386,7 @@ var gestureScenarios = []gestureScenario{
 	}, counter{downs: 1, ups: 1, taps: 1}},
 }
 
-// TestNoAllocsGestures checks the allocation contract on the M2 paths:
+// TestNoAllocsGestures checks the allocation contract on the gesture paths:
 // without a trace or a registry, Step and Apply do not allocate
 // for taps, holds, multi-taps committed by their window or at their count,
 // interrupts replayed from the buffer, holdPreferred, timeOnly, latches,

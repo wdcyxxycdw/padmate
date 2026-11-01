@@ -24,14 +24,14 @@ const (
 	westDoubleHold = `"west":{"doubleTap":{"type":"keys","keys":"F14"},"hold":{"type":"keys","keys":"E"}}`
 )
 
-// unmatchedTrace steps prog through steps (runM2: every deadline on the way
+// unmatchedTrace steps prog through steps (runDeadlines: every deadline on the way
 // runs at its time) and returns the decisions, as scriptBrief writes them,
 // and what the engine sent.
 func unmatchedTrace(t *testing.T, prog *engine.Program, opts engine.Options, steps string) (decisions []string, sent string) {
 	t.Helper()
 	r := &recorder{}
 	opts.Trace = func(d engine.Decision) { decisions = append(decisions, scriptBrief(d)) }
-	runM2(t, engine.New(prog, r, opts), r, steps)
+	runDeadlines(t, engine.New(prog, r, opts), r, steps)
 	return decisions, r.String()
 }
 
@@ -153,7 +153,7 @@ func TestUnmatchedMultiTapDecisionFields(t *testing.T) {
 	r := &recorder{}
 	var got []engine.Decision
 	e := engine.New(compile(t, westDoubleOnly, southTap), r, engine.Options{Trace: func(d engine.Decision) { got = append(got, d) }})
-	runM2(t, e, r, "+west@0 -west@10 wait@1000 +south@1100 -south@1110")
+	runDeadlines(t, e, r, "+west@0 -west@10 wait@1000 +south@1100 -south@1110")
 	if len(got) != 4 {
 		t.Fatalf("%d decisions: %v", len(got), got)
 	}
@@ -253,7 +253,7 @@ func TestUnmatchedMultiTapDecisionUnderScript(t *testing.T) {
 				Gestures: &gestureRegistry{entries: tc.entries, pass: tc.pass},
 				Trace:    func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 			})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if !slices.Equal(got, tc.want) {
 				t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(tc.want, "\n"))
 			}
@@ -273,7 +273,7 @@ func TestUnmatchedMultiTapDecisionUnderScript(t *testing.T) {
 			Gestures: &gestureRegistry{entries: []engine.GestureEntry{{ID: 1, Control: control.West, Scope: "base", Claim: true}}},
 			Trace:    func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 		})
-		runM2(t, e, r, "+dpad.down@0 +west@10 -west@20 wait@1000")
+		runDeadlines(t, e, r, "+dpad.down@0 +west@10 -west@20 wait@1000")
 		want := []string{
 			"@0s dpad.down down press dispatch level=base binding=/layers/base/dpad.down",
 			"@10ms west down press script",
@@ -298,7 +298,7 @@ func TestUnmatchedMultiTapDecisionUnderScript(t *testing.T) {
 			Gestures: &gestureRegistry{},
 			Trace:    func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 		})
-		runM2(t, e, r, "+dpad.down@0 +west@10 -west@20 wait@1000")
+		runDeadlines(t, e, r, "+dpad.down@0 +west@10 -west@20 wait@1000")
 		want := []string{
 			"@0s dpad.down down press dispatch level=base binding=/layers/base/dpad.down",
 			"@10ms west down press blocked level=base binding=/layers/base/west",
@@ -367,7 +367,7 @@ func TestUnmatchedMultiTapDecisionDoesNotChangeOutput(t *testing.T) {
 	prog := compile(t, westDoubleOnly, southTap)
 	_, traced := unmatchedTrace(t, prog, engine.Options{}, steps)
 	r := &recorder{}
-	runM2(t, engine.New(prog, r, engine.Options{}), r, steps)
+	runDeadlines(t, engine.New(prog, r, engine.Options{}), r, steps)
 	if traced != want || r.String() != want {
 		t.Errorf("output with a trace %q, without %q; want %q", traced, r.String(), want)
 	}

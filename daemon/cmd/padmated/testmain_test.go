@@ -17,7 +17,7 @@ import (
 // padmatectl release-all.
 var errRealEvent = errors.New("test: listening on the real release-all event")
 
-// harnessExit is the exit code of a start that failed in TestM10UIHarness,
+// harnessExit is the exit code of a start that failed in TestUIHarness,
 // which TestMain exits with after its checks, as padmated would.
 var harnessExit int
 

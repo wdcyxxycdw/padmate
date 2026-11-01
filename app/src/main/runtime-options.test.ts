@@ -95,10 +95,12 @@ describe("isolated development runtime", () => {
     });
     const launch = options.daemonLaunch(report);
     // A Go test executable refuses padmated's flags.
-    expect(launch.args).toEqual(["-test.run=^TestM10UIHarness$", "-test.v"]);
-    expect(launch.env.PADMATE_M10_STARTUP_REPORT).toBe(report);
+    expect(launch.args).toEqual(["-test.run=^TestUIHarness$", "-test.v"]);
+    expect(launch.env.PADMATE_UI_HARNESS_STARTUP_REPORT).toBe(report);
     expect(launch.env.PADMATE_PIPE).toBe(options.pipe);
-    expect(options.childEnv).not.toHaveProperty("PADMATE_M10_STARTUP_REPORT");
+    expect(options.childEnv).not.toHaveProperty(
+      "PADMATE_UI_HARNESS_STARTUP_REPORT",
+    );
   });
   it("passes explicit development endpoint and data consistently", () => {
     const options = resolveRuntimeOptions({
@@ -144,7 +146,7 @@ describe("isolated development runtime", () => {
       "--data-dir",
       "C:\\RealUser\\AppData\\Roaming\\padmate",
     ]);
-    expect(launch.env).not.toHaveProperty("PADMATE_M10_STARTUP_REPORT");
+    expect(launch.env).not.toHaveProperty("PADMATE_UI_HARNESS_STARTUP_REPORT");
     expect(options.userData).toBe(
       "C:\\RealUser\\AppData\\Roaming\\padmate\\ui",
     );

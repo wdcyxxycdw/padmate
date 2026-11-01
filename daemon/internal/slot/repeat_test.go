@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// TestRepeatStopsAfterRelease checks M2's acceptance that repeat stops as
+// TestRepeatStopsAfterRelease checks that repeat stops as
 // soon as its control is released: through a slot and its
 // Arbiter, no edge comes later than tapPressMs + 10 ms after the release,
 // whatever the phase of the release in the repeat period, and nothing is

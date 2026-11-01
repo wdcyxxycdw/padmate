@@ -260,7 +260,7 @@ describe("start failure text", () => {
   it("never points at the developer documentation, or names layers", () => {
     const all: StartFailure[] = [
       report("config", "invalid", {
-        message: 'unknown layer "tools"; only "base" until layers arrive in M3',
+        message: 'unknown layer "tools"',
       }),
       report("sdl", "missing"),
       report("instance", "refused"),

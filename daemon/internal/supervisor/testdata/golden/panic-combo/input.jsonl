@@ -1,4 +1,4 @@
-# The M1d acceptance case: holding the combo for 2 s
+# The panic combo: holding the combo for 2 s
 # lets go of every key and pauses the mapping; holding it again resumes.
 # Pad A's south holds Space; back and start are the function keys and send
 # nothing. South goes down, then back, then start, which completes

@@ -1089,7 +1089,7 @@ describe("settings page", () => {
     expect(hold.placeholder).toBe("250");
     expect(multi.value).toBe("300");
     expect(multi.placeholder).toBe("220");
-    // The hold time has no helper line under it (F14).
+    // The hold time has no helper line under it.
     const holdRow = hold.closest(".row") as HTMLElement;
     expect(holdRow.querySelector(".row-hint")).toBeNull();
     expect(hold.getAttribute("aria-describedby")).toBeNull();
@@ -2128,7 +2128,7 @@ describe("start at sign-in", () => {
     await waitFor(() =>
       expect((toggle() as HTMLButtonElement).disabled).toBe(true),
     );
-    // No helper line under it (F14).
+    // No helper line under it.
     expect(row().querySelector(".row-hint")).toBeNull();
     // A development daemon is dry-run, but it registers nothing to mark.
     expect(within(row()).queryByText("演练")).toBeNull();
@@ -2267,7 +2267,7 @@ describe("profiles in the shell", () => {
     expect(text).not.toContain("基于");
   });
 
-  it("keeps a taken or empty name out of the draft in 配置设置 (F2)", async () => {
+  it("keeps a taken or empty name out of the draft in 配置设置", async () => {
     setup({ profiles: library });
     const open = async () => {
       const menu = await openMenu();
@@ -3088,7 +3088,7 @@ describe("logs view", () => {
 });
 
 describe("conflicting software", () => {
-  it("is not shown in Settings or its logs view (F15)", async () => {
+  it("is not shown in Settings or its logs view", async () => {
     setup();
     await openPage("设置");
     expect(await screen.findByRole("combobox", { name: "语言" })).toBeTruthy();
@@ -3226,7 +3226,7 @@ describe("shortcut table", () => {
     expect(localStorage.getItem("padmate.labelDisplay")).toBe("keys");
   });
 
-  it("offers no automatic shortcuts (G5)", async () => {
+  it("offers no automatic shortcuts", async () => {
     setup({ profile: paint });
     const menu = await openMore();
     const items = within(menu)
@@ -3431,7 +3431,7 @@ describe("a repaired settings file", () => {
   });
 });
 
-describe("the tray exit waits for the last save (G9)", () => {
+describe("the tray exit waits for the last save", () => {
   it("answers Main's request to finish only after a slow save has completed", async () => {
     const app = setup();
     await screen.findByRole("group", { name: /Test controller/ });

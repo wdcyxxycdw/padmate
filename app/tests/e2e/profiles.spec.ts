@@ -774,7 +774,7 @@ test("导出 and 导入 back up one profile with its scripts; saved versions sta
       }, path);
 
     // An edit on the mapping page is saved at once; padmated still keeps
-    // the version it replaced, but no page lists or restores it (F9).
+    // the version it replaced, but no page lists or restores it.
     const label = p
       .getByTestId("mapping-editor")
       .getByRole("textbox", { name: "功能" });

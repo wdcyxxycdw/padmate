@@ -41,9 +41,7 @@
 // check catch a stale copy.
 //
 // The schema is closed: it accepts only what the daemon can execute and
-// rejects everything else, naming the milestone that adds it where one
-// does. Later milestones widen it. The action rules, added in M2's audit,
-// reject some profiles the schema accepted before, whose tap-class
+// rejects everything else. The action rules reject some profiles the schema accepted before, whose tap-class
 // gestures could hold a key that nothing released.
 //
 // The package is pure: no platform dependencies, no clock.

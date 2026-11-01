@@ -57,7 +57,7 @@ func TestFilteredV05DeclarationsMatchRuntimeArityTable(t *testing.T) {
 	}
 }
 
-func TestGestureSurfaceFollowsM5M6Boundary(t *testing.T) {
+func TestGestureSurfaceFollowsAPI06Boundary(t *testing.T) {
 	for _, tc := range []struct {
 		api      Version
 		advanced bool

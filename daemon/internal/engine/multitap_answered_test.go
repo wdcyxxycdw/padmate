@@ -189,7 +189,7 @@ func TestUnmatchedMultiTapDecisionNotAfterAScriptAnswer(t *testing.T) {
 				Gestures: &gestureRegistry{entries: tc.entries, pass: tc.pass},
 				Trace:    func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 			})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if !slices.Equal(got, tc.want) {
 				t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(tc.want, "\n"))
 			}
@@ -228,9 +228,9 @@ func TestUnmatchedMultiTapDroppedWindowIsCanceled(t *testing.T) {
 		var got []string
 		r := &recorder{}
 		e := engine.New(compile(t, westDoubleOnly), r, engine.Options{Trace: func(d engine.Decision) { got = append(got, scriptBrief(d)) }})
-		runM2(t, e, r, "+west@0 -west@10")
+		runDeadlines(t, e, r, "+west@0 -west@10")
 		e.Reload(timeAt(20), compile(t, westDoubleOnly))
-		runM2(t, e, r, "wait@1000")
+		runDeadlines(t, e, r, "wait@1000")
 		if want := []string{press, cancel}; !slices.Equal(got, want) {
 			t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 		}
@@ -242,7 +242,7 @@ func TestUnmatchedMultiTapDroppedWindowIsCanceled(t *testing.T) {
 			Gestures: &gestureRegistry{},
 			Trace:    func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 		})
-		runM2(t, e, r, "+west@0 -west@10 cancel@20 wait@1000")
+		runDeadlines(t, e, r, "+west@0 -west@10 cancel@20 wait@1000")
 		want := []string{"@0s west down press unbound binding=script-resolution", "@20ms west press cancel level=base binding=script-resolution"}
 		if !slices.Equal(got, want) {
 			t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
@@ -371,7 +371,7 @@ func TestConsumedReleaseAnswersAWaitingPress(t *testing.T) {
 				Button: button,
 				Trace:  func(d engine.Decision) { got = append(got, scriptBrief(d)) },
 			})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if !slices.Equal(got, tc.want) {
 				t.Errorf("decisions\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(tc.want, "\n"))
 			}
@@ -387,7 +387,7 @@ func TestConsumedReleaseAnswersAWaitingPress(t *testing.T) {
 			Button: consumeRelease,
 			Trace:  func(d engine.Decision) { got = append(got, d) },
 		})
-		runM2(t, e, r, "+west@0 -west@10 wait@1000")
+		runDeadlines(t, e, r, "+west@0 -west@10 wait@1000")
 		if len(got) != 2 {
 			t.Fatalf("%d decisions: %v", len(got), got)
 		}

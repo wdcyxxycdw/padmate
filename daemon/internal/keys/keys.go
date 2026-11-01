@@ -10,7 +10,7 @@
 //
 // The package is pure data and string processing with no platform
 // dependencies, so it builds and tests on every OS. Character keys are
-// resolved against the foreground keyboard layout at send time (M1b); the
+// resolved against the foreground keyboard layout at send time; the
 // US mapping here is what that resolver falls back to.
 package keys
 
@@ -89,7 +89,7 @@ const (
 	// MouseMove and MouseJump are not keys and have no KeySpec name: they tell
 	// the output layer that an event moves the pointer, relatively by a number of
 	// pixels (MouseMove) or to an absolute position (MouseJump), which the stick
-	// in mode "mouse" and the "mouse" action produce (ADR-0004, M15b). No Key has
+	// in mode "mouse" and the "mouse" action produce (ADR-0004). No Key has
 	// them, so no profile can spell them as a key.
 	MouseMove
 	MouseJump
@@ -205,7 +205,7 @@ func (k Key) String() string {
 
 // Char returns the character a character key types: lower case for letters
 // ('z' for "Z"), the character itself for digits and punctuation, and '+'
-// for "Plus". The layout resolver (M1b) must look keys up by this character,
+// for "Plus". The layout resolver must look keys up by this character,
 // not by String: the name of a letter key is upper case, and on Windows an
 // upper-case letter resolves to Shift plus the key, so "Ctrl+Z" would send
 // Ctrl+Shift+Z. It returns false for every key that is not KindChar.
@@ -228,7 +228,7 @@ func (k Key) Aliases() []string {
 
 // US returns how k is produced on the US English layout (00000409).
 //
-// For character keys this is only the baseline: the layout resolver (M1b)
+// For character keys this is only the baseline: the layout resolver
 // replaces it with the mapping of the foreground layout. A generic modifier
 // maps to its left key. A raw scan code maps to itself, with VK 0 because
 // its virtual key depends on the layout. A mouse key is no keyboard key and

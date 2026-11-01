@@ -351,7 +351,7 @@ func TestParseScriptConfig(t *testing.T) {
 		ds[0].Message != "script API 0.17 is the previous version; this release's is 0.21: change script.api to 0.21" {
 		t.Fatalf("API 0.17 profile = %#v, diagnostics %v", p, ds)
 	}
-	// 0.8 was supported until M17 and 0.16 until M21 and neither is now: the
+	// 0.8 and 0.16 were supported once and neither is now: the
 	// schema's enum has only the current and the previous API.
 	for _, doc := range []string{
 		`{"schemaVersion":0,"name":"script","layers":{"base":{}},"script":{"entry":"main.ts","api":"0.8"}}`,
@@ -472,10 +472,10 @@ func TestModelStrings(t *testing.T) {
 	}
 }
 
-// TestParseM15Analog checks the rings, knob and two-stage trigger settings:
+// TestParseAnalogRingsKnob checks the rings, knob and two-stage trigger settings:
 // the defaults, the values written, and the
 // controls they add.
-func TestParseM15Analog(t *testing.T) {
+func TestParseAnalogRingsKnob(t *testing.T) {
 	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"m15","layers":{"base":{}}}`))
 	if p == nil || len(ds) != 0 {
 		t.Fatalf("Parse defaults: %v", ds)
@@ -518,9 +518,9 @@ func TestParseM15Analog(t *testing.T) {
 	}
 }
 
-// TestParseM15AnalogErrors checks the rules of the second trigger stage and
+// TestParseAnalogRingsKnobErrors checks the rules of the second trigger stage and
 // the ranges of the new fields.
-func TestParseM15AnalogErrors(t *testing.T) {
+func TestParseAnalogRingsKnobErrors(t *testing.T) {
 	for _, tc := range []struct{ name, analog, pointer, message string }{
 		{"fullRelease above fullPress", `{"lt":{"fullPress":0.7,"fullRelease":0.75}}`, "/analog/lt/fullRelease", "fullRelease must not exceed fullPress"},
 		{"fullRelease above the default fullPress", `{"rt":{"fullRelease":0.95}}`, "/analog/rt/fullRelease", "fullRelease must not exceed fullPress"},
@@ -565,7 +565,7 @@ func TestParseStickLabel(t *testing.T) {
 }
 
 // TestParseTwoStageWorkaround checks that the profiles the editor wrote
-// before lt.full, a trigger with press 0.90 and release 0.80 (UI, M12), still
+// before lt.full, a trigger with press 0.90 and release 0.80 (UI), still
 // parse: the default fullPress is not held to be above press.
 func TestParseTwoStageWorkaround(t *testing.T) {
 	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"old","analog":{"lt":{"press":0.9,"release":0.8},"rt":{"press":0.95,"release":0.9}},"layers":{"base":{}}}`))

@@ -64,7 +64,7 @@ type ScriptEvent struct {
 	Held             bool
 }
 
-// ScriptRuntime is the slot-owned seam for the optional M5 runtime. The
+// ScriptRuntime is the slot-owned seam for the optional script runtime. The
 // implementation may build and reload asynchronously, but all methods are
 // called by the slot loop goroutine.
 type ScriptRuntime interface {
@@ -753,7 +753,7 @@ func (s *Slot) Owner(o engine.OwnerID) output.Owner {
 // takes more than a minute of virtual time. The pointer of a stick that is
 // still pushed in mode "mouse" is not such a deadline: like a key held at the
 // end, it goes on until the caller's ReleaseAll, so a trace may end with the
-// stick deflected. In M1a only tap ends and
+// stick deflected. Only tap ends and
 // retries of failed Sends make deadlines, so that fails only while Send
 // keeps failing; a repeat while a control is held will need an end
 // time for Replay. It does not ReleaseAll: the caller does. With no

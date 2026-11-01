@@ -23,7 +23,7 @@ const (
 	wmApp   = 0x8000 // WM_APP
 
 	// The session window's private messages. WM_APP+8 and up, and timer
-	// IDs 2 and up, are left to the foreground watcher (winfocus, M8),
+	// IDs 2 and up, are left to the foreground watcher (winfocus),
 	// which will share this window.
 	wmDesktopSwitch = wmApp + 1 // the WinEvent callback: the input desktop changed
 	wmStop          = wmApp + 2 // Close: end the message loop

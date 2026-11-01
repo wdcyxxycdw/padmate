@@ -26,7 +26,7 @@ type Combo struct {
 // DefaultCombo returns the combo of the gamepad info with the hold of
 // ComboHold: back+start, or for a single Joy-Con (joyconleft, joyconright)
 // SL+SR; the families standard and joycon of ARCHITECTURE §10.4, which
-// config.json may set later (M8). SDL reports SL and SR as
+// config.json may set later. SDL reports SL and SR as
 // leftshoulder and rightshoulder when the Joy-Con is held sideways, and as
 // paddles when vertical is set, as it is when the hint
 // SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS is in effect: paddle2 and paddle4

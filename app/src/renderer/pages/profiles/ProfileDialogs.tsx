@@ -122,7 +122,7 @@ type NewProfileState = Pick<
 
 /**
  * 新建配置: asks for a name and makes a blank profile of it (ADR-0013; a copy
- * is the card's 复制). Names are unique (F2). onCreated gets the new library
+ * is the card's 复制). Names are unique. onCreated gets the new library
  * ID after the list has been reloaded.
  */
 export function NewProfileDialog({
@@ -219,7 +219,7 @@ export function NewProfileDialog({
 
 /**
  * 重命名…: changes only the profile's display name, to one no other
- * profile has (F2). The fixed default is never renamed.
+ * profile has. The fixed default is never renamed.
  */
 export function RenameProfileDialog({
   entry,
@@ -884,7 +884,7 @@ export function BindConflictDialog({
 }
 
 /**
- * 点选窗口… (F4): blocks the page while padmate waits for a click
+ * 点选窗口…: blocks the page while padmate waits for a click
  * into another app's window. It closes itself once a window is picked or
  * the wait ends; 取消, × and Esc stop waiting.
  */

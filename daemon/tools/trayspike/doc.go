@@ -5,7 +5,7 @@
 // `task spike:tray` builds it with -H=windowsgui into bin/trayspike.exe, next to
 // the pinned SDL3.dll, so it has no console, like the release padmated.
 // Its main thread runs the fyne.io/systray message loop (a tray icon with
-// a Quit item), as padmated's will (M7); T-input is internal/input.Open
+// a Quit item), as padmated's will; T-input is internal/input.Open
 // on its own locked OS thread. The process has no window that can take
 // the focus, so every event it receives is a background event.
 //

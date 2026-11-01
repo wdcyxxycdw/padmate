@@ -14,7 +14,7 @@ import {
 } from "./analog-editor";
 
 // The cases of the daemon's TestRing* and TestKnob* (internal/engine,
-// m15_test.go), read the same way: an angle in degrees (0 up, clockwise) and
+// stick_rings_knob_test.go), read the same way: an angle in degrees (0 up, clockwise) and
 // a normalized depth. The editor mirrors readStick, directionsFor and
 // ringWant without their hysteresis and delays.
 describe("stick rings and knob, as the daemon reads them", () => {
@@ -90,7 +90,7 @@ describe("stick rings and knob, as the daemon reads them", () => {
   });
 });
 
-describe("the settings M15 adds", () => {
+describe("the ring, knob and second-stage settings", () => {
   it("checks the ring, knob and second-stage ranges", () => {
     expect(
       analogIssues({
@@ -125,7 +125,7 @@ describe("the settings M15 adds", () => {
     expect(
       analogIssues({ lt: { press: 0.5, fullPress: 0.5, fullRelease: 0.4 } }),
     ).toEqual([{ path: "analog.lt.fullPress", code: "fullPress" }]);
-    // The default fullPress is not held to it: the two-stage set-up of M12
+    // The default fullPress is not held to it: the older two-stage set-up
     // has a press of 0.9 and must keep loading.
     expect(analogIssues({ lt: { press: 0.9, release: 0.8 } })).toEqual([]);
     expect(analogIssues({ lt: { press: 0.95, release: 0.8 } })).toEqual([]);

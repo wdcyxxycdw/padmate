@@ -1,7 +1,7 @@
 // Keeping the controller scene's GPU side between visits to the mapping page
 // (H2).
 //
-// G3 stopped decoding the GLB on every visit, but each visit still made a new
+// The model cache stopped decoding the GLB on every visit, but each visit still made a new
 // WebGL renderer and uploaded the model's ~10 textures to the new context. That
 // upload is synchronous: measured in the Electron app (ANGLE/D3D11) it blocks
 // the main thread for 0.6-0.85 s (texSubImage2D), against 0.35-1.1 ms for

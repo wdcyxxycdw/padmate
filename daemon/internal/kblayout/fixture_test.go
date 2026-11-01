@@ -309,7 +309,7 @@ func TestJISKeys(t *testing.T) {
 }
 
 // TestFrenchLayout spot-checks the AZERTY fixture, which the layout
-// resolver tests (M1b) depend on.
+// resolver tests depend on.
 func TestFrenchLayout(t *testing.T) {
 	fr := loadFixture(t, klidFR)
 	for _, tc := range []struct {

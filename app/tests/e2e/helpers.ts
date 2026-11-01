@@ -84,10 +84,10 @@ export async function fixture(): Promise<Fixture> {
     // The scripts page records the files it opens instead of starting an
     // editor.
     PADMATE_UI_EDITOR_LOG: join(path, "editor.log"),
-    PADMATE_M10_HARNESS: "1",
-    PADMATE_M10_IPC_DIR: ipc,
-    PADMATE_M10_PIPE: `\\\\.\\pipe\\padmate-m10-e2e-${randomUUID()}`,
-    PADMATE_M10_DATA_DIR: data,
+    PADMATE_UI_HARNESS_HARNESS: "1",
+    PADMATE_UI_HARNESS_IPC_DIR: ipc,
+    PADMATE_UI_HARNESS_PIPE: `\\\\.\\pipe\\padmate-ui-e2e-${randomUUID()}`,
+    PADMATE_UI_HARNESS_DATA_DIR: data,
   });
   return { path, ipc, env, applications: [], mainPIDs: new Map() };
 }
@@ -251,7 +251,7 @@ export async function recordShortcut(
 
 export async function discoveryPID(f: Fixture): Promise<number> {
   const value = JSON.parse(await readFile(join(f.ipc, "daemon.json"), "utf8"));
-  expect(value.pipe).toBe(f.env.PADMATE_M10_PIPE);
+  expect(value.pipe).toBe(f.env.PADMATE_UI_HARNESS_PIPE);
   return value.pid as number;
 }
 

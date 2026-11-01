@@ -268,7 +268,7 @@ func TestAxes(t *testing.T) {
 	}
 }
 
-func TestM4VirtualControls(t *testing.T) {
+func TestVirtualControls(t *testing.T) {
 	for _, name := range []string{
 		"ls.up", "ls.down", "ls.left", "ls.right", "ls.upleft", "ls.upright", "ls.downleft", "ls.downright", "ls.active",
 		"rs.up", "rs.down", "rs.left", "rs.right", "rs.upleft", "rs.upright", "rs.downleft", "rs.downright", "rs.active",
@@ -293,10 +293,10 @@ func TestM4VirtualControls(t *testing.T) {
 	}
 }
 
-// TestM15Controls checks the controls of the rings, the virtual knob and the
+// TestRingKnobStageControls checks the controls of the rings, the virtual knob and the
 // second trigger stage: their numbers come after the
 // half axes, so no earlier value moved, and they are virtual with no aliases.
-func TestM15Controls(t *testing.T) {
+func TestRingKnobStageControls(t *testing.T) {
 	if control.RightTriggerNegative+1 != control.LSInner {
 		t.Errorf("LSInner = %d, want %d: the new controls follow the half axes", control.LSInner, control.RightTriggerNegative+1)
 	}

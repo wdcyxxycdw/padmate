@@ -1415,7 +1415,7 @@ describe("profile operations", () => {
     const dialog = await screen.findByRole("dialog", { name: "新建配置" });
     const name = within(dialog).getByRole("textbox", { name: "名称" });
     expect(document.activeElement).toBe(name);
-    // No placeholder in the name field (F1).
+    // No placeholder in the name field.
     expect(name.getAttribute("placeholder")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "新建" }));
     expect(within(dialog).getByText("名称不能为空")).toBeTruthy();
@@ -1592,7 +1592,7 @@ describe("profile operations", () => {
     expect(within(create).getByRole("textbox", { name: "名称" })).toBe(field);
   });
 
-  it("refuses a name another profile has (F2)", async () => {
+  it("refuses a name another profile has", async () => {
     const { api, user } = await setup({ config: baseConfig });
     await user.click(screen.getByRole("button", { name: "新建配置" }));
     const create = await screen.findByRole("dialog", { name: "新建配置" });

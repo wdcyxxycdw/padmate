@@ -123,7 +123,7 @@ describe("mapping drafts", () => {
   it("tells reserved system shortcuts, and nothing else", () => {
     for (const chord of ["Win+L", "Ctrl+Alt+Del", "Alt+Tab", "Ctrl+Shift+Esc"])
       expect(isReservedShortcut(chord), chord).toBe(true);
-    // A bare letter is not warned about (F6).
+    // A bare letter is not warned about.
     for (const chord of ["a", ";", "Ctrl+Z", "F13"])
       expect(isReservedShortcut(chord), chord).toBe(false);
   });

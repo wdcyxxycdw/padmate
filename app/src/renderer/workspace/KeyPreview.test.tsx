@@ -99,7 +99,7 @@ describe("key preview", () => {
     expect(line().querySelector("svg.key-preview-icon")).toBeNull();
   });
 
-  it("draws the control as the pad shows it and names it for screen readers (G6)", () => {
+  it("draws the control as the pad shows it and names it for screen readers", () => {
     const { store, line } = setup();
     press(store, "tap D");
     // Not "A → D": the A button is its icon, a green A (ADR-0013).

@@ -495,7 +495,7 @@ func TestPrinterHaptic(t *testing.T) {
 }
 
 // TestPrinterFeedback: what a slot's engine asks the controller to show
-// (M3) is a line "feedback slot=N mode=N [paused] [pulse] [color]"
+// is a line "feedback slot=N mode=N [paused] [pulse] [color]"
 // under the decision that caused it, indented like a send line, at the
 // clock's time. A line is printed when a pulse starts or what it shows
 // changes, so a refresh that changes nothing is silent; the JSON lines of

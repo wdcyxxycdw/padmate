@@ -7,15 +7,15 @@ import (
 )
 
 // SupportedAPIs lists the script API versions this daemon runs, the current
-// one first. The policy (M14) is that a release
+// one first. The policy is that a release
 // supports the current API and the previous 0.N, so a script written for the
 // last release still loads after an upgrade: when the API moves on this list
 // becomes {new, previous}, and a shim keeps the members of the previous
-// version that the new one changes. The API follows the release whose
-// milestone changes it (script.api 0.N with padmate v0.N.0), so the previous
-// version is the last one an API change shipped, not N-1: 0.16 (M16, the HUD
-// API) followed 0.8, as 0.9 to 0.15 kept the API, 0.17 (M17, the rumble and
-// LED members of pad) follows 0.16, and 0.21 (M21, key.sequence and key.type and
+// version that the new one changes. The API follows the release that
+// changes it (script.api 0.N with padmate v0.N.0), so the previous
+// version is the last one an API change shipped, not N-1: 0.16 (the HUD
+// API) followed 0.8, as 0.9 to 0.15 kept the API, 0.17 (the rumble and
+// LED members of pad) follows 0.16, and 0.21 (key.sequence and key.type and
 // the MediaKey names) follows 0.17, as 0.18 to 0.20 kept it. All of them only add
 // members, so the previous version needs no shim; the release that dropped 0.8
 // is the one that made 0.17 current, and the one that dropped 0.16 the one that
@@ -49,7 +49,7 @@ func supportedText() string {
 }
 
 // StableMembers are the values of the "padmate" module that form the stable
-// subset of the script API (M14): from this release on they keep their name,
+// subset of the script API: from this release on they keep their name,
 // shape and behavior in every supported API version, so a script that only
 // uses them keeps working across the current and the previous 0.N. The
 // promise covers the members' own properties and methods (for example

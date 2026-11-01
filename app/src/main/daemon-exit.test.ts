@@ -74,7 +74,7 @@ describe("the daemon's exit event", () => {
   });
 });
 
-describe("quitting after the saves (G9)", () => {
+describe("quitting after the saves", () => {
   afterEach(() => {
     vi.useRealTimers();
   });

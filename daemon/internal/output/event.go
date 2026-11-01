@@ -245,7 +245,7 @@ func (id KeyID) String() string {
 // error for the zero Key.
 //
 // Most keys are injected by scan code. Three groups go by VK, with their
-// scan code in wScan (the first two measured in M0b, Windows 11 x64):
+// scan code in wScan (the first two measured on Windows 11 x64):
 //   - Pause (E1 1D 45): VK_PAUSE with wScan 0x45, which hooks see as
 //     vk=0x13 sc=0x45, like the physical key.
 //   - Num0–Num9 and NumDecimal: an injected scan code 0x47–0x53 is

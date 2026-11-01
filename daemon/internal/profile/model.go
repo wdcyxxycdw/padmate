@@ -198,7 +198,7 @@ type Dpad struct {
 }
 
 // Trigger keeps the existing trigger-to-button hysteresis configurable while
-// retaining the M1 defaults.
+// retaining the first defaults.
 type Trigger struct {
 	Press   float64
 	Release float64
@@ -223,7 +223,7 @@ func ValidCurve(name string) bool {
 	return name == CurveLinear || name == CurveQuadratic || name == CurveCubic
 }
 
-// DefaultAnalog returns the M4 defaults from ARCHITECTURE §7.6.
+// DefaultAnalog returns the defaults from ARCHITECTURE §7.6.
 func DefaultAnalog() Analog {
 	stick := Stick{Mode: "standard", Deadzone: 0.15, Saturation: 0.95,
 		DirectionThreshold: 0.30, DiagonalWidth: 45, HysteresisDeg: 8,
@@ -239,7 +239,7 @@ func DefaultAnalog() Analog {
 }
 
 // Feedback configures the controller indications: the pulses and colors of
-// layer changes and pause (M3), the haptics of bindings, the knob
+// layer changes and pause, the haptics of bindings, the knob
 // ticks, the player lights and the low-battery alert.
 // It holds their times, strength and pause color only. The switches that
 // turn them off (rumble, led, pause and lowBattery) are global since
@@ -253,7 +253,7 @@ type Feedback struct {
 	PausedColor string
 }
 
-// DefaultFeedback returns the default M3 feedback settings.
+// DefaultFeedback returns the default feedback settings.
 func DefaultFeedback() Feedback {
 	return Feedback{
 		ShortMs: 70, LongMs: 210, GapMs: 100,
@@ -261,7 +261,7 @@ func DefaultFeedback() Feedback {
 	}
 }
 
-// Timing is the profile-wide default for M2 gesture and output timing.
+// Timing is the profile-wide default for gesture and output timing.
 type Timing struct {
 	HoldMs, MultiTapMs, TapPressMs, TapGapMs     int
 	HoldSet, MultiTapSet, TapPressSet, TapGapSet bool
@@ -343,7 +343,7 @@ func (b *Binding) Action(g Gesture) *Action {
 
 // Gesture is a way of using a control that a binding gives an action, its
 // property name in the file (ARCHITECTURE §7.2, §10.3). The zero value is
-// GestureNone. M1a has only press; M2 adds release, tap, hold and the
+// GestureNone. The others are press, release, tap, hold and the
 // multi-taps.
 //
 // The engine names gestures with this type too (engine.Gesture is an

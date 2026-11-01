@@ -31,7 +31,7 @@ const (
 	heldChildWait = 30 * time.Second
 )
 
-// TestHeldLogSurvivesKill is the M1d acceptance "kill the process while
+// TestHeldLogSurvivesKill is the acceptance "kill the process while
 // Ctrl is held, and the next start releases Ctrl exactly once", with a
 // fake Sender. A child process runs a Loop with a held-key log and a
 // Sender that writes each batch as one line to stdout; the test kills it,

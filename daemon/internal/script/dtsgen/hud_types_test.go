@@ -10,7 +10,7 @@ import (
 
 // The hud API and pad.label came with API 0.16 (ADR-0010): 0.8's
 // declarations have neither, 0.16's have both, and hud.radial is not declared
-// before the API of M19 (after 1.0, numbered 0.22 for now).
+// before the radial API (after 1.0, numbered 0.22 for now).
 func TestHUDAPIBoundary(t *testing.T) {
 	for _, tc := range []struct {
 		api  Version
@@ -26,7 +26,7 @@ func TestHUDAPIBoundary(t *testing.T) {
 			}
 		}
 		if strings.Contains(string(data), "radial(") {
-			t.Errorf("API %s declares hud.radial (M19, after 1.0)", tc.api)
+			t.Errorf("API %s declares hud.radial (after 1.0)", tc.api)
 		}
 	}
 }
@@ -56,7 +56,7 @@ on("south", "press", () => {
   hud.panel("brush", { title: "画笔" });
   // @ts-expect-error a control name
   pad.label("nothing");
-  // @ts-expect-error hud.radial is not in this API (M19, after 1.0)
+  // @ts-expect-error hud.radial is not in this API (after 1.0)
   hud.radial(null);
 });
 `

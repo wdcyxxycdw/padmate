@@ -50,8 +50,8 @@ export class FixtureClient {
       await readFile(join(f.ipc, "daemon.json"), "utf8"),
     );
     if (
-      discovery.pipe !== f.env.PADMATE_M10_PIPE ||
-      !discovery.pipe.startsWith("\\\\.\\pipe\\padmate-m10-e2e-")
+      discovery.pipe !== f.env.PADMATE_UI_HARNESS_PIPE ||
+      !discovery.pipe.startsWith("\\\\.\\pipe\\padmate-ui-e2e-")
     )
       throw new Error("Refusing a non-fixture IPC endpoint");
     const socket = createConnection(discovery.pipe);

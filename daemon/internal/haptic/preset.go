@@ -1,4 +1,4 @@
-// Package haptic is the effect channel of a controller (M17, ADR-0015): the
+// Package haptic is the effect channel of a controller (ADR-0015): the
 // presets of the haptics a controller can give, and the Mixer that decides,
 // per controller, which request owns the motors, the LED and the player
 // lights at each moment.
@@ -24,7 +24,7 @@ const (
 
 	// DefaultStrength, DefaultPulseMs and DefaultGapMs are what Train uses
 	// for a value that is not positive: the defaults of profile.Feedback
-	// (strength, shortMs, gapMs) that the pulse plan of M3 used.
+	// (strength, shortMs, gapMs) that the first pulse plan used.
 	DefaultStrength = 0x7000
 	DefaultPulseMs  = 70
 	DefaultGapMs    = 100
@@ -133,7 +133,7 @@ func (p Preset) Steps(master uint16, shortMs, gapMs int) []Step {
 // Train returns n pulses of pulseMs on both motors at strength, with gapMs of
 // silence between them and none after the last. A value that is not positive
 // is the default (1 pulse, DefaultPulseMs, DefaultGapMs, DefaultStrength), as
-// the pulse plan of M3 had it; n is at most MaxPulses and the times at most
+// the first pulse plan had it; n is at most MaxPulses and the times at most
 // MaxStepMs.
 func Train(n, pulseMs, gapMs int, strength uint16) []Step {
 	n = min(max(n, 1), MaxPulses)

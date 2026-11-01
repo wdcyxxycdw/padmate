@@ -229,7 +229,7 @@ declare module "padmate" {
   export const hud: {
     /** @since 0.16 */ toast(text: string, o?: { ms?: number }): void;
     /** @since 0.16 */ panel(id: string, content: { title?: string; rows: readonly [string, string][] } | null): void;
-    /** M19，1.0 之后；API 编号待定，先标 0.22 @since 0.22 */ radial(o: { items: readonly string[]; stick: StickName; selected: number | null } | null): void;
+    /** 1.0 之后；API 编号待定，先标 0.22 @since 0.22 */ radial(o: { items: readonly string[]; stick: StickName; selected: number | null } | null): void;
   };
   /** @since 0.8 */ export interface AppInfo { readonly exe: string; readonly path: string; readonly pid: number; readonly elevated: boolean }
   /** @since 0.8 */ export const app: { readonly current: AppInfo | null; is(exe: string): boolean; onChange(h: (a: AppInfo | null) => void): Disposable };
@@ -261,7 +261,7 @@ declare module "padmate/math" {
 }
 /** @since 0.22 */
 declare module "padmate/std" {
-  /** M19，1.0 之后；API 编号待定，先标 0.22 @since 0.22 */ export function radialMenu(o: { stick: import("padmate").StickName; items: readonly { label: string; run: () => void }[]; openWith: import("padmate").Control }): import("padmate").Disposable;
+  /** 1.0 之后；API 编号待定，先标 0.22 @since 0.22 */ export function radialMenu(o: { stick: import("padmate").StickName; items: readonly { label: string; run: () => void }[]; openWith: import("padmate").Control }): import("padmate").Disposable;
   /** @since 0.23 */ export function cycle<T>(key: string, items: readonly T[], dir?: 1 | -1): T;   // 状态存于 session
   /** @since 0.23 */ export function stickRepeat(o: { stick: import("padmate").StickName; up: import("padmate").KeySpec; down: import("padmate").KeySpec; minHz: number; maxHz: number }): import("padmate").Disposable;
   /** @since 0.23 */ export function modifierButton(c: import("padmate").Control, spec: import("padmate").KeySpec): import("padmate").Disposable;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "name": "M4 analog acceptance",
+  "name": "Analog examples",
   "analog": {
     "ls": {"mode": "standard", "deadzone": 0.15, "saturation": 0.95, "directionThreshold": 0.30, "hysteresisDeg": 8},
     "rs": {"mode": "fourWay", "deadzone": 0.15, "saturation": 0.95, "directionThreshold": 0.30, "directionDelayMs": 10},

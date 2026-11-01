@@ -78,12 +78,12 @@ func (p *Program) IgnoredFunctionKeyBindings() []string { return p.fnIgnored }
 type BindingInfo struct {
 	Layer   string
 	Binding *profile.Binding
-	// Gesture is the gesture AddedLatency is for: GesturePress in M1a, or
+	// Gesture is the gesture AddedLatency is for: GesturePress, or
 	// GestureNone for a binding without an action.
 	Gesture Gesture
 	// AddedLatency is how long the engine waits after the press of the
 	// binding's control before it acts on it. It is 0 for a
-	// control with only press gestures, which is every control in M1a.
+	// control with only press gestures.
 	AddedLatency time.Duration
 }
 
@@ -550,8 +550,8 @@ func (s gestureSet) has(g Gesture) bool        { return s&(1<<g) != 0 }
 
 // addedLatency is how long the engine waits after the press of a control
 // whose gestures are gs before it acts (ARCHITECTURE §7.2). A
-// control with only immediate gestures never waits, and every M1a gesture
-// is immediate. M2 adds the ones that wait here: tap together with hold
+// control with only immediate gestures never waits, and a press
+// is immediate. These wait here: tap together with hold
 // waits holdMs to tell them apart, and a multi-tap adds multiTapMs to wait
 // for the next tap. Until then another gesture is a bug: it panics.
 func addedLatency(gs gestureSet) time.Duration {

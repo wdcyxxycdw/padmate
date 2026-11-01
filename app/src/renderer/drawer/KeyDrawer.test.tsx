@@ -1338,7 +1338,7 @@ it("lets a read-only stick drawer open its directions", async () => {
   expect(up?.matches(":disabled")).toBe(false);
 });
 
-it("offers no 自动 and no example label in the key and stick drawers (F7)", async () => {
+it("offers no 自动 and no example label in the key and stick drawers", async () => {
   const profile: Profile = {
     ...paint,
     layers: {

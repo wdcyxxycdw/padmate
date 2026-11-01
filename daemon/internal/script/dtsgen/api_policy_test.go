@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The script API policy (M14): the host runs the
+// The script API policy: the host runs the
 // current script API and the previous 0.N, and script.api in profile.json
 // names one of them.
 
@@ -21,7 +21,7 @@ func TestSupportedAPIsFollowThePolicy(t *testing.T) {
 		t.Fatalf("HostAPI = %s, want the current API %s (first of SupportedAPIs)", HostAPI, SupportedAPIs[0])
 	}
 	// The previous 0.N is the last API version a release shipped, which need
-	// not be N-1: the API follows the milestone that changes it.
+	// not be N-1: the API follows the release that changes it.
 	for i := 1; i < len(SupportedAPIs); i++ {
 		prev, cur := SupportedAPIs[i-1], SupportedAPIs[i]
 		if cur.Major != prev.Major || cur.Minor >= prev.Minor {

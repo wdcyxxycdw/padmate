@@ -572,7 +572,7 @@ function keySets(profile: Profile): string[] {
 
 /**
  * Whether a trigger has the two stages the editor set up before lt.full
- * existed (M12): press 0.9 or more on the trigger and a shared half-axis
+ * existed: press 0.9 or more on the trigger and a shared half-axis
  * threshold of 0.5 with a binding on the half axis, and nothing on the
  * second stage yet. Such a file keeps working; the editor offers to move it
  * to lt.full.
@@ -605,7 +605,7 @@ export function legacyTwoStage(
 }
 
 /**
- * Moves the two stages of the M12 set-up to the native ones: the trigger's
+ * Moves the two stages of that older set-up to the native ones: the trigger's
  * binding becomes the second stage (`lt.full`), the half axis's binding
  * becomes the trigger's (`lt`), and press and release return to their
  * defaults. Press and release are shared by every key set, so the same move

@@ -501,7 +501,7 @@ func (l *Lifecycle) pollTeardowns() error {
 	return errors.Join(errs...)
 }
 
-// RecordInterruption applies the M5 restart policy. A permanent stop releases
+// RecordInterruption applies the restart policy. A permanent stop releases
 // keys immediately while leaving the lifecycle available for manual reload.
 func (l *Lifecycle) RecordInterruption(now clock.Time) RestartDecision {
 	d := l.restart.Record(now)

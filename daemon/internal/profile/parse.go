@@ -109,8 +109,8 @@ func (r *resolver) warnAt(off int, ptr, msg string) {
 	r.ds = append(r.ds, Diagnostic{Severity: SeverityWarning, Pointer: ptr, Offset: off, Message: msg})
 }
 
-// checks run on the resolved profile, after every name is resolved. Later
-// milestones add theirs here: layer references (M3) and so on. The rules of
+// checks run on the resolved profile, after every name is resolved, such as
+// the layer references. The rules of
 // one action, such as the mode of a key sequence, are in action.
 var checks = []func(r *resolver, p *Profile){
 	checkNoAction,

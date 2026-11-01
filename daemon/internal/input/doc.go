@@ -43,7 +43,7 @@
 // DeviceID. T-input's log records go through a queue to a goroutine of
 // the Source, so that a log that blocks never holds up T-input.
 //
-// T-input also drives the effects of the gamepads (M17, ADR-0015): rumble,
+// T-input also drives the effects of the gamepads (ADR-0015): rumble,
 // the LED and the player lights. A haptic.Mixer, which T-input advances in
 // each turn of its loop, decides which request owns them; SetFeedback (the
 // layer's color and pulses), Play (a preset) and Identify (the cues that tell

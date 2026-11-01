@@ -417,7 +417,7 @@ const mapvkVSCToVKEx = 3 // MAPVK_VSC_TO_VK_EX
 
 // ForegroundLayout returns the keyboard layout of the foreground thread.
 // SendInput derives the VK of a scan code event from it, not from the
-// layout of the injecting thread (measured in M0b: with the injecting
+// layout of the injecting thread (measured on Windows 11: with the injecting
 // thread switched to French, sc 0x10 still arrived as the foreground's VK
 // 'Q').
 func ForegroundLayout() windows.Handle {

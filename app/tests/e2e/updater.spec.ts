@@ -38,7 +38,7 @@ const run = promisify(execFile);
 // updater rightly refuses a stand-in that nobody signed.
 //
 // It works for any version of the build, a release or a test build such as
-// 0.0.0-m28b.1: what depends on the version is derived from it. Every build
+// 0.0.0-test.1: what depends on the version is derived from it. Every build
 // looks once, at latest.yml (ADR-0018: the download site holds releases only,
 // and one channel file), so the feed is asked for latest.yml once (looks()),
 // and the installer of an update "installed long ago" is named 0.0.0-0, the

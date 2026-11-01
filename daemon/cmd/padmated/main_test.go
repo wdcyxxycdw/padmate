@@ -31,7 +31,7 @@ import (
 var update = flag.Bool("update", false, "rewrite testdata/*.golden from the current output")
 
 const (
-	// basicProfile and basicTrace are the M1a acceptance example.
+	// basicProfile and basicTrace are the acceptance example.
 	basicProfile = "../../../examples/profiles/basic.json"
 	basicTrace   = "../../../examples/traces/basic.jsonl"
 )
@@ -115,7 +115,7 @@ func TestGoldenFeedbackSwitchesOfConfig(t *testing.T) {
 	}
 }
 
-// TestAcceptance is the M1a acceptance command: the example trace with
+// TestAcceptance is the acceptance command: the example trace with
 // the example profile prints the expected actions and ends with the
 // release of the pan still held.
 func TestAcceptance(t *testing.T) {

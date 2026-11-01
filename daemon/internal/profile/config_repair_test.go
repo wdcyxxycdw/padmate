@@ -53,7 +53,7 @@ func TestRepairConfigKeepsValidMembers(t *testing.T) {
 		name, data, want string
 		members          []string
 	}{{
-		// The owner's case (F17): an emergency combo of one button. Its
+		// The owner's case: an emergency combo of one button. Its
 		// family's override goes, so the built-in combo applies again.
 		name:    "panic override",
 		data:    `{"schemaVersion":0,"enabled":false,"safety":{"panic":{"standard":{"buttons":["back"],"holdMs":2000},"joyconLeft":{"buttons":["back","start"],"holdMs":3000}}},` + rules + `}`,

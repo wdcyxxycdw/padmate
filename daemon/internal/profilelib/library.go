@@ -113,7 +113,7 @@ type Document struct {
 	ParentDiagnostics profile.Diagnostics
 }
 
-// Revision returns the content revision used for optimistic writes in M9.
+// Revision returns the content revision used for optimistic writes.
 func Revision(data []byte) string { return fmt.Sprintf("%x", sha256.Sum256(data)) }
 
 // Read returns original profile bytes, with a size limit and confined paths.

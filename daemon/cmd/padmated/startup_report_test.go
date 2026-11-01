@@ -63,7 +63,7 @@ func runReport(t *testing.T, args ...string) (code int, stderr string, rep start
 }
 
 // TestStartupReportConfig: a config.json with errors no longer stops the
-// start (the owner's G1 after F17): padmated repairs it. One it
+// start (the owner's decision): padmated repairs it. One it
 // cannot read still does, and the report names the file.
 func TestStartupReportConfig(t *testing.T) {
 	dir := t.TempDir()

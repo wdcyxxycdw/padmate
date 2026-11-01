@@ -16,7 +16,7 @@ import (
 // reports, and drives it from its loop with the wall clock. The three ways
 // to ask for an effect all end there:
 //
-//   - SetFeedback, the ambient state of the layer and the pause (M3);
+//   - SetFeedback, the ambient state of the layer and the pause;
 //   - Play, a preset of the Event, Script or Alert class;
 //   - Identify, the cues that tell a user which controller is which.
 //
@@ -171,7 +171,7 @@ func (e gamepadEffector) PlayerIndexTaken(index int) bool {
 
 // HapticCaps returns what the Mixer may do with a gamepad that reports c.
 // When the capabilities are not known (a gamepad whose properties could not
-// be read), it tries rumble and the LED, as M3 did for every gamepad, but
+// be read), it tries rumble and the LED, as the first pulse plan did for every gamepad, but
 // does not release a color or touch the player lights, which need to be
 // sure.
 func (c Capabilities) HapticCaps() haptic.Caps {
@@ -286,7 +286,7 @@ func (s *Source) openDevice(id DeviceID) *device {
 // the indication ignores it; a call that fails is returned, and puts its group
 // of effects (the motors, the LED, the player lights) of that gamepad into the
 // Mixer's cooldown, the others going on. A color is written even when the LED
-// shows it already, as M3 did. Unknown devices are ignored.
+// shows it already, as the first pulse plan did. Unknown devices are ignored.
 func (s *Source) SetFeedback(f Feedback) error {
 	return s.do(func() error { return s.setFeedback(f, time.Now()) })
 }

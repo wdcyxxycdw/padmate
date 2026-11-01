@@ -3,7 +3,7 @@
 // forwards the engine's key commands with a full output.Owner, and runs
 // the engine's and the Arbiter's deadlines.
 //
-// # Scope in M1b
+// # Scope
 //
 // A Slot is not safe for concurrent use and has no channels or timers of
 // its own: its owner calls Handle for each event and Advance when

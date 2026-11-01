@@ -18,28 +18,28 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 )
 
-// TestM10UIHarness is only present in the test executable. It cannot enable
+// TestUIHarness is only present in the test executable. It cannot enable
 // injection and requires explicit isolated filesystem and pipe locations.
 // It starts live mode as padmated does, through runContext, on the
 // harness's pipe and discovery folder, with an instance lease of that pipe
 // of its own: a second harness of the same E2E fixture forwards to the
 // first, as a second padmated would.
 //
-// PADMATE_M10_STARTUP_REPORT, an absolute path, is the --startup-report of
+// PADMATE_UI_HARNESS_STARTUP_REPORT, an absolute path, is the --startup-report of
 // the start: the UI passes it in the environment, as a test
 // executable takes no flags of padmated's. When the start fails, the
 // executable exits as padmated does, 2 or exitStartup, after the report is
 // written; an E2E makes it fail with a config.json in
-// PADMATE_M10_DATA_DIR that cannot be read, a folder: one with errors is
+// PADMATE_UI_HARNESS_DATA_DIR that cannot be read, a folder: one with errors is
 // repaired.
-func TestM10UIHarness(t *testing.T) {
-	if os.Getenv("PADMATE_M10_HARNESS") != "1" {
+func TestUIHarness(t *testing.T) {
+	if os.Getenv("PADMATE_UI_HARNESS_HARNESS") != "1" {
 		t.Skip("Electron E2E subprocess only")
 	}
-	dir, pipe, data := os.Getenv("PADMATE_M10_IPC_DIR"), os.Getenv("PADMATE_M10_PIPE"), os.Getenv("PADMATE_M10_DATA_DIR")
-	report := os.Getenv("PADMATE_M10_STARTUP_REPORT")
+	dir, pipe, data := os.Getenv("PADMATE_UI_HARNESS_IPC_DIR"), os.Getenv("PADMATE_UI_HARNESS_PIPE"), os.Getenv("PADMATE_UI_HARNESS_DATA_DIR")
+	report := os.Getenv("PADMATE_UI_HARNESS_STARTUP_REPORT")
 	if !filepath.IsAbs(dir) || !filepath.IsAbs(data) || pipe == "" || report != "" && !filepath.IsAbs(report) {
-		t.Fatal("private M10 harness locations required")
+		t.Fatal("private UI harness locations required")
 	}
 	sum := sha256.Sum256([]byte(strings.ToLower(pipe)))
 	savedPipe, savedDir, savedInstance := ipcPipe, ipcDir, instanceName
@@ -60,14 +60,14 @@ func TestM10UIHarness(t *testing.T) {
 	}
 }
 
-// TestM10UIHarnessStartupReport runs the harness as the E2E does, in a
+// TestUIHarnessStartupReport runs the harness as the E2E does, in a
 // process of its own: with a config.json it cannot read (a
 // folder) it exits exitStartup and writes the report; with a config.json
 // that has errors, which it repairs, it removes the stale report
 // and serves the E2E's pipe until it is killed, as the E2E's cleanup
 // does.
-func TestM10UIHarnessStartupReport(t *testing.T) {
-	if os.Getenv("PADMATE_M10_HARNESS") == "1" {
+func TestUIHarnessStartupReport(t *testing.T) {
+	if os.Getenv("PADMATE_UI_HARNESS_HARNESS") == "1" {
 		t.Skip("the harness itself")
 	}
 	root := t.TempDir()
@@ -84,11 +84,11 @@ func TestM10UIHarnessStartupReport(t *testing.T) {
 	}
 	pipe := `\\.\pipe\padmate-m10-harness-test-` + rand.Text()
 	harness := func(out *syncBuffer) *exec.Cmd {
-		cmd := exec.Command(os.Args[0], "-test.run=^TestM10UIHarness$", "-test.v")
+		cmd := exec.Command(os.Args[0], "-test.run=^TestUIHarness$", "-test.v")
 		// The harness's own TestMain folder goes into temp, which the test
 		// removes, also after the kill.
-		cmd.Env = append(os.Environ(), "PADMATE_M10_HARNESS=1", "PADMATE_M10_IPC_DIR="+run, "PADMATE_M10_PIPE="+pipe,
-			"PADMATE_M10_DATA_DIR="+data, "PADMATE_M10_STARTUP_REPORT="+report, "TMP="+temp, "TEMP="+temp)
+		cmd.Env = append(os.Environ(), "PADMATE_UI_HARNESS_HARNESS=1", "PADMATE_UI_HARNESS_IPC_DIR="+run, "PADMATE_UI_HARNESS_PIPE="+pipe,
+			"PADMATE_UI_HARNESS_DATA_DIR="+data, "PADMATE_UI_HARNESS_STARTUP_REPORT="+report, "TMP="+temp, "TEMP="+temp)
 		cmd.Stdout, cmd.Stderr = out, out
 		return cmd
 	}

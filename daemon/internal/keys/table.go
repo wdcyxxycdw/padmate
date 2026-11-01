@@ -216,7 +216,7 @@ var charRows = [...]charRow{
 }
 
 // plusRow is the "+" character. "+" separates chord tokens, so it is
-// spelled Plus. On the US layout it is Shift+=; the layout resolver (M1b)
+// spelled Plus. On the US layout it is Shift+=; the layout resolver
 // replaces that with whatever types "+" on the foreground layout.
 var plusRow = row{"Plus", 0x0D, 0xBB, nil}
 

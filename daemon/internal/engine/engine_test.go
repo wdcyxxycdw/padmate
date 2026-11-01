@@ -325,7 +325,7 @@ func TestStep(t *testing.T) {
 			want:     "@10 down decl/1 Space, @20 up decl/1 Space",
 		},
 		{
-			name:     "Apply does nothing in M1a",
+			name:     "Apply does nothing",
 			bindings: []string{eastHold, southTap},
 			input:    "+east@0 apply@0 +south@10 apply@20 apply@1000 -south@1500 -east@2000",
 			want:     "@0 down decl/1 Space, @10 tap decl/2 Ctrl+Z 20ms, @2000 up decl/1 Space",

@@ -28,47 +28,47 @@ is never written to stdout. Only the UI's fixed method allowlist is accepted.`
 func bridgeMethod(method string) bool {
 	return slices.Contains([]string{
 		"status.get", "devices.list", "engine.pause", "engine.resume", "engine.releaseAll",
-		// M17 identify a controller: the daemon lets the controller buzz
+		// Identify a controller: the daemon lets the controller buzz
 		// and flash; the selector is the DeviceKey of a row of the settings page.
 		"devices.identify",
-		// M25 the mapping wizard (ADR-0012): the elements of a
+		// The mapping wizard (ADR-0012): the elements of a
 		// controller, and a mapping for it that the daemon saves in config.json and
 		// gives to SDL.
 		"devices.rawInfo", "devices.setMapping", "devices.resetMapping",
-		// M22 the latency statistics of the diagnostics page (ADR-0016).
+		// The latency statistics of the diagnostics page (ADR-0016).
 		"latency.get", "latency.reset",
 		"config.get", "config.put",
-		// M13 a repaired config.json: the UI has shown the dialog.
+		// A repaired config.json: the UI has shown the dialog.
 		"config.repairSeen",
 		"profiles.list", "profiles.get", "profiles.put", "profiles.validate", "profiles.explain",
-		// M21 profile inheritance: a profile with its parents merged in.
+		// Profile inheritance: a profile with its parents merged in.
 		"profiles.resolve",
 		// Library management and window capture.
 		"profiles.activate", "profiles.delete", "profiles.copy", "apps.recent",
-		// M13 saved versions of profile.json.
+		// Saved versions of profile.json.
 		"profiles.history", "profiles.restore",
-		// M13 back up one profile as an archive and add one: the
+		// Back up one profile as an archive and add one: the
 		// daemon reads and writes the files, Electron main moves the bytes.
 		"profiles.export", "profiles.import",
-		// M25 import of an AntiMicroX profile (ADR-0012): Electron main
+		// Import of an AntiMicroX profile (ADR-0012): Electron main
 		// reads the file and passes its bytes; the daemon reads and checks it.
 		"profiles.importAmgp",
-		// M13 scripts page: new and import script, open the profile folder.
+		// Scripts page: new and import script, open the profile folder.
 		// profiles.folder returns a path for Electron main only.
 		"script.init", "script.import", "profiles.folder",
 		"script.status", "script.reload", "script.logs", "script.describe", "script.registrations",
-		// M13 macros: the scripts page, its menus and the editor.
+		// Macros: the scripts page, its menus and the editor.
 		// macros.path and script.path return a path for Electron main only.
 		"macros.list", "macros.create", "macros.import", "macros.rename", "macros.delete", "macros.path",
 		"script.path", "script.detach",
 		"subscribe", "ui.setOutput",
-		// M13 tray exit: the UI has saved its last edit and quits.
+		// Tray exit: the UI has saved its last edit and quits.
 		"ui.exitReady",
-		// M13 settings: recording a new emergency combo pauses the
+		// Settings: recording a new emergency combo pauses the
 		// mapping while input events still flow; the bridge connection owns
 		// the capture, which ends when it closes.
 		"capture.start", "capture.stop",
-		// M13 start at sign-in (ADR-0001): the daemon writes its own
+		// Start at sign-in (ADR-0001): the daemon writes its own
 		// command; neither method takes an executable or arguments.
 		"startup.get", "startup.set",
 	}, method)

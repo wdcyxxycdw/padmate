@@ -79,7 +79,7 @@ type Source uint8
 const (
 	// SourceDecl is a declarative binding.
 	SourceDecl Source = iota + 1
-	// SourceScript is a script (M5).
+	// SourceScript is a script.
 	SourceScript
 )
 

@@ -4,7 +4,7 @@ package output
 // 32 bits hold Tag and the low 32 bits a nonce chosen by the injector (the
 // process id for padmatectl). A low-level hook can then tell padmate's own
 // events apart from the physical keyboard and from other injectors, and
-// tell padmate processes apart. Experiment (M0b, Windows 11 x64): a keyboard
+// tell padmate processes apart. Experiment (Windows 11 x64): a keyboard
 // hook receives all 64 bits of dwExtraInfo unchanged. A mouse hook does not
 // (measured 2026-10-19, Windows 11 x64): MSLLHOOKSTRUCT.dwExtraInfo of an
 // injected mouse event keeps only the low 32 bits, the nonce, so IsPadmate is

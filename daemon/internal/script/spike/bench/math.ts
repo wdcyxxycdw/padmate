@@ -1,5 +1,5 @@
 // Stand-ins for padmate/math and StickState.direction,
-// which the M0d stub does not have. Angles: 0° is up, clockwise.
+// which the spike stub does not have. Angles: 0° is up, clockwise.
 
 export function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;

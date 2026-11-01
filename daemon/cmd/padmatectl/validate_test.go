@@ -24,7 +24,7 @@ import (
 // and review the diff.
 var update = flag.Bool("update", false, "rewrite testdata/validate.golden from the current output")
 
-// profilesDir holds the M1a acceptance fixtures: a drawing profile without
+// profilesDir holds the acceptance fixtures: a drawing profile without
 // mistakes and three with one mistake each.
 const profilesDir = "../../testdata/profiles/"
 

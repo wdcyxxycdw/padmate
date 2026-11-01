@@ -116,7 +116,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
     report: string,
   ): { args: string[]; env: NodeJS.ProcessEnv } => ({
     args: harness
-      ? ["-test.run=^TestM10UIHarness$", "-test.v"]
+      ? ["-test.run=^TestUIHarness$", "-test.v"]
       : [
           "--startup-report",
           report,
@@ -126,7 +126,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
           dataDir,
         ],
     env: harness
-      ? { ...childEnv, PADMATE_M10_STARTUP_REPORT: report }
+      ? { ...childEnv, PADMATE_UI_HARNESS_STARTUP_REPORT: report }
       : childEnv,
   });
   // E2E runs record the files the scripts page opens instead of starting

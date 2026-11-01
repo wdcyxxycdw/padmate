@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "name": "M2 gesture acceptance",
+  "name": "Gesture examples",
   "timing": {
     "holdMs": 250,
     "multiTapMs": 220,

@@ -1,4 +1,4 @@
-// The words for the controls M15 adds to a stick or trigger: the rings, the
+// The words for the extra controls of a stick or trigger: the rings, the
 // knob ticks and the second stage of a trigger. The
 // lists, the key preview, the controller chips and the diagnostics name them
 // here; the drawers use the same words, so change them together.

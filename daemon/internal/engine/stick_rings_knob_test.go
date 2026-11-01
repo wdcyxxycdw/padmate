@@ -1073,7 +1073,7 @@ func TestTriggerSecondStageDecisions(t *testing.T) {
 	}
 }
 
-func TestCompileFillsM15Defaults(t *testing.T) {
+func TestCompileFillsRingKnobDefaults(t *testing.T) {
 	p := &profile.Profile{Layers: []*profile.Layer{{Name: "base"}}}
 	prog, err := engine.Compile(p)
 	if err != nil {
@@ -1101,10 +1101,10 @@ func TestCompileFillsM15Defaults(t *testing.T) {
 	}
 }
 
-// TestNoAllocsM15 checks the allocation contract for the paths the rings, the
+// TestNoAllocsRingsKnob checks the allocation contract for the paths the rings, the
 // knob and the second stage add: Step, Apply, NextDeadline and the calls that
 // clear them never allocate.
-func TestNoAllocsM15(t *testing.T) {
+func TestNoAllocsRingsKnob(t *testing.T) {
 	if raceEnabled {
 		t.Skip("the race detector may allocate; the other CI jobs run this")
 	}

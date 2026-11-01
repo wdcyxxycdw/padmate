@@ -231,7 +231,7 @@ test("axe finds nothing in the real window, state by state", async ({}, info) =>
       .click();
     await check("dialog: 调校");
     await closeDialog(page);
-    // The mapping wizard (M25) opens for a controller SDL knows, as a remap.
+    // The mapping wizard opens for a controller SDL knows, as a remap.
     // The fake input has no raw events, so it shows what it does then.
     await page
       .getByRole("button", { name: /^更多操作 / })

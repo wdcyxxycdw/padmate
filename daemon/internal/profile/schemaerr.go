@@ -278,7 +278,7 @@ func (f *flattener) missing(n *node, ptr, where, name string) {
 	}
 }
 
-// Hints for names that later milestones add, so a profile written for a
+// Hints for names that later versions add, so a profile written for a
 // newer padmate says what is missing rather than only "unknown".
 var (
 	laterProperties = map[string]map[string]string{
@@ -313,7 +313,7 @@ func unknownProperty(where, p string) string {
 		if s := suggest(p, []string{"base"}); len(s) > 0 {
 			return "unknown layer " + quote(p) + didYouMean(s)
 		}
-		return "unknown layer " + quote(p) + `; only "base" until layers arrive in M3`
+		return "unknown layer " + quote(p)
 	case schemaLayer:
 		return "unknown control " + quote(p) + controlHint(p, schemaLayer)
 	case schemaFunctionKeys:
@@ -389,9 +389,9 @@ func functionSetProperty(p string) string {
 func controlHint(p, where string) string {
 	switch {
 	case strings.HasPrefix(p, "ls.") || strings.HasPrefix(p, "rs."):
-		return "; stick directions arrive in M4"
+		return ""
 	case slices.Contains([]string{"dpad.upleft", "dpad.upright", "dpad.downleft", "dpad.downright"}, p):
-		return "; d-pad diagonals arrive in M4"
+		return ""
 	}
 	// A printed name is not a typo: "l1" is the left shoulder, not "lt",
 	// the nearest name.
@@ -425,9 +425,6 @@ func typeMessage(where string, k *kind.Type, v any) string {
 		return msg
 	}
 	msg := "expected " + orList(want) + ", got " + got
-	if where == schemaKeys && k.Got == "array" {
-		msg += "; key sequences arrive in M2"
-	}
 	return msg
 }
 

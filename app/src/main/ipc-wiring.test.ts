@@ -72,7 +72,7 @@ describe("Electron IPC wiring", () => {
     );
   });
 
-  it("saves before the UI quits for the tray, and tells the daemon (G9)", () => {
+  it("saves before the UI quits for the tray, and tells the daemon", () => {
     const main = source("./index.ts");
     // The exit waits for the renderer through the close guard, answers the
     // daemon with ui.exitReady and quits only after that.

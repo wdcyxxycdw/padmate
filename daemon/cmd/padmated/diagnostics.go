@@ -210,7 +210,7 @@ func elevatedNotice(exe string) tray.Notification {
 
 // missingControls names the controls that prog binds and the gamepad of
 // v lacks, as the mapping page names them for its family (padlabel, the
-// owner's G11): LT, 背键 1, not lt, paddle1. A stick's directions and
+// owner's decision): LT, 背键 1, not lt, paddle1. A stick's directions and
 // half axes are the stick, a trigger's half axes the trigger; each name
 // comes once, in the order of the controls.
 func missingControls(prog *engine.Program, v slot.View) []string {

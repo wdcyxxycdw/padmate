@@ -653,7 +653,7 @@ func TestW3CAliases(t *testing.T) {
 
 func TestChar(t *testing.T) {
 	// Every character key types its own character, lower case for letters,
-	// in table order. The layout resolver (M1b) looks keys up by this rune.
+	// in table order. The layout resolver looks keys up by this rune.
 	const want = "abcdefghijklmnopqrstuvwxyz0123456789-=[];'`\\,./+"
 	var got []rune
 	for _, k := range keys.Table() {

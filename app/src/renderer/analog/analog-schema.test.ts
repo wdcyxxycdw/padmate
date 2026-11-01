@@ -25,7 +25,7 @@ it.skipIf(!validator)(
     try {
       const empty = (): Profile => ({
         schemaVersion: 1,
-        name: "M12 generated",
+        name: "two-stage generated",
         layers: { base: {} },
       });
       const cases: Profile[] = [];
@@ -92,7 +92,7 @@ it.skipIf(!validator)(
       cases.push(triggers);
       // The settings of the advanced editor: a knob with its ticks and
       // rings, the second stage, a rate that follows the push depth, and the
-      // two-stage set-up of M12 moved to lt.full.
+      // older two-stage set-up moved to lt.full.
       const key = (keys: string, repeat?: object) => ({
         press: {
           type: "keys" as const,

@@ -23,11 +23,11 @@ const (
 // MaxCallStackSize is the call depth limit of a script call.
 const MaxCallStackSize = 2000
 
-// Host is the goja spike's stand-in for the M5 script host: the least
-// that runs the benchmark script. It is not the M5 host and must not grow
+// Host is the goja spike's stand-in for the script host: the least
+// that runs the benchmark script. It is not the real host and must not grow
 // into it; see the package doc.
 //
-// It installs the global the M0d padmate stub reads (compile.HostGlobal)
+// It installs the global the spike's padmate stub reads (compile.HostGlobal)
 // with on, key.tap and sleep. on records a Registration; key.tap appends
 // its spec to Taps and returns a promise that is already resolved;
 // sleep returns a promise that stays pending until ResumeSleeps. A Host
@@ -100,7 +100,7 @@ func NewHost() *Host {
 }
 
 // Activate is a script activation without the build: a new Host that has
-// run p. The M0d stub has no setup(), so "setup" is the bundle's top-level
+// run p. The spike stub has no setup(), so "setup" is the bundle's top-level
 // code, which makes the registrations.
 func Activate(p *goja.Program) (*Host, error) {
 	h := NewHost()
@@ -198,7 +198,7 @@ func (h *Host) NewStickEvent(control string, x, y, dt float64) *goja.Object {
 	return o
 }
 
-// name interns s as a JavaScript string, as the M5 host would for control
+// name interns s as a JavaScript string, as the real host would for control
 // and gesture names.
 func (h *Host) name(s string) goja.Value {
 	v, ok := h.names[s]
@@ -222,7 +222,7 @@ func (h *Host) Dispatch(fn goja.Callable, ev goja.Value) error {
 // PendingSleeps is the number of sleep promises waiting for ResumeSleeps.
 func (h *Host) PendingSleeps() int { return len(h.sleeps) }
 
-// ResumeSleeps resolves the pending sleeps, as a timer would in M5.
+// ResumeSleeps resolves the pending sleeps, as a timer would in the real host.
 // Each resolve is an outermost call, so the continuations run before it
 // returns; sleeps they start stay pending for the next ResumeSleeps.
 func (h *Host) ResumeSleeps() error {

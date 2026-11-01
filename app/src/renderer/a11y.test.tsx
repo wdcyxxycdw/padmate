@@ -786,7 +786,7 @@ const confirmable = {
   schemaVersion: 1,
   name: "Confirm",
   defaultLayer: "base",
-  // The M12 set-up of the trigger: its second stage is the half axis.
+  // The older two-stage set-up of the trigger: its second stage is the half axis.
   analog: { lt: { press: 0.9, release: 0.8 }, axisThreshold: 0.5 },
   layers: {
     base: {

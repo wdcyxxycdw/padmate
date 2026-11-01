@@ -172,7 +172,7 @@ func (r *Script) Input(e Edge) error {
 }
 
 // Replay parses and sends a trace of button edges to the script. Axis/value
-// edges are rejected because the M5 Host has no axis event API yet.
+// edges are rejected because the Host has no axis event API yet.
 func (r *Script) Replay(trace string) error {
 	edges, err := ParseTrace(trace)
 	if err != nil {

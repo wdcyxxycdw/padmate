@@ -85,7 +85,7 @@ function captureAPI() {
 it("captures modifiers while they are held, a chord when its key goes down, and honours the key position switch", async () => {
   const { api, emit } = captureAPI();
   render(<Draft />);
-  // Shortcuts are recorded, never typed (G2); the key position option
+  // Shortcuts are recorded, never typed; the key position option
   // lives under 高级, not next to the shortcut.
   const field = screen.getByRole("group", { name: "快捷键" });
   expect(within(field).queryByRole("textbox")).toBeNull();
@@ -288,7 +288,7 @@ it("stops only its own late capture session when the editor closes", async () =>
   expect(api.captureStop).toHaveBeenCalledExactlyOnceWith(17);
 });
 
-it("warns about reserved shortcuts but not about bare letters (F6)", async () => {
+it("warns about reserved shortcuts but not about bare letters", async () => {
   const { record } = captureAPI();
   render(<Draft />);
   await record("a");
@@ -542,7 +542,7 @@ it("offers no type for a profile switch, which stays locked", () => {
   );
 });
 
-it("has no 自动 button and no text entry next to the shortcut (F7, G2)", () => {
+it("has no 自动 button and no text entry next to the shortcut", () => {
   captureAPI();
   render(<Draft initial={{ press: { type: "keys", keys: "" } }} />);
   const field = screen.getByRole("group", { name: "快捷键" });

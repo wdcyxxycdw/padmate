@@ -10,7 +10,7 @@ import (
 )
 
 // CurrentSchema is the newest profile version understood by this build. The
-// format was frozen as version 1 in M14: from then on a profile that
+// format was frozen as version 1: from then on a profile that
 // is valid stays valid, new optional fields do not change the version, and a
 // change that could break an existing profile adds a migration and bumps it.
 const CurrentSchema = 1

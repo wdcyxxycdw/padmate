@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// G7: picking a script for a key in the drawer is one undo step, and
+// Picking a script for a key in the drawer is one undo step, and
 // Ctrl+Z takes it back, whatever the pad reports while its setting says it
 // cannot send keys to padmate's own window.
 import {

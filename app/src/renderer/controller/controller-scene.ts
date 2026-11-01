@@ -246,7 +246,7 @@ function createGpuStage(info: ModelInfo): SceneStage {
     for (const listener of [...lostListeners]) listener();
   };
   canvas.addEventListener("webglcontextlost", lost);
-  // The model cache decodes and parses each shell once (G3); this stage
+  // The model cache decodes and parses each shell once; this stage
   // gets its own copy, which it disposes with the stage.
   const loaded = controllerModels
     .get(modelShell(info.type))

@@ -1153,7 +1153,7 @@ on("north", "press", () => {
     expect(before.bounds.height).toBe(160);
     await recordToasts(page);
 
-    // padmate's own window in front is a local dry run (M10): the daemon
+    // padmate's own window in front is a local dry run: the daemon
     // pauses the scripts while it is the foreground. So, as in the toast case,
     // the main window is brought to the front first (a program holding the
     // foreground fails that step) and then blurred; whatever Windows puts in
@@ -1180,7 +1180,7 @@ on("north", "press", () => {
     ).toBe(false);
 
     // padmate's own window coming to the front and leaving it each release
-    // the slot (M10), which drops the script's runtime; the next press asks
+    // the slot, which drops the script's runtime; the next press asks
     // for a new one, and a press before its setup is done
     // is dropped. So press east, which the script does not use and the
     // profile does not bind, until the script runs, before the first press

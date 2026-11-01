@@ -17,8 +17,8 @@
 // never reads the time, which comes from Input.T and the now arguments, so
 // it runs and is tested the same on any platform. profile never imports
 // engine. The gesture names belong to profile, which reads them from the
-// file; Gesture here is an alias of profile.Gesture, so M2 can add
-// gestures to both without an import cycle.
+// file; Gesture here is an alias of profile.Gesture, so new
+// gestures go into both without an import cycle.
 //
 // # Press cycles
 //
@@ -105,7 +105,7 @@
 // the original times of replayed edges: a replayed press's hold threshold
 // and a replayed release's multi-tap window count from them.
 //
-// The lookup of a binding walks the active levels (M3): the
+// The lookup of a binding walks the active levels: the
 // Registry's when Options.Registry is set, otherwise the overlays from the
 // top, then the base layer and common. Above them is the set of the function
 // key that is held, if there is one and it binds the control.

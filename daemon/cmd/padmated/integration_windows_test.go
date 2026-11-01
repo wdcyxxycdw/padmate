@@ -348,7 +348,7 @@ func TestMenuMaskToProbe(t *testing.T) {
 	mask := []output.KeyEvent{output.MenuMaskEvent(false), output.MenuMaskEvent(true)}
 	masked := func(down []output.KeyEvent) []output.KeyEvent { return slices.Concat(mask, releases(down)) }
 	want := slices.Concat(
-		alt, masked(alt), // a: a lone Alt (the M1c acceptance)
+		alt, masked(alt), // a: a lone Alt (the menu mask's acceptance)
 		win, masked(win), // b: a lone LWin
 		altTab, releases(altTab), // c: a tap of Alt+Tab, no mask
 		alt, f13, releases(f13), releases(alt), // d: F13 tapped while Alt is held, no mask

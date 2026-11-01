@@ -119,7 +119,7 @@ describe("packaged application in test mode", () => {
     expect(options.daemon).toContain("Installed");
     expect(options.ctl).toContain("Installed");
     expect(options.daemonLaunch(report).args).not.toContain(
-      "-test.run=^TestM10UIHarness$",
+      "-test.run=^TestUIHarness$",
     );
     expect(options.editorLog).toBe("");
     expect(options.appsFile).toBe("");

@@ -34,7 +34,7 @@ func TestMissingControlsUseDeviceMasksAndProfileBindings(t *testing.T) {
 		if v.Device != 2 {
 			continue
 		}
-		// The names of the mapping page (the owner's G11), not the
+		// The names of the mapping page (the owner's decision), not the
 		// control IDs lt, paddle1 and rs.up.
 		got := missingControls(tl.cfg.prog, v)
 		want := []string{"背键 1", "LT", "RS"}

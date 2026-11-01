@@ -531,7 +531,7 @@ func (d *dev) advancePlayer(now time.Time) bool {
 // and not by a pattern moving on. If its claim is the one that shows, the next
 // sync writes the color again, even when the LED shows it already: SDL drops
 // a repeat inside its window (sdlLEDRepeat) and sends one after it, which is
-// what M3 relied on to bring back a light that a receiver had reset behind the
+// what the first pulse plan relied on to bring back a light that a receiver had reset behind the
 // Mixer's back, as a power-cycled controller does. A claim that is not
 // the winner, and a pattern that reveals the claim below it, change nothing
 // that shows, and are not written.

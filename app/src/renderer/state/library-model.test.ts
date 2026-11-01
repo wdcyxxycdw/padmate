@@ -633,7 +633,7 @@ describe("profile IDs and names", () => {
     );
   });
 
-  it("keeps names unique, trimmed and in any case (F2)", () => {
+  it("keeps names unique, trimmed and in any case", () => {
     const library: ProfileEntry[] = [
       { id: "default", name: "Whatever it stores", default: true },
       { id: "paint", name: " 绘画 " },

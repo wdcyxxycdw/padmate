@@ -70,7 +70,7 @@ describe("close guard", () => {
   });
 });
 
-describe("waiting for saves when the daemon exits (G9)", () => {
+describe("waiting for saves when the daemon exits", () => {
   /** Settles into a flag, so a test can tell when it resolved. */
   function settling(closing: CloseGuard, waitMs?: number) {
     const state = { done: false };

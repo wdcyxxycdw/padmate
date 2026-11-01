@@ -25,7 +25,7 @@ bin\padmated.exe --profile examples\scripts\stick-rate\profile.json --dry-run
 自动测试读这三个配置和脚本，经真实的引擎和脚本运行时，输出由假的 Sender 记录，不注入键盘：
 
 ```powershell
-task test -- -run M6 -count=1
+task test -- -run ScriptExample -count=1
 ```
 
 把 `PADMATE_TEST_TSC` 设为本机 TypeScript 编译器入口（`typescript/bin/tsc`），同一条命令还会做 TypeScript 检查。

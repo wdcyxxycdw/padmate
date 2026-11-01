@@ -68,8 +68,8 @@ type Registration struct {
 }
 
 // RegistrationScope identifies where a script registration participates in
-// the level lookup. M5 exposes only the base and global scopes; layer scopes
-// are added with the M6 layer API.
+// the level lookup: the base and global scopes, and the scopes of the
+// layer API.
 type RegistrationScope uint8
 
 const (

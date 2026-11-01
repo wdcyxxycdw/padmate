@@ -1,9 +1,9 @@
-// The licensed controller models (G3): each shell is decoded and parsed once
+// The licensed controller models: each shell is decoded and parsed once
 // per app session, and every scene gets its own copy of it. Before, every
 // visit to the mapping page decoded the ~8 MB inline GLB again, character by
 // character, and parsed it again, textures included.
 //
-// Copying is the cheap part (about 1 ms). What a visit still cost after G3
+// Copying is the cheap part (about 1 ms). What a visit still cost after the cache
 // was uploading the copy's textures to a new WebGL context, 0.6-0.85 s of
 // blocked main thread in the Electron app; controller-stage.ts keeps the
 // renderer and its textures between visits, so a copy is made only when a

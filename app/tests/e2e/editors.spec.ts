@@ -152,7 +152,7 @@ test("a key runs a script, ownership and IME warnings, real Markdown and PNG sho
       }),
     ).toHaveCount(0);
     await recordShortcut(app, shortcut, "A");
-    // A bare letter is not warned about (F6); the field has no 自动 (F7).
+    // A bare letter is not warned about; the field has no 自动.
     await expect(page.getByText(/输入法吃掉/)).toHaveCount(0);
     await expect(page.getByTestId("auto-shortcut")).toHaveCount(0);
     // The capture only reports it: the system's shortcut is never pressed.

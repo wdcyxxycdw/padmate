@@ -108,7 +108,7 @@ func exited(t *testing.T, finished <-chan int, within time.Duration) time.Durati
 }
 
 // TestTrayExitWaitsForUI: 退出 in the tray lets go of every key and
-// pauses the mapping at once, then tells the UI (the owner's G9).
+// pauses the mapping at once, then tells the UI (the owner's decision).
 // padmated keeps serving while the UI saves its last edit, and exits once
 // the UI answers ui.exitReady.
 func TestTrayExitWaitsForUI(t *testing.T) {

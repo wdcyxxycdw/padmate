@@ -292,22 +292,22 @@ var (
 	allCaps = Caps{Rumble: true, TriggerRumble: true, LED: true, RGBLED: true, PlayerLED: true}
 )
 
-const m3Strength = "28672/28672" // 0x7000 on both motors
+const firstPlanStrength = "28672/28672" // 0x7000 on both motors
 
-func TestMixerAmbientTrainMatchesM3(t *testing.T) {
-	// The pulse plan of M3 (input/feedback_test.go): 3 pulses of 70 ms, 100 ms
+func TestMixerAmbientTrainMatchesPulsePlan(t *testing.T) {
+	// The first pulse plan (input/feedback_test.go): 3 pulses of 70 ms, 100 ms
 	// apart, at 0x7000; the first at once, the next ones 170 ms after each
 	// other. The Mixer also stops the motors when the last pulse ends, where
-	// M3 did a gap later; the pulse is over by then either way.
+	// the first plan did a gap later; the pulse is over by then either way.
 	r := newRig(t, Caps{Rumble: true})
 	if o := r.play(Ambient, Train(3, 70, 100, 0x7000), 0); o != Started {
 		t.Fatalf("Play = %v, want started", o)
 	}
 	r.run(0, 600)
 	r.expect(
-		"@0 rumble "+m3Strength+" 70ms",
-		"@170 rumble "+m3Strength+" 70ms",
-		"@340 rumble "+m3Strength+" 70ms",
+		"@0 rumble "+firstPlanStrength+" 70ms",
+		"@170 rumble "+firstPlanStrength+" 70ms",
+		"@340 rumble "+firstPlanStrength+" 70ms",
 		"@410 rumble stop",
 	)
 	if r.f.merged != 0 || r.f.endless != 0 {
@@ -317,7 +317,7 @@ func TestMixerAmbientTrainMatchesM3(t *testing.T) {
 	// The defaults: one pulse of 70 ms at 0x7000 (TestFeedbackDefaults).
 	r.play(Ambient, Train(0, 0, 0, 0), 1000)
 	r.run(1000, 1200)
-	r.expect("@1000 rumble "+m3Strength+" 70ms", "@1070 rumble stop")
+	r.expect("@1000 rumble "+firstPlanStrength+" 70ms", "@1070 rumble stop")
 }
 
 func TestMixerPriority(t *testing.T) {
@@ -339,10 +339,10 @@ func TestMixerPriority(t *testing.T) {
 	r.expect()
 	// The same class replaces, and the pulse that ran is stopped first.
 	want(Ambient, 40, Started)
-	r.expect("@40 rumble stop", "@40 rumble "+m3Strength+" 70ms")
+	r.expect("@40 rumble stop", "@40 rumble "+firstPlanStrength+" 70ms")
 	// A higher class preempts.
 	want(Alert, 50, Started)
-	r.expect("@50 rumble stop", "@50 rumble "+m3Strength+" 70ms")
+	r.expect("@50 rumble stop", "@50 rumble "+firstPlanStrength+" 70ms")
 	want(Event, 60, Dropped)
 	want(Script, 60, Dropped)
 	want(Ambient, 60, Dropped)
@@ -416,8 +416,8 @@ func TestMixerSeparatesIdenticalSteps(t *testing.T) {
 	r.play(Event, []Step{one, one}, 0)
 	r.run(0, 100)
 	r.expect(
-		"@0 rumble "+m3Strength+" 25ms",
-		"@25 rumble stop", "@25 rumble "+m3Strength+" 25ms",
+		"@0 rumble "+firstPlanStrength+" 25ms",
+		"@25 rumble stop", "@25 rumble "+firstPlanStrength+" 25ms",
 		"@50 rumble stop",
 	)
 
@@ -427,8 +427,8 @@ func TestMixerSeparatesIdenticalSteps(t *testing.T) {
 	r.play(Script, []Step{one}, 1025)
 	r.run(1025, 1100)
 	r.expect(
-		"@1000 rumble "+m3Strength+" 25ms",
-		"@1025 rumble stop", "@1025 rumble "+m3Strength+" 25ms",
+		"@1000 rumble "+firstPlanStrength+" 25ms",
+		"@1025 rumble stop", "@1025 rumble "+firstPlanStrength+" 25ms",
 		"@1050 rumble stop",
 	)
 
@@ -436,8 +436,8 @@ func TestMixerSeparatesIdenticalSteps(t *testing.T) {
 	r.play(Ambient, []Step{one, {Ms: 40}, one}, 2000)
 	r.run(2000, 2200)
 	r.expect(
-		"@2000 rumble "+m3Strength+" 25ms",
-		"@2065 rumble "+m3Strength+" 25ms",
+		"@2000 rumble "+firstPlanStrength+" 25ms",
+		"@2065 rumble "+firstPlanStrength+" 25ms",
 		"@2090 rumble stop",
 	)
 
@@ -951,7 +951,7 @@ func TestMixerErrorCooldown(t *testing.T) {
 	if !errors.Is(err, boom) || o != Cooling || !strings.Contains(err.Error(), "device 1") || !strings.Contains(err.Error(), "motors") {
 		t.Fatalf("Play = %v, %v; want cooling and the failure of the motors of device 1", o, err)
 	}
-	r.expect("@0 rumble " + m3Strength + " 70ms")
+	r.expect("@0 rumble " + firstPlanStrength + " 70ms")
 	r.f.fail = nil
 	if o, err := r.m.Play(dv, Alert, steps, r.at(100)); o != Cooling || err != nil {
 		t.Errorf("Play in the cooldown = %v, %v; want cooling", o, err)
@@ -1003,11 +1003,11 @@ func TestMixerErrorCooldown(t *testing.T) {
 	if o, err := r.m.Play(dv, Event, steps, r.at(2100)); o != Started || err != nil {
 		t.Errorf("Play in the LED's cooldown = %v, %v; want started", o, err)
 	}
-	r.expect("@2100 rumble " + m3Strength + " 70ms")
+	r.expect("@2100 rumble " + firstPlanStrength + " 70ms")
 	ledCool := 1000 + int(LEDCooldown/time.Millisecond)
 	r.run(2100, ledCool-1)
 	// The pulses of the train play to their end, the LED being in its cooldown.
-	r.expect("@2270 rumble "+m3Strength+" 70ms", "@2440 rumble "+m3Strength+" 70ms", "@2510 rumble stop")
+	r.expect("@2270 rumble "+firstPlanStrength+" 70ms", "@2440 rumble "+firstPlanStrength+" 70ms", "@2510 rumble stop")
 	r.run(ledCool-1, ledCool+1)
 	r.expect(fmt.Sprintf("@%d led #0000FF", ledCool)) // the strongest claim of the moment
 	if r.f.led != blue {
@@ -1033,9 +1033,9 @@ func TestMixerErrorCooldown(t *testing.T) {
 	if o, err := r.m.Play(dv, Event, steps, r.at(20)); o != Started || err != nil {
 		t.Errorf("Play in the player lights' cooldown = %v, %v; want started", o, err)
 	}
-	r.expect("@0 player 0", "@10 led #FF0000", "@20 rumble "+m3Strength+" 70ms")
+	r.expect("@0 player 0", "@10 led #FF0000", "@20 rumble "+firstPlanStrength+" 70ms")
 	r.run(20, int(ErrorCooldown/time.Millisecond)+1)
-	r.expect("@190 rumble "+m3Strength+" 70ms", "@360 rumble "+m3Strength+" 70ms", "@430 rumble stop", "@5000 player 0")
+	r.expect("@190 rumble "+firstPlanStrength+" 70ms", "@360 rumble "+firstPlanStrength+" 70ms", "@430 rumble stop", "@5000 player 0")
 
 	// A call that fails while the Mixer advances is the same: Advance returns
 	// it, the program is not resumed after the cooldown.
@@ -1076,8 +1076,8 @@ func TestMixerErrorCooldown(t *testing.T) {
 		t.Fatalf("Identify = %+v, %v", cues, err)
 	}
 	r.expect(
-		"@0 rumble "+m3Strength+" 70ms", "@1 led #FF0000",
-		"@200 rumble "+m3Strength+" 150ms", "@200 led #FFFFFF",
+		"@0 rumble "+firstPlanStrength+" 70ms", "@1 led #FF0000",
+		"@200 rumble "+firstPlanStrength+" 150ms", "@200 led #FFFFFF",
 	)
 }
 
@@ -1111,8 +1111,8 @@ func TestMixerLEDFailureKeepsThePulses(t *testing.T) {
 	r.run(500, 900)
 	r.expect(
 		"@0 led #FF0000",
-		"@0 rumble "+m3Strength+" 70ms", "@170 rumble "+m3Strength+" 70ms", "@240 rumble stop",
-		"@500 rumble "+m3Strength+" 70ms", "@670 rumble "+m3Strength+" 70ms", "@740 rumble stop",
+		"@0 rumble "+firstPlanStrength+" 70ms", "@170 rumble "+firstPlanStrength+" 70ms", "@240 rumble stop",
+		"@500 rumble "+firstPlanStrength+" 70ms", "@670 rumble "+firstPlanStrength+" 70ms", "@740 rumble stop",
 	)
 }
 
@@ -1149,7 +1149,7 @@ func TestMixerLEDResend(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	// A request for the color the LED shows is written again, as M3 did on
+	// A request for the color the LED shows is written again, as the first plan did on
 	// every layer change and refresh; SDL drops it inside its window, and sends
 	// it after, which brings back a light that was reset behind our back.
 	set(Ambient, red, 0)
@@ -1340,11 +1340,11 @@ func TestMixerIdentify(t *testing.T) {
 	}
 	r.run(100, 1500)
 	r.expect(
-		"@100 rumble "+m3Strength+" 150ms", "@100 led #FFFFFF",
+		"@100 rumble "+firstPlanStrength+" 150ms", "@100 led #FFFFFF",
 		"@350 led #FF0000",
-		"@400 rumble "+m3Strength+" 150ms",
+		"@400 rumble "+firstPlanStrength+" 150ms",
 		"@600 led #FFFFFF",
-		"@700 rumble "+m3Strength+" 150ms",
+		"@700 rumble "+firstPlanStrength+" 150ms",
 		"@850 rumble stop", "@850 led #FF0000",
 		"@1100 led #FFFFFF",
 		"@1350 led #FF0000",
@@ -1379,7 +1379,7 @@ func TestMixerIdentify(t *testing.T) {
 	if _, err := r.m.Identify(dv, r.at(10)); err != nil {
 		t.Fatal(err)
 	}
-	r.expect("@10 rumble stop", "@10 rumble "+m3Strength+" 150ms")
+	r.expect("@10 rumble stop", "@10 rumble "+firstPlanStrength+" 150ms")
 }
 
 func TestCuesFor(t *testing.T) {

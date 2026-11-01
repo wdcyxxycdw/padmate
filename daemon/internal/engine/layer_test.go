@@ -53,7 +53,7 @@ func runLayerScript(t testing.TB, e *engine.Engine, r *recorder, script string) 
 	}
 }
 
-func TestM3Layers(t *testing.T) {
+func TestLayers(t *testing.T) {
 	const src = `{"schemaVersion":0,"name":"layers","defaultLayer":"base","common":{"leftstick":{"press":{"type":"layer","layers":["base","alt","third"],"op":"cycle"}}},"layers":{"base":{"east":{"press":{"type":"layer","layer":"alt","op":"toggle"}},"south":{"press":{"type":"keys","keys":"A"}},"west":{"latch":true,"press":{"type":"keys","keys":"Shift"}}},"alt":{"south":{"press":{"type":"keys","keys":"B"}},"west":{"block":true}},"third":{"south":{"press":{"type":"keys","keys":"C"}}}}}`
 	for _, tc := range []struct{ name, script, want string }{
 		{"toggle layer", "+east@0 -east@1 +south@2 -south@3 +east@4 -east@5 +south@6 -south@7", "@2 down decl/2 B, @3 up decl/2 B, @6 down decl/4 A, @7 up decl/4 A"},
@@ -76,7 +76,7 @@ func TestM3Layers(t *testing.T) {
 	}
 }
 
-func TestM3LayerTapPressOwnerAndCarry(t *testing.T) {
+func TestLayerTapPressOwnerAndCarry(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"tap","layers":{"base":{"leftshoulder":{"tap":{"type":"keys","keys":"F13"},"hold":{"type":"layer","layer":"alt","op":"hold"}},"south":{"press":{"type":"keys","keys":"A"}},"east":{"press":{"type":"layer","layer":"alt","op":"toggle"}}},"alt":{"south":{"press":{"type":"keys","keys":"B"}},"east":{"press":{"type":"keys","keys":"C"}}}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
@@ -92,7 +92,7 @@ func TestM3LayerTapPressOwnerAndCarry(t *testing.T) {
 	}
 }
 
-func TestM3DefaultLayer(t *testing.T) {
+func TestDefaultLayer(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"default","defaultLayer":"alt","layers":{"base":{"south":{"press":{"type":"keys","keys":"A"}}},"alt":{"south":{"press":{"type":"keys","keys":"B"}}}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
@@ -102,7 +102,7 @@ func TestM3DefaultLayer(t *testing.T) {
 	}
 }
 
-func TestM3LatchAcrossLayer(t *testing.T) {
+func TestLatchAcrossLayer(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"latch-layer","layers":{"base":{"east":{"latch":true,"press":{"type":"keys","keys":"Shift"}},"leftstick":{"press":{"type":"layer","layer":"alt","op":"toggle"}}},"alt":{"east":{"press":{"type":"keys","keys":"B"}}}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
@@ -112,7 +112,7 @@ func TestM3LatchAcrossLayer(t *testing.T) {
 	}
 }
 
-func TestM3LayerChangeNotification(t *testing.T) {
+func TestLayerChangeNotification(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"notify","layers":{"base":{"east":{"press":{"type":"layer","layer":"alt","op":"toggle"}}},"alt":{"color":"#112233"}}}`)
 	r := &recorder{}
 	var got []engine.LayerState
@@ -123,7 +123,7 @@ func TestM3LayerChangeNotification(t *testing.T) {
 	}
 }
 
-func TestM3FeedbackPulsesAndPause(t *testing.T) {
+func TestFeedbackPulsesAndPause(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"feedback","feedback":{"shortMs":80,"longMs":240,"gapMs":120,"strength":12345,"pausedColor":"#AA5500"},"common":{"leftstick":{"press":{"type":"layer","op":"cycle","layers":["base","alt","third"]}}},"layers":{"base":{"east":{"press":{"type":"layer","layer":"alt","op":"toggle"}}},"alt":{"color":"#112233"},"third":{"color":"#334455"}}}`)
 	r := &recorder{}
 	var got []engine.Feedback
@@ -137,7 +137,7 @@ func TestM3FeedbackPulsesAndPause(t *testing.T) {
 	}
 }
 
-func TestM3FeedbackCanBeDisabled(t *testing.T) {
+func TestFeedbackCanBeDisabled(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"feedback-off","layers":{"base":{"east":{"press":{"type":"layer","layer":"alt","op":"toggle"}}},"alt":{"color":"#112233"}}}`)
 	var got []engine.Feedback
 	r := &recorder{}
@@ -154,7 +154,7 @@ func TestM3FeedbackCanBeDisabled(t *testing.T) {
 	}
 }
 
-func TestM3CommonCarry(t *testing.T) {
+func TestCommonCarry(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"common","common":{"north":{"press":{"type":"keys","keys":"C"}}},"layers":{"base":{"south":{"press":{"type":"keys","keys":"A"}}},"alt":{}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
@@ -172,7 +172,7 @@ type fakeLevel struct {
 func (l fakeLevel) Name() string                               { return l.name }
 func (l fakeLevel) Binding(c control.Control) *profile.Binding { return l.bindings[c] }
 
-func TestM3FakeRegistryConsumesSouthTap(t *testing.T) {
+func TestFakeRegistryConsumesSouthTap(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"fake","layers":{"base":{}}}`)
 	r := &recorder{}
 	b := &profile.Binding{ID: "/fake/south", Control: control.South, Block: true}
@@ -206,7 +206,7 @@ func TestLayerOwnershipBoundaries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, src), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Fatalf("got %s; want %s", got, tc.want)
 			}
@@ -226,7 +226,7 @@ func TestLayerPartialBindingAndBlock(t *testing.T) {
 		p := compileLayers(t, `{"schemaVersion":0,"name":"partial","common":{"east":{"press":{"type":"layer","layer":"alt","op":"hold"}}},"layers":{"base":{"south":{"press":{"type":"keys","keys":"F13"}}},"alt":{`+alt+`}}}`)
 		r := &recorder{}
 		e := engine.New(p, r, engine.Options{})
-		runM2(t, e, r, "+east@0 +south@1 -south@2 -east@3")
+		runDeadlines(t, e, r, "+east@0 +south@1 -south@2 -east@3")
 		if r.String() != want {
 			t.Errorf("block=%v: got %s; want %s", block, r.String(), want)
 		}
@@ -237,7 +237,7 @@ func TestLayerAndKeyHoldReleaseTogether(t *testing.T) {
 	p := compileLayers(t, `{"schemaVersion":0,"name":"mixed","layers":{"base":{"west":{"press":{"type":"keys","keys":"Shift"},"tap":{"type":"keys","keys":"F13"},"hold":{"type":"layer","layer":"alt","op":"hold"}},"south":{"press":{"type":"keys","keys":"A"}}},"alt":{"south":{"press":{"type":"keys","keys":"B"}}}}}`)
 	r := &recorder{}
 	e := engine.New(p, r, engine.Options{})
-	runM2(t, e, r, "+west@0 wait@300 -west@310 +south@320 -south@330")
+	runDeadlines(t, e, r, "+west@0 wait@300 -west@310 +south@320 -south@330")
 	if want := "@0 down decl/1 Shift, @310 up decl/1 Shift, @320 down decl/2 A, @330 up decl/2 A"; r.String() != want {
 		t.Fatalf("got %s; want %s", r.String(), want)
 	}

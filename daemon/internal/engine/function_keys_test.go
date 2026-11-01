@@ -87,7 +87,7 @@ func TestFunctionKeySets(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q; want %q", got, tc.want)
 			}
@@ -130,12 +130,12 @@ func TestFunctionKeyChoice(t *testing.T) {
 			// The function key sends nothing, held alone or pressed again.
 			r := &recorder{}
 			e := engine.New(prog, r, engine.Options{})
-			runM2(t, e, r, "+"+name+"@0 -"+name+"@10 +"+name+"@20 -"+name+"@30 wait@500")
+			runDeadlines(t, e, r, "+"+name+"@0 -"+name+"@10 +"+name+"@20 -"+name+"@30 wait@500")
 			if got := r.String(); got != "" {
 				t.Errorf("the function key sent %q", got)
 			}
 			// The set is used under it.
-			runM2(t, e, r, "+"+name+"@100 +south@110 -south@120 -"+name+"@130")
+			runDeadlines(t, e, r, "+"+name+"@100 +south@110 -south@120 -"+name+"@130")
 			if got, want := r.String(), "@110 down decl/1 F1, @120 up decl/1 F1"; got != want {
 				t.Errorf("under the function key sent %q; want %q", got, want)
 			}
@@ -147,7 +147,7 @@ func TestFunctionKeyChoice(t *testing.T) {
 				plain, under := tc.plain[other], tc.under[other]
 				r := &recorder{}
 				e := engine.New(prog, r, engine.Options{})
-				runM2(t, e, r, "+"+other+"@0 -"+other+"@10 +"+name+"@20 +"+other+"@30 -"+other+"@40 -"+name+"@50")
+				runDeadlines(t, e, r, "+"+other+"@0 -"+other+"@10 +"+name+"@20 +"+other+"@30 -"+other+"@40 -"+name+"@50")
 				want := "@0 down decl/1 " + plain + ", @10 up decl/1 " + plain + ", @30 down decl/2 " + under + ", @40 up decl/2 " + under
 				if got := r.String(); got != want {
 					t.Errorf("%s: sent %q; want %q", other, got, want)
@@ -204,7 +204,7 @@ func TestFunctionKeyPressOwner(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q; want %q", got, tc.want)
 			}
@@ -231,7 +231,7 @@ func TestOtherCenterKeysAreOrdinary(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q; want %q", got, tc.want)
 			}
@@ -249,7 +249,7 @@ func TestFunctionKeyWithoutASet(t *testing.T) {
 	const plain = `{"schemaVersion":1,"name":"none","layers":{"base":{"south":{"press":{"type":"keys","keys":"A"}}}}}`
 	r := &recorder{}
 	e := engine.New(compileLayers(t, plain), r, engine.Options{})
-	runM2(t, e, r, "+start@0 +south@10 -south@20 -start@30")
+	runDeadlines(t, e, r, "+start@0 +south@10 -south@20 -start@30")
 	if got, want := r.String(), "@10 down decl/1 A, @20 up decl/1 A"; got != want {
 		t.Errorf("sent %q; want %q", got, want)
 	}
@@ -264,7 +264,7 @@ func TestFunctionKeyWithoutASet(t *testing.T) {
 		t.Run("old format, "+tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileFn(t, old, tc.fn), r, engine.Options{})
-			runM2(t, e, r, "+"+tc.name+"@0 +south@10 -south@20 +north@30 -north@40 +east@50 -east@60 -"+tc.name+"@70")
+			runDeadlines(t, e, r, "+"+tc.name+"@0 +south@10 -south@20 +north@30 -north@40 +east@50 -east@60 -"+tc.name+"@70")
 			// south: start's set wins; north: only back's has it; east: neither.
 			if got, want := r.String(), "@10 down decl/1 F4, @20 up decl/1 F4, @30 down decl/2 F2, @40 up decl/2 F2, @50 down decl/3 B, @60 up decl/3 B"; got != want {
 				t.Errorf("sent %q; want %q", got, want)
@@ -301,7 +301,7 @@ func TestFunctionKeyBufferedPress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q;\nwant      %q", got, tc.want)
 			}
@@ -361,7 +361,7 @@ func TestFunctionKeyAddsNoDelay(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q; want %q", got, tc.want)
 			}
@@ -505,10 +505,10 @@ func TestFunctionKeyAfterExitPaths(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(prog, r, engine.Options{})
-			runM2(t, e, r, "+start@0 +south@10")
+			runDeadlines(t, e, r, "+start@0 +south@10")
 			tc.exit(e)
 			r.out = nil
-			runM2(t, e, r, "-south@20 +south@30 -south@35")
+			runDeadlines(t, e, r, "-south@20 +south@30 -south@35")
 			if got := r.String(); got != tc.after {
 				t.Errorf("sent %q; want %q", got, tc.after)
 			}
@@ -517,7 +517,7 @@ func TestFunctionKeyAfterExitPaths(t *testing.T) {
 	t.Run("paused", func(t *testing.T) {
 		r := &recorder{}
 		e := engine.New(prog, r, engine.Options{})
-		runM2(t, e, r, "+start@0 pause@5 +south@10 -south@15 -start@20 +south@25 -south@30 resume@35 +south@40 -south@45")
+		runDeadlines(t, e, r, "+start@0 pause@5 +south@10 -south@15 -start@20 +south@25 -south@30 resume@35 +south@40 -south@45")
 		if got, want := r.String(), "@40 down decl/3 A, @45 up decl/3 A"; got != want {
 			t.Errorf("sent %q; want %q", got, want)
 		}
@@ -525,7 +525,7 @@ func TestFunctionKeyAfterExitPaths(t *testing.T) {
 	t.Run("a function key is physical state", func(t *testing.T) {
 		r := &recorder{}
 		e := engine.New(prog, r, engine.Options{})
-		runM2(t, e, r, "+start@0 cancel@5 -start@10 +south@15 -south@20")
+		runDeadlines(t, e, r, "+start@0 cancel@5 -start@10 +south@15 -south@20")
 		if got, want := r.String(), "@15 down decl/1 A, @20 up decl/1 A"; got != want {
 			t.Errorf("sent %q; want %q", got, want)
 		}
@@ -539,9 +539,9 @@ func TestFunctionKeyReloadChangesTheSet(t *testing.T) {
  "functionSet":{"south":{"press":{"type":"keys","keys":"F9"}}}}`
 	r := &recorder{}
 	e := engine.New(compileLayers(t, fnProfile), r, engine.Options{})
-	runM2(t, e, r, "+start@0")
+	runDeadlines(t, e, r, "+start@0")
 	e.Reload(timeAt(5), compileLayers(t, next))
-	runM2(t, e, r, "+south@10 -south@20")
+	runDeadlines(t, e, r, "+south@10 -south@20")
 	if got, want := r.String(), "@10 down decl/1 F9, @20 up decl/1 F9"; got != want {
 		t.Errorf("sent %q; want %q", got, want)
 	}
@@ -851,7 +851,7 @@ func TestFunctionKeyAboveARegistry(t *testing.T) {
 	level := fakeLevel{name: "reg", bindings: map[control.Control]*profile.Binding{control.South: b, control.East: {ID: "/reg/east", Control: control.East, Press: &profile.Action{ID: "/reg/east/press", Type: profile.ActionKeys, Mode: profile.ModeHold, Keys: keys.MustParse("S")}}}}
 	r := &recorder{}
 	e := engine.New(compileLayers(t, fnProfile), r, engine.Options{Registry: fakeRegistry{levels: []engine.Level{level}}})
-	runM2(t, e, r, "+south@0 -south@5 +start@10 +south@15 -south@20 +east@25 -east@30 -start@35")
+	runDeadlines(t, e, r, "+south@0 -south@5 +start@10 +south@15 -south@20 +east@25 -east@30 -start@35")
 	want := "@0 down decl/1 R, @5 up decl/1 R, @15 down decl/2 F1, @20 up decl/2 F1, @25 down decl/3 S, @30 up decl/3 S"
 	if got := r.String(); got != want {
 		t.Errorf("sent %q; want %q", got, want)
@@ -892,7 +892,7 @@ func TestCompileFunctionKeys(t *testing.T) {
 	}
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
-	runM2(t, e, r, "+start@0 -start@1 +back@2 -back@3 +south@4 -south@5")
+	runDeadlines(t, e, r, "+start@0 -start@1 +back@2 -back@3 +south@4 -south@5")
 	if got, want := r.String(), "@2 down decl/1 V, @3 up decl/1 V, @4 down decl/2 A, @5 up decl/2 A"; got != want {
 		t.Errorf("sent %q; want %q", got, want)
 	}
@@ -999,7 +999,7 @@ func TestFunctionKeyBetweenTaps(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compileLayers(t, tc.src), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if got := r.String(); got != tc.want {
 				t.Errorf("sent %q;\nwant      %q", got, tc.want)
 			}

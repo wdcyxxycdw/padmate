@@ -47,7 +47,7 @@ async function xboxShell() {
   return gltf.scene;
 }
 
-describe("controller models (G3)", () => {
+describe("controller models", () => {
   it("decodes base64 to the same bytes, fast path or not", async () => {
     const bytes = await readFile(new URL("./assets/xbox.glb", import.meta.url));
     const text = bytes.toString("base64");

@@ -190,7 +190,7 @@ func TestBuildErrors(t *testing.T) {
 	}{
 		{
 			name: "padmate submodule", root: "padmatesub", entry: "main.ts",
-			want: []string{`main.ts:1:23: error: module "padmate/layers" does not exist; the M0d stub only provides "padmate"`},
+			want: []string{`main.ts:1:23: error: module "padmate/layers" does not exist; only "padmate" can be imported`},
 		},
 		{
 			name: "node built-in", root: "builtin", entry: "main.ts",

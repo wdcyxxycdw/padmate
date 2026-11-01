@@ -58,12 +58,12 @@ type Config struct {
 	Output  *output.Loop // T-output; the slots use Output.Remote()
 	Program *engine.Program
 	// ProfileKey is the stable profile identity used for in-memory session
-	// state. padmated supplies the canonical profile file path until M8.
+	// state. padmated supplies the canonical profile file path.
 	ProfileKey string
 	// LayerMemory retains only device/profile layer choices across reloads
 	// and reconnections. It never performs disk I/O on slot threads.
 	LayerMemory slot.LayerMemory
-	// ScriptFactory creates the optional per-slot M5 runtime. It is called on
+	// ScriptFactory creates the optional per-slot script runtime. It is called on
 	// the runner goroutine before a slot loop starts; all runtime methods then
 	// run on that slot's loop goroutine.
 	ScriptFactory func(index uint8, gen uint32, clk clock.Clock, arb slot.Arbiter) (slot.ScriptRuntime, error)

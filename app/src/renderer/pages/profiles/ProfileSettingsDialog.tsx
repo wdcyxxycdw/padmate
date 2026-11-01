@@ -216,7 +216,7 @@ export function ProfileSettingsDialog({
 
 /**
  * The profile's name, saved on Enter or when the field is left. A name that
- * is empty, too long or another profile's (F2) is not saved; the problem
+ * is empty, too long or another profile's is not saved; the problem
  * shows while typing.
  */
 function NameField({

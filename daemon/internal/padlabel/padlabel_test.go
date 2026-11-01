@@ -45,7 +45,7 @@ func labelCases() []Pad {
 }
 
 // TestLabelsMatchUI keeps one source of truth for the names (the owner's
-// G11): every label the mapping page gives a control, this package gives
+// decision): every label the mapping page gives a control, this package gives
 // too, for every pad. It runs the UI's TypeScript with node, which needs
 // type stripping (Node 22.18 or later); without it, it skips.
 func TestLabelsMatchUI(t *testing.T) {

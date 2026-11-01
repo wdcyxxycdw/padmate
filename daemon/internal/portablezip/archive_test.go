@@ -153,7 +153,7 @@ func TestCollectRepoFilesUsesAllowlist(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := collectRepoFiles(root); err == nil {
-		t.Fatal("missing M6 example accepted")
+		t.Fatal("missing script example accepted")
 	}
 }
 

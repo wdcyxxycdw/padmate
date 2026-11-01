@@ -14,8 +14,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// runM2 advances every deadline before the next input, as slot.Replay does.
-func runM2(t testing.TB, e *engine.Engine, r *recorder, script string) {
+// runDeadlines advances every deadline before the next input, as slot.Replay does.
+func runDeadlines(t testing.TB, e *engine.Engine, r *recorder, script string) {
 	t.Helper()
 	for tok := range strings.FieldsSeq(script) {
 		op, at, ok := strings.Cut(tok, "@")
@@ -56,7 +56,7 @@ func runM2(t testing.TB, e *engine.Engine, r *recorder, script string) {
 	}
 }
 
-func TestM2Gestures(t *testing.T) {
+func TestRecognizerGestures(t *testing.T) {
 	const pair = `"west":{"tap":{"type":"keys","keys":"B"},"hold":{"type":"keys","keys":"E"}}`
 	const south = `"south":{"press":{"type":"keys","keys":"Ctrl+Z","mode":"tap"}}`
 	const (
@@ -249,7 +249,7 @@ func TestM2Gestures(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &recorder{}
 			e := engine.New(compile(t, tc.bindings), r, engine.Options{})
-			runM2(t, e, r, tc.steps)
+			runDeadlines(t, e, r, tc.steps)
 			if r.String() != tc.want {
 				t.Fatalf("got  %s\nwant %s", r.String(), tc.want)
 			}
@@ -261,10 +261,10 @@ func TestM2Gestures(t *testing.T) {
 	}
 }
 
-// TestM2BufferedLayerRelease: leftshoulder holds the layer nav. Its release
+// TestBufferedLayerRelease: leftshoulder holds the layer nav. Its release
 // comes after south's press, which waits for north's gesture, so it waits
 // too, and south's press finds nav's binding, as the edges came.
-func TestM2BufferedLayerRelease(t *testing.T) {
+func TestBufferedLayerRelease(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"t","layers":{"base":{`+
 		`"west":{"tap":{"type":"keys","keys":"F13"},"hold":{"type":"keys","keys":"E"}},`+
 		`"north":{"tap":{"type":"keys","keys":"B"},"hold":{"type":"keys","keys":"F15"}},`+
@@ -273,33 +273,33 @@ func TestM2BufferedLayerRelease(t *testing.T) {
 		`"nav":{"south":{"press":{"type":"keys","keys":"C","mode":"tap"}}}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
-	runM2(t, e, r, "+west@0 +leftshoulder@10 +north@20 +south@25 -leftshoulder@28 -south@40 -north@50 -west@60")
+	runDeadlines(t, e, r, "+west@0 +leftshoulder@10 +north@20 +south@25 -leftshoulder@28 -south@40 -north@50 -west@60")
 	if got, want := r.String(), "@28 down decl/1 E, @40 down decl/3 F15, @40 tap decl/4 C 20ms, @50 up decl/3 F15, @60 up decl/1 E"; got != want {
 		t.Fatalf("got  %s\nwant %s", got, want)
 	}
 }
 
-// TestM2TapKeepsPressLayer: west's press action holds the layer nav. Its
+// TestTapKeepsPressLayer: west's press action holds the layer nav. Its
 // release decides the tap ahead of south's press, which it captured, but
 // releases nav only in order: south's press came while nav was active, so
 // it finds nav's binding.
-func TestM2TapKeepsPressLayer(t *testing.T) {
+func TestTapKeepsPressLayer(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":0,"name":"t","layers":{"base":{`+
 		`"west":{"press":{"type":"layer","layer":"nav","op":"hold"},"tap":{"type":"keys","keys":"F13"},"hold":{"type":"keys","keys":"E"}},`+
 		`"south":{"press":{"type":"keys","keys":"A","mode":"tap"}}},`+
 		`"nav":{"south":{"press":{"type":"keys","keys":"C","mode":"tap"}}}}}`)
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
-	runM2(t, e, r, "+west@0 +south@10 -west@20 -south@30")
+	runDeadlines(t, e, r, "+west@0 +south@10 -west@20 -south@30")
 	if got, want := r.String(), "@20 tap decl/1 F13 20ms, @20 tap decl/2 C 20ms"; got != want {
 		t.Fatalf("got  %s\nwant %s", got, want)
 	}
 }
 
-// TestM2LateStepAfterWindow: a press whose original time is at or after the
+// TestLateStepAfterWindow: a press whose original time is at or after the
 // end of the multi-tap window starts a new count, even when no Apply ran at
 // the window's deadline (a late slot).
-func TestM2LateStepAfterWindow(t *testing.T) {
+func TestLateStepAfterWindow(t *testing.T) {
 	r := &recorder{}
 	e := engine.New(compile(t, `"south":{"tap":{"type":"keys","keys":"Ctrl+Z"},"doubleTap":{"type":"keys","keys":"F16"}}`), r, engine.Options{})
 	for _, in := range []struct {
@@ -316,7 +316,7 @@ func TestM2LateStepAfterWindow(t *testing.T) {
 	}
 }
 
-func TestM2TripleQuad(t *testing.T) {
+func TestTripleQuad(t *testing.T) {
 	for count := 1; count <= 4; count++ {
 		t.Run(fmt.Sprint(count), func(t *testing.T) {
 			p := compile(t, `"west":{"tap":{"type":"keys","keys":"F13"},"doubleTap":{"type":"keys","keys":"F14"},"tripleTap":{"type":"keys","keys":"F15"},"quadTap":{"type":"keys","keys":"F16"}}`)
@@ -327,7 +327,7 @@ func TestM2TripleQuad(t *testing.T) {
 				fmt.Fprintf(&script, "+west@%d -west@%d ", n*50, n*50+10)
 			}
 			script.WriteString("wait@1000")
-			runM2(t, e, r, script.String())
+			runDeadlines(t, e, r, script.String())
 			at := (count-1)*50 + 10
 			if count < 4 {
 				at += 220
@@ -362,13 +362,13 @@ func setAction(b *profile.Binding, g engine.Gesture, a *profile.Action) {
 	}
 }
 
-// TestM2CompileRejectsUnsafeModes checks the action rules on models built
+// TestCompileRejectsUnsafeModes checks the action rules on models built
 // by hand, which Parse never returns: a gesture that runs after the control
 // is released (profile.Gesture.Momentary) cannot hold keys or a layer, nor
 // repeat; a key sequence needs tap mode and cannot repeat; repeat needs hold
 // mode. commitMulti runs its action on a copy of the control's state, so a
 // hold it started would never be released (invariant 1).
-func TestM2CompileRejectsUnsafeModes(t *testing.T) {
+func TestCompileRejectsUnsafeModes(t *testing.T) {
 	a := keys.MustParse("A")
 	seq := []keys.Chord{keys.MustParse("Ctrl+K"), keys.MustParse("S")}
 	keysAction := func(m profile.Mode, seq []keys.Chord, r *profile.Repeat) *profile.Action {
@@ -420,21 +420,21 @@ func TestM2CompileRejectsUnsafeModes(t *testing.T) {
 	}
 }
 
-func TestM2RepeatStopsAndHonorsGap(t *testing.T) {
+func TestRepeatStopsAndHonorsGap(t *testing.T) {
 	p := compile(t, `"east":{"press":{"type":"keys","keys":"A","mode":"hold","repeat":{"delayMs":10,"rateHz":1000}},"timing":{"tapGapMs":20}}`)
 	r := &recorder{}
 	e := engine.New(p, r, engine.Options{})
-	runM2(t, e, r, "+east@0 wait@10 wait@30 wait@50 -east@60 wait@500")
+	runDeadlines(t, e, r, "+east@0 wait@10 wait@30 wait@50 -east@60 wait@500")
 	if got, want := r.String(), "@0 down decl/1 A, @10 repeat decl/1 A, @50 repeat decl/1 A, @60 up decl/1 A"; got != want {
 		t.Fatalf("got %s; want %s", got, want)
 	}
 }
 
-func TestM2LatchClearsOnCancel(t *testing.T) {
+func TestLatchClearsOnCancel(t *testing.T) {
 	p := compile(t, `"east":{"latch":true,"press":{"type":"keys","keys":"Shift"}}`)
 	r := &recorder{}
 	e := engine.New(p, r, engine.Options{})
-	runM2(t, e, r, "+east@0 -east@1 cancel@2 wait@500")
+	runDeadlines(t, e, r, "+east@0 -east@1 cancel@2 wait@500")
 	if got, want := r.String(), "@0 down decl/1 Shift, @2 up decl/1 Shift"; got != want {
 		t.Fatalf("got %s; want %s", got, want)
 	}
@@ -443,7 +443,7 @@ func TestM2LatchClearsOnCancel(t *testing.T) {
 	}
 }
 
-func TestM2TimingScopesAndExplicitZero(t *testing.T) {
+func TestTimingScopesAndExplicitZero(t *testing.T) {
 	src := `{"schemaVersion":0,"name":"timing","timing":{"holdMs":7,"multiTapMs":9,"tapPressMs":3,"tapGapMs":4},"layers":{"base":{"west":{"timing":{"holdMs":11,"multiTapMs":13,"tapPressMs":5,"tapGapMs":6},"tap":{"type":"keys","keys":"B"},"hold":{"type":"keys","keys":"E"}},"east":{"timing":{"holdMs":0,"multiTapMs":0,"tapPressMs":0,"tapGapMs":0},"tap":{"type":"keys","keys":"A"},"hold":{"type":"keys","keys":"D"}}}}}`
 	p, ds := profile.Parse([]byte(src))
 	if p == nil || ds.HasErrors() {
@@ -455,7 +455,7 @@ func TestM2TimingScopesAndExplicitZero(t *testing.T) {
 	}
 	r := &recorder{}
 	e := engine.New(prog, r, engine.Options{})
-	runM2(t, e, r, "+west@0 wait@10 wait@11 -west@12 +east@20 wait@20 -east@21")
+	runDeadlines(t, e, r, "+west@0 wait@10 wait@11 -west@12 +east@20 wait@20 -east@21")
 	if got, want := r.String(), "@11 down decl/1 E 5ms, @12 up decl/1 E, @20 down decl/2 D, @21 up decl/2 D"; got != want {
 		t.Fatalf("got %s; want %s", got, want)
 	}

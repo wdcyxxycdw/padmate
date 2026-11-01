@@ -1706,7 +1706,7 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("keeps profile names unique (F2)", async () => {
+  it("keeps profile names unique", async () => {
     const { b, store, stop } = await library((b) =>
       b.api.listProfiles.mockResolvedValue([
         { id: "default", name: "默认", default: true },

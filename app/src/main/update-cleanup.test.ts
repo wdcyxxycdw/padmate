@@ -61,7 +61,7 @@ describe("the update downloaded by an earlier run", () => {
   // is the lowest version there is, so it is old for any build.
   it.each([
     "0.0.0-0",
-    "0.0.0-m28b.1",
+    "0.0.0-test.1",
     "0.0.0-signtest.1",
     "0.14.0",
     "1.0.0-rc.1",
@@ -80,7 +80,7 @@ describe("the update downloaded by an earlier run", () => {
   it("keeps 0.0.1 for a test build, which is 0.0.0 with a label", async () => {
     await seed([setup("0.0.1")]);
     await expect(
-      cleanStalePending({ cacheRoot: root, appVersion: "0.0.0-m28b.1" }),
+      cleanStalePending({ cacheRoot: root, appVersion: "0.0.0-test.1" }),
     ).resolves.toBe("none");
   });
 

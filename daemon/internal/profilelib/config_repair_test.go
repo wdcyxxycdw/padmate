@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// brokenConfig is the owner's case (F17), an emergency combo of one
+// brokenConfig is the owner's case, an emergency combo of one
 // button, beside settings that are fine.
 const brokenConfig = `{"schemaVersion":0,"enabled":false,"rules":[{"exe":"paint.exe","profile":"paint"}],"safety":{"panic":{"standard":{"buttons":["back"],"holdMs":2000}}}}`
 

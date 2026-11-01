@@ -18,7 +18,7 @@ import (
 )
 
 // TestLiveInjectVirtual is the automatic acceptance of --inject (ADR-0006;
-// TestPadToProbe is the end-to-end test of M1b): the presses of a virtual
+// TestPadToProbe is the end-to-end test): the presses of a virtual
 // gamepad go through live mode with --inject, and a low-level
 // hook sees the keys injected by SendInput, tagged with padmated's nonce,
 // the process id. The hook, proven live by a canary before padmated

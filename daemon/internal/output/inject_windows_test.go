@@ -71,7 +71,7 @@ type injectCase struct {
 // no state to restore.
 //
 // A swallowed CapsLock, NumLock or ScrollLock still flips the lock state
-// the system translates input with (measured in M0b: after one swallowed
+// the system translates input with (measured on Windows 11: after one swallowed
 // NumLock tap an injected sc 0x47 changed from VK_NUMPAD7 to VK_HOME,
 // while GetKeyState in a new process still reported the old state). So
 // every batch taps its key twice and ends in the state it started in.
@@ -248,7 +248,7 @@ func checkInjected(t *testing.T, c injectCase, hkl windows.Handle, numLock bool,
 
 	wantScan := uint32(e.Scan)
 	// The system reports RShift (0x36) as extended although it is not
-	// E0-prefixed and was injected without KEYEVENTF_EXTENDEDKEY (M0b).
+	// E0-prefixed and was injected without KEYEVENTF_EXTENDEDKEY.
 	wantExt := e.Ext || !e.ByVK && e.Scan == 0x36
 	var wantVK uint32
 	switch {

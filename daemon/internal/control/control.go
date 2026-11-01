@@ -7,8 +7,8 @@
 // input, traces and padmatectl monitor.
 //
 // The stick directions, active controls, d-pad diagonals and half-axis
-// controls are virtual buttons produced by the analog recognizer (M4). M15
-// adds the stick rings (inner, outer), the virtual knob ticks (cw, ccw) and
+// controls are virtual buttons produced by the analog recognizer, and
+// so are the stick rings (inner, outer), the virtual knob ticks (cw, ccw) and
 // the second stage of the triggers (lt.full, rt.full).
 //
 // The package is pure data with no platform dependencies.
@@ -259,8 +259,8 @@ func (c Control) CanBeFunctionKey() bool { return c == Back || c == Guide || c =
 func (c Control) IsTrigger() bool { return c == LT || c == RT }
 
 // IsVirtual reports whether c is produced by an analog recognizer rather
-// than arriving as an SDL gamepad button. LT/RT are virtual trigger buttons;
-// M4 adds stick, d-pad diagonal and half-axis controls.
+// than arriving as an SDL gamepad button. LT/RT are virtual trigger buttons,
+// and so are the stick, d-pad diagonal and half-axis controls.
 func (c Control) IsVirtual() bool { return c >= LT }
 
 // HasDepth reports whether c follows how far a stick or a trigger is pushed:

@@ -496,7 +496,7 @@ export function slugId(name: string, existing: Iterable<string>): string {
 
 export type NameProblem = "empty" | "tooLong" | "taken";
 
-/** How names compare (F2): trimmed, Unicode NFC, case-insensitive. */
+/** How names compare: trimmed, Unicode NFC, case-insensitive. */
 function nameKey(name: string): string {
   return name.trim().normalize("NFC").toLowerCase();
 }

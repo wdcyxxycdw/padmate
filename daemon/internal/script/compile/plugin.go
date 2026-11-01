@@ -102,7 +102,7 @@ func plugin(root string, virtualModules map[string]string) api.Plugin {
 				switch {
 				case args.Path == "padmate" || strings.HasPrefix(args.Path, "padmate/"):
 					if _, ok := virtualModules[args.Path]; !ok {
-						return fail(fmt.Sprintf("module %q does not exist; the M0d stub only provides \"padmate\"", args.Path)), nil
+						return fail(fmt.Sprintf("module %q does not exist; only \"padmate\" can be imported", args.Path)), nil
 					}
 					return api.OnResolveResult{Path: args.Path, Namespace: padmateNamespace}, nil
 				case isNodeBuiltin(args.Path):

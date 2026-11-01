@@ -15,7 +15,7 @@ const OutputRate = 500
 // once for one script runtime.
 const OutputBurst = 100
 
-// OutputBudget is the M5 output guard of one output scope. Its token bucket
+// OutputBudget is the output guard of one output scope. Its token bucket
 // belongs to the runtime: tokens refill at OutputRate per second and the
 // bucket is capped at OutputBurst. Taps also have one pending entry per main
 // key, which belongs to the scope: each run of a macro forks the runtime's

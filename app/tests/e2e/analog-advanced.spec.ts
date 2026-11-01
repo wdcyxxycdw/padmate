@@ -11,7 +11,7 @@ import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut, setWindowSize } from "./helpers";
 
-// The advanced analog editor (M15): the knob and its ticks, the rings
+// The advanced analog editor: the knob and its ticks, the rings
 // and the second stage of a trigger. Every edit is read back from the profile
 // file the daemon has on disk, and a few are driven through the fake pad.
 
@@ -287,7 +287,7 @@ test("the rings are bound and set, and the hard push sends its key", async ({}, 
 test("the full pull of a trigger is bound and set, and the old two-stage set-up moves over", async ({}, info) => {
   test.setTimeout(120000);
   const f = await editorFixture();
-  // A file made by the editor of M12: the full press as the trigger's own
+  // A file made by the older editor: the full press as the trigger's own
   // key at 90%, the half press on the raw axis at a shared 50%.
   await writeFile(
     join(f.path, "data", "profiles", "paint", "profile.json"),
