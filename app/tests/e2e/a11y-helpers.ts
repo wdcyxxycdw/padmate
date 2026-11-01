@@ -54,6 +54,8 @@ export interface AxeFinding {
   help: string;
   target: string;
   html: string;
+  /** What axe measured (for a contrast finding, the colours and the ratio). */
+  data?: string;
 }
 
 /** What one axeCheck found: the findings are what failed, the rest is for the report. */
@@ -92,6 +94,7 @@ type Found = {
   help: string;
   target: string;
   html: string;
+  data: string;
 };
 
 /**
@@ -141,6 +144,13 @@ export async function axeScan(
                   help: item.help,
                   target: (node.target as string[]).join(" "),
                   html: node.html.slice(0, 200),
+                  // What axe measured, so a contrast finding says which colours
+                  // it saw (a disabled or half-drawn control shows here).
+                  data: [...node.any, ...node.all, ...node.none]
+                    .map((check) => JSON.stringify(check.data ?? null))
+                    .filter((text) => text !== "null")
+                    .join(" ")
+                    .slice(0, 300),
                 })),
             );
           return {
@@ -199,7 +209,7 @@ export async function axeCheck(
   expect(
     outcome.findings.map(
       (item) =>
-        `${item.rule} (${item.impact}): ${item.help} — ${item.target} — ${item.html}`,
+        `${item.rule} (${item.impact}): ${item.help} — ${item.target} — ${item.html}${item.data ? ` — ${item.data}` : ""}`,
     ),
     `axe: ${label}`,
   ).toEqual([]);
