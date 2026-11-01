@@ -1797,7 +1797,7 @@ describe("settings page", () => {
     const dialog = screen.getByRole("dialog", { name: "关于与许可" });
     expect(dialog.textContent).toContain("MIT");
     expect(dialog.textContent).toContain("CC BY 4.0");
-    // The three controller models, each with its author and source.
+    // The four controller models, each with its author and source.
     for (const [author, source] of [
       ["Rusfort", "xbox-elite-controller-32aad0ff25f7446b8afe649ea3cc9e43"],
       ["Taohid Animation", "ps5-controller-b7bb9c5102a04cb0b1966c6d02bad7d6"],
@@ -1805,11 +1805,14 @@ describe("settings page", () => {
         "shaielwolf",
         "dualshock-4-playstation-controller-e3c2f0dc16524fc19cdde45bad1de1a9",
       ],
+      ["Wevensson", "nintendo-switch-oled-aa2c7d815a104accae7709eb39ac2184"],
     ]) {
       expect(dialog.textContent).toContain(author);
       expect(dialog.textContent).toContain(source);
     }
     expect(dialog.textContent).toContain("DualShock 4 PlayStation Controller");
+    expect(dialog.textContent).toContain("Nintendo Switch OLED");
+    expect(dialog.textContent).toContain("任天堂");
     // The button icons (ADR-0013): Kenney's under CC0, PromptFont's under
     // the OFL, whose text goes with them.
     expect(dialog.textContent).toContain("Kenney");

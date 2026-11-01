@@ -26,6 +26,12 @@ const models = [
     source:
       "https://sketchfab.com/3d-models/dualshock-4-playstation-controller-e3c2f0dc16524fc19cdde45bad1de1a9",
   },
+  {
+    title: "Nintendo Switch OLED",
+    author: "Wevensson",
+    source:
+      "https://sketchfab.com/3d-models/nintendo-switch-oled-aa2c7d815a104accae7709eb39ac2184",
+  },
 ];
 
 // The button icons (ADR-0013, pad-icons/README.md). PromptFont's license
@@ -107,15 +113,15 @@ export function ModelLicenses({
           <p className="page-licenses-note">
             {tx(
               language,
-              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox 和 DualShock 4 素材重新打包为 GLB，DualShock 4 的贴图缩小并去掉了法线贴图；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
-              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox and DualShock 4 assets are repacked as GLB, with the DualShock 4 textures downscaled and its normal maps removed; the DualSense derivative previously split and named controls and baked transforms.",
+              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox、DualShock 4 和 Switch OLED 素材重新打包为 GLB。DualShock 4 的贴图缩小并去掉了法线贴图；Switch OLED 只保留左右两只 Joy-Con，各放进自己的坐标系并拆成命名的部件，贴图转成 WebP 并缩小，背面仍带原贴图上的标志；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
+              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox, DualShock 4 and Switch OLED assets are repacked as GLB. The DualShock 4 textures are downscaled and its normal maps removed; of the Switch OLED only the two Joy-Cons are kept, each in its own frame and split into named parts, with the textures converted to WebP and downscaled, and the back still shows the logo of the original texture; the DualSense derivative previously split and named controls and baked transforms.",
             )}
           </p>
           <p className="page-licenses-note">
             {tx(
               language,
-              "素材按许可条款原样提供，不附带担保。这些是独立作者作品，非微软或索尼官方素材，不表示其认可本项目。",
-              "Assets are provided as-is, without warranties, under the license terms. These independent works are not official Microsoft or Sony assets and do not imply endorsement.",
+              "素材按许可条款原样提供，不附带担保。这些是独立作者作品，非微软、索尼或任天堂官方素材，不表示其认可本项目。",
+              "Assets are provided as-is, without warranties, under the license terms. These independent works are not official Microsoft, Sony or Nintendo assets and do not imply endorsement.",
             )}
           </p>
         </section>
