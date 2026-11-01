@@ -12,6 +12,7 @@ go-winio.RtlNtStatusToDosErrorNoTeb
 go-winio.SetFileCompletionNotificationModes
 go-winio.WSAGetOverlappedResult
 go-winio/internal/fs.CreateFileW
+internal/input/jc2win.RoUninitialize
 internal/kblayout.MapVirtualKeyExW
 internal/kblayout.VkKeyScanExW
 internal/latency.QueryPerformanceCounter

@@ -7,6 +7,7 @@ go-winio.GetQueuedCompletionStatus
 go-winio.SetFileCompletionNotificationModes
 go-winio.WSAGetOverlappedResult
 go-winio/internal/fs.CreateFileW
+internal/input/jc2win.RoUninitialize
 internal/latency.QueryPerformanceCounter
 internal/latency.QueryPerformanceFrequency
 internal/output.SendInput

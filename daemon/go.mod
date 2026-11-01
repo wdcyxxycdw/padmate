@@ -10,6 +10,8 @@ require (
 	github.com/dop251/goja v0.0.0-20260917113740-793a2a65c13b
 	github.com/ebitengine/purego v0.11.1
 	github.com/evanw/esbuild v0.28.2
+	github.com/go-ole/go-ole v1.2.6
+	github.com/saltosystems/winrt-go v0.0.0-20261015065339-8ef619c103a3
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/tc-hib/winres v0.3.1
 	golang.org/x/sys v0.48.0
