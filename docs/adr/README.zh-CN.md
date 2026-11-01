@@ -13,7 +13,7 @@
 | 文档 | 讲什么 |
 |---|---|
 | [进程划分与技术栈](0001-processes-and-stack.zh-CN.md) | Go 守护进程加可选的 Electron 界面；常驻、托盘、单实例与转发；界面的生命周期与安全桥 |
-| [手柄输入：SDL3](0002-input-sdl.zh-CN.md) | 自带固定版本的 SDL3、hint 组合、go-sdl3 与 purego 补丁、Joy-Con、接收器心跳 |
+| [手柄输入：SDL3](0002-input-sdl.zh-CN.md) | 自带固定版本的 SDL3、hint 组合、go-sdl3 与 purego 补丁、Joy-Con、接收器心跳、直接经蓝牙 LE 读 Joy-Con 2 |
 | [多手柄、热插拔与 slot](0003-devices-and-slots.zh-CN.md) | 最多 4 个手柄同时映射；热插拔、重连与排队 |
 | [键盘与鼠标输出](0004-output-sendinput.zh-CN.md) | SendInput 扫描码与键盘布局、注入标记、菜单屏蔽键、按键间隔、鼠标输出 |
 | [引擎、slot loop 与运行时监督](0005-engine-and-threads.zh-CN.md) | 纯函数引擎、slot loop、T-output 循环、运行时监督、端到端延迟 |

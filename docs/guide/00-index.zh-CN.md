@@ -21,3 +21,4 @@ padmate 把手柄上的按键、摇杆和扳机变成键盘快捷键。典型用
 11. [托盘和紧急释放](12-tray-and-emergency.zh-CN.md)：随时让它停下。
 12. [更新和隐私](13-updates-and-privacy.zh-CN.md)：检查更新、联网内容和卸载。
 13. [常见问题](14-faq.zh-CN.md)：SmartScreen、杀毒软件、手柄没反应。
+14. [Joy-Con 2](15-joycon-2.zh-CN.md)：经蓝牙连接 Switch 2 的 Joy-Con。

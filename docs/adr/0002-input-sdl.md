@@ -1,4 +1,4 @@
-# ADR-0002: Controller input: SDL3, hints, go-sdl3 patches, Joy-Cons and receiver heartbeats
+# ADR-0002: Controller input: SDL3, hints, go-sdl3 patches, Joy-Cons, receiver heartbeats and Joy-Con 2 over Bluetooth LE
 
 [中文](0002-input-sdl.zh-CN.md)
 
@@ -13,6 +13,8 @@ Controller input uses SDL 3.4.x, loaded at run time as SDL3.dll through go-sdl3 
 - Some go-sdl3 bindings are missing, and some panic or give wrong results.
 - When painting, the left hand often holds a single Joy-Con; when the other one wakes up, the one in hand must not be affected.
 - A 2.4 GHz USB receiver of the Switch protocol keeps its controller listed in SDL after the controller turns off. SDL reports no removal, and a key held before the controller turned off stays held.
+- SDL cannot read a Joy-Con 2 (the Switch 2 Joy-Con). SDL 3.4.16 has a Switch 2 driver, but it is USB only: it talks through libusb, and a Joy-Con 2, which has no USB port of its own, works only inside the charging grip. Its Bluetooth path is a `FIXME` upstream that returns "not supported". Worse, the official Windows SDL3.dll is built without libusb, so it has no Switch 2 driver at all. Painting with one Joy-Con 2 in the left hand means no cable and no grip.
+- A Joy-Con 2 speaks a custom GATT protocol over Bluetooth LE that Nintendo has not documented. It refuses standard Bluetooth pairing (it drops the link when the host starts it), so Windows cannot pair it; but Windows can open a GATT connection to an unpaired LE device. The controller also stays paired with its console, and padmate must not disturb that.
 
 ## Decision
 
@@ -27,12 +29,29 @@ Controller input uses SDL 3.4.x, loaded at run time as SDL3.dll through go-sdl3 
    - Only a complete report whose timer byte changes counts as a heartbeat. A device is "armed" only after it keeps sending idle heartbeats while at rest, so a device that reports only on change is never armed, and a button held still is never released by mistake.
    - When an armed device has been silent for the timeout, a DeviceRemoved is synthesized. Whether a control is held does not matter, since latches and scripts can hold keys with no control held.
    - The device becomes dormant, but its handle stays open (closing the gamepad would make SDL put the device back into simple mode). Its next button or axis event brings it back with a new DeviceID and the same DeviceKey, and the router treats it as a reconnect ([ADR: Several controllers](0003-devices-and-slots.md)).
+7. **padmate reads Joy-Con 2 itself, over Bluetooth LE, with the Windows Runtime.**
+   - Three layers. `internal/input/jc2` is the pure protocol: advertisements, commands, replies, reports, stick calibration, the mapping and the silence watchdog; it builds and tests on Linux. `internal/input/jc2win` is the Windows transport (github.com/saltosystems/winrt-go over go-ole: no cgo, no helper process). A hub in `internal/input` runs on T-input and turns reports into the same `Event`s as the SDL backend, so the router, slots and engine do not change. No virtual gamepad is created, and SDL never sees these controllers.
+   - **No pairing, of any kind.** padmate opens a GATT connection to the unpaired controller. It uses no Windows pairing call, never starts Nintendo's own pairing command, and changes no Windows setting. The controller's pairing with its console is never touched, so the same controllers keep working on the console.
+   - **A hard allowlist of what is sent.** The only bytes ever written to the command characteristic are the exact requests that `jc2.CheckRequest` accepts: the firmware info, three flash reads (the info block with the serial number, the factory stick calibration, the user stick calibration), the feature mask `0x03` (buttons and sticks; set, then enable) and the player lights. The only other write is the notification switch (CCCD) of the input report and of the command reply. Pairing commands, flash writes and erases, the pairing area of the flash (where the console's keys are), firmware update, shutdown and vibration are not on the list. The check runs on the final bytes just before the one write call; tests and a fuzz test keep both the list and that call site in place.
+   - Only the native side report of each controller is subscribed to. The common report stays silent unless a command that padmate does not send selects it, and buttons and sticks do not need it.
+8. **Connection policy: connect only on the standard advertisement, and only the controllers the user chose.**
+   - A controller accepts a PC only while its SYNC button is held (the standard advertisement, whose host address is all zero). The advertisement it sends after a normal button press is a reconnection to its console, and it drops a PC's link within a millisecond. So SYNC is needed every time, and padmate never tries the reconnection advertisement.
+   - "连接新的 Joy-Con 2" in the tray (and in the UI) opens a pairing window of 30 s. The first controller that advertises with SYNC held is connected and remembered (address, serial number, side). Afterwards a remembered controller connects by itself whenever it advertises with SYNC held. An unknown controller is never connected outside the window. The switch for connecting remembered controllers automatically is on by default; with no controller remembered and no window open, nothing is scanned. A remembered controller can be forgotten. After a failed or closed connection an address is left alone for a few seconds, because repeated connects can put a controller on a cooldown.
+   - The player lights show the connection's player number.
+9. **A left and a right Joy-Con 2 form one gamepad by themselves.** Whenever one left and one right Joy-Con 2 are both connected, they become one `joyconpair` gamepad. When one of them goes, the pair is reported removed (everything is released) and the other comes back as a single. There is no switch and no hint. A single one is held sideways unless the vertical hint is set, and its buttons follow the Switch 1 Joy-Con mapping; the C button of the right Joy-Con 2 is `misc2`. A Joy-Con 2 never combines with a Switch 1 Joy-Con that SDL reports: those stay apart as in decision 4.
+10. **Timing and the silence watchdog.**
+    - Right after connecting, padmate requests the throughput-optimized connection parameters (`RequestPreferredConnectionParameters`, Windows 11). On the measured controllers this takes the report interval from 60 ms to 15 ms and keeps it there. Windows 10 has no such call: the interval stays at 60 ms and the log says so (best effort).
+    - Windows needs about 10 s to notice a dead link, far too long, but the controllers report on a timer, also at rest. So a link without a report for 300 ms is dormant: its gamepad is reported removed (everything is released) and the link is kept. If reports come back, the gamepad is reported added again with a new DeviceID and the same DeviceKey, with no SYNC. A link silent for 3 s, or one that Windows reports lost, is closed. A long gap costs at most one release of the held keys; it does not disconnect the controller.
 
 ## Costs
 
 - Following SDL means bumping the version and hash ourselves and repeating the hardware tests. A new clone must run `task sdl` first.
-- Using two Joy-Cons together needs a hint. Switch 2 Joy-Cons are not supported.
+- Using two Joy-Cons together needs a hint. Other Switch 2 controllers (Pro Controller 2, GameCube controller) are not supported.
 - Receiver detection relies on how the real hardware behaves and on SDL 3.4.16 forcing complete reports over USB; upgrading SDL means checking again. It errs on the side of no stuck keys: a link lost for more than 2 s releases the keys and reports a disconnect.
+- The Joy-Con 2 protocol is unofficial, from public reverse engineering. A firmware update, which the console can install, may change it. The decoder is tolerant and the allowlist is exact, so a change shows up as a controller that does not connect, not as a wrong write.
+- The user holds SYNC every time a Joy-Con 2 connects. The controller wakes the console with an ordinary button, but padmate answers only SYNC.
+- On Windows 10 the report interval stays at 60 ms: the stick updates about 17 times a second, and the Bluetooth leg adds about 30 ms on average.
+- Two more modules (winrt-go and go-ole). The callbacks that winrt-go creates are fixed in number and created once, in line with invariant 5 of CLAUDE.md.
 
 ## Alternatives given up
 
@@ -41,4 +60,10 @@ Controller input uses SDL 3.4.x, loaded at run time as SDL3.dll through go-sdl3 
 - **Ship `binsdl`.** Its version does not go through our checks, and it writes a DLL at run time and then loads it, which antivirus programs readily flag.
 - **Turn on RawInput or WGI by default, or use XInput only.** There is no reason to replace the defaults; XInput cannot read PlayStation or Switch controllers.
 - **Make holding upright the default, or add a `--joycon` flag or `sl`/`sr` aliases.** The templates are designed for sideways holding. Which control SL stands for depends on left or right, the grip and whether they are combined; a fixed alias is wrong in some mode.
+- **Wait for SDL, or build SDL with libusb.** Upstream has no plan for the Bluetooth path, and the USB path needs the charging grip. A self-built SDL would overturn decision 1 (an official asset, no toolchain of our own) and still not read the controller over Bluetooth.
+- **A third-party bridge plus ViGEmBus.** It turns the Joy-Con 2 into a virtual gamepad and needs a kernel driver that is no longer maintained. Virtual gamepads are out of scope (CLAUDE.md), the controllers would look alike to SDL, and it is one more program to run.
+- **An adapter.** None is documented to support Joy-Con 2.
+- **Nintendo pairing with the PC**, so that an ordinary button, not SYNC, would reconnect it. It could displace the console's entry in the controller's pairing list, and the controller might then no longer connect to its console as before. Holding SYNC every time is the price.
+- **Writing the report-rate descriptor** that the console writes. Nobody knows what it means, it writes to the controller, and the connection parameters of Windows already give 15 ms.
+- **Connecting on the reconnection advertisement.** Windows connects, but the controller ends the link within a millisecond.
 - **Receivers: use the connection or power state, a timeout on silent controls, the IMU, probing with `SDL_SendGamepadEffect`, or rebuilding the device with another hint.** The connection state is always WIRED; a silence timeout would hit a painter holding a button still; not every device has an IMU; probing would block T-input; changing a hint affects every Switch device.

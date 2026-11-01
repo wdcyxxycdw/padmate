@@ -13,7 +13,7 @@ How the documents divide the work:
 | Record | Topic |
 |---|---|
 | [Processes and stack](0001-processes-and-stack.md) | A Go daemon plus an optional Electron UI; running in the background, the tray, single instance and forwarding; the UI's lifecycle and security bridge |
-| [Controller input: SDL3](0002-input-sdl.md) | A bundled, pinned SDL3; the hint set; go-sdl3 and purego patches; Joy-Cons; receiver heartbeats |
+| [Controller input: SDL3](0002-input-sdl.md) | A bundled, pinned SDL3; the hint set; go-sdl3 and purego patches; Joy-Cons; receiver heartbeats; Joy-Con 2 read directly over Bluetooth LE |
 | [Several controllers, hot-plug and slots](0003-devices-and-slots.md) | Up to four controllers mapped at once; hot-plug, reconnects and the queue |
 | [Keyboard and mouse output](0004-output-sendinput.md) | SendInput scan codes and keyboard layouts, the injection tag, the menu mask key, key gaps, mouse output |
 | [Engine, slot loop and runtime supervision](0005-engine-and-threads.md) | The pure engine, the slot loop, the T-output loop, runtime supervision, end-to-end latency |

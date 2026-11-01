@@ -11,7 +11,7 @@
 | 领域 | 决定 | ADR |
 |---|---|---|
 | 平台与进程 | 只支持 Windows 10/11 x64。Go 守护进程 `padmated` 负责全部映射，常驻托盘，单实例；Electron 界面可选，关掉不影响映射 | [进程与技术栈](adr/0001-processes-and-stack.zh-CN.md) |
-| 输入 | 自带固定版本的 SDL 3.4.16（go-sdl3 + purego）；Joy-Con 不合并 | [手柄输入](adr/0002-input-sdl.zh-CN.md) |
+| 输入 | 自带固定版本的 SDL 3.4.16（go-sdl3 + purego）；Joy-Con 不合并；Joy-Con 2 直接经蓝牙 LE 读（winrt-go），不配对 | [手柄输入](adr/0002-input-sdl.zh-CN.md) |
 | 多手柄 | 4 个预建 slot，其余手柄排队；新分配先暂代，按任意键确认 | [多手柄与 slot](adr/0003-devices-and-slots.zh-CN.md) |
 | 输出 | SendInput 扫描码；事件带 `dwExtraInfo` 标记；只有 T-output 调 SendInput | [键盘与鼠标输出](adr/0004-output-sendinput.zh-CN.md) |
 | 线程 | slot loop、T-output、T-input 各自锁定 OS 线程；引擎是纯函数 | [引擎与线程](adr/0005-engine-and-threads.zh-CN.md) |
@@ -53,8 +53,8 @@ Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`
 
 `daemon/internal/` 的包。“纯包”不导入 `x/sys/windows`、`input`、`output`、`script`、`latency`，不记日志，不读真实时间（不变量 2）。
 
-- **纯逻辑包**：`keys`、`control`、`profile`（`Resolve` 合并父配置，读文件的函数由调用者给）、`engine`、`clock`、`haptic`、`sdlmapping`、`mapwizard`（界面用 TypeScript 实现同一套，`testdata/vectors.json` 共用）、`amgp`、`kblayout`、`watch`、`padlabel`。`Level` / `Registry` 返回的 binding 不经 `Compile`，必须先过 `engine.CheckBinding`，否则松开后才执行的手势按住的键没人松开（§7.7）。
-- **与 Windows 和 SDL 打交道的包**：`output`（Arbiter、MenuMask、`Loop`、布局 Resolver 跨平台；SendInput 在 `_windows.go`，§8）、`input`（T-input、SDL 后端、虚拟手柄、设备身份、事件 JSON 行；引擎不导入它）、`sdlpin`、`winhook`、`winfocus`（§9）、`winsession`、`keycapture`、`ownwindow`、`instance`、`autostart`、`emergency`、`diagnostics`、`tray`、`ipc`（§11）、`profilelib`（§10.1）、`trace`、`logging`、`latency`（§13，叶子包，纯包不能导入）。`injecttest`、`winsessiontest` 是测试工具。
+- **纯逻辑包**：`keys`、`control`、`profile`（`Resolve` 合并父配置，读文件的函数由调用者给）、`engine`、`clock`、`haptic`、`sdlmapping`、`mapwizard`（界面用 TypeScript 实现同一套，`testdata/vectors.json` 共用）、`amgp`、`kblayout`、`watch`、`padlabel`、`input/jc2`（Joy-Con 2 的协议：广播、命令白名单、回复、报告、摇杆校准、控件映射、静默看门狗；只导入标准库，所以能在 Linux 上构建和测试，§5.3.1、§7.1.1）。`Level` / `Registry` 返回的 binding 不经 `Compile`，必须先过 `engine.CheckBinding`，否则松开后才执行的手势按住的键没人松开（§7.7）。
+- **与 Windows 和 SDL 打交道的包**：`output`（Arbiter、MenuMask、`Loop`、布局 Resolver 跨平台；SendInput 在 `_windows.go`，§8）、`input`（T-input、SDL 后端、Joy-Con 2 的 hub、虚拟手柄、设备身份、事件 JSON 行；引擎不导入它）、`input/jc2win`（蓝牙 LE 上 Joy-Con 2 的 Windows Runtime 传输，§5.3.1；`doc.go` 跨平台，其余是 `_windows.go`）、`sdlpin`、`winhook`、`winfocus`（§9）、`winsession`、`keycapture`、`ownwindow`、`instance`、`autostart`、`emergency`、`diagnostics`、`tray`、`ipc`（§11）、`profilelib`（§10.1）、`trace`、`logging`、`latency`（§13，叶子包，纯包不能导入）。`injecttest`、`winsessiontest` 是测试工具。
 - **编排**：`slot`（串起 engine、脚本和 Arbiter）、`supervisor`（设备与 slot 对应、router、重启、重载）、`script`、`simtest`（只有 `_test.go` 能导入，§14）。
 
 **导入规则**由 depguard 与 forbidigo 强制，配置在 `daemon/.golangci.yml`：纯逻辑包不得导入 Windows 相关包、`input`、`output`、`script`、`latency`、`winsession`、goja、esbuild 和日志包，也不得直接读时间（`time.Now` 等）；`winsession` 不得导入映射相关的包；整个模块禁止调用 `output.SendInput`，例外是 padmated 的 `sender_windows.go`、padmatectl 的 `send_windows.go`、`injecttest`、`output` 和测试。纯逻辑包、`slot`、`supervisor`、`simtest` 和其他包的非 Windows 部分能在 Linux 上编译并测试。
@@ -68,7 +68,8 @@ Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`
 | 线程 | 锁定 | 职责 |
 |---|---|---|
 | main | 是 | `systray.Run`（§5.2） |
-| T-input | 是 | SDL 事件泵、紧急组合检测、手柄效果、接收器看门狗（§5.3–§5.5） |
+| T-input | 是 | SDL 事件泵、紧急组合检测、手柄效果、接收器看门狗、Joy-Con 2 的 hub（§5.3–§5.5、§5.3.1） |
+| jc2win 传输 | 是 | Joy-Con 2 在 Windows Runtime 一侧的工作：扫描、连接、GATT、白名单内的写入。一个 goroutine，一切经通道交给 T-input（§5.3.1） |
 | slot loop ×N | 是 | `engine.Step`、脚本分发、定时器。每个 slot 一个，不管有没有手柄；最多 4 个（§5.10） |
 | script worker | 否 | esbuild 构建、新 runtime 的 setup、旧 runtime 的 teardown |
 | T-output | 是 | `output.Loop`：拥有 Arbiter，唯一的 SendInput 调用者（§5.9） |
@@ -96,9 +97,22 @@ Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`
 - **效果**（理由见 [手柄反馈](adr/0015-controller-feedback.zh-CN.md)）：都在 T-input 上执行。一次 Effector 调用失败，它所在的组冷却 5–7 s，期间不写任何东西（2.4G 接收器不接 OUT 报告时，阻塞写会拖住所有手柄的输入）。`padmated.effectQueue` 让 slot 和引擎只提交数据，一个 worker 按序调 T-input；取消永不丢弃，脚本放出的东西不能比脚本活得长。
 - **关闭与 panic。** `Close` 分离虚拟手柄、关设备、`SDL_Quit`、关事件通道。T-input 上的 panic 或 `Goexit` 也这样结束：`Err()` 在 `Events` 关闭之前设好，返回 `*PanicError`；之后的命令返回 `ErrClosed`。
 
+### 5.3.1 蓝牙 LE 的 Joy-Con 2（`ble.go`、`jc2hub.go`、`jc2/`、`jc2win/`）
+
+SDL 读不了 Joy-Con 2，所以 T-input 还跑着第二个后端，理由见 [手柄输入](adr/0002-input-sdl.zh-CN.md)。它分三部分：`jc2`（纯协议）、`jc2win`（Windows Runtime 传输，经 winrt-go）和 `internal/input` 里的 hub（`jc2hub.go`，由 `ble.go` 接到 `Source` 上）。它的手柄在哪些地方和别的手柄一样，见 §7.1.1。
+
+- **启动。** 只有 `Options.JoyCon2` 不为 nil 时：padmated 的实机模式会设它；`monitor`、`record` 和大多数测试留空。`Source.init` 在 hint 和组合监视之后启动传输。传输起不来不算 `Open` 的错误：SDL 的手柄照常工作，`JoyCon2Available()` 和 Joy-Con 2 的各方法返回原因（Windows 以外是 `ble_other.go`，没有传输）。测试给 `JoyCon2Options.Transport` 一个假传输，所以 hub 能在 Linux 上测试。
+- **传输 goroutine。** `jc2win.Start` 启动一个 goroutine，它把自己锁在一个 OS 线程上，为这个线程初始化 Windows Runtime（多线程单元），并做所有不在回调里的 WinRT 调用：扫描、连接（会话、服务、简短的启动对话）、通知开关、白名单内的命令写入、连接参数请求。`Scan`、`Connect`、`Disconnect`、`Close` 只排队请求，从不阻塞。能写什么只在一处决定（`gate.go`：对最终字节跑 `jc2.CheckRequest`，紧接着才是唯一的写调用；`guard_test.go` 守住这一点）。
+- **回调。** 三个 WinRT 事件在 Windows 线程池的线程上调进 Go：收到一条广播、特征值变了、连接状态变了。每个都复制字节、读 `latency.Now`、不阻塞地发进有界通道（256；满了计一次丢弃）然后返回，不等待，不 await，也不拿慢路径持有的锁。padmate 自己不创建回调：winrt-go 的 delegate 共用固定的四个，只创建一次（不变量 5）。
+- **事件怎样进入 T-input。** 循环的每一轮里，在 `SDL_WaitEventTimeout(2 ms)` 之后、接收器看门狗旁边，`pumpJoyCon2` 取空这个通道（最多 512 条，所以大量广播拖不住循环），再运行 hub 的定时器。没有唤醒通道：一条报告最多多等一轮（2 ms），加上手柄自己的 15 ms（Windows 11）或 60 ms 发送间隔。每个公开方法（`JoyCon2Pair`、`JoyCon2Forget` 等）都经 `s.do`，所以 hub 只在 T-input 上被碰。hub 不读时钟，用的是 SDL 的计时，也就是 `Event.Time` 的时钟。
+- **hub 做什么。** 决定连谁（配对窗口、记住的手柄、自动连接），什么时候扫描（只在窗口开着、或有记住的手柄可连时），组成手柄，用 `jc2` 映射每条报告，把和上次状态的差别发成 `ButtonDown`、`ButtonUp`、`AxisMotion`。事件的 `Stamp` 是它那条报告的回调里取的，所以延迟统计从那里算起（§13）。
+- **连接策略。** 手柄只在按住 SYNC 时接受 PC（“标准”广播，主机地址全 0）。hub 只连标准广播，而且要么配对窗口（默认 30 s，1–600 s）开着且还没取走手柄，要么手柄已被记住且自动连接开着。连接失败或被关闭的地址 5 s 内不再理会；连接 30 s 还没连上就取消；最多八条连接，每条一个玩家编号。窗口里的第一只手柄连上后被记住（`OnRemember`，再 `Memory.RememberJoyCon2`，§10.1）。序列号已经以别的地址连着的手柄会被断开。
+- **不卡键**（不变量 1）。一个手柄的事件以它的 `DeviceRemoved` 结束，所有消费者都把它当作松开该 `DeviceID` 的一切，而 `DeviceID` 永不复用。hub 在这些时候报告手柄移除：它变 dormant（见下）、链路丢失或被关闭、这一对变化、手柄被忘记或断开，以及 `Close`（先于 `SDL_Quit`）。恢复时 `Reenumerate` 先让 hub 取空事件并走一遍定时器（睡眠期间死掉的链路就没了），再对每个在线的手柄发一个 `DeviceState`。
+- **Dormant。** 300 ms（`jc2.DefaultSilence`）没有报告的链路是 dormant：它的手柄报告移除，链路保留。下一条报告让手柄以新的 `DeviceID`、同一个 `DeviceKey` 回来，router 按重连处理（§5.8）。3 s（`jc2.DefaultLinkGiveUp`）没有报告的链路，或 Windows 报告已断开的链路，则被关闭。这里没有“武装”：和接收器（§5.5）不同，这些手柄按定时器发报告，静止时也发。
+
 ### 5.4 设备身份（`internal/input/devicekey.go`）
 
-DeviceID 每次连接都变；`DeviceKey{GUID, Serial, Path, N}` 重连后不变，N 区分除 N 外都相同、同时连着的手柄。router 用它认出回来的手柄，让它收回 slot 或给暂代 slot 改换 home（§5.8）。
+DeviceID 每次连接都变；`DeviceKey{GUID, Serial, Path, N}` 重连后不变，N 区分除 N 外都相同、同时连着的手柄。router 用它认出回来的手柄，让它收回 slot 或给暂代 slot 改换 home（§5.8）。Joy-Con 2 的 DeviceKey 依据手柄 flash 里的序列号（§7.1.1）。
 
 ### 5.5 接收器看门狗（`receiver.go`、`watchdog.go`、`hidbeat.go`）
 
@@ -256,11 +270,34 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 - 别名：`a b x y`（south east west north）、`lb rb`、`l3 r3`、`select`（back）。原始轴名：`leftx lefty rightx righty lefttrigger righttrigger`。
 - 功能键任何时候只有一个，见 §7.9。
 
-**Joy-Con**：每只是一个手柄，默认横握；类型 `joyconleft`、`joyconright`，合并的 `joyconpair` 需 `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`。键映射由 SDL 3.4.16 决定（Switch 1；Switch 2 的不支持）：
+**Joy-Con**：每只是一个手柄，默认横握；类型 `joyconleft`、`joyconright`，合并的 `joyconpair` 需 `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`。键映射由 SDL 3.4.16 决定（Switch 1；Switch 2 的 Joy-Con 2 不由 SDL 读取，见 §7.1.1）：
 
 - 横握：SL/SR 是 leftshoulder/rightshoulder，L(R) 和 ZL(ZR) 是 paddle2/paddle4（左）或 paddle1/paddle3（右），−/+ 是 start，Capture/Home 是 guide，四个面键是 south/east/west/north，摇杆是 left 摇杆。受 SDL 250 ms 抬起延迟影响。
 - 竖握 L：SL/SR 是 paddle2/paddle4，L/ZL 是 leftshoulder/lt，− 是 back，Capture 是 misc1。竖握 R：SL/SR 是 paddle3/paddle1，R/ZR 是 rightshoulder/rt，+ 是 start，Home 是 guide，摇杆是 right 摇杆。合并后与标准手柄相同。
-- 没有 misc2..6、touchpad 和 `sl`/`sr` 别名。界面按 `buttonMask` 判断握法：有 south、没有 rightstick 的单只是横握（竖握的右手那只也有面键）；Go 的 `padlabel` 同一规则。守护进程的握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并的 back+start。
+- 没有 misc2..6（Joy-Con 2 有 misc2，§7.1.1）、touchpad 和 `sl`/`sr` 别名。界面按 `buttonMask` 判断握法：有 south、没有 rightstick 的单只是横握（竖握的右手那只也有面键）；Go 的 `padlabel` 同一规则。守护进程的握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并的 back+start。
+
+### 7.1.1 Joy-Con 2
+
+Switch 2 的 Joy-Con，由 padmate 自己经蓝牙 LE 读取（§5.3.1，[手柄输入](adr/0002-input-sdl.zh-CN.md)）。控件名和上面的 Joy-Con 相同，另加右手那只 C 键的 `misc2`。映射（`jc2/mapping.go`）有三种模式，hub 给每个手柄选一种：
+
+- **横握**，单只 Joy-Con 2 横着拿（默认）。左：左/下/上/右是 south/east/west/north，SL/SR 是 leftshoulder/rightshoulder，L/ZL 是 paddle2/paddle4，− 是 start，Capture 是 guide，摇杆按下是 leftstick。右：A/X/B/Y 是 south/east/west/north，SL/SR 是 leftshoulder/rightshoulder，R/ZR 是 paddle1/paddle3，+ 是 start，Home 是 guide，C 是 misc2，摇杆按下是 leftstick。摇杆是 left 摇杆，随手柄转过来：按拿着时的“右”得 leftx > 0，按“下”得 lefty > 0。
+- **竖握**，单只竖着拿，只在设了竖握 hint（`SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS`，和 Switch 1 Joy-Con 用同一个）时。左：方向键是 dpad.*，L 是 leftshoulder，ZL 是 lefttrigger（0 或 32767），− 是 back，Capture 是 misc1，SL/SR 是 paddle2/paddle4，摇杆是 left 摇杆，不转。右：A/B/X/Y 是 east/south/north/west，R 是 rightshoulder，ZR 是 righttrigger，+ 是 start，Home 是 guide，C 是 misc2，SR/SL 是 paddle1/paddle3，摇杆是 right 摇杆，不转。
+- **一对**：两张竖握表的并集，left 摇杆来自左 Joy-Con，right 摇杆来自右 Joy-Con。自动组成（见下）。紧急组合按 §7.1 各模式的规则：leftshoulder+rightshoulder、paddle2+paddle4（竖握 L）、paddle3+paddle1（竖握 R）、back+start（一对）。
+- guide 不能映射（§7.9），所以横握时 Capture 和 Home 都用不上，和 Switch 1 Joy-Con 一样；SDL 的 250 ms guide 延迟不适用，因为没有 SDL 参与。握把上的键（GL/GR）和运动传感器不读。
+- **摇杆。** 报告里的摇杆是两个 12 位数。hub 用手柄自己的校准把它们换成 −1..1；校准在连接时从 flash 读：有用户校准用用户的，否则用出厂的（中心和各方向的行程），都没有就用中心 2048、行程 1200。轴按 SDL 的约定（y 向下，扳机 0..32767）。摇杆静止时不正好在中心（见 PITFALLS），所以摇杆的死区要盖住这个偏差。
+
+**设备身份。** `DeviceInfo.Driver` 是 `ble`。Vendor 是 `0x057e`；Product 是 `0x2067`（左）、`0x2066`（右）或 `0x2068`（一对，padmate 自己定的号）；`Type` 是 `joyconleft`、`joyconright` 或 `joyconpair`；名字是 `Joy-Con 2 (L)`、`Joy-Con 2 (R)` 或 `Joy-Con 2 pair`。GUID 按 SDL 的布局（§5.4）：前两字节是总线类型 `0x0005`（蓝牙），没有名字 CRC，接着是 vendor 和 product，驱动签名 `b` 在第 14 字节（padmate 自己的签名，`guid.go` 解码为 `ble`）。同一型号的所有 Joy-Con 2 GUID 相同，靠序列号区分。所以 `DeviceKey` 是 `{GUID, Serial}`：`Serial` 是 flash `0x13002` 起的 14 个 ASCII 字节，一对则是两个序列号用 `+` 连起来（左在前），因此手柄每次连接 key 都不变，和它的蓝牙地址无关（地址只在 `Path` 里，`ble:<地址>`）。`DeviceID` 从 `0x40000001` 往上数，这一段和 SDL 的（从 1 起）、接收器别名的（从 2³²−1 往下）、测试假 id 的（`0x7ff00001` 附近）都不相遇。每次报告手柄新增都换一个新的。
+
+**一对与单只。** hub 自己用已连接的手柄组成 gamepad，没有开关：按连接先后，第一只左和第一只右 Joy-Con 2 合成一对，其余每只是单只。只有 hub 自己的链路会组成一对：Joy-Con 2 从不和 SDL 报告的 Switch 1 Joy-Con 合并。集合变化时，不再合适的手柄先报告移除（它的消费者松开一切），再报告新的新增；所以一对里一只离开，另一只就以新的 `DeviceID` 作为单只回来。一对只在两条链路都在报告时才在线：其中一条变 dormant（§5.3.1），整对就报告移除，两只都报告时才回来。
+
+**电量。** 每条报告的第一个字节带电量等级 0–9、充电位和外接电源位。hub 把等级换成十分之一步长的百分比，充电为 `charging`，外接电源且没在充电为 `wired`，否则 `discharging`，作为 `DevicePower` 事件和电量查询的结果发出（连接方式 `wireless`）。一对取两只中较低的。手柄的每条链路都发过报告之前，不发百分比。玩家编号取 0–7 中没有在线链路用着的最小值，手柄上的灯显示的也是它。
+
+**Joy-Con 2 的 `DeviceID` 上，各个按设备的方法做什么。** SDL 不认识它，所以对它从不调用 SDL（`Source.isJoyCon2`）：
+
+- 效果、灯和触觉提示什么都不做，也不返回错误：padmate 不驱动这些手柄的震动和灯（灯显示玩家编号，连接时设一次）。所以 `devices.identify` 没有动静。
+- 映射类调用（读取、设置或重置 SDL 映射）和原始事件流（`devices.rawInfo`）返回 `input.ErrUnsupported`：没有 SDL 映射可改，Joy-Con 2 又总是已知的手柄，映射向导无事可做。
+- 电量和玩家编号来自报告（见上）；睡眠后 `Reenumerate` 把手柄的状态带回来（§5.3.1）。
+- Joy-Con 2 自己的方法（`JoyCon2Pair`、`JoyCon2CancelPair`、`JoyCon2Forget`、`JoyCon2Disconnect`、`JoyCon2Status` 等）就是 IPC 的 `joycon2.*`（§11）；没有这个后端时（不是 Windows、传输没起来、假输入）返回 `ErrJoyCon2Unavailable`。
 
 ### 7.2 手势识别
 
@@ -571,6 +608,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 **state.json**
 
 - 内容：`lastProfile`、`lastProfileSet` 和每设备每配置的层状态（`devices[DeviceKey].profiles[id]`：`base`、`toggled`、`cycles`）。`lastProfileSet:true` 加空 `lastProfile` 表示上次已禁用。
+- `joycon2`：记住的 Joy-Con 2（蓝牙 LE），`{addr, serial, side}` 数组（`addr` 为大写 `AA:BB:CC:DD:EE:FF`，`side` 为 `L` 或 `R`，最多 64 个，旧的在前）。这是机器状态，不是设置，只有守护进程写。配对窗口连上一只手柄时在 T-input 上调 `Memory.RememberJoyCon2`（持锁写 map，无 I/O），`joycon2.forget` 调 `Memory.ForgetJoyCon2`，由下面的后台刷新写文件。没有这个成员的文件表示一只也没记。
 - `profilelib.Memory` 在内存合并，后台每 500 ms 刷新；退出在 output 停止后最后刷新，最多等 1 s。校验后写临时文件、Sync、rename。
 
 **config.json 的自动修复**（`profile.RepairConfig`、`profilelib.ReadRepairedConfig`）
@@ -720,7 +758,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 }
 ```
 
-顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`safety.panic`（含 `guide` 的组合带警告加载但不用，这一类手柄保留内置组合，`PanicCombo.Usable`；界面每次写都去掉）、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
+顶层成员：`enabled`（自动选择开关，缺省 true，不改变手动暂停）、`releaseOnSwitch`、`functionKey`（`start` 默认，或 `back`；对所有配置和手柄一样；退役的 `guide` 仍合 schema，按 `start` 读，界面每次写都去掉，同下面的弃用成员）、`restoreLayerState`、`rules`、`timing`（全局四个时间，位于 profile 和 binding 之下，显式 0 不被默认值覆盖）、`output`、`feedback`（四个开关，默认 true）、`joycon2.autoConnect`（默认 true：记住的 Joy-Con 2 在按住 SYNC 时自动连接；立即生效，不必重启）、`safety.panic`（含 `guide` 的组合带警告加载但不用，这一类手柄保留内置组合，`PanicCombo.Usable`；界面每次写都去掉）、`devices`。弃用成员 `defaultProfile`、`onUnmatched`、`ignore` 和 `profile` 为 null 的规则：旧文件照常加载、`config.put` 照常接受，但被忽略，界面每次写都去掉。
 
 **规则**（自动选择，§9）：首条已启用的匹配规则胜出，没有匹配的用 `default`。`exe` 是文件名或完整路径，不区分大小写，`/` 与 `\` 等价，不读标题、不支持通配符。`device` 只接受 `"any"`。
 
@@ -859,6 +897,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | -32024 | 不是可导入的 AntiMicroX 文件，`data {reason}` |
 | -32025 | 映射不能保存，`data.reason`：`syntax`、`mapping`、`guid`、`config` |
 | -32026 | 这个输入做不了（假输入没有映射或原始事件，或已映射的手柄没有处于捕获） |
+| -32027 | 蓝牙 LE 的 Joy-Con 2 不可用（不是 Windows、传输没有启动，或没有它的假输入） |
 
 ### 方法
 
@@ -867,6 +906,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `hello` / `subscribe` | 握手（必须第一条）/ 订阅话题 |
 | `status.get` | 守护进程状态、slots、设备、紧急组合、冲突程序、配置修复提示 |
 | `devices.list` / `devices.identify` | 设备表（按连接 ID 排序，含 `key`、`slot`、`status`、`battery`）/ 让手柄震动闪灯 |
+| `joycon2.status` / `joycon2.pair {seconds?}` / `joycon2.cancelPair` / `joycon2.forget {serial}` / `joycon2.disconnect {id}` | Joy-Con 2：状态 / 打开连接并记住新手柄的窗口（默认 30 s，1–600）/ 关闭它 / 忘记记住的手柄（state.json 也删）/ 按连接 ID 断开一个手柄（一对的两只都断；手柄仍记着）。都返回状态 |
 | `devices.rawInfo` / `devices.setMapping` / `devices.resetMapping` | 映射向导：原始事件流 / 保存并应用 SDL 映射 / 拿走它 |
 | `latency.get` / `latency.reset` | 延迟统计（口径见 §13）/ 清空 |
 | `engine.pause` / `resume` / `releaseAll` / `setLayer` | 暂停、恢复、全部释放、切层 |
@@ -878,7 +918,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `startup.get/set` | 登录时启动（只接受 `enabled`，命令总是本进程的可执行文件和 `startupArgs`） |
 | `script.status/reload/describe/registrations/logs/init/import/path/detach` | 脚本 |
 | `macros.list/create/import/rename/delete/path` | 脚本库的宏，不带配置 ID |
-| `fake.press/release/axis/effects/battery` | 只在 `--fake-input` 下 |
+| `fake.press/release/axis/effects/battery/joycon2` | 只在 `--fake-input` 下 |
 | `ui.register` / `ui.setOutput` / `ui.exitReady` | 注册经验证的 UI 进程；设自身窗口输出开关；托盘退出或 `daemon.exit` 时界面存完修改后确认（只有注册过的连接能调） |
 | `daemon.exit` | 安装程序请 padmated 像托盘“退出”一样退出（§5）；参数必须恰为 `{reason:"installer"}`，别的内容 -32602 且不动 |
 | `instance.forward {args}` | 第二实例转发启动参数 |
@@ -890,6 +930,7 @@ JSON-RPC 标准码（如 -32602）之外：
 - **`profiles.put {id,text,revision}`**：revision 必填，空串只允许创建；不匹配 -32009。校验后在写锁内写临时文件、Sync、rename，替换前存快照。活动配置同步应用（即使 `--watch=false`），返回 `{revision,applied,problem?}`：脚本参数检查失败时文件已保存但保留旧运行时并返回 `problem`。改固定默认配置的 name 返回 -32018。父配置不在库里、成环或有错误时 InvalidParams。
 - **`profiles.delete {id,revision}`**：永久删除，不保留副本。写锁内先 rename 成隐藏的 `.tmp-<id>-*` 再删，所以要么整个离开库要么不变；删不干净仍算成功。拒绝：活动配置 -32012；被规则（含禁用的）或启动参数选中 -32013；链接等 -32015；`default` -32018。删除前先刷新 state.json。被别的配置基于时先把它们写成完整内容（§10.1），返回 `flattened`；写不成 -32023。
 - **`profiles.export/import`**：守护进程只收发字节，不接受路径，选文件和读写文件在 Electron 主进程。`import {data,name?,replace?,macros?}`：`name` 与 `replace` 不能同给；`-32020` 的 `reason`：`format`、`version`、`entry`、`limit`、`encoding`、`profile`；名称占用 -32021，脚本冲突 -32022。
+- **`joycon2.*`**（`ipc_joycon2.go`、`ipc_fake_joycon2.go`）：结果是 `{available, unavailable?, autoConnect, windowOpen, windowEndsAt?, windowLeftMs?, scanning, known:[{addr,serial,side,connected}], links:[{addr,serial?,side,player,firmware?,interval?,state,device?,known}]}`。连接的 `state` 为 `connecting`、`connected`、`dormant`（静默；它的手柄已报告移除）或 `closing`；`device` 是 `devices.list` 和 `joycon2.disconnect` 用的连接 ID。没有这个后端的输入对 `joycon2.status` 答 `available:false`，其余方法 -32027；不认识的 serial 或连接 ID 是 -32004；`seconds` 不在 1–600、缺 `serial` 或 `id`、多余成员是 -32602。后端没有变化回调，所以由一个监视 goroutine 在手柄来去、方法之后、手柄被记住时、窗口开着或有连接正在建立或关闭时每 250 ms、其余时候每 2 s 读一次状态，不同就发 `joycon2.changed`（剩余时间不算变化）。假输入有模拟的后端：不扫描、不写 state.json、不出手柄；`joycon2.pair` 开窗口，`fake.joycon2 {side?}` 是用户按住 SYNC（只在窗口开着时连上并记住 `FAKEJC2L0001`、`FAKEJC2R0001`……，连接 ID 从 1001 起），窗口到时自己关。托盘只在输入有这个后端时显示“连接新的 Joy-Con 2”，点击打开 30 s 窗口并给出通知（§5）。
 - **`devices.rawInfo`**：手柄要求前必须已在捕获状态（`capture.start`），否则 -32026（向导要用户按会被映射成按键的按钮，必须先暂停）。要求按连接记，断连时放掉，最后一个放掉才 `RawStop`；原始事件作为 `input.raw` 只发给要求过该手柄且订阅了话题的连接。向导流程：订阅 `input.raw`、`capture.start`、`devices.rawInfo`，结束时 `rawInfo {watch:false}` 和 `capture.stop`。
 - **`macros.*`**（`ipc_macros.go`、`profilelib/macro.go`）：全部在库写锁内经 `os.Root`。`rename` 同时按字节位置改写所有引用，任何一个写失败就全部改回；`delete` 先清掉引用再删文件；整库已有 64 个宏时新建返回 InvalidParams。库模式下 `watch.DirWatcher` 监视库文件夹顶层脚本。CLI：`padmatectl macro list|new|import|rename|delete`。
 
@@ -909,6 +950,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `daemon.exiting` | 退出前发布 `{reason:"tray"}` 或 `{reason:"installer"}` |
 | `hud` | 脚本的 `hud.toast`：`{kind:"toast",slot,text,ms}`。有订阅时脚本的 `host.has("hud")` 为 true |
 | `input.raw` | `devices.rawInfo` 要求过的手柄的原始事件 `{timeNs,device,kind,index,value}`；订阅它本身不开任何设备 |
+| `joycon2.changed` | Joy-Con 2 的状态，形状同 `joycon2.status` 的结果，变化时发（窗口开关、手柄连上、被记住、被忘记或断开） |
 
 **`profile.changed`** 的 `kind`：`active`（`id,revision,generation`）、`saved`（`id,revision,applied`）、`deleted`（`id`）、`config`（`revision,applied,restartRequired`）、`macros`（脚本库顶层脚本变化，只在 `--watch`）、`configRepaired`（§10.1）。
 

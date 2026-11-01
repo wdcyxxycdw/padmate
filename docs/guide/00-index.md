@@ -21,3 +21,4 @@ Words in quotation marks are the exact text of the Chinese interface. The interf
 11. [The tray and emergency release](12-tray-and-emergency.md): stop it at any time.
 12. [Updates and privacy](13-updates-and-privacy.md): checking for updates, what goes over the network, and uninstalling.
 13. [FAQ](14-faq.md): SmartScreen, antivirus programs, a controller that does nothing.
+14. [Joy-Con 2](15-joycon-2.md): connect the Joy-Cons of the Switch 2 over Bluetooth.

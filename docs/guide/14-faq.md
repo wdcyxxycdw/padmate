@@ -33,7 +33,7 @@ Do not exclude the whole install folder, and do not turn off your antivirus prog
 
 ## The controller does not show up, or input is doubled
 
-- First make sure the controller is an Xbox, PlayStation or Switch Pro controller, or a single Joy-Con.
+- First make sure the controller is an Xbox, PlayStation or Switch Pro controller, or a Joy-Con. A Joy-Con 2 needs its own connection steps; see [Joy-Con 2](15-joycon-2.md).
 - Steam, DS4Windows and HidHide may take the controller over. “Conflicts” on the Diagnostics page names the one running and says what to do; see [Diagnostics](09-diagnostics.md).
 - When, on the “Settings” page, under “Controller calibration”, the controller says “Not recognised as a gamepad”, build a mapping with the [mapping wizard](11-mapping-wizard.md).
 

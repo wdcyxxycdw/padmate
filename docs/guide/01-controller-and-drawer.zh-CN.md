@@ -14,6 +14,7 @@
 - 标签跟着连着的手柄走，只给它有的键。PS5 手柄显示 DualSense 的外形，PS4 和 PS3 手柄显示 DualShock 4 的外形，其余手柄显示 Xbox 的外形；键名和图标按手柄上印的给，比如 × ○ □ △、L1、Options，或 B A Y X、ZL、+。
 - 手柄下方一排是附加键：Xbox Series 的分享键、DualSense 的麦克风键、Switch 的截图键，以及 Elite、Edge 的背键和 Fn 键、Joy-Con 的 SL 和 SR。手柄没有这些键，就没有这一排。
 - 单只 Joy-Con 横握时，只有一根摇杆、四个面键、SL、SR、L 和 ZL（右手那只是 R 和 ZR），以及 − 或 +。Xbox、PS 和 Home 键不能映射；横握的左手 Joy-Con 的截图键，SDL 也报成 Home 键，所以同样不能映射。
+- Joy-Con 2（Switch 2 的 Joy-Con）按 [Joy-Con 2](15-joycon-2.zh-CN.md) 里的步骤连接。它的键和 Joy-Con 相同，右手那只另有一个 C 键。
 
 ## 按键抽屉
 

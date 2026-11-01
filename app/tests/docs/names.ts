@@ -256,7 +256,13 @@ export const names: Name[] = [
 ];
 
 /** The tray menu of padmated: Chinese only, quoted as it is in both languages. */
-export const trayNames = ["暂停映射", "恢复映射", "登录时启动", "退出 padmate"];
+export const trayNames = [
+  "暂停映射",
+  "恢复映射",
+  "登录时启动",
+  "退出 padmate",
+  "连接新的 Joy-Con 2",
+];
 
 /**
  * Quoted text that is not a name of the app's own strings: text of Windows or

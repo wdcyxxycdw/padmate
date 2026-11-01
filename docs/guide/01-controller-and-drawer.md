@@ -14,6 +14,7 @@ The middle of the page shows a front-facing 3D controller. Each key has a tag be
 - The tags follow the connected controller and only cover the keys it has. A PS5 controller shows the shape of a DualSense, a PS4 or PS3 controller that of a DualShock 4, and all others the shape of an Xbox controller; key names and icons are what the controller prints, such as × ○ □ △, L1 and Options, or B A Y X, ZL and +.
 - The row below the controller holds the extra keys: the Share button of an Xbox Series controller, the mute button of a DualSense, the Capture button of a Switch controller, the back and Fn buttons of an Elite or Edge, and the SL and SR of Joy-Cons. A controller without them has no such row.
 - A single Joy-Con held sideways has one stick, four face buttons, SL, SR, L and ZL (R and ZR on the right one), and − or +. The Xbox, PS and Home buttons cannot be mapped; SDL reports the Capture button of a left Joy-Con held sideways as the Home button, so it cannot be mapped either.
+- A Joy-Con 2 (the Switch 2 Joy-Con) is connected as described in [Joy-Con 2](15-joycon-2.md). Its keys are the same as a Joy-Con's, and the right one has an extra C key.
 
 ## The key drawer
 
