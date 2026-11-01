@@ -48,11 +48,16 @@ func TestElectronBuilderConfig(t *testing.T) {
 		t.Errorf("artifactName is %q, want %q", got, want)
 	}
 	// A wizard, per user, no administrator rights. It
-	// finishes with "run padmate" ticked, makes a Start Menu and a desktop
-	// shortcut (ADR-0018), and has no license page (TestNoLicensePage).
+	// finishes with "run padmate" ticked, makes a Start Menu shortcut, leaves
+	// the desktop shortcut to installer.nsh, which makes it as the wizard's box
+	// says (ADR-0018), and has no license page (TestNoLicensePage). It speaks
+	// both languages and asks which itself (TestInstallerOptions).
+	if regexp.MustCompile(`(?m)^\s*displayLanguageSelector:`).MatchString(config) {
+		t.Error("displayLanguageSelector is set: electron-builder would ask for the language a second time")
+	}
 	for key, value := range map[string]string{
 		"oneClick": "false", "perMachine": "false", "allowElevation": "false", "runAfterFinish": "true",
-		"createDesktopShortcut": "always", "createStartMenuShortcut": "true",
+		"createDesktopShortcut": "false", "createStartMenuShortcut": "true", "multiLanguageInstaller": "true",
 		"requestedExecutionLevel": "asInvoker", "asar": "true", "include": "build/installer.nsh",
 	} {
 		if got := configValue(t, config, key); got != value {
@@ -274,9 +279,69 @@ func TestWizardScriptDefinesMaxRelativePath(t *testing.T) {
 	}
 }
 
-// padmate-wizard.nsh is read by NSIS as it is, and its tests compile it on its
-// own: it holds ASCII only, so that it needs no byte order mark.
+// The language dialog, the page of the desktop shortcut and what the install
+// does with them (ADR-0018) are wired where electron-builder calls
+// installer.nsh: the choice at the start, before the folder check speaks; the
+// page after the folder page; the language file and the shortcut at the end
+// of an install that is not an automatic update; the shortcut deleted by the
+// uninstaller unless an upgrade keeps it.
+func TestInstallerOptions(t *testing.T) {
+	text := string(readApp(t, "build/installer.nsh"))
+	for _, want := range []string{
+		`!include "padmate-options.nsh"`, "!insertmacro PadmateOptionFunctions",
+		`!define PADMATE_DESKTOP_LINK "$DESKTOP\${SHORTCUT_NAME}.lnk"`,
+		"LangString padmateOptionsTitle ${LANG_ENGLISH}", "LangString padmateOptionsTitle ${LANG_SIMPCHINESE}",
+		"LangString padmateOptionsText ${LANG_ENGLISH}", "LangString padmateOptionsText ${LANG_SIMPCHINESE}",
+		"LangString padmateDesktopShortcut ${LANG_ENGLISH} \"" + DesktopShortcutText[1] + "\"",
+		"LangString padmateDesktopShortcut ${LANG_SIMPCHINESE} \"" + DesktopShortcutText[0] + "\"",
+		`StrCpy $R8 "$padmateRoaming\padmate\ui"`,
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("installer.nsh lacks %q", want)
+		}
+	}
+	if pages := customMacro(t, text, "customPageAfterChangeDir"); !strings.Contains(pages, "!insertmacro PadmateDirPage\n  !insertmacro PadmateOptionsPage") {
+		t.Errorf("the page of the desktop shortcut does not follow the folder page:\n%s", pages)
+	}
+	init := customMacro(t, text, "customInit")
+	choose, desktop, check := strings.Index(init, "Call PadmateChooseLanguage"), strings.Index(init, "Call PadmateDesktopInit"), strings.Index(init, "Call PadmateCheckFolder")
+	if choose < 0 || desktop < 0 || check < 0 || choose > check || desktop > check {
+		t.Errorf("customInit does not choose the language and the shortcut before it checks the folder:\n%s", init)
+	}
+	if install := customMacro(t, text, "customInstall"); !strings.Contains(install, "${ifNot} ${isUpdated}\n    Call PadmateApplyOptions") {
+		t.Errorf("customInstall does not apply the options outside an automatic update:\n%s", install)
+	}
+	if un := customMacro(t, text, "customUnInstall"); !strings.Contains(un, "${ifNot} ${isKeepShortcuts}") || !strings.Contains(un, `Delete "$oldDesktopLink"`) {
+		t.Errorf("the uninstaller does not delete the desktop shortcut:\n%s", un)
+	}
+	if !strings.Contains(customMacro(t, text, "customUnInit"), `ReadRegStr $0 HKCU "${INSTALL_REGISTRY_KEY}" Language`) {
+		t.Error("the uninstaller does not take the installer's language")
+	}
+	// The installer writes the line the settings page writes, with setBy
+	// "installer", and compares with it exactly.
+	options := string(readApp(t, "build/padmate-options.nsh"))
+	for _, language := range []string{LanguageChinese, LanguageEnglish} {
+		if line := "'" + strings.TrimSuffix(LanguageLine(language), "\n") + "'"; !strings.Contains(options, "S== "+line) {
+			t.Errorf("padmate-options.nsh does not compare with %s", line)
+		}
+	}
+	if !strings.Contains(options, `FileWrite $0 '{"language":"$R9","setBy":"installer"}$\n'`) {
+		t.Error("padmate-options.nsh does not write the line of LanguageLine")
+	}
+	if !strings.Contains(options, `!define PADMATE_LANGUAGE_FILE "`+LanguageFile+`"`) {
+		t.Errorf("padmate-options.nsh does not name the file %s", LanguageFile)
+	}
+}
+
+// padmate-wizard.nsh and padmate-options.nsh are read by NSIS as they are,
+// and their tests compile them on their own: they hold ASCII only, so that
+// they need no byte order mark.
 func TestWizardScriptIsASCII(t *testing.T) {
+	for i, b := range readApp(t, "build/padmate-options.nsh") {
+		if b >= 0x80 {
+			t.Fatalf("padmate-options.nsh has the byte %#x at offset %d: it must stay ASCII", b, i)
+		}
+	}
 	for i, b := range readApp(t, "build/padmate-wizard.nsh") {
 		if b >= 0x80 {
 			t.Fatalf("padmate-wizard.nsh has the byte %#x at offset %d: it must stay ASCII", b, i)

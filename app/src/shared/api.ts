@@ -5,6 +5,18 @@ import type {
   UpdateState,
 } from "./update";
 
+/** The two languages of the window. */
+export type UILanguage = "zh-CN" | "en";
+
+/**
+ * The window's language file (main/ui-language.ts): the language, and who
+ * wrote it, the settings page when the person picked it, or the installer.
+ */
+export interface SavedLanguage {
+  language: UILanguage;
+  setBy: "settings" | "installer";
+}
+
 // "failed": the mapping service did not start; "disconnected": the
 // connection ended after it was made, or reconnecting did not reach the
 // service.
@@ -1042,6 +1054,12 @@ export interface PadmateAPI {
   // Main checks every field and ignores an invalid one; the call takes no
   // part in anything the daemon does.
   setOverlayPrefs(prefs: OverlayPrefs): Promise<void>;
+  // The window's language as its file in the browser data holds it
+  // (ADR-0018): picked on the settings page, or the installer's first
+  // language; null when there is none. The page asks once, before it
+  // draws. setLanguage writes the person's pick.
+  getLanguage(): Promise<SavedLanguage | null>;
+  setLanguage(language: UILanguage): Promise<void>;
   // The automatic update (ADR-0018). Main owns the state and pushes
   // each change to onUpdateState; the calls answer with the state they led
   // to. The window sends no version and no address.

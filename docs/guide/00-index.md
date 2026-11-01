@@ -4,7 +4,7 @@
 
 padmate turns the buttons, sticks and triggers of a controller into keyboard shortcuts. The typical use is painting with the controller in your left hand and the pen in your right.
 
-Words in quotation marks are the exact text of the Chinese interface. To switch to English, open “Settings”, go to “General” and change “Language”.
+Words in quotation marks are the exact text of the Chinese interface. The interface starts in the language you chose when installing; to change it, open “Settings”, go to “General” and change “Language”.
 
 ## Chapters
 

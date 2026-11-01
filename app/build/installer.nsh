@@ -7,8 +7,18 @@
 ;
 ; This file is UTF-8 with a BOM, so that NSIS reads it as Unicode. Keep it so.
 ;
-; The installer is a wizard (ADR-0018): a folder page, the progress and a
-; finish page. It installs for the current user only: customInstallMode skips
+; The installer is a wizard (ADR-0018): a dialog for the language, a folder
+; page, a page with the box for the desktop shortcut, the progress and a
+; finish page (padmate-options.nsh has the language and the box). The language
+; is the wizard's and the first one of padmate's window, which the install
+; writes into the window's language file unless the person picked a language
+; in the settings; --language=zh-CN or --language=en chooses it on the command
+; line, without the dialog. electron-builder makes no desktop shortcut
+; (createDesktopShortcut: false): customInstall makes it or deletes it as the
+; box says, and the uninstaller deletes it. An automatic update (--updated) has
+; no pages and touches neither.
+;
+; It installs for the current user only: customInstallMode skips
 ; electron-builder's page for "all users or only me" for good, and customInit
 ; ignores /allusers, so nothing ever asks for administrator rights. The
 ; folder page is padmate's own (customPageAfterChangeDir), not
@@ -89,8 +99,10 @@
   !define PADMATE_UN ""
 !endif
 
-; The folder rule of the wizard: only a macro, expanded in customHeader.
+; The folder rule of the wizard, and its language and desktop shortcut: only
+; macros, expanded in customHeader and where the pages are laid out.
 !include "padmate-wizard.nsh"
+!include "padmate-options.nsh"
 
 ; The folder of that copy (APP_INSTALLER_STORE_FILE, relative to %LOCALAPPDATA%;
 ; electron-builder names it after the package). A build where it is named
@@ -142,6 +154,54 @@
 
     !insertmacro PadmatePathFunctions
     !insertmacro PadmatePageFunctions
+
+    ; The language dialog comes before the language is known, so it speaks
+    ; both. The page after the folder page has the box for the desktop
+    ; shortcut; the Start Menu shortcut is always made.
+    !define PADMATE_LANGDLL_TITLE "padmate"
+    !define PADMATE_LANGDLL_TEXT "请选择 padmate 使用的语言。$\r$\nChoose the language for padmate."
+    !define PADMATE_DESKTOP_LINK "$DESKTOP\${SHORTCUT_NAME}.lnk"
+    LangString padmateOptionsTitle ${LANG_ENGLISH} "Options"
+    LangString padmateOptionsTitle ${LANG_SIMPCHINESE} "安装选项"
+    LangString padmateOptionsText ${LANG_ENGLISH} "padmate is always added to the Start menu."
+    LangString padmateOptionsText ${LANG_SIMPCHINESE} "开始菜单里总会添加 padmate。"
+    LangString padmateDesktopShortcut ${LANG_ENGLISH} "Create a shortcut on the desktop"
+    LangString padmateDesktopShortcut ${LANG_SIMPCHINESE} "在桌面创建快捷方式"
+    !insertmacro PadmateOptionFunctions
+
+    ; What the person chose, at the end of an install that is not an
+    ; automatic update: the window's first language, unless the person picked
+    ; one in the settings (PadmateWriteLanguage), the language of the
+    ; uninstaller, and the desktop shortcut, made or deleted. The shortcut is
+    ; made as electron-builder makes it when it is asked to.
+    Function PadmateApplyOptions
+      Push $0
+      Push $R8
+      Push $R9
+      Call PadmateLocate
+      StrCpy $R8 $LANGUAGE
+      Call PadmateUILanguage
+      StrCpy $R9 $R8
+      StrCpy $R8 "$padmateRoaming\padmate\ui"
+      Call PadmateWriteLanguage
+      Pop $0
+      ${If} $0 == "1"
+        DetailPrint "padmate: language $R9"
+      ${EndIf}
+      WriteRegStr HKCU "${INSTALL_REGISTRY_KEY}" Language $LANGUAGE
+      ${If} $padmateDesktop == "1"
+        CreateShortCut "$newDesktopLink" "$appExe" "" "$appExe" 0 "" "" "${APP_DESCRIPTION}"
+        ClearErrors
+        WinShell::SetLnkAUMI "$newDesktopLink" "${APP_ID}"
+      ${ElseIf} ${FileExists} "$newDesktopLink"
+        WinShell::UninstShortcut "$newDesktopLink"
+        Delete "$newDesktopLink"
+      ${EndIf}
+      System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+      Pop $R9
+      Pop $R8
+      Pop $0
+    FunctionEnd
 
     ; The check of a silent install, and of one that has no folder page
     ; (--updated), at the start: the folder is the one /D= names, or the
@@ -462,9 +522,11 @@
 ; The folder page. It stands in for the one electron-builder adds with
 ; allowToChangeInstallationDirectory (see the top of this file), and is laid
 ; out where that one would be: after the install-mode page, before the
-; progress. Its functions are in customHeader.
+; progress. The page of the desktop shortcut follows it. Their functions are in
+; customHeader.
 !macro customPageAfterChangeDir
   !insertmacro PadmateDirPage
+  !insertmacro PadmateOptionsPage
 !macroend
 
 !macro customInit
@@ -473,6 +535,11 @@
   StrCpy $hasPerMachineInstallation "0"
   StrCpy $hasPerUserInstallation "1"
   !insertmacro setInstallModePerUser
+  ; The language first, so that every message after it speaks it; then
+  ; whether the desktop shortcut is to be there, while the earlier
+  ; installation is as it was.
+  Call PadmateChooseLanguage
+  Call PadmateDesktopInit
   ; A silent install, and one with no folder page (--updated), check the
   ; folder here. The wizard checks it when Next is pressed.
   ${If} ${Silent}
@@ -490,10 +557,32 @@
 ; After the files are written and the registry entries made.
 !macro customInstall
   Call PadmateDropInstallerCopy
+  ${ifNot} ${isUpdated}
+    Call PadmateApplyOptions
+  ${endIf}
+!macroend
+
+; The uninstaller speaks the language the installer was run in.
+!macro customUnInit
+  Push $0
+  ReadRegStr $0 HKCU "${INSTALL_REGISTRY_KEY}" Language
+  ${If} $0 == ${PADMATE_LANG_ZH}
+  ${OrIf} $0 == ${PADMATE_LANG_EN}
+    StrCpy $LANGUAGE $0
+  ${EndIf}
+  Pop $0
 !macroend
 
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     Call un.PadmateClean
+  ${endIf}
+  ; The desktop shortcut is the installer's own (customInstall), so its
+  ; uninstaller deletes it, unless an upgrade keeps the shortcuts
+  ; (--keep-shortcuts); the new install then makes or deletes it as its box
+  ; says.
+  ${ifNot} ${isKeepShortcuts}
+    WinShell::UninstShortcut "$oldDesktopLink"
+    Delete "$oldDesktopLink"
   ${endIf}
 !macroend

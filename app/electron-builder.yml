@@ -75,7 +75,8 @@ win:
       - sha256
     rfc3161TimeStampServer: http://timestamp.digicert.com
 nsis:
-  # A wizard: folder page, progress, finish page with "run padmate" (ADR-0018).
+  # A wizard: language dialog, folder page, desktop shortcut page, progress,
+  # finish page with "run padmate" (ADR-0018).
   # electron-builder's assisted installer offers an all-users install, which
   # needs administrator rights; padmate installs for the current user only
   # and never asks for elevation: build/installer.nsh skips that page for good
@@ -95,18 +96,20 @@ nsis:
   # they exist. Never change it: an install under another GUID is not upgraded.
   guid: 6e1c5b0a-3f7d-4c8e-9a52-7d0b1f4c2e83
   artifactName: padmate-v${version}-windows-amd64-setup.${ext}
+  # The installer speaks both; build/installer.nsh asks which in a dialog of
+  # its own (displayLanguageSelector is not set: that one cannot be skipped
+  # by --language= and lists only languages of the system's code page).
   multiLanguageInstaller: true
   installerLanguages:
     - zh_CN
     - en_US
   differentialPackage: false
   runAfterFinish: true
-  # A desktop shortcut as well (ADR-0018). "always" also makes it when an
-  # installer runs over an installation that has none (every one before
-  # v1.0.2), and again when the user deleted it, but not in an automatic
-  # update (--updated), which keeps the shortcuts as they are. The uninstaller
-  # deletes it.
-  createDesktopShortcut: always
+  # The desktop shortcut is build/installer.nsh's (ADR-0018): the wizard has a
+  # box for it, ticked on a first installation and, over one, when the desktop
+  # has the shortcut; customInstall makes or deletes it, and the uninstaller
+  # deletes it. electron-builder's would be made whatever the box says.
+  createDesktopShortcut: false
   createStartMenuShortcut: true
   shortcutName: padmate
   deleteAppDataOnUninstall: false

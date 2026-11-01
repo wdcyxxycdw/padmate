@@ -200,6 +200,10 @@ const (
 	// The folder field of NSIS's folder page.
 	idFolderField = 1019
 
+	// The list of the language dialog.
+	cbGetCount  = 0x0146
+	cbSetCurSel = 0x014E
+
 	wmGetText       = 0x000D
 	wmGetTextLength = 0x000E
 	wmSetText       = 0x000C

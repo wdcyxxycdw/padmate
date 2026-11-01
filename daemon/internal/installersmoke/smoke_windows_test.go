@@ -80,6 +80,40 @@ func dropsCopy(t *testing.T, tag installerpkg.Tag) bool {
 	return tag.Compare(since) >= 0
 }
 
+// optionsSince is the first version whose installer asks for the language
+// and has the box for the desktop shortcut, and writes the window's language
+// file (ADR-0018).
+const optionsSince = "v1.0.4-rc.1"
+
+func hasOptions(t *testing.T, tag installerpkg.Tag) bool {
+	t.Helper()
+	since, err := installerpkg.ParseTag(optionsSince)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tag.Compare(since) >= 0
+}
+
+// languageFile is the window's language file under the test root.
+func (s *smoke) languageFile() string {
+	return filepath.Join(s.roaming, "padmate", "ui", installerpkg.LanguageFile)
+}
+
+// checkLanguageFile checks that the window's language file holds want.
+func (s *smoke) checkLanguageFile(want, what string) {
+	s.t.Helper()
+	if data, err := os.ReadFile(s.languageFile()); err != nil || string(data) != want {
+		s.t.Errorf("%s: %s holds %q, %v; want %q", what, s.languageFile(), data, err, want)
+	}
+}
+
+// userDefaultUILanguage is GetUserDefaultUILanguage, what the installer asks
+// Windows for.
+func userDefaultUILanguage() uint16 {
+	r, _, _ := windows.NewLazySystemDLL("kernel32.dll").NewProc("GetUserDefaultUILanguage").Call()
+	return uint16(r)
+}
+
 func tagOf(t *testing.T, file string) installerpkg.Tag {
 	t.Helper()
 	if !filepath.IsAbs(file) {
@@ -344,10 +378,16 @@ func (s *smoke) runCommand(exe, args string, timeout time.Duration) (int, string
 
 func (s *smoke) install(installer string) {
 	s.t.Helper()
+	s.installWith(installer, "")
+}
+
+// installWith is install with more arguments, which come before /D=.
+func (s *smoke) installWith(installer, args string) {
+	s.t.Helper()
 	s.ran(installer)
 	start := time.Now()
-	if code, out, err := s.runCommand(installer, `/S /D=`+s.inst, 5*time.Minute); err != nil || code != 0 {
-		s.t.Fatalf("%s /S: exit code %d, %v\n%s", filepath.Base(installer), code, err, out)
+	if code, out, err := s.runCommand(installer, strings.TrimSpace(`/S `+args)+` /D=`+s.inst, 5*time.Minute); err != nil || code != 0 {
+		s.t.Fatalf("%s /S %s: exit code %d, %v\n%s", filepath.Base(installer), args, code, err, out)
 	}
 	s.t.Logf("installed %s in %v", filepath.Base(installer), time.Since(start).Round(100*time.Millisecond))
 }
@@ -798,6 +838,11 @@ func TestInstallerSmoke(t *testing.T) {
 		// The first installer of an upgrade may be an earlier build and older than
 		// the update.
 		s.checkInstalledAs(tag1, second != "", tag1.Compare(tag2) < 0)
+		// A silent install without --language= takes the system's display
+		// language for the window.
+		if hasOptions(t, tag1) {
+			s.checkLanguageFile(installerpkg.LanguageLine(installerpkg.InstallerLanguage(userDefaultUILanguage())), "after a silent install")
+		}
 		if isBuildUnderTest(first, second) {
 			s.checkSigned()
 		}
@@ -1137,6 +1182,48 @@ func TestInstallerSmoke(t *testing.T) {
 	})
 	if t.Failed() {
 		t.FailNow()
+	}
+
+	if newer := chooseNewer(first, second); hasOptions(t, tagOf(t, newer)) {
+		t.Run("a silent install takes --language= and --no-desktop-shortcut, and keeps the language picked in the settings", func(t *testing.T) {
+			s.t = t
+			s.installWith(newer, "--language=en --no-desktop-shortcut")
+			s.checkLanguageFile(installerpkg.LanguageLine(installerpkg.LanguageEnglish), "after --language=en")
+			if s.exists(s.desktopLink) {
+				t.Error("--no-desktop-shortcut made a desktop shortcut")
+			}
+			// Over an installation without the shortcut the box starts unticked:
+			// the shortcut the person deleted does not come back.
+			s.installWith(newer, "--language=zh-CN")
+			s.checkLanguageFile(installerpkg.LanguageLine(installerpkg.LanguageChinese), "after --language=zh-CN over the installer's own language")
+			if s.exists(s.desktopLink) {
+				t.Error("a reinstall over an installation without a desktop shortcut made one")
+			}
+			// A language picked in the settings stays, whatever the installer is
+			// told; the shortcut comes back on a first installation.
+			picked := `{"language":"zh-CN","setBy":"settings"}` + "\n"
+			s.write(s.languageFile(), picked)
+			s.installWith(newer, "--language=en")
+			s.checkLanguageFile(picked, "a reinstall after the language was picked in the settings")
+			s.uninstall()
+			s.checkLanguageFile(picked, "a silent uninstall")
+			s.install(newer)
+			if !s.exists(s.desktopLink) {
+				t.Error("a first installation made no desktop shortcut")
+			}
+			s.checkLanguageFile(picked, "a new installation after the language was picked in the settings")
+			s.uninstall()
+			if s.exists(s.desktopLink) {
+				t.Error("the uninstaller left the desktop shortcut")
+			}
+			deleteRegistryTree(`Software\padmate-installer-test`)
+			if err := removeAllRetry(filepath.Join(s.roaming, "padmate")); err != nil {
+				t.Fatal(err)
+			}
+		})
+		if t.Failed() {
+			t.FailNow()
+		}
 	}
 
 	if os.Getenv(envInteractive) == "1" {

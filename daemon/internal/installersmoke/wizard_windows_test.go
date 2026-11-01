@@ -31,12 +31,16 @@ type wizardRun struct {
 	code int
 }
 
-// startWizard starts the installer with its window, under the test override.
-func (s *smoke) startWizard(installer string) *wizardRun {
+// startWizard starts the installer with its window, under the test override,
+// with the arguments given (--language= skips the language dialog).
+func (s *smoke) startWizard(installer string, args ...string) *wizardRun {
 	s.t.Helper()
 	s.ran(installer)
+	if err := refuseForceRun(strings.Join(args, " ")); err != nil {
+		s.t.Fatal(err)
+	}
 	cmd := exec.Command(installer)
-	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: `"` + installer + `"`}
+	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: strings.Join(append([]string{`"` + installer + `"`}, args...), " ")}
 	cmd.Env = append(append([]string(nil), s.env...), installerpkg.TestRootEnv+"="+s.root)
 	if err := cmd.Start(); err != nil {
 		s.t.Fatal(err)
@@ -131,16 +135,93 @@ func (w *wizardRun) folderPage() (dialog, windows.HWND) {
 }
 
 // finishPage waits for the finish page, which has the "run padmate" box, and
-// returns the wizard window.
+// returns the wizard window. The page of the desktop shortcut, which comes
+// before it, is left with Next as it is.
 func (w *wizardRun) finishPage(timeout time.Duration) dialog {
 	w.s.t.Helper()
 	var d dialog
+	var passed windows.HWND
 	w.wait("finish page", timeout, func() bool {
 		var ok bool
 		d, ok = w.wizard()
-		return ok && d.checkBox() != 0
+		if !ok {
+			return false
+		}
+		box := d.checkBox()
+		if box == 0 {
+			return false
+		}
+		if isDesktopBox(box) {
+			// Each page is a dialog of its own: Next once per page.
+			if page := d.page(); page != passed {
+				passed = page
+				_ = d.click(idOK)
+			}
+			return false
+		}
+		return true
 	})
 	return d
+}
+
+// optionsPage waits for the page of the desktop shortcut and returns the
+// wizard window and the page's box.
+func (w *wizardRun) optionsPage() (dialog, windows.HWND) {
+	w.s.t.Helper()
+	var d dialog
+	w.wait("page of the desktop shortcut", time.Minute, func() bool {
+		var ok bool
+		d, ok = w.wizard()
+		return ok && isDesktopBox(d.checkBox())
+	})
+	return d, d.checkBox()
+}
+
+// isDesktopBox reports whether a check box is the box of the desktop shortcut,
+// in either language.
+func isDesktopBox(box windows.HWND) bool {
+	if box == 0 {
+		return false
+	}
+	text := windowText(box)
+	return text == installerpkg.DesktopShortcutText[0] || text == installerpkg.DesktopShortcutText[1]
+}
+
+// languageDialog waits for the dialog that asks for the language, before the
+// wizard, and returns it and its list.
+func (w *wizardRun) languageDialog() (dialog, windows.HWND) {
+	w.s.t.Helper()
+	var d dialog
+	var list windows.HWND
+	w.wait("language dialog", time.Minute, func() bool {
+		for _, b := range installerDialogs(w.pid) {
+			for _, child := range childWindows(b.hwnd) {
+				if className(child) == "ComboBox" {
+					d, list = b, child
+					return true
+				}
+			}
+		}
+		return false
+	})
+	return d, list
+}
+
+// chooseLanguage picks the item named name in the language dialog's list and
+// presses OK.
+func (w *wizardRun) chooseLanguage(d dialog, list windows.HWND, name string) {
+	w.s.t.Helper()
+	count, _ := sendMessage(list, cbGetCount, 0, 0)
+	for i := range count {
+		sendMessage(list, cbSetCurSel, i, 0)
+		if windowText(list) == name {
+			if err := d.click(idOK); err != nil {
+				w.s.t.Fatal(err)
+			}
+			return
+		}
+	}
+	w.s.t.Fatalf("the language dialog has no %q among its %d items", name, count)
 }
 
 // finish leaves the finish page with "run padmate" unticked and waits for the
@@ -275,6 +356,13 @@ func TestInstallerWizard(t *testing.T) {
 		s.inst = filepath.Join(parent, installerpkg.FolderName)
 
 		w := s.startWizard(installer)
+		// The language comes first, in a dialog of its own; English here, so
+		// that the wizard speaks the language the system may not.
+		options := hasOptions(t, tag)
+		if options {
+			d, list := w.languageDialog()
+			w.chooseLanguage(d, list, langDLLName[installerpkg.LanguageEnglish])
+		}
 		d, field := w.folderPage()
 		offered := windowText(field)
 		if !strings.HasSuffix(strings.ToLower(offered), `\`+installerpkg.FolderName) {
@@ -290,7 +378,21 @@ func TestInstallerWizard(t *testing.T) {
 		if got != s.inst {
 			t.Fatalf("the wizard chose %q, want %q", got, s.inst)
 		}
+		// The box of the desktop shortcut, in English and ticked on a first
+		// installation, and left so.
+		if options {
+			page, box := w.optionsPage()
+			if text := windowText(box); text != installerpkg.DesktopShortcutText[1] || !isChecked(box) {
+				t.Errorf("the box of the desktop shortcut says %q, ticked %v; want %q, ticked", text, isChecked(box), installerpkg.DesktopShortcutText[1])
+			}
+			if err := page.click(idOK); err != nil {
+				t.Fatal(err)
+			}
+		}
 		w.finish(w.finishPage(5 * time.Minute))
+		if options {
+			s.checkLanguageFile(installerpkg.LanguageLine(installerpkg.LanguageEnglish), "after the wizard in English")
+		}
 		s.checkInstalled(tag, false)
 		s.checkRuns()
 		s.uninstall()
@@ -308,7 +410,7 @@ func TestInstallerWizard(t *testing.T) {
 		foreign := filepath.Join(s.inst, "mine", "notes.txt")
 		s.write(foreign, "not padmate's")
 
-		w := s.startWizard(installer)
+		w := s.startWizard(installer, "--language=zh-CN")
 		d, field := w.folderPage()
 		// The folder itself: nothing is added, so Next goes straight to the check.
 		if err := setWindowText(field, s.inst); err != nil {
@@ -398,7 +500,7 @@ func TestInstallerWizard(t *testing.T) {
 
 		parent := filepath.Join(s.root, parentMove)
 		s.inst = filepath.Join(parent, installerpkg.FolderName)
-		w := s.startWizard(installer)
+		w := s.startWizard(installer, "--language=zh-CN")
 		d, field := w.folderPage()
 		if offered := windowText(field); !strings.EqualFold(offered, home) {
 			t.Errorf("the folder page offers %q, want the folder of the installation, %q", offered, home)

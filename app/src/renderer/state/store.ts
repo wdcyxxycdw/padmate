@@ -15,10 +15,12 @@ import type {
   ProfileImportOptions,
   ProfileImportResult,
   RecentApp,
+  SavedLanguage,
   ScriptStatusEntry,
   SlotState,
   StartupState,
   StatusResult,
+  UILanguage,
 } from "../../shared/api";
 import { LibraryErrorCode } from "../../shared/api";
 import type { Config } from "../../shared/generated/schema";
@@ -71,7 +73,7 @@ export const LOG_LIMIT = 256;
 export const CAPTURE_TIMEOUT_MS = 30_000;
 /** apps.recent keeps at most this many; live updates keep the same bound. */
 export const RECENT_APPS_LIMIT = 12;
-export type Language = "zh-CN" | "en";
+export type Language = UILanguage;
 /** "logs" and "diagnostics" are views inside Settings, not navigation rail items. */
 export type Page =
   | "overview"
@@ -386,14 +388,34 @@ function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function savedLanguage(): Language {
+/** localStorage key of the language picked on the settings page. */
+const LANGUAGE_KEY = "padmate.language";
+
+/** The language picked on the settings page, as localStorage keeps it. */
+function pickedLanguage(): Language | null {
   try {
-    return globalThis.localStorage?.getItem("padmate.language") === "en"
-      ? "en"
-      : "zh-CN";
+    const value = globalThis.localStorage?.getItem(LANGUAGE_KEY);
+    return value === "en" || value === "zh-CN" ? value : null;
   } catch {
-    return "zh-CN";
+    return null;
   }
+}
+
+/**
+ * The window's language (ADR-0018): the one picked on the settings page,
+ * which this window's localStorage keeps; else the one of the language file
+ * (main/ui-language.ts), which the installer writes; else Chinese.
+ */
+export function initialLanguage(
+  saved: SavedLanguage | null | undefined,
+): Language {
+  return pickedLanguage() ?? saved?.language ?? "zh-CN";
+}
+
+/** What the store is made with besides the API. */
+export interface PadmateStoreOptions {
+  /** The language file as Main read it before the window drew. */
+  savedLanguage?: SavedLanguage | null;
 }
 
 function savedLabelDisplay(): LabelDisplay {
@@ -470,7 +492,10 @@ export function readBasicSettings(
   }
 }
 
-export function createPadmateStore(api: PadmateAPI) {
+export function createPadmateStore(
+  api: PadmateAPI,
+  options: PadmateStoreOptions = {},
+) {
   let lifetime = 0;
   let connectionEpoch = 0;
   let refreshSequence = 0;
@@ -603,6 +628,17 @@ export function createPadmateStore(api: PadmateAPI) {
     // its toasts and the three settings. Main checks it and ignores what is
     // invalid. It is sent at start and with every change; a failure leaves the
     // overlay as it was, and the next push repeats all of it.
+    // The person's pick goes into the language file too, where the
+    // installer sees it and leaves it (ADR-0018). A failure leaves the file
+    // as it was; localStorage still has the pick.
+    function writeLanguage(language: Language) {
+      try {
+        void Promise.resolve(api.setLanguage(language)).catch(() => {});
+      } catch {
+        /* The file is for the installer; the window has its pick. */
+      }
+    }
+
     function pushOverlayPrefs() {
       const { language, overlay } = get();
       try {
@@ -1335,7 +1371,7 @@ export function createPadmateStore(api: PadmateAPI) {
       keyPreview: null,
       dropped: 0,
       selectedDevice: null,
-      language: savedLanguage(),
+      language: initialLanguage(options.savedLanguage),
       labelDisplay: savedLabelDisplay(),
       overlay: savedOverlaySettings(),
       page: "overview",
@@ -1365,6 +1401,16 @@ export function createPadmateStore(api: PadmateAPI) {
           if (currentLifetime === lifetime) eventReceived(event);
         });
         pushOverlayPrefs();
+        // A pick made before the window had its language file is kept only in
+        // localStorage, out of the installer's sight: it goes into the file
+        // once.
+        const picked = pickedLanguage();
+        const saved = options.savedLanguage;
+        if (
+          picked &&
+          (saved?.setBy !== "settings" || saved.language !== picked)
+        )
+          writeLanguage(picked);
         void api
           .getConnection()
           .then((connection) => {
@@ -1622,10 +1668,11 @@ export function createPadmateStore(api: PadmateAPI) {
       setLanguage(language) {
         set({ language });
         try {
-          globalThis.localStorage?.setItem("padmate.language", language);
+          globalThis.localStorage?.setItem(LANGUAGE_KEY, language);
         } catch {
           /* Preference remains usable for this window. */
         }
+        writeLanguage(language);
         // The overlay's toasts are in this language.
         pushOverlayPrefs();
       },
