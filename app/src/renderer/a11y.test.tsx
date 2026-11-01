@@ -358,6 +358,79 @@ describe("dialogs of Settings", () => {
   });
 });
 
+// The Joy-Con 2 section, with a daemon that has Joy-Con 2 and remembers one.
+describe("Joy-Con 2 in Settings", () => {
+  const remembered = {
+    available: true,
+    autoConnect: true,
+    windowOpen: false,
+    windowLeftMs: 0,
+    known: [
+      {
+        addr: "C8:48:05:FA:01:01",
+        serial: "FAKEJC2L0001",
+        side: "L" as const,
+        connected: true,
+      },
+    ],
+    links: [],
+  };
+  async function openJoyCon2(language: "zh-CN" | "en" = "zh-CN") {
+    const app = renderApp({ language });
+    app.api.getJoyCon2Status.mockResolvedValue(remembered);
+    await controller();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: language === "en" ? "Settings" : "设置",
+      }),
+    );
+    await screen.findByTestId("joycon2-settings");
+    return app;
+  }
+  it("the section", async () => {
+    await openJoyCon2();
+    await clean("joy-con 2 section");
+  });
+  it("the section in English", async () => {
+    await openJoyCon2("en");
+    await clean("joy-con 2 section in English");
+  });
+  it("连接新的 Joy-Con 2: the window, and what it found", async () => {
+    const app = await openJoyCon2();
+    app.api.pairJoyCon2.mockResolvedValue({
+      ...remembered,
+      windowOpen: true,
+      windowLeftMs: 30000,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "连接新的 Joy-Con 2" }));
+    await dialogNamed("连接新的 Joy-Con 2");
+    await screen.findByRole("timer");
+    await clean("joy-con 2 window");
+    app.event("joycon2.changed", {
+      ...remembered,
+      known: [
+        ...remembered.known,
+        {
+          addr: "C8:48:05:FA:01:02",
+          serial: "FAKEJC2R0001",
+          side: "R",
+          connected: true,
+        },
+      ],
+    });
+    await screen.findByText("已连接并记住 Joy-Con 2（右）。");
+    await clean("joy-con 2 result");
+  });
+  it("忘记 Joy-Con 2（左）？", async () => {
+    await openJoyCon2();
+    fireEvent.click(
+      screen.getByRole("button", { name: /^忘记 Joy-Con 2（左）/ }),
+    );
+    await dialogNamed("忘记 Joy-Con 2（左）？");
+    await clean("forget joy-con 2");
+  });
+});
+
 /** Goes to the profiles page. */
 async function openProfiles(options: Parameters<typeof renderApp>[0] = {}) {
   const app = renderApp(options);

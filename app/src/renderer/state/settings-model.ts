@@ -14,6 +14,7 @@ import type {
   Config,
   ConfigCombo,
   ConfigFeedback,
+  ConfigJoycon2,
   ConfigSafety,
   ConfigTiming,
 } from "../../shared/generated/schema";
@@ -151,6 +152,32 @@ export function setFeedbackSwitch(
   else feedback[key] = false;
   const { feedback: _previous, ...rest } = config;
   return Object.keys(feedback).length ? { ...config, feedback } : rest;
+}
+
+/**
+ * Whether a remembered Joy-Con 2 connects by itself when its SYNC button is
+ * held: config.joycon2.autoConnect, on unless the file says false.
+ */
+export function joyCon2AutoConnect(config: Config | null): boolean {
+  return config?.joycon2?.autoConnect !== false;
+}
+
+/**
+ * Turns joycon2.autoConnect on or off. The file only says false, like a
+ * feedback switch: turning it on removes the member, and the object goes with
+ * it. Null when the file already says it.
+ */
+export function setJoyCon2AutoConnect(
+  config: Config,
+  on: boolean,
+): Config | null {
+  const written = config.joycon2?.autoConnect;
+  if (on ? written === undefined : written === false) return null;
+  const joycon2: ConfigJoycon2 = { ...config.joycon2 };
+  if (on) delete joycon2.autoConnect;
+  else joycon2.autoConnect = false;
+  const { joycon2: _previous, ...rest } = config;
+  return Object.keys(joycon2).length ? { ...config, joycon2 } : rest;
 }
 
 /** Sets config.safety.panic[family], or with null removes it. */

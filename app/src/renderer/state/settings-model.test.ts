@@ -11,10 +11,12 @@ import {
   globalTiming,
   identifyFailureText,
   isPanicFamily,
+  joyCon2AutoConnect,
   parseMs,
   setFeedbackSwitch,
   setFunctionKey,
   setGlobalTiming,
+  setJoyCon2AutoConnect,
   setPanicCombo,
   startupDryRun,
   startupFailureText,
@@ -374,5 +376,54 @@ describe("the tags of a controller's battery", () => {
       "Charging",
     ]);
     expect(batteryTags({ state: "unknown" }, "en")).toEqual([]);
+  });
+});
+
+describe("joycon2.autoConnect of config.json", () => {
+  const base: Config = { schemaVersion: 0 };
+
+  it("is on unless the file says false", () => {
+    expect(joyCon2AutoConnect(null)).toBe(true);
+    expect(joyCon2AutoConnect(base)).toBe(true);
+    expect(joyCon2AutoConnect({ ...base, joycon2: {} })).toBe(true);
+    expect(
+      joyCon2AutoConnect({ ...base, joycon2: { autoConnect: true } }),
+    ).toBe(true);
+    expect(
+      joyCon2AutoConnect({ ...base, joycon2: { autoConnect: false } }),
+    ).toBe(false);
+  });
+
+  it("writes false when it goes off and takes the object away when it goes on", () => {
+    const off = setJoyCon2AutoConnect(base, false);
+    expect(off).toEqual({ schemaVersion: 0, joycon2: { autoConnect: false } });
+    const on = setJoyCon2AutoConnect(off as Config, true);
+    expect(on).toEqual({ schemaVersion: 0 });
+    expect(on && "joycon2" in on).toBe(false);
+  });
+
+  it("keeps what else the file holds, and changes nothing when it already is as asked", () => {
+    const other: Config = {
+      schemaVersion: 0,
+      feedback: { led: false },
+      joycon2: { autoConnect: true },
+    };
+    expect(setJoyCon2AutoConnect(other, false)).toEqual({
+      schemaVersion: 0,
+      feedback: { led: false },
+      joycon2: { autoConnect: false },
+    });
+    // A member written as true is on, and goes.
+    expect(setJoyCon2AutoConnect(other, true)).toEqual({
+      schemaVersion: 0,
+      feedback: { led: false },
+    });
+    expect(setJoyCon2AutoConnect(base, true)).toBeNull();
+    expect(
+      setJoyCon2AutoConnect(
+        { ...base, joycon2: { autoConnect: false } },
+        false,
+      ),
+    ).toBeNull();
   });
 });

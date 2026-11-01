@@ -1,3 +1,4 @@
+import type { JoyCon2Status } from "./joycon2";
 import type { KeyHint, OverlayPrefs } from "./overlay";
 import type {
   UpdateDismissal,
@@ -898,6 +899,20 @@ export interface PadmateAPI {
   // mapping the daemon refuses. resetMapping takes the GUID's mapping away.
   setMapping(device: string, mapping: string): Promise<MappingResult>;
   resetMapping(device: string): Promise<MappingResult>;
+  // The Joy-Con 2 section of Settings. getJoyCon2Status is joycon2.status;
+  // available is false when the daemon has no Joy-Con 2 support, and the
+  // section is then not shown. watchJoyCon2 asks for the "joycon2.changed"
+  // events (JoyCon2Status as data) while the section is up, and lets go of
+  // them when it is not; it resolves once the daemon has the subscription.
+  // pairJoyCon2 opens the 30 second window that connects and remembers one
+  // new controller, cancelJoyCon2Pair closes it, forgetJoyCon2 forgets a
+  // remembered controller by serial number; each answers with the new
+  // state. A daemon without Joy-Con 2 rejects them with code -32027.
+  getJoyCon2Status(): Promise<JoyCon2Status>;
+  watchJoyCon2(on: boolean): Promise<void>;
+  pairJoyCon2(): Promise<JoyCon2Status>;
+  cancelJoyCon2Pair(): Promise<JoyCon2Status>;
+  forgetJoyCon2(serial: string): Promise<JoyCon2Status>;
   pause(): Promise<EngineControlResult>;
   resume(): Promise<EngineControlResult>;
   releaseAll(): Promise<EngineControlResult>;

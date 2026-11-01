@@ -199,7 +199,10 @@ function ControllerRow({
   const gamepad = device.info.gamepad;
   const calibratable = gamepad && sticksOf(device.info.axisMask).length > 0;
   const menu: MenuEntry[] = [];
-  if (gamepad)
+  // A Joy-Con 2 is read by padmate itself, not by SDL: it has no SDL mapping to
+  // redo, and its raw events are not offered (the daemon answers
+  // devices.rawInfo with "unsupported").
+  if (gamepad && device.info.driver !== "ble")
     menu.push({
       label: t("重新映射…", "Remap…"),
       disabled,

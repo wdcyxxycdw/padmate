@@ -84,14 +84,20 @@ export function isDisconnectedError(error: unknown): boolean {
  *
  * With `raw: true` every list ends with input.raw: the mapping wizard
  * is open. A daemon that does not know it refuses all of them, and the wizard
- * cannot work with it anyway.
+ * cannot work with it anyway. `joycon2: true` adds joycon2.changed after it, for
+ * the Settings section that connects Joy-Con 2 controllers; a daemon that
+ * does not know it refuses the lists as well, and that section is then
+ * not shown (it asks joycon2.status first).
  */
 export async function subscribe(
   call: (method: string, params: unknown) => Promise<unknown>,
-  options: { hud?: boolean; raw?: boolean } = {},
+  options: { hud?: boolean; raw?: boolean; joycon2?: boolean } = {},
 ): Promise<void> {
   const withHud = options.hud ?? true;
-  const extra = options.raw ? [rawInputTopic] : [];
+  const extra = [
+    ...(options.raw ? [rawInputTopic] : []),
+    ...(options.joycon2 ? [joyCon2Topic] : []),
+  ];
   const lists: string[][] = [];
   if (withHud) lists.push([...daemonTopics, ...extra]);
   const withoutHud = daemonTopics.filter((topic) => topic !== "hud");

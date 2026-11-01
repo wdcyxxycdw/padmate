@@ -7,6 +7,7 @@ import { daemonTopics, joyCon2Topic, rawInputTopic } from "./bridge";
 import { configRepairHandlers } from "./config-repair-handlers";
 import { deviceHandlers } from "./device-handlers";
 import { installedAppHandlers } from "./installed-apps";
+import { joyCon2Handlers } from "./joycon2-handlers";
 import { libraryHandlers } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
 import { startFailureHandlers } from "./start-failure";
@@ -209,6 +210,58 @@ describe("Electron IPC wiring", () => {
       expect(main).toMatch(place);
   });
 
+  it("connects, forgets and reads Joy-Con 2 through fixed methods, with the joycon2.changed topic wished up while the section is", () => {
+    // Renderer -> preload -> Main's handler table, which checks the serial
+    // number -> the daemon's methods, which the UI bridge lets through.
+    const api = source("../shared/api.ts");
+    for (const signature of [
+      "getJoyCon2Status(): Promise<JoyCon2Status>;",
+      "watchJoyCon2(on: boolean): Promise<void>;",
+      "pairJoyCon2(): Promise<JoyCon2Status>;",
+      "cancelJoyCon2Pair(): Promise<JoyCon2Status>;",
+      "forgetJoyCon2(serial: string): Promise<JoyCon2Status>;",
+    ])
+      expect(api).toContain(signature);
+    const preload = source("../preload/index.ts");
+    for (const channel of [
+      'getJoyCon2Status: () => invoke("padmate:joyCon2Status"),',
+      'watchJoyCon2: (on) => invoke("padmate:joyCon2Watch", on),',
+      'pairJoyCon2: () => invoke("padmate:joyCon2Pair"),',
+      'cancelJoyCon2Pair: () => invoke("padmate:joyCon2CancelPair"),',
+      'forgetJoyCon2: (serial) => invoke("padmate:joyCon2Forget", serial),',
+    ])
+      expect(preload).toContain(channel);
+    const handlers = source("./joycon2-handlers.ts");
+    for (const method of [
+      "joycon2.status",
+      "joycon2.pair",
+      "joycon2.cancelPair",
+      "joycon2.forget",
+    ])
+      expect(handlers).toContain(`"${method}"`);
+    expect(handlers).toContain("validateJoyCon2Serial(serial)");
+    // The renderer is not given joycon2.disconnect.
+    expect(handlers).not.toContain("joycon2.disconnect");
+    const bridge = source("../../../daemon/cmd/padmatectl/ui_bridge.go");
+    expect(bridge).toContain(
+      '"joycon2.status", "joycon2.pair", "joycon2.cancelPair", "joycon2.forget"',
+    );
+    // The daemon has the methods the bridge lets through.
+    const daemon = source("../../../daemon/cmd/padmated/ipc_joycon2.go");
+    for (const method of [
+      "joycon2.status",
+      "joycon2.pair",
+      "joycon2.cancelPair",
+      "joycon2.forget",
+    ])
+      expect(daemon).toContain(`methods["${method}"]`);
+    // The topic is on the one subscription, wished up by the section and let
+    // go of when its page reloads or goes.
+    const main = source("./index.ts");
+    expect(main).toContain("(on) => hud.joyCon2Up(on),");
+    expect(main.match(/hud\.joyCon2Up\(false\)/g)).toHaveLength(2);
+  });
+
   it("imports an AntiMicroX profile as data through one fixed method", () => {
     // Main reads the chosen file; the daemon is given its bytes, never a path.
     const handlers = source("./archive-handlers.ts");
@@ -272,6 +325,12 @@ describe("Electron IPC wiring", () => {
         }),
       ),
       ...Object.keys(deviceHandlers(() => undefined)),
+      ...Object.keys(
+        joyCon2Handlers(
+          () => undefined,
+          async () => {},
+        ),
+      ),
       ...Object.keys(startupHandlers(() => undefined)),
       ...Object.keys(
         updateHandlers({
@@ -335,13 +394,14 @@ describe("Electron IPC wiring", () => {
       ),
     ];
     const channels = [
-      ...preload.matchAll(/invoke\(\s*"padmate:([A-Za-z]+)"/g),
+      ...preload.matchAll(/invoke\(\s*"padmate:([A-Za-z0-9]+)"/g),
     ].map((m) => m[1]);
     expect(channels.length).toBeGreaterThan(20);
     expect(main).toMatch(/ipcMain\.handle\(`padmate:\$\{name\}`/);
     expect(main).toContain("...libraryHandlers(");
     expect(main).toContain("...macroHandlers(");
     expect(main).toContain("...deviceHandlers(");
+    expect(main).toContain("...joyCon2Handlers(");
     expect(main).toContain("...startupHandlers(");
     expect(main).toContain("...updateHandlers(");
     expect(main).toContain("...startFailureHandlers(");

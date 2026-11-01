@@ -20,6 +20,7 @@ import type {
   StartupState,
   UILanguage,
 } from "../../shared/api";
+import type { JoyCon2Status } from "../../shared/joycon2";
 import type { OverlayPrefs } from "../../shared/overlay";
 import {
   initialUpdateState,
@@ -33,6 +34,15 @@ export const developmentStartup: StartupState = {
   current: false,
   mode: "dry-run",
   reason: "development",
+};
+/** What a daemon without Joy-Con 2 support says. */
+export const joyCon2Unavailable: JoyCon2Status = {
+  available: false,
+  autoConnect: false,
+  windowOpen: false,
+  windowLeftMs: 0,
+  known: [],
+  links: [],
 };
 export function editorAPIFixture() {
   const api = {
@@ -149,6 +159,19 @@ export function editorAPIFixture() {
         notes: [],
         warnings: [],
       }),
+    ),
+    // The Joy-Con 2 section: a daemon without Joy-Con 2 support, so the
+    // section is not shown unless a test gives it a state.
+    getJoyCon2Status: vi.fn(
+      async (): Promise<JoyCon2Status> => joyCon2Unavailable,
+    ),
+    watchJoyCon2: vi.fn(async (_on: boolean) => {}),
+    pairJoyCon2: vi.fn(async (): Promise<JoyCon2Status> => joyCon2Unavailable),
+    cancelJoyCon2Pair: vi.fn(
+      async (): Promise<JoyCon2Status> => joyCon2Unavailable,
+    ),
+    forgetJoyCon2: vi.fn(
+      async (_serial: string): Promise<JoyCon2Status> => joyCon2Unavailable,
     ),
     listMacros: vi.fn(
       async (): Promise<MacroList> => ({ macros: [], missing: [], legacy: [] }),

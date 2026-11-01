@@ -128,6 +128,14 @@ export function validateDevice(value: unknown): string {
     throw new Error("Invalid device selector");
   return value;
 }
+// The serial number of a remembered Joy-Con 2, as joycon2.forget takes it: the
+// printable ASCII the controller's flash holds, 14 characters in practice;
+// the daemon accepts up to 64.
+export function validateJoyCon2Serial(value: unknown): string {
+  if (typeof value !== "string" || !/^[!-~]{1,64}$/.test(value))
+    throw new Error("Invalid Joy-Con 2 serial number");
+  return value;
+}
 // A selector that names one controller, as devices.identify needs: a
 // connection ID or a DeviceKey, never empty.
 export function validateDeviceKey(value: unknown): string {

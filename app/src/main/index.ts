@@ -47,6 +47,7 @@ import {
   programScan,
   windowsDirectory,
 } from "./installed-apps";
+import { joyCon2Handlers } from "./joycon2-handlers";
 import { libraryHandlers, uiResult } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
 import { NativeCapture } from "./native-capture";
@@ -470,6 +471,12 @@ function registerHandlers(update: UpdateController): void {
       (method, params) => manager?.call(method, params),
       rawWatch,
     ),
+    // The Joy-Con 2 section of Settings; joycon2.changed is on the one
+    // subscription while that section is up.
+    ...joyCon2Handlers(
+      (method, params) => manager?.call(method, params),
+      (on) => hud.joyCon2Up(on),
+    ),
     // The automatic update; the window sends no address or version.
     ...updateHandlers(update),
     // The window's language, in its own file, which the installer writes too
@@ -757,6 +764,7 @@ app
       capture.stop("renderer-exit");
       padCapture.stop();
       rawWatch.reset();
+      void hud.joyCon2Up(false).catch(() => {});
       // Nobody is left to answer: quit without asking the renderer.
       pageReady = false;
       closeGuard.release();
@@ -824,6 +832,7 @@ app
       capture.stop("reload");
       padCapture.stop();
       rawWatch.reset();
+      void hud.joyCon2Up(false).catch(() => {});
       // A page that reloads no longer answers a held close.
       closeGuard.release();
     });

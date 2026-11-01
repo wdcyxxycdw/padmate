@@ -48,6 +48,11 @@ const api: PadmateAPI = {
   setMapping: (device, mapping) =>
     invoke("padmate:mappingSet", device, mapping),
   resetMapping: (device) => invoke("padmate:mappingReset", device),
+  getJoyCon2Status: () => invoke("padmate:joyCon2Status"),
+  watchJoyCon2: (on) => invoke("padmate:joyCon2Watch", on),
+  pairJoyCon2: () => invoke("padmate:joyCon2Pair"),
+  cancelJoyCon2Pair: () => invoke("padmate:joyCon2CancelPair"),
+  forgetJoyCon2: (serial) => invoke("padmate:joyCon2Forget", serial),
   pause: () => ipcRenderer.invoke("padmate:pause"),
   resume: () => ipcRenderer.invoke("padmate:resume"),
   releaseAll: () => ipcRenderer.invoke("padmate:releaseAll"),

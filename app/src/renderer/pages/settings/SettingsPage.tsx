@@ -12,8 +12,10 @@ import {
   configuredFunctionKey,
   deviceCombo,
   isPanicFamily,
+  joyCon2AutoConnect,
   setFunctionKey,
   setGlobalTiming,
+  setJoyCon2AutoConnect,
   setPanicCombo,
   startupDryRun,
 } from "../../state/settings-model";
@@ -37,6 +39,7 @@ import { ComboKeys, PanicComboDialog, seconds } from "./PanicComboDialog";
 import { ResetMappingDialog } from "./ResetMappingDialog";
 import { FeedbackSection } from "./SettingsFeedback";
 import { FunctionKeyRow } from "./SettingsFunctionKey";
+import { JoyCon2Section } from "./SettingsJoyCon2";
 import { OverlaySection } from "./SettingsOverlay";
 import { TimingSection } from "./SettingsTiming";
 import { UpdatesSection } from "./SettingsUpdates";
@@ -512,6 +515,17 @@ export function SettingsPage({
             onRemap={(entry: DeviceEntry) => setWizardFor(entry.info.id)}
             onRestoreMapping={(entry: DeviceEntry) =>
               setRestoreFor(entry.info.id)
+            }
+          />
+
+          {/* Not shown when the daemon has no Joy-Con 2 support. */}
+          <JoyCon2Section
+            api={store.getState().api}
+            language={language}
+            autoConnect={joyCon2AutoConnect(parsed)}
+            disabled={disabled}
+            onAutoConnect={(on) =>
+              void write((source) => setJoyCon2AutoConnect(source, on))
             }
           />
 

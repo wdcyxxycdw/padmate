@@ -20,6 +20,9 @@ import { isDisconnectedError, managerDisconnected, subscribe } from "./bridge";
 // controller's raw events only once the daemon has the subscription. A
 // connection that ends takes the wizard's watch with it, so the wish does not
 // outlive the connection.
+//
+// And a third: joycon2.changed, while the Settings section that connects
+// Joy-Con 2 controllers is up (joyCon2Up, handled the same way as the wizard's).
 
 type Call = (method: string, params: unknown) => Promise<unknown>;
 
@@ -31,12 +34,14 @@ export class HudSubscription {
   private up = false;
   /** Whether the mapping wizard is open: input.raw is on the list. */
   private raw = false;
+  /** Whether the Joy-Con 2 section is up: joycon2.changed is on the list. */
+  private joy = false;
   /**
    * What the daemon was last told on this connection, or undefined while there
    * is none. A daemon that does not know hud is told too: subscribe goes
    * without it for such a daemon, and there is nothing more to try.
    */
-  private told: { hud: boolean; raw: boolean } | undefined;
+  private told: { hud: boolean; raw: boolean; joy: boolean } | undefined;
   /** Calls to rawUp that wait for the daemon to be told. */
   private waiters: Array<{
     resolve: () => void;
@@ -71,6 +76,20 @@ export class HudSubscription {
    */
   rawUp(on: boolean): Promise<void> {
     this.raw = on;
+    return this.wish(on);
+  }
+
+  /**
+   * The Joy-Con 2 section is up and needs joycon2.changed (true) or is done
+   * with it (false). Resolves and rejects as rawUp does.
+   */
+  joyCon2Up(on: boolean): Promise<void> {
+    this.joy = on;
+    return this.wish(on);
+  }
+
+  /** Tells the daemon what is wished now; the wish of rawUp and joyCon2Up. */
+  private wish(on: boolean): Promise<void> {
     if (this.stopped || !this.linked)
       return on
         ? Promise.reject(new Error(managerDisconnected))
@@ -90,9 +109,10 @@ export class HudSubscription {
   async open(call: Call): Promise<void> {
     const hud = this.up;
     const raw = this.raw;
-    await subscribe(call, { hud, raw });
+    const joy = this.joy;
+    await subscribe(call, { hud, raw, joycon2: joy });
     this.generation++;
-    this.told = { hud, raw };
+    this.told = { hud, raw, joy };
   }
 
   /** The connection is in the manager's hands: calls go through it. */
@@ -104,12 +124,16 @@ export class HudSubscription {
 
   /**
    * The connection is gone, or there is none yet. The wizard's watch went with
-   * it, so the next connection does not subscribe to input.raw.
+   * it, so the next connection does not subscribe to input.raw. The Joy-Con 2
+   * section is still up with its page and asks again when it sees the new
+   * state, so the next connection does not subscribe to joycon2.changed
+   * either until it does.
    */
   disconnected(): void {
     this.linked = false;
     this.told = undefined;
     this.raw = false;
+    this.joy = false;
     this.generation++;
     this.cancelRetry();
     this.settle(new Error(managerDisconnected));
@@ -127,7 +151,8 @@ export class HudSubscription {
     return (
       this.told !== undefined &&
       this.told.hud === this.up &&
-      this.told.raw === this.raw
+      this.told.raw === this.raw &&
+      this.told.joy === this.joy
     );
   }
 
@@ -155,8 +180,9 @@ export class HudSubscription {
         const generation = this.generation;
         const hud = this.up;
         const raw = this.raw;
+        const joy = this.joy;
         try {
-          await subscribe(this.call, { hud, raw });
+          await subscribe(this.call, { hud, raw, joycon2: joy });
         } catch (error) {
           // The connection ended meanwhile: the one after it starts afresh.
           if (generation !== this.generation) continue;
@@ -166,7 +192,7 @@ export class HudSubscription {
           this.settle(error);
           return;
         }
-        if (generation === this.generation) this.told = { hud, raw };
+        if (generation === this.generation) this.told = { hud, raw, joy };
       }
       if (this.matches()) this.settle();
     } finally {
