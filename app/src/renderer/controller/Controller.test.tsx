@@ -15,6 +15,7 @@ import type { DeviceInfo } from "../../shared/api";
 import { translator } from "../i18n";
 import { joyCon2Pads, sdlPads } from "../testing/sdl-pads";
 import { Controller } from "./Controller";
+import { type Callout, controllerCallouts } from "./controller-callouts";
 import type { ChipInfo } from "./controller-chips";
 import * as scenes from "./controller-scene";
 
@@ -304,7 +305,7 @@ describe("3D controller component", () => {
     vi.stubGlobal("WebGL2RenderingContext", class {});
     const update = vi.fn();
     const dispose = vi.fn();
-    let ready = () => {};
+    let ready = (_callouts: Callout[]) => {};
     const create = vi
       .spyOn(scenes, "createControllerScene")
       .mockImplementation((_host, _info, onReady) => {
@@ -338,7 +339,7 @@ describe("3D controller component", () => {
     expect(screen.getByRole("group").getAttribute("data-renderer")).toBe(
       "loading",
     );
-    act(() => ready());
+    act(() => ready(controllerCallouts(info)));
     expect(screen.getByRole("group").getAttribute("data-renderer")).toBe(
       "webgl",
     );
@@ -354,6 +355,134 @@ describe("3D controller component", () => {
     );
     unmount();
     expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
+  it("moves a Joy-Con's chips to the places the built model arranged, keeping its own labels", () => {
+    vi.stubGlobal("WebGL2RenderingContext", class {});
+    let ready = (_callouts: Callout[]) => {};
+    const update = vi.fn();
+    vi.spyOn(scenes, "createControllerScene").mockImplementation(
+      (_host, _info, onReady) => {
+        ready = onReady;
+        return { update, dispose: vi.fn() };
+      },
+    );
+    const sideways = { ...info, id: 6, ...sdlPads.joyConRightSideways };
+    const placement = (container: HTMLElement, control: string) =>
+      container
+        .querySelector(`[data-callout="${control}"]`)
+        ?.getAttribute("data-placement");
+    const { container, rerender } = render(
+      <Controller info={sideways} t={translator("en")} language="en" />,
+    );
+    // Before the model, the table's first choice: R and ZR in the corner at
+    // the top, the face buttons below.
+    expect(placement(container, "paddle1")).toBe("top");
+    expect(
+      container
+        .querySelector('[data-callout="paddle1"]')
+        ?.getAttribute("data-side"),
+    ).toBe("right");
+    expect(placement(container, "south")).toBe("bottom");
+    // The model arranged them otherwise (and named them in Chinese, which
+    // the chips do not take).
+    const arranged = controllerCallouts(sideways, "zh-CN").map((callout) =>
+      callout.control === "south"
+        ? { ...callout, placement: "right" as const, slot: 5 }
+        : callout,
+    );
+    expect(screen.getByRole("group").getAttribute("data-arranged")).toBeNull();
+    const before = update.mock.calls.length;
+    act(() => ready(arranged));
+    expect(screen.getByRole("group").getAttribute("data-arranged")).toBe(
+      "true",
+    );
+    // The leaders start on the chips as measured, and the chips just moved:
+    // the scene draws them again.
+    expect(update.mock.calls.length).toBeGreaterThan(before);
+    expect(placement(container, "south")).toBe("right");
+    expect(placement(container, "paddle1")).toBe("top");
+    expect(
+      container
+        .querySelector('[data-callout="paddle1"]')
+        ?.getAttribute("aria-label"),
+    ).toMatch(/^R · /);
+    // Another model starts again from the table.
+    rerender(
+      <Controller
+        info={{ ...info, id: 7, ...sdlPads.joyConLeftSideways }}
+        t={translator("en")}
+        language="en"
+      />,
+    );
+    expect(placement(container, "south")).toBe("bottom");
+  });
+
+  it("gives a Joy-Con's rows the wide layout and the model's size, and no other pad", () => {
+    vi.stubGlobal("WebGL2RenderingContext", class {});
+    let ready = (
+      _callouts: Callout[],
+      _frame?: { width: number; halfHeight: number },
+    ) => {};
+    vi.spyOn(scenes, "createControllerScene").mockImplementation(
+      (_host, _info, onReady) => {
+        ready = onReady;
+        return { update: vi.fn(), dispose: vi.fn() };
+      },
+    );
+    const labels = (container: HTMLElement) =>
+      container.querySelector<HTMLElement>(".controller-labels");
+    const pair = { ...info, id: 8, ...joyCon2Pads.joyConPair };
+    const { container, rerender } = render(
+      <Controller info={pair} t={translator("en")} />,
+    );
+    // A pair's row above stays narrow; both rows of a single one are wide.
+    expect(labels(container)?.dataset.wideRows).toBe("true");
+    expect(labels(container)?.dataset.wideTop).toBeUndefined();
+    expect(labels(container)?.dataset.corners).toBe("true");
+    expect(labels(container)?.dataset.columns).toBe("true");
+    expect(labels(container)?.style.getPropertyValue("--top-count")).toBe("2");
+    // The model's size is the stylesheet's default until it is built.
+    expect(labels(container)?.style.getPropertyValue("--model-h")).toBe("");
+    act(() =>
+      ready(controllerCallouts(pair), { width: 3.45, halfHeight: 2.07 }),
+    );
+    expect(labels(container)?.style.getPropertyValue("--model-w")).toBe("3.45");
+    expect(labels(container)?.style.getPropertyValue("--model-h")).toBe("2.07");
+    rerender(
+      <Controller
+        info={{ ...info, id: 9, ...sdlPads.joyConRightSideways }}
+        t={translator("en")}
+      />,
+    );
+    expect(labels(container)?.dataset.wideTop).toBe("true");
+    expect(labels(container)?.style.getPropertyValue("--model-h")).toBe("");
+    // Any other pad, and a Joy-Con the table does not know, keep the rows.
+    rerender(<Controller info={info} t={translator("en")} />);
+    expect(labels(container)?.dataset.wideRows).toBeUndefined();
+    rerender(
+      <Controller
+        info={{ ...info, type: "joyconleft", buttonMask: 0, axisMask: 0 }}
+        t={translator("en")}
+      />,
+    );
+    expect(labels(container)?.dataset.wideRows).toBeUndefined();
+  });
+
+  it("makes its scene with the one it is given", () => {
+    vi.stubGlobal("WebGL2RenderingContext", class {});
+    const shared = vi
+      .spyOn(scenes, "createControllerScene")
+      .mockReturnValue({ update: vi.fn(), dispose: vi.fn() });
+    const own = vi
+      .fn<typeof scenes.createControllerScene>()
+      .mockReturnValue({ update: vi.fn(), dispose: vi.fn() });
+    const { unmount } = render(
+      <Controller info={info} t={translator("en")} createScene={own} />,
+    );
+    expect(own).toHaveBeenCalledTimes(1);
+    expect(shared).not.toHaveBeenCalled();
+    unmount();
   });
 
   it("lets go of the scene on each effect cleanup, StrictMode's replay included", () => {
@@ -890,7 +1019,15 @@ describe("the controls of the connected pad", () => {
       />,
     );
     expect(ids(container)).toEqual(
-      expect.arrayContaining(["misc1", "paddle1", "dpad.up", "rightstick"]),
+      expect.arrayContaining(["misc1", "dpad.up", "rightstick"]),
+    );
+    // The pair has no SL and SR chips though the pad reports them.
+    expect(ids(container)).not.toContain("paddle1");
+    rerender(
+      <Controller
+        info={{ ...info, id: 5, ...sdlPads.joyConRightUpright }}
+        t={translator("en")}
+      />,
     );
     expect(
       container
@@ -919,7 +1056,7 @@ describe("the controls of the connected pad", () => {
     expect(listed).not.toContain("misc2");
   });
 
-  it("gives a Joy-Con 2 pair its C button, named in the interface's language, and room for six chips below", () => {
+  it("gives a Joy-Con 2 pair its C button, named in the interface's language, and its row of two chips below", () => {
     const pair = { ...info, id: 4, ...joyCon2Pads.joyConPair };
     const { container, rerender } = render(
       <Controller info={pair} t={translator("en")} language="en" />,
@@ -931,14 +1068,14 @@ describe("the controls of the connected pad", () => {
       container
         .querySelector<HTMLElement>(".controller-labels")
         ?.style.getPropertyValue("--row-count"),
-    ).toBe("6");
+    ).toBe("2");
     rerender(<Controller info={pair} t={translator("zh-CN")} />);
     expect(
       container
         .querySelector('[data-callout="misc2"]')
         ?.getAttribute("aria-label"),
     ).toMatch(/^C 键 · /);
-    // A Switch OLED pair has no such button, and five chips at most.
+    // A Switch OLED pair has no such button: the Capture button alone.
     rerender(
       <Controller
         info={{ ...info, id: 3, ...sdlPads.joyConPair }}
@@ -950,6 +1087,6 @@ describe("the controls of the connected pad", () => {
       container
         .querySelector<HTMLElement>(".controller-labels")
         ?.style.getPropertyValue("--row-count"),
-    ).toBe("5");
+    ).toBe("1");
   });
 });

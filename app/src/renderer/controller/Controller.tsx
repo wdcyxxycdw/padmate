@@ -21,19 +21,22 @@ import { calloutOf, stickPress } from "./control-callout";
 import {
   type Callout,
   controllerCallouts,
+  diagramHasControl,
   type ModelInfo,
+  withArrangement,
 } from "./controller-callouts";
 import {
   type ChipInfo,
   type ChipSegment,
   functionKeyChip,
 } from "./controller-chips";
+import { covers, joyConKind } from "./controller-joycon-layout";
+import { wideRowsOf } from "./controller-layout";
 import {
   type ControllerFamily,
   controllerLabels,
   controlStrength,
   familyName,
-  padHasControl,
   stickPush,
   triggerValue,
 } from "./controller-model";
@@ -60,6 +63,12 @@ interface ControllerProps {
   hint?: boolean;
   /** The function key (ADR-0012), whose chip is only a tag; Menu by default. */
   functionKey?: FunctionKey;
+  /**
+   * Makes the scene. The app has one controller at a time and the default
+   * shares one stage; a page that shows several (tests/preview) gives each
+   * its own (createSceneWithOwnStage).
+   */
+  createScene?: typeof createControllerScene;
 }
 
 /** Printed face colors, matched by the label the controller reports. */
@@ -505,6 +514,7 @@ export function Controller({
   chips,
   hint = false,
   functionKey = defaultFunctionKey,
+  createScene,
 }: ControllerProps) {
   const stageHost = useRef<HTMLDivElement>(null);
   const callouts = useRef<SVGSVGElement>(null);
@@ -512,6 +522,13 @@ export function Controller({
     undefined,
   );
   const [renderer, setRenderer] = useState("loading");
+  // Where the model put the chips once it was built, for this model (a
+  // Joy-Con's chips go where its leaders do not cross, controller-callouts).
+  const [arranged, setArranged] = useState<{
+    key: string;
+    callouts: Callout[];
+    frame?: { width: number; halfHeight: number };
+  }>();
   const { type, buttonLabels, buttonMask, axisMask, vendor, product } = info;
   const modelKey = stageKey({
     type,
@@ -530,11 +547,20 @@ export function Controller({
     language,
   );
   const family = familyName(info.type);
-  const layout = controllerCallouts(info, language);
+  const base = controllerCallouts(info, language);
+  const layout =
+    arranged?.key === modelKey
+      ? withArrangement(base, arranged.callouts)
+      : base;
   // The chips of the row below share the width between the columns.
   const rowCount = layout.filter(
     (entry) => entry.placement === "bottom",
   ).length;
+  // A Joy-Con's rows above and below are as wide as a column's chips where
+  // there is room (controller-3d.css, controller-layout.ts).
+  const joyConKindOfPad = joyConKind(info);
+  const wide = !!joyConKindOfPad && covers(layout, joyConKindOfPad);
+  const wideRows = wideRowsOf(layout);
   // The leader of a stick belongs to both its cells.
   const selectedCallout = selectedControl && calloutOf(selectedControl);
   // Leaders of unset controls are dashed; the scene reads this on each frame.
@@ -569,10 +595,13 @@ export function Controller({
       // The scene takes the session's canvas into the stage host (H2): the
       // first visit builds it, the next ones draw it at once. A replayed
       // effect (StrictMode) or another page only lets go of it.
-      scene.current = createControllerScene(
+      scene.current = (createScene ?? createControllerScene)(
         stageHost.current,
         modelInfo,
-        () => setRenderer("webgl"),
+        (callouts, frame) => {
+          setArranged({ key: modelKey, callouts, frame });
+          setRenderer("webgl");
+        },
         () => {
           scene.current?.dispose();
           scene.current = undefined;
@@ -592,7 +621,7 @@ export function Controller({
       scene.current?.dispose();
       scene.current = undefined;
     };
-  }, [modelKey]);
+  }, [modelKey, createScene]);
   useEffect(() => {
     scene.current?.update(
       input,
@@ -600,12 +629,26 @@ export function Controller({
       unbound ? unbound.split(" ") : [],
     );
   }, [input, selectedCallout, unbound]);
+  // The first frame is drawn before the arranged layout is applied (the scene
+  // hands it over with that frame): the chips then move, and the leaders,
+  // which start on the chips as measured, are drawn again.
+  const arrangedHere = arranged?.key === modelKey;
+  useEffect(() => {
+    if (!arrangedHere) return;
+    const current = latest.current;
+    scene.current?.update(
+      current.input,
+      current.selectedCallout,
+      current.unbound ? current.unbound.split(" ") : [],
+    );
+  }, [arrangedHere]);
   return (
     <fieldset
       className="controller-3d"
       aria-label={`${info.name} · ${t("controller")}`}
       aria-describedby={hintId}
       data-renderer={renderer}
+      data-arranged={arrangedHere || undefined}
       data-selected-control={selectedControl}
     >
       <div ref={stageHost} className="stage-host">
@@ -616,7 +659,22 @@ export function Controller({
         />
         <div
           className="controller-labels"
-          style={{ "--row-count": rowCount } as CSSProperties}
+          data-wide-rows={wide || undefined}
+          data-wide-top={(wide && joyConKindOfPad !== "pair") || undefined}
+          data-corners={(wide && wideRows.corners) || undefined}
+          data-columns={(wide && wideRows.columns) || undefined}
+          style={
+            {
+              "--row-count": rowCount,
+              "--top-count": wideRows.tops,
+              ...(wide && arranged?.key === modelKey && arranged.frame
+                ? {
+                    "--model-w": arranged.frame.width,
+                    "--model-h": arranged.frame.halfHeight,
+                  }
+                : {}),
+            } as CSSProperties
+          }
         >
           {layout.map((callout) => {
             // Controls without chip data still get a chip named after them.
@@ -686,7 +744,7 @@ export function Controller({
         aria-label={tx(language, "手柄按键状态", "Controller state")}
       >
         {Object.entries(labels)
-          .filter(([control]) => padHasControl(control, info))
+          .filter(([control]) => diagramHasControl(control, info))
           .map(([control, label]) => (
             <li
               key={control}

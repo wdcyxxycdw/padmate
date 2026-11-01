@@ -284,6 +284,74 @@
 }
 
 /*
+ * A Joy-Con's rows (data-wide-rows, from Controller.tsx): they sit just above
+ * and below the model, and a chip is as wide as a column's where the stage has
+ * room, so that a shortcut shows whole. The row below shares the width between
+ * the columns (data-columns) or the stage's edges, --row-count chips; the row
+ * above (data-wide-top, not for a pair, whose shoulders' leaders pass over its
+ * ends) does the same between the shoulder corners (data-corners),
+ * --top-count chips. controller-layout.ts repeats all this.
+ */
+.controller-labels[data-wide-rows] {
+  --corner-shift: 0px;
+  --top-inset: var(--edge);
+  --bottom-inset: var(--edge);
+  /* The model's width and half its height in its units (Controller.tsx sets
+     them once the model is built), and the pixels of a unit under the
+     scene's camera. */
+  --model-w: 5.6;
+  --model-h: 2.1;
+  --unit: min(14.653cqh, calc(58.824cqw / var(--model-w)));
+}
+.controller-labels[data-wide-rows][data-corners] {
+  --top-inset: calc(var(--side-x) + var(--chip-w) + var(--top-gap));
+}
+.controller-labels[data-wide-rows][data-columns] {
+  --bottom-inset: calc(var(--side-x) + var(--chip-w) + var(--top-gap));
+}
+.controller-labels[data-wide-rows]
+  .stage-chip[data-placement="top"]:not([data-side]) {
+  top: max(
+    8px,
+    min(
+      var(--top-y),
+      calc(50cqh - var(--model-h) * var(--unit) - var(--chip-h) - 10px)
+    )
+  );
+}
+.controller-labels[data-wide-top]
+  .stage-chip[data-placement="top"]:not([data-side]) {
+  --top-pitch: min(
+    calc(var(--chip-w) + var(--top-gap)),
+    calc((100cqw - 2 * var(--top-inset)) / max(1, var(--top-count, 1)))
+  );
+  width: calc(var(--top-pitch) - var(--top-gap));
+  left: calc(50% + var(--offset) * var(--top-pitch));
+  top: max(
+    8px,
+    calc(50cqh - var(--model-h) * var(--unit) - var(--chip-h) - 10px)
+  );
+}
+.controller-labels[data-wide-rows] .stage-chip[data-placement="bottom"] {
+  --row-pitch: min(
+    calc(var(--chip-w) + var(--top-gap)),
+    calc((100cqw - 2 * var(--bottom-inset)) / max(1, var(--row-count, 1)))
+  );
+  top: min(
+    calc(50cqh + var(--model-h) * var(--unit) + 10px),
+    calc(100% - 72px - var(--chip-h))
+  );
+}
+.controller-view:has(.editor-notice)
+  .controller-labels[data-wide-rows]
+  .stage-chip[data-placement="bottom"] {
+  top: min(
+    calc(50cqh + var(--model-h) * var(--unit) + 10px),
+    calc(100% - 112px - var(--chip-h))
+  );
+}
+
+/*
  * A stick is one callout of two stacked cells (movement above, press below;
  * each a .stage-chip button) that is --span slots tall: its first slot is
  * --slot, the chips after it in the column start --span slots further down.

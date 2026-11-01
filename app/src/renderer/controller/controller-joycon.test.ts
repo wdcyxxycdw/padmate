@@ -259,8 +259,6 @@ describe.each(generations)("$name shells", (generation) => {
       "lefttrigger",
       "back",
       "misc1",
-      "paddle2",
-      "paddle4",
     ])
       expect(p(c).x, c).toBeLessThan(0);
     for (const c of [
@@ -273,10 +271,12 @@ describe.each(generations)("$name shells", (generation) => {
       "righttrigger",
       "start",
       "guide",
-      "paddle1",
-      "paddle3",
     ])
       expect(p(c).x, c).toBeGreaterThan(0);
+    // SL and SR of both halves are off the picture: no anchor, no marker, no
+    // chip (the Joy-Cons are joined on their rails).
+    for (const c of ["paddle1", "paddle2", "paddle3", "paddle4"])
+      expect(model.controls.has(c), c).toBe(false);
     // Each hand as on the single one.
     expect(p("leftstick").y).toBeGreaterThan(p("dpad.up").y);
     expect(p("north").y).toBeGreaterThan(p("south").y);

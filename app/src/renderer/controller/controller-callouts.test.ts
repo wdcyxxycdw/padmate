@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { sdlPads } from "../testing/sdl-pads";
-import { controllerCallouts } from "./controller-callouts";
+import { joyCon2Pads, sdlPads } from "../testing/sdl-pads";
+import { controllerCallouts, diagramHasControl } from "./controller-callouts";
+import { padHasControl } from "./controller-model";
 
 const controls = (info: Parameters<typeof controllerCallouts>[0]) =>
   controllerCallouts(info).map((callout) => callout.control);
@@ -186,7 +187,8 @@ describe("the callouts follow the controls SDL reports", () => {
       ["touchpad", "misc1", "paddle1", "paddle2", "paddle3", "paddle4"],
     ],
     ["switchPro", ["misc1"]],
-    ["joyConPair", ["misc1", "paddle1", "paddle2", "paddle3", "paddle4"]],
+    // The pair has no SL and SR chips, though the pad reports them.
+    ["joyConPair", ["misc1"]],
   ] as const)("give %s its extra buttons: %j", (name, extra) => {
     expect(controls(sdlPads[name]).sort()).toEqual(
       [...standard, ...extra].sort(),
@@ -281,19 +283,34 @@ describe("the callouts follow the controls SDL reports", () => {
       ["paddle3", 2],
     ]);
     expect(row(sdlPads.switchPro)).toEqual([["misc1", 0]]);
-    expect(row(sdlPads.joyConLeftSideways)).toEqual([
-      ["paddle4", -0.5],
-      ["paddle2", 0.5],
-    ]);
     expect(row({ type: "xboxone" })).toEqual([]);
   });
 
+  it("leave SL and SR of a pair off the picture, though the pad reports them", () => {
+    for (const pad of [sdlPads.joyConPair, joyCon2Pads.joyConPair]) {
+      expect(padHasControl("paddle1", pad)).toBe(true);
+      for (const control of ["paddle1", "paddle2", "paddle3", "paddle4"]) {
+        expect(controls(pad), control).not.toContain(control);
+        expect(diagramHasControl(control, pad), control).toBe(false);
+      }
+      expect(diagramHasControl("leftshoulder", pad)).toBe(true);
+    }
+    // A single Joy-Con keeps its SL and SR, and so does every other pad's
+    // paddle: only the joined pair hides them.
+    expect(controls(sdlPads.joyConLeftUpright)).toContain("paddle2");
+    expect(controls(sdlPads.joyConRightUpright)).toContain("paddle1");
+    expect(controls(sdlPads.joyConLeftSideways)).toContain("leftshoulder");
+    expect(controls(sdlPads.ps5Edge)).toContain("paddle1");
+  });
+
   it("center a short column on the middle of the stage", () => {
-    // The sideways Joy-Con's stick alone, its four face buttons.
+    // The sideways Joy-Con's stick alone in its column.
     const info = sdlPads.joyConLeftSideways;
     expect(callout(info, "leftstick")?.slot).toBe(4);
-    expect(callout(info, "north")?.slot).toBe(3);
-    expect(callout(info, "south")?.slot).toBe(6);
+    expect(callout(info, "leftstick")?.span).toBe(2);
+    // Held upright, its stick and four buttons fill the column.
+    expect(callout(sdlPads.joyConLeftUpright, "leftstick")?.slot).toBe(2);
+    expect(callout(sdlPads.joyConLeftUpright, "dpad.down")?.slot).toBe(7);
     // A full column is where it was.
     expect(callout(sdlPads.ps5, "dpad.up")?.slot).toBe(2);
   });

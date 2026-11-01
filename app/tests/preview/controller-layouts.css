@@ -1,0 +1,41 @@
+/* The development preview of the controller layouts: the app's own styles do
+   the stage; this only lays the stages out on a scrolling page. */
+html,
+body,
+#root {
+  height: auto;
+  min-height: 100%;
+  overflow: auto;
+}
+.preview-page {
+  padding: 16px 24px 48px;
+}
+.preview-page h1 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+.preview-page header p {
+  margin: 0 0 16px;
+  color: var(--text-3);
+}
+.preview-generation > h2 {
+  margin: 24px 0 8px;
+  font-size: 15px;
+}
+.preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+.preview-cell h2 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.preview-cell .controller-view {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}

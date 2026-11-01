@@ -18,7 +18,8 @@ import {
   disposeAsset,
   type ModelInfo,
 } from "./controller-asset";
-import { calloutBox, calloutEdge } from "./controller-callouts";
+import { type Callout, calloutBox, calloutEdge } from "./controller-callouts";
+import { cameraDistance, cameraSpec } from "./controller-layout";
 import { stickActiveThreshold } from "./controller-model";
 import { controllerModels, modelShell } from "./controller-models";
 import {
@@ -210,7 +211,7 @@ function createGpuStage(info: ModelInfo): SceneStage {
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   const scene = new Scene(),
-    camera = new PerspectiveCamera(32, 1, 0.05, 100);
+    camera = new PerspectiveCamera(cameraSpec.fov, 1, 0.05, 100);
   let environment: ReturnType<PMREMGenerator["fromScene"]>;
   try {
     const room = new RoomEnvironment(),
@@ -285,10 +286,7 @@ function createGpuStage(info: ModelInfo): SceneStage {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       const size = new Box3().setFromObject(model.group).getSize(new Vector3());
-      const distance = Math.max(
-        11.9,
-        (size.x * 1.7) / (2 * Math.tan((Math.PI * 16) / 180) * camera.aspect),
-      );
+      const distance = cameraDistance(size.x, camera.aspect);
       camera.position.set(0, 0, distance);
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
@@ -339,7 +337,11 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
   return function createControllerScene(
     host: HTMLElement,
     info: ModelInfo,
-    onReady: () => void,
+    /** Called when the first frame is drawn, with the places of the chips. */
+    onReady: (
+      callouts: Callout[],
+      frame?: { width: number; halfHeight: number },
+    ) => void,
     onFailure: () => void,
     labels?: SVGSVGElement,
     initial: SceneState = {},
@@ -490,7 +492,11 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
         projectLabels(box, model);
         if (!ready) {
           ready = true;
-          onReady();
+          const anchors = model.layoutAnchors;
+          onReady(
+            model.callouts,
+            anchors && { width: anchors.width, halfHeight: anchors.halfHeight },
+          );
         }
       } catch {
         fail();
@@ -563,11 +569,15 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
   };
 }
 
+/** A scene with a stage store of its own (createControllerScene's is shared). */
+export const createSceneWithOwnStage = () =>
+  bindControllerScene(
+    createStageStore<ModelInfo, SceneStage>({
+      key: stageKey,
+      create: createGpuStage,
+      usable: (stage) => !stage.broken,
+    }),
+  );
+
 /** The scene of this app session: one stage kept for the model in use. */
-export const createControllerScene = bindControllerScene(
-  createStageStore<ModelInfo, SceneStage>({
-    key: stageKey,
-    create: createGpuStage,
-    usable: (stage) => !stage.broken,
-  }),
-);
+export const createControllerScene = createSceneWithOwnStage();

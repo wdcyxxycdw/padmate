@@ -12,7 +12,11 @@ import {
   Vector3,
 } from "three";
 import type { PadInput } from "../state/store";
-import { controllerCallouts, type ModelInfo } from "./controller-callouts";
+import {
+  arrangeCallouts,
+  controllerCallouts,
+  type ModelInfo,
+} from "./controller-callouts";
 import {
   isJoyCon2Shell,
   isJoyConShell,
@@ -23,6 +27,7 @@ import {
   joyConStick,
   layoutJoyCons,
 } from "./controller-joycon";
+import { convexHull, halfHeightOf, type Point3 } from "./controller-layout";
 import {
   controllerLabels,
   controlStrength,
@@ -103,6 +108,53 @@ const fixedStickRadius: Partial<Record<ModelShell, number>> = {
   dualshock: 0.45,
 };
 const zAxis = new Vector3(0, 0, 1);
+/**
+ * Points that hold the silhouette of a model whatever the camera: the
+ * vertices of its shell that are on the convex hull (seen from the front) of
+ * the vertices of one of 16 slices of its depth (a slice 0.1 deep moves a vertex by 1 px at most). Perspective moves a
+ * vertex with its depth, so the hull of the whole is not enough. `skip` are
+ * the meshes that are not the shell (the markers).
+ */
+export function shellOutline(
+  group: Group,
+  skip: ReadonlySet<unknown>,
+): Point3[] {
+  group.updateMatrixWorld(true);
+  const all: Point3[] = [];
+  const v = new Vector3();
+  group.traverse((node) => {
+    if (!(node instanceof Mesh) || skip.has(node)) return;
+    const position = node.geometry.getAttribute("position");
+    if (!position) return;
+    for (let i = 0; i < position.count; i++) {
+      v.fromBufferAttribute(position, i).applyMatrix4(node.matrixWorld);
+      all.push({ x: v.x, y: v.y, z: v.z });
+    }
+  });
+  if (all.length === 0) return [];
+  let low = Number.POSITIVE_INFINITY,
+    high = Number.NEGATIVE_INFINITY;
+  for (const p of all) {
+    low = Math.min(low, p.z);
+    high = Math.max(high, p.z);
+  }
+  const slices = 16;
+  const outline = new Set<Point3>();
+  for (let slice = 0; slice < slices; slice++) {
+    const inSlice = all.filter((p) => {
+      const at = Math.min(
+        slices - 1,
+        Math.floor(((p.z - low) / (high - low || 1)) * slices),
+      );
+      return at === slice;
+    });
+    const hull = convexHull(inSlice);
+    // convexHull gives copies of the points it was given, objects and all.
+    for (const h of hull) outline.add(h as Point3);
+  }
+  return [...outline];
+}
+
 export function collectResources(group: Group) {
   const resources = new Set<Resource>();
   group.traverse((node) => {
@@ -459,12 +511,36 @@ export function buildAssetModel(
         target.copy(control.stick.anchor),
       );
     };
+    // A Joy-Con's chips are placed by where its controls turned out to be, so
+    // that no leader crosses another (controller-joycon-layout.ts).
+    const width = new Box3().setFromObject(group).getSize(new Vector3()).x;
+    const points: Record<string, Vector3> = {};
+    for (const [name, control] of controls) points[name] = anchor(control);
+    const outline = joyCon
+      ? shellOutline(
+          group,
+          new Set([...controls.values()].map((c) => c.marker)),
+        )
+      : [];
+    const layoutAnchors = joyCon
+      ? {
+          width,
+          points,
+          outline,
+          halfHeight: halfHeightOf(outline),
+          narrowTop: shell.endsWith("-pair"),
+        }
+      : undefined;
     return {
       group,
       resources,
       controls,
       sticks,
-      callouts,
+      callouts: layoutAnchors
+        ? arrangeCallouts(callouts, info, layoutAnchors)
+        : callouts,
+      /** What the Joy-Con layout was made from (a Joy-Con's model only). */
+      layoutAnchors,
       update,
       anchor,
       dispose,

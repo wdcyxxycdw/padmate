@@ -1,6 +1,13 @@
 import type { DeviceInfo } from "../../shared/api";
 import type { Language } from "../state/store";
 import {
+  type Anchors,
+  arrangeJoyCon,
+  diagramHidden,
+  joyConKind,
+  staticLayout,
+} from "./controller-joycon-layout";
+import {
   controllerLabels,
   familyName,
   padHasControl,
@@ -60,7 +67,10 @@ const bottomRow = [
 // Each endpoint identifies one physical control; the same IDs feed selection
 // and input feedback. A pad gets a chip for each control it has
 // (padHasControl), so a single Joy-Con held sideways shows no D-pad and a
-// DualSense Edge its four back and Fn buttons.
+// DualSense Edge its four back and Fn buttons. A pair of Joy-Cons has no SL
+// or SR chip: they cannot be pressed with the two joined (diagramHidden).
+// A Joy-Con's chips are placed by controller-joycon-layout.ts; the others by
+// the columns and rows below.
 export function controllerCallouts(
   info: ModelInfo,
   language?: Language,
@@ -72,7 +82,8 @@ export function controllerCallouts(
     language,
   );
   const ps = familyName(info.type) === "playstation";
-  const has = (control: string) => padHasControl(control, info);
+  const has = (control: string) =>
+    padHasControl(control, info) && !diagramHidden(info.type, control);
   const callouts: Callout[] = [];
   const add = (
     control: string,
@@ -127,7 +138,49 @@ export function controllerCallouts(
   extra.forEach((control, index) => {
     add(control, "bottom", { offset: index - (extra.length - 1) / 2 });
   });
-  return callouts;
+  const kind = joyConKind(info);
+  return kind ? staticLayout(callouts, kind) : callouts;
+}
+
+/**
+ * Whether the controller picture shows a control: the pad has it
+ * (padHasControl) and the picture does not leave it out (diagramHidden).
+ */
+export function diagramHasControl(control: string, info: ModelInfo): boolean {
+  return padHasControl(control, info) && !diagramHidden(info.type, control);
+}
+
+/**
+ * A Joy-Con's callouts placed for its model: where each leader ends decides
+ * which side and in what order the chips go, so that no leader crosses
+ * another. Other pads, which have no table of this kind, are returned as they
+ * are.
+ */
+export function arrangeCallouts(
+  callouts: Callout[],
+  info: ModelInfo,
+  anchors: Anchors,
+): Callout[] {
+  const kind = joyConKind(info);
+  return kind ? arrangeJoyCon(callouts, kind, anchors) : callouts;
+}
+
+/**
+ * The callouts of this language with the places an arrangement (made for the
+ * model, in any language) gave the controls; a callout the arrangement lacks
+ * keeps its own place.
+ */
+export function withArrangement(
+  callouts: readonly Callout[],
+  arranged: readonly Callout[],
+): Callout[] {
+  const own = new Map(callouts.map((callout) => [callout.control, callout]));
+  const placed = arranged.flatMap((callout) => {
+    const base = own.get(callout.control);
+    return base ? [{ ...callout, label: base.label }] : [];
+  });
+  const done = new Set(placed.map((callout) => callout.control));
+  return [...placed, ...callouts.filter((c) => !done.has(c.control))];
 }
 
 /**
@@ -144,30 +197,4 @@ export function calloutBox(
   );
 }
 
-/** The side of a chip that faces the controller. */
-export function calloutSide(
-  callout: Pick<Callout, "placement" | "side">,
-): "left" | "right" | undefined {
-  if (callout.side) return callout.side;
-  return callout.placement === "left" || callout.placement === "right"
-    ? callout.placement
-    : undefined;
-}
-
-/**
- * Where a leader line leaves a chip: the middle of the edge that faces the
- * controller. `rect` is the chip's box relative to the stage.
- */
-export function calloutEdge(
-  callout: Pick<Callout, "placement" | "side">,
-  rect: { left: number; top: number; width: number; height: number },
-): { x: number; y: number } {
-  const side = calloutSide(callout);
-  const middle = rect.top + rect.height / 2;
-  if (side === "left") return { x: rect.left + rect.width, y: middle };
-  if (side === "right") return { x: rect.left, y: middle };
-  const center = rect.left + rect.width / 2;
-  return callout.placement === "bottom"
-    ? { x: center, y: rect.top }
-    : { x: center, y: rect.top + rect.height };
-}
+export { calloutEdge, calloutSide } from "./controller-layout";

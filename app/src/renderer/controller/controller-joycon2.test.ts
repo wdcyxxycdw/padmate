@@ -185,7 +185,6 @@ describe("the C button of a Joy-Con 2", () => {
       expect(control?.point.x).toBeCloseTo(centre.x, 2);
       expect(control?.point.y).toBeCloseTo(centre.y, 2);
       const callout = model.callouts.find((entry) => entry.control === "misc2");
-      expect(callout?.placement).toBe("bottom");
       expect(callout?.label).toBe("C 键");
       model.dispose();
     },
@@ -246,18 +245,14 @@ describe("the C button of a Joy-Con 2", () => {
 });
 
 describe("a Joy-Con 2 pair", () => {
-  it("has the Capture and the C button in the row below, six chips in all", () => {
+  it("has the Capture and the C button in the row below, and no SL or SR", () => {
     const row = controllerCallouts(joyCon2Pads.joyConPair)
       .filter((entry) => entry.placement === "bottom")
       .sort((a, b) => (a.offset ?? 0) - (b.offset ?? 0))
       .map((entry) => [entry.control, entry.offset]);
     expect(row).toEqual([
-      ["paddle4", -2.5],
-      ["paddle2", -1.5],
       ["misc1", -0.5],
       ["misc2", 0.5],
-      ["paddle1", 1.5],
-      ["paddle3", 2.5],
     ]);
   });
 
@@ -274,9 +269,9 @@ describe("a Joy-Con 2 pair", () => {
     // The left Capture is a part of its own: right of the left D-pad, below it.
     expect(p("misc1").y).toBeLessThan(p("dpad.down").y);
     expect(p("misc1").x).toBeGreaterThan(p("dpad.down").x);
-    // SL and SR sit on the rails, facing each other.
-    expect(p("paddle2").x).toBeGreaterThan(p("leftstick").x);
-    expect(p("paddle1").x).toBeLessThan(p("rightstick").x);
+    // SL and SR sit on the rails, which are joined: not on the picture.
+    for (const c of ["paddle1", "paddle2", "paddle3", "paddle4"])
+      expect(model.controls.has(c), c).toBe(false);
     model.dispose();
   });
 
