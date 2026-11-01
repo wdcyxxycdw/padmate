@@ -1,0 +1,20 @@
+# joycon-combine-right-first without R's recentering ButtonUp of east at
+# @500: the mirror of joycon-combine-lost-up. Joy-Con (R) holds east on
+# its own, and its ButtonUp is dropped because Events was full. Joy-Con
+# (L) wakes: SDL replaces R with the pair, so R's removal is the only
+# thing that can end the hold, and its ReleaseAll releases Space at @500.
+# The pair holds east and loses its ButtonUp too, at @800, when L is
+# switched off; R comes back 10 ms later with a new id and its old key.
+# The GUIDs and serials are joycon-combine-right-first's; the pair's key
+# is its GUID and fixed path.
+{"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"Nintendo Switch Joy-Con (R)","type":"joyconright","vendor":1406,"product":8199,"version":1,"guid":"050000007e0500000720000001006802","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":100000000,"kind":"down","device":1,"control":"south"}
+{"timeNs":110000000,"kind":"up","device":1,"control":"south"}
+{"timeNs":200000000,"kind":"down","device":1,"control":"east"}
+{"timeNs":500000000,"kind":"removed","device":1}
+{"timeNs":500000000,"kind":"added","device":3,"info":{"id":3,"name":"Nintendo Switch Joy-Con (L/R)","type":"joyconpair","vendor":1406,"product":8200,"version":1,"guid":"050000007e0500000820000001006803","driver":"hidapi","path":"nintendo_joycons_combined","serial":"","gamepad":true,"virtual":false}}
+{"timeNs":600000000,"kind":"down","device":3,"control":"east"}
+{"timeNs":800000000,"kind":"removed","device":3}
+{"timeNs":810000000,"kind":"added","device":4,"info":{"id":4,"name":"Nintendo Switch Joy-Con (R)","type":"joyconright","vendor":1406,"product":8199,"version":1,"guid":"050000007e0500000720000001006802","driver":"hidapi","path":"","serial":"aa-bb-cc-dd-ee-02","gamepad":true,"virtual":false}}
+{"timeNs":900000000,"kind":"down","device":4,"control":"south"}
+{"timeNs":910000000,"kind":"up","device":4,"control":"south"}

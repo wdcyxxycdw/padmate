@@ -59,8 +59,11 @@ func TestKeyOf(t *testing.T) {
 }
 
 // TestKeyOfJoyCon checks the keys of Joy-Cons shaped like SDL's HIDAPI
-// ones: a lone Joy-Con by its serial, the MAC address, and the
-// pair by its two serials, never by its fixed path.
+// ones: a lone Joy-Con by its serial, the MAC address. The pair has no
+// serial in SDL 3.4.16 (SDL_hidapi_combined.c joins the serials that its
+// children set on the joystick, and the Switch driver sets none), so it is
+// known by its GUID and its fixed path; a serial, should a later SDL give
+// the pair one, wins over the path.
 func TestKeyOfJoyCon(t *testing.T) {
 	const (
 		guidL    = "050000007e0500000620000001006801"
@@ -83,8 +86,9 @@ func TestKeyOfJoyCon(t *testing.T) {
 		{"L", joycon("joyconleft", 0x2006, guidL, serial1, "hid-path-1"), input.DeviceKey{GUID: guidL, Serial: serial1}},
 		// Another L, even on the same path, is another key.
 		{"another L", joycon("joyconleft", 0x2006, guidL, serial2, "hid-path-1"), input.DeviceKey{GUID: guidL, Serial: serial2}},
+		{"pair", joycon("joyconpair", 0x2008, guidPair, "", pairPath), input.DeviceKey{GUID: guidPair, Path: pairPath}},
 		{
-			"pair", joycon("joyconpair", 0x2008, guidPair, serial1+","+serial2, pairPath),
+			"pair with a serial", joycon("joyconpair", 0x2008, guidPair, serial1+","+serial2, pairPath),
 			input.DeviceKey{GUID: guidPair, Serial: serial1 + "," + serial2},
 		},
 	} {
@@ -431,5 +435,46 @@ func TestRegistryRandomWalk(t *testing.T) {
 	t.Logf("%d reconnects, %d forgotten, N up to %d", reconnects, forgotten, maxN)
 	if reconnects < 100 || forgotten < 100 || maxN < 5 {
 		t.Errorf("the walk tried too little: %d reconnects, %d forgotten, N up to %d", reconnects, forgotten, maxN)
+	}
+}
+
+// TestRegistryJoyConPair follows the keys through the replacements that
+// SDL makes when a left and a right Joy-Con are connected together
+// (ADR-0002): L is replaced by the pair, which is replaced by L again when
+// R goes. L keeps its key across the pair. The pair is known by its GUID
+// and fixed path, so it has the same key whichever Joy-Cons form it and
+// whenever it comes back, and two pairs at once are told apart by N.
+func TestRegistryJoyConPair(t *testing.T) {
+	const (
+		guidL    = "050000007e0500000620000001006801"
+		guidPair = "050000007e0500000820000001006803"
+		pairPath = "nintendo_joycons_combined"
+	)
+	left := func(id input.DeviceID, serial string) *input.DeviceInfo {
+		return &input.DeviceInfo{ID: id, Name: "Nintendo Switch Joy-Con (L)", Type: "joyconleft", GUID: guidL, Serial: serial, IsGamepad: true}
+	}
+	pair := func(id input.DeviceID) *input.DeviceInfo {
+		return &input.DeviceInfo{ID: id, Name: "Nintendo Switch Joy-Con (L/R)", Type: "joyconpair", GUID: guidPair, Path: pairPath, IsGamepad: true}
+	}
+	keyL := input.DeviceKey{GUID: guidL, Serial: "aa-bb-cc-dd-ee-01"}
+	keyPair := input.DeviceKey{GUID: guidPair, Path: pairPath}
+
+	r := input.NewRegistry()
+	connect(t, r, left(1, "aa-bb-cc-dd-ee-01"), keyL, false)
+	// R wakes: L goes and the pair comes, a key of its own.
+	disconnect(t, r, 1, keyL)
+	connect(t, r, pair(3), keyPair, false)
+	checkConnected(t, r, []input.DeviceID{3}, []input.DeviceKey{keyPair})
+	// R is switched off: the pair goes and L is found again, with a new
+	// id and its old key.
+	disconnect(t, r, 3, keyPair)
+	connect(t, r, left(4, "aa-bb-cc-dd-ee-01"), keyL, true)
+	// R wakes again: the pair is the same key as before.
+	disconnect(t, r, 4, keyL)
+	connect(t, r, pair(5), keyPair, true)
+	// Another L, also in a pair, and another pair at once: #1.
+	connect(t, r, pair(6), input.DeviceKey{GUID: guidPair, Path: pairPath, N: 1}, false)
+	if s := keyPair.String(); s != guidPair+"/p:"+pairPath {
+		t.Errorf("pair key %q, want %q", s, guidPair+"/p:"+pairPath)
 	}
 }

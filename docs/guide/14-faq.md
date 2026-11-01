@@ -34,6 +34,7 @@ Do not exclude the whole install folder, and do not turn off your antivirus prog
 ## The controller does not show up, or input is doubled
 
 - First make sure the controller is an Xbox, PlayStation or Switch Pro controller, or a Joy-Con. A Joy-Con 2 needs its own connection steps; see [Joy-Con 2](15-joycon-2.md).
+- A left and a right Joy-Con that are connected together are one controller; one connected alone is a small controller held sideways. When the second one connects, or one of the two drops, the controller is replaced: held keys are released, and mapping goes on with the new one. The settings of the pair are separate from those of a single Joy-Con. The same holds for a left and a right Joy-Con 2.
 - Steam, DS4Windows and HidHide may take the controller over. “Conflicts” on the Diagnostics page names the one running and says what to do; see [Diagnostics](09-diagnostics.md).
 - When, on the “Settings” page, under “Controller calibration”, the controller says “Not recognised as a gamepad”, build a mapping with the [mapping wizard](11-mapping-wizard.md).
 

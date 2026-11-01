@@ -10,7 +10,7 @@
 // stage is built.
 import {
   BufferGeometry,
-  type Group,
+  Group,
   type Material,
   Mesh,
   Texture,
@@ -20,14 +20,38 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { familyName } from "./controller-model";
 
 /**
- * The three shells: the DualSense for a PS5 pad, the DualShock 4 for a PS4 or
- * PS3 pad, the Xbox one for every other pad.
+ * The shells: the DualSense for a PS5 pad, the DualShock 4 for a PS4 or PS3
+ * pad, a Joy-Con (or both of a pair), the Xbox one for every other pad.
  */
-export type ModelShell = "dualsense" | "dualshock" | "xbox";
+export type ModelShell =
+  | "dualsense"
+  | "dualshock"
+  | "xbox"
+  | "joycon-left"
+  | "joycon-right"
+  | "joycon-pair";
+
+/** The shells that are one GLB file each; the pair is made of two of them. */
+export type ModelFile = Exclude<ModelShell, "joycon-pair">;
 
 export function modelShell(type: string): ModelShell {
+  if (type === "joyconleft") return "joycon-left";
+  if (type === "joyconright") return "joycon-right";
+  if (type === "joyconpair") return "joycon-pair";
   if (familyName(type) !== "playstation") return "xbox";
   return type === "ps5" ? "dualsense" : "dualshock";
+}
+
+/**
+ * The two Joy-Cons of a pair in one group, each under its own named root: the
+ * parts of both have the same names, so the root says whose they are.
+ */
+export function joyConPair(left: Group, right: Group): Group {
+  left.name = "joycon-left";
+  right.name = "joycon-right";
+  const pair = new Group();
+  pair.add(left, right);
+  return pair;
 }
 
 /**
@@ -48,15 +72,17 @@ export function decodeBase64(text: string): Uint8Array {
   return bytes;
 }
 
-/** Decodes and parses the bundled GLB of a shell. */
-async function parseBundledModel(shell: ModelShell): Promise<Group> {
+/** Decodes and parses a bundled GLB file. */
+async function parseBundledFile(file: ModelFile): Promise<Group> {
   // Vite embeds each local GLB in a lazy module as a data URL. Decoding it
   // here opens no connection (fetch of a data: URL would need connect-src).
   const { default: data } = await {
     dualsense: () => import("./assets/dualsense.glb?url&inline"),
     dualshock: () => import("./assets/dualshock4.glb?url&inline"),
     xbox: () => import("./assets/xbox.glb?url&inline"),
-  }[shell]();
+    "joycon-left": () => import("./assets/joycon-left.glb?url&inline"),
+    "joycon-right": () => import("./assets/joycon-right.glb?url&inline"),
+  }[file]();
   const bytes = decodeBase64(data.slice(data.indexOf(",") + 1));
   const loader = new GLTFLoader();
   // TextureLoader uses <img src=blob:>, keeping production connect-src 'none'.
@@ -71,6 +97,37 @@ async function parseBundledModel(shell: ModelShell): Promise<Group> {
   }));
   // Both decoders return an array over a whole buffer of its own.
   return (await loader.parseAsync(bytes.buffer as ArrayBuffer, "")).scene;
+}
+
+/**
+ * What the cache parses a shell with: each GLB file is parsed once however
+ * many shells use it. The pair is copies of the two Joy-Con files, so the
+ * parsed files stay as parsed.
+ */
+export function createShellParser(
+  parseFile: (file: ModelFile) => Promise<Group>,
+) {
+  const files = new Map<ModelFile, Promise<Group>>();
+  const fileOf = (file: ModelFile) => {
+    let parsed = files.get(file);
+    if (!parsed) {
+      const loading = parseFile(file);
+      parsed = loading;
+      files.set(file, loading);
+      loading.catch(() => {
+        if (files.get(file) === loading) files.delete(file);
+      });
+    }
+    return parsed;
+  };
+  return async (shell: ModelShell): Promise<Group> => {
+    if (shell !== "joycon-pair") return fileOf(shell);
+    const [left, right] = await Promise.all([
+      fileOf("joycon-left"),
+      fileOf("joycon-right"),
+    ]);
+    return joyConPair(modelCopy(left), modelCopy(right));
+  };
 }
 
 /**
@@ -157,4 +214,6 @@ export function createModelCache(parse: (shell: ModelShell) => Promise<Group>) {
 }
 
 /** The models of this app session. */
-export const controllerModels = createModelCache(parseBundledModel);
+export const controllerModels = createModelCache(
+  createShellParser(parseBundledFile),
+);

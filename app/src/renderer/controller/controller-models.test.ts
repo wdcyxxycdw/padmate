@@ -12,7 +12,10 @@ import { describe, expect, it, vi } from "vitest";
 import { buildAssetModel } from "./controller-asset";
 import {
   createModelCache,
+  createShellParser,
   decodeBase64,
+  joyConPair,
+  type ModelFile,
   modelCopy,
   modelShell,
 } from "./controller-models";
@@ -76,16 +79,17 @@ describe("controller models", () => {
     expect(decodeBase64("")).toEqual(new Uint8Array());
   });
 
-  it("uses the DualSense shell for PS5, the DualShock 4 one for PS4 and PS3, the Xbox one otherwise", () => {
+  it("uses the DualSense shell for PS5, the DualShock 4 one for PS4 and PS3, a Joy-Con one for each Joy-Con layout, the Xbox one otherwise", () => {
     expect(modelShell("ps5")).toBe("dualsense");
     expect(modelShell("ps4")).toBe("dualshock");
     expect(modelShell("ps3")).toBe("dualshock");
+    expect(modelShell("joyconleft")).toBe("joycon-left");
+    expect(modelShell("joyconright")).toBe("joycon-right");
+    expect(modelShell("joyconpair")).toBe("joycon-pair");
     for (const type of [
       "xboxone",
       "xbox360",
       "switchpro",
-      "joyconleft",
-      "joyconpair",
       "gamecube",
       "standard",
       "unknown",
@@ -130,6 +134,62 @@ describe("controller models", () => {
     expect(material(source).color.getHex()).toBe(0xffffff);
     await cache.get("dualsense");
     expect(parse).toHaveBeenCalledTimes(2);
+  });
+
+  it("parses each GLB file once, the pair being copies of the two Joy-Con files", async () => {
+    const files = new Map<ModelFile, Group>();
+    const parseFile = vi.fn(async (file: ModelFile) => {
+      const group = template();
+      group.name = `parsed-${file}`;
+      files.set(file, group);
+      return group;
+    });
+    const cache = createModelCache(createShellParser(parseFile));
+    const [pair, , left] = await Promise.all([
+      cache.get("joycon-pair"),
+      cache.get("joycon-pair"),
+      cache.get("joycon-left"),
+    ]);
+    const right = await cache.get("joycon-right");
+    await cache.get("joycon-pair");
+    expect(parseFile.mock.calls.map(([file]) => file).sort()).toEqual([
+      "joycon-left",
+      "joycon-right",
+    ]);
+    // Both Joy-Cons are in the pair under their own names, as their own copies.
+    expect(pair.children.map((child) => child.name)).toEqual([
+      "joycon-left",
+      "joycon-right",
+    ]);
+    const [first, second] = pair.children;
+    expect(first).not.toBe(left);
+    expect(second).not.toBe(right);
+    expect(shellMesh(first).geometry).not.toBe(shellMesh(left).geometry);
+    expect(shellMesh(first).geometry.attributes.position).toBe(
+      shellMesh(files.get("joycon-left") as Group).geometry.attributes.position,
+    );
+    // The parsed files keep their own names and parents.
+    for (const group of files.values()) expect(group.parent).toBeNull();
+    expect(files.get("joycon-left")?.name).toBe("parsed-joycon-left");
+  });
+
+  it("parses a Joy-Con file again after it failed, for the pair too", async () => {
+    const parseFile = vi
+      .fn<(file: ModelFile) => Promise<Group>>()
+      .mockRejectedValueOnce(new Error("broken"))
+      .mockImplementation(async () => template());
+    const cache = createModelCache(createShellParser(parseFile));
+    await expect(cache.get("joycon-pair")).rejects.toThrow("broken");
+    await expect(cache.get("joycon-pair")).resolves.toBeInstanceOf(Group);
+    expect(parseFile).toHaveBeenCalledTimes(3);
+  });
+
+  it("names the two roots of a pair", () => {
+    const left = new Group();
+    const right = new Group();
+    const pair = joyConPair(left, right);
+    expect([left.name, right.name]).toEqual(["joycon-left", "joycon-right"]);
+    expect(pair.children).toEqual([left, right]);
   });
 
   it("tries a shell again after a failed load", async () => {

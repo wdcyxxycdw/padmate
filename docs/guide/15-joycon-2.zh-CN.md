@@ -2,7 +2,7 @@
 
 [English](15-joycon-2.md)
 
-Joy-Con 2 是 Switch 2 的 Joy-Con。padmate 自己经蓝牙读取它们，所以不用线，也不用充电握把，就能当手柄用。本章讲怎么连接。初代 Switch 的 Joy-Con 和其他手柄，照常通过 Windows 连接。
+Joy-Con 2 是 Switch 2 的 Joy-Con。padmate 自己经蓝牙读取它们，所以不用线，也不用充电握把，就能当手柄用。本章讲怎么连接。初代 Switch 的 Joy-Con 和其他手柄，照常通过 Windows 连接；左右各一只初代 Joy-Con 同时连着时，同样会自己合成一个手柄。
 
 ## 开始之前
 
@@ -28,7 +28,7 @@ padmate 会记住连接过的 Joy-Con 2。下次不用走托盘菜单：按住 J
 
 ## 一只还是两只
 
-- **一只左、一只右的 Joy-Con 2**，两只都连上后会自动合成一个完整的手柄。其中一只离开时，另一只继续单独使用。每次变化时，按着的键都会松开。
+- **一只左、一只右的 Joy-Con 2**，两只都连上后会自动合成一个完整的手柄。没有对应的设置项。其中一只离开时，另一只继续单独使用。每次变化时，按着的键都会松开。Joy-Con 2 只和另一只 Joy-Con 2 配对，不会和初代 Switch 的 Joy-Con 混在一起：一只 Joy-Con 2 加一只初代 Joy-Con，仍是两个单独的手柄。
 - **单只 Joy-Con 2** 横握，和初代 Switch 的单只 Joy-Con 一样：一根摇杆、四个面键、SL、SR、L 和 ZL（右手那只是 R 和 ZR），以及 − 或 +。见[手柄图和按键抽屉](01-controller-and-drawer.zh-CN.md)。
 - **C 键**在右手的 Joy-Con 2 上。它是附加键，可以像其他附加键一样映射。Home 键和截图键不能映射。
 - 紧急暂停：单只是 SL 和 SR 一起按，一对是 − 和 + 一起按。见[托盘和紧急释放](12-tray-and-emergency.zh-CN.md)。

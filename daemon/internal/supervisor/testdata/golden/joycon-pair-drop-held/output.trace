@@ -1,0 +1,11 @@
+# Each Space ends at the removal of the device that held it, at @500 for
+# the pair and at @800 for L; the device that replaces it maps from its
+# first press.
++Space@100
+-Space@500
++LCtrl@600 +Z@600
+-Z@620 -LCtrl@620
++Space@700
+-Space@800
++LCtrl@900 +Z@900
+-Z@920 -LCtrl@920

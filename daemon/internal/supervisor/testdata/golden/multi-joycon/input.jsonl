@@ -1,4 +1,4 @@
-# Two Joy-Cons under padmate's default, COMBINE=0 (ADR-0002), on
+# Two Joy-Cons that SDL leaves apart (see joycon-separate), on
 # two slots: the events of joycon-separate. Joy-Con (L) takes
 # slot 0 and holds east. Joy-Con (R) wakes and gets slot 1 at once,
 # provisionally, and its tap of south, which confirms the slot, maps

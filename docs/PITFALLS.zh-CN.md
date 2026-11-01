@@ -7,11 +7,21 @@
 ## SDL 与手柄
 
 ### 基本行为与 hint
-- **SDL hint**：`input.Open` 在 `SDL_Init` 前设 `SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1`、`SDL_NO_SIGNAL_HANDLERS=1`（否则 SDL 拿走 Ctrl+C）、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0`，再设 preset 和 `--hint`。环境变量里的同名 hint 优先。`SDL_Quit` 重置 hint，每次 Open 重设。
+- **SDL hint**：`input.Open` 在 `SDL_Init` 前设 `SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1`、`SDL_NO_SIGNAL_HANDLERS=1`（否则 SDL 拿走 Ctrl+C）、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`，再设 preset 和 `--hint`。环境变量里的同名 hint 优先。`SDL_Quit` 重置 hint，每次 Open 重设。
 - **SDL 行为**：SDL 只给打开的手柄发事件，所以 GAMEPAD_ADDED 时就打开。每个轴的第一个值发两次。虚拟手柄的 `VirtualJoystickDesc.Version` 手填 136，改状态后调 `SDL_UpdateJoysticks`。分离时 SDL 先抬起按住的键、轴回中再发 removed，padmate 仍要 ReleaseAll。同进程内设备 id 不复用，重连靠 DeviceKey 认。guide 键的抬起推迟到按下后 250 ms，其间的按下被丢。
 
 ### 设备信息与标识
 - **DeviceKey 的依据**：虚拟手柄 serial、path 为空，GUID 是 `ff00`、名字 CRC-16/ARC、名字前 9 字节、`00 76 01`。同名虚拟手柄只能靠 #N 区分；名字前 9 字节相同的两只，SDL 会把后一只报成前一只的名字，测试里让前 9 字节不同。XInput 的 path 是槽位，DeviceKey 不用。
+
+### Joy-Con 合并
+读自 SDL 3.4.16 的 `SDL_hidapijoystick.c`、`SDL_hidapi_combined.c`、`SDL_hidapi_switch.c` 和 `SDL_joystick.c`，未在硬件上测过（ADR-0002）。
+
+- **SDL 何时合并**：`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS` 在 SDL 里默认也是真（`SDL_HIDAPI_combine_joycons`），`input.Open` 仍明确设成 1。环境变量里有同名 hint 时以环境变量为准。只有被 HIDAPI 的 Switch 驱动接管的 Joy-Con 才会合并，虚拟手柄和其他后端的设备永远不合并。Joy-Con 2 也在此列：它由 padmate 自己的 hub 读取，不经过 SDL，所以 SDL 不会合并它（也不会把它和 Switch 1 的 Joy-Con 混在一起）；hub 按同样的自动规则把一只左、一只右的 Joy-Con 2 合成一对（ARCHITECTURE §7.1.1）。`HIDAPI_CreateCombinedJoyCons` 在每次 `HIDAPI_UpdateDeviceList` 末尾循环调用：在 SDL 的设备列表里取第一只还没成对的左 Joy-Con 和第一只右 Joy-Con（Joy-Con Grip 按名字里的 `(L)` 或 `(R)` 算）。它不看是谁的、也不看序列号，不需要手柄处于什么状态。两只左的永远不合并；第三只 Joy-Con 一直单独，直到有伙伴来。
+- **合并设备是什么**：一个新的 HIDAPI 设备，有两个子设备，路径 `nintendo_joycons_combined`，名字 `Nintendo Switch Joy-Con (L/R)`，VID 057e、PID 2008（Switch 2 的合并设备另有产品号），任一只是蓝牙则总线按蓝牙。GUID 由这些算出（version 为 0），所以由哪两只组成都一样。**它没有序列号**：`HIDAPI_DriverCombined_OpenJoystick` 拼接的是子设备 `OpenJoystick` 留在 `joystick->serial` 里的序列号，而 Switch 驱动一个都不设（`HIDAPI_JoystickOpen` 在驱动的 `OpenJoystick` 之后才复制 `device->serial`，合并设备又没有），所以 `SDL_GetJoystickSerial` 给 NULL。因此它的 DeviceKey 是 GUID 加固定路径：每一对、每次重连都相同，同时连着两对时才靠 N 区分。单只 Joy-Con 由 GUID（末字节是 Joy-Con 种类）加序列号（MAC 地址 `xx-xx-xx-xx-xx-xx`）标识。
+- **第二只连上时**，都在同一次设备列表更新里：第二只像别的设备一样先加入，然后 `HIDAPI_CreateCombinedJoyCons` 创建合并设备，它的 `HIDAPI_JoystickConnected` 先对两个子设备的 joystick 调 `HIDAPI_JoystickDisconnected`，再加入一个新 id 的 joystick。所以 SDL 排进队列的是：第二只 ADDED、第一只 REMOVED、第二只 REMOVED、合并设备 ADDED；T-input 处理第二只的 ADDED 时它已经不在了，什么也不报告（`listed`，ADR-0002 决定 5）。`SDL_PrivateJoystickRemoved` 先调 `SDL_PrivateJoystickForceRecentering`，所以对已打开的 joystick，SDL 在 REMOVED 之前先发按钮抬起并回中各轴。按在第一只 Joy-Con 上的键，由这些抬起事件（Events 可能丢掉它们）和做 `ReleaseAll` 的 `DeviceRemoved` 释放。
+- **合并设备里一只断开时**：它的读错误调用 `HIDAPI_JoystickDisconnected`，该函数“总是同时断开父设备”；子设备“走了”（枚举里不再出现，或没有 joystick 也没有句柄）时，`HIDAPI_UpdateDeviceList` 把父设备和两个子设备都删掉。合并设备的 joystick 同样先回中再移除。留下的那只在之后某次扫描里成为新的 HIDAPI 设备，重新初始化（要读设备信息），所以它单独回来，比合并设备消失晚一些，id 是新的，GUID 和序列号还是原来的。Windows 是否还列出睡着的 Joy-Con 的 HID 设备，也就是 SDL 多久才发现它没了，取决于硬件。
+- **映射**：合并设备映射为标准布局加 misc1 和 paddle1–4（`SDL_CreateMappingForHIDAPIGamepad`、`SDL_IsJoystickNintendoSwitchJoyConPair`）。`SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 对它无效：设备有父设备时，Switch 驱动一律用合并后的报告处理函数，合并设备的映射也不读这个 hint。这个 hint 只决定单只 Joy-Con 怎么握。
+- **输出**：合并设备的震动发给两个子设备，左边只收低频部分，右边只收高频部分（`HIDAPI_DriverSwitch_RumbleJoystick`）；LED 和震动能力是两只的并集；`SDL_SendGamepadEffect` 不支持（`HIDAPI_DriverCombined_SendJoystickEffect`）。电量由右边那只报告，取两只中较低的。
 
 ### 断连恢复与事件丢失
 - **唤醒重扫**：`Reenumerate(ctx)` 以不可丢弃的 `DeviceState` 发布完整状态，要等内部 fence 通过再 `Supervisor.Sync`；router 把快照当 Resync，不当新 press。接收器仍 dormant 时不得用缓存状态复活它。
@@ -42,7 +52,7 @@
 - **DualSense**：再加 misc1（麦克风键）。**Edge**：paddle1 右背键、paddle2 左背键、paddle3 右 Fn、paddle4 左 Fn。蓝牙连接、手柄还发简单报告时（报告 0x01 长 10 或 78 字节），驱动只报 PS 键和触摸板按下，麦克风键和 Edge 的四个键要等增强报告才有。
 - **Switch Pro**：标准 15 键加 misc1（截图键），Home 是 guide。
 - **单只 Joy-Con**：横握（默认）的映射里有 guide，左手那只的 guide 是截图键，右手那只是 Home 键；padmate 不映射 guide，所以横握的左手 Joy-Con 截图键不能用。竖握的左手那只截图键是 misc1。竖握的右手那只也有面键，界面看有没有 rightstick 区分握法。
-- **一对 Joy-Con**：标准 15 键加 misc1（截图键）和 paddle1–4（右 SR、左 SL、右 SL、左 SR）。
+- **一对 Joy-Con**（左右各一只同时连着）：标准 15 键加 misc1（截图键）和 paddle1–4（右 SR、左 SL、右 SL、左 SR）。
 - 触摸位置、陀螺仪和加速度计不是按键，不能映射。SDL 不读 Switch 2 的手柄；Joy-Con 2 由 padmate 自己读（见下一节），其他 Switch 2 手柄不支持。
 
 ### 映射、重新映射和原始摇杆

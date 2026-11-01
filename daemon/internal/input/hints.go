@@ -28,18 +28,21 @@ const (
 	// also sits in front of Go's console control handler and takes Ctrl+C,
 	// so Go would never see it.
 	HintNoSignalHandlers = "SDL_NO_SIGNAL_HANDLERS"
-	// HintCombineJoyCons is set to "0" by Open, after the two hints above
-	// and before any other (ADR-0002): each Joy-Con is its own
-	// gamepad, whether or not its partner is connected. A lone Joy-Con is
-	// a gamepad under either value; with "1", which
-	// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1" restores, SDL
-	// replaces the two by one pair device when both are connected
-	// (SDL_hidapijoystick.c, HIDAPI_CreateCombinedJoyCons).
+	// HintCombineJoyCons is set to "1" by Open, after the two hints above
+	// and before any other (ADR-0002), although it is SDL's default too:
+	// when a left and a right Joy-Con are connected together, SDL replaces
+	// the two gamepads by one pair device (joyconpair; SDL_hidapijoystick.c,
+	// HIDAPI_CreateCombinedJoyCons), and when one of them goes it deletes
+	// the pair and finds the other again as a lone gamepad. A lone
+	// Joy-Con is a gamepad under either value. It is no setting: only
+	// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0", or the environment
+	// variable of that name, keeps every Joy-Con apart, as a diagnostic.
 	HintCombineJoyCons = "SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS"
 	// HintVerticalJoyCons is not set by padmate, so SDL's default "0"
 	// (sideways) applies. SDL reads it when it opens a Joy-Con
-	// (SDL_hidapi_switch.c). Source reads it back so that headers record
-	// it.
+	// (SDL_hidapi_switch.c) and for the mapping of a lone one
+	// (SDL_gamepad.c); a pair ignores it. Source reads it back so that
+	// headers record it.
 	HintVerticalJoyCons = "SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS"
 
 	hintHIDAPI      = "SDL_JOYSTICK_HIDAPI"      // default 1
@@ -58,7 +61,7 @@ var backgroundHint = Hint{HintBackgroundEvents, "1"}
 // since SDL keeps the value set last. No preset does, apart from the
 // background hint that every preset repeats with the same value
 // (TestPresets).
-var openHints = []Hint{backgroundHint, {HintNoSignalHandlers, "1"}, {HintCombineJoyCons, "0"}}
+var openHints = []Hint{backgroundHint, {HintNoSignalHandlers, "1"}, {HintCombineJoyCons, "1"}}
 
 // BackendHints are the hints that select SDL's joystick backends. Source
 // reads them back after SDL_Init, whether or not they were set.

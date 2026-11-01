@@ -2,7 +2,7 @@
 
 [中文](15-joycon-2.zh-CN.md)
 
-Joy-Con 2 are the Joy-Cons of the Switch 2. padmate reads them itself over Bluetooth, so they work as controllers with no cable and no charging grip. This chapter is about connecting them. The Joy-Cons of the original Switch and other controllers connect through Windows as usual.
+Joy-Con 2 are the Joy-Cons of the Switch 2. padmate reads them itself over Bluetooth, so they work as controllers with no cable and no charging grip. This chapter is about connecting them. The Joy-Cons of the original Switch and other controllers connect through Windows as usual; a left and a right original Joy-Con together also become one controller by themselves.
 
 ## Before you start
 
@@ -28,7 +28,7 @@ padmate remembers the Joy-Con 2 it connected. Next time, do not use the tray men
 
 ## One Joy-Con or two
 
-- **One left and one right Joy-Con 2** become one full gamepad by themselves, as soon as both are connected. When one of them goes away, the other goes on alone. Held keys are released each time this changes.
+- **One left and one right Joy-Con 2** become one full gamepad by themselves, as soon as both are connected. There is no setting for it. When one of them goes away, the other goes on alone. Held keys are released each time this changes. A Joy-Con 2 only ever pairs with another Joy-Con 2: it never mixes with a Joy-Con of the original Switch, so a Joy-Con 2 and an original Joy-Con stay two single controllers.
 - **A single Joy-Con 2** is held sideways, like a single Joy-Con of the original Switch: one stick, four face buttons, SL, SR, L and ZL (R and ZR on the right one), and − or +. See [The controller picture and the key drawer](01-controller-and-drawer.md).
 - **The C key** is on the right Joy-Con 2. It is an extra key, and you can map it like the other extra keys. The Home and Capture keys cannot be mapped.
 - The emergency pause is SL and SR together for a single one, and − and + together for a pair. See [The tray and emergency release](12-tray-and-emergency.md).

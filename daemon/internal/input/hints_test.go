@@ -174,3 +174,22 @@ func TestParseHint(t *testing.T) {
 		t.Errorf("String() = %q", s)
 	}
 }
+
+// TestOpenHintsCombine pins ADR-0002: Open sets the combine hint to "1"
+// itself, once, and does not rely on SDL's default, which is also true.
+// A left and a right Joy-Con that are connected together become one pair
+// device (SDL_hidapijoystick.c, HIDAPI_CreateCombinedJoyCons).
+func TestOpenHintsCombine(t *testing.T) {
+	var got []Hint
+	for _, h := range openHints {
+		if h.Name == HintCombineJoyCons {
+			got = append(got, h)
+		}
+	}
+	if want := []Hint{{HintCombineJoyCons, "1"}}; !slices.Equal(got, want) {
+		t.Errorf("openHints sets %v, want %v", got, want)
+	}
+	if slices.ContainsFunc(openHints, func(h Hint) bool { return h.Name == HintVerticalJoyCons }) {
+		t.Errorf("openHints %v set %s, which is left to SDL", openHints, HintVerticalJoyCons)
+	}
+}

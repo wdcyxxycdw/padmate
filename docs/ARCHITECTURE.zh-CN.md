@@ -11,7 +11,7 @@
 | 领域 | 决定 | ADR |
 |---|---|---|
 | 平台与进程 | 只支持 Windows 10/11 x64。Go 守护进程 `padmated` 负责全部映射，常驻托盘，单实例；Electron 界面可选，关掉不影响映射 | [进程与技术栈](adr/0001-processes-and-stack.zh-CN.md) |
-| 输入 | 自带固定版本的 SDL 3.4.16（go-sdl3 + purego）；Joy-Con 不合并；Joy-Con 2 直接经蓝牙 LE 读（winrt-go），不配对 | [手柄输入](adr/0002-input-sdl.zh-CN.md) |
+| 输入 | 自带固定版本的 SDL 3.4.16（go-sdl3 + purego）；左右两只 Joy-Con 同时连着就是一个手柄；Joy-Con 2 直接经蓝牙 LE 读（winrt-go），不配对 | [手柄输入](adr/0002-input-sdl.zh-CN.md) |
 | 多手柄 | 4 个预建 slot，其余手柄排队；新分配先暂代，按任意键确认 | [多手柄与 slot](adr/0003-devices-and-slots.zh-CN.md) |
 | 输出 | SendInput 扫描码；事件带 `dwExtraInfo` 标记；只有 T-output 调 SendInput | [键盘与鼠标输出](adr/0004-output-sendinput.zh-CN.md) |
 | 线程 | slot loop、T-output、T-input 各自锁定 OS 线程；引擎是纯函数 | [引擎与线程](adr/0005-engine-and-threads.zh-CN.md) |
@@ -90,7 +90,7 @@ Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`
 
 `internal/input`，理由见 [手柄输入](adr/0002-input-sdl.zh-CN.md)。
 
-- `input.Open` 启动 T-input：锁线程，加载 SDL（`$PADMATE_SDL3`，再 exe 旁边；Windows 必须是固定的 3.4.16；每进程只加载一次，同时只有一个 Source），按“总设 → preset → `--hint`”的顺序设 hint（后设覆盖先设），`SDL_Init(SDL_INIT_GAMEPAD)`。
+- `input.Open` 启动 T-input：锁线程，加载 SDL（`$PADMATE_SDL3`，再 exe 旁边；Windows 必须是固定的 3.4.16；每进程只加载一次，同时只有一个 Source），按“总设 → preset → `--hint`”的顺序设 hint（后设覆盖先设；“总设”是允许后台事件、关掉 SDL 的信号处理器、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`），`SDL_Init(SDL_INIT_GAMEPAD)`。
 - 所有 SDL 调用都在 T-input 上：其他 goroutine 把函数经命令通道交给它，在两次 `SDL_WaitEventTimeout(2 ms)` 之间执行。不用 `SDL_PushEvent` 唤醒（与 `SDL_Quit` 有竞争）。事件一返回就读 `latency.Now` 记进 `Event.Stamp`（§13）。
 - **事件通道**容量 1024，发送从不阻塞：满了丢按钮和轴并计数。`DeviceAdded`、`DeviceRemoved`、`ComboHeld` 不丢，进 backlog 按序等位；backlog 不空时按钮和轴也丢，所以没有事件越过排着的设备事件。
 - **映射变化。** SDL 映射按 GUID 立即生效，不松开按着的东西。没有映射的 joystick 按 raw 报告（`IsGamepad` 为 false）；加入映射时同 id 再发 `IsGamepad` 为 true 的 `DeviceAdded`；拿走映射时发 `DeviceRemoved` 和 `IsGamepad` 为 false 的 `DeviceAdded`；映射变了发 `DeviceRemapped`（不写进 trace，§5.7）。
@@ -113,6 +113,8 @@ SDL 读不了 Joy-Con 2，所以 T-input 还跑着第二个后端，理由见 [�
 ### 5.4 设备身份（`internal/input/devicekey.go`）
 
 DeviceID 每次连接都变；`DeviceKey{GUID, Serial, Path, N}` 重连后不变，N 区分除 N 外都相同、同时连着的手柄。router 用它认出回来的手柄，让它收回 slot 或给暂代 slot 改换 home（§5.8）。Joy-Con 2 的 DeviceKey 依据手柄 flash 里的序列号（§7.1.1）。
+
+左右两只 Joy-Con 同时连着时，SDL 把它们换成一个合并设备（§7.1）：单只被移除，合并设备以新的 DeviceID 加入。SDL 3.4.16 里合并设备没有序列号，所以它的 key 是合并设备的 GUID 加固定路径，任意两只 Joy-Con 组成的、每一次连上的都一样。单只 Joy-Con 有自己的 key（GUID 加序列号），合并设备散开、它回来时拿回这个 key。换设备就是一次普通的移除加一次加入（`DeviceRemoved` 做 `ReleaseAll`，§5.6）；按 DeviceKey 保存的状态（调校、state.json 里的层状态）不会从单只带到合并设备上。两只 Joy-Con 2 组成的一对（§7.1.1）也是这样换掉的，但它有序列号（两个合在一起），所以 key 是它自己的。
 
 ### 5.5 接收器看门狗（`receiver.go`、`watchdog.go`、`hidbeat.go`）
 
@@ -270,11 +272,11 @@ profile 文件的 watcher（§10.5）每看到新内容调 `reloadProfile`：内
 - 别名：`a b x y`（south east west north）、`lb rb`、`l3 r3`、`select`（back）。原始轴名：`leftx lefty rightx righty lefttrigger righttrigger`。
 - 功能键任何时候只有一个，见 §7.9。
 
-**Joy-Con**：每只是一个手柄，默认横握；类型 `joyconleft`、`joyconright`，合并的 `joyconpair` 需 `--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`。键映射由 SDL 3.4.16 决定（Switch 1；Switch 2 的 Joy-Con 2 不由 SDL 读取，见 §7.1.1）：
+**Joy-Con**：左右两只同时连着就是一个手柄，即合并设备（`joyconpair`），没有开关也没有设置项；只连着一只时它是自己的一个手柄，默认横握（`joyconleft`、`joyconright`）。规则对 SDL 会合并的每一种 Joy-Con 都一样，padmate 自己读取的 Joy-Con 2 也照此办理（§7.1.1）。合并设备会换掉单只的设备（§5.4，以及 PITFALLS 的“Joy-Con 合并”），所以按在一只 Joy-Con 上的键，在另一只连上时、或合并设备里一只断开时被释放，映射在新设备上继续。`--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0` 让它们保持分开，只用于诊断（它只影响 SDL 合并的 Joy-Con，不影响 Joy-Con 2）。键映射由 SDL 3.4.16 决定（Switch 1；Joy-Con 2 不由 SDL 读取，见 §7.1.1；其他 Switch 2 手柄不支持）：
 
 - 横握：SL/SR 是 leftshoulder/rightshoulder，L(R) 和 ZL(ZR) 是 paddle2/paddle4（左）或 paddle1/paddle3（右），−/+ 是 start，Capture/Home 是 guide，四个面键是 south/east/west/north，摇杆是 left 摇杆。受 SDL 250 ms 抬起延迟影响。
-- 竖握 L：SL/SR 是 paddle2/paddle4，L/ZL 是 leftshoulder/lt，− 是 back，Capture 是 misc1。竖握 R：SL/SR 是 paddle3/paddle1，R/ZR 是 rightshoulder/rt，+ 是 start，Home 是 guide，摇杆是 right 摇杆。合并后与标准手柄相同。
-- 没有 misc2..6（Joy-Con 2 有 misc2，§7.1.1）、touchpad 和 `sl`/`sr` 别名。界面按 `buttonMask` 判断握法：有 south、没有 rightstick 的单只是横握（竖握的右手那只也有面键）；Go 的 `padlabel` 同一规则。守护进程的握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并的 back+start。
+- 竖握 L：SL/SR 是 paddle2/paddle4，L/ZL 是 leftshoulder/lt，− 是 back，Capture 是 misc1。竖握 R：SL/SR 是 paddle3/paddle1，R/ZR 是 rightshoulder/rt，+ 是 start，Home 是 guide，摇杆是 right 摇杆。合并设备与标准手柄相同，另有 misc1（截图键）和 paddle1–4，握法 hint 对它无效。
+- 没有 misc2..6（Joy-Con 2 有 misc2，§7.1.1）、touchpad 和 `sl`/`sr` 别名。界面按 `buttonMask` 判断握法：有 south、没有 rightstick 的单只是横握（竖握的右手那只也有面键）；Go 的 `padlabel` 同一规则。守护进程的握法按 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS` 判断（没设、空串、以 0 开头或 false 是横握）。紧急组合（§5）：横握单只 leftshoulder+rightshoulder，竖握 L paddle2+paddle4，竖握 R paddle3+paddle1，合并设备 back+start。
 
 ### 7.1.1 Joy-Con 2
 
@@ -288,7 +290,7 @@ Switch 2 的 Joy-Con，由 padmate 自己经蓝牙 LE 读取（§5.3.1，[手柄
 
 **设备身份。** `DeviceInfo.Driver` 是 `ble`。Vendor 是 `0x057e`；Product 是 `0x2067`（左）、`0x2066`（右）或 `0x2068`（一对，padmate 自己定的号）；`Type` 是 `joyconleft`、`joyconright` 或 `joyconpair`；名字是 `Joy-Con 2 (L)`、`Joy-Con 2 (R)` 或 `Joy-Con 2 pair`。GUID 按 SDL 的布局（§5.4）：前两字节是总线类型 `0x0005`（蓝牙），没有名字 CRC，接着是 vendor 和 product，驱动签名 `b` 在第 14 字节（padmate 自己的签名，`guid.go` 解码为 `ble`）。同一型号的所有 Joy-Con 2 GUID 相同，靠序列号区分。所以 `DeviceKey` 是 `{GUID, Serial}`：`Serial` 是 flash `0x13002` 起的 14 个 ASCII 字节，一对则是两个序列号用 `+` 连起来（左在前），因此手柄每次连接 key 都不变，和它的蓝牙地址无关（地址只在 `Path` 里，`ble:<地址>`）。`DeviceID` 从 `0x40000001` 往上数，这一段和 SDL 的（从 1 起）、接收器别名的（从 2³²−1 往下）、测试假 id 的（`0x7ff00001` 附近）都不相遇。每次报告手柄新增都换一个新的。
 
-**一对与单只。** hub 自己用已连接的手柄组成 gamepad，没有开关：按连接先后，第一只左和第一只右 Joy-Con 2 合成一对，其余每只是单只。只有 hub 自己的链路会组成一对：Joy-Con 2 从不和 SDL 报告的 Switch 1 Joy-Con 合并。集合变化时，不再合适的手柄先报告移除（它的消费者松开一切），再报告新的新增；所以一对里一只离开，另一只就以新的 `DeviceID` 作为单只回来。一对只在两条链路都在报告时才在线：其中一条变 dormant（§5.3.1），整对就报告移除，两只都报告时才回来。
+**一对与单只。** hub 自己用已连接的手柄组成 gamepad，没有开关：按连接先后，第一只左和第一只右 Joy-Con 2 合成一对，其余每只是单只。这和 SDL 对 Switch 1 Joy-Con 的规则一样，是自动的（没有开关，也没有设置项；`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS` 管不到它）。只有 hub 自己的链路会组成一对：Joy-Con 2 从不和 SDL 报告的 Switch 1 Joy-Con 合并，两种各在自己的后端里配对。集合变化时，不再合适的手柄先报告移除（它的消费者松开一切），再报告新的新增；所以一对里一只离开，另一只就以新的 `DeviceID` 作为单只回来。一对只在两条链路都在报告时才在线：其中一条变 dormant（§5.3.1），整对就报告移除，两只都报告时才回来。
 
 **电量。** 每条报告的第一个字节带电量等级 0–9、充电位和外接电源位。hub 把等级换成十分之一步长的百分比，充电为 `charging`，外接电源且没在充电为 `wired`，否则 `discharging`，作为 `DevicePower` 事件和电量查询的结果发出（连接方式 `wireless`）。一对取两只中较低的。手柄的每条链路都发过报告之前，不发百分比。玩家编号取 0–7 中没有在线链路用着的最小值，手柄上的灯显示的也是它。
 
@@ -775,7 +777,7 @@ Step    := {keys: KeySpec} | {wait: 1..10000} | {text}      // 一步一个成�
 
 | 族 | 组合 |
 |---|---|
-| standard、合并的一对 Joy-Con | back+start |
+| standard、一对 Joy-Con（左右同时连着合并而成） | back+start |
 | joyconLeft / joyconRight（横握） | leftshoulder+rightshoulder |
 | joyconLeftVertical | paddle2+paddle4 |
 | joyconRightVertical | paddle3+paddle1 |

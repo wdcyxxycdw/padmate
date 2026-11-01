@@ -204,6 +204,12 @@ func TestComboWatch(t *testing.T) {
 		{"Joy-Con", "add:joyconleft@0 +back@0 +start@0 due- fire@3000 +leftshoulder@3000 +rightshoulder@3100 fire@5100>1@5100"},
 		{"Joy-Con R", "add:joyconright@0 +rightshoulder@0 +leftshoulder@0 fire@2000>1@2000"},
 		{"Joy-Con pair", "add:joyconpair@0 +leftshoulder@0 +rightshoulder@0 due- +back@0 +start@0 fire@2000>1@2000"},
+		// A Joy-Con holds SL+SR when its partner connects: SDL replaces it with
+		// the pair (ADR-0002). The hold dies with the device; the pair has its
+		// own combo, back+start, and its own hold time.
+		{"Joy-Con replaced by the pair", "add:joyconleft@0 +leftshoulder@0 +rightshoulder@500 rm@1000 due- fire@3000 2add:joyconpair@1000 2+leftshoulder@1000 2+rightshoulder@1000 due- 2+back@1100 2+start@1200 due@3200 fire@3200>2@3200"},
+		// The pair drops back to the Joy-Con that is left, which holds nothing.
+		{"the pair replaced by a Joy-Con", "add:joyconpair@0 +back@0 +start@500 rm@1000 due- fire@3000 2add:joyconleft@1010 2+leftshoulder@1100 due- 2+rightshoulder@1200 due@3200 fire@3200>2@3200"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			w := input.NewComboWatch(horizontal)

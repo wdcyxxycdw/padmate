@@ -14,8 +14,16 @@ import {
 import type { PadInput } from "../state/store";
 import { controllerCallouts, type ModelInfo } from "./controller-callouts";
 import {
+  isJoyConShell,
+  joyConMaxHeight,
+  joyConPoints,
+  joyConStick,
+  layoutJoyCons,
+} from "./controller-joycon";
+import {
   controllerLabels,
   controlStrength,
+  isSidewaysJoyCon,
   stickDeflection,
 } from "./controller-model";
 import { type ModelShell, modelShell } from "./controller-models";
@@ -141,8 +149,19 @@ export function buildAssetModel(
     group.clear();
   };
   try {
+    // A Joy-Con is turned or laid out first, then fits the box the other
+    // shells fill: 5.6 wide and no taller than the Xbox shell.
+    const layout = isJoyConShell(shell)
+      ? layoutJoyCons(
+          asset,
+          shell,
+          isSidewaysJoyCon(info.type, info.buttonMask),
+        )
+      : undefined;
     const size = new Box3().setFromObject(asset).getSize(new Vector3());
-    asset.scale.multiplyScalar(5.6 / size.x);
+    asset.scale.multiplyScalar(
+      layout ? Math.min(5.6 / size.x, joyConMaxHeight / size.y) : 5.6 / size.x,
+    );
     asset.updateMatrixWorld(true);
     const center = new Box3().setFromObject(asset).getCenter(new Vector3());
     asset.position.sub(center);
@@ -165,8 +184,10 @@ export function buildAssetModel(
         ? new Box3().setFromObject(part).getCenter(new Vector3())
         : new Vector3(...fallback);
     };
-    const positions: Record<string, Vector3> =
-      shell === "dualsense"
+    const joyCon = layout && joyConPoints(layout);
+    const positions: Record<string, Vector3> = joyCon
+      ? joyCon.positions
+      : shell === "dualsense"
         ? {
             south: point("cross__cap", [1.6, 0.2, 0.8]),
             east: point("circle__cap", [2, 0.75, 0.8]),
@@ -241,28 +262,30 @@ export function buildAssetModel(
     // grips, which the front view shows (the Elite's are behind them). An
     // Edge's Fn buttons sit below the sticks.
     const grip = (x: number, y: number) => new Vector3(x, y, 0.6);
-    Object.assign(
-      positions,
-      shell !== "xbox"
-        ? {
-            // The DualShock 4's grips are wider apart than the DualSense's.
-            paddle1: shell === "dualshock" ? grip(2.1, -1) : grip(1.75, -0.95),
-            paddle2:
-              shell === "dualshock" ? grip(-2.1, -1) : grip(-1.75, -0.95),
-            paddle3: positions.rightstick
-              .clone()
-              .add(new Vector3(0.1, -0.5, 0)),
-            paddle4: positions.leftstick
-              .clone()
-              .add(new Vector3(-0.1, -0.5, 0)),
-          }
-        : {
-            paddle1: grip(1.45, -0.5),
-            paddle2: grip(-1.45, -0.5),
-            paddle3: grip(1.75, -0.95),
-            paddle4: grip(-1.75, -0.95),
-          },
-    );
+    if (!joyCon)
+      Object.assign(
+        positions,
+        shell !== "xbox"
+          ? {
+              // The DualShock 4's grips are wider apart than the DualSense's.
+              paddle1:
+                shell === "dualshock" ? grip(2.1, -1) : grip(1.75, -0.95),
+              paddle2:
+                shell === "dualshock" ? grip(-2.1, -1) : grip(-1.75, -0.95),
+              paddle3: positions.rightstick
+                .clone()
+                .add(new Vector3(0.1, -0.5, 0)),
+              paddle4: positions.leftstick
+                .clone()
+                .add(new Vector3(-0.1, -0.5, 0)),
+            }
+          : {
+              paddle1: grip(1.45, -0.5),
+              paddle2: grip(-1.45, -0.5),
+              paddle3: grip(1.75, -0.95),
+              paddle4: grip(-1.75, -0.95),
+            },
+      );
     // A marker for each control the pad has a chip for, and the Xbox, PS or
     // Home button, which has none but lights when pressed.
     for (const name of Object.keys(positions))
@@ -271,7 +294,7 @@ export function buildAssetModel(
     const ray = new Raycaster();
     for (const [name, p] of Object.entries(positions)) {
       // Project front controls onto the actual surface, retaining trigger anchors above the shoulders.
-      if (!name.endsWith("trigger")) {
+      if (!name.endsWith("trigger") && !joyCon?.behind.has(name)) {
         ray.set(new Vector3(p.x, p.y, 10), new Vector3(0, 0, -1));
         const hit = ray
           .intersectObject(asset, true)
@@ -294,12 +317,27 @@ export function buildAssetModel(
       group.add(marker);
       controls.set(name, { point: p, marker, strength: 0 });
     }
-    for (const [side, prefix, depth, maxTilt] of stickParts[shell] ?? []) {
-      const mesh = find(prefix);
+    // A Joy-Con's stick is a mesh of its own; its depth is in metres of the
+    // GLB, which the normalization scaled.
+    const tilting = joyCon
+      ? joyCon.sticks.map(
+          ([side, mesh]) =>
+            [
+              side,
+              mesh,
+              joyConStick.depth * asset.scale.x,
+              joyConStick.maxTilt,
+            ] as const,
+        )
+      : (stickParts[shell] ?? []).map(
+          ([side, prefix, depth, maxTilt]) =>
+            [side, find(prefix), depth, maxTilt] as const,
+        );
+    for (const [side, mesh, depth, maxTilt] of tilting) {
       const control = controls.get(`${side}stick`);
       if (!mesh || !control) continue;
-      // Both shells model each stick upright in its own node: the mesh's +Z
-      // is the stick's axis and its box is centred on it.
+      // Every shell with a tilting stick models it upright in its own node: the
+      // mesh's +Z is the stick's axis and its box is centred on it.
       if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
       const box = mesh.geometry.boundingBox;
       if (!box) continue;
@@ -360,9 +398,11 @@ export function buildAssetModel(
         asset.traverse((n) => {
           if (n.name.startsWith("Text")) n.visible = false;
         });
-      // The DualShock 4 has its symbols in the texture.
+      // The DualShock 4 and the Joy-Cons have their symbols in the texture.
       const faces =
-        shell === "dualshock" ? [] : ["south", "east", "west", "north"];
+        shell === "dualshock" || layout
+          ? []
+          : ["south", "east", "west", "north"];
       for (const name of faces) {
         const p = positions[name];
         const texture = own(makeLabel(labels[name]));
