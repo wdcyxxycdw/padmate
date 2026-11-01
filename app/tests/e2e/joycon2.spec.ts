@@ -34,7 +34,7 @@ test("连接新的 Joy-Con 2: the dialog counts down, remembers the controller, 
     ).toHaveAttribute("aria-checked", "true");
     await expect(section.getByText("FAKEJC2L0001")).toHaveCount(0);
 
-    await section.getByRole("button", { name: "连接新的 Joy-Con 2" }).click();
+    await section.getByRole("button", { name: "连接新的 Joy-Con 2", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "连接新的 Joy-Con 2" });
     await expect(
       dialog.getByText("请在 30 秒内按住 Joy-Con 2 侧面的 SYNC 键。"),
@@ -49,7 +49,7 @@ test("连接新的 Joy-Con 2: the dialog counts down, remembers the controller, 
       dialog.getByText("已连接并记住 Joy-Con 2（左）。"),
     ).toBeVisible();
     await page.screenshot({ path: info.outputPath("joycon2-found.png") });
-    await dialog.getByRole("button", { name: "确定" }).click();
+    await dialog.getByRole("button", { name: "确定", exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect(section.getByText("FAKEJC2L0001")).toBeVisible();
     await expect(section.getByText("已连接", { exact: true })).toBeVisible();
@@ -61,7 +61,7 @@ test("连接新的 Joy-Con 2: the dialog counts down, remembers the controller, 
     const confirm = page.getByRole("dialog", {
       name: "忘记 Joy-Con 2（左）？",
     });
-    await confirm.getByRole("button", { name: "取消" }).click();
+    await confirm.getByRole("button", { name: "取消", exact: true }).click();
     await expect(confirm).toHaveCount(0);
     expect((await status(f)).known).toHaveLength(1);
     await section
@@ -86,7 +86,7 @@ test("取消 closes the window of the daemon with the dialog", async ({}) => {
     const page = launched.page;
     await page.getByRole("button", { name: "设置", exact: true }).click();
     const section = page.getByTestId("joycon2-settings");
-    await section.getByRole("button", { name: "连接新的 Joy-Con 2" }).click();
+    await section.getByRole("button", { name: "连接新的 Joy-Con 2", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "连接新的 Joy-Con 2" });
     await expect(dialog.getByRole("timer")).toBeVisible();
     await expect.poll(async () => (await status(f)).windowOpen).toBe(true);
