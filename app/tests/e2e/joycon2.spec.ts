@@ -34,7 +34,9 @@ test("连接新的 Joy-Con 2: the dialog counts down, remembers the controller, 
     ).toHaveAttribute("aria-checked", "true");
     await expect(section.getByText("FAKEJC2L0001")).toHaveCount(0);
 
-    await section.getByRole("button", { name: "连接新的 Joy-Con 2", exact: true }).click();
+    await section
+      .getByRole("button", { name: "连接新的 Joy-Con 2", exact: true })
+      .click();
     const dialog = page.getByRole("dialog", { name: "连接新的 Joy-Con 2" });
     await expect(
       dialog.getByText("请在 30 秒内按住 Joy-Con 2 侧面的 SYNC 键。"),
@@ -86,7 +88,9 @@ test("取消 closes the window of the daemon with the dialog", async ({}) => {
     const page = launched.page;
     await page.getByRole("button", { name: "设置", exact: true }).click();
     const section = page.getByTestId("joycon2-settings");
-    await section.getByRole("button", { name: "连接新的 Joy-Con 2", exact: true }).click();
+    await section
+      .getByRole("button", { name: "连接新的 Joy-Con 2", exact: true })
+      .click();
     const dialog = page.getByRole("dialog", { name: "连接新的 Joy-Con 2" });
     await expect(dialog.getByRole("timer")).toBeVisible();
     await expect.poll(async () => (await status(f)).windowOpen).toBe(true);
