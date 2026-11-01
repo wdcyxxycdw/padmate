@@ -23,12 +23,12 @@ How the documents divide the work:
 | [IPC](0009-ipc.md) | JSON-RPC over a named pipe, authentication, the handshake and bounded connections |
 | [Scripting runtime](0010-scripting-runtime.md) | goja + esbuild, our own event loop, gestures and output shared with declarative mappings, API versions |
 | [Scripts as macros](0011-script-macros.md) | A script is a macro that a button starts; the macro library; only the daemon writes the files |
-| [Mapping model](0012-mapping-model.md) | One set of buttons per profile, a single function key, analog controls, sequences and inheritance, repeat, the mapping wizard, AntiMicroX import |
+| [Mapping model](0012-mapping-model.md) | One set of buttons per profile, a single function key chosen for each controller, analog controls, sequences and inheritance, repeat, the mapping wizard, AntiMicroX import |
 | [Editor UI](0013-editor-ui.md) | The controller picture and the button drawer, edit drafts and shortcut capture, autosave, the shortcut key pool, key symbols and icons |
 | [Overlay window](0014-overlay.md) | A floating window that is created once, never takes focus and lets the mouse through |
-| [Controller feedback](0015-controller-feedback.md) | Rumble, lights, haptic presets, battery and the global switches |
+| [Controller feedback](0015-controller-feedback.md) | Rumble, lights, haptic presets, battery and the switches of each controller |
 | [Explainable mapping and diagnostics](0016-diagnostics.md) | The event record and "why did nothing happen" |
-| [Global settings and start at sign-in](0017-settings-and-startup.md) | Global settings take effect on save; the start-at-sign-in switch and long argument references |
+| [Settings and start at sign-in](0017-settings-and-startup.md) | Settings take effect on save; the settings of each controller (function key, feedback, emergency pause) and the Controllers view; the start-at-sign-in switch and long argument references |
 | [Installation, updates and releases](0018-installer-and-updates.md) | A per-user NSIS wizard installer, the portable package, signing, automatic updates and the download site |
 
 ## When to change an ADR

@@ -35,6 +35,7 @@ padmate 会记住连接过的 Joy-Con 2。下次不用再连新的：按住 Joy-
 - **单只 Joy-Con 2** 横握，和初代 Switch 的单只 Joy-Con 一样：一根摇杆、四个面键、SL、SR、L 和 ZL（右手那只是 R 和 ZR），以及 − 或 +。见[手柄图和按键抽屉](01-controller-and-drawer.zh-CN.md)。
 - **C 键**在右手的 Joy-Con 2 上。它是附加键，可以像其他附加键一样映射。Home 键和截图键不能映射。手柄图上它的标签是 C 键。
 - **手柄图**：映射页上的 Joy-Con 2 用 Switch 2 Joy-Con 的模型，不是初代 Switch 的。它的模型上没有 SL、SR、ZL、ZR 可指，这几个键的标签指向导轨和肩部上的固定位置。
+- 功能键：单只默认是 ZL 或 ZR，也可以选 L 或 R；一对默认是 −，也可以选 +。在“设置”的“手柄设置”里选，见[层和功能键](03-layers-and-function-keys.zh-CN.md)。
 - 紧急暂停：单只是 SL 和 SR 一起按，一对是 − 和 + 一起按。见[托盘和紧急释放](12-tray-and-emergency.zh-CN.md)。
 - Joy-Con 2 的电量显示在托盘的状态行里，每 10 % 一档。连着的 Joy-Con 2 也和其他手柄一样，带着电量列在“设置”的“手柄调校”里。
 

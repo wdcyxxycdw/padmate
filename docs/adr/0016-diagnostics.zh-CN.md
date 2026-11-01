@@ -20,7 +20,7 @@
 6. **决策发布挪出热路径**：交给一个发布 goroutine 编码，有上限，满了丢最旧的并计数。引擎和 slot 的零分配测试不变。
 7. **延迟测量点：** T-input 取到 SDL 事件后立即读 QPC，放进 `input.Event.Stamp`，Arbiter 在 `SendInput` 返回后再读一次，差就是延迟。只算真正发出的键：只预览不计；连发、序列后续步骤、到点才发的长按和多击、指针移动都不经过输入边沿，不计。每只手柄保留最近 1000 次，预先分配，在 T-output 上写，不分配内存。口径与基准一致，p99 超过 1.5 ms 标警告色。
 8. **Steam 只提示“可能”。** `steam.exe` 在运行时，按手柄的类型、厂商和驱动标出 Steam Input 哪一类设置会管到它，沿用 `status.get` 的 `conflicts` 和 5 秒一次的检查。
-9. `profiles.explain` 和 `padmatectl profile explain` 列出功能键的那一套，并标出当前按着的功能键。
+9. `profiles.explain` 和 `padmatectl profile explain` 按手柄列出功能键的那一套（功能键是手柄自己的设置，所以各 slot 可以不同），并标出当前按着的功能键。
 
 ## 代价
 

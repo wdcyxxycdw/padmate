@@ -35,6 +35,7 @@ padmate remembers the Joy-Con 2 it connected. Next time, do not connect a new on
 - **A single Joy-Con 2** is held sideways, like a single Joy-Con of the original Switch: one stick, four face buttons, SL, SR, L and ZL (R and ZR on the right one), and − or +. See [The controller picture and the key drawer](01-controller-and-drawer.md).
 - **The C key** is on the right Joy-Con 2. It is an extra key, and you can map it like the other extra keys. The Home and Capture keys cannot be mapped. On the controller picture its tag is C.
 - **The picture** of a Joy-Con 2 on the Mapping page is the model of the Switch 2 Joy-Con, not the original Switch one. Its model has no SL, SR, ZL or ZR to point at, so their tags point at fixed places on the rail and the shoulder.
+- The function key: for a single one it is ZL or ZR by default, and L or R if you choose; for a pair it is − by default, and + if you choose. You choose it in “Settings”, under “Controllers”; see [Layers and the function key](03-layers-and-function-keys.md).
 - The emergency pause is SL and SR together for a single one, and − and + together for a pair. See [The tray and emergency release](12-tray-and-emergency.md).
 - The battery of a Joy-Con 2 shows in the status line of the tray, in steps of 10 %. A connected Joy-Con 2 is also listed with its battery in “Settings”, in the section “Controller calibration”, like any other controller.
 

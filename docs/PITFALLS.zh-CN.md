@@ -145,7 +145,7 @@
 ### 暂停与紧急组合
 - **检测位置与线程**：`input.ComboWatch` 在 T-input 把事件送进通道之前看到它（通道满丢事件也看得到），不要挪到通道后面。`OnCombo` 在 T-input 上，只能调 `output.Loop.Block`，不能调 `Do`（它等 T-output）。`ComboHeld` 不写进 trace，黄金测试和 `--fake-input` 用 `input.ExpandCombos` 插入。
 - **暂停的边沿**经 `Edge.Pause` 投递，暂停期间的边沿都带 PauseOn；只让新建的 slot 以暂停启动不够，重启前排着的按下会在恢复后重放（`TestPauseRestart`）。
-- **换紧急组合与加锁顺序**：config.json 的 `safety` 变了，只经 `Source.RepickCombos` 在 T-input 上调 `ComboWatch.Repick`，不要在别的 goroutine 动 ComboWatch，也不要为换组合重开 Source。`commitConfigLocked` 里先持有 `configApplyMu` 再取 `profileMu`，反过来会死锁。
+- **换紧急组合与加锁顺序**：一只手柄的紧急组合（`devices.<DeviceKey>.panic`，或退役的 `safety`）变了，只经 `Source.RepickCombos` 在 T-input 上调 `ComboWatch.Repick`，不要在别的 goroutine 动 ComboWatch，也不要为换组合重开 Source。`commitConfigLocked` 里先持有 `configApplyMu` 再取 `profileMu`，反过来会死锁。
 
 ### 退出
 - **注销、关机与 SIGTERM**（按文档，没实测）：GUI 子系统的 release 版收不到控制台事件，padmated 从 winsession 窗口的 `WM_QUERYENDSESSION`/`WM_ENDSESSION` 得知。`WM_ENDSESSION` 返回后约 5 s 系统强制结束进程，所以最多等 3 s。T-session 调过 `OnStop("session-end")` 时（`liveRun.sessionEnding`）先写完关闭日志再关 T-session；其他时候先关 T-session，收尾日志才不丢。不带 /F 的 taskkill 发 WM_CLOSE，按停止处理；带 /F 不给机会，释放靠 held-keys 日志。
@@ -180,13 +180,11 @@
 - **鼠标模式的摇杆**：`CancelAll` 后仍推着的摇杆要先回死区才恢复（`mouseLock`）；`Reload` 和校准变化不上锁，否则界面自动保存会让指针停住。`inputOnly` 引擎 `Output` 为空，不能调 `Output.Move`/`Jump` 或排 deadline。
 
 ### 功能键
-- 功能键（`Program.fnKey`，`back` 或 `start`）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
-
+- 功能键（`Program.fnKey`：`back`、`start` 或某个背键）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
 - **每只手柄的设置（ADR-0017）**：手柄的功能键、反馈开关和紧急组合是 `devices.<DeviceKey>` 的成员；顶层的 `functionKey`、`feedback`、`safety.panic` 已退役，但仍然会读。不先把它们折进各只手柄（`pads.migrate`、`profile.MigratePadSettings`），就不要从文件里去掉它们（`withoutRetired`、手写的改写），否则某只手柄的行为会悄悄变。退役的 `functionKey` 只用于标准布局的手柄：文件里没写时的默认 `start`，不能把一对 Joy-Con 从它的 `back` 上挪走。
 - 单只 Joy-Con 的族按它报告的按键判断（有 `south`、没有 `rightstick` 是横握），和界面的 `isSidewaysJoyCon`、`padlabel.sideways` 一致；按键未知时才看竖握提示。键的 GUID 看不出握法，所以 config 检查接受两种握法的功能键（`padfamily.PossibleFunctionKeys`），只有运行时的族才收窄。当前族不接受的功能键直接跳过，绝不是错误。
 - DeviceKey 含 `/`（`…/s:SERIAL`、`…/p:PATH`）：在诊断的 JSON Pointer 里写成 `~1`。拼指针用 `childPointer`，不要自己拼接键。
 - `liveDevices` 有意从已提交的配置里拷贝按手柄的成员；运行时要读的 `DeviceSettings` 新成员必须加在那里，立即生效的 `Config` 新字段要加进 `liveSettings`，并在 `startupFields` 里清掉，否则 `configNeedsRestart` 每改一次就报需要重启。
-
 - **运行时的功能键是 slot 的，不是 profile 的（ADR-0017）。** `cfg.prog` 和 `Supervisor.Reload` 的 Program 带的是*默认*功能键（`start`）；slot 运行的是 `Program.ForFunctionKey(自己手柄的键)`。所以别用 `prog.FunctionKey()` 判断某只手柄的行为（问 slot 的 `View.ProgramFunctionKey` 或 `PadSettings`），别拿 config.json 的功能键去编译 profile，并记住不同变体的 `IgnoredFunctionKeyBindings` 和 `Bindings()` 不一样。没有手柄的 slot 用 key `""` 去问，得到的是标准布局加退役的顶层 `functionKey`，`onFunctionKey` 对它什么也不说。
 - **功能键切换是不换代的引擎 `Reload`（`Slot.switchProgram`）。** 手柄来去（`DeviceAdded`、`DeviceRemoved`）时，层状态既不在它之前保存、也不在它里面恢复（由调用方恢复；先保存会把记忆覆盖成新引擎的默认层）；由 `RefreshFunctionKey` 触发时则在前后保存和恢复。Program 没变时必须什么也不做：任何配置变化后 `RefreshFunctionKeys` 都会在每个 slot 上运行，多余的一次 `Reload` 会松开别的手柄按着的键。
 - **`ComboWatch.Repick` 不动组合没变的设备。** 别“简化”成全部重新解除待发：改一只手柄的组合会取消另一只手柄正在进行的长按。padmated 的 `ComboFor` 用 `input.KeyOf(info)`（N 为 0）认手柄，所以两只没有序列号的相同手柄共用第一只的设置。
@@ -250,7 +248,7 @@
 - **摇杆的两个选中 id**：`leftstick`、`rightstick` 是“旋转”，`leftstick.press`、`rightstick.press` 是“点按”，而绑定键 `leftstick` 是按下摇杆的绑定。绑定键找抽屉经 `calloutFor`，选中 id 找绑定经 `bindingKey`，比较“选中的是不是这个标注”先 `calloutOf`，否则“点按”格没名字、不亮引线。
 - **引线跟着量到的标签走，所以标签移动后必须重画**：`controller-scene.ts` 每一帧都用 `getBoundingClientRect` 量每个标签，但 Joy-Con 的第一帧是在 `Controller` 应用排好的布局之前画的（场景随这一帧把布局交出去，React 在它之后才移动标签），不重画的话，引线就从标签原来的位置出发，留下悬在空中的线头。所以 `Controller` 在布局应用后会通知场景更新；jsdom 测试看不出这个差别，`tests/preview/check-layouts.mjs`（无头 Chromium）看得出。
 - **引线是否交叉取决于舞台尺寸**：标签的像素大小和离舞台边缘的距离不变，而模型随舞台缩放，所以同一种排法在一个尺寸下干净、在另一个尺寸下就交叉，一条引线还可能从另一个键的终点旁不到一个像素处经过。因此一种排法要在一个尺寸网格（`supportedStages`，从 440 × 440 起，即工作区给舞台的最小尺寸）上逐个检查，连同编辑器提示条把下面一排顶起来的情况。在 Joy-Con 2 一对的模型上量过：四个面键加右摇杆占满一列的六个位置时，没有哪种顺序能在所有尺寸上让 Y 的引线避开 B 的终点，所以 `controller-joycon-layout.ts` 从上面一排去指 Y，放在 − 和 + 之间（把一列的位置分得更细、间隔四分之一格，也只有在允许引线从 B 的终点不到一个像素处经过时才行）。样式表里下面一排的位置是为 Xbox 的外壳定死的，高的 Joy-Con 模型（4.1 个单位高：一对，或竖握的单只）在近似正方形的舞台上会伸进去；所以 Joy-Con 的两排改为跟随模型的大小，标签还要避开模型的剪影，用外壳全部顶点投影后的凸包来核对。一条引线离另一条的终点不到 1.5 px 就算相交（`anchorClearance`）。
-- **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由 config.json 的 `functionKey` 定，纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。`guide` 永不映射：列出或计数绑定的代码要连同功能键一起把它排除（界面用 `isIgnoredControl`，守护进程用 `control.Control.Unmappable`），保存时去掉（`savedForm`）。脚本解析控件用 `scriptControl` 而不是 `control.Parse`，紧急组合只有 `PanicCombo.Usable` 时才用。
+- **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由手柄定（`devices.<DeviceKey>.functionKey`，经 `Config.PadSettings` 解析，ADR-0017），纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。`guide` 永不映射：列出或计数绑定的代码要连同功能键一起把它排除（界面用 `isIgnoredControl`，守护进程用 `control.Control.Unmappable`），保存时去掉（`savedForm`）。脚本解析控件用 `scriptControl` 而不是 `control.Parse`，紧急组合只有 `PanicCombo.Usable` 时才用。
 - **映射向导的捕获与清理**：向导开的是留着的捕获：窗口 `blur`、锁屏、睡眠调 `windowAway()`，不停止它；关闭、重载、渲染进程崩溃、退出调 `stop()`，断连调 `disconnected()`。不要把 blur 改成 `stop()`（向导开着时切到别的程序，手柄键会发出快捷键），也不要把别的路径改成 `windowAway()`（窗口关了映射还停着）。
 - **快捷键捕获**：start/stop/事件都带 session，卸载时迟到的 start 只能停自己的会话；钩子只观察，自动测试不可真按 Win+L、Ctrl+Alt+Del 或注销。录紧急组合时超时或失败的 `capture.start` 仍可能到达 daemon、`capture.stop` 也可能没发出，所以 `pad-capture.ts` 发过 start 后一直重发 stop 直到确认或断连。
 

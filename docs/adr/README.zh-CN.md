@@ -23,12 +23,12 @@
 | [IPC](0009-ipc.zh-CN.md) | 命名管道上的 JSON-RPC、身份验证、握手与有界连接 |
 | [脚本运行时](0010-scripting-runtime.zh-CN.md) | goja + esbuild、自研事件循环、与声明式映射共用手势和输出、API 版本 |
 | [脚本即宏](0011-script-macros.zh-CN.md) | 脚本是按键触发的宏；宏库；文件只由守护进程写 |
-| [映射模型](0012-mapping-model.zh-CN.md) | 一个配置一组按键、唯一功能键、模拟量控件、序列与继承、连发、映射向导、AntiMicroX 导入 |
+| [映射模型](0012-mapping-model.zh-CN.md) | 一个配置一组按键、每只手柄自己选的唯一功能键、模拟量控件、序列与继承、连发、映射向导、AntiMicroX 导入 |
 | [编辑界面](0013-editor-ui.zh-CN.md) | 手柄图与按键抽屉、编辑草稿与快捷键捕获、自动保存、快捷键键池、按键符号与图标 |
 | [Overlay 窗口](0014-overlay.zh-CN.md) | 只建一次、不抢焦点、鼠标穿透的浮层窗口 |
-| [手柄反馈](0015-controller-feedback.zh-CN.md) | 震动、灯光、触感预设、电量与全局开关 |
+| [手柄反馈](0015-controller-feedback.zh-CN.md) | 震动、灯光、触感预设、电量与每只手柄的开关 |
 | [可解释映射与诊断](0016-diagnostics.zh-CN.md) | 事件记录与“为什么没触发” |
-| [全局设置与登录自启](0017-settings-and-startup.zh-CN.md) | 全局设置保存即生效、登录自启开关与长参数引用 |
+| [设置与登录自启](0017-settings-and-startup.zh-CN.md) | 设置保存即生效、每只手柄自己的设置（功能键、反馈、紧急暂停）与“手柄设置”子页、登录自启开关与长参数引用 |
 | [安装、更新与发布](0018-installer-and-updates.zh-CN.md) | 按用户的 NSIS 向导式安装包、便携包、签名、自动更新与下载站 |
 
 ## 什么时候改 ADR

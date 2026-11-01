@@ -27,8 +27,9 @@ Identifying is an explicit act of the user: it ignores every switch and pause, w
 
 The player lights show the mode number of the current layer, not the slot number, because the tray badge and the layer pulses speak of the mode too.
 
-### 4. Four global feedback switches
-- Rumble, lights, the pause cue and the low-battery warning are stored in config.json's `feedback`, all on by default. They take effect at once, without reloading the profile or releasing held keys. When a switch goes from on to off, whatever it governs that is still running is stopped.
+### 4. Four feedback switches for each controller
+- Rumble, lights, the pause cue and the low-battery warning are stored for each controller in config.json, `devices.<DeviceKey>.feedback`, all on by default. A switch that a controller does not set takes the retired top-level `feedback` while the file still has it, and is on otherwise. They take effect at once, without reloading the profile or releasing held keys. When a switch of a controller goes from on to off, whatever it governs on that controller that is still running is stopped; the other controllers are not touched.
+- Controllers differ in what they can do and in how the user wants them to behave, so the switches belong to the controller, and the Controllers view of the Settings page shows them under each one ([ADR: Settings and start at sign-in](0017-settings-and-startup.md)). Everything that acts on a controller asks for that controller's switches: the engine's layer and pause cues, a script's effects, the error buzz and the low-battery warning.
 - These switches are about the controller and the user, not about the mapping of one app, so they are not per profile. Members of the same name in a profile are kept and marked `deprecated`: parsed, ignored, not migrated. A profile's `feedback` keeps only timing, strength and the pause color.
 
 ### 5. Battery and low-battery warnings
@@ -48,6 +49,7 @@ The player lights show the mode number of the current layer, not the slot number
 - **Events before layer pulses.** Users would count the layer wrong.
 - **A global cool-down.** One controller with a problem should not silence the others.
 - **A strength or switch of their own for haptic touches.** `strength` and `rumble` do it.
+- **One set of switches for all controllers.** One controller's rumble or lights could not be turned off without the others.
 - **Feedback switches per profile.** Old values left behind would make the global switch seem "stuck off"; a migration could contradict them, and the daemon does not rewrite users' files.
 - **Turning XInput's charging into unknown.** unknown does not re-arm; wired is what says "this reading is not a battery level".
 - **Opening a second HID handle of our own to read the battery.** SDL already parses it, and an extra handle on a USB receiver is a risk.

@@ -20,7 +20,7 @@ Every decision of the engine already reaches the UI over the IPC topic `engine.a
 6. **Publishing decisions moves off the hot path:** a publishing goroutine encodes them, with a limit; when it is full, the oldest is dropped and counted. The engine's and the slot's zero-allocation tests are unchanged.
 7. **Where latency is measured:** T-input reads QPC as soon as it gets the SDL event and puts it in `input.Event.Stamp`; the Arbiter reads it again after `SendInput` returns, and the difference is the latency. Only keys really sent count: a preview does not; repeat, the later steps of a sequence, holds and multi-taps that fire when their time comes, and pointer movement do not go through an input edge and do not count. Each controller keeps its last 1000 samples, allocated in advance and written on T-output without allocating. It is measured the same way as the benchmark, and a p99 over 1.5 ms is shown in the warning color.
 8. **Steam is only flagged as "may".** While `steam.exe` runs, the type, vendor and driver of each controller tell which kind of Steam Input setting would take it over; this uses the `conflicts` of `status.get` and its check every 5 seconds.
-9. `profiles.explain` and `padmatectl profile explain` list the function key's set and mark the function key held right now.
+9. `profiles.explain` and `padmatectl profile explain` list the function key's set for each controller (the function key is a setting of the controller, so the slots can differ) and mark the function key held right now.
 
 ## Costs
 

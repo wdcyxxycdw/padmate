@@ -6,7 +6,18 @@ A controller has few keys. The function key and layers let one key do different 
 
 ## The function key
 
-Of the two keys in the middle of the controller, View and Menu, one is the function key, and by default it is Menu. On a PlayStation controller they are Create (or Share) and Options, and on a Switch Pro controller − and +.
+Each controller has its own function key. Which key it is depends on the kind of controller:
+
+| Controller | Default function key | Can also be |
+|---|---|---|
+| Xbox, PlayStation, Switch Pro and the like | Menu | View |
+| A single Joy-Con held sideways, the left one | ZL | L |
+| A single Joy-Con held sideways, the right one | ZR | R |
+| A single Joy-Con held upright, the left one | − | nothing else |
+| A single Joy-Con held upright, the right one | + | nothing else |
+| A left and a right Joy-Con connected as one controller | − | + |
+
+On a PlayStation controller, View and Menu are Create (or Share) and Options, and on a Switch Pro controller − and +. A single Joy-Con uses ZL or ZR by default because those keys are large and easy to press. A Joy-Con held upright has just one key in the middle, so there is no other choice.
 
 The function key works like a laptop's Fn key:
 
@@ -16,7 +27,13 @@ The function key works like a laptop's Fn key:
 
 ### Changing the function key
 
-Click “Settings”, open “General”, find “Function key”, and click one of the keys. It applies at once, for all profiles and controllers.
+Click “Settings”. In “General”, find the row “Controllers” and click “Open”. The page has a section for each controller, and under each one its “Function key”: click one of the keys. It applies at once, to that controller only, for all profiles. When you change it, the keys that controller is holding are released first.
+
+Controllers that are connected now come first. Controllers that were connected before and are not now are under “Previously connected”; you can change them too, and they use the new setting the next time they connect.
+
+On the “Mapping” page, the set for “Hold function key” uses the function key of the controller the page is showing. Switch to another controller and the function key switches with it.
+
+The function key that earlier versions let you choose in “Settings” is still the function key of Xbox, PlayStation and similar controllers. A Joy-Con uses its own default.
 
 ### Why the Xbox button cannot be used
 
@@ -70,6 +87,6 @@ Each profile has its own folder in `%APPDATA%\padmate\profiles`, and the `profil
 - To make a key do nothing in a layer, write `"block": true`.
 - `defaultLayer` is the base layer at start-up. Without it, it is `base`.
 
-View and Menu are `back` and `start`. A setting written on the current function key does not apply, but stays in the file. The Xbox button is `guide`: no setting written on it applies, and the check gives a warning for each; when you edit the profile on the Mapping page, they are removed from the file. The function key's set is written in `functionSet`, in the same way as a layer.
+View and Menu are `back` and `start`. On a single Joy-Con held sideways, ZL, L, ZR and R are `paddle4`, `paddle2`, `paddle3` and `paddle1`. A setting written on the current function key does not apply, but stays in the file. The Xbox button is `guide`: no setting written on it applies, and the check gives a warning for each; when you edit the profile on the Mapping page, they are removed from the file. The function key's set is written in `functionSet`, in the same way as a layer.
 
 After you save the file, padmate rereads it. To check it, run `.\padmatectl.exe validate profile.json` in the `resources\bin` folder. It points out what is wrong and does not change the file.
