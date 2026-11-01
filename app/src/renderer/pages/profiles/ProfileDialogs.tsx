@@ -235,18 +235,25 @@ export function RenameProfileDialog({
   const t = (zh: string, en: string) => tx(language, zh, en);
   const formId = useId();
   const open = !!entry;
-  const [name, setName] = useState("");
+  const [name, setName] = useState(() =>
+    entry ? profileName(entry, language) : "",
+  );
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
+  // The dialog starts over in the render that opens it for another profile,
+  // not in an effect after it: its first frame already holds the name, so 保存
+  // is never drawn disabled (and 名称不能为空 never flashes) as it opens.
+  const [shown, setShown] = useState(entry?.id);
+  if (shown !== entry?.id) {
+    setShown(entry?.id);
+    if (entry) {
+      setName(profileName(entry, language));
+      setBusy(false);
+      setFailure("");
+    }
+  }
   const input = useOpenFocus(open);
   const inline = useInlineReport(open);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Starts over only when another profile opens the dialog.
-  useEffect(() => {
-    if (!entry) return;
-    setName(profileName(entry, language));
-    setBusy(false);
-    setFailure("");
-  }, [entry?.id]);
   const problem = profileNameProblem(name, state.profiles, entry?.id);
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
