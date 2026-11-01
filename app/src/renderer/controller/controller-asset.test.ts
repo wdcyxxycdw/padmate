@@ -1,12 +1,17 @@
 import { readFile } from "node:fs/promises";
-import { Mesh, Quaternion, Texture, Vector3 } from "three";
+import { Box3, Mesh, Quaternion, Texture, Vector3 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { describe, expect, it, vi } from "vitest";
 import { sdlPads } from "../testing/sdl-pads";
 import { buildAssetModel, type ModelInfo } from "./controller-asset";
+import { modelShell } from "./controller-models";
 
 async function fixture(type: string, masks: Omit<ModelInfo, "type"> = {}) {
-  const file = type.startsWith("ps") ? "dualsense" : "xbox";
+  const file = {
+    dualsense: "dualsense",
+    dualshock: "dualshock4",
+    xbox: "xbox",
+  }[modelShell(type)];
   const bytes = await readFile(
     new URL(`./assets/${file}.glb`, import.meta.url),
   );
@@ -131,6 +136,100 @@ const directions = [
 const sticks = ["xboxone", "ps5"].flatMap((type) =>
   ["left", "right"].map((side) => [type, side] as const),
 );
+
+describe("DualShock 4 shell", () => {
+  async function ds4() {
+    const { type, ...masks } = sdlPads.ps4;
+    return fixture(type, masks);
+  }
+  const at = (model: Model, control: string) => {
+    const point = model.controls.get(control)?.point;
+    if (!point) throw new Error(`Missing ${control}`);
+    return point;
+  };
+
+  it("anchors every control inside the model outline", async () => {
+    const model = await ds4();
+    const outline = new Box3().setFromObject(model.group.children[0]);
+    outline.expandByScalar(1e-6);
+    for (const [name, control] of model.controls)
+      expect(outline.containsPoint(control.point), name).toBe(true);
+    for (const name of ["touchpad", "back", "start", "guide"])
+      expect(model.controls.has(name), name).toBe(true);
+    model.dispose();
+  });
+
+  it("puts the controls where the pad has them", async () => {
+    const model = await ds4();
+    const p = (control: string) => at(model, control);
+    // Face buttons: the cross at the bottom, the triangle at the top, the
+    // square left and the circle right of the cluster, which is the right half.
+    expect(p("south").y).toBeLessThan(p("west").y);
+    expect(p("west").y).toBeCloseTo(p("east").y, 2);
+    expect(p("west").y).toBeLessThan(p("north").y);
+    expect(p("west").x).toBeLessThan(p("south").x);
+    expect(p("south").x).toBeCloseTo(p("north").x, 2);
+    expect(p("south").x).toBeLessThan(p("east").x);
+    for (const c of ["south", "east", "west", "north"])
+      expect(p(c).x, c).toBeGreaterThan(1);
+    // The D-pad is the left half, up above down and left of right.
+    for (const c of ["up", "down", "left", "right"])
+      expect(p(`dpad.${c}`).x, c).toBeLessThan(-1);
+    expect(p("dpad.up").y).toBeGreaterThan(p("dpad.down").y);
+    expect(p("dpad.left").x).toBeLessThan(p("dpad.right").x);
+    // The sticks side by side below the face parts, the PS button between.
+    expect(p("leftstick").x).toBeLessThan(p("guide").x);
+    expect(p("guide").x).toBeLessThan(p("rightstick").x);
+    expect(p("leftstick").y).toBeCloseTo(p("rightstick").y, 2);
+    expect(p("leftstick").y).toBeLessThan(p("dpad.down").y);
+    expect(p("rightstick").y).toBeLessThan(p("south").y);
+    // Share, the touchpad and Options in a row above the sticks.
+    expect(p("back").x).toBeLessThan(p("touchpad").x);
+    expect(p("touchpad").x).toBeLessThan(p("start").x);
+    expect(p("touchpad").y).toBeGreaterThan(p("leftstick").y);
+    expect(p("back").y).toBeGreaterThan(p("leftstick").y);
+    expect(p("start").y).toBeGreaterThan(p("rightstick").y);
+    // The bumpers and triggers on the top edge, the triggers above the bumpers.
+    expect(p("leftshoulder").x).toBeLessThan(0);
+    expect(p("rightshoulder").x).toBeGreaterThan(0);
+    expect(p("lefttrigger").y).toBeGreaterThan(p("leftshoulder").y);
+    expect(p("righttrigger").y).toBeGreaterThan(p("rightshoulder").y);
+    model.dispose();
+  });
+
+  it("shows a stick's push on the gauge without tilting anything", async () => {
+    const model = await ds4();
+    for (const side of ["left", "right"]) {
+      const { control, stick } = stickOf(model, side);
+      expect(stick.maxTilt).toBe(0);
+      expect(stick.radius).toBeGreaterThan(0.2);
+      model.update(push(side, 1, 0));
+      expect(stick.x).toBeCloseTo(1, 6);
+      expect(stick.pivot.quaternion.equals(new Quaternion())).toBe(true);
+      expect(model.anchor(control).distanceTo(control.point)).toBeLessThan(
+        1e-9,
+      );
+      expect(control.marker.parent).toBe(model.group);
+    }
+    model.dispose();
+  });
+
+  it("serves PS3 pads with the same shell, without a touchpad", async () => {
+    const four = await ds4();
+    const three = await fixture("ps3");
+    expect(modelShell("ps3")).toBe(modelShell("ps4"));
+    expect(three.controls.has("touchpad")).toBe(false);
+    for (const [name, control] of three.controls)
+      expect(
+        control.point.distanceTo(
+          four.controls.get(name)?.point ?? new Vector3(9, 9, 9),
+        ),
+        name,
+      ).toBeLessThan(1e-9);
+    four.dispose();
+    three.dispose();
+  });
+});
 
 describe("stick motion", () => {
   it.each(sticks)(

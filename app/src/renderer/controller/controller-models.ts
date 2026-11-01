@@ -19,11 +19,15 @@ import {
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { familyName } from "./controller-model";
 
-/** The two shells: PlayStation pads get the DualSense, every other pad the Xbox one. */
-export type ModelShell = "playstation" | "xbox";
+/**
+ * The three shells: the DualSense for a PS5 pad, the DualShock 4 for a PS4 or
+ * PS3 pad, the Xbox one for every other pad.
+ */
+export type ModelShell = "dualsense" | "dualshock" | "xbox";
 
 export function modelShell(type: string): ModelShell {
-  return familyName(type) === "playstation" ? "playstation" : "xbox";
+  if (familyName(type) !== "playstation") return "xbox";
+  return type === "ps5" ? "dualsense" : "dualshock";
 }
 
 /**
@@ -48,10 +52,11 @@ export function decodeBase64(text: string): Uint8Array {
 async function parseBundledModel(shell: ModelShell): Promise<Group> {
   // Vite embeds each local GLB in a lazy module as a data URL. Decoding it
   // here opens no connection (fetch of a data: URL would need connect-src).
-  const { default: data } =
-    shell === "playstation"
-      ? await import("./assets/dualsense.glb?url&inline")
-      : await import("./assets/xbox.glb?url&inline");
+  const { default: data } = await {
+    dualsense: () => import("./assets/dualsense.glb?url&inline"),
+    dualshock: () => import("./assets/dualshock4.glb?url&inline"),
+    xbox: () => import("./assets/xbox.glb?url&inline"),
+  }[shell]();
   const bytes = decodeBase64(data.slice(data.indexOf(",") + 1));
   const loader = new GLTFLoader();
   // TextureLoader uses <img src=blob:>, keeping production connect-src 'none'.

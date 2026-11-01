@@ -20,6 +20,12 @@ const models = [
     source:
       "https://sketchfab.com/3d-models/ps5-controller-b7bb9c5102a04cb0b1966c6d02bad7d6",
   },
+  {
+    title: "DualShock 4 PlayStation Controller",
+    author: "shaielwolf",
+    source:
+      "https://sketchfab.com/3d-models/dualshock-4-playstation-controller-e3c2f0dc16524fc19cdde45bad1de1a9",
+  },
 ];
 
 // The button icons (ADR-0013, pad-icons/README.md). PromptFont's license
@@ -101,8 +107,8 @@ export function ModelLicenses({
           <p className="page-licenses-note">
             {tx(
               language,
-              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox 素材重新打包为 GLB；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
-              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox assets are repacked as GLB; the DualSense derivative previously split and named controls and baked transforms.",
+              "padmate 调整了尺寸、灯光、材质与按键标签，隐藏背部拨片并添加输入反馈。Xbox 和 DualShock 4 素材重新打包为 GLB，DualShock 4 的贴图缩小并去掉了法线贴图；DualSense 素材此前已由衍生作者拆分控件、命名并烘焙变换。",
+              "padmate adjusts scale, lighting, materials and button labels, hides paddles and adds input feedback. Xbox and DualShock 4 assets are repacked as GLB, with the DualShock 4 textures downscaled and its normal maps removed; the DualSense derivative previously split and named controls and baked transforms.",
             )}
           </p>
           <p className="page-licenses-note">

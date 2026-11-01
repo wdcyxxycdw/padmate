@@ -19,17 +19,32 @@
 - 获取来源：[dualsense-studio 的控件拆分模型及署名](https://github.com/SafaElmali/dualsense-studio/blob/main/controller/ATTRIBUTION.md)
 - 原模型页面与 GLB 元数据均声明 CC BY 4.0。衍生作者将控件拆开并命名、烘焙变换，保留原几何及纹理。没有采用该仓库的应用代码。
 
+## DualShock 4 PlayStation Controller — shaielwolf
+
+- 作者：https://sketchfab.com/shaielwolf
+- 原模型：https://sketchfab.com/3d-models/dualshock-4-playstation-controller-e3c2f0dc16524fc19cdde45bad1de1a9
+- 获取来源：由项目所有者从 Sketchfab 下载。原模型页面、随模型下载的 `license.txt` 与 glTF 的 `asset.extras` 均声明 CC BY 4.0。
+- 署名文字：This work is based on "DualShock 4 PlayStation Controller" (https://sketchfab.com/3d-models/dualshock-4-playstation-controller-e3c2f0dc16524fc19cdde45bad1de1a9) by shaielwolf (https://sketchfab.com/shaielwolf) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+- `dualshock4.glb` 把原 glTF、scene.bin 及贴图打包为单文件，几何、节点名、材质和元数据不变。修改只在贴图上：PNG 转成 WebP，基础色和自发光贴图最长边不超过 1024 px（质量 85），金属度/粗糙度贴图不超过 512 px（质量 80）；四张 4096 px 的法线贴图去掉；不再被引用的图片和采样器一并删除。
+
 ## padmate 的显示修改
 
-统一尺寸与中心，设置灯光与材质，隐藏 Xbox 背部拨片，以 SDL 设备族标签绘制面键标记，添加实时输入标记、摇杆倾斜及引线。仅提供固定正面视图，每个标准控件独立引线，四个肩键从上方引线指示，中间三个功能键从下方以竖线指示。Xbox 外形也作为 Nintendo/未知设备的通用标准布局；PlayStation 使用 DualSense 外形，均不声称精确复刻每款已连接设备。
+统一尺寸与中心，设置灯光与材质，隐藏 Xbox 背部拨片，以 SDL 设备族标签绘制面键标记，添加实时输入标记、摇杆倾斜及引线。仅提供固定正面视图，每个标准控件独立引线，四个肩键从上方引线指示，中间三个功能键从下方以竖线指示。外形共三种：PS5 使用 DualSense，PS4 与 PS3 使用 DualShock 4，其余手柄（Xbox、Switch Pro、Joy-Con 和未知设备）使用 Xbox，也作为它们的通用标准布局。均不声称精确复刻每款已连接设备。
 
 保留作者与本文件；界面通过“设置 → 关于与许可”集中展示作者、原模型地址、许可及修改说明，总览不常驻署名。CC BY 4.0 第 3(a)(2) 节允许根据媒介与使用场景采用合理的署名方式。这些是独立作者模型，不是微软或索尼官方素材，也不表示他们认可本项目。
 
 ## 资源重建
 
-正式构建直接使用已入库的 GLB，无需下载素材。需要重新打包时，将上述 Xbox 固定版本的 `scene.gltf`、`scene.bin` 与其引用的贴图按原目录结构放入 `.cache/asset-candidates/xbox/`，将已核对许可的 DualSense 文件放入 `.cache/asset-candidates/dualsense.glb`，然后从仓库根目录运行 `node app/scripts/pack-controller-models.mjs`。脚本仅打包本地素材，不是 `task gen` 的一部分。
+正式构建直接使用已入库的 GLB，无需下载素材。需要重新打包时，素材按下面的目录放在仓库根目录下，再从仓库根目录运行 `node app/scripts/pack-controller-models.mjs`：
+
+- `.cache/asset-candidates/xbox/`：上述 Xbox 固定版本的 `scene.gltf`、`scene.bin` 与其引用的贴图，保持原目录结构。
+- `.cache/asset-candidates/dualsense.glb`：已核对许可的 DualSense 文件，脚本原样复制。
+- `.cache/asset-candidates/ds4/`：DualShock 4 的 `scene.gltf`、`scene.bin` 与其引用的 PNG 贴图，保持原目录结构。
+
+PNG 转 WebP 用 sharp，它不在 app 的依赖里，要先在仓库根目录安装：`npm install --prefix .cache/asset-tools sharp@0.34.5`。某个素材不在位时，脚本跳过它，该 GLB 保持入库的样子。脚本仅打包本地素材，不是 `task gen` 的一部分。
 
 当前产物 SHA-256：
 
 - `xbox.glb`：`a4eb1fc09d802f8146b964c36850b3d13cb687906a761d605948848dc7fdaf14`
 - `dualsense.glb`：`e55e172f3a6704769818954970fda2d29038a31f85ba7358a36d0549df4f9d30`
+- `dualshock4.glb`：`c87f473bbde04e44c5e770503acc53854cd9e74f27c2c715f6138d70c7f5f0fa`

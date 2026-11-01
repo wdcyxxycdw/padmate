@@ -17,7 +17,7 @@ The editor is an Electron app (`app/`). Early on it showed too much, with intern
 ### 2. The controller picture
 - It is a real 3D model under an open license (CC BY 4.0, attributed in `app/src/renderer/controller/assets/ATTRIBUTION.md`), seen from a fixed front view that cannot be rotated; the main page does not scroll.
 - Each physical control has a leader line and a native HTML button, reachable by keyboard. A stick is two cells, one above the other: "rotation" and "press".
-- The labels follow the buttons SDL reports for the connected controller (`buttonMask`, `axisMask`, `padHasControl`): a control the controller lacks gets none; a single Joy-Con held sideways, for example, has no d-pad, right stick, triggers or −. The extra buttons (Share, Capture, the mute button, the back buttons of an Elite or Edge, the Fn buttons of an Edge, a Joy-Con's SL/SR, or L/ZL when held sideways) sit in one row below the controller, the left hand's on the left and the right hand's on the right, the whole row between the two columns of labels. Until SDL reports the buttons, a controller gets the standard ones, plus the touchpad on a PS4 or PS5. There are only two shells: PlayStation controllers use the DualSense, all others borrow the Xbox.
+- The labels follow the buttons SDL reports for the connected controller (`buttonMask`, `axisMask`, `padHasControl`): a control the controller lacks gets none; a single Joy-Con held sideways, for example, has no d-pad, right stick, triggers or −. The extra buttons (Share, Capture, the mute button, the back buttons of an Elite or Edge, the Fn buttons of an Edge, a Joy-Con's SL/SR, or L/ZL when held sideways) sit in one row below the controller, the left hand's on the left and the right hand's on the right, the whole row between the two columns of labels. Until SDL reports the buttons, a controller gets the standard ones, plus the touchpad on a PS4 or PS5. There are only three shells: a PS5 controller uses the DualSense, a PS4 or PS3 controller the DualShock 4, and all others (Xbox, Switch Pro, Joy-Con, unknown) the Xbox.
 - The CSP stays `connect-src 'none'`, so decoding the model uses no `fetch` and needs no network.
 - The rendering stage stays alive for the app's session; coming back to the Mapping page only puts the canvas back. It is released only when the model changes, the context is lost or it fails, since most of the time goes into uploading textures.
 
@@ -73,7 +73,7 @@ UI text that a document quotes in “…” must be in the name table of `app/te
 
 ## Costs
 
-- Three.js and two GLBs (about 14 MB) make the build larger, and the stage that stays alive holds its GPU memory.
+- Three.js and three GLBs (about 18 MB) make the build larger, and the stage that stays alive holds its GPU memory.
 - With changes saved at once, there is no "discard"; a mistaken edit relies on Ctrl+Z, and undo does not survive a restart.
 - When the controller's state is unknown, a Ctrl+Z that the controller sends to padmate's window does not undo.
 - After a broken settings file is repaired, the settings it changed can be recovered only from the backup.

@@ -76,10 +76,20 @@ describe("controller models", () => {
     expect(decodeBase64("")).toEqual(new Uint8Array());
   });
 
-  it("uses the PlayStation shell for PlayStation pads, the Xbox one otherwise", () => {
-    expect(modelShell("ps5")).toBe("playstation");
-    expect(modelShell("ps3")).toBe("playstation");
-    for (const type of ["xboxone", "switchpro", "joyconleft", "unknown"])
+  it("uses the DualSense shell for PS5, the DualShock 4 one for PS4 and PS3, the Xbox one otherwise", () => {
+    expect(modelShell("ps5")).toBe("dualsense");
+    expect(modelShell("ps4")).toBe("dualshock");
+    expect(modelShell("ps3")).toBe("dualshock");
+    for (const type of [
+      "xboxone",
+      "xbox360",
+      "switchpro",
+      "joyconleft",
+      "joyconpair",
+      "gamecube",
+      "standard",
+      "unknown",
+    ])
       expect(modelShell(type)).toBe("xbox");
   });
 
@@ -118,7 +128,7 @@ describe("controller models", () => {
     expect(meshes[1].visible).toBe(true);
     expect(material(meshes[1]).color.getHex()).toBe(0xffffff);
     expect(material(source).color.getHex()).toBe(0xffffff);
-    await cache.get("playstation");
+    await cache.get("dualsense");
     expect(parse).toHaveBeenCalledTimes(2);
   });
 
