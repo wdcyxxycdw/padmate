@@ -12,6 +12,7 @@ import { macroHandlers } from "./macro-handlers";
 import { startFailureHandlers } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
 import { systemSettingsHandlers } from "./system-settings";
+import { LanguageFile, languageHandlers } from "./ui-language";
 import { updateHandlers } from "./update-handlers";
 
 // The wiring between the daemon, the main process and the preload lives in
@@ -102,6 +103,24 @@ describe("Electron IPC wiring", () => {
     );
     expect(source("../shared/api.ts")).toContain(
       "setOverlayPrefs(prefs: OverlayPrefs): Promise<void>;",
+    );
+  });
+
+  it("reads and writes the window's language file through Main's handlers alone (ADR-0018)", () => {
+    // Renderer -> preload -> the handler table; the file is the browser
+    // data's, where the installer writes its language too.
+    expect(source("../preload/index.ts")).toContain(
+      'getLanguage: () => invoke("padmate:languageGet"),',
+    );
+    expect(source("../preload/index.ts")).toContain(
+      'setLanguage: (language) => invoke("padmate:languageSet", language),',
+    );
+    expect(source("./index.ts")).toContain(
+      "...languageHandlers(new LanguageFile(join(browserData, LANGUAGE_FILE))),",
+    );
+    // The page asks before it draws.
+    expect(source("../renderer/main.tsx")).toMatch(
+      /api\.getLanguage\(\)[\s\S]*createPadmateStore\(api, \{ savedLanguage \}\)/,
     );
   });
 
@@ -303,6 +322,7 @@ describe("Electron IPC wiring", () => {
       ),
       ...Object.keys(appPathHandlers(async () => "")),
       ...Object.keys(systemSettingsHandlers(async () => {})),
+      ...Object.keys(languageHandlers(new LanguageFile(""))),
       ...Object.keys(
         appIconHandlers({
           thumbnail: async () => {
@@ -331,6 +351,7 @@ describe("Electron IPC wiring", () => {
     expect(main).toContain("...appPathHandlers(");
     expect(main).toContain("...installedAppHandlers(");
     expect(main).toContain("...configRepairHandlers(");
+    expect(main).toContain("...languageHandlers(");
     for (const channel of channels)
       expect(
         library.includes(channel) || new RegExp(`\\b${channel}:`).test(main),

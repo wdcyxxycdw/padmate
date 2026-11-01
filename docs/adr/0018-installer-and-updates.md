@@ -21,7 +21,9 @@ After compiling, the pure-Go `winres` writes the icon and the version resources;
 ### 2. The installer (an NSIS wizard)
 - electron-builder builds an NSIS package. **It installs for the current user only and never elevates**: the manifest is `asInvoker`, there is no "all users" option, and `packageinstaller verify` checks the manifest.
 - **The uninstall entry's GUID is fixed and never changes**; with another one, an old installation would no longer be upgraded as the same program.
-- The desktop shortcut is created only on a fresh install and on a manual reinstall, never by an automatic update, so a shortcut the user deleted does not come back with each update.
+- **The language.** Before the wizard, a dialog in both languages asks for 简体中文 or English, starting on the system's display language (any Chinese gives Chinese, anything else English). The wizard and the uninstaller then speak the language chosen, and it becomes padmate's first interface language: the installer writes it to `%APPDATA%\padmate\ui\language.json` in the same form the Settings page writes, marked as written by the installer. It writes the file only when there is none or the file holds a line it wrote itself; once the user picks a language in Settings, no reinstall or upgrade changes it. The interface takes the language picked in Settings first, then the file, then Chinese.
+- **The desktop shortcut.** The page after the folder page has one box, "Create a shortcut on the desktop". On a fresh install it starts ticked; over an installation it starts ticked only when the desktop has the shortcut now, so a shortcut the user deleted does not come back. Unticked, no shortcut is made, and one that is there is removed. The Start menu shortcut is always made. The uninstaller removes the desktop shortcut.
+- **Silent installs.** `/S` asks nothing: the language is the system's unless `--language=zh-CN` or `--language=en` names one (that also skips the dialog of a wizard), and the shortcut follows the same default as the box unless `--no-desktop-shortcut` is given. An automatic update (`--updated`) writes no language and leaves the shortcut as it is.
 - **The installation folder.** If the last part of the chosen folder is `padmate`, that is the installation folder; otherwise padmate goes into a `padmate` subfolder of it. When the subfolder was added, the page stays so the user can confirm again; where it goes is always visible before installing. `/D=` of a silent install is used as given.
 - **The folder guard.** The folder must be empty, already hold `padmate.exe` or the uninstaller, or be the installation folder recorded in the registry. A folder with other files is left alone.
 - The installer tries a write first, because electron-builder deletes the old version before writing the new one, and a failed write would leave the user with neither version.
@@ -58,7 +60,8 @@ A person runs `task release:r2`; builds never upload, and the task reads no cred
 ## Costs
 
 - An unsigned installer triggers SmartScreen's "Unknown publisher", and every version builds reputation from zero.
-- The wizard takes one more click than a one-click installer.
+- The wizard takes more clicks than a one-click installer: the language dialog, the folder page and the shortcut page.
+- The interface language is kept in two places, the window's `localStorage` and `language.json`, because only the file can be read by the installer; a pick made before the file existed is copied into it the next time the window starts.
 - Cloudflare has no guarantees on networks in mainland China. Its security features may challenge an unusual User-Agent, which shows as "could not check for updates"; `/latest.yml` and the installers need skip rules.
 - A published installer cannot be overwritten; a fix means a new version.
 
@@ -68,5 +71,8 @@ A person runs `task release:r2`; builds never upload, and the task reads no cred
 - **No trial write, with the installation reporting the error when it fails.** The user would be left with neither the old version nor the new one.
 - **Installing updates automatically when the UI closes, or differential updates.** The first stops mapping while painting; the second has to keep a 135 MB copy.
 - **A PE check of the import table only.** Go executables load APIs at run time, which the import table does not show.
+- **electron-builder's own language selector (`displayLanguageSelector`) and desktop shortcut (`createDesktopShortcut`).** The selector lists only languages of the system's code page and cannot be skipped from the command line; the shortcut is made whatever the box says.
+- **Remembering the shortcut box in the registry.** A shortcut the user deleted by hand would come back with the next reinstall; whether the desktop has it now is what the user last chose.
+- **The installer writing the language only when no file exists.** Then a second install in the other language would change nothing although nobody had picked a language.
 - **A download page with a web page, or another server as the download source.** The first is too verbose, the second too slow.
 - **Ending processes by name with `taskkill`, PowerShell or wmic, or always running `release-all` after quit.** It would kill development builds and portable copies by mistake, or make padmated elsewhere release keys and destroy scripts.

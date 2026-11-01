@@ -971,7 +971,7 @@ JSON-RPC 标准码（如 -32602）之外：
 ### 12.4 状态和保存
 
 - `renderer/editor/editor-store.ts`：映射页和配置设置对话框的编辑器，一个配置一个，同一配置同一时刻只有一个。持有整份 profile 草稿、revision、撤销记录、功能键视图 `view`。纯函数在各 `*-model.ts`。
-- 界面自己的偏好存渲染进程 `localStorage`；守护进程需要知道的设置写 config.json。
+- 界面自己的偏好存渲染进程 `localStorage`；守护进程需要知道的设置写 config.json。语言另外写进 `<userData>\language.json`（`main/ui-language.ts`），一行 `{"language":…,"setBy":"settings"}`，因为安装程序要读它：安装程序把默认语言以 `setBy:"installer"` 写在这里，不是自己写的文件就不动（§15.4）。Main 在窗口绘制前读这个文件（`getLanguage`）；语言先取 `localStorage` 的，其次取文件的，都没有时用 zh-CN；只有 `localStorage` 里有的选择，启动时复制进文件。
 - `status.profileId` 是库 ID，`slots[].profile` 是展示名称，不能拿名称调库 API。
 
 **自动保存**：
@@ -1184,7 +1184,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 `task package:installer VERSION=vX.Y.Z`：版本检查、构建 exe、取固定 `SDL3.dll`、`packageinstaller stage`、`app:build`、electron-builder（`app/scripts/package-installer.mjs`、`app/electron-builder.yml`、`app/build/installer.nsh`）、`packageinstaller verify`。输出在 `dist/installer/`。
 
-- 按用户安装、从不提权，向导式；默认 `%LOCALAPPDATA%\Programs\padmate`；向导里装进所选文件夹的 `padmate` 子文件夹（`installerpkg.WizardDir`）。`padmate.exe` 在根，`resources\bin\` 放 `padmated.exe`、`padmatectl.exe`、`SDL3.dll`。卸载项的 GUID 固定，永不修改。
+- 按用户安装、从不提权，向导式：中英双语的语言对话框、文件夹页、只有“在桌面创建快捷方式”勾选框的一页、进度、完成页。默认 `%LOCALAPPDATA%\Programs\padmate`；向导里装进所选文件夹的 `padmate` 子文件夹（`installerpkg.WizardDir`）。语言和勾选框在 `app/build/padmate-options.nsh`，它的规则和 `installerpkg.InstallerLanguage`、`WritesLanguage`、`DesktopDefault` 一致；electron-builder 不建桌面快捷方式（`createDesktopShortcut: false`），也不问语言（不设 `displayLanguageSelector`）。`padmate.exe` 在根，`resources\bin\` 放 `padmated.exe`、`padmatectl.exe`、`SDL3.dll`。卸载项的 GUID 固定，永不修改。
 - **版本的唯一来源**是发布标签 `vMAJOR.MINOR.PATCH[-PRERELEASE]`。Go 可执行文件报告标签（ldflags）；`padmate.exe`、`app.asar` 和安装包用去掉 `v` 的版本（`extraMetadata.version`，不改 `app/package.json`）。`packageinstaller verify` 读回每一处。
 - **代码签名**默认不签。`PADMATE_SIGN` 取 `none`、`store`、`pfx`、`azure`；签名模式都带 `forceCodeSigning=true`，`electron-builder.yml` 不含证书、密码、指纹、账号。
 - **PE 检查。** `task pe:check` 用 `pecheck` 检查 `bin/padmated.exe` 和 `bin/padmatectl.exe`。`-- -update` 在有意改动后重写清单，评审时看 diff：新增的每一行都是 padmate 多了一个能调用的 Windows 函数。
@@ -1200,7 +1200,9 @@ JSON-RPC 标准码（如 -32602）之外：
 其他规则：
 
 - 完整卸载（不是升级）删除 Run 值（仅当指向本安装目录）、`run` 和 `logs` 文件夹，并询问是否保留 `%APPDATA%\padmate` 里的配置、脚本和设置；静默卸载一律保留。`/D=` 指向放着别的文件的目录时，安装程序以退出码 2 退出（卸载会删整个安装目录）。
-- 更新是 `<安装包> --updated /S --force-run`：静默，不带 `/D=`，最后以当前用户启动 `padmate.exe`。更新下载的 `pending\` 在 `%LOCALAPPDATA%\padmate-updater\`：只有完整卸载递归删整个文件夹，因为更新时正在运行的安装程序就在里面。
+- 不是更新的安装在最后：把所选语言写进 `%APPDATA%\padmate\ui\language.json`，除非文件里是设置里选过的语言（不是它自己写的那两行之一）；把它记在安装注册表项的 `Language` 下给卸载程序用；按勾选框建或删 `$DESKTOP\padmate.lnk`。勾选框全新安装时默认勾上，覆盖安装时只有快捷方式在才默认勾上。完整卸载，以及升级时不带 `--keep-shortcuts` 运行的卸载程序，删除桌面快捷方式。
+- 静默安装：`/S` 用系统界面语言（各种中文算 zh-CN，其余 en）和勾选框的默认值；`--language=zh-CN` 或 `--language=en` 指定语言（向导里也不再弹语言对话框），`--no-desktop-shortcut` 不建快捷方式，已有的删掉。
+- 更新是 `<安装包> --updated /S --force-run`：静默，不带 `/D=`，最后以当前用户启动 `padmate.exe`；不写语言，桌面快捷方式保持原样。更新下载的 `pending\` 在 `%LOCALAPPDATA%\padmate-updater\`：只有完整卸载递归删整个文件夹，因为更新时正在运行的安装程序就在里面。
 - **不要直接启动安装版的 `padmate.exe`**：它启动的守护进程带 `--inject`，用真的 `%APPDATA%\padmate`。测试模式见 §12。
 
 ### 15.5 发布

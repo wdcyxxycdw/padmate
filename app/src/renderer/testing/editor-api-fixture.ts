@@ -16,7 +16,9 @@ import type {
   ProfileSaveResult,
   RawInfo,
   RecentApp,
+  SavedLanguage,
   StartupState,
+  UILanguage,
 } from "../../shared/api";
 import type { OverlayPrefs } from "../../shared/overlay";
 import {
@@ -196,6 +198,9 @@ export function editorAPIFixture() {
     markConfigRepairSeen: vi.fn(async (_backup: string) => {}),
     showConfigBackup: vi.fn(async (_backup: string) => {}),
     setOverlayPrefs: vi.fn(async (_prefs: OverlayPrefs) => {}),
+    // No language file: the window starts in Chinese, or as localStorage says.
+    getLanguage: vi.fn(async (): Promise<SavedLanguage | null> => null),
+    setLanguage: vi.fn(async (_language: UILanguage) => {}),
     // The automatic update (PKG-10): a build that cannot update, the state a
     // development run has. A test of the update dialogs replaces them.
     getUpdateState: vi.fn(async (): Promise<UpdateState> => initialUpdateState),

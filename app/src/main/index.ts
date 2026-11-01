@@ -80,6 +80,7 @@ import {
 } from "./start-failure";
 import { startupHandlers } from "./startup-handlers";
 import { systemSettingsHandlers } from "./system-settings";
+import { LANGUAGE_FILE, LanguageFile, languageHandlers } from "./ui-language";
 import type { UpdateController } from "./update-controller";
 import { updateHandlers } from "./update-handlers";
 import { createUpdates, removeStaleUpdate } from "./update-main";
@@ -472,6 +473,9 @@ function registerHandlers(update: UpdateController): void {
     ),
     // PKG-10: the automatic update; the window sends no address or version.
     ...updateHandlers(update),
+    // The window's language, in its own file, which the installer writes too
+    // (ADR-0018).
+    ...languageHandlers(new LanguageFile(join(browserData, LANGUAGE_FILE))),
     // UI-19: start at sign-in, the daemon's own entry.
     ...startupHandlers(
       (method, params) => manager?.call(method, params),
