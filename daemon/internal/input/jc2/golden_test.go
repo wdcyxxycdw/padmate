@@ -15,7 +15,7 @@ import (
 var update = flag.Bool("update", false, "rewrite the golden files of testdata/golden")
 
 // A capture is the input reports of a real Joy-Con 2 with the steps the owner
-// was asked to do (testdata/capture-*.log). The reports are decoded with Map
+// was asked to do (testdata/capture-*.txt). The reports are decoded with Map
 // in horizontal and in vertical mode, and the events that Diff makes from
 // them are compared with testdata/golden/<case>.txt.
 //
@@ -97,8 +97,8 @@ var captures = []struct {
 	cal  StickCal
 	file string
 }{
-	{"R", SideR, calR, "testdata/capture-R.log"},
-	{"L", SideL, calL, "testdata/capture-L.log"},
+	{"R", SideR, calR, "testdata/capture-R.txt"},
+	{"L", SideL, calL, "testdata/capture-L.txt"},
 }
 
 func TestGolden(t *testing.T) {

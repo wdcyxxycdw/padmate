@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input/jc2win"
 )
 
-// The captures of the spike (jc2/testdata/capture-*.log) are the reports of
+// The captures of the spike (jc2/testdata/capture-*.txt) are the reports of
 // real Joy-Cons 2. This test replays them through the hub, as the reports of
 // a fake link at the times they were captured, and holds the events to the
 // golden files of package jc2, which were made by mapping and diffing the same
@@ -100,7 +100,7 @@ func TestHubReplaysCaptures(t *testing.T) {
 		{"R", jc2.SideR, addrR1, serR1, captureCalR},
 		{"L", jc2.SideL, addrL1, serL1, captureCalL},
 	} {
-		lines := readCaptureLines(t, filepath.Join("jc2", "testdata", "capture-"+c.name+".log"))
+		lines := readCaptureLines(t, filepath.Join("jc2", "testdata", "capture-"+c.name+".txt"))
 		for _, vertical := range []bool{false, true} {
 			mode := jc2.Horizontal
 			if vertical {
