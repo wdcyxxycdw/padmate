@@ -18,6 +18,7 @@
 - 用真实的开放许可 3D 模型（CC BY 4.0，署名在 `app/src/renderer/controller/assets/ATTRIBUTION.md`），固定正面不可旋转，主页面不滚动。
 - 每个物理控件一条引线和一个原生 HTML 按钮，键盘可达。摇杆是上下两格“旋转”“点按”。
 - 标签按当前手柄 SDL 报告的按键给（`buttonMask`、`axisMask`，`padHasControl`）：手柄没有的键不给，比如横握的单只 Joy-Con 没有十字键、右摇杆、扳机和 −。附加键（Share、Capture、麦克风键、Elite 和 Edge 的背键、Edge 的 Fn 键、Joy-Con 的 SL/SR 或横握时的 L/ZL）在手柄下方排成一排，左手的在左、右手的在右，整排夹在两列标签之间。SDL 还没报告按键时按标准手柄给，PS4、PS5 另有触摸板。外形有四种：PS5 用 DualSense，PS4 和 PS3 用 DualShock 4，Joy-Con 用 Joy-Con 的模型，其余（Xbox、Switch Pro、未知手柄）借用 Xbox。横握的单只 Joy-Con 横着显示，直握的竖着显示。左右两只同时连着时是一个完整手柄（SDL 自己合并），并排显示成一对。
+- Joy-Con 2 有自己的模型，`joycon2-left.glb` 和 `joycon2-right.glb`，按 USB 编号认出：厂商 `0x057e`，产品 `0x2066`（右）、`0x2067`（左）、`0x2068`（一对）；Switch 1 的 Joy-Con 仍用 Switch OLED 的模型。这两份文件取自 NAIT Studio 的 Switch 2 主机模型（CC BY 4.0，“Nintendo Switch 2 Realistic 3D Model”），只保留两只 Joy-Con 2，每只放进自己的坐标系，拆成分别命名的部件，每个部件一份材质。原模型没有贴图，外观由材质的基础色决定。顶点位置、法线和索引量化存储（`KHR_mesh_quantization`；这个素材不用 meshopt），触点针脚和指示灯去掉，摇杆的轴心移到它的底部，倾斜才绕着正确的点。两份文件约 270 KB 和 296 KB。原模型没有 SL、SR、ZL、ZR 的几何，这四个键的引线指向导轨和肩部上的固定位置，文件里用同名的空节点标出，界面只用它放引线。右手那只的 C 键显示为“C 键”。
 - CSP 保持 `connect-src 'none'`，所以模型解码不用 `fetch`，也不依赖外网。
 - 渲染舞台在应用会话里常驻，再进映射页只是把 canvas 放回去，仅在换模型、context 丢失或失败时释放，因为耗时主要在纹理上传。
 
@@ -73,7 +74,7 @@ config.json 有错时，先备份成 `config.broken-<时间>.json`（从不覆�
 
 ## 代价
 
-- Three.js 和五份 GLB（约 18 MB）增大构建产物，舞台常驻占一份 GPU 内存。
+- Three.js 和七份 GLB（约 19 MB）增大构建产物，舞台常驻占一份 GPU 内存。
 - 修改即保存没有“放弃”，误改靠 Ctrl+Z，撤销不跨重启。
 - 手柄状态不明时，手柄发到 padmate 窗口的 Ctrl+Z 不会撤销。
 - 坏设置文件被修复后，改掉的设置只能靠备份找回。

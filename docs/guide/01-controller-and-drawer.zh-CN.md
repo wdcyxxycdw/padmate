@@ -15,7 +15,7 @@
 - 手柄下方一排是附加键：Xbox Series 的分享键、DualSense 的麦克风键、Switch 的截图键，以及 Elite、Edge 的背键和 Fn 键、Joy-Con 的 SL 和 SR。手柄没有这些键，就没有这一排。
 - 单只 Joy-Con 横握时，只有一根摇杆、四个面键、SL、SR、L 和 ZL（右手那只是 R 和 ZR），以及 − 或 +。Xbox、PS 和 Home 键不能映射；横握的左手 Joy-Con 的截图键，SDL 也报成 Home 键，所以同样不能映射。
 - 单只 Joy-Con 横握时，图上横着显示。左右两只 Joy-Con 同时连着时，会自己合成一个完整手柄，不需要设置，图上显示成一对。只剩一只时，它又是单只 Joy-Con。
-- Joy-Con 2（Switch 2 的 Joy-Con）按 [Joy-Con 2](15-joycon-2.zh-CN.md) 里的步骤连接。它的键和 Joy-Con 相同，右手那只另有一个 C 键；左右各一只 Joy-Con 2 同时连着时同样会自己合成一个完整手柄（不会和 Switch 1 的 Joy-Con 混在一起）。
+- Joy-Con 2（Switch 2 的 Joy-Con）按 [Joy-Con 2](15-joycon-2.zh-CN.md) 里的步骤连接。它的键和 Joy-Con 相同，右手那只另有一个 C 键；左右各一只 Joy-Con 2 同时连着时同样会自己合成一个完整手柄（不会和 Switch 1 的 Joy-Con 混在一起）。图上 Joy-Con 2 用它自己的模型，Switch 1 的 Joy-Con 仍用原来的。Joy-Con 2 的模型上没有 SL、SR、ZL、ZR 可指，它们的标签指向导轨和肩部上的固定位置。C 键的标签是 C 键。
 
 ## 按键抽屉
 
