@@ -36,7 +36,7 @@ const buttons = () =>
     (button) => button.textContent,
   );
 
-describe("the update dialogs (PKG-10, ADR-0018)", () => {
+describe("the update dialogs (ADR-0018)", () => {
   it("show nothing while there is nothing to say", async () => {
     await show("none");
     expect(screen.queryByRole("dialog")).toBeNull();

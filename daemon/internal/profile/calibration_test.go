@@ -14,7 +14,7 @@ func calibrationConfig(cal string) string {
 	return `{"schemaVersion":0,"devices":{"` + devKey + `":{"calibration":` + cal + `}}}`
 }
 
-// TestConfigCalibration: a device's calibration (IN-14) holds the stick
+// TestConfigCalibration: a device's calibration holds the stick
 // members it sets, and nothing else.
 func TestConfigCalibration(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"devices":{"` + devKey + `":{"ignored":true,"calibration":{"ls":{"deadzone":0.22,"saturation":0.9},"rs":{"deadzone":0.18}}},"other":{"calibration":{"rs":{"saturation":0.8}}},"plain":{"ignored":false}}}`))

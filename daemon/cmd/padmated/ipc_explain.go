@@ -42,7 +42,7 @@ type rpcExplanation struct {
 	ProfileID       string `json:"profileId"`
 	Name            string `json:"name"`
 	DeclarativeOnly bool   `json:"declarativeOnly"`
-	// FunctionKey is the function key config.json chooses (MAP-27, ADR-0012),
+	// FunctionKey is the function key config.json chooses (ADR-0012),
 	// "back", "start" or "guide": the one for every slot, and the key the
 	// FunctionSet of each slot belongs to.
 	FunctionKey string `json:"functionKey"`

@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// The scripts' hud API (SCR-22) over IPC: host.has("hud") follows a client
+// The scripts' hud API over IPC: host.has("hud") follows a client
 // subscribing to hud, a toast is a hud event, and the panels are in the slot
 // object of the engine.activity state event until the script removes them or
 // its runtime stops (here: a pause).

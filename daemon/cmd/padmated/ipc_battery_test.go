@@ -18,7 +18,7 @@ func powerEvent(id input.DeviceID, state input.PowerState, percent int) input.Ev
 	return input.Event{Device: id, Kind: input.DevicePower, Power: &p}
 }
 
-// TestDevicesListCarriesBattery (IN-12): devices.list and status.get show
+// TestDevicesListCarriesBattery: devices.list and status.get show
 // the latest power of each gamepad as "battery":{"state","percent"}; the
 // member is absent until T-input read one, the percent is left out when the
 // gamepad does not report it, and a gamepad that is removed takes it along.
@@ -119,7 +119,7 @@ func TestInputTopicNeverCarriesPower(t *testing.T) {
 }
 
 // TestLiveAsksForPowerEvents: padmated opens the Source with PowerEvents, the
-// switch that makes T-input read the batteries (IN-12).
+// switch that makes T-input read the batteries.
 func TestLiveAsksForPowerEvents(t *testing.T) {
 	var got input.Options
 	tl, _ := sessionStart(t, func(cfg *liveConfig) {

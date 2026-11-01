@@ -1,4 +1,4 @@
-# Raw Input and HIDAPI (SPK-01): Pad A holds east and
+# Raw Input and HIDAPI: Pad A holds east and
 # south when it is unplugged. SDL sends their ups, then removed. The pad
 # comes back with a new id while both are still held, and SDL reports a
 # down of each 65 ms after added (HIDAPI; about 2 ms on Raw Input). They

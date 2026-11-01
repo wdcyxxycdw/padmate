@@ -20,7 +20,7 @@ function host(locked: boolean) {
 const source = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("one window of padmate per set of browser data (PKG-10)", () => {
+describe("one window of padmate per set of browser data", () => {
   it("is the first instance when the lock is free, and shows its window for a second", () => {
     const { app, handlers } = host(true);
     const show = vi.fn();

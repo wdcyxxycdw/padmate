@@ -1,4 +1,4 @@
-// The key preview line of the mapping page (UI-44): which control the pad
+// The key preview line of the mapping page: which control the pad
 // pressed and what it sends, from an engine decision. Nothing here talks
 // to the daemon.
 import { macroName } from "../../shared/macro-names";
@@ -142,11 +142,11 @@ function sequenceSteps(list: string, language: Language | undefined): string[] {
 /**
  * What the action sends, as the line shows it: the shortcut of a keys
  * action ("tap Ctrl+Z", "hold Shift", "tap [Ctrl+K,S]"), the name of the
- * script a macro action runs ("macro 复制全部.ts", without the extension,
- * SCR-50), the label or name of a legacy script action, a precision
- * action with its share of the speed ("mouse precision 0.3", MOU-05) or the
- * key hints action ("hud hints", HUD-03), a text ('text "hi"', OUT-21) or a
- * sequence ('sequence: Ctrl+A, wait 100, text "hi"', MAP-22). null for other
+ * script a macro action runs ("macro 复制全部.ts", without the
+ * extension), the label or name of a legacy script action, a precision
+ * action with its share of the speed ("mouse precision 0.3") or the
+ * key hints action ("hud hints"), a text ('text "hi"') or a
+ * sequence ('sequence: Ctrl+A, wait 100, text "hi"'). null for other
  * actions (layers, profiles, a pointer jump). language names the wheel and
  * media keys ("Ctrl+滚轮↑", "音量加").
  */

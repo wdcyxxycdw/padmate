@@ -84,7 +84,7 @@ function MsRow({
 }
 
 /**
- * Settings → 按键判定 (UI-19): config.json's default hold and multi-tap
+ * Settings → 按键判定: config.json's default hold and multi-tap
  * times, under every profile's own. They apply when saved.
  */
 export function TimingSection({

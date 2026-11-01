@@ -14,7 +14,7 @@ import { createPadmateStore } from "./store";
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
-describe("where the overlay's settings are kept (HUD-05)", () => {
+describe("where the overlay's settings are kept", () => {
   it("uses keys of its own in the UI's localStorage, next to the language", () => {
     expect(overlayStorageKeys).toEqual({
       toasts: "padmate.overlay.toasts",
@@ -135,7 +135,7 @@ describe("where the overlay's settings are kept (HUD-05)", () => {
   });
 });
 
-describe("the store pushes the overlay's settings to Main (HUD-05)", () => {
+describe("the store pushes the overlay's settings to Main", () => {
   function make(overrides: Partial<PadmateAPI> = {}) {
     const api = {
       ...editorAPIFixture(),

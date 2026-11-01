@@ -1,4 +1,4 @@
-// The "添加软件" menu of the profiles page (UI-18, PRO-16, UI-46): pick a
+// The "添加软件" menu of the profiles page: pick a
 // window, choose from the installed apps, or browse to an .exe. Nothing is
 // typed in.
 import type { Language } from "../../state/store";

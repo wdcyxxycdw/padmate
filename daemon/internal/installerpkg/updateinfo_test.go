@@ -169,7 +169,7 @@ func latestWithoutSize(name, sum, version string) string {
 	return fmt.Sprintf("version: %s\nfiles:\n  - url: %s\n    sha512: %s\npath: %s\nsha512: %s\nreleaseDate: '2026-10-24T06:56:06.100Z'\n", version, name, sum, name, sum)
 }
 
-// electron-builder writes no size (PKG-10, measured on a real build): the check
+// electron-builder writes no size (measured on a real build): the check
 // then has the version, the file name and the SHA-512 to go on, and all of them
 // are still held to the installer. A size that is written is still compared.
 func TestCheckUpdateInfoWithoutSize(t *testing.T) {

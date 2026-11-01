@@ -77,7 +77,7 @@ func (l *exitListener) received(t *testing.T) []string {
 
 // TestTrayQuitTellsUIBeforeClosing: choosing 退出 in the tray writes
 // daemon.exiting {"reason":"tray"} to the UI's connection before the
-// daemon closes it (DMN-22), so the UI quits too; the keys are released
+// daemon closes it, so the UI quits too; the keys are released
 // as on every exit.
 func TestTrayQuitTellsUIBeforeClosing(t *testing.T) {
 	e, err := ipc.Listen(`\\.\pipe\padmate-tray-exit-`+rand.Text(), t.TempDir())

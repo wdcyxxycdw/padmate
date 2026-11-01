@@ -56,7 +56,7 @@ linters:
               desc: pure packages never log; errors flow out through Slot.Errors
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/winsession
               desc: pure packages must not depend on the session thread; padmated passes its reasons to the supervisor
-        # winsession (DMN-09) only reports the session's state: padmated
+        # winsession only reports the session's state: padmated
         # wires it to the supervisor and the output, so it depends on none
         # of the mapping's packages.
         winsession:
@@ -80,7 +80,7 @@ linters:
               desc: winsession does not measure latency
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/winhook
               desc: winsession's thread has its own message loop; the hook thread is winhook's
-        # The SPK-03 spike is throwaway (spike/doc.go): only its command
+        # The goja spike is throwaway (spike/doc.go): only its command
         # imports it.
         spike:
           list-mode: lax
@@ -90,8 +90,8 @@ linters:
             - "!**/tools/spk03/**"
           deny:
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/script/spike
-              desc: the SPK-03 spike is throwaway; write production code in internal/script instead
-        # simtest is the test harness (ENG-19, ARCHITECTURE §14): only tests
+              desc: the goja spike is throwaway; write production code in internal/script instead
+        # simtest is the test harness (ARCHITECTURE §14): only tests
         # import it.
         simtest:
           list-mode: lax
@@ -113,7 +113,7 @@ linters:
           deny:
             - pkg: github.com/wdcyxxycdw/padmate/daemon/internal/injecttest
               desc: injecttest injects real keys; import it from _test.go files only
-        # winsessiontest sends session messages to the session window (DMN-09):
+        # winsessiontest sends session messages to the session window:
         # only tests import it, so that no command fakes a lock or a sign-out.
         winsessiontest:
           list-mode: lax

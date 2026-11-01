@@ -519,7 +519,7 @@ describe("the toaster", () => {
     expect(shown.at(-1)).toBe("已暂停");
   });
 
-  it("shows nothing with toasts off, and the changes meanwhile are not told when they are on again (HUD-05)", () => {
+  it("shows nothing with toasts off, and the changes meanwhile are not told when they are on again", () => {
     const { toaster, shown } = make();
     toaster.handle(state(false, { slot: 0, profile: "绘画" }));
     toaster.configure({ toasts: false });
@@ -596,7 +596,7 @@ describe("the toaster", () => {
   });
 });
 
-describe("a script's toast (SCR-22)", () => {
+describe("a script's toast", () => {
   // The event the daemon publishes for hud.toast.
   const hud = (data: unknown): DaemonEvent => ({ topic: "hud", data });
   const toast = (text: string, ms = 1500, slot = 0) =>

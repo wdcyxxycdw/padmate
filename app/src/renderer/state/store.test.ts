@@ -94,7 +94,7 @@ function bridge() {
   };
 }
 
-/** The four feedback switches at their default: on (UI-27). */
+/** The four feedback switches at their default: on. */
 const allOn = { rumble: true, led: true, pause: true, lowBattery: true };
 
 describe("live renderer state", () => {
@@ -172,7 +172,7 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("identifies a controller by its key, and reports a failure in the shell's alert (IN-13)", async () => {
+  it("identifies a controller by its key, and reports a failure in the shell's alert", async () => {
     const b = bridge();
     const store = createPadmateStore(b.api);
     const stop = await store.getState().start();
@@ -231,7 +231,7 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("keeps the last press that ran an action for the key preview (UI-44)", async () => {
+  it("keeps the last press that ran an action for the key preview", async () => {
     const b = bridge();
     b.api.getStatus.mockImplementation(async () => ({
       ...status,
@@ -482,7 +482,7 @@ describe("live renderer state", () => {
       ).toBe(0);
   });
 
-  it("reads the feedback switches (UI-27): on unless the file says false", () => {
+  it("reads the feedback switches: on unless the file says false", () => {
     const read = (feedback: unknown) =>
       readBasicSettings({
         text: JSON.stringify({ schemaVersion: 0, feedback }),
@@ -501,7 +501,7 @@ describe("live renderer state", () => {
     expect(read({ rumble: "no", led: 0, pause: null })).toMatchObject(allOn);
   });
 
-  it("saves one feedback switch alone, touching nothing else (UI-27)", async () => {
+  it("saves one feedback switch alone, touching nothing else", async () => {
     const b = bridge();
     b.api.getConfig.mockResolvedValueOnce({
       text: '{"schemaVersion":0,"enabled":false,"timing":{"holdMs":300}}',
@@ -541,7 +541,7 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("saves a feedback switch over what changed elsewhere after a conflict (UI-27)", async () => {
+  it("saves a feedback switch over what changed elsewhere after a conflict", async () => {
     const b = bridge();
     const store = createPadmateStore(b.api);
     const stop = store.getState().start();
@@ -729,7 +729,7 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("keeps the battery of a device across the periodic state updates (IN-12)", async () => {
+  it("keeps the battery of a device across the periodic state updates", async () => {
     const b = bridge();
     const device = (id: number, battery?: DeviceBattery): DeviceEntry => ({
       info: {
@@ -793,7 +793,7 @@ describe("live renderer state", () => {
     stop();
   });
 
-  it("merges the batteries of a state event into the devices, by connection ID (IN-12)", async () => {
+  it("merges the batteries of a state event into the devices, by connection ID", async () => {
     const b = bridge();
     const device = (id: number, battery?: DeviceBattery): DeviceEntry => ({
       info: {
@@ -1420,7 +1420,7 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("exports a profile under its name in the UI (PRO-20)", async () => {
+  it("exports a profile under its name in the UI", async () => {
     const { b, store, stop } = await library((b) =>
       b.api.listProfiles.mockResolvedValue([
         { id: "default", name: "Stored", default: true },
@@ -1499,7 +1499,7 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("imports a profile file and reads the list again (PRO-20)", async () => {
+  it("imports a profile file and reads the list again", async () => {
     const { b, store, stop } = await library();
     const listed = b.api.listProfiles.mock.calls.length;
     b.api.importProfile.mockResolvedValueOnce({
@@ -1671,7 +1671,7 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("never deletes or renames the fixed default (PRO-28)", async () => {
+  it("never deletes or renames the fixed default", async () => {
     const { b, store, stop } = await library((b) =>
       b.api.listProfiles.mockResolvedValue([
         { id: "default", name: "默认", default: true },
@@ -1946,7 +1946,7 @@ describe("profile library state", () => {
     stop();
   });
 
-  it("keeps Windows' own programs out of the recent apps (UI-46)", async () => {
+  it("keeps Windows' own programs out of the recent apps", async () => {
     const { b, store, stop } = await library();
     const searchHost = {
       exe: "SearchHost.exe",
@@ -2117,7 +2117,7 @@ describe("profile library state", () => {
   });
 });
 
-describe("a repaired config.json (PRO-29)", () => {
+describe("a repaired config.json", () => {
   const repair = {
     backup: "config.broken-20261015-191600.json",
     path: "C:dataconfig.broken-20261015-191600.json",

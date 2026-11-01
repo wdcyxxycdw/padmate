@@ -11,7 +11,7 @@ import type {
 import { startFailureText } from "../shared/start-failure-text";
 import type { EditorHandler } from "./library-handlers";
 
-// Why the mapping service did not start (UI-45, ADR-0001): padmated writes
+// Why the mapping service did not start (ADR-0001): padmated writes
 // --startup-report FILE when live mode does not start, and Main reads it
 // once padmated has exited. The report is data from another program: Main
 // keeps only the known fields, bounded, and uses its paths for display and
@@ -208,7 +208,7 @@ export function currentFailure(
 }
 
 /**
- * Main's dialog when the page cannot say why (UI-45). Main does not know
+ * Main's dialog when the page cannot say why. Main does not know
  * the page's language, so it says it in both, as its other boxes do.
  */
 export function failureDialogText(failure: StartFailure): {
@@ -239,7 +239,7 @@ export type PageRecovery = "dialog" | "reload" | "unavailable" | "none";
  * (broken) or its renderer went away while the start had failed (gone):
  * a failed start is the dialog's; a connection, or a lost one, needs the
  * page, so a page that went away loads again and one that never loaded
- * cannot show (UI-45).
+ * cannot show.
  */
 export function pageRecovery(
   phase: ConnectionState["phase"],
@@ -257,7 +257,7 @@ export function uiFailureText(packaged: boolean): string {
     : "无法显示界面。请运行 task app:install 和 task app:prepare 后重试。\nCould not show the UI. Run task app:install and task app:prepare, then retry.";
 }
 
-/** The start-failure page's buttons (UI-45); none takes an argument. */
+/** The start-failure page's buttons; none takes an argument. */
 export function startFailureHandlers(
   options: StartFailureOptions,
 ): Record<string, EditorHandler> {

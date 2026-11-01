@@ -4,7 +4,7 @@ import {
   overlayOpacityFrom,
 } from "../../shared/overlay";
 
-// The overlay's settings (HUD-05, ADR-0014) are the UI's own, like its
+// The overlay's settings (ADR-0014) are the UI's own, like its
 // language: they are kept in this window's localStorage, not in config.json or
 // a profile. The store pushes them to Main, which acts on them (store.ts).
 

@@ -10,7 +10,7 @@ import type { Profile } from "../../shared/generated/schema";
 import { createEditorStore, type EditorStore } from "./editor-store";
 
 // The profile a hand-written profile file extends, which the editor reads next
-// to it (PRO-19, ADR-0012, ADR-0013): the UI does not make profiles that
+// to it (ADR-0012, ADR-0013): the UI does not make profiles that
 // extend another any more, but a file that does still works.
 
 const parentProfile: Profile = {

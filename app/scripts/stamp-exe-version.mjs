@@ -1,5 +1,5 @@
 // Sets the numeric file version of padmate.exe to the release's three numbers
-// (PKG-06) and signs the file again (PKG-09). electron-builder runs this as its
+// and signs the file again. electron-builder runs this as its
 // `afterSign` hook, after it has edited the Electron executable's resources and
 // signed it, and before NSIS packs it.
 //

@@ -14,8 +14,8 @@ const keyDownBit uint16 = 0x8000
 const mapvkVscToVkEx = 3
 
 // AsyncKeyDown reports whether GetAsyncKeyState has e's key down. It is
-// the default LoopOptions.KeyDown of the startup sweep of the held-key log
-// (OUT-14). A key sent by VK is looked up by that VK, a modifier or a named
+// the default LoopOptions.KeyDown of the startup sweep of the held-key log.
+// A key sent by VK is looked up by that VK, a modifier or a named
 // key by its US VK, which no layout changes, and any other key by its scan
 // code on the keyboard layout of the calling thread. A mouse button is looked
 // up by its VK (VK_LBUTTON, ...); GetAsyncKeyState reports the physical

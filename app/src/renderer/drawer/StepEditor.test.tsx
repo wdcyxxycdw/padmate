@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The step editor of the key drawer (UI-31): the steps of a sequence, a
+// The step editor of the key drawer: the steps of a sequence, a
 // shortcut or a wait each (ADR-0013), and the choices around them.
 import {
   cleanup,
@@ -43,7 +43,7 @@ function captureAPI() {
   return { api, ...fakeCapture(api) };
 }
 
-/** Types into a field and leaves it, which commits the text (UI-43). */
+/** Types into a field and leaves it, which commits the text. */
 function commit(field: Element, value: string) {
   fireEvent.change(field, { target: { value } });
   fireEvent.blur(field);
@@ -389,7 +389,7 @@ it("keeps the other steps when one is edited", () => {
   });
 });
 
-it("records a media key from the keyboard and shows it by name (OUT-20)", async () => {
+it("records a media key from the keyboard and shows it by name", async () => {
   const { record } = captureAPI();
   render(<Draft initial={{ press: { type: "keys", keys: "" } }} />);
   await record("VolumeUp");

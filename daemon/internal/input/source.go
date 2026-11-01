@@ -57,7 +57,7 @@ type Options struct {
 	// "default" preset. A hint that is also an environment variable keeps
 	// the environment's value, which SDL gives priority.
 	Hints []Hint
-	// OnCombo turns on combo detection (DMN-07): when a gamepad has held
+	// OnCombo turns on combo detection: when a gamepad has held
 	// its DefaultCombo for the hold time, T-input calls OnCombo, then
 	// sends a ComboHeld event, which is never dropped. The grip of a
 	// single Joy-Con comes from SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS as
@@ -72,7 +72,7 @@ type Options struct {
 	// ComboHold replaces ComboHold as the hold time of the combos, for
 	// tests; 0 or less keeps ComboHold.
 	ComboHold time.Duration
-	// ReceiverTimeout turns on the receiver watchdog (IN-30, ADR-0002)
+	// ReceiverTimeout turns on the receiver watchdog (ADR-0002)
 	// with this timeout: T-input reads the HID reports of every Switch Pro
 	// protocol device on USB (057e:2009, SDL's HIDAPI driver), and once one
 	// has proven that it reports while its input does not change, reports
@@ -82,7 +82,7 @@ type Options struct {
 	// the watchdog off, as "padmatectl monitor", "record" and spk01 do,
 	// which then show what SDL reports; a timeout below 100ms is an error.
 	ReceiverTimeout time.Duration
-	// PowerEvents turns on DevicePower events (IN-12): T-input reads the
+	// PowerEvents turns on DevicePower events: T-input reads the
 	// power of every gamepad when it connects and when it comes back from
 	// the receiver watchdog's removal, sends SDL's battery events on, and
 	// reads every 30 s in case a driver sends none; it sends a DevicePower
@@ -93,7 +93,7 @@ type Options struct {
 	// PowerPollEvery is how often T-input reads the power with
 	// PowerEvents on; 0 means every 30 s. Tests shorten it.
 	PowerPollEvery time.Duration
-	// Mappings are the custom gamepad mappings (IN-18, ADR-0012): SDL mapping
+	// Mappings are the custom gamepad mappings (ADR-0012): SDL mapping
 	// strings, at most one for each GUID, that SDL is to read joysticks with.
 	// nil leaves them alone, as "padmatectl monitor" and "record" do. A non-nil
 	// list, also an empty one, makes Open write them to a database file in the
@@ -191,7 +191,7 @@ type Source struct {
 }
 
 // deviceKind says how T-input reads a device. SDL changes it when a mapping
-// is added or taken away (IN-18), so it is not fixed for a device's life.
+// is added or taken away, so it is not fixed for a device's life.
 type deviceKind uint8
 
 const (
@@ -224,7 +224,7 @@ type device struct {
 	// events that repeat the last value.
 	axes [sdl.GAMEPAD_AXIS_COUNT]int16
 	// beat is the heartbeat source of a device that the receiver watchdog
-	// watches, and nil for another (IN-30); dog is its watchdog. dormant is
+	// watches, and nil for another; dog is its watchdog. dormant is
 	// set once the watchdog has reported it removed, until it comes back.
 	// statsAt is when its statistics were last logged.
 	beat    *hidBeat
@@ -316,7 +316,7 @@ func Open(opts Options) (*Source, error) {
 	}
 	// The first latency.Now looks up QueryPerformanceCounter and the first Freq
 	// QueryPerformanceFrequency: both are done here, so that T-input's stamps
-	// and T-output's Sub (DMN-15) allocate nothing.
+	// and T-output's Sub allocate nothing.
 	_, _ = latency.Now(), latency.Freq()
 	ready := make(chan error, 1)
 	go s.run(hints, ready)
@@ -391,7 +391,7 @@ const maxTickSamples = 1024
 // SampleTicks reads SDL_GetTicksNS, the clock of Event.Time, n times on
 // T-input, each between two latency.Now reads, and returns the readings
 // with SDL_GetPerformanceFrequency. It lets a caller map Event.Time onto
-// latency Stamps with latency.CalibrateSDL (ENG-11). n must be in
+// latency Stamps with latency.CalibrateSDL. n must be in
 // 1..1024. It returns ErrClosed once the Source is closed.
 func (s *Source) SampleTicks(n int) (freq int64, pairs []latency.TicksPair, err error) {
 	if n < 1 || n > maxTickSamples {
@@ -580,7 +580,7 @@ func (s *Source) VerticalJoyCons() bool {
 
 // RepickCombos asks the combo watch on T-input to pick every device's
 // combo again (ComboWatch.Repick), through ComboFor, which now gives
-// another combo: padmated calls it once config.json changed them (UI-19).
+// another combo: padmated calls it once config.json changed them.
 // A hold under way does not fire; the new combo fires once all its
 // members are pressed again. It does nothing without combo detection, and
 // returns ErrClosed once the Source is closed.
@@ -649,7 +649,7 @@ func (s *Source) loop() {
 		s.flush()
 		s.flushRaw()
 		if sdl.WaitEventTimeout(&ev, waitMS) {
-			s.stamp = latency.Now() // the start of the latency statistics (DMN-15)
+			s.stamp = latency.Now() // the start of the latency statistics
 			s.handle(&ev)
 			now := time.Now()
 			s.advanceEffects(now)
@@ -749,7 +749,7 @@ func (s *Source) handle(ev *sdl.Event) {
 		s.handlePower(ev.JoyBatteryEvent())
 	case sdl.EVENT_GAMEPAD_REMOVED:
 		// SDL sends this when the device is gone, and also when a mapping is
-		// taken away (IN-18): then SDL still lists the joystick. Whether it is a
+		// taken away: then SDL still lists the joystick. Whether it is a
 		// gamepad is looked at now, not when SDL queued the event: a mapping that
 		// was taken away and added again before T-input got here, as
 		// SetMappings does for the mappings that stay, is a remap (and SDL
@@ -830,7 +830,7 @@ func (s *Source) handle(ev *sdl.Event) {
 
 // addGamepad opens the gamepad id and reports it, once. SDL only sends
 // gamepad button and axis events for an open gamepad. A joystick that was
-// reported without a mapping and has one now (IN-18) is reported again, as a
+// reported without a mapping and has one now is reported again, as a
 // gamepad with the same id: the consumer took the first report for a device
 // that no slot maps, and learns that it is a gamepad now. The raw events it
 // was asked for go on.
@@ -930,7 +930,7 @@ func listed(id sdl.JoystickID) bool {
 }
 
 // downgrade turns the gamepad d, which SDL no longer reads as one because a
-// mapping was taken away (IN-18), into a joystick without a mapping that
+// mapping was taken away, into a joystick without a mapping that
 // is still connected: the consumer is told of its removal and then of the
 // joystick, with the same id. The raw events it was asked for go on.
 func (s *Source) downgrade(d *device, t uint64) {
@@ -1034,7 +1034,7 @@ func (s *Source) remove(id sdl.JoystickID, t uint64) {
 // is dropped and counted.
 //
 // A device is reported with one id for as long as it is connected, but more
-// than once when its mapping changes (IN-18): a joystick that gets one is
+// than once when its mapping changes: a joystick that gets one is
 // reported again as a gamepad, and a gamepad that loses it is removed and
 // reported as a joystick. A DeviceRemoved takes the DeviceAdded events of its
 // device that still wait out: they are of no use to a consumer that is told

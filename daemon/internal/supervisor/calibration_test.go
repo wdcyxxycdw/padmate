@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the stick calibration of a controller (IN-14) across slots.
+// Tests of the stick calibration of a controller across slots.
 
 // calProgram has a left stick deadzone of 0.4 and binds ls.right to a held
 // Space.

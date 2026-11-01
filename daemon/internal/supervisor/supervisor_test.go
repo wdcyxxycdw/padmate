@@ -248,7 +248,7 @@ func at(msec int, e input.Event) input.Event {
 }
 
 // TestReclaim: the gamepad a hand-off came from takes the slot back when it
-// reconnects before the one it was handed to pressed a button (IN-05). The
+// reconnects before the one it was handed to pressed a button. The
 // slot forgets the stand-in, releasing what it holds, before it learns of
 // the gamepad that came back; the stand-in waits again, first in line. The
 // gamepad that came back is provisional until its first press.
@@ -369,7 +369,7 @@ func TestHandoffConfirmed(t *testing.T) {
 
 // TestTakeOver: a gamepad that waits behind a stand-in that pressed no
 // button, such as an idle gamepad that stays connected, takes the slot
-// over with a press (IN-05). The slot forgets the stand-in, releasing what
+// over with a press. The slot forgets the stand-in, releasing what
 // it holds, learns of the gamepad that pressed, with the buttons it held
 // before, and then maps the press; the slot is its own, and the stand-in
 // waits again, first.
@@ -1422,7 +1422,7 @@ func TestSlotsSharedKeyRetry(t *testing.T) {
 	h.expect("+Space@0 -Space@30 +Space@30 -Space@40")
 }
 
-// TestSlotsMenuMask: the menu mask (OUT-08) goes by the one keyboard that
+// TestSlotsMenuMask: the menu mask goes by the one keyboard that
 // every slot shares. Pad A's lone Alt is masked when it goes up, but not
 // after Pad B pressed a key while it was down.
 func TestSlotsMenuMask(t *testing.T) {

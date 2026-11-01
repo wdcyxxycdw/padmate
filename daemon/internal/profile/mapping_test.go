@@ -192,7 +192,7 @@ func FuzzSetDeviceMappings(f *testing.F) {
 }
 
 // TestRepairConfigDropsABadMapping: a mapping that cannot work resets that
-// member only (PRO-29), so one bad string does not cost the device's other
+// member only, so one bad string does not cost the device's other
 // settings.
 func TestRepairConfigDropsABadMapping(t *testing.T) {
 	a := mapText(mapGUIDA, "a:b0")

@@ -9,7 +9,7 @@ import { closeApplication, placeWindow } from "./helpers";
 
 const run = promisify(execFile);
 
-// PKG-03: the application as the installer lays it out, started in its test
+// The application as the installer lays it out, started in its test
 // mode. PADMATE_TEST_PACKAGED_APP names an installed or unpacked padmate.exe
 // (dist\installer\win-unpacked\padmate.exe of task package:installer, or the
 // installed one); without it this test is skipped. The application keeps to
@@ -172,7 +172,7 @@ test("the packaged application starts its bundled daemon, shows the controller a
     await page.screenshot({ path: info.outputPath("packaged-mapping.png") });
 
     // One version: the daemon says the version the package.json inside
-    // app.asar has (PKG-06), and the settings page shows it.
+    // app.asar has, and the settings page shows it.
     expect(status.version.replace(/^v/, "").split(" ")[0]).toBe(facts.version);
     await page.getByRole("button", { name: "设置", exact: true }).click();
     await expect(

@@ -885,7 +885,7 @@ describe("profile IDs and names", () => {
     ).toEqual(["a", "w"]);
   });
 
-  it("names the fixed default by its ID (PRO-28)", () => {
+  it("names the fixed default by its ID", () => {
     expect(DEFAULT_PROFILE_ID).toBe("default");
     expect(isDefaultProfile("default")).toBe(true);
     expect(isDefaultProfile("Default")).toBe(false);
@@ -1012,7 +1012,7 @@ describe("failures", () => {
     );
   });
 
-  it("explains a profile file that was refused (PRO-20)", () => {
+  it("explains a profile file that was refused", () => {
     expect(
       libraryFailure({
         message: "profile archive: newer",
@@ -1062,7 +1062,7 @@ describe("failures", () => {
   });
 });
 
-describe("an AntiMicroX file that was refused (PRO-21)", () => {
+describe("an AntiMicroX file that was refused", () => {
   it("keeps the reason and the daemon's words", () => {
     expect(
       libraryFailure({
@@ -1133,7 +1133,7 @@ describe("an AntiMicroX file that was refused (PRO-21)", () => {
   });
 });
 
-describe("profiles that extend others (PRO-19, ADR-0013)", () => {
+describe("profiles that extend others (ADR-0013)", () => {
   it("names a profile by its library ID", () => {
     const entry = (id: string, rest = {}): ProfileEntry => ({
       id,

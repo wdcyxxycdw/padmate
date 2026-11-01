@@ -16,8 +16,7 @@ type wantEvent struct {
 }
 
 // TestSendRecordedByProbe runs "padmatectl send" with "padmate-probe
-// record" swallowing its events and checks what the hook saw (OUT-01,
-// ENG-06).
+// record" swallowing its events and checks what the hook saw.
 //
 // A backstop hook in the test process swallows every padmate-tagged event
 // and records it. It is installed before the probe, so the probe's hook

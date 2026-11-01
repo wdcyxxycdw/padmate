@@ -42,7 +42,7 @@ func (r *liveRun) selectionConfig() *profile.Config {
 	return profile.DefaultConfig()
 }
 
-// feedbackSwitches returns the global feedback switches (UI-27, ADR-0015) of
+// feedbackSwitches returns the global feedback switches (ADR-0015) of
 // the effective config, which the slots' engines, the effect queue's callers,
 // the scripts' effects and the low-battery alert read at each use. The result
 // is an immutable copy.
@@ -53,7 +53,7 @@ func (r *liveRun) feedbackSwitches() profile.FeedbackSwitches {
 // liveSettings is the effective config after committing next: the fields
 // applied at once (automatic selection, output.sendToOwnWindow,
 // output.eventGapMs, timing, the function key, safety, the feedback switches and
-// the stick calibration of each device, IN-14) come from next, everything captured at startup
+// the stick calibration of each device) come from next, everything captured at startup
 // (restoreLayerState, which devices are ignored and the rest of output)
 // stays as startup has it. Both inputs are immutable and may share slices and
 // maps with the result.
@@ -120,7 +120,7 @@ func startupFields(c *profile.Config) profile.Config {
 }
 
 // calibrations returns the stick calibration of each device of c that has
-// one (IN-14): what a change of config.json has to tell the slots about.
+// one: what a change of config.json has to tell the slots about.
 func calibrations(c *profile.Config) map[string]*profile.Calibration {
 	var out map[string]*profile.Calibration
 	for key, d := range c.Devices {

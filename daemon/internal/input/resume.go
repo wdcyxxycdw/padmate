@@ -112,7 +112,7 @@ func (s *Source) reenumerate(ctx context.Context) error {
 				s.emit(Event{Time: now, Device: DeviceID(id), Kind: DeviceAdded, Info: deviceInfo(id, false)})
 			case d.kind != kindRaw:
 				// A mapping was taken away while the events waited in SDL's
-				// queue that say so (IN-18).
+				// queue that say so.
 				s.downgrade(d, now)
 			}
 			continue

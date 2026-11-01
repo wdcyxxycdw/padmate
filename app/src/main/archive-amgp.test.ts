@@ -6,7 +6,7 @@ import { LibraryErrorCode } from "../shared/api";
 import { archiveHandlers, maxAmgpBytes } from "./archive-handlers";
 import { type DaemonCall, uiResult } from "./library-handlers";
 
-// An AntiMicroX profile (PRO-21, ADR-0012) is chosen with the same 导入…
+// An AntiMicroX profile (ADR-0012) is chosen with the same 导入…
 // dialog as a .padmate file; Main routes it by the extension, reads it (at
 // most 1 MiB) and hands the bytes to profiles.importAmgp as data. The daemon
 // never gets a path.
@@ -66,7 +66,7 @@ function fixture(
   return { call, chooseImport, run };
 }
 
-describe("importing an AntiMicroX profile (PRO-21)", () => {
+describe("importing an AntiMicroX profile", () => {
   it.each(["Paint.amgp", "Paint.AMGP", "old.xml", "OLD.XML"])(
     "sends %s to profiles.importAmgp as data with the file's name",
     async (name) => {

@@ -580,7 +580,7 @@ func (d *dev) syncLED(now time.Time) error {
 // A claim for a light that another controller holds is not shown, and the
 // lights stay as they are: giving the index to this controller would move that
 // one to a free slot, and change its lights, for good. Controllers that ask
-// for the same light, such as two in the same mode (HUD-08), so have it one
+// for the same light, such as two in the same mode, so have it one
 // after the other in the order of their requests, and the rest keep their own
 // index. The claim is looked at again whenever it is asked for again, and when
 // a pattern moves on; the restore is not held back, since it gives a controller

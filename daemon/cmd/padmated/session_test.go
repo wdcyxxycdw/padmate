@@ -16,8 +16,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winsession"
 )
 
-// fakeSession is the session watcher that testConfig gives live mode
-// (DMN-09): it keeps the Config startLive passed, and the test calls its
+// fakeSession is the session watcher that testConfig gives live mode:
+// it keeps the Config startLive passed, and the test calls its
 // hooks as T-session would.
 type fakeSession struct {
 	cfg      winsession.Config
@@ -150,7 +150,7 @@ func button(src *fakeSource, control string, down bool) {
 	src.events <- input.Event{Device: 1, Kind: kind, Control: control}
 }
 
-// TestLiveSessionLock: a lock of the session (DMN-09) suspends the
+// TestLiveSessionLock: a lock of the session suspends the
 // mapping: Space, held on east, is released, and presses map to nothing
 // until the unlock; east, pressed while locked and held through the
 // unlock, does nothing until it is pressed again. It follows the
@@ -271,7 +271,7 @@ func TestLiveSessionAtStart(t *testing.T) {
 // When the session ends it closes last, after the log has "padmated
 // stopped" and is closed, since its Close lets the system end the
 // process; otherwise it closes before, so that what it logs on its way
-// out comes before the last line and is kept (DMN-09). A session that
+// out comes before the last line and is kept. A session that
 // ends while a signal's exit path runs, before it closes the watcher,
 // closes it last too, although the log's cause stays the signal.
 func TestLiveSessionStops(t *testing.T) {
@@ -433,7 +433,7 @@ func TestLiveSessionStartFails(t *testing.T) {
 
 // TestLiveSessionDegraded: when the session thread ends by itself,
 // stderr says so, and the suspension stays: only the watcher's polling
-// may end it from then on (DMN-09).
+// may end it from then on.
 func TestLiveSessionDegraded(t *testing.T) {
 	tl, src := sessionLive(t, nil, nil, "--dry-run")
 	button(src, "east", true)

@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profilelib"
 )
 
-// Profile inheritance in a running daemon (PRO-19, ADR-0012).
+// Profile inheritance in a running daemon (ADR-0012).
 
 const (
 	// The parent binds east, and has a layer for the child to use.

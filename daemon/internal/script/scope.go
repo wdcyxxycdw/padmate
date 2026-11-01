@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// outputScope is the output of one owner (SCR-50): its keys
+// outputScope is the output of one owner: its keys
 // held with key.down, its taps still running, its errors and its timers. A
 // runtime has one for the legacy script's key API, and each run of a macro
 // has one of its own, so a run's end or key.releaseAll touches nothing

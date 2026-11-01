@@ -354,7 +354,7 @@ func TestWheelPressWhileReleasePending(t *testing.T) {
 	}
 }
 
-// The event gap (OUT-17) paces the events that inject something; the
+// The event gap paces the events that inject something; the
 // release of a wheel key injects nothing and takes no gap.
 func TestWheelEventGap(t *testing.T) {
 	opts := simtest.WithArbiterOptions(output.ArbiterOptions{EventGap: 50 * ms})
@@ -383,7 +383,7 @@ func TestWheelEventGap(t *testing.T) {
 
 	t.Run("excess taps", func(t *testing.T) {
 		// Taps that come faster than the gap lets them out wait one at a time
-		// and further ones merge, as for any key (OUT-10, OUT-17): the queue
+		// and further ones merge, as for any key: the queue
 		// stays bounded.
 		s := newSim(t, opts)
 		for range 4 {

@@ -372,7 +372,7 @@ func TestPointerEvent(t *testing.T) {
 	}
 }
 
-// The media and volume keys (ADR-0012, OUT-20) are sent by VK, with the E0 scan
+// The media and volume keys (ADR-0012) are sent by VK, with the E0 scan
 // code and the extended-key flag along, so the system never has to guess the key
 // from a layout: the press and the release carry the same VK and scan code.
 func TestKeyEventForMedia(t *testing.T) {

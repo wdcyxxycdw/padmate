@@ -1,5 +1,5 @@
-// Pure helpers for custom gamepad mappings and the mapping wizard (IN-17,
-// IN-18, IN-19, ADR-0012): the words and pictures of each prompt, how an
+// Pure helpers for custom gamepad mappings and the mapping wizard
+// (ADR-0012): the words and pictures of each prompt, how an
 // element is named, and what to tell the user after a mapping is saved. The
 // rules that find the element are in mapwizard.ts.
 import type { DeviceEntry, MappingResult } from "../../../shared/api";
@@ -12,7 +12,7 @@ import { EXCURSION, type RawKind, type WizardInput } from "./mapwizard";
 const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
-/** Whether config.json saves a mapping for the controller key (IN-18). */
+/** Whether config.json saves a mapping for the controller key. */
 export function hasCustomMapping(config: Config | null, key: string): boolean {
   const entry = config?.devices?.[key];
   return (

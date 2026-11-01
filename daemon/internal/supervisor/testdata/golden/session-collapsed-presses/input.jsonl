@@ -1,4 +1,4 @@
-# Presses during a collapsed lock (DMN-09): south taps at 100. At 500
+# Presses during a collapsed lock: south taps at 100. At 500
 # the session locks, east goes down and south taps, and the session
 # unlocks, all before the router looks at the suspension: it routes the
 # presses with the mapping not held, but the lock closed the gate first,

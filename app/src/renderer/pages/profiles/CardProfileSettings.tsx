@@ -7,7 +7,7 @@ import type { Language } from "../../state/store";
 import { ProfileSettingsDialog } from "./ProfileSettingsDialog";
 
 /**
- * 配置设置 for the profile of a card on the 配置 page (UI-27), without
+ * 配置设置 for the profile of a card on the 配置 page, without
  * activating it, switching the mapping page's profile or leaving the page.
  *
  * Each profile has one editor at a time, so that its autosave, revision and

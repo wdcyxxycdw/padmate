@@ -1,6 +1,6 @@
 // Package watch polls a file for changes of its content: padmated's
-// reload of the profile when it is saved (PRO-03). A DirWatcher polls the
-// files of a folder, the profile's macros (SCR-50), by name, size and
+// reload of the profile when it is saved. A DirWatcher polls the
+// files of a folder, the profile's macros, by name, size and
 // modification time.
 //
 // A Watcher stats the file every Interval. The file's key is its size and
@@ -30,7 +30,7 @@
 // next read of the settled file finds content with an ignored sum, it is
 // taken as seen without a change. Each such read forgets every sum
 // ignored, so an own write that a save overwrote within the debounce
-// ignores nothing later. Nothing calls it until IPC-04 (M9).
+// ignores nothing later.
 //
 // The package reads time only from its clock.Clock and is cross-platform.
 package watch

@@ -119,7 +119,7 @@ func (a *Arbiter) busy(id KeyID) bool {
 	}
 	if a.heldByDown(id) {
 		// A tap on a key held by Down presses it once more. With an event
-		// gap one such press waits at a time (OUT-17): the next tap queues
+		// gap one such press waits at a time: the next tap queues
 		// behind it, and further ones merge, as on a busy key.
 		return len(a.outbox) > 0 && a.extraQueued(id)
 	}
@@ -149,7 +149,7 @@ func (a *Arbiter) queueOrStart(o Owner, c keys.Chord, hold time.Duration, done f
 	if !a.busy(main) {
 		return a.startTap(o, hold, done, presses)
 	}
-	// OUT-10 bounds backlog by physical main key, across owners,
+	// The backlog is bounded by physical main key, across owners,
 	// layouts, and modifiers. The earliest tap keeps its chord and position.
 	if slices.ContainsFunc(a.queued, func(q *queuedTap) bool { return q.main == main }) {
 		a.stats.MergedTaps++

@@ -24,7 +24,7 @@ func TestResumeGateIsIndependentAndReleasesHeldKeys(t *testing.T) {
 	lt.do(blocked(false))
 }
 
-// TestExitGateStaysClosed: the gate a tray exit closes (DMN-22) lets go
+// TestExitGateStaysClosed: the gate a tray exit closes lets go
 // of every key at once, and no other owner's open reopens it.
 func TestExitGateStaysClosed(t *testing.T) {
 	lt := startLoop(t, output.LoopOptions{})

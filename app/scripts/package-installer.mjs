@@ -1,4 +1,4 @@
-// Builds the installer with electron-builder (PKG-03, PKG-06, PKG-09).
+// Builds the installer with electron-builder.
 //
 //   node scripts/package-installer.mjs --version v0.14.0 [--output DIR]
 //
@@ -7,7 +7,7 @@
 // The version is the release tag: the app and the installer get it without the
 // "v" (extraMetadata.version), so no file is edited for a release.
 //
-// Code signing (PKG-09, ADR-0018) is chosen by PADMATE_SIGN, never by a file in
+// Code signing (ADR-0018) is chosen by PADMATE_SIGN, never by a file in
 // the repository: none (the default), store, pfx or azure. signingPlan turns the
 // environment into electron-builder flags and an environment patch; no
 // certificate, password or thumbprint is written anywhere, and none is printed.
@@ -448,7 +448,7 @@ async function main() {
       : `package-installer: signing with ${plan.mode}, publisher ${JSON.stringify(plan.subject)}`,
   );
   // The installed application has no node_modules: the main process must be
-  // one file that requires nothing but Node and electron (PKG-10).
+  // one file that requires nothing but Node and electron.
   await assertMainBundle(resolve(app, "out/main/index.js"));
   // electron-builder keeps what an earlier build left in its output folder.
   await rm(output, { recursive: true, force: true });

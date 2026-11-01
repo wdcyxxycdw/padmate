@@ -58,7 +58,7 @@ func TestSmallRun(t *testing.T) {
 		t.Fatalf("exit %d; stderr %s", code, stderr.String())
 	}
 	out := stdout.String()
-	for _, want := range []string{"## SPK-03 results\n", "| dispatch noop | 100 |", "| dispatch tap after 100ms idle | 2 |", "| esbuild build, warm: every build after the first | 2 |", "### Watchdog", "Skipped.\n"} {
+	for _, want := range []string{"## goja spike results\n", "| dispatch noop | 100 |", "| dispatch tap after 100ms idle | 2 |", "| esbuild build, warm: every build after the first | 2 |", "### Watchdog", "Skipped.\n"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("report lacks %q:\n%s", want, out)
 		}

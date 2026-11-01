@@ -1,4 +1,4 @@
-// 从已安装的软件中选择… (UI-46): a blocking, searchable list of the apps
+// 从已安装的软件中选择…: a blocking, searchable list of the apps
 // padmate has seen in front lately, then the programs of the Start Menu,
 // each with its icon.
 import { useEffect, useRef, useState } from "react";

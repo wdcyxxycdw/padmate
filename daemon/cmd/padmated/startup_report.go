@@ -15,8 +15,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// exitStartup is padmated's exit code when live mode does not start (UI-45,
-// ADR-0001): the arguments are fine, but a file it reads, the instance,
+// exitStartup is padmated's exit code when live mode does not start
+// (ADR-0001): the arguments are fine, but a file it reads, the instance,
 // SDL, the log, IPC or the output stopped it before mapping began. With
 // --startup-report FILE, FILE says why.
 const exitStartup = 3
@@ -25,14 +25,14 @@ const exitStartup = 3
 const maxReportedProblems = 20
 
 // startupReport is what --startup-report FILE gets when padmated does not
-// start (UI-45, ADR-0001): one JSON object, for the UI that started
+// start (ADR-0001): one JSON object, for the UI that started
 // padmated to show. Every field is always there; "" and 0 mean unknown.
 // It never holds the IPC token.
 type startupReport struct {
 	Version int `json:"version"` // 1
 	// Kind is what stopped the start: usage (exit 2), instance, library,
 	// config (a config.json that cannot be read; one with errors is
-	// repaired, PRO-29), profile, log, ipc, sdl, output or internal (exit
+	// repaired), profile, log, ipc, sdl, output or internal (exit
 	// 3). state.json never stops the start.
 	Kind string `json:"kind"`
 	// Cause is how: invalid (File has the errors listed in Errors), missing,

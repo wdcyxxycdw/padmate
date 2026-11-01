@@ -109,7 +109,7 @@ describe("3D controller component", () => {
         ?.getAttribute("aria-pressed"),
     ).toBe("false");
   });
-  it("describes the group with one instruction and names the state list (UI-24)", () => {
+  it("describes the group with one instruction and names the state list", () => {
     render(
       <Controller
         info={info}
@@ -421,7 +421,7 @@ describe("3D controller component", () => {
     const button = (name: string) => screen.getByRole("button", { name });
     const south = button("A · Undo");
     expect(south.getAttribute("data-callout")).toBe("south");
-    // Edits are saved at once (UI-43): nothing marks a chip as unsaved.
+    // Edits are saved at once: nothing marks a chip as unsaved.
     expect(south.hasAttribute("data-dirty")).toBe(false);
     expect(south.title.split("\n")).toEqual(["A · Undo", "Ctrl+Z"]);
     expect(

@@ -480,7 +480,7 @@ func TestVirtualTraceCurrent(t *testing.T) {
 }
 
 // TestRecordVirtual runs "record --virtual" in this process with the SDL
-// library (ENG-08).
+// library.
 func TestRecordVirtual(t *testing.T) {
 	inputtest.Unsetenv(t, input.HintCombineJoyCons, input.HintVerticalJoyCons)
 	if lib := inputtest.Library(t); filepath.IsAbs(lib) {
@@ -509,8 +509,7 @@ func TestRecordVirtual(t *testing.T) {
 			!strings.Contains(string(b), " "+input.HintBackgroundEvents+"=1") {
 			t.Errorf("the recording does not start with the header:\n%s", b)
 		}
-		// padmate's Joy-Con hint is set, and SDL's default of the other kept
-		// (IN-07).
+		// padmate's Joy-Con hint is set, and SDL's default of the other kept.
 		for _, want := range []struct{ prefix, word string }{
 			{"# hints in effect: ", input.HintCombineJoyCons + "=0"},
 			{"# hints unset (SDL's default): ", input.HintVerticalJoyCons},

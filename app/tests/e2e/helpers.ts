@@ -82,7 +82,7 @@ export async function fixture(): Promise<Fixture> {
     PADMATE_UI_DATA_DIR: data,
     PADMATE_UI_USER_DATA: join(path, "browser"),
     // The scripts page records the files it opens instead of starting an
-    // editor (SCR-50).
+    // editor.
     PADMATE_UI_EDITOR_LOG: join(path, "editor.log"),
     PADMATE_M10_HARNESS: "1",
     PADMATE_M10_IPC_DIR: ipc,
@@ -212,7 +212,7 @@ export async function rpc(
 
 /**
  * Records chord in a shortcut field (its group, named 快捷键 or 第 N 步) the
- * way the user does, since shortcuts cannot be typed (OUT-18): 录入 starts
+ * way the user does, since shortcuts cannot be typed: 录入 starts
  * the real native capture, and the chord arrives as the capture helper
  * reports it. The first key that is not a modifier ends the capture and
  * commits it, so there is nothing to stop (ADR-0013): chord must have one.
@@ -375,7 +375,7 @@ export async function cleanup(
   });
 }
 
-/** What `padmate-probe window --json` prints (SPK-09, ADR-0014). */
+/** What `padmate-probe window --json` prints (ADR-0014). */
 export interface WindowInfo {
   /** GetForegroundWindow, "0x" and hexadecimal. */
   foreground: string;

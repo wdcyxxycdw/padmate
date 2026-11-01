@@ -1,4 +1,4 @@
-# The lock (DMN-09): Pad A's east holds Space when the workstation
+# The lock: Pad A's east holds Space when the workstation
 # locks at 500, which lets go of Space at once. A tap of south during the
 # lock maps nothing. East, held across the lock and its end at 1000, does
 # nothing until it is pressed again at 1400; south taps again after it.

@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The sequence and text actions (MAP-22, OUT-21, ADR-0012) hold nothing, so they
+// The sequence and text actions (ADR-0012) hold nothing, so they
 // fit every gesture, and the engine only hands the request to its Output, once,
 // when the gesture fires. The timing is the Output's.
 

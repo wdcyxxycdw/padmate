@@ -164,7 +164,7 @@ func topLevelNames(f *ast.File) []string {
 // TestInjectSenderOnlyToLoop checks that startLive hands the Sender that
 // chooseSender returns to output.StartLoop only, as its second argument,
 // so that T-output is the only caller of SendInput in padmated (CLAUDE.md
-// invariant 3). The startup sweep of the held-key log (OUT-14) runs on
+// invariant 3). The startup sweep of the held-key log runs on
 // T-output too (Loop.Swept), not on startLive's goroutine.
 func TestInjectSenderOnlyToLoop(t *testing.T) {
 	fset := token.NewFileSet()

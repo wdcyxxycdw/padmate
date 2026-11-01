@@ -1,5 +1,5 @@
 // Command gojafeatures probes the linked goja for the JavaScript features and
-// standard library that padmate scripts can use (SPK-03). `task gen` runs it
+// standard library that padmate scripts can use. `task gen` runs it
 // through the go:generate directive in internal/script/compile:
 //
 //	go run ../../../tools/gojafeatures [-dir .]

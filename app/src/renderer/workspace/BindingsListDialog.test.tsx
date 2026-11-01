@@ -149,7 +149,7 @@ it("names a stick's press like the stick, and never by its selection id", () => 
   expect(listControlName("l3", labels, "zh-CN")).toBe(labels.leftstick);
 });
 
-it("names the fixed default by its ID (PRO-28)", async () => {
+it("names the fixed default by its ID", async () => {
   const editor = await editorFor({ ...profile, name: "Stored" }, "default");
   render(<Harness editor={editor} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: "列表" }));
@@ -353,7 +353,7 @@ it("lists what is saved: a shortcut cleared in the drawer is left out (H1)", asy
   expect(listed).not.toContain("按住");
 });
 
-// UI-30 (ADR-0012): the function key is listed as one that cannot be opened,
+// ADR-0012: the function key is listed as one that cannot be opened,
 // and the list follows the set the page shows.
 const withSet: Profile = {
   ...profile,
@@ -566,7 +566,7 @@ it("lists the volume and media keys by name", async () => {
   expect(dialog.textContent).toContain("点按 Ctrl+下一首");
 });
 
-it("lists what the profile takes from the one its file extends, unmarked (PRO-19, ADR-0013)", async () => {
+it("lists what the profile takes from the one its file extends, unmarked (ADR-0013)", async () => {
   const parent: Profile = {
     schemaVersion: 1,
     name: "绘画",

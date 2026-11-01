@@ -38,7 +38,7 @@ const (
 	frReload         // Reload, of program2 and program in turn; the check waits for it
 	frCombo          // a ComboHeld of pad a's last id, connected or not: the pause toggles
 	frSuspend        // the suspension's reasons become a&AllReasons: Suspend, or SuspendQuiet when b%2 is 1
-	frRemap          // a DeviceRemapped of pad a's last id (IN-18): connected or not, it is reset when connected
+	frRemap          // a DeviceRemapped of pad a's last id: connected or not, it is reset when connected
 	frOps
 )
 
@@ -82,11 +82,11 @@ var frSeeds = [][]byte{
 	{0, frAdd, 0, 0, frAdd, 1, 0, frDown, 0, 1, frDown, 1, 1, frAxis, 1, 0x40, frRemove, 0, 0, frSync, 0, 0, frUp, 1, 1, frSync, 0, 0},
 	// a reconnect while held, then a tap
 	{0, frAdd, 0, 0, frDown, 0, 1, frRemove, 0, 0, frAdd, 0, 0, frDown, 0, 0, frUp, 0, 0, frWait, 30, 0, frSync, 0, 0},
-	// a reconnect while held, as XInput reports it (SPK-01): SDL's ups
+	// a reconnect while held, as XInput reports it: SDL's ups
 	// before the removal, then ups with no down on the new id; then a tap
 	{0, frAdd, 0, 0, frDown, 0, 1, frDown, 0, 0, frUp, 0, 1, frUp, 0, 0, frRemove, 0, 0, frAdd, 0, 0, frUp, 0, 0, frUp, 0, 1, frSync, 0, 0,
 		frDown, 0, 0, frUp, 0, 0, frWait, 30, 0, frSync, 0, 0},
-	// a reconnect while held, as Raw Input and HIDAPI report it (SPK-01):
+	// a reconnect while held, as Raw Input and HIDAPI report it:
 	// a down of the held button soon after the new id is added
 	{0, frAdd, 0, 0, frDown, 0, 1, frUp, 0, 1, frRemove, 0, 0, frAdd, 0, 0, frDown, 0, 1, frSync, 0, 0, frUp, 0, 1, frSync, 0, 0},
 	// ups with no down from a gamepad that waits and from a stand-in,
@@ -164,7 +164,7 @@ var frSeeds = [][]byte{
 	{0, frAdd, 0, 0, frDown, 0, 1, frReload, 0, 0, frSync, 0, 0, frStall, 0, 0, frDown, 0, 0, frDown, 0, 2, frUp, 0, 1, frDown, 0, 1, frSync, 0, 0},
 	// the combo while east is held and a tap is under way: both end; a press
 	// while paused does nothing, and east, held across the resume, nothing
-	// until pressed again (DMN-07)
+	// until pressed again
 	{0, frAdd, 0, 0, frDown, 0, 1, frDown, 0, 0, frCombo, 0, 0, frSync, 0, 0, frUp, 0, 0, frDown, 0, 0, frSync, 0, 0, frCombo, 0, 0, frSync, 0, 0,
 		frUp, 0, 1, frDown, 0, 1, frSync, 0, 0, frUp, 0, 1},
 	// the combo of a gamepad that waits, and of one not connected
@@ -177,7 +177,7 @@ var frSeeds = [][]byte{
 	{0, frAdd, 0, 0, frAdd, 1, 0, frDown, 0, 1, frDown, 1, 1, frCombo, 0, 0, frReload, 0, 0, frSync, 0, 0, frRemove, 0, 0, frSync, 0, 0,
 		frAdd, 0, 0, frDown, 0, 1, frCombo, 1, 0, frSync, 0, 0, frUp, 0, 1, frDown, 0, 1, frSync, 0, 0},
 
-	// Several slots (IN-08).
+	// Several slots.
 
 	// 2 slots: both hold east, so Space goes down once; one is removed,
 	// and Space stays down until the other releases
@@ -234,7 +234,7 @@ var frSeeds = [][]byte{
 	{4, frAdd, 0, 0, frAdd, 1, 0, frDown, 1, 1, frStall, 1, 0, frDown, 1, 2, frUp, 1, 2, frCombo, 0, 0, frDown, 0, 1, frCombo, 0, 0, frUp, 0, 1,
 		frDown, 0, 1, frUnstall, 1, 0, frSync, 0, 0, frUp, 1, 1, frDown, 1, 1, frSync, 0, 0},
 
-	// A remap (IN-18): the held east and the tap go up at once, and a late
+	// A remap: the held east and the tap go up at once, and a late
 	// release changes nothing; then the press counts again
 	{0, frAdd, 0, 0, frDown, 0, 1, frDown, 0, 0, frRemap, 0, 0, frSync, 0, 0, frUp, 0, 1, frSync, 0, 0, frDown, 0, 1, frSync, 0, 0, frUp, 0, 1},
 	// a remap while behind, and of a gamepad that waits and one not connected
@@ -242,7 +242,7 @@ var frSeeds = [][]byte{
 	// a remap while paused and across a Reload
 	{0, frAdd, 0, 0, frDown, 0, 1, frCombo, 0, 0, frRemap, 0, 0, frReload, 0, 0, frSync, 0, 0, frCombo, 0, 0, frUp, 0, 1, frDown, 0, 1, frSync, 0, 0, frUp, 0, 1},
 
-	// The system's suspension (DMN-09).
+	// The system's suspension.
 
 	// a lock while east is held, and its end; then a quiet one, which the
 	// Sync applies
@@ -278,7 +278,7 @@ var frSeeds = [][]byte{
 	{0, frSuspend, 1, 0, frAdd, 0, 0, frAxis, 0, 0x40, frAxis, 3, 0x7f, frSuspend, 0, 0, frAxis, 0, 0x50, frAxis, 3, 0, frSync, 0, 0,
 		frAxis, 3, 0x7f, frAxis, 0, 0, frAxis, 0, 0x50, frSync, 0, 0},
 
-	// A remap leaves the suspension's quarantine as it is (IN-18, ADR-0006).
+	// A remap leaves the suspension's quarantine as it is (ADR-0006).
 	// The router's reset of a gamepad (remapped) clears its state and the
 	// resume sample, not d.recovery, and only these tell that from a reset that
 	// clears the quarantine too: the late report of a control that was held
@@ -306,7 +306,7 @@ var frSeeds = [][]byte{
 // FuzzRouter drives a Supervisor of 1 to MaxSlots slots with the events of
 // two more gamepads than slots that leave and reconnect, stalls of the slot
 // loops with small edge buffers, and drops of input. At every Sync it
-// checks the router against a model of IN-05 and IN-08 (see the package
+// checks the router against a model of the slot rules (see the package
 // doc): a gamepad that connects takes the free slot of the lowest index,
 // if any, and becomes its home, rehoming a provisional stand-in on a slot
 // whose home is its key; with no slot free it takes that slot back, and
@@ -316,18 +316,18 @@ var frSeeds = [][]byte{
 // assigned longest ago, for good. A holder that loses its slot waits
 // again, first. Each slot must have the model's gamepad, home and
 // provisional flag, its state must be the router's, and the router's the
-// model's; the Status must keep the router's invariants. Reloads (PRO-03)
+// model's; the Status must keep the router's invariants. Reloads
 // change none of this: the check waits for them, and then each slot and
 // every key held must be of the last generation and its program. The
-// ComboHeld events of any gamepad toggle the pause (DMN-06, DMN-07):
+// ComboHeld events of any gamepad toggle the pause:
 // Status.Paused must be the model's, and nothing is held while paused.
-// Suspend and SuspendQuiet set the system's suspension (DMN-09), which
+// Suspend and SuspendQuiet set the system's suspension, which
 // holds the mapping too: Status.Suspended must be the model's, Output's
 // system gate closed just while suspended and its user gate just while
 // paused, and nothing is held while suspended. A stick or trigger that is
 // deflected at the start of a suspension or moves during it is masked in the
 // router's state after the resume, as a button is (ADR-0006), until the
-// report that ends its quarantine (axisApplies). A DeviceRemapped (IN-18) of
+// report that ends its quarantine (axisApplies). A DeviceRemapped of
 // a connected gamepad resets it, as a drop does every one: its controls count
 // as up in the router and in its slot, and one that is still held counts
 // again after a release and a press; it leaves the suspension's quarantine

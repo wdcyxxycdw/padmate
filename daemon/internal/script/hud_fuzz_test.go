@@ -9,7 +9,7 @@ import (
 )
 
 // What the hud API hands the overlay always fits it, whatever a script
-// passes: a call either throws a TypeError or keeps its limits (SCR-22).
+// passes: a call either throws a TypeError or keeps its limits.
 func FuzzHUD(f *testing.F) {
 	f.Add("brush", `{"title":"画笔","rows":[["大小","12"]]}`, "笔刷 2", 1500.0)
 	f.Add(" a\tb ", `{"rows":[["\u0000x\n","  y  "],["a","b"]]}`, "　\n", -1.0)

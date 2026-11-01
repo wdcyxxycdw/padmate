@@ -56,7 +56,7 @@ const joycon: DeviceEntry = {
   key: "joycon",
 };
 
-/** The fixed default as padmated writes it into a new library (PRO-28). */
+/** The fixed default as padmated writes it into a new library. */
 const defaultProfile = '{"schemaVersion":0,"name":"默认","layers":{"base":{}}}';
 
 function snapshot(devices: DeviceEntry[] = [pad]): StatusResult {

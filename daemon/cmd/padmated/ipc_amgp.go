@@ -20,7 +20,7 @@ import (
 // why in words for the user. Nothing was written.
 const rpcCodeAmgpInvalid = -32024
 
-// amgpMethods adds the import of AntiMicroX profiles (PRO-21, ADR-0012).
+// amgpMethods adds the import of AntiMicroX profiles (ADR-0012).
 func (r *liveRun) amgpMethods(methods handler.Map) {
 	methods["profiles.importAmgp"] = r.rpcImportAmgp
 }
@@ -36,7 +36,7 @@ type rpcAmgpImported struct {
 // rpcImportAmgp makes a new library profile from an AntiMicroX file
 // (.amgp, or the .xml of older versions). The file comes as data, the bytes in
 // standard base64, as the command line and the UI's main process pass a file
-// they have read: no method of the daemon takes a path to open (PRO-20), so
+// they have read: no method of the daemon takes a path to open, so
 // that a client of the bridge cannot make the daemon read a file or reach a
 // network share. The file is untrusted: amgp.Import reads at most amgp.MaxBytes
 // of it, with limits on nesting and size, and no DOCTYPE; it executes and

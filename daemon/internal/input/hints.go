@@ -29,7 +29,7 @@ const (
 	// so Go would never see it.
 	HintNoSignalHandlers = "SDL_NO_SIGNAL_HANDLERS"
 	// HintCombineJoyCons is set to "0" by Open, after the two hints above
-	// and before any other (IN-07, ADR-0002): each Joy-Con is its own
+	// and before any other (ADR-0002): each Joy-Con is its own
 	// gamepad, whether or not its partner is connected. A lone Joy-Con is
 	// a gamepad under either value; with "1", which
 	// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1" restores, SDL
@@ -65,10 +65,10 @@ var openHints = []Hint{backgroundHint, {HintNoSignalHandlers, "1"}, {HintCombine
 var BackendHints = []string{hintHIDAPI, hintRawInput, hintXInput, hintDirectInput, hintWGI, hintGameInput}
 
 // JoyConHints are the Joy-Con hints that Source reads back after SDL_Init,
-// whether or not they were set (IN-07).
+// whether or not they were set.
 var JoyConHints = []string{HintCombineJoyCons, HintVerticalJoyCons}
 
-// Preset is a named list of hints for the backend experiments (SPK-01).
+// Preset is a named list of hints for the backend experiments.
 type Preset struct {
 	Name  string
 	About string

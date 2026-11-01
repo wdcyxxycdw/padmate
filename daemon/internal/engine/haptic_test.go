@@ -15,8 +15,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the haptics a binding gives (MAP-25) and of the knob tick
-// (HUD-10), ADR-0015: Options.Haptic is called once per declarative dispatch
+// Tests of the haptics a binding gives and of the knob tick,
+// ADR-0015: Options.Haptic is called once per declarative dispatch
 // of a binding with "haptic", and once per knob step with knobTick.
 
 // compileHaptic compiles a profile with the given feedback, analog and base

@@ -18,7 +18,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/tray"
 )
 
-// The low-battery alert (IN-12, ADR-0015) end to end on a fake source: the power
+// The low-battery alert (ADR-0015) end to end on a fake source: the power
 // of a gamepad goes through the router's OnPower to the tracker, which asks for
 // the cue on the controller (the effect queue), the tray's notice and the
 // overlay's batteries. No controller is reached and no SDL is needed.
@@ -96,7 +96,7 @@ func drainNotices(tl *testLive) []tray.Notification {
 	}
 }
 
-// TestLiveLowBatteryAlert (IN-12): a gamepad that discharges to 25% is announced
+// TestLiveLowBatteryAlert: a gamepad that discharges to 25% is announced
 // once, on the controller (Alert class: three pulses and the flash) and in the
 // tray; the next episode, after it was charged, is announced again, under
 // another notice key, which the tray's never-forgetting queue lets through
@@ -170,7 +170,7 @@ func TestBatteryNoticeKeysRepeatPerEpisode(t *testing.T) {
 	}
 }
 
-// TestLiveLowBatterySwitches (UI-27, ADR-0015): the global lowBattery switch
+// TestLiveLowBatterySwitches (ADR-0015): the global lowBattery switch
 // off is silent everywhere; rumble off keeps the flash and the notice but not
 // the pulses; led off the pulses but not the flash. The profile's retired
 // members do nothing.
@@ -322,7 +322,7 @@ func TestLiveLowBatterySilentEpisodeIsNotAnnouncedLater(t *testing.T) {
 	tl.waitUntil(t, "the next episode's alert", func() bool { return len(alerts(src, padOne)) == 1 })
 }
 
-// TestLiveLowBatteryAppliesToEveryPad (UI-27, ADR-0015): the switches are the
+// TestLiveLowBatteryAppliesToEveryPad (ADR-0015): the switches are the
 // same for a gamepad that holds a slot and one that waits for it: the alert is
 // off for both or on for both, and the controller's part follows rumble and
 // lights for both. Strength and pulse times are the profile's for the mapped
@@ -449,7 +449,7 @@ func TestLiveLowBatteryIgnoredPadIsLeftAlone(t *testing.T) {
 	}
 }
 
-// TestStateEventCarriesBatteries (IN-12): the engine.activity state event lists
+// TestStateEventCarriesBatteries: the engine.activity state event lists
 // the power of each gamepad that has read one, with its key and name and "low":
 // true while the alert of its episode is raised (and only then), which is what
 // the overlay turns into its toast on the false-to-true edge; the member is an
@@ -528,7 +528,7 @@ func TestStateEventCarriesBatteries(t *testing.T) {
 	}
 }
 
-// TestTrayShowsTheBattery (IN-12): the tray's menu line of a pad has its power,
+// TestTrayShowsTheBattery: the tray's menu line of a pad has its power,
 // and the low-battery balloon reaches the tray's notification. A fake renderer
 // stands in for the tray, as in the pause test.
 func TestTrayShowsTheBattery(t *testing.T) {

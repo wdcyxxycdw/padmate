@@ -1,5 +1,5 @@
 // Package pecheck is the offline hygiene check of padmate's Windows
-// executables (PKG-11, ADR-0018). It reads a PE file with debug/pe, so it
+// executables (ADR-0018). It reads a PE file with debug/pe, so it
 // builds and tests on Linux, and reports what an antivirus engine's heuristics
 // and a reviewer would care about: how the file is laid out, what it imports,
 // and which Windows functions padmate binds at run time.

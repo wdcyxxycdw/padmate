@@ -9,7 +9,7 @@ import (
 
 func TestMigrateChain(t *testing.T) {
 	if CurrentSchema != 1 {
-		t.Fatalf("CurrentSchema = %d; the profile format is frozen at 1 (PRO-01)", CurrentSchema)
+		t.Fatalf("CurrentSchema = %d; the profile format is frozen at 1", CurrentSchema)
 	}
 	if len(migrations) != CurrentSchema {
 		t.Fatal("migration chain and schema version differ")
@@ -33,7 +33,7 @@ func TestMigrateCurrent(t *testing.T) {
 	}
 }
 
-// The 0 to 1 migration (PRO-06): the formats are identical, so only the
+// The 0 to 1 migration: the formats are identical, so only the
 // value of schemaVersion changes. Every other byte is retained and the
 // document keeps its length, so a position in the old text is a position in
 // the new one.
@@ -93,7 +93,7 @@ func TestMigrateRejects(t *testing.T) {
 }
 
 // A document of a version newer than this build is refused, never read
-// partially (PRO-06); the message says what to do.
+// partially; the message says what to do.
 func TestMigrateRefusesNewer(t *testing.T) {
 	for _, version := range []string{"2", "3", "2.0", "2e0", "100"} {
 		data := []byte(`{"schemaVersion": ` + version + `, "name": "n", "layers": {"base": {}}}`)

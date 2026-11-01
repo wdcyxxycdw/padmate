@@ -1,4 +1,4 @@
-/* Key drawer (UI-39): one control, its gestures and their settings. */
+/* Key drawer: one control, its gestures and their settings. */
 .drawer {
   flex: 1;
   min-width: 0;
@@ -794,7 +794,7 @@
   }
 }
 
-/* The steps of a sequence that are not a shortcut (UI-31): a wait and a text,
+/* The steps of a sequence that are not a shortcut: a wait and a text,
    the box a text is written in, and the line that reads the sequence. */
 .drawer-keys > .menu-anchor .menu {
   min-width: 150px;
@@ -849,7 +849,7 @@
   flex-wrap: wrap;
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   /* The lit arm of a d-pad icon is only a colour (ADR-0013). */
   .drawer-glyph[data-icon] > svg {

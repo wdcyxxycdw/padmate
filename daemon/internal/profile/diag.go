@@ -66,7 +66,7 @@ type Diagnostic struct {
 	Col      int      `json:"col"`     // 1-based, in Unicode code points from the line start
 	Message  string   `json:"message"`
 	// Profile is the library ID of the parent whose file has the problem when
-	// that is not the file that was checked (PRO-19, ADR-0012): Pointer,
+	// that is not the file that was checked (ADR-0012): Pointer,
 	// Offset, Line and Col are then those of the parent's file. "" is the
 	// checked file itself.
 	Profile string `json:"profile,omitempty"`

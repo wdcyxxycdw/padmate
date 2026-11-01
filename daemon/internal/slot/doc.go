@@ -24,15 +24,15 @@
 // The engine owns its commands with an engine.OwnerID; the Slot adds its
 // index and profile generation (Owner). ReleaseAll ends every engine cycle,
 // then has the Arbiter release every key of the slot's index, of any
-// generation (OUT-07, §8.2). A removed device does the same, then the
-// engine forgets which controls are down. Reload (PRO-03) switches the
+// generation (§8.2). A removed device does the same, then the
+// engine forgets which controls are down. Reload switches the
 // engine to a new Program, releases like ReleaseAll, and owns later
 // commands with the new generation; the controls down across it stay down
 // and do nothing until pressed again.
 //
 // # Pause
 //
-// SetPaused(true) (DMN-06) puts the engine in paused mode, which ends
+// SetPaused(true) puts the engine in paused mode, which ends
 // every cycle, and releases like ReleaseAll. Until SetPaused(false) every
 // press is decided (engine.ReasonPaused) but sends nothing. Resuming
 // presses nothing again: the controls down across it do nothing until

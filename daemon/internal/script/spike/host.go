@@ -23,7 +23,7 @@ const (
 // MaxCallStackSize is the call depth limit of a script call.
 const MaxCallStackSize = 2000
 
-// Host is the SPK-03 stand-in for the M5 script host (SCR-01): the least
+// Host is the goja spike's stand-in for the M5 script host: the least
 // that runs the benchmark script. It is not the M5 host and must not grow
 // into it; see the package doc.
 //

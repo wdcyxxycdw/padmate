@@ -9,7 +9,7 @@ import (
 )
 
 // arbiterTiming is shared by real, dry-run and virtual-clock replay paths:
-// the profile's tap timing, and the event gap of settings (OUT-17), nil
+// the profile's tap timing, and the event gap of settings, nil
 // without a library.
 func arbiterTiming(prog *engine.Program, settings *profile.Config) output.ArbiterOptions {
 	timing := prog.Timing()
@@ -20,7 +20,7 @@ func arbiterTiming(prog *engine.Program, settings *profile.Config) output.Arbite
 	}
 }
 
-// eventGap is config.json's output.eventGapMs (OUT-17); 0 without one.
+// eventGap is config.json's output.eventGapMs; 0 without one.
 func eventGap(settings *profile.Config) time.Duration {
 	if settings == nil {
 		return 0

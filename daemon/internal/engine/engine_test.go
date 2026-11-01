@@ -382,7 +382,7 @@ func TestStepInvalidInput(t *testing.T) {
 	}
 }
 
-// TestReload switches engines to another program (PRO-03) at each
+// TestReload switches engines to another program at each
 // "reload@t" of the input, alternating between the program of bindings
 // and that of reloaded: the cycles end as with CancelAll, the controls
 // down stay down, and later presses use the new program.

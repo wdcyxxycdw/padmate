@@ -15,7 +15,7 @@ import (
 // A macro action runs the macro once through Options.Script, on every
 // gesture, and holds nothing: there are no key commands, the release
 // sends nothing, a hold runs once at holdMs however long the control stays
-// down, and latch does not keep anything (SCR-50).
+// down, and latch does not keep anything.
 func TestMacroAction(t *testing.T) {
 	r := &recorder{}
 	var runs []string

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The drawer while the function set is shown (UI-30, ADR-0012): it reads and
+// The drawer while the function set is shown (ADR-0012): it reads and
 // writes the set, a control the set leaves out starts empty, and the menu
 // clears a control from the set.
 import {

@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The function key (MAP-27, ADR-0012): one control of back, start and guide,
+// The function key (ADR-0012): one control of back, start and guide,
 // chosen in config.json. A profile's functionSet holds the bindings used while
 // it is held, written like a layer and bindable on any control.
 func TestFunctionSetParse(t *testing.T) {

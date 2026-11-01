@@ -71,7 +71,7 @@ async function profilesFixture(): Promise<Fixture> {
   await writeFile(join(data, "profiles", "other", "notes.ts"), "export {};\n");
   await writeFile(join(data, "config.json"), pretty(seed));
   // The programs the 从已安装的软件中选择… dialog lists, instead of the real
-  // Start Menu (UI-46): names and the empty files their shortcuts lead to.
+  // Start Menu: names and the empty files their shortcuts lead to.
   // The uninstaller is left out of the list.
   const apps = join(f.path, "apps");
   await mkdir(apps);
@@ -730,7 +730,7 @@ test("导出 and 导入 back up one profile with its scripts; saved versions sta
   // A script and a note: the export carries every file of the folder.
   await writeFile(join(folder, "scripts", "brush.ts"), "export {};\n");
   await writeFile(join(folder, "notes.md"), "# 笔记\n");
-  // A script of the library (SCR-51) that a key of the profile runs: the
+  // A script of the library that a key of the profile runs: the
   // export carries it, and an import puts it back into the library.
   const library = join(data, "macros");
   const brush = "export default () => {};\n// v1\n";

@@ -1,4 +1,4 @@
-// What the accessibility pass of the real window needs (UI-24, a11y.spec.ts):
+// What the accessibility pass of the real window needs (a11y.spec.ts):
 // axe-core injected into the page, the computed-style signatures that stand in
 // for a contrast check under forced colors, the keyboard walk, and the check
 // that nothing is out of reach at 150% and 200% zoom. Only the page is used,

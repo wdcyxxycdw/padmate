@@ -24,8 +24,8 @@ func tsConstant(t *testing.T, file, name string) string {
 // UPDATE_CHANNEL that Main hands to electron-updater (and opens for a manual
 // download), in the publish block of electron-builder.yml (which becomes
 // resources\app-update.yml), and here as UpdateURL and UpdateChannel, which
-// CheckTree demands of a built tree. They must not drift apart (PKG-10,
-// ADR-0018).
+// CheckTree demands of a built tree. They must not drift apart
+// (ADR-0018).
 func TestElectronBuilderPublishesToTheUpdateSource(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
 	url := tsConstant(t, "src/main/update-config.ts", "UPDATE_URL")
@@ -70,7 +70,7 @@ func TestElectronBuilderPublishesToTheUpdateSource(t *testing.T) {
 		}
 	}
 	if got := configValue(t, config, "differentialPackage"); got != "false" {
-		t.Errorf("differentialPackage is %q, want false: PKG-05 deletes the copy a differential download needs", got)
+		t.Errorf("differentialPackage is %q, want false: the uninstall deletes the copy a differential download needs", got)
 	}
 }
 

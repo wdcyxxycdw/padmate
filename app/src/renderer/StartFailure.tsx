@@ -8,7 +8,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * The whole window when the mapping service did not start (UI-45): which
+ * The whole window when the mapping service did not start: which
  * file, where in it and what is wrong, with 打开文件夹, 重试 and 退出.
  * retrying: 重试 is running; the last failure shows until it is decided.
  */

@@ -18,11 +18,11 @@ import (
 var errRealEvent = errors.New("test: listening on the real release-all event")
 
 // harnessExit is the exit code of a start that failed in TestM10UIHarness,
-// which TestMain exits with after its checks, as padmated would (UI-45).
+// which TestMain exits with after its checks, as padmated would.
 var harnessExit int
 
-// TestMain keeps the tests off the real event of padmatectl release-all
-// (DMN-20): the event is auto-reset, so a test listening on it could take
+// TestMain keeps the tests off the real event of padmatectl release-all:
+// the event is auto-reset, so a test listening on it could take
 // a release-all meant for a padmated that runs. live() uses emergencyEvent,
 // which is a name of the test process's own here, and testConfig gives
 // each test a name of its own. A Listen on emergency.Name fails, and fails

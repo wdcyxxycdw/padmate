@@ -45,7 +45,7 @@ const (
 	injectMarginRow   = 30 * time.Second
 )
 
-// TestInjectLatency times SendInput on its own (ENG-11): one call per
+// TestInjectLatency times SendInput on its own: one call per
 // press or release of F15 (1 event) or Ctrl+Shift+F16 (3 events), from a
 // goroutine locked to its thread, in a test process with no Loop and no
 // SDL. This process's hook swallows every event (CLAUDE.md invariant 6),
@@ -219,7 +219,7 @@ func TestInjectLatency(t *testing.T) {
 		fmt.Sprintf("scale %g (%s)", scale, latency.EnvScale),
 	}
 	rep := latency.Report{
-		Title:      "SendInput 单独（ENG-11）",
+		Title:      "SendInput 单独",
 		Env:        env,
 		Gate:       latency.GateOff,
 		GateReason: "info only",
@@ -363,7 +363,7 @@ func matchHookStamps(t *testing.T, sends []injectSend, hooked []winhook.Event) {
 }
 
 // BenchmarkLatencyResolve measures Resolver.Resolve on the system's
-// layouts (ENG-11): F13 has no character, so it is ChordStroke; Z asks
+// layouts: F13 has no character, so it is ChordStroke; Z asks
 // for the foreground window's layout, whose tables the Resolver caches
 // after the first Resolve. A warning means that Resolve fell back to the
 // US key instead, which would time the wrong path, so it fails the

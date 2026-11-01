@@ -25,7 +25,7 @@ import { closeApplication, placeWindow } from "./helpers";
 
 const run = promisify(execFile);
 
-// PKG-10 (ADR-0018): the automatic update of the installed application, in its
+// ADR-0018: the automatic update of the installed application, in its
 // test mode, against a feed on this machine. PADMATE_TEST_PACKAGED_APP names an
 // installed or unpacked padmate.exe, as for packaged.spec.ts; without it the
 // tests are skipped. The application keeps to private folders, starts its

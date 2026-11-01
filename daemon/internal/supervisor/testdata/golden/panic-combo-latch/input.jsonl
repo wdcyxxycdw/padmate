@@ -1,4 +1,4 @@
-# The combo latches (DMN-07): held on, it fires once. Pad A holds south
+# The combo latches: held on, it fires once. Pad A holds south
 # (Space) throughout. Back+start held for 1.9 s fires nothing; they are the
 # function keys and send nothing. Held again from 3100, the combo
 # fires at 5100 and pauses, which lets go of

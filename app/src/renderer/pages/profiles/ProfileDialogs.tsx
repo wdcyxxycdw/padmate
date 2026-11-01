@@ -1,4 +1,4 @@
-// Dialogs of the profiles page (UI-17, UI-18, PRO-20, SCR-51): create a
+// Dialogs of the profiles page: create a
 // blank library profile, rename and delete one, answer a name clash of an
 // imported file or scripts that clash with the library's, pick a window and
 // confirm moving an app to another profile.
@@ -64,7 +64,7 @@ function TextField({
   const errorId = useId();
   const inputId = useId();
   // The error is outside the label: inside it, it would become part of the
-  // field's name. It is an alert, so it is read when it appears (UI-24).
+  // field's name. It is an alert, so it is read when it appears.
   return (
     <div className="field">
       <label className="field-label" htmlFor={inputId}>
@@ -436,7 +436,7 @@ function reportWhere(line: AmgpReportLine): string {
 }
 
 /**
- * What an AntiMicroX import dropped, approximated and noted (PRO-21), by
+ * What an AntiMicroX import dropped, approximated and noted, by
  * severity, with where in the file and why. The import is done. A group has
  * no note of its own: a line can say more than any note of its group could
  * (a dropped line may be a duplicate that padmate does handle, an info line
@@ -524,7 +524,7 @@ export function AmgpReportDialog({
   );
 }
 
-/** A file whose name another profile goes by (PRO-20). */
+/** A file whose name another profile goes by. */
 export interface ImportClash {
   /** The profile with the name. */
   id: string;
@@ -678,7 +678,7 @@ export function ImportClashDialog({
   );
 }
 
-/** Scripts of an imported file that clash with the library's (SCR-51). */
+/** Scripts of an imported file that clash with the library's. */
 export interface ImportScriptClash {
   scripts: ScriptClash[];
   /** Main's token for the file it read. */
@@ -884,7 +884,7 @@ export function BindConflictDialog({
 }
 
 /**
- * 点选窗口… (PRO-16, F4): blocks the page while padmate waits for a click
+ * 点选窗口… (F4): blocks the page while padmate waits for a click
  * into another app's window. It closes itself once a window is picked or
  * the wait ends; 取消, × and Esc stop waiting.
  */

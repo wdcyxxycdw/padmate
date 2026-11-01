@@ -1,4 +1,4 @@
-// Pure helpers for the stick calibration of a controller (IN-14): the
+// Pure helpers for the stick calibration of a controller: the
 // deadzone and outer edge of each stick, saved per controller in config.json
 // under devices.<DeviceKey>.calibration. They take a parsed config.json and
 // return a new object, or null when the change alters nothing; they never

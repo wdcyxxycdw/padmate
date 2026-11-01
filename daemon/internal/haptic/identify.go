@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// The pattern of Identify (IN-13): three buzzes on both motors, three white
+// The pattern of Identify: three buzzes on both motors, three white
 // flashes of the color LED, and a chase over the four player lights for a
 // controller that has those and no color LED. The programs run side by side:
 // the buzzes last 750 ms (three of 150 ms, two rests of 150 ms between), the

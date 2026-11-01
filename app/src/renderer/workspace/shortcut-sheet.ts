@@ -1,4 +1,4 @@
-// The shortcut table export (OUT-18): which shortcut each gamepad button
+// The shortcut table export: which shortcut each gamepad button
 // types, and which command to give that shortcut in the painting app. Only
 // keys actions of the base layer are listed, the only layer the GUI shows
 // (the function set is not).
@@ -40,7 +40,7 @@ export interface SheetOptions {
   controlName?: (control: string) => string;
   /**
    * The name the title shows; profile.name when absent. The fixed default
-   * goes by its ID, whatever name it stores (PRO-28).
+   * goes by its ID, whatever name it stores.
    */
   profileName?: string;
 }

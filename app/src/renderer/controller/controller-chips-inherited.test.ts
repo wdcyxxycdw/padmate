@@ -9,8 +9,8 @@ import {
 import { controllerLabels } from "./controller-model";
 
 // The binding keys a chip shows, and the chips of the sequence and text
-// actions (MAP-22, OUT-21), which the editor sets now. A chip says nothing of
-// where a binding comes from (PRO-19, ADR-0013).
+// actions, which the editor sets now. A chip says nothing of
+// where a binding comes from (ADR-0013).
 
 const labels = controllerLabels("xboxone");
 const controls = Object.keys(labels);
@@ -155,7 +155,7 @@ describe("chips of the sequence and text actions", () => {
       },
     },
   };
-  it("are not locked: the editor sets them (UI-31)", () => {
+  it("are not locked: the editor sets them", () => {
     const result = chips("actions", value);
     expect(result.south.state).toBe("bound");
     expect(result.east.state).toBe("bound");

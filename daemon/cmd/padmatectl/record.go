@@ -20,7 +20,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/version"
 )
 
-// "padmatectl record" (ENG-08) records the events of one gamepad in the
+// "padmatectl record" records the events of one gamepad in the
 // format of "monitor --json" (input.WriteEvent), for fake input and the
 // traces of daemon/testdata/traces.
 

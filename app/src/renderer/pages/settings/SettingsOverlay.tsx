@@ -13,7 +13,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * Settings → 浮层 (HUD-05, ADR-0014): the overlay's toasts, position and
+ * Settings → 浮层 (ADR-0014): the overlay's toasts, position and
  * opacity. They are the UI's own, kept in localStorage like the language, so
  * they do not wait for the mapping service and do not touch config.json.
  */

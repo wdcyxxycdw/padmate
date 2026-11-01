@@ -21,7 +21,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 )
 
-// startupReportKeys are the fields every report has (UI-45, ADR-0001).
+// startupReportKeys are the fields every report has (ADR-0001).
 var startupReportKeys = []string{"cause", "col", "dataDir", "errors", "file", "kind", "line", "message", "pointer", "version"}
 
 // runReport runs padmated with args and --startup-report, first, as the UI
@@ -63,7 +63,7 @@ func runReport(t *testing.T, args ...string) (code int, stderr string, rep start
 }
 
 // TestStartupReportConfig: a config.json with errors no longer stops the
-// start (PRO-29, the owner's G1 after F17): padmated repairs it. One it
+// start (the owner's G1 after F17): padmated repairs it. One it
 // cannot read still does, and the report names the file.
 func TestStartupReportConfig(t *testing.T) {
 	dir := t.TempDir()
@@ -82,7 +82,7 @@ func TestStartupReportConfig(t *testing.T) {
 
 // TestStartupReportFiles: the profile and the log each name themselves; a
 // data folder that is a file is the library's problem. A state.json with
-// errors no longer stops the start (PRO-29, TestStartResetsBrokenState).
+// errors no longer stops the start (TestStartResetsBrokenState).
 func TestStartupReportFiles(t *testing.T) {
 	dir := t.TempDir()
 	notDir := filepath.Join(dir, "file")
@@ -243,7 +243,7 @@ func (failingWriter) Write([]byte) (int, error) { return 0, errors.New("no stder
 
 // TestStartupReportRemovedFirst: padmated removes a report left by an
 // earlier start as soon as it has read its flags, before it starts, so
-// that a start that hangs, or is killed, leaves none (UI-45). The UI
+// that a start that hangs, or is killed, leaves none. The UI
 // passes the flag first, before the packaged UI's --inject or the
 // development UI's --dry-run and --data-dir.
 func TestStartupReportRemovedFirst(t *testing.T) {

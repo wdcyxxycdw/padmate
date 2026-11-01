@@ -9,7 +9,7 @@ import {
   type OverlayPrefs,
 } from "../shared/overlay";
 
-// The key hints (HUD-03, ADR-0014). While a button bound to the hints action
+// The key hints (ADR-0014). While a button bound to the hints action
 // is held, the daemon's periodic engine.activity state event gives the slot a
 // "hints" list: for each control of the slot's current layer stack, what it
 // does. This takes that list out of the event and hands it to the overlay,
@@ -17,7 +17,7 @@ import {
 //
 // Only the first mapped slot is followed, like the toasts. Hints show also
 // while the main window is focused (the user asked for them by holding the
-// button), and the toast switch of the settings (HUD-05) does not touch them.
+// button), and the toast switch of the settings does not touch them.
 
 /** The hints one state event carries for the first mapped slot. */
 export interface ObservedHints {
@@ -44,7 +44,7 @@ function mapped(device: unknown): boolean {
  * among the slots it lists that have a device (a free slot is listed with
  * device 0, and is not a mapped one). null for a state event without such a
  * slot, undefined for an event that is not a state event. The key hints and
- * a script's panels (SCR-22) are the first mapped slot's, as the toasts are.
+ * a script's panels are the first mapped slot's, as the toasts are.
  */
 export function firstMappedSlot(
   event: DaemonEvent,

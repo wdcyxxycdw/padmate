@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PadmateAPI } from "../../shared/api";
 import { initialUpdateState, type UpdateState } from "../../shared/update";
 
-/** The part of the window's API that the automatic update (PKG-10) uses. */
+/** The part of the window's API that the automatic update uses. */
 export type UpdateApi = Pick<
   PadmateAPI,
   | "getUpdateState"

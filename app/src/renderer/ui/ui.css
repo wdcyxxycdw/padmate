@@ -86,7 +86,7 @@
   font-weight: 500;
   color: var(--text-3);
 }
-/* A field that did not commit (UI-43) and why. */
+/* A field that did not commit and why. */
 .field-error {
   color: var(--red);
   font-size: 12px;
@@ -530,7 +530,7 @@
 }
 
 /*
- * Windows high contrast (UI-24). A forced color scheme replaces every color,
+ * Windows high contrast. A forced color scheme replaces every color,
  * drops shadows and gradients, and keeps only what the stylesheet says in
  * system colors. A state that only differed by color or by a shadow would
  * vanish, so each one below gets an edge, a ring or a system color. The

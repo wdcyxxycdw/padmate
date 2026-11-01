@@ -24,7 +24,7 @@ export const APP_ICON_SIZE = 96;
 export const APP_ICON_CACHE = 128;
 
 /**
- * A bound app's icon (UI-42) as a PNG data URL, "" when the file has none
+ * A bound app's icon as a PNG data URL, "" when the file has none
  * or cannot be read. The renderer supplies only the executable's path,
  * checked by validateAppIconPath; no window or window title is read.
  */

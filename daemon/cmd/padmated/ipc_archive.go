@@ -28,7 +28,7 @@ const (
 	rpcCodeProfileNameTaken = -32021
 	// rpcCodeMacroConflict: profiles.import without macros of an archive
 	// whose macros the script library has under the same names with other
-	// bytes (SCR-51); data is {"conflicts":[{"file","existing",
+	// bytes; data is {"conflicts":[{"file","existing",
 	// "replaceable"}]}: file the archive's macro, existing the library's,
 	// replaceable whether macros "replace" replaces it (the same
 	// extension). Nothing was written. The client asks the user and
@@ -37,7 +37,7 @@ const (
 )
 
 // archiveMethods back up one library profile as an archive and add an
-// archive to the library (PRO-20). The daemon reads and writes the files;
+// archive to the library. The daemon reads and writes the files;
 // the client only moves the archive's bytes, so no method takes a path.
 func (r *liveRun) archiveMethods(methods handler.Map) {
 	methods["profiles.export"] = r.rpcExportProfile
@@ -143,7 +143,7 @@ func (r *liveRun) rpcExportProfile(_ context.Context, req *jrpc2.Request) (any, 
 
 // rpcImportProfile adds an archive to the library: a new profile, its ID
 // made from the name, or with replace the profile whose folder it
-// replaces. Its macros go into the script library (SCR-51); macros
+// replaces. Its macros go into the script library; macros
 // settles those whose names the library has with other bytes, which are
 // otherwise rpcCodeMacroConflict: "replace" writes the archive's over the
 // library's, "keep" adds them under numbered names that the imported

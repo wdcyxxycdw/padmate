@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// TestRecorderPercentiles (DMN-15): the Recorder summarizes with the same
+// TestRecorderPercentiles: the Recorder summarizes with the same
 // nearest-rank rule as the bench (Summarize), over virtual data: 1..1000 µs
 // has p50 500 µs, p90 900 µs, p99 990 µs and a maximum of 1000 µs.
 func TestRecorderPercentiles(t *testing.T) {
@@ -91,7 +91,7 @@ func TestRecorderDevices(t *testing.T) {
 	}
 }
 
-// TestRecorderNoAlloc (DMN-15): Record, which T-output runs once per key sent,
+// TestRecorderNoAlloc: Record, which T-output runs once per key sent,
 // allocates nothing: not for a ring in use, not for a new device that takes a
 // free ring, and not for one that takes the ring of the least recently written.
 func TestRecorderNoAlloc(t *testing.T) {
@@ -139,7 +139,7 @@ func TestRecorderConcurrent(t *testing.T) {
 	wg.Wait()
 }
 
-// TestWarn (DMN-15, ADR-0016): a p99 above 1.5 ms warns, but only from 50
+// TestWarn (ADR-0016): a p99 above 1.5 ms warns, but only from 50
 // samples on; exactly 1.5 ms does not warn, as the bench's gate is p99 < 1.5 ms.
 func TestWarn(t *testing.T) {
 	if WarnP99 != 1500*time.Microsecond || WarnMinSamples != 50 {
@@ -163,7 +163,7 @@ func TestWarn(t *testing.T) {
 	}
 }
 
-// TestRecorderSummaryAllocatesOutsideTheLock (DMN-15): Summary copies a ring
+// TestRecorderSummaryAllocatesOutsideTheLock: Summary copies a ring
 // under the mutex that Record of T-output needs, so it must not allocate
 // there: an allocation that stalls (a GC assist) would stall T-output behind
 // the reader. The copy goes to the stack, and the one allocation that Summary

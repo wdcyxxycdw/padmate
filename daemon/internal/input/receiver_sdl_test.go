@@ -19,7 +19,7 @@ import (
 )
 
 // These tests need the SDL library, as those of source_test.go do. They
-// drive the receiver watchdog (IN-30) with virtual Switch Pro gamepads
+// drive the receiver watchdog with virtual Switch Pro gamepads
 // whose heartbeat reports the test sends (Virtual.Beat, Virtual.Report):
 // SDL sees nothing of those reports, only T-input's heartbeat source.
 

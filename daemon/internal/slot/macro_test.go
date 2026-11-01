@@ -21,7 +21,7 @@ import (
 // fakeMacroHold is how long a run of fakeMacros holds its key.
 const fakeMacroHold = 100 * time.Millisecond
 
-// fakeMacros is a runtime that only runs macros (SCR-50), as padmated's
+// fakeMacros is a runtime that only runs macros, as padmated's
 // is for a profile without a legacy entry: Needed, not Configured. A run
 // of the macro "F13.ts" presses F13 for fakeMacroHold under an owner of
 // its own, so the output shows when each macro ran. Like padmated's

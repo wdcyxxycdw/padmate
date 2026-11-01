@@ -46,7 +46,7 @@ func statusRepair(ctx context.Context, t *testing.T, client *jrpc2.Client) *rpcC
 }
 
 // TestStartRepairsConfig: a config.json with errors no longer stops the
-// start (PRO-29): it is backed up, then repaired, keeping what was fine,
+// start: it is backed up, then repaired, keeping what was fine,
 // and status.get tells the UI until it says it has shown it. A later read
 // of a file broken by hand (config.get) repairs it too, and tells the
 // subscribers at once.
@@ -194,7 +194,7 @@ func TestStartResetsBrokenState(t *testing.T) {
 	}
 }
 
-// TestReplayRepairsInMemory: a replay never writes (PRO-29): it runs with
+// TestReplayRepairsInMemory: a replay never writes: it runs with
 // the repaired config.json and without a state.json that has errors,
 // leaving both files as they are.
 func TestReplayRepairsInMemory(t *testing.T) {

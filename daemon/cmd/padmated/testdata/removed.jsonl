@@ -2,7 +2,7 @@
 # Ctrl+Z not yet over: everything is released at once. SDL does not reuse
 # device ids, so the pad comes back as device 2, with the same guid.
 # --fake-input replays one device and skips device 2; live mode maps a
-# pad that comes back (IN-05).
+# pad that comes back.
 {"timeNs":0,"kind":"added","device":1,"info":{"id":1,"name":"pad","type":"standard","guid":"0500a1b25e040000130b000009057200","gamepad":true}}
 {"timeNs":10000000,"kind":"down","device":1,"control":"east"}
 {"timeNs":20000000,"kind":"axis","device":1,"control":"lefttrigger","value":20000}

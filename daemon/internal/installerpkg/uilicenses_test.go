@@ -169,7 +169,7 @@ func TestCollectUILicensesResolvesNestedCopies(t *testing.T) {
 }
 
 // electron-updater is bundled into the main process, so its license and those
-// of what it needs are shipped (PKG-10).
+// of what it needs are shipped.
 func TestCollectUILicensesListsTheUpdater(t *testing.T) {
 	app := filepath.Join("..", "..", "..", "app")
 	if _, err := os.Stat(filepath.Join(app, "node_modules", "electron-updater")); err != nil {

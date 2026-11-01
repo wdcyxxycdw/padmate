@@ -1,4 +1,4 @@
-// 脚本 page (UI-41, SCR-50, SCR-51): the script library, shared by every
+// 脚本 page: the script library, shared by every
 // profile and independent of the open one. Each script is a file of the
 // library that keys of any profile run from the key drawer; the page
 // creates, imports, opens, renames and deletes them, and says which
@@ -571,7 +571,7 @@ export function ScriptsPage({
 }: {
   state: ShellState;
   /**
-   * The mapping page's editor (UI-43): renaming, deleting and removing
+   * The mapping page's editor: renaming, deleting and removing
    * write profile.json, so they wait for its saves and read it again.
    */
   editor: EditorStore;
@@ -611,7 +611,7 @@ export function ScriptsPage({
     );
   }, [api, profileChanges, focusCount, refreshes]);
 
-  // An edit of the open profile waits for its save (UI-43).
+  // An edit of the open profile waits for its save.
   const saving = useStore(editor, (value) => value.saving);
   const [busy, setBusy] = useState(false);
   const running = useRef(false);

@@ -19,7 +19,7 @@ func releaseWorkflow(t *testing.T) string {
 
 // The release workflow has never run on GitHub (remote CI is off), so its
 // strings are pinned here: what a release holds, how it is marked, and where
-// the signing secrets are read (PKG-07, PKG-09, PKG-10, ADR-0018).
+// the signing secrets are read (ADR-0018).
 func TestReleaseWorkflow(t *testing.T) {
 	text := releaseWorkflow(t)
 
@@ -126,7 +126,7 @@ func stepIndex(text, name string) int {
 // which no secret is (signingPlan refuses a URL and a base64 value). So the
 // workflow carries no PFX secrets, and a repository variable that asks for
 // another mode is an error before anything is built, not a build that fails
-// late or quietly makes no signature (PKG-09, ADR-0018).
+// late or quietly makes no signature (ADR-0018).
 func TestReleaseWorkflowSignsOnlyWithAzure(t *testing.T) {
 	text := releaseWorkflow(t)
 	for _, forbidden := range []string{"secrets.WIN_CSC", "secrets.CSC_"} {
@@ -167,7 +167,7 @@ func TestReleaseWorkflowSignsOnlyWithAzure(t *testing.T) {
 // smoke test, because electron-builder deletes the uninstaller from
 // dist/installer once it has signed it. The variable that turns the check on
 // is set from the publisher the build was signed as, in the step that runs the
-// smoke test and nowhere else (PKG-09, ADR-0018).
+// smoke test and nowhere else (ADR-0018).
 func TestReleaseWorkflowChecksTheSignedUninstaller(t *testing.T) {
 	text := releaseWorkflow(t)
 	smoke := stepIndex(text, "Smoke-test install, upgrade and uninstall")

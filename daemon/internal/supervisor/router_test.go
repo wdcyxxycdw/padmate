@@ -209,7 +209,7 @@ func fmtEdges(edges []slot.Edge) string {
 }
 
 // TestPolicy drives the router over one slot through the assignment
-// policy (IN-05): every assignment is provisional until the gamepad it
+// policy: every assignment is provisional until the gamepad it
 // went to presses a button, and until then the slot's home takes it back
 // when it reconnects, if another gamepad has it, and a gamepad that waits
 // takes it over when it presses a button, the holder waiting again at the
@@ -484,7 +484,7 @@ func TestPressDisabled(t *testing.T) {
 	}
 }
 
-// checkInvariants asserts the router's invariants (IN-08) on its status,
+// checkInvariants asserts the router's invariants on its status,
 // its line and its connected gamepads.
 func checkInvariants(t *testing.T, r *router) {
 	t.Helper()
@@ -590,7 +590,7 @@ func linesWith(lines []logLine, msg string) []logLine {
 // reconnects while a slot is free takes that slot, and the stand-in on the
 // slot whose home is its key keeps its slot, which gets no edge, so that
 // what the stand-in holds stays held, and becomes its home, still
-// provisionally (IN-08). No slot is free then, so the next gamepad to
+// provisionally. No slot is free then, so the next gamepad to
 // connect waits.
 func TestRehomeFree(t *testing.T) {
 	const a, b, c, d = "0a0a", "0b0b", "0c0c", "0d0d"
@@ -650,7 +650,7 @@ func TestReclaimFull(t *testing.T) {
 
 // TestTakeOverOldest drives the router over two slots: a press of a
 // gamepad that waits takes over the provisional slot assigned longest ago,
-// slot 1 here, not the one of the lowest index (IN-08); the next press
+// slot 1 here, not the one of the lowest index; the next press
 // takes the other.
 func TestTakeOverOldest(t *testing.T) {
 	const a, b, c, d = "0a0a", "0b0b", "0c0c", "0d0d"
@@ -683,7 +683,7 @@ type slotsStep struct {
 }
 
 // TestPolicySlots drives the router over several slots through the
-// assignment policy (IN-08): a gamepad that connects takes the free slot
+// assignment policy: a gamepad that connects takes the free slot
 // of the lowest index, and a stand-in for its key is rehomed; it takes its
 // home slot back only when every slot is taken; a press of a gamepad that
 // waits takes over the provisional slot assigned longest ago; a hand-off

@@ -38,7 +38,7 @@ func TestConfigValidation(t *testing.T) {
 		`{"schemaVersion":0,"rules":[{"exe":"paint.exe","profile":""}]}`,
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["south","south"],"holdMs":2000}}}}`,
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["leftx+","south"],"holdMs":2000}}}}`,
-		// UI-19 (ADR-0001): at least two buttons and 500 ms, so that one
+		// ADR-0001: at least two buttons and 500 ms, so that one
 		// button held a little long never pauses.
 		`{"schemaVersion":0,"safety":{"panic":{"standard":{"buttons":["back"],"holdMs":2000}}}}`,
 		`{"schemaVersion":0,"safety":{"panic":{"joyconLeft":{"buttons":["back","start"],"holdMs":499}}}}`,
@@ -59,7 +59,7 @@ func TestConfigValidation(t *testing.T) {
 }
 
 // TestConfigPanicComboBounds: the smallest and largest emergency combos
-// config.json accepts (UI-19, ADR-0001).
+// config.json accepts (ADR-0001).
 func TestConfigPanicComboBounds(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"safety":{"panic":{
 		"standard":{"buttons":["back","start"],"holdMs":500},
@@ -85,8 +85,8 @@ func TestConfigPanicComboBounds(t *testing.T) {
 }
 
 // TestConfigSelection: the first enabled rule that names a profile wins;
-// an application no rule binds gets the fixed default profile (PRO-28,
-// ADR-0008).
+// an application no rule binds gets the fixed default profile
+// (ADR-0008).
 func TestConfigSelection(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"rules":[
 		{"exe":"paint.exe","profile":"off","enabled":false},
@@ -216,7 +216,7 @@ func TestConfigTimingAndPanic(t *testing.T) {
 	}
 }
 
-// TestConfigEventGap: output.eventGapMs (OUT-17) is 0 when left out and
+// TestConfigEventGap: output.eventGapMs is 0 when left out and
 // any whole number of milliseconds from 0 to 50.
 func TestConfigEventGap(t *testing.T) {
 	for _, tc := range []struct {
@@ -265,7 +265,7 @@ func FuzzConfig(f *testing.F) {
 		f.Add([]byte(seed))
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {
-		// Every repair parses (PRO-29); a valid file keeps its settings.
+		// Every repair parses; a valid file keeps its settings.
 		fixed, repair := RepairConfig(data, func(key string) bool { return !strings.Contains(key, "x") })
 		rc, rds := ParseConfig(fixed)
 		if rds.HasErrors() {
@@ -297,7 +297,7 @@ func FuzzConfig(f *testing.F) {
 }
 
 // TestConfigFeedbackSwitches: config.json feedback holds the four global
-// feedback switches (UI-27, ADR-0015). Each is on unless it says false, the
+// feedback switches (ADR-0015). Each is on unless it says false, the
 // members are independent, and a missing object is all on.
 func TestConfigFeedbackSwitches(t *testing.T) {
 	all := DefaultFeedbackSwitches()
@@ -342,8 +342,8 @@ func TestConfigFeedbackSwitches(t *testing.T) {
 }
 
 // TestConfigFunctionKey: config.json functionKey picks the one function key
-// (MAP-27, ADR-0012): start unless it says back or guide. Anything else, in
-// type or value, is a schema error that the repair (PRO-29) resets.
+// (ADR-0012): start unless it says back or guide. Anything else, in
+// type or value, is a schema error that the repair resets.
 func TestConfigFunctionKey(t *testing.T) {
 	if got := DefaultConfig().FunctionKey; got != control.Start {
 		t.Errorf("DefaultConfig().FunctionKey = %s; want start", got)

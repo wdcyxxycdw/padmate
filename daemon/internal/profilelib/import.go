@@ -130,7 +130,7 @@ type Imported struct {
 // file system refuses as a duplicate (fs.ErrExist) is an *ArchiveError
 // too.
 //
-// The archive's macros folder goes into the library (SCR-51), not the
+// The archive's macros folder goes into the library, not the
 // profile folder: a macro the library lacks is added, one it has with
 // the same bytes is used, and one whose name it has with other bytes is a
 // *MacroConflictError with opts.Macros MacrosAsk, before anything is

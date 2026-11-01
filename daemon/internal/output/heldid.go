@@ -7,7 +7,7 @@ import (
 )
 
 // HeldIdentity is the logon session a held-key log was written in
-// (OUT-14, ADR-0006). The startup sweep takes the keys of a log only when
+// (ADR-0006). The startup sweep takes the keys of a log only when
 // it is of the same logon session as the run: the keys of another's were
 // let go of when that session ended, and a key the system has down now is
 // not the last run's but the user's or another program's.

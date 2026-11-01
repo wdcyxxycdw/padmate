@@ -1,4 +1,4 @@
-// Code that runs inside the page of a Playwright test (UI-24): the helpers of
+// Code that runs inside the page of a Playwright test: the helpers of
 // tests/e2e/a11y-helpers.ts hand these to `evaluate`, which serializes the
 // function, so each one is plain and reaches for nothing outside itself. They
 // live here, away from Playwright, so that src/renderer/a11y-page-scripts.test.ts

@@ -19,7 +19,7 @@ func writeProfile(t *testing.T, src string) string {
 	return path
 }
 
-// TestValidateHaptic (MAP-25, HUD-10): validate lists the haptic of a binding
+// TestValidateHaptic: validate lists the haptic of a binding
 // after its gesture, as text and as the "haptic" member of --json, accepts
 // knobTick, and reports a preset that is not one, or a knobTick that is not a
 // boolean, at its member.

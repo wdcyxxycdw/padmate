@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// The limits of a sequence (ADR-0012, MAP-22): at least one and at most MaxSteps
+// The limits of a sequence (ADR-0012): at least one and at most MaxSteps
 // steps, and a wait of MinWait to MaxWait.
 const (
 	MaxSteps = 64
@@ -33,8 +33,8 @@ const (
 	StepText
 )
 
-// Step is one step of a sequence action (ADR-0012, MAP-22), of the
-// key.sequence of a script (SCR-26), and the one step of a text action. It is
+// Step is one step of a sequence action (ADR-0012), of the
+// key.sequence of a script, and the one step of a text action. It is
 // plain data, shared by the profile, the engine and the output layer: only the
 // member of its Kind is used. Build one with KeysStep, WaitStep or TextStep.
 type Step struct {

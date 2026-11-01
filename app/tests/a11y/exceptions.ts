@@ -1,4 +1,4 @@
-// The accessibility exceptions (UI-24): app/tests/a11y/exceptions.json, shared
+// The accessibility exceptions: app/tests/a11y/exceptions.json, shared
 // by the jsdom pass (src/renderer/a11y.test.tsx) and the Electron pass
 // (tests/e2e/a11y.spec.ts). An exception names an axe rule, a CSS selector of
 // the nodes it covers and why it is accepted. It is a decision, not a

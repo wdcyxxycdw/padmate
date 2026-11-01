@@ -9,7 +9,7 @@ import type {
 import type { Profile } from "../../shared/generated/schema";
 import { createEditorStore, type EditorStore } from "./editor-store";
 
-// A save whose answer is lost (UI-43). The daemon answers profiles.put only
+// A save whose answer is lost. The daemon answers profiles.put only
 // after it has applied the profile, and the bridge gives up on a request
 // after 10 s (BridgeClient.call), so a put can write profile.json and still
 // fail for the editor. The revision it holds is then stale: the editor has to

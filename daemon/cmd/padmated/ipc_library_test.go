@@ -98,7 +98,7 @@ func TestIPCDeleteProfile(t *testing.T) {
 	if err := client.CallResult(ctx, "profiles.list", nil, &items); err != nil || len(items) != 3 || items[0].ID != profilelib.DefaultID || !items[0].Default || items[1].Default {
 		t.Fatal(items, err)
 	}
-	// The fixed default is never deleted (PRO-28, ADR-0008).
+	// The fixed default is never deleted (ADR-0008).
 	if data := rpcErrorData(t, del(profilelib.DefaultID, items[0].Revision), rpcCodeProfileFixed); data != `{"op":"delete"}` {
 		t.Fatal(data)
 	}

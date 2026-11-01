@@ -143,7 +143,7 @@ test("real fake-input UI fits the window without keyboard injection and enforces
       "false",
     );
     await modelScreenshot(info.outputPath("released.png"));
-    // The key preview line (UI-44) sits over the stage until it fades.
+    // The key preview line sits over the stage until it fades.
     await expect(page.getByTestId("key-preview")).toHaveText("", {
       timeout: 6000,
     });
@@ -165,7 +165,7 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     const expectFits = async () => {
       await expectPageFits(page);
       const stage = await page.locator(".controller-stage").boundingBox();
-      // The switch between the usual keys and the function set (UI-30)
+      // The switch between the usual keys and the function set
       // sits above the controller: it is centred in the rest of the stage.
       const bar = await page.locator(".key-view-bar").boundingBox();
       const controller = await page
@@ -339,8 +339,8 @@ test("real fake-input UI fits the window without keyboard injection and enforces
     });
     const calloutButtons = page.locator("button[data-callout]");
     // The function key, Menu unless the settings say otherwise, is a tag and
-    // not a button; View and the Xbox button are ordinary buttons (UI-30).
-    // Each stick is two buttons, its movement and its press (UI-39).
+    // not a button; View and the Xbox button are ordinary buttons.
+    // Each stick is two buttons, its movement and its press.
     await expect(calloutButtons).toHaveCount(18);
     await expect(page.locator("[data-callout='start']")).toHaveCount(1);
     await expect(page.locator("button[data-callout='start']")).toHaveCount(0);

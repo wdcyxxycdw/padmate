@@ -231,7 +231,7 @@ func TestMenuMask(t *testing.T) {
 			{send: "+MouseLeft", plan: failSend(0), want: "[+MouseLeft!]", left: 1, err: "test: blocked", is: errBlocked},
 			{send: "-LAlt", want: "[+vk:0xE8 -vk:0xE8 -LAlt]"},
 		}},
-		// A Unicode event (a unit of a typed text, OUT-21) is no key press for the
+		// A Unicode event (a unit of a typed text) is no key press for the
 		// mask, like a mouse event: a lone Alt released after Alt and a typed
 		// character still gets the mask key, which is harmless.
 		{"text does not dirty", []maskStep{
@@ -567,7 +567,7 @@ func TestMenuMaskNoAllocs(t *testing.T) {
 }
 
 // BenchmarkMenuMask measures a batch the MenuMask passes through and one it
-// masks, for ENG-11.
+// masks, for the latency bench.
 func BenchmarkMenuMask(b *testing.B) {
 	for _, bb := range []struct{ name, batch string }{
 		{"pass-through", "+LCtrl +Z -Z -LCtrl"},

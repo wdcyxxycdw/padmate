@@ -162,7 +162,7 @@ function Harness({
 }
 const draft = () =>
   JSON.parse(screen.getByTestId("draft").textContent ?? "{}") as Profile;
-/** Types into a field and leaves it, which commits the text (UI-43). */
+/** Types into a field and leaves it, which commits the text. */
 function commit(field: Element, init: { target: { value: string } }) {
   fireEvent.change(field, init);
   fireEvent.blur(field);
@@ -1054,7 +1054,7 @@ describe("trigger settings", () => {
     expect(screen.getByRole("meter").dataset.active).toBe("false");
   });
 
-  it("says where the release, press and full pull marks are, in words (UI-24)", () => {
+  it("says where the release, press and full pull marks are, in words", () => {
     render(<Harness panel={TriggerSettings} control="lefttrigger" />);
     const meter = screen.getByRole("meter", { name: "扳机实时力度" });
     // The marks are presentational children of the meter; a sentence says
@@ -1619,7 +1619,7 @@ describe("wording", () => {
   });
 });
 
-describe("scripts in the analog panels (SCR-50)", () => {
+describe("scripts in the analog panels", () => {
   it("names a script, or says its file is gone", () => {
     const binding = { press: { type: "macro" as const, file: "复制全部.ts" } };
     const { unmount } = render(
@@ -1647,7 +1647,7 @@ describe("scripts in the analog panels (SCR-50)", () => {
   });
 });
 
-describe("stick panel: knob, rings and curve (UI-28)", () => {
+describe("stick panel: knob, rings and curve", () => {
   // No dead zone or push settings of its own: the defaults, 15% and 95%.
   const bare: Profile = { ...layered, analog: {} };
   const knobFile = (stick: "ls" | "rs" = "ls"): Profile => ({
@@ -1713,7 +1713,7 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
     expect(draft().analog?.ls?.knobStepDeg).toBe(180);
   });
 
-  it("has a 刻度震动 switch in the knob section, off by default, that writes knobTick and takes it out again (HUD-10)", () => {
+  it("has a 刻度震动 switch in the knob section, off by default, that writes knobTick and takes it out again", () => {
     render(<Harness initial={knobFile()} />);
     const tick = screen.getByRole("switch", { name: "刻度震动" });
     // In the knob section, beside the step, with no hint line.
@@ -2252,7 +2252,7 @@ describe("stick panel: knob, rings and curve (UI-28)", () => {
   });
 });
 
-describe("stick panel: pointer mode (MOU-01, MOU-04, MOU-06, UI-33)", () => {
+describe("stick panel: pointer mode", () => {
   const mouseFile = (
     stick: "ls" | "rs" = "ls",
     settings: Record<string, unknown> = {},

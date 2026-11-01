@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// paced is a Sim option: an Arbiter with an event gap (OUT-17).
+// paced is a Sim option: an Arbiter with an event gap.
 func paced(gap, minPress, minGap time.Duration) simtest.Option {
 	return simtest.WithArbiterOptions(output.ArbiterOptions{EventGap: gap, MinPress: minPress, MinGap: minGap})
 }
@@ -199,7 +199,7 @@ func TestEventGap(t *testing.T) {
 	}
 }
 
-// TestEventGapZero: without a gap a tap is one Send, as before OUT-17.
+// TestEventGapZero: without a gap a tap is one Send, as without the pacing.
 func TestEventGapZero(t *testing.T) {
 	s := newSim(t)
 	s.tap(ownerA, "Ctrl+Shift+F13", 0)
@@ -210,7 +210,7 @@ func TestEventGapZero(t *testing.T) {
 }
 
 // TestEventGapZeroAllocs: without a gap a tap and the Advance that ends
-// it allocate no more than before OUT-17 (17 times, on 28f0078).
+// it allocate no more than without the pacing (17 times, on 28f0078).
 func TestEventGapZeroAllocs(t *testing.T) {
 	if raceEnabled {
 		t.Skip("the race detector may allocate; the other CI jobs run this")

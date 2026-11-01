@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The sequence (MAP-22, ADR-0012): steps that tap a shortcut, wait or type a
+// The sequence (ADR-0012): steps that tap a shortcut, wait or type a
 // text, run by one owner-cancellable queue of the Arbiter.
 
 func kstep(spec string) keys.Step { return keys.KeysStep(keys.MustParse(spec)) }
@@ -566,7 +566,7 @@ func TestSequenceDoesNotSurviveTheGate(t *testing.T) {
 	s.ExpectOutput("")
 }
 
-// The event gap (OUT-17) spaces a sequence's events like any other, and the
+// The event gap spaces a sequence's events like any other, and the
 // events keep their order: a text waits for the events of the step before it.
 func TestSequenceWithEventGap(t *testing.T) {
 	s := newSim(t, simtest.WithArbiterOptions(output.ArbiterOptions{EventGap: 5 * ms}))

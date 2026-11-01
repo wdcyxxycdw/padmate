@@ -2,7 +2,7 @@ const MAX_LINE = 500;
 
 /**
  * The log of electron-updater, kept in memory: the latest lines, nothing on
- * disk and nothing sent anywhere (PKG-10). It has the interface the updater
+ * disk and nothing sent anywhere. It has the interface the updater
  * wants of a logger.
  */
 export class LogRing {

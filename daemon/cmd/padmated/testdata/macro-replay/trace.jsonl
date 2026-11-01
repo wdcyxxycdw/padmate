@@ -1,4 +1,4 @@
-# Macros (SCR-50): a tap runs 复制全部.ts, which taps Ctrl+A and, 50 ms
+# Macros: a tap runs 复制全部.ts, which taps Ctrl+A and, 50 ms
 # later, Ctrl+C; east holds Shift for 300 ms, and its second press while
 # the run goes on is ignored; leftstick maps as without a script while Shift is
 # held; north's hold runs 长按.js once; west's macro does not exist, which

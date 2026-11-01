@@ -65,11 +65,11 @@ export const axisThresholdDefault = 0.3;
 export const knobStepRange = { min: 10, max: 180 } as const;
 /**
  * The pointer speed in px/s at full travel that a mouse-mode stick may set
- * (`analog.ls.mouseSpeed`, MOU-04). The slider stops at `slider`; the number
+ * (`analog.ls.mouseSpeed`). The slider stops at `slider`; the number
  * field goes up to `max`.
  */
 export const mouseSpeedRange = { min: 50, max: 10000, slider: 4000 } as const;
-/** The smoothing time of a mouse-mode stick in ms (`mouseSmoothingMs`, MOU-06). */
+/** The smoothing time of a mouse-mode stick in ms (`mouseSmoothingMs`). */
 export const mouseSmoothingRange = { min: 0, max: 500 } as const;
 
 export function analogGroup(control: string): AnalogGroup | null {
@@ -106,8 +106,8 @@ export function analogGroup(control: string): AnalogGroup | null {
 
 /**
  * The directions a stick or d-pad mode emits, in grid order. A knob emits
- * none: it turns the stick into the two tick controls (ANA-11). A stick that
- * moves the pointer emits none either (MOU-01).
+ * none: it turns the stick into the two tick controls. A stick that
+ * moves the pointer emits none either.
  */
 export function modeDirections(mode: string): readonly Direction[] {
   return mode === "knob" || mode === "mouse"
@@ -124,12 +124,12 @@ export function knobControls(group: "ls" | "rs"): BindingControl[] {
   return [`${group}.cw`, `${group}.ccw`] as BindingControl[];
 }
 
-/** The inner and outer ring controls of a stick (ANA-10). */
+/** The inner and outer ring controls of a stick. */
 export function ringControls(group: "ls" | "rs"): BindingControl[] {
   return [`${group}.inner`, `${group}.outer`] as BindingControl[];
 }
 
-/** The second stage of a trigger (ANA-14). */
+/** The second stage of a trigger. */
 export function fullControl(group: "lt" | "rt"): BindingControl {
   return `${group}.full` as BindingControl;
 }
@@ -281,7 +281,7 @@ export interface StickReading {
   /** The stick's angle in degrees, 0 up and clockwise; null until active. */
   angle: number | null;
   /**
-   * The ring the stick is in (ANA-10): inner from the trigger point up to the
+   * The ring the stick is in: inner from the trigger point up to the
    * outer threshold, outer from there on; null until active. Without the
    * outer ring's hysteresis, like the directions.
    */
@@ -291,9 +291,9 @@ export interface StickReading {
 /**
  * Which virtual directions a stick position presses. It mirrors the engine's
  * readStick, directionsFor and ringWant (internal/engine) without the
- * time-dependent hysteresis and delay. A knob (ANA-11) presses no
+ * time-dependent hysteresis and delay. A knob presses no
  * direction: its ticks come from the angle over time. A stick that moves the
- * pointer (MOU-01) presses none either. x and y are SDL axes normalized to
+ * pointer presses none either. x and y are SDL axes normalized to
  * -1–1, with y positive downwards.
  */
 export function stickReading(
@@ -517,8 +517,8 @@ export function toPercent(value: number): number {
 }
 
 /**
- * Every key set of a profile: its groups, the shared one and the function set
- * (MAP-27), which uses the same stick and trigger settings.
+ * Every key set of a profile: its groups, the shared one and the function set,
+ * which uses the same stick and trigger settings.
  */
 function allLayers(profile: Profile): ProfileLayer[] {
   return [
@@ -531,8 +531,8 @@ function allLayers(profile: Profile): ProfileLayer[] {
 /**
  * Whether any repeat of a stick's or trigger's controls sets minRateHz, in
  * any key group. Only then does the response curve (`analog.<group>.curve`)
- * have an effect: it shapes that rate and moves no threshold (ANA-13). A stick
- * that moves the pointer is the other case (MOU-04): there the curve is always
+ * have an effect: it shapes that rate and moves no threshold. A stick
+ * that moves the pointer is the other case: there the curve is always
  * shown, beside the speed, and this does not decide it.
  */
 export function usesDepthRate(

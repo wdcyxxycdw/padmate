@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// PowerUpdate is what Config.OnPower gets: the power a gamepad reported (IN-12),
+// PowerUpdate is what Config.OnPower gets: the power a gamepad reported,
 // with what padmated needs to decide whether to announce it.
 type PowerUpdate struct {
 	// Device is the connection ID of the gamepad, Key its stable identity
@@ -24,11 +24,11 @@ type PowerUpdate struct {
 	// the router's program of this moment (a reload is ordered with the
 	// events): the strength and the pulse times of the alert's buzz. A gamepad
 	// that holds no slot has no profile, and gets the defaults. The switches
-	// (UI-27) are not in it: they are global (config.json feedback, ADR-0015).
+	// are not in it: they are global (config.json feedback, ADR-0015).
 	Feedback profile.Feedback
 }
 
-// devicePower keeps the latest power of a gamepad on its record (IN-12),
+// devicePower keeps the latest power of a gamepad on its record,
 // for Devices, and passes it to Config.OnPower. It is no control: no slot
 // gets it, and it neither takes a slot over nor confirms one. The value is
 // copied, since the event is shared with the other consumers of the stream.

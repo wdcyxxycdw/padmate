@@ -7,7 +7,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is the pure logic of the receiver watchdog (IN-30, ADR-0002).
+// This file is the pure logic of the receiver watchdog (ADR-0002).
 // A 2.4G receiver of the Switch Pro protocol, such as GameSir's Nova 2
 // Lite in Switch mode, stays listed by SDL when its gamepad is switched
 // off, and SDL reports no removal, so the keys held then stay held. SDL
@@ -97,7 +97,7 @@ const (
 )
 
 // watchable reports whether T-input watches the device info, whose SDL
-// connection state is state (IN-30): a device of the Switch Pro protocol
+// connection state is state: a device of the Switch Pro protocol
 // that SDL's HIDAPI driver reads over USB, with a HID path to open; or a
 // virtual one of that protocol with a heartbeat (VirtualDesc.Heartbeat).
 // Over Bluetooth SDL itself reopens a device silent for 3 s.

@@ -1,4 +1,4 @@
-// The rules of the controller mapping wizard (IN-19, ADR-0012): from the raw
+// The rules of the controller mapping wizard (ADR-0012): from the raw
 // events of one joystick, which element the user pressed or pushed for each
 // control that the wizard asks for, and the SDL mapping string of the answers.
 //

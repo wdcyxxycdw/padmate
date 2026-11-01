@@ -1,4 +1,4 @@
-// UI-24: contrast of the colors the stylesheets set, computed from the CSS
+// Contrast of the colors the stylesheets set, computed from the CSS
 // text. axe cannot do this in jsdom (no layout) and has no check for the
 // contrast of a control's border (WCAG 1.4.11), so this test is what gates
 // `task ci`; the Electron pass of app/tests/e2e/a11y.spec.ts looks at the

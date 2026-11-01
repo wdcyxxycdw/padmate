@@ -1,7 +1,7 @@
-// Command padmate-probe is a development tool (ENG-06): it records the
+// Command padmate-probe is a development tool: it records the
 // keyboard events a low-level hook sees, injected or physical, dumps
 // keyboard layouts into test fixtures, and reads window state (the
-// foreground window, the extended style of a window; SPK-09). All three
+// foreground window, the extended style of a window). All three
 // subcommands need Windows.
 package main
 

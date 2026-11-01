@@ -44,7 +44,7 @@ function setup(focused = () => true) {
   return { store, shown, view, line: () => screen.getByTestId("key-preview") };
 }
 
-describe("key preview (UI-44)", () => {
+describe("key preview", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -87,7 +87,7 @@ describe("key preview (UI-44)", () => {
     expect(line().textContent).toBe("LB → Shift");
   });
 
-  it("names the script a key runs, with the script icon (SCR-50)", () => {
+  it("names the script a key runs, with the script icon", () => {
     const { store, line } = setup();
     // engine.activity names a macro action by its file.
     press(store, "macro 复制全部.ts");

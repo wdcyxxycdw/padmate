@@ -132,7 +132,7 @@ func tableEvents(t *testing.T) []KeyEvent {
 }
 
 // A media key goes by VK, and the E0 scan code and KEYEVENTF_EXTENDEDKEY go
-// along (OUT-20): VK_VOLUME_UP is wVk 0xAF with wScan 0x30, as the physical key
+// along: VK_VOLUME_UP is wVk 0xAF with wScan 0x30, as the physical key
 // sends it, and no KEYEVENTF_SCANCODE, so that the layout is not asked.
 func TestMakeInputMedia(t *testing.T) {
 	const extra = uintptr(0x7061646D_00001234)
@@ -162,8 +162,8 @@ func TestMakeInputMedia(t *testing.T) {
 	}
 }
 
-// A Unicode event is KEYEVENTF_UNICODE with wVk 0 and the code unit in wScan
-// (OUT-21), a release with KEYEVENTF_KEYUP as well: no KEYEVENTF_SCANCODE and
+// A Unicode event is KEYEVENTF_UNICODE with wVk 0 and the code unit in wScan,
+// a release with KEYEVENTF_KEYUP as well: no KEYEVENTF_SCANCODE and
 // no KEYEVENTF_EXTENDEDKEY, whatever the other fields of the event say. The
 // tag in dwExtraInfo is the same as any event's.
 func TestMakeInputUnicode(t *testing.T) {

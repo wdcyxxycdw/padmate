@@ -18,7 +18,7 @@ import (
 //	PADMATE_PIPE     the pipe of this instance (ipc.Listen already reads it);
 //	                 also makes the instance mutex follow the pipe, and makes
 //	                 this a development build for the login startup entry,
-//	                 which it never writes (UI-19).
+//	                 which it never writes.
 //	PADMATE_IPC_DIR  where it publishes daemon.json, in place of
 //	                 %LOCALAPPDATA%\padmate\run. Without it, a private instance
 //	                 uses a folder of its own below the temporary folder, never

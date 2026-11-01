@@ -54,8 +54,8 @@ export default defineScript({
 });
 `,
   );
-  // A script (macro, SCR-50) a key can run: the library is one folder for
-  // every profile (SCR-51).
+  // A script (macro) a key can run: the library is one folder for
+  // every profile.
   await mkdir(join(f.path, "data", "macros"), { recursive: true });
   await writeFile(
     join(f.path, "data", "macros", "下一个笔刷.ts"),

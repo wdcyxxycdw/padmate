@@ -12,7 +12,7 @@ type Summary struct {
 }
 
 // Summarize sorts a copy of ds and takes nearest-rank percentiles: the
-// p-quantile is element ⌈p·N⌉−1, the rule SPK-03 used. No samples give
+// p-quantile is element ⌈p·N⌉−1, the rule the goja spike used. No samples give
 // the zero Summary. ds is not modified. Negative values are allowed.
 //
 // It duplicates the percentile code of internal/script/spike on purpose:

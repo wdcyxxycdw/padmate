@@ -44,7 +44,7 @@ const (
 	Error
 	// Pulse1 to Pulse4 are that many pulses on both motors, of the short
 	// pulse and gap of the profile's feedback: the pulses of the layer
-	// modes (HUD-16).
+	// modes.
 	Pulse1
 	Pulse2
 	Pulse3

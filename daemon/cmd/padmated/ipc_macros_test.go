@@ -36,7 +36,7 @@ func readLibraryMacro(t *testing.T, dir, name string) string {
 	return string(data)
 }
 
-// macros.list lists the script library (SCR-51): each macro with the
+// macros.list lists the script library: each macro with the
 // profiles and controls that run it in their profile.json, aliases and
 // layers merged, its build or load problem, names CheckMacroFile refuses,
 // the macros that bindings run but the library lacks, and every profile's
@@ -379,7 +379,7 @@ func TestIPCScriptPathsAndDetach(t *testing.T) {
 }
 
 // A library daemon moves the profiles' macros folders into the script
-// library before it starts (SCR-51): a macro the library has with other
+// library before it starts: a macro the library has with other
 // bytes gets a number and the profile's binding follows it, so each
 // profile runs its own macro; the start logs what moved.
 func TestLiveMigratesMacros(t *testing.T) {

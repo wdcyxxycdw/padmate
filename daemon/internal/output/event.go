@@ -14,8 +14,8 @@ import (
 // described independently of the injection backend. An event with Mouse set
 // is a mouse event (a wheel notch, a button press or release, or a pointer
 // move); every other field but Key and Up is then unused, except Dx and Dy of a
-// pointer move. An event with Unicode set types one UTF-16 code unit of a text
-// (OUT-21); every other field but Unit and Up is then unused.
+// pointer move. An event with Unicode set types one UTF-16 code unit of a text;
+// every other field but Unit and Up is then unused.
 type KeyEvent struct {
 	// Key is the key the event was made from, for display and
 	// bookkeeping. It does not affect injection of a keyboard event and may
@@ -40,10 +40,9 @@ type KeyEvent struct {
 	// whose E1 1D 45 sequence is not a single scan code, and for the
 	// numpad digits and NumDecimal, whose VK the system would otherwise
 	// derive from the current NumLock state, and for the media and volume
-	// keys (OUT-20), which carry an E0 scan code and Ext along.
+	// keys, which carry an E0 scan code and Ext along.
 	// MenuMaskEvent sets it for the
-	// menu mask key, vk 0xE8, with Scan 0, since no physical key has it
-	// (OUT-08).
+	// menu mask key, vk 0xE8, with Scan 0, since no physical key has it.
 	ByVK bool
 	// Up reports a release rather than a press.
 	Up bool
@@ -55,7 +54,7 @@ type KeyEvent struct {
 	// where it was even if it leaks (ADR-0004).
 	Dx, Dy int32
 	// Unicode marks an event that types a character instead of pressing a key
-	// (ADR-0012, OUT-21): the injection sets KEYEVENTF_UNICODE, with wVk 0 and the
+	// (ADR-0012): the injection sets KEYEVENTF_UNICODE, with wVk 0 and the
 	// UTF-16 code unit Unit in wScan. The system hands the foreground thread a
 	// VK_PACKET key, which the application turns into the character. Nothing of
 	// the layout, the IME or the modifier state of padmate comes into it. A
@@ -78,7 +77,7 @@ type KeyEvent struct {
 }
 
 // UnicodeEvent returns the event that types, or with up releases, the UTF-16
-// code unit unit (KEYEVENTF_UNICODE, OUT-21). It has no Key: nothing in the key
+// code unit unit (KEYEVENTF_UNICODE). It has no Key: nothing in the key
 // table names it.
 func UnicodeEvent(unit uint16, up bool) KeyEvent {
 	return KeyEvent{Unicode: true, Unit: unit, Up: up}
@@ -171,7 +170,7 @@ func (e KeyEvent) isMouse() bool { return e.Mouse != keys.MouseNone }
 // and it is never paced (gapless).
 func (e KeyEvent) Pointer() bool { return e.Mouse.IsPointer() }
 
-// gapless reports whether e takes no part in the event gap (OUT-17): it neither
+// gapless reports whether e takes no part in the event gap: it neither
 // waits for the gap nor starts one. A wheel release injects nothing, and a
 // pointer move is sent at the rate of the stick, which the gap would throttle.
 func (e KeyEvent) gapless() bool { return e.Silent() || e.Pointer() }
@@ -253,7 +252,7 @@ func (id KeyID) String() string {
 //     translated like the physical key, so it gives VK_NUMPAD7 for 0x47
 //     with NumLock on and VK_HOME with NumLock off. By VK they always
 //     arrive as VK_NUMPAD0–9 and VK_DECIMAL, whatever the NumLock state.
-//   - The media and volume keys (VolumeUp and its kin, ADR-0012, OUT-20): the
+//   - The media and volume keys (VolumeUp and its kin, ADR-0012): the
 //     VK of VK_VOLUME_UP, VK_MEDIA_PLAY_PAUSE and the like, with the E0 scan
 //     code in wScan and KEYEVENTF_EXTENDEDKEY, as the physical key sends them.
 //     Whatever the layout, the key is the key; what the hook sees of it has not
@@ -263,7 +262,7 @@ func (id KeyID) String() string {
 // (MenuMaskEvent).
 //
 // Character keys use their US scan code; resolving them against the
-// foreground layout is the Resolver's job (OUT-04).
+// foreground layout is the Resolver's job.
 //
 // A mouse key (a wheel notch or a button) makes a mouse event: no scan code,
 // no VK, no layout and no NumLock. A wheel notch is momentary: its release is Silent. A

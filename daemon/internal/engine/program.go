@@ -33,12 +33,12 @@ type Program struct {
 	// Trigger thresholds in raw axis units.
 	pressRaw, releaseRaw               int16
 	triggerPressRaw, triggerReleaseRaw [2]int16
-	// Second stage of the triggers (ANA-14).
+	// Second stage of the triggers.
 	triggerFullPressRaw, triggerFullReleaseRaw [2]int16
-	// Response curves (ANA-13), indexed by curveLS, curveRS, curveLT, curveRT.
+	// Response curves, indexed by curveLS, curveRS, curveLT, curveRT.
 	curves [4]curveKind
 
-	// fnKey is the function key of this Program (MAP-27, ADR-0012): back,
+	// fnKey is the function key of this Program (ADR-0012): back,
 	// start or guide, never control.Invalid. fnSet is the profile's function
 	// set, nil when it has none, and fnLevel the name that set has in lookups
 	// and decisions, profile.FunctionLevel(fnKey).
@@ -74,7 +74,7 @@ func (p *Program) FunctionKey() control.Control { return p.fnKey }
 // empty when there are none, and must not be changed.
 func (p *Program) IgnoredFunctionKeyBindings() []string { return p.fnIgnored }
 
-// BindingInfo describes one binding of a Program (PRO-04).
+// BindingInfo describes one binding of a Program.
 type BindingInfo struct {
 	Layer   string
 	Binding *profile.Binding
@@ -82,7 +82,7 @@ type BindingInfo struct {
 	// GestureNone for a binding without an action.
 	Gesture Gesture
 	// AddedLatency is how long the engine waits after the press of the
-	// binding's control before it acts on it (MAP-08). It is 0 for a
+	// binding's control before it acts on it. It is 0 for a
 	// control with only press gestures, which is every control in M1a.
 	AddedLatency time.Duration
 }
@@ -392,7 +392,7 @@ func checkActions(b *profile.Binding) error {
 // HUD hints action last while the control is held, so they need a press or hold
 // gesture (profile.PrecisionGestureMessage, profile.HintsGestureMessage);
 // repeat's style follows its mode;
-// a minRateHz (ANA-12) is on a control that has a depth
+// a minRateHz is on a control that has a depth
 // (control.Control.HasDepth) and does not exceed the rate.
 func checkAction(c control.Control, g Gesture, a *profile.Action) error {
 	if a == nil {
@@ -418,7 +418,7 @@ func checkAction(c control.Control, g Gesture, a *profile.Action) error {
 	}
 	if a.Type == profile.ActionSequence {
 		// A sequence taps, waits and types; it holds nothing, so it fits every
-		// gesture (MAP-22). Its steps pass the rules Parse applies.
+		// gesture. Its steps pass the rules Parse applies.
 		if err := keys.ValidateSteps(a.Steps); err != nil {
 			return fmt.Errorf("engine: action %s: %w", a.ID, err)
 		}
@@ -521,7 +521,7 @@ func (p *Program) Profile() *profile.Profile { return p.prof }
 func (p *Program) Bindings() []BindingInfo { return slices.Clone(p.bindings) }
 
 // layer returns the layer called name, or nil. Engine.lookup walks the
-// active levels with it (ENG-21).
+// active levels with it.
 func (p *Program) layer(name string) *profile.Layer { return p.layers[name] }
 
 // gestures returns the gestures of control c that have an action.
@@ -549,7 +549,7 @@ func (s gestureSet) with(g Gesture) gestureSet { return s | 1<<g }
 func (s gestureSet) has(g Gesture) bool        { return s&(1<<g) != 0 }
 
 // addedLatency is how long the engine waits after the press of a control
-// whose gestures are gs before it acts (MAP-08, ARCHITECTURE §7.2). A
+// whose gestures are gs before it acts (ARCHITECTURE §7.2). A
 // control with only immediate gestures never waits, and every M1a gesture
 // is immediate. M2 adds the ones that wait here: tap together with hold
 // waits holdMs to tell them apart, and a multi-tap adds multiTapMs to wait

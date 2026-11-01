@@ -49,7 +49,7 @@ type injectCase struct {
 	event output.KeyEvent
 }
 
-// TestInjectKeys (SPK-02) injects presses and releases of every key of
+// TestInjectKeys injects presses and releases of every key of
 // keys.Table and of extraScans, and checks what a low-level hook sees:
 // scan code, E0 flag, LLKHF_INJECTED, the tag and the VK. Every event is
 // swallowed by the hook, so nothing reaches the foreground application.
@@ -151,7 +151,7 @@ func (s *captureSender) Send(events []output.KeyEvent) (int, error) {
 	return len(events), nil
 }
 
-// TestInjectMenuMask (OUT-08) injects what a MenuMask sends for a press
+// TestInjectMenuMask injects what a MenuMask sends for a press
 // and a release of LAlt, and checks what a low-level hook sees: LAlt as
 // TestInjectKeys checks it, and the mask key with vk 0xE8, scan code 0
 // and no E0 flag; each with LLKHF_INJECTED only and the tag. Every event

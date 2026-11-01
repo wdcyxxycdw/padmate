@@ -10,7 +10,7 @@ import (
 )
 
 // A multi-tap window that ends with no action for the number of taps in it
-// leaves one decision (ADR-0016, ENG-20): the press only started a wait, and
+// leaves one decision (ADR-0016): the press only started a wait, and
 // without it the explanation of the press ("waiting for a tap, hold or
 // multi-tap") would never be answered. The decision is unbound, with the
 // gesture of the count, the binding and level the press resolved, and no

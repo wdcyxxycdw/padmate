@@ -3,7 +3,7 @@ import { configRepairHandlers } from "./config-repair-handlers";
 import type { DaemonCall } from "./library-handlers";
 import { validateConfigBackup } from "./security";
 
-describe("backup names of a repaired config.json (PRO-29)", () => {
+describe("backup names of a repaired config.json", () => {
   it.each([
     "config.broken-20261015-191600.json",
     "config.broken-20261015-191600-2.json",

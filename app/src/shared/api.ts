@@ -5,7 +5,7 @@ import type {
   UpdateState,
 } from "./update";
 
-// "failed": the mapping service did not start (UI-45); "disconnected": the
+// "failed": the mapping service did not start; "disconnected": the
 // connection ended after it was made, or reconnecting did not reach the
 // service.
 export interface ConnectionState {
@@ -19,7 +19,7 @@ export interface ConnectionState {
   failure?: StartFailure;
 }
 
-// What padmated's --startup-report says (UI-45, ADR-0001), as Main checked
+// What padmated's --startup-report says (ADR-0001), as Main checked
 // it: unknown values become "internal" and "other", a missing text or
 // number "" and 0. message is padmated's own English words; file and
 // dataDir are absolute paths, for display only.
@@ -94,7 +94,7 @@ export interface DeviceInfo {
   };
 }
 
-// What a controller says about its power (IN-12), in the four states of the
+// What a controller says about its power, in the four states of the
 // script API. percent is absent when the controller does not report a charge.
 export type BatteryState = "wired" | "charging" | "discharging" | "unknown";
 
@@ -103,7 +103,7 @@ export interface DeviceBattery {
   percent?: number;
 }
 
-// One controller of the batteries in an engine.activity state event (IN-12):
+// One controller of the batteries in an engine.activity state event:
 // the power it reported, which the settings page shows, and whether it is in an
 // announced low-battery episode (low), which the overlay tells on the edge into
 // it. Only controllers that have read a power are listed. device is the
@@ -118,7 +118,7 @@ export interface BatteryReading {
   low: boolean;
 }
 
-// What a controller can show when it is identified (IN-13): it buzzes
+// What a controller can show when it is identified: it buzzes
 // (rumble), flashes its color LED (led) or chases its player lights
 // (player). All false: it can show nothing.
 export interface DeviceIdentify {
@@ -128,7 +128,7 @@ export interface DeviceIdentify {
 }
 
 // What devices.rawInfo says about a controller whose raw joystick events the
-// mapping wizard watches (IN-17, IN-19): device is its DeviceKey, id the
+// mapping wizard watches: device is its DeviceKey, id the
 // connection ID its input.raw events carry, guid the SDL GUID a mapping is
 // written for, gamepad whether SDL reads it as a gamepad now. axisRest is the
 // rest value of each axis (SDL's initial state), axes entries long.
@@ -144,7 +144,7 @@ export interface RawInfo {
   watching: boolean;
 }
 
-// One raw joystick element that changed (IN-17): the data of an input.raw
+// One raw joystick element that changed: the data of an input.raw
 // event. value is 1 or 0 for a button, the position (-32768..32767) for an
 // axis and the direction mask (up 1, right 2, down 4, left 8, 0 centered) for
 // a hat. device is the connection ID.
@@ -167,7 +167,7 @@ export interface MappingWarning {
   device?: number;
 }
 
-// The answer to devices.setMapping and devices.resetMapping (IN-18). mapping
+// The answer to devices.setMapping and devices.resetMapping. mapping
 // is the string saved (the name "*", platform Windows), "" after a reset; keys
 // are the config.json device keys written, since SDL applies a mapping to a
 // GUID; changed is false when config.json already had it. applied and
@@ -193,7 +193,7 @@ export interface DeviceEntry {
   disabled: boolean;
   /**
    * The latest power the daemon read from the controller; absent until it has
-   * read one. The settings page shows it on the controller's row (IN-12), and
+   * read one. The settings page shows it on the controller's row, and
    * the periodic state events keep it current.
    */
   battery?: DeviceBattery;
@@ -211,13 +211,13 @@ export interface SlotState {
   mode: number;
   /**
    * What each control of the current layer does, while a button bound to the
-   * key hints action is held (HUD-03); absent otherwise. Main reads it for the
+   * key hints action is held; absent otherwise. Main reads it for the
    * overlay (main/overlay-hints.ts).
    */
   hints?: KeyHint[];
 }
 
-// The emergency combo of a connected controller (UI-19), as the daemon
+// The emergency combo of a connected controller, as the daemon
 // detects it: family is config.json's safety.panic key for it.
 export interface DeviceCombo {
   device: number;
@@ -244,7 +244,7 @@ export interface StatusResult {
     message: string;
     document: string;
     /**
-     * Only for kind "steamInput" (IN-24, ADR-0016): the kinds of controller
+     * Only for kind "steamInput" (ADR-0016): the kinds of controller
      * whose Steam Input setting may manage a connected pad, in this order and
      * each once: "xbox", "playstation", "switch", "steamHardware".
      */
@@ -253,12 +253,12 @@ export interface StatusResult {
   localDryRun?: boolean;
   sendToOwnWindow?: boolean;
   combos?: DeviceCombo[];
-  // A repair of config.json the user has not been told of yet (PRO-29).
+  // A repair of config.json the user has not been told of yet.
   configRepair?: ConfigRepair;
 }
 
 // The daemon found errors in config.json, backed the file up and repaired
-// it (PRO-29). backup is the copy's file name in the data folder
+// it. backup is the copy's file name in the data folder
 // (config.broken-YYYYMMDD-HHMMSS.json, with -2, -3 when taken); path is its
 // absolute path, for display only. reset: the file could not be parsed at
 // all and the defaults replaced it; otherwise only the members with errors
@@ -269,7 +269,7 @@ export interface ConfigRepair {
   reset: boolean;
 }
 
-// Start at sign-in (UI-19, ADR-0001): the daemon's own HKCU Run entry.
+// Start at sign-in (ADR-0001): the daemon's own HKCU Run entry.
 // enabled: Run has a padmate value; current: it is the command this daemon
 // writes (not another copy or mode of padmate). mode is how that command
 // starts padmate, the daemon's own mode; it says nothing about another
@@ -320,7 +320,7 @@ export interface ScriptStatusEntry {
     restartCount: number;
     permanent: boolean;
     metadata: ScriptMetadata;
-    // The runtime's macros with a problem (SCR-50): the latest error of
+    // The runtime's macros with a problem: the latest error of
     // each, and the macros a CPU interruption disabled until the file
     // changes. lastError has only the legacy script's errors.
     macros?: MacroStatus[];
@@ -342,7 +342,7 @@ export interface MacroUse {
   control: string;
   gesture: string;
 }
-// A file of the script library (SCR-51, ADR-0013), shared by every profile.
+// A file of the script library (ADR-0013), shared by every profile.
 // name is file without the extension. actions is how many actions run it,
 // in every layer and common of every profile: as many as deleting it
 // clears, where usedBy merges them (a fixture without it counts usedBy).
@@ -392,13 +392,13 @@ export interface ProfileDiagnostic {
 export interface ProfileEntry {
   id: string;
   name?: string;
-  // The fixed default profile (PRO-28): its ID is always "default".
+  // The fixed default profile: its ID is always "default".
   default?: boolean;
   // When the profile's folder was created, in Unix milliseconds: the
   // profiles page lists by it. Absent when the platform does not say.
   created?: number;
   revision?: string;
-  // The parent this profile's text names (PRO-19, ADR-0012): the library ID
+  // The parent this profile's text names (ADR-0012): the library ID
   // of the profile it is based on. Absent for a profile that stands alone.
   extends?: string;
   diagnostics?: ProfileDiagnostic[];
@@ -419,7 +419,7 @@ export interface ProfileDocument {
   diagnostics: ProfileDiagnostic[];
   problem?: string;
 }
-// A member of a merged profile that a parent wrote (PRO-19): pointer is a
+// A member of a merged profile that a parent wrote: pointer is a
 // JSON pointer into ProfileResolution.text, profile the library ID of the
 // profile that wrote it.
 export interface ProfileOrigin {
@@ -499,7 +499,7 @@ export interface LayerExplanation {
   actions: Record<string, string>;
 }
 /**
- * The function set (MAP-27, ADR-0016, ADR-0012), shaped like a layer: layer is
+ * The function set (ADR-0016, ADR-0012), shaped like a layer: layer is
  * the level's name in decisions, "function:<function key>" (such as
  * "function:start"); resolution also has "inactive" (the key is not held),
  * "fallthrough" (held, but the set does not bind the control) and "ignored"
@@ -529,7 +529,7 @@ export interface ProfileExplanation {
     functionSet: FunctionSetExplanation;
   }[];
 }
-// The latency statistics of the diagnostics page (DMN-15, ADR-0016): the time
+// The latency statistics of the diagnostics page (ADR-0016): the time
 // from padmate receiving a controller's input edge to the return of the Send
 // call, over the controller's latest samples, in microseconds.
 export interface LatencyDevice {
@@ -594,13 +594,13 @@ export const LibraryErrorCode = {
   // startup.set without an entry: a development or test build, or no
   // system support; data is the StartupState.
   startupUnavailable: -32017,
-  // The fixed default profile (PRO-28): profiles.delete of it, or a
+  // The fixed default profile: profiles.delete of it, or a
   // profiles.put that changes its name; data.op is "delete" or "rename".
   profileFixed: -32018,
   // A macro the macros folder does not list under exactly this name, or a
   // legacy entry that does not exist: data is { file }.
   macroNotFound: -32019,
-  // profiles.import (PRO-20) of a file it does not accept; data.reason is
+  // profiles.import of a file it does not accept; data.reason is
   // an ArchiveProblem.
   archiveInvalid: -32020,
   // profiles.import whose name another profile goes by; data is {id, name}
@@ -612,15 +612,15 @@ export const LibraryErrorCode = {
   // ProfileImportResult { conflict: true }.
   macroConflict: -32022,
   // profiles.delete of a profile that others are based on, when one of them
-  // cannot be written out whole first (PRO-19): data is { id, reason,
+  // cannot be written out whole first: data is { id, reason,
   // diagnostics? }, id the profile that cannot, reason "invalid" (it has
   // errors of its own) or "script" (it inherits its parent's script).
   profileChild: -32023,
-  // profiles.importAmgp (PRO-21) of a file that is not an AntiMicroX profile
+  // profiles.importAmgp of a file that is not an AntiMicroX profile
   // padmate imports; data.reason is an AmgpProblem, and the message says why in
   // Chinese, for the user. Nothing was written.
   amgpInvalid: -32024,
-  // devices.setMapping refused the mapping (IN-18); data.reason is "syntax" (not
+  // devices.setMapping refused the mapping; data.reason is "syntax" (not
   // a mapping string), "mapping" (binds nothing, or its GUID is not the
   // controller's), "guid" (the controller has none) or "config" (config.json
   // would not validate with it).
@@ -669,20 +669,20 @@ export interface DaemonEvent {
     | "profile.changed"
     | "output.preview"
     | "app.foreground"
-    // The daemon is stopping (DMN-22); Main handles it, the renderer never
+    // The daemon is stopping; Main handles it, the renderer never
     // gets it.
     | "daemon.exiting"
-    // A script's HUD calls (SCR-22): data is `{ kind: "toast", slot, text,
+    // A script's HUD calls: data is `{ kind: "toast", slot, text,
     // ms }`. Main shows it in the overlay; the renderer never gets it.
     | "hud"
-    // The raw joystick events of a controller devices.rawInfo asked for (IN-17):
+    // The raw joystick events of a controller devices.rawInfo asked for:
     // data is `{ timeNs, device, kind, index, value }`.
     | "input.raw"
     | "dropped";
   data: unknown;
 }
 
-// A program the Start Menu lists (UI-46): name is its shortcut's name, exe
+// A program the Start Menu lists: name is its shortcut's name, exe
 // the file name of its executable and path that executable's absolute local
 // path. Main reads them; the renderer supplies no path.
 export interface InstalledApp {
@@ -690,7 +690,7 @@ export interface InstalledApp {
   exe: string;
   path: string;
 }
-// The .exe the user chose in the file dialog (UI-46).
+// The .exe the user chose in the file dialog.
 export interface BrowsedApp {
   exe: string;
   path: string;
@@ -699,7 +699,7 @@ export interface BrowsedApp {
 // is not an .exe on a local drive. The message is English.
 export type AppBrowseProblem = "path";
 
-// A foreground executable the daemon has seen (PRO-16). Identity only: the
+// A foreground executable the daemon has seen. Identity only: the
 // daemon never reads window titles.
 export interface RecentApp {
   exe: string;
@@ -781,7 +781,7 @@ export type AmgpProblem =
   | "root"
   | "joystick"
   | "version";
-// How much of an AntiMicroX construct reached the padmate profile (PRO-21):
+// How much of an AntiMicroX construct reached the padmate profile:
 // "dropped" is not in the profile at all, "approximate" is something close to
 // it, "info" lost nothing and says what was done.
 export type AmgpSeverity = "dropped" | "approximate" | "info";
@@ -796,7 +796,7 @@ export interface AmgpReportLine {
   slot?: number;
   message: string;
 }
-// A profile made from an AntiMicroX .amgp or .xml file (PRO-21): a new
+// A profile made from an AntiMicroX .amgp or .xml file: a new
 // profile and what the import dropped or approximated. Main read the file; the
 // daemon converts it.
 export interface AmgpImported {
@@ -808,7 +808,7 @@ export interface AmgpImported {
   problem?: string;
   report: AmgpReportLine[];
 }
-// Backup of one profile (PRO-20): a .padmate file, which Main reads and
+// Backup of one profile: a .padmate file, which Main reads and
 // writes; the daemon makes and checks the archive. The renderer supplies
 // no path.
 export interface ProfileImported {
@@ -817,7 +817,7 @@ export interface ProfileImported {
   revision: string;
   applied: boolean;
   problem?: string;
-  // What became of the archive's scripts in the library (SCR-51): file is
+  // What became of the archive's scripts in the library: file is
   // the name in the archive, name the one in the library; same: the library
   // had it with these contents; replaced: it overwrote the library's.
   macros?: Array<{
@@ -864,12 +864,12 @@ export interface PadmateAPI {
   onConnection(listener: (state: ConnectionState) => void): () => void;
   getStatus(): Promise<StatusResult>;
   getDevices(): Promise<DeviceEntry[]>;
-  // IN-13: the controller with this key (DeviceEntry.key) buzzes and flashes
+  // The controller with this key (DeviceEntry.key) buzzes and flashes
   // for at most a second and a half, so that the user can tell which it is,
   // whatever the profile and the pause say. The answer says which cues it
   // gave. Rejects with code -32004 when it is not connected any more.
   identifyDevice(key: string): Promise<DeviceIdentify>;
-  // The mapping wizard (IN-17, IN-18, IN-19, ADR-0012). device is a
+  // The mapping wizard (ADR-0012). device is a
   // connection ID (DeviceEntry.info.id as text) or a key; use the ID for a
   // controller SDL does not know, whose keys are all the same.
   // rawWatchStart asks for the controller's raw joystick events: they arrive
@@ -890,7 +890,7 @@ export interface PadmateAPI {
   getConfig(): Promise<ConfigGetResult>;
   listProfiles(): Promise<ProfileEntry[]>;
   getProfile(id: string): Promise<ProfileDocument>;
-  // PRO-19: profile id with its parents merged in, to show what it inherits.
+  // Profile id with its parents merged in, to show what it inherits.
   // The profile's own file is getProfile's; this one is read-only.
   resolveProfile(id: string): Promise<ProfileResolution>;
   putProfile(
@@ -909,40 +909,40 @@ export interface PadmateAPI {
   deleteProfile(id: string, revision: string): Promise<void>;
   // Copies a library profile to a new, unused library ID.
   copyProfile(from: string, to: string): Promise<{ revision: string }>;
-  // PRO-20: Main asks the daemon for the profile as an archive, then shows
+  // Main asks the daemon for the profile as an archive, then shows
   // the save dialog with name (sanitised) as the file name; saved is false
   // when the user cancels.
   exportProfile(id: string, name: string): Promise<{ saved: boolean }>;
-  // PRO-20: without options Main shows the open dialog, reads the chosen
+  // Without options Main shows the open dialog, reads the chosen
   // .padmate file (at most 4 MiB) and adds it as a new profile. With the
   // token from { exists: true } it adds that same file again, replacing
-  // a profile or under a new name. A .amgp or .xml file of AntiMicroX (PRO-21)
+  // a profile or under a new name. A .amgp or .xml file of AntiMicroX
   // is converted instead (at most 1 MiB): the answer is { amgp: true, ... }
   // with the report, and a file it does not import rejects with code -32024.
   importProfile(options?: ProfileImportOptions): Promise<ProfileImportResult>;
   // Newest first, at most 12, excluding padmate's own windows; memory only.
   getRecentApps(): Promise<RecentApp[]>;
-  // A bound app's icon on the profiles page (UI-42): a PNG data URL that
+  // A bound app's icon on the profiles page: a PNG data URL that
   // Main reads from the executable at path, which must be a local drive
   // path to an .exe; "" when it has none. Nothing reads a window or title.
   getAppIcon(path: string): Promise<string>;
-  // The path of a rule's program when the rule names only its file name
-  // (UI-42): Main takes the Start Menu program with that file name, else
+  // The path of a rule's program when the rule names only its file name:
+  // Main takes the Start Menu program with that file name, else
   // the file an App Paths key of the registry names, else a path the
   // registry's MuiCache remembers the program was started from; "" when
   // none is found. exe must be a bare .exe file name; the answer is a local
   // drive path to an existing .exe, which getAppIcon accepts.
   resolveAppPath(exe: string): Promise<string>;
-  // 从已安装的软件中选择 (UI-46): the programs the Start Menu lists whose
+  // 从已安装的软件中选择: the programs the Start Menu lists whose
   // shortcuts lead to an existing local .exe, by name; a few hundred at
   // most.
   listInstalledApps(): Promise<InstalledApp[]>;
-  // 浏览… (UI-46): Main shows the open dialog for an .exe; null when the
+  // 浏览…: Main shows the open dialog for an .exe; null when the
   // user cancels. Rejects with data { reason: AppBrowseProblem } for a file
   // it cannot use.
   browseApp(): Promise<BrowsedApp | null>;
   explainProfile(control: string, id?: string): Promise<ProfileExplanation>;
-  // The diagnostics page (DMN-15, UI-22): the latency of the keys padmate
+  // The diagnostics page: the latency of the keys padmate
   // sent, per controller; the page asks once a second while it is open.
   // device (a connection ID or a key) narrows both calls to one controller;
   // without it getLatency lists the controllers that have a slot and
@@ -951,7 +951,7 @@ export interface PadmateAPI {
   resetLatency(device?: string): Promise<{ reset: boolean }>;
   getScriptDescription(id?: string): Promise<ScriptDescription>;
   getScriptRegistrations(device?: string): Promise<ScriptStatusEntry[]>;
-  // The scripts page (SCR-50, SCR-51, UI-41): the script library shared by
+  // The scripts page: the script library shared by
   // every profile, for the page and the key drawer. Like every script call
   // it never rejects with a path: a failure of the file system, such as a
   // full disk, is code -32098 (the daemon's system error) with a fixed
@@ -994,7 +994,7 @@ export interface PadmateAPI {
   // has to be in front to ask.
   padCaptureStart(stays?: boolean): Promise<void>;
   padCaptureStop(): Promise<void>;
-  // Start at sign-in (UI-19). The daemon registers its own executable and
+  // Start at sign-in. The daemon registers its own executable and
   // arguments; the renderer passes neither. setStartup rejects with code
   // -32017 in a development build.
   getStartup(): Promise<StartupState>;
@@ -1002,9 +1002,9 @@ export interface PadmateAPI {
   // Opens the Game Bar page of Windows Settings (ms-settings:gaming-gamebar,
   // the only address Main opens), where the user turns off "Allow your
   // controller to open Game Bar" when the Xbox button is the function key
-  // (UI-30, ADR-0012). It takes no address.
+  // (ADR-0012). It takes no address.
   openGameBarSettings(): Promise<void>;
-  // Closing the window (UI-43): Main asks the renderer once, which commits
+  // Closing the window: Main asks the renderer once, which commits
   // the field being typed in, waits for its saves and then calls
   // readyToClose. Main closes after a few seconds anyway.
   onClosing(listener: () => void): () => void;
@@ -1022,7 +1022,7 @@ export interface PadmateAPI {
   ): Promise<{ sendToOwnWindow: boolean; localDryRun: boolean }>;
   onEvent(listener: (event: DaemonEvent) => void): () => void;
   reconnect(): Promise<void>;
-  // The page that says why the mapping service did not start (UI-45).
+  // The page that says why the mapping service did not start.
   // Each rejects unless the connection is "failed", or a retry of it.
   // openStartFolder shows the file at fault when it is in the data
   // folder, otherwise opens the data folder; no other path is opened.
@@ -1030,19 +1030,19 @@ export interface PadmateAPI {
   // Starts the service again; resolves once it is connected or failed.
   retryStart(): Promise<void>;
   quit(): Promise<void>;
-  // The dialog that tells of a repaired config.json (PRO-29): 确定 tells the
+  // The dialog that tells of a repaired config.json: 确定 tells the
   // daemon the repair was shown (config.repairSeen), 打开文件夹 selects the
   // backup in the data folder. backup is ConfigRepair.backup; Main accepts
   // only a name of that form, never a path.
   markConfigRepairSeen(backup: string): Promise<void>;
   showConfigBackup(backup: string): Promise<void>;
-  // The overlay's settings (HUD-05): the toasts and their language, where
+  // The overlay's settings: the toasts and their language, where
   // the window sits and how opaque the pill is. They live in the UI's
   // localStorage, so the UI tells Main at start and whenever one changes.
   // Main checks every field and ignores an invalid one; the call takes no
   // part in anything the daemon does.
   setOverlayPrefs(prefs: OverlayPrefs): Promise<void>;
-  // The automatic update (PKG-10, ADR-0018). Main owns the state and pushes
+  // The automatic update (ADR-0018). Main owns the state and pushes
   // each change to onUpdateState; the calls answer with the state they led
   // to. The window sends no version and no address.
   getUpdateState(): Promise<UpdateState>;

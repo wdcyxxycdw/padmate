@@ -110,7 +110,7 @@
       "x-go-field": "FunctionKeys"
     },
     "functionSet": {
-      "description": "Bindings that apply while the function key is held (ADR-0012, MAP-27). The function key is one for every profile, chosen in config.json (functionKey: start by default, back or guide). A control that the set does not bind keeps its normal binding. Optional. When both functionSet and functionKeys are written, functionKeys is ignored.",
+      "description": "Bindings that apply while the function key is held (ADR-0012). The function key is one for every profile, chosen in config.json (functionKey: start by default, back or guide). A control that the set does not bind keeps its normal binding. Optional. When both functionSet and functionKeys are written, functionKeys is ignored.",
       "$ref": "#/$defs/functionBindings",
       "x-go-type": "*wireLayer",
       "x-go-field": "FunctionSet"
@@ -1187,7 +1187,7 @@
     },
     "functionBindings": {
       "title": "Function set",
-      "description": "Bindings used while the function key is held (ADR-0012, MAP-27), keyed by control and written like a layer without a color: the same bindings, gestures and actions. A control the set does not bind keeps its normal binding. Any control can be bound here, back, start and guide too, except the function key itself (config.json functionKey, start by default): a binding on it is ignored. Bind each control only once.",
+      "description": "Bindings used while the function key is held (ADR-0012), keyed by control and written like a layer without a color: the same bindings, gestures and actions. A control the set does not bind keeps its normal binding. Any control can be bound here, back, start and guide too, except the function key itself (config.json functionKey, start by default): a binding on it is ignored. Bind each control only once.",
       "type": "object",
       "additionalProperties": false,
       "properties": {

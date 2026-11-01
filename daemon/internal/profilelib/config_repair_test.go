@@ -44,7 +44,7 @@ func fixedClock(t *testing.T, at time.Time) {
 // TestReadRepairedConfigBacksUpThenRepairs: a config.json with errors is
 // copied to config.broken-YYYYMMDD-HHMMSS.json, byte for byte, and then
 // replaced by its repair, which keeps the settings that were fine; the
-// next read finds nothing to repair (PRO-29).
+// next read finds nothing to repair.
 func TestReadRepairedConfigBacksUpThenRepairs(t *testing.T) {
 	l := New(t.TempDir())
 	writeConfig(t, l.Dir(), brokenConfig)

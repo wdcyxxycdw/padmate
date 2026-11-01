@@ -102,7 +102,7 @@ describe("renderer boundaries", () => {
     expect(() => validateExport("png", "data:text/html;base64,WA==")).toThrow();
     expect(() => validateExport("png", "data:image/png;base64,WA==")).toThrow();
   });
-  it("requires a controller selector without control characters (IN-13)", () => {
+  it("requires a controller selector without control characters", () => {
     expect(validateDeviceKey("7")).toBe("7");
     const key = String.raw`030000007e05/p:\\?\HID#VID_057E`;
     expect(validateDeviceKey(key)).toBe(key);
@@ -119,7 +119,7 @@ describe("renderer boundaries", () => {
     ])
       expect(() => validateDeviceKey(value), String(value)).toThrow();
   });
-  it("takes an SDL mapping string of printable ASCII, as the daemon bounds it (IN-18)", () => {
+  it("takes an SDL mapping string of printable ASCII, as the daemon bounds it", () => {
     const mapping =
       "ff00aabb000000000000000000007600,*,a:b0,leftx:a0,platform:Windows";
     expect(validateMapping(mapping)).toBe(mapping);
@@ -235,7 +235,7 @@ describe("renderer boundaries", () => {
     ])
       expect(() => validateScriptImportOptions(value)).toThrow();
   });
-  it("suggests an export file name that Windows accepts (PRO-20)", () => {
+  it("suggests an export file name that Windows accepts", () => {
     for (const [name, want] of [
       ["Paint", "Paint.padmate"],
       ["绘画 2", "绘画 2.padmate"],
@@ -313,7 +313,7 @@ describe("renderer boundaries", () => {
   });
 });
 
-describe("the overlay's preload (HUD-04, HUD-03, SCR-22, ADR-0014)", () => {
+describe("the overlay's preload (ADR-0014)", () => {
   const read = (path: string) =>
     readFileSync(new URL(path, import.meta.url), "utf8");
   const preload = read("../preload/overlay.ts");

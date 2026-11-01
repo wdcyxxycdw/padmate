@@ -128,7 +128,7 @@ func TestIPCConfigRevisionAndRestartNotice(t *testing.T) {
 		t.Fatal(doc, err)
 	}
 	var saved rpcSaved
-	// Automatic selection applies at once (UI-18).
+	// Automatic selection applies at once.
 	if err := client.CallResult(ctx, "config.put", map[string]string{"revision": doc.Revision, "text": `{"schemaVersion":0,"enabled":false}`}, &saved); err != nil || saved.RestartRequired || !saved.Applied {
 		t.Fatal(saved, err)
 	}
@@ -183,8 +183,8 @@ export default defineScript({params:{amount:param.number({default:1,max:2})},set
 	}
 }
 
-// TestIPCDefaultProfileEditableNotRenamable: the fixed default (PRO-28,
-// ADR-0008) saves and applies an edit at once, refuses a new name with
+// TestIPCDefaultProfileEditableNotRenamable: the fixed default
+// (ADR-0008) saves and applies an edit at once, refuses a new name with
 // rpcCodeProfileFixed, and copies to an ordinary profile that renames.
 func TestIPCDefaultProfileEditableNotRenamable(t *testing.T) {
 	dir := t.TempDir()

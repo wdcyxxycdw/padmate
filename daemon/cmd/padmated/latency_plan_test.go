@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/latency"
 )
 
-// benchRow is one row of TestLatencyLive (ENG-11): n edges, each a press
+// benchRow is one row of TestLatencyLive: n edges, each a press
 // or a release, with gap of idle before each.
 type benchRow struct {
 	name  string
@@ -20,7 +20,7 @@ type benchRow struct {
 	minN  int  // n at scale 1 for gated rows, else 0
 	pads  int  // gamepads: 1; 4 for row H, which presses one control on each in turn
 	// macros measures with benchMacroProfile, a profile that also binds a
-	// macro (SCR-50), on an unpressed control: the hold bindings beside a
+	// macro, on an unpressed control: the hold bindings beside a
 	// runtime that only runs macros.
 	macros bool
 }
@@ -28,7 +28,7 @@ type benchRow struct {
 // The plan of TestLatencyLive: the gate, the warm-up and the time model of
 // the estimate.
 const (
-	benchTarget = latency.WarnP99 // the p99 of each gated row (ARCHITECTURE §13), also the product threshold of DMN-15
+	benchTarget = latency.WarnP99 // the p99 of each gated row (ARCHITECTURE §13), also the product threshold of the latency statistics
 	// benchWarmup edges at benchWarmupGap come before row A, and
 	// benchWarmupSteps steps of row H's four pads before row H. They are
 	// not scaled, and their samples are dropped.
@@ -60,7 +60,7 @@ var benchRows0 = []benchRow{
 	{name: "H", gap: 50 * time.Millisecond, n: 400, pads: benchPadsMax},    // four pads at once; info
 }
 
-// benchPadsMax is the gamepads of row H: the supervisor's slots (IN-08).
+// benchPadsMax is the gamepads of row H: the supervisor's slots.
 const benchPadsMax = 4
 
 // benchPlan returns the rows of TestLatencyLive for scale, which must be
@@ -69,7 +69,7 @@ const benchPadsMax = 4
 // row H's is rounded up to a multiple of 8, so that each of its four
 // pads presses and releases in turn an even number of times and ends up.
 // A gated row's minN stays its scale-1 count. multi adds row H, which
-// needs several slots (IN-08).
+// needs several slots.
 func benchPlan(scale float64, multi bool) (rows []benchRow, estimate time.Duration, err error) {
 	if !(scale > 0 && scale <= latency.MaxScale) { // also rejects NaN
 		return nil, 0, fmt.Errorf("scale %v is not in (0, %d]", scale, latency.MaxScale)

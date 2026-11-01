@@ -36,7 +36,7 @@ const (
 	liveTestPad = "padmated live test"
 	// liveWait bounds each wait of the live tests.
 	liveWait = 5 * time.Second
-	// comboTestHold is the hold of the panic combo (DMN-07) in the tests
+	// comboTestHold is the hold of the panic combo in the tests
 	// that hold it, instead of input.ComboHold's 2 s.
 	comboTestHold = 100 * time.Millisecond
 )
@@ -77,7 +77,7 @@ var testEvents atomic.Int64
 // profile, the SDL library lib and newInject, writing to the buffers of
 // tl. The log is at debug level. The session watcher is a fakeSession,
 // tl.session, which reports nothing unless the test makes it. The event
-// of padmatectl release-all is one of the test's own (DMN-20).
+// of padmatectl release-all is one of the test's own.
 func testConfig(t *testing.T, tl *testLive, lib string, newInject func() (output.Sender, error), args ...string) liveConfig {
 	t.Helper()
 	args = append([]string{"--profile", basicProfile, "--device", liveTestPad}, args...)
@@ -345,7 +345,7 @@ const profileAlt = `{"schemaVersion": 0, "name": "menu mask", "layers": {"base":
 
 // TestLiveVirtualDryRunMenuMask holds Alt alone on a virtual gamepad in
 // live dry-run mode: the printer is below the Loop's MenuMask, so the
-// release shows the mask key's press and release before it (OUT-08), as
+// release shows the mask key's press and release before it, as
 // does the release of Alt on the exit path.
 func TestLiveVirtualDryRunMenuMask(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "profile.json")
@@ -397,11 +397,11 @@ func TestLiveVirtualDryRunMenuMask(t *testing.T) {
 
 // TestLiveVirtualReconnect unplugs a virtual gamepad that holds east, and
 // plugs in one with the same name, so the same device key: it is mapped
-// again, reconnected (IN-05). Then a second gamepad waits, and holds east
+// again, reconnected. Then a second gamepad waits, and holds east
 // when the first leaves: it stands in, with Space pressed. The first comes
 // back before the stand-in presses a button, and takes the slot back,
 // provisionally until its press: Space is released, and the stand-in
-// waits again. It runs with one slot, the line of IN-05; the router tests
+// waits again. It runs with one slot, the gamepad line; the router tests
 // cover the rules with several.
 func TestLiveVirtualReconnect(t *testing.T) {
 	tl := &testLive{}
@@ -482,7 +482,7 @@ func TestLiveVirtualReconnect(t *testing.T) {
 
 // TestLiveVirtualTakeOver, with one slot: an idle gamepad connects first
 // and takes the slot, provisionally; the gamepad in hand connects after it
-// and waits. Its first press takes the slot over and is mapped (IN-05), and
+// and waits. Its first press takes the slot over and is mapped, and
 // the idle one's presses then map nothing. The header and the rows have
 // no slots then. With padmated's 4 slots the idle one keeps a slot of its
 // own, and is mapped (docs/adr/0003-devices-and-slots.md).
@@ -546,7 +546,7 @@ func TestLiveVirtualTakeOver(t *testing.T) {
 }
 
 // TestLiveVirtualTwoPads maps two virtual gamepads at once, each on a slot
-// of its own (IN-08), and each row names the slot of its pad. The pads
+// of its own, and each row names the slot of its pad. The pads
 // share the keyboard: Space held by both goes down once, and up once the
 // second lets go. That second release is by unplugging the pad, but SDL
 // lifts east before it reports the removal (docs/PITFALLS.md "SDL behavior"), so it
@@ -618,7 +618,7 @@ func TestLiveVirtualTwoPads(t *testing.T) {
 
 // TestLiveVirtualFivePads fills the 4 slots with idle virtual gamepads,
 // each provisional until its first press; a fifth waits, and its press
-// takes over the slot assigned longest ago, slot 0 (IN-08), and is mapped.
+// takes over the slot assigned longest ago, slot 0, and is mapped.
 func TestLiveVirtualFivePads(t *testing.T) {
 	tl := startTestLive(t, nil, "--dry-run")
 	// Names whose first 9 bytes differ: see TestLiveVirtualReconnect. Each
@@ -665,8 +665,8 @@ func TestLiveVirtualFivePads(t *testing.T) {
 	}
 }
 
-// TestLiveVirtualJoyCon maps virtual Joy-Cons under padmate's hints
-// (IN-07): with COMBINE=0 each is a gamepad of its own, so --device
+// TestLiveVirtualJoyCon maps virtual Joy-Cons under padmate's hints:
+// with COMBINE=0 each is a gamepad of its own, so --device
 // selects L alone, and R's presses map nothing. It models SDL's mapping
 // of a sideways Joy-Con (inputtest.JoyConLeft), not the device. L's SL
 // and SR hold Ctrl and Shift, and SDL's recentering at the removal
@@ -783,7 +783,7 @@ func pausedRow(slot, control string) func([]string) bool {
 }
 
 // TestLiveVirtualCombo: a virtual gamepad holds back and start, its panic
-// combo (DMN-07), for comboTestHold: the mapping pauses, and Space, held
+// combo, for comboTestHold: the mapping pauses, and Space, held
 // on east, is released. Presses map to nothing until the combo is held
 // again, which resumes the mapping; east, pressed while paused and held
 // through the resume, does nothing until it is pressed again. It follows
@@ -946,7 +946,7 @@ func TestLiveFlagsSmoke(t *testing.T) {
 	if line := logLine(log, "padmated stopped"); !strings.Contains(line, `"code":0`) {
 		t.Errorf("padmated stopped: %q, want code 0", line)
 	}
-	// The real session watcher (DMN-09) started, or there is none.
+	// The real session watcher started, or there is none.
 	if line := logLine(log, "session events off"); line != "" || strings.Contains(stderr.String(), "session events") {
 		t.Errorf("session events off: %q\nstderr:\n%s", line, stderr.String())
 	}
@@ -1117,7 +1117,7 @@ func TestLiveInputPanics(t *testing.T) {
 }
 
 // TestLiveComboBeforeLoop: live mode opens the Source with an OnCombo and
-// the default hold (DMN-07). OnCombo, which T-input calls when a combo
+// the default hold. OnCombo, which T-input calls when a combo
 // fires, before it sends the ComboHeld, does nothing before the output loop
 // has started, and afterwards lets go of every key at once, before the
 // router pauses. The ComboHeld then pauses the mapping, and the next one
@@ -1185,7 +1185,7 @@ func TestLiveComboBeforeLoop(t *testing.T) {
 }
 
 // TestLiveSlotsExit takes each exit path of live mode, including those of
-// the session watcher (DMN-09), while two slots hold keys, Space on both:
+// the session watcher, while two slots hold keys, Space on both:
 // every key held goes up once, and Space only after both slots have
 // canceled their press of east (CLAUDE.md invariant 1). The order of the
 // two slots' releases is otherwise free. A fake stands in for the Source,
@@ -1279,8 +1279,8 @@ func TestLiveSlotsExit(t *testing.T) {
 	}
 }
 
-// TestLiveOnEvent: liveConfig.onEvent, the probe of the latency benchmark
-// (ENG-11), receives every event the slot handles, in order, before the
+// TestLiveOnEvent: liveConfig.onEvent, the probe of the latency benchmark,
+// receives every event the slot handles, in order, before the
 // printer notes it, and changes nothing the printer prints: stdout is the
 // same as without it, but for the times, which come from the real clock.
 // The bindings are holds, which start no timer. A fake stands in for the
@@ -1431,7 +1431,7 @@ func TestLiveInjectSenderError(t *testing.T) {
 	if run != nil || !errors.Is(err, errInject) {
 		t.Fatalf("startLive = %v, %v; want nil, %v", run, err, errInject)
 	}
-	// The UI says the output failed (UI-45).
+	// The UI says the output failed.
 	if rep := newStartupReport(cfg.opts, err); rep.Kind != "output" || rep.Message != errInject.Error() {
 		t.Errorf("startup report %+v", rep)
 	}
@@ -1452,7 +1452,7 @@ func TestLiveInjectSenderError(t *testing.T) {
 	src.Close()
 }
 
-// receiverTestTimeout is the receiver watchdog's timeout (IN-30) in the
+// receiverTestTimeout is the receiver watchdog's timeout in the
 // tests that lose a virtual Switch Pro gamepad, instead of padmated's
 // input.DefaultReceiverTimeout.
 const receiverTestTimeout = 500 * time.Millisecond
@@ -1493,7 +1493,7 @@ func (tl *testLive) attachReceiver(t *testing.T) (v *input.Virtual, stop func() 
 
 // TestLiveVirtualReceiverLoss: a virtual Switch Pro gamepad holds east
 // when its heartbeat stops, as a Nova 2 Lite's does when it is switched
-// off behind its receiver (IN-30). Padmated reports it removed and
+// off behind its receiver. Padmated reports it removed and
 // releases Space. Its next press brings it back with a new id, reconnected
 // to its slot, and is mapped.
 func TestLiveVirtualReceiverLoss(t *testing.T) {
@@ -1535,7 +1535,7 @@ func TestLiveVirtualReceiverLoss(t *testing.T) {
 	}
 }
 
-// profileLatch latches Shift on west (MAP-10): the profile of
+// profileLatch latches Shift on west: the profile of
 // TestLiveVirtualReceiverLatch.
 const profileLatch = `{"schemaVersion": 0, "name": "latch", "layers": {"base": {` +
 	`"west": {"latch": true, "press": {"type": "keys", "keys": "Shift"}}}}}` + "\n"

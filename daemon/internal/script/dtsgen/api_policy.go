@@ -55,7 +55,7 @@ func supportedText() string {
 // promise covers the members' own properties and methods (for example
 // key.tap, pad.isDown) and the types they use (Control, KeySpec,
 // InputEvent, ...), and the padmate/math module. The members a macro can use
-// (the @macro marks in padmate.d.ts, SCR-50) are always in it.
+// (the @macro marks in padmate.d.ts) are always in it.
 //
 // The core the documentation names is on, key, layers and
 // pad; the rest are the definitions scripts are built from, the input and

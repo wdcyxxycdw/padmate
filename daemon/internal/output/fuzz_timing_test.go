@@ -29,7 +29,7 @@ type physicalTiming struct {
 
 // FuzzArbiterTiming checks physical timing independently of Arbiter's
 // deadlines, plus completion uniqueness, per-key backlog and cancellation.
-// An op byte from 238 up sets the event gap (OUT-17), so the op bytes of
+// An op byte from 238 up sets the event gap, so the op bytes of
 // the older corpus keep their meaning; with a gap every Send that is not
 // forced (ReleaseOwner, ReleaseAll) or a resend of failed releases has one
 // event and comes at least the gap after the Send before it, ReleaseOwner
@@ -63,7 +63,7 @@ func FuzzArbiterTiming(f *testing.F) {
 		ready := map[output.KeyID]clock.Time{}
 		binding := map[output.KeyID]time.Duration{}
 		// rebind holds the minimum of a DownFor whose key goes up and down
-		// again behind queued releases (OUT-17): it belongs to the press
+		// again behind queued releases: it belongs to the press
 		// after the last of them, not to the one down now. n counts the
 		// releases still to go out before it.
 		type rebound struct {
@@ -111,7 +111,7 @@ func FuzzArbiterTiming(f *testing.F) {
 		// capped holds, for each press of a key queued when the profile
 		// minimum changed, in queue order, the lowest minimum since it was
 		// queued: a release queued behind it keeps the minimum of its time.
-		// A key may have more than one press queued (OUT-17, pressAgain).
+		// A key may have more than one press queued (pressAgain).
 		capped := map[output.KeyID][]time.Duration{}
 		failedUp := map[output.KeyID]bool{} // releases offered and not injected
 		// resendable: the keys whose last offered event is such a release. A
@@ -265,7 +265,7 @@ func FuzzArbiterTiming(f *testing.F) {
 			// pending releases, a forced batch that carries them). The logical
 			// press it ends ended with its first offer: unbind must not count
 			// it again, or a DownFor minimum that waits for the releases
-			// queued before it would reach the press before it (OUT-17).
+			// queued before it would reach the press before it.
 			resent := markResends(events, n, resendable)
 			minPress, minGap := arb.Timing()
 			var held []output.HeldKey
@@ -438,7 +438,7 @@ func FuzzArbiterTiming(f *testing.F) {
 				_ = arb.DownFor(o, c, minimum)
 				if kept, ok := output.MergedKeys(arb, o, c); ok {
 					// A Down merged into an earlier press of its main key leaves
-					// out the modifiers it would have to press (OUT-17): its
+					// out the modifiers it would have to press: its
 					// minimum is not theirs, also for a press of theirs this op
 					// sent from the queue.
 					for _, id := range taking {
@@ -477,7 +477,7 @@ func FuzzArbiterTiming(f *testing.F) {
 				force, canCancel = true, true
 				releasedOwner = func(x output.Owner) bool { return x == o }
 				// The presses other owners queued all go out: their chords
-				// may rely on them (OUT-17).
+				// may rely on them.
 				var others []output.KeyEvent
 				owners := output.PacedOwners(arb)
 				for j, e := range output.PacedEvents(arb) {

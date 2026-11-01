@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// This file is the key hints (HUD-03, ADR-0014): a HUD hints action
+// This file is the key hints (ADR-0014): a HUD hints action
 // ({"type":"hud","op":"hints"}) turns the hints on for as long as its cycle
 // holds, the way a precision action holds its factor (stick_mouse.go). It sends
 // no key, and nothing outside the engine's own state changes.

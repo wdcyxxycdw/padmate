@@ -97,7 +97,7 @@ export function editorText(
 
 /**
  * A whole number of a binding, committed on Enter or when the field loses
- * focus (UI-43). Empty is the default. A text field, since a number field
+ * focus. Empty is the default. A text field, since a number field
  * reports text it cannot parse ("1e") as empty, which would clear the value.
  */
 export function NumberField({
@@ -218,7 +218,7 @@ function swallowRelease(): void {
   window.addEventListener("blur", off);
 }
 
-/** How long Esc is held to end a capture (UI-24). */
+/** How long Esc is held to end a capture. */
 export const ESC_HOLD_MS = 1000;
 
 /** How long one capture lasts: the helper stops itself then (keyboard_capture). */
@@ -337,7 +337,7 @@ export function captureStartNote(
 
 /**
  * One chord, set by recording only (ADR-0013): shortcuts are recorded, never
- * typed (OUT-18). Recording is one step (ADR-0013): a click on the field or
+ * typed. Recording is one step (ADR-0013): a click on the field or
  * its button starts it (that click is not recorded), the first key that is not
  * a modifier ends it at once with the modifiers held, and modifiers alone are
  * recorded when they are let go; at most three keys. The rules are the
@@ -349,7 +349,7 @@ export function captureStartNote(
  * on unmount. The chord is committed when the capture ends, so a recording is
  * one edit; removing the step or unmounting drops it.
  *
- * The way out is to hold Esc for ESC_HOLD_MS (UI-24); a short Esc is recorded
+ * The way out is to hold Esc for ESC_HOLD_MS; a short Esc is recorded
  * as Esc, and a click elsewhere is recorded as a click. The helper only
  * watches (it never swallows a key), so this window gets the Esc press and its
  * release as ordinary key events, and times the hold itself, from the first
@@ -376,7 +376,7 @@ function ShortcutField({
   /** Capture records physical key positions (set under 高级). */
   physical: boolean;
   onRemove?: () => void;
-  /** A step of a sequence moves up and down (UI-31). */
+  /** A step of a sequence moves up and down. */
   moves?: StepMoves;
   /** The step's place in its sequence, for the editor to find its row. */
   stepIndex?: number;
@@ -750,7 +750,7 @@ interface StepFocus {
 }
 
 /**
- * One shortcut, or the steps of a sequence (UI-31): shortcuts only are a list
+ * One shortcut, or the steps of a sequence: shortcuts only are a list
  * of them that taps, as before; a wait among them makes it a sequence action.
  * A sequence is tapped and has no hold or repeat. A single shortcut has
  * neither a send mode nor a repeat to set (ADR-0013): it is held while the
@@ -980,8 +980,8 @@ export function SingleShortcutField({
 }
 
 /**
- * Picks the script (macro, SCR-50) a mapping runs from the script library
- * (SCR-51), which every profile shares. Until one is picked the draft keeps
+ * Picks the script (macro) a mapping runs from the script library,
+ * which every profile shares. Until one is picked the draft keeps
  * its action, so choosing 脚本 without a script, or going to create one,
  * leaves no empty reference.
  */
@@ -1303,7 +1303,7 @@ const timingFields = [
 ] as const;
 
 /**
- * The haptics a binding can give (MAP-25), in the order of the schema's enum:
+ * The haptics a binding can give, in the order of the schema's enum:
  * the preset, then its name in Chinese and English. No preset is "".
  */
 const hapticPresets = [

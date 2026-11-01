@@ -14,7 +14,7 @@ import (
 )
 
 // macroDir returns the macros folder the active profile runs its macros
-// from: the script library of the data folder (SCR-51), or without a
+// from: the script library of the data folder, or without a
 // library the folder beside the --profile file; "" while no profile file
 // is active.
 func (r *liveRun) macroDir() string {
@@ -28,7 +28,7 @@ func (r *liveRun) macroDir() string {
 	return filepath.Join(filepath.Dir(target.path), profile.MacroDir)
 }
 
-// watchMacros keeps one watcher of the macros folder (SCR-50, design
+// watchMacros keeps one watcher of the macros folder (design
 // §5.3) until ctx is done. The library's stays while profiles switch;
 // without a library, a switch to a profile in another folder replaces it.
 func (r *liveRun) watchMacros(ctx context.Context) {

@@ -1,5 +1,5 @@
 // task test:sign: the signing pipeline end to end on this machine with a
-// throwaway certificate (PKG-09, ADR-0018). Opt-in, Windows only, not part of
+// throwaway certificate (ADR-0018). Opt-in, Windows only, not part of
 // task ci. It builds into .cache/signtest and installs, runs and trusts nothing.
 //
 //   node scripts/test-sign.mjs

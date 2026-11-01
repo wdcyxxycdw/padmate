@@ -12,7 +12,7 @@ import (
 )
 
 // AppUpdateFile is electron-builder's description of where the app looks for
-// updates, in resources; it is where publisherName is written (PKG-09, PKG-10).
+// updates, in resources; it is where publisherName is written.
 const AppUpdateFile = "resources/app-update.yml"
 
 // SignedFiles are the files of an installation that are signed, relative to
@@ -83,8 +83,7 @@ func CheckSignedFile(path string, o SignOptions) []string {
 // CheckSignatures checks the signatures of a built installation (electron-builder's
 // win-unpacked) and of the installer: the Electron app, the daemon, the CLI
 // and the installer are signed by o.Subject; SDL3.dll is not signed; and
-// resources/app-update.yml names the publisher the updater will accept
-// (PKG-09, PKG-10).
+// resources/app-update.yml names the publisher the updater will accept.
 func CheckSignatures(root, installer string, o SignOptions) []string {
 	var problems []string
 	for _, name := range SignedFiles {
@@ -107,8 +106,8 @@ func CheckSignatures(root, installer string, o SignOptions) []string {
 // signature of a downloaded update only when publisherName is there, and
 // quietly installs without checking when it is not, so a signed build without
 // it is a mistake. So is a build without the file: the publish block of
-// electron-builder.yml (PKG-10) makes electron-builder write it into every
-// build, signed or not, and only the builds before PKG-10 lacked it (they are
+// electron-builder.yml makes electron-builder write it into every
+// build, signed or not, and only the builds before the automatic update lacked it (they are
 // never checked with -signed).
 func checkPublisherName(file, installer, subject string) []string {
 	data, err := os.ReadFile(file)

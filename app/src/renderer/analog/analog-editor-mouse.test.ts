@@ -8,7 +8,7 @@ import {
   stickReading,
 } from "./analog-editor";
 
-// The stick that moves the pointer (MOU-01, MOU-04, MOU-06): the editor reads
+// The stick that moves the pointer: the editor reads
 // it as the daemon does, a stick that is pushed and presses no direction.
 describe("a stick that moves the pointer", () => {
   // The default dead zone 0.15 and saturation 0.95.

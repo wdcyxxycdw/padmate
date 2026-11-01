@@ -1,5 +1,5 @@
 // Package clock is the time source of the engine, the Output Arbiter and
-// the slot loops (ENG-07). The pure packages read time only through a
+// the slot loops. The pure packages read time only through a
 // Clock (CLAUDE.md invariant 2), so tests drive them with a Fake.
 //
 // The package uses only the standard library and builds on every OS. It

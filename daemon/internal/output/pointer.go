@@ -31,7 +31,7 @@ const pointerErrInterval = time.Second
 // Move moves the pointer by dx pixels right and dy down, relative to where it
 // is (MOUSEEVENTF_MOVE; the system scales it with the pointer speed and, when it
 // is on, the acceleration). A move of 0, 0 does nothing. The move goes out at
-// once, in its own Send, unless events wait in the event gap's queue (OUT-17):
+// once, in its own Send, unless events wait in the event gap's queue:
 // then it waits behind them, in order, and joins the move queued last when that
 // is the same owner's, so that the queue does not grow with a stick. A move
 // never waits for the event gap itself and does not start one, which would

@@ -25,7 +25,7 @@ function options(language: Language = "zh-CN", type = "xboxone") {
 }
 
 // A painting profile as a user sets it up: a few keys with a shortcut, the
-// rest only named (OUT-18), on a standard pad and on a sideways Joy-Con.
+// rest only named, on a standard pad and on a sideways Joy-Con.
 const standardPaint: Profile = {
   schemaVersion: 1,
   name: "绘画",
@@ -219,7 +219,7 @@ describe("shortcut table", () => {
       options("en"),
     );
     expect(sheet.title).toBe("Photo shortcut table");
-    // The fixed default goes by its ID, whatever name it stores (PRO-28).
+    // The fixed default goes by its ID, whatever name it stores.
     expect(
       shortcutSheet(mixed, { ...options("en"), profileName: "Default" }).title,
     ).toBe("Default shortcut table");

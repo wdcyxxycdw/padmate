@@ -7,7 +7,7 @@ import { cleanup, fixture, launch, rpc } from "./helpers";
 
 test.use({ actionTimeout: 15000 });
 
-// PRO-29: a config.json with errors is repaired, not refused. The daemon
+// A config.json with errors is repaired, not refused. The daemon
 // backs the file up as config.broken-YYYYMMDD-HHMMSS.json, keeps every valid
 // member and resets only what had errors; the window tells once, in a
 // blocking dialog, with 确定 and 打开文件夹. What cannot be repaired, such as
@@ -72,7 +72,7 @@ test("a config.json with errors is repaired, backed up and told once", async ({}
       dialog.getByRole("button", { name: "确定", exact: true }),
     ).toBeFocused();
     await page.screenshot({ path: info.outputPath("config-repair.png") });
-    // UI-24: the dialog is checked like the rest of the window.
+    // The dialog is checked like the rest of the window.
     await axeCheck(page, "config repair dialog");
 
     // 打开文件夹 selects the backup in the data folder and leaves the dialog.

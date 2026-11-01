@@ -1,4 +1,4 @@
-# The haptic of a binding (MAP-25) plays once for each dispatch, and the
+# The haptic of a binding plays once for each dispatch, and the
 # printer shows it as "haptic slot=0 <preset>" under the decision that caused
 # it (not in the JSON lines of --decisions). north plays its confirm at the
 # press, east its tick at the press and not again when the button is let go,

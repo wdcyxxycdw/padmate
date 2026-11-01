@@ -10,7 +10,7 @@ import (
 )
 
 // UserDocuments are the documents an installation has besides the user
-// guide (ENG-17): the README, in English and in Chinese. The rest of docs/
+// guide: the README, in English and in Chinese. The rest of docs/
 // (the architecture, the pitfalls, the decision records) is about how padmate
 // is made, and the READMEs of the examples are notes for developing them.
 var UserDocuments = []string{"README.md", "README.zh-CN.md"}

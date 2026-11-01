@@ -162,7 +162,7 @@ func TestKeysParseJSONMouse(t *testing.T) {
 }
 
 // A media key has the scan code and the VK of its key, like any keyboard key,
-// and the kind "media" (OUT-20); an alias is shown as the canonical name.
+// and the kind "media"; an alias is shown as the canonical name.
 func TestKeysParseJSONMedia(t *testing.T) {
 	code, stdout, stderr := runCmd(t, "keys", "parse", "--json", "volumeup", "Ctrl+AudioVolumeMute", "MediaTrackNext", "VolumeDown+Ctrl")
 	if code != 1 {
@@ -271,7 +271,7 @@ func TestKeysList(t *testing.T) {
 		{"-", "- char 0x0C 0xBD"},
 		{"Key-", "Key- physical 0x0C 0xBD Minus"},
 		{"Key1", "Key1 physical 0x02 0x31 Digit1"},
-		// The media and volume keys (OUT-20) are keyboard keys with an E0 scan code
+		// The media and volume keys are keyboard keys with an E0 scan code
 		// and a VK; the aliases are the W3C names.
 		{"VolumeUp", "VolumeUp media E0 30 0xAF AudioVolumeUp"},
 		{"VolumeDown", "VolumeDown media E0 2E 0xAE AudioVolumeDown"},

@@ -268,7 +268,7 @@ func TestPrinterTypedTextLiveTimer(t *testing.T) {
 	}
 }
 
-// The media and volume keys (OUT-20) print by name, as every key does: the
+// The media and volume keys print by name, as every key does: the
 // press with +, the release with -, a chord's modifiers around them.
 func TestPrinterMediaKeys(t *testing.T) {
 	var out bytes.Buffer

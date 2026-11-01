@@ -1,5 +1,5 @@
 # What electron-builder 26.17.0 really writes for the nsis target with the
-# github provider: no size, no blockMapSize (measured on a build, PKG-10).
+# github provider: no size, no blockMapSize (measured on a build).
 # The generic provider of the download site (ADR-0018) goes through the same
 # createUpdateInfo and writes the same shape (read in app-builder-lib 26.17.0,
 # not measured again): only the github provider rewrites the url of the entry.

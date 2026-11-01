@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { assertMainBundle, bareRequires } from "./main-bundle-guard.mjs";
 
-describe("the requires of the main bundle (PKG-10)", () => {
+describe("the requires of the main bundle", () => {
   it("allows Node's own modules and electron", () => {
     const code = [
       'const fs = require("fs");',

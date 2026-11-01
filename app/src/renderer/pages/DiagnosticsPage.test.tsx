@@ -168,7 +168,7 @@ const cells = (item: HTMLElement) => ({
   result: item.querySelector(".page-act-result")?.textContent,
 });
 
-describe("the event list (UI-20, UI-21)", () => {
+describe("the event list", () => {
   it("says what to do when nothing was pressed yet, and has nothing to clear", () => {
     mount();
     expect(
@@ -576,7 +576,7 @@ describe("the event list (UI-20, UI-21)", () => {
   });
 });
 
-describe("latency (UI-22)", () => {
+describe("latency", () => {
   const figures: LatencyResult = {
     devices: [
       {
@@ -830,7 +830,7 @@ describe("latency (UI-22)", () => {
   });
 });
 
-describe("conflicts (IN-24)", () => {
+describe("conflicts", () => {
   const steam = {
     kind: "conflict",
     process: "steam.exe",

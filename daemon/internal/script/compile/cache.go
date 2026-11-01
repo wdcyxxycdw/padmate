@@ -248,7 +248,7 @@ func sourceDigest(t tree, api string, slot cacheSlot) string {
 // hashTree hashes the files of the canonical root: their relative paths and
 // bytes, in lexical order, so the digest is independent of the order the
 // file system lists them in, and a rename changes it. profile.json is
-// hashed apart; the profile library's saved versions (PRO-17) and the
+// hashed apart; the profile library's saved versions and the
 // macros' type declarations are left out: those of the root's macros
 // folder, or, for macro, a macros folder that is the root, its own. A link
 // to outside the root is an error.

@@ -1,4 +1,4 @@
-// OUT-18: shortcuts are recorded in the drawer, and the table lists them. The
+// Shortcuts are recorded in the drawer, and the table lists them. The
 // starter templates this file once tested are gone (ADR-0013).
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -79,7 +79,7 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
     const saved = async () => JSON.parse(await readFile(file, "utf8"));
 
     // Two named keys, X and B. Neither has a shortcut, and there is nowhere
-    // to type one (OUT-18).
+    // to type one.
     await openControl(p, "west");
     await label.fill("抓手");
     await expect(shortcut).toHaveAttribute("data-keys", "");
@@ -115,7 +115,7 @@ test("shortcuts are only recorded, nothing assigns them, and the Markdown table 
       .click();
     await expect(exporting).toHaveCount(0);
 
-    // X gets its shortcut by recording; it is saved at once (UI-43). B
+    // X gets its shortcut by recording; it is saved at once. B
     // stays named only.
     await openControl(p, "west");
     await recordShortcut(app, shortcut, "F16");

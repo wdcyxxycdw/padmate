@@ -60,7 +60,7 @@ func Pack(ctx context.Context, opts Options) (string, error) {
 // It checks what Pack checks (build version, resources, subsystem, the
 // pinned SDL hash, license sources) and reads every file once, so the bytes
 // it returns are the bytes that were checked. OutDir is not used. The
-// installer (PKG-03) lays the same files out under its resources folder.
+// installer lays the same files out under its resources folder.
 func Collect(ctx context.Context, opts Options) ([]File, error) {
 	entries, err := collect(ctx, opts)
 	if err != nil {

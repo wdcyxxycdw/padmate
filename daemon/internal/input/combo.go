@@ -8,11 +8,11 @@ import (
 )
 
 // ComboHold is how long the buttons of a combo must be held together
-// before it fires (DMN-07).
+// before it fires.
 const ComboHold = 2 * time.Second
 
 // Combo is a set of gamepad buttons that fires a ComboHeld event once all
-// of them have been held together for Hold (DMN-07): padmated toggles the
+// of them have been held together for Hold: padmated toggles the
 // pause with it. Other buttons held at the same time do not matter.
 type Combo struct {
 	// Buttons are the members, named as in ButtonName. A combo with no
@@ -47,7 +47,7 @@ func DefaultCombo(info DeviceInfo, vertical bool) Combo {
 	return c
 }
 
-// ComboWatch finds the combos that the gamepads hold (DMN-07). It tracks
+// ComboWatch finds the combos that the gamepads hold. It tracks
 // the members held of each device from the Events it observes, without
 // asking SDL, so it works on what T-input saw even when Events was full.
 // Its methods must be called from one goroutine.
@@ -85,7 +85,7 @@ func NewComboWatch(pick func(DeviceInfo) Combo) *ComboWatch {
 
 // Repick gives every device the combo pick returns for it now, with the
 // Info it got before: padmated calls it after config.json changed the
-// combos (UI-19). It is conservative: it forgets which members are held
+// combos. It is conservative: it forgets which members are held
 // and disarms every combo, also one whose members stay the same, so a
 // combo fires only after all its members have been pressed again; a hold
 // under way never fires early or with the old members.

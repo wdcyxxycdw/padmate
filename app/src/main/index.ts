@@ -96,30 +96,30 @@ protocol.registerSchemesAsPrivileged([
 const browserData = runtimeOptions().userData;
 mkdirSync(browserData, { recursive: true });
 app.setPath("userData", browserData);
-// PKG-10: one window per set of browser data. After an update the installer
+// One window per set of browser data. After an update the installer
 // starts padmate again; a second instance does nothing but bring the first
 // one's window to the front.
 const firstInstance = claimSingleInstance(app, showExistingWindow);
 
 let window: BrowserWindow | undefined;
-// PKG-10 (ADR-0018): the automatic update, made when the app is ready.
+// ADR-0018: the automatic update, made when the app is ready.
 let updates: UpdateController | undefined;
-// HUD-01 (ADR-0014): the overlay is a second window, made once after this one
+// ADR-0014: the overlay is a second window, made once after this one
 // is ready, never shown actively and destroyed with this one.
 let overlay: OverlayController | undefined;
 let manager: DaemonManager | undefined;
 let quitting = false;
 let pageReady = false;
 let shown = false;
-// UI-45: the page did not load, or its renderer went away while the start
+// The page did not load, or its renderer went away while the start
 // had failed; then a dialog says why instead of the page.
 let pageBroken = false;
 let rendererGone = false;
 // The page is loaded again after rendererGone; it shows once loaded.
 let recovering = false;
 let failureDialog = false;
-// DMN-22: the daemon's exit is being answered (its tray's 退出, or the
-// installer's, PKG-04): the window finishes its saves, tells the daemon and
+// The daemon's exit is being answered (its tray's 退出, or the
+// installer's): the window finishes its saves, tells the daemon and
 // quits, and a close in between waits for that.
 let trayExiting = false;
 // ADR-0013: closing the window hid it, and padmate.exe stays with the page
@@ -127,7 +127,7 @@ let trayExiting = false;
 let hiddenByClose = false;
 // A quit waits for the saves (before-quit): the close it makes goes through.
 let quitHeld = false;
-// UI-43: closing waits for the mapping page's saves; nothing asks the user.
+// Closing waits for the mapping page's saves; nothing asks the user.
 const closeGuard = new CloseGuard({
   ask: () => {
     if (!window || window.isDestroyed() || !pageReady) return false;
@@ -175,15 +175,15 @@ const events = new EventBuffer((batch) => {
   if (window && !window.isDestroyed())
     window.webContents.send("padmate:eventBatch", batch);
 });
-// HUD-04 (ADR-0014): the daemon's state events, as they arrive, tell the
+// ADR-0014: the daemon's state events, as they arrive, tell the
 // overlay what changed. Not while the main window is focused: the user is
 // looking at the editor then. Whether there are toasts and in which language
-// is the UI's choice, pushed by the page (HUD-05, overlayPreferences).
+// is the UI's choice, pushed by the page (overlayPreferences).
 const toasts = new OverlayToaster({
   mainFocused: () => !!window && !window.isDestroyed() && window.isFocused(),
   show: (text, ms) => overlay?.toast(text, ms),
 });
-// HUD-03 (ADR-0014): the key hints the daemon lists in its state events while
+// ADR-0014: the key hints the daemon lists in its state events while
 // the hints button is held. They show also while the main window is focused
 // and do not depend on the toast switch. What kind of pad the names are for
 // comes from the daemon's device list, asked once per device.
@@ -201,7 +201,7 @@ const hints = new OverlayHints({
       : undefined;
   },
 });
-// SCR-22 (ADR-0014): the panels a script keeps with hud.panel, which the daemon
+// ADR-0014: the panels a script keeps with hud.panel, which the daemon
 // lists in its state events. They show also while the main window is focused
 // and do not depend on the toast switch; the page keeps them back while the
 // hints show.
@@ -212,7 +212,7 @@ const panels = new OverlayPanels({
     return true;
   },
 });
-// SCR-22: the daemon tells a script that an overlay is there (host.has("hud"))
+// The daemon tells a script that an overlay is there (host.has("hud"))
 // while somebody subscribes to its hud topic. The UI does while its overlay is
 // up: from the moment its window is ready, until it is given up (the window
 // could not be made, its page did not load, or its renderer died twice). Every
@@ -222,7 +222,7 @@ const hud = new HudSubscription((method, params) =>
     ? manager.call(method, params)
     : Promise.reject(new Error(managerDisconnected)),
 );
-// IN-17, IN-19 (ADR-0012): the raw joystick events of the controller the
+// ADR-0012: the raw joystick events of the controller the
 // mapping wizard watches. The input.raw topic is on the same subscription as
 // hud, wished up while a watch lasts; the watch ends when the wizard says so,
 // and here when its page goes away.
@@ -230,7 +230,7 @@ const rawWatch = new RawWatch(
   (method, params) => manager?.call(method, params),
   { up: (on) => hud.rawUp(on) },
 );
-// HUD-05: what the UI pushed about the overlay (toasts, language, position,
+// What the UI pushed about the overlay (toasts, language, position,
 // opacity), validated here; the overlay is made with the latest of it.
 const overlayPreferences = new OverlayPreferences(() => [
   toasts,
@@ -243,7 +243,7 @@ const developmentServer = !app.isPackaged && !!rendererURL;
 
 /**
  * A close while the daemon is connected (ADR-0013): the window hides, and a
- * field still being typed in is committed, as when it closes (UI-43). The
+ * field still being typed in is committed, as when it closes. The
  * page stays, so nothing waits for the saves.
  */
 function hideOnClose(): void {
@@ -266,7 +266,7 @@ function send(channel: string, value: ConnectionState | DaemonEvent): void {
 }
 
 // The window shows once the page is ready and the start is decided: the
-// app when connected, why not when it failed (UI-45).
+// app when connected, why not when it failed.
 function showWhenReady(): void {
   const phase = manager?.state.phase;
   if (pageReady && !shown && !quitting && phase && phase !== "connecting") {
@@ -276,7 +276,7 @@ function showWhenReady(): void {
 }
 
 /**
- * HUD-01: makes the overlay once the main window is ready, so the main page
+ * Makes the overlay once the main window is ready, so the main page
  * is the first window Playwright sees (firstWindow). BrowserWindow
  * .getAllWindows() has no order to rely on (Electron 44 lists the newest
  * first), so the E2E specs find the main window by title, not by [0].
@@ -296,7 +296,7 @@ function startOverlay(): void {
   overlay.start();
 }
 
-/** 打开文件夹 (UI-45): never a path of the report's other than its file. */
+/** 打开文件夹: never a path of the report's other than its file. */
 async function openStartFolder(): Promise<void> {
   const target = startFolderTarget(
     manager?.state.failure,
@@ -307,12 +307,12 @@ async function openStartFolder(): Promise<void> {
     throw new Error("Could not open the data folder");
 }
 
-/** PRO-29: selects the backup of a repaired config.json in the data folder. */
+/** Selects the backup of a repaired config.json in the data folder. */
 function showConfigBackup(backup: string): void {
   shell.showItemInFolder(join(runtimeOptions().dataDir, backup));
 }
 
-/** The programs of the Start Menu (UI-46), or of a test's own list. */
+/** The programs of the Start Menu, or of a test's own list. */
 function listPrograms() {
   const options = runtimeOptions();
   const isFile = async (path: string) => (await stat(path)).isFile();
@@ -342,7 +342,7 @@ function listPrograms() {
   });
 }
 
-// UI-42: one reading of the Start Menu serves the picker and the search for
+// One reading of the Start Menu serves the picker and the search for
 // a bound app's path; a test's own apps list stands for the whole machine, so
 // the registry (App Paths and the MuiCache) is not read then.
 const programs = programScan(listPrograms);
@@ -361,7 +361,7 @@ function quitAfterFailure(): void {
 }
 
 /**
- * The start failed and the page cannot say why (UI-45): a dialog does,
+ * The start failed and the page cannot say why: a dialog does,
  * until the user quits or a retry ends otherwise (pageRecovery).
  */
 async function showFailureDialog(): Promise<void> {
@@ -450,7 +450,7 @@ function registerHandlers(update: UpdateController): void {
       count: 1,
       run: (id) => manager?.call("profiles.get", { id: validateProfileID(id) }),
     },
-    // PRO-19: a profile with its parents merged in; read-only.
+    // A profile with its parents merged in; read-only.
     profileResolve: {
       count: 1,
       run: (id) =>
@@ -465,29 +465,29 @@ function registerHandlers(update: UpdateController): void {
         }),
     },
     ...libraryHandlers((method, params) => manager?.call(method, params)),
-    // IN-13: the controller buzzes and flashes, to tell which it is.
+    // The controller buzzes and flashes, to tell which it is.
     ...deviceHandlers(
       (method, params) => manager?.call(method, params),
       rawWatch,
     ),
-    // PKG-10: the automatic update; the window sends no address or version.
+    // The automatic update; the window sends no address or version.
     ...updateHandlers(update),
-    // UI-19: start at sign-in, the daemon's own entry.
+    // Start at sign-in, the daemon's own entry.
     ...startupHandlers(
       (method, params) => manager?.call(method, params),
       runtimeOptions().packagedTest,
     ),
-    // UI-30: the Game Bar page of Windows Settings, the one address Main
+    // The Game Bar page of Windows Settings, the one address Main
     // opens for the window (system-settings.ts).
     ...systemSettingsHandlers((url) => shell.openExternal(url)),
-    // UI-45: the page that says why the mapping service did not start.
+    // The page that says why the mapping service did not start.
     ...startFailureHandlers({
       state: () => manager?.state,
       open: openStartFolder,
       retry: () => manager?.connect(),
       quit: quitAfterFailure,
     }),
-    // UI-42: bound apps' icons, read from their executables, never from
+    // Bound apps' icons, read from their executables, never from
     // a window.
     ...appIconHandlers({
       thumbnail: (path, size) =>
@@ -497,7 +497,7 @@ function registerHandlers(update: UpdateController): void {
         }),
       fileIcon: (path) => app.getFileIcon(path, { size: "large" }),
     }),
-    // UI-46: the programs the Start Menu lists, and an .exe the user
+    // The programs the Start Menu lists, and an .exe the user
     // browses to; the renderer supplies no path.
     ...installedAppHandlers({
       list: programs.fresh,
@@ -511,14 +511,14 @@ function registerHandlers(update: UpdateController): void {
         return result.canceled ? undefined : result.filePaths[0];
       },
     }),
-    // UI-42: the path of a rule's program that is named by file name only.
+    // The path of a rule's program that is named by file name only.
     ...appPathHandlers(findAppPath),
-    // PRO-29: the dialog for a repaired config.json.
+    // The dialog for a repaired config.json.
     ...configRepairHandlers({
       call: (method, params) => manager?.call(method, params),
       show: showConfigBackup,
     }),
-    // PRO-20: backup of one profile as a .padmate file.
+    // Backup of one profile as a .padmate file.
     ...archiveHandlers({
       call: (method, params) => manager?.call(method, params),
       chooseExport: async (name) => {
@@ -539,7 +539,7 @@ function registerHandlers(update: UpdateController): void {
         const result = await dialog.showOpenDialog(window, {
           title: "导入配置 / Import profile",
           properties: ["openFile"],
-          // A .padmate backup, or an AntiMicroX profile (PRO-21).
+          // A .padmate backup, or an AntiMicroX profile.
           filters: [
             {
               name: "padmate / AntiMicroX",
@@ -553,7 +553,7 @@ function registerHandlers(update: UpdateController): void {
       },
       writeFile: (path, data) => writeFile(path, data),
     }),
-    // SCR-50: the scripts page's macros and its editor.
+    // The scripts page's macros and its editor.
     ...macroHandlers({
       call: (method, params) => manager?.call(method, params),
       chooseScript: async () => {
@@ -600,10 +600,10 @@ function registerHandlers(update: UpdateController): void {
           device: validateDevice(device),
         }),
     },
-    // HUD-05: the UI's choices about the overlay; invalid fields are ignored.
+    // The UI's choices about the overlay; invalid fields are ignored.
     overlayPrefs: { count: 1, run: (prefs) => overlayPreferences.push(prefs) },
     captureStart: { count: 0, run: () => capture.start() },
-    // UI-19: recording a new emergency combo on the controller. IN-19: the
+    // Recording a new emergency combo on the controller. The
     // mapping wizard asks for a capture that stays while the window is away.
     padCaptureStart: {
       count: 1,
@@ -761,7 +761,7 @@ app
       pageReady = false;
       closeGuard.release();
       if (quitting) return;
-      // UI-45: the start failed (or is retried); a dialog says why instead.
+      // The start failed (or is retried); a dialog says why instead.
       if (manager?.state.failure && manager.state.phase !== "connected") {
         rendererGone = true;
         shown = false;
@@ -794,7 +794,7 @@ app
         return;
       }
       rawWatch.reset();
-      // The daemon's exit saves and quits by itself (DMN-22); its own quit
+      // The daemon's exit saves and quits by itself; its own quit
       // closes the window through here and is let through.
       if (holdsWindowClose({ trayExiting, quitting }, () => closeGuard.hold()))
         event.preventDefault();
@@ -847,8 +847,8 @@ app
           hints.handle(event);
           panels.handle(event);
         },
-        // DMN-22: 退出 in the daemon's tray, or the installer's exit
-        // (PKG-04, `padmatectl quit`). The daemon has stopped the mapping
+        // 退出 in the daemon's tray, or the installer's exit
+        // (`padmatectl quit`). The daemon has stopped the mapping
         // and released every key, and waits for this UI (2 s at most): the
         // window finishes its saves as when it closes, the UI answers
         // ui.exitReady, then it quits. The end of the connection shows

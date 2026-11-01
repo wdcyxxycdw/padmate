@@ -12,7 +12,7 @@ import (
 )
 
 // These tests need no SDL: they cover the pure logic of the receiver
-// watchdog (IN-30) on made-up SDL tick times.
+// watchdog on made-up SDL tick times.
 
 // testTiming is receiverTiming for a 1 s timeout: prove 500 ms, gap 125 ms.
 func testTiming(t *testing.T) receiverTiming {
@@ -57,7 +57,7 @@ func TestReceiverTiming(t *testing.T) {
 		}
 	}
 	if DefaultReceiverTimeout != 2*time.Second {
-		t.Errorf("DefaultReceiverTimeout = %v, want 2s (owner decision 1 of IN-30)", DefaultReceiverTimeout)
+		t.Errorf("DefaultReceiverTimeout = %v, want 2s (an owner decision)", DefaultReceiverTimeout)
 	}
 	if tm, _ := newReceiverTiming(minReceiverTimeout); tm.gap <= uint64(receiverWatchEvery) {
 		t.Errorf("the gap %v of the shortest timeout is not above the watch %v", time.Duration(tm.gap), receiverWatchEvery)

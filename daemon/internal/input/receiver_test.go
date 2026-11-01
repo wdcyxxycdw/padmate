@@ -19,7 +19,7 @@ import (
 )
 
 // These tests need no SDL: they build a Source by hand, with fake
-// heartbeat sources, and call T-input's receiver watchdog (IN-30)
+// heartbeat sources, and call T-input's receiver watchdog
 // directly. receiver_sdl_test.go drives it through SDL.
 
 // logBuffer collects the JSON records of a slog.Logger at debug level.

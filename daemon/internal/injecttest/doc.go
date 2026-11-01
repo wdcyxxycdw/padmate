@@ -51,7 +51,7 @@
 // hook swallows both, so the application sees no click. ButtonMessage and
 // ButtonProblems say what the mouse hook must report for a button event.
 //
-// A typed text (OUT-21, ADR-0012) is Unicode events: KEYEVENTF_UNICODE, which
+// A typed text (ADR-0012) is Unicode events: KEYEVENTF_UNICODE, which
 // the system turns into VK_PACKET keys carrying a UTF-16 unit, and which would be
 // characters typed into the foreground window if the hook let them through. The
 // hook swallows them by the tag and the nonce like any key, but that Windows

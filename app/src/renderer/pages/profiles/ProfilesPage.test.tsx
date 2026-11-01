@@ -228,7 +228,7 @@ function fakeDaemon({
           code: -32013,
           data: { references },
         };
-      // The profiles based on it are written out whole first (PRO-19), all or
+      // The profiles based on it are written out whole first, all or
       // none.
       const children = [...daemon.profiles].filter(([, stored]) => {
         try {
@@ -357,9 +357,9 @@ async function setup(
   const editKeys = vi.fn(async (id: string) => {
     if ((await store.getState().activateProfile(id)).ok) openMapping();
   });
-  // The mapping page's flush (UI-43).
+  // The mapping page's flush.
   const saveEdits = vi.fn(async (_id: string) => true);
-  // The shell opens 配置设置 for a card's profile (UI-27).
+  // The shell opens 配置设置 for a card's profile.
   const profileSettings = vi.fn((_id: string) => {});
   function Host() {
     const state = useStore(store);
@@ -1578,7 +1578,7 @@ describe("profile operations", () => {
     ).not.toContain("Duplicate");
   });
 
-  it("names the field by its label alone and announces its error (UI-24)", async () => {
+  it("names the field by its label alone and announces its error", async () => {
     const { user } = await setup({ config: baseConfig });
     await user.click(screen.getByRole("button", { name: "新建配置" }));
     const create = await screen.findByRole("dialog", { name: "新建配置" });
@@ -1851,7 +1851,7 @@ describe("profile operations", () => {
 
   it("renames and deletes the profile in use without asking about edits", async () => {
     await setup({ config: baseConfig });
-    // The mapping page saves its edits at once (UI-43): nothing waits.
+    // The mapping page saves its edits at once: nothing waits.
     openCardMenu("Paint");
     chooseMenuItem("重命名…");
     expect(
@@ -1895,7 +1895,7 @@ describe("profile operations", () => {
   });
 });
 
-describe("export and import (PRO-20)", () => {
+describe("export and import", () => {
   const pill = () => document.querySelector(".profiles-pill");
 
   it("exports a profile from its card after saving its edits", async () => {
@@ -2038,7 +2038,7 @@ describe("export and import (PRO-20)", () => {
     );
   });
 
-  describe("scripts that clash with the library's (SCR-51)", () => {
+  describe("scripts that clash with the library's", () => {
     const token = "9".padStart(32, "0");
     const clash = {
       file: "画笔.ts",
@@ -2367,7 +2367,7 @@ describe("picker helpers", () => {
   });
 });
 
-describe("配置设置 from a profile card (UI-27)", () => {
+describe("配置设置 from a profile card", () => {
   it("is the first item of every card's menu, the fixed default's too", async () => {
     await setup({ config: baseConfig });
     for (const name of ["Paint", "Photo"]) {
@@ -2431,7 +2431,7 @@ describe("配置设置 from a profile card (UI-27)", () => {
   });
 });
 
-describe("profiles whose files have extends (PRO-19, ADR-0013)", () => {
+describe("profiles whose files have extends (ADR-0013)", () => {
   /** Profiles stored with an extends, as a hand-written file has it. */
   function based(
     daemon: Awaited<ReturnType<typeof setup>>["daemon"],
@@ -2573,7 +2573,7 @@ describe("profiles whose files have extends (PRO-19, ADR-0013)", () => {
   });
 });
 
-describe("importing an AntiMicroX profile (PRO-21)", () => {
+describe("importing an AntiMicroX profile", () => {
   const pill = () => document.querySelector(".profiles-pill");
   const imported = (report: AmgpReportLine[]): AmgpImported => ({
     amgp: true,

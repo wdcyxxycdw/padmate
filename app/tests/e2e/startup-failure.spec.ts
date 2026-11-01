@@ -10,10 +10,10 @@ import {
 import { axeCheck } from "./a11y-helpers";
 import { cleanup, type Fixture, fixture, placeWindow, root } from "./helpers";
 
-// UI-45: when the mapping service does not start, the window says why and
+// When the mapping service does not start, the window says why and
 // offers 打开文件夹, 重试 and 退出 instead of quitting. 打开文件夹 is not
 // clicked here: it opens Explorer. A config.json with errors is no such
-// failure since PRO-29: it is repaired (config-repair.spec.ts); one that
+// failure: it is repaired (config-repair.spec.ts); one that
 // cannot be read at all, here a folder, still is.
 
 /** Starts the app without waiting for a connection, which never comes. */
@@ -80,7 +80,7 @@ test("a config.json that cannot be read says where, and 重试 after the fix ope
     await expect(view).not.toContainText("task ");
     await expect(view).not.toContainText("docs/");
     await page.screenshot({ path: info.outputPath("start-failure.png") });
-    // UI-24: the page is checked like the rest of the window.
+    // The page is checked like the rest of the window.
     await axeCheck(page, "start failure");
 
     await rm(config, { recursive: true });

@@ -15,7 +15,7 @@ interface SlotInit {
 }
 
 // One entry of engine.activity's slots, as the daemon writes it; hints only
-// while the hints button is held (HUD-03).
+// while the hints button is held.
 function slot({ slot, device = 7 + slot, hints }: SlotInit) {
   return {
     slot,
@@ -344,7 +344,7 @@ describe("OverlayHints and the kind of pad", () => {
   });
 });
 
-describe("OverlayHints among the overlay's preferences (HUD-05)", () => {
+describe("OverlayHints among the overlay's preferences", () => {
   it("takes the language from a push, like the toaster, and ignores what is not valid", () => {
     const { hints, shown } = setup();
     const toasts = { configure: vi.fn() };

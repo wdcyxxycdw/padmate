@@ -15,7 +15,7 @@ import (
 )
 
 // rpcInput uses the recording format, and "remapped" for a gamepad whose
-// mapping changed (IN-18), with its info as it is now. Internal combo and wake
+// mapping changed, with its info as it is now. Internal combo and wake
 // snapshots are not physical edges; they are deliberately excluded from the
 // input topic.
 type rpcInput struct {
@@ -47,7 +47,7 @@ func (r *liveRun) publishInput(e input.Event) {
 const exitAnnounceWait = 250 * time.Millisecond
 
 // exitReadyWait bounds how long an exit waits for the UIs to save their
-// last edit (DMN-22): the owner's 2 s.
+// last edit: the owner's 2 s.
 const exitReadyWait = 2 * time.Second
 
 // exitReplyWait bounds how long an exit that daemon.exit asked for waits for
@@ -56,7 +56,7 @@ const exitReadyWait = 2 * time.Second
 const exitReplyWait = 500 * time.Millisecond
 
 // exitReasonInstaller is the reason of daemon.exit: the installer replaces
-// or removes padmated (PKG-04). It is the only one daemon.exit accepts.
+// or removes padmated. It is the only one daemon.exit accepts.
 const exitReasonInstaller = "installer"
 
 // rpcExiting is the daemon.exiting event: why padmated stops.
@@ -66,7 +66,7 @@ type rpcExiting struct {
 
 // announceExit tells the IPC clients that subscribe to daemon.exiting that
 // padmated stops for reason, "tray" when the user chose 退出 in the tray
-// (DMN-22, ADR-0001) and "installer" when daemon.exit asked for it, so that
+// (ADR-0001) and "installer" when daemon.exit asked for it, so that
 // the UI saves its last edit and quits too instead of showing a lost
 // connection. It waits until the event is written to their connections,
 // exitAnnounceWait at most, and returns the sessions it was written to.
@@ -82,7 +82,7 @@ func (r *liveRun) announceExit(reason string) []*ipc.Session {
 	return written
 }
 
-// exitFromTray is the tray's 退出 (DMN-22); see exitFor.
+// exitFromTray is the tray's 退出; see exitFor.
 func (r *liveRun) exitFromTray() { r.exitFor("tray", nil) }
 
 // exitFor takes the exit that the user chose (reason "tray") or the
@@ -158,7 +158,7 @@ func (r *liveRun) exitSequence(reason string, replied <-chan struct{}) {
 	r.endStop(stopCause(reason))
 }
 
-// exitMethods adds daemon.exit (PKG-04): the installer asks the running
+// exitMethods adds daemon.exit: the installer asks the running
 // padmated to exit as the tray's 退出 does. It replies at once and runs the
 // sequence on a goroutine of its own; the sequence waits for session's
 // connection to close, exitReplyWait at most, before it closes the
@@ -185,7 +185,7 @@ func (r *liveRun) exitMethods(methods handler.Map, session *ipc.Session) {
 }
 
 // uiExits keeps the connections of the UIs that ui.register verified, for
-// an exit to wait for their ui.exitReady (DMN-22).
+// an exit to wait for their ui.exitReady.
 type uiExits struct {
 	mu  sync.Mutex
 	uis map[*ipc.Session]chan struct{}

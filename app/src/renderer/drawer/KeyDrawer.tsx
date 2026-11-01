@@ -138,7 +138,7 @@ function KeyTitle({
     refocus.current = true;
     onEditing(false);
   };
-  // The name is committed on Enter or when the field loses focus (UI-43).
+  // The name is committed on Enter or when the field loses focus.
   const field = useCommitField({
     value: name,
     onCommit: (next) => onRename(next.trim()),
@@ -233,7 +233,7 @@ function stickModeName(mode: string | undefined, language: Language): string {
       : tx(language, "方向键", "Direction keys");
 }
 
-/** Drawer that edits one control of the profile draft (UI-39, ADR-0012). */
+/** Drawer that edits one control of the profile draft (ADR-0012). */
 export function KeyDrawer({
   editor,
   control,
@@ -250,7 +250,7 @@ export function KeyDrawer({
   onControl: (control: string) => void;
   info: DeviceInfo;
   input?: PadInput;
-  /** The sticks the live controller has its own calibration for (IN-14). */
+  /** The sticks the live controller has its own calibration for. */
   calibrated?: { ls: boolean; rs: boolean };
   language: Language;
   onClose: () => void;
@@ -261,13 +261,13 @@ export function KeyDrawer({
 }) {
   const state = useStore(editor);
   const t = (zh: string, en: string) => tx(language, zh, en);
-  // The usual bindings, or the function set (UI-30, ADR-0012): the set
+  // The usual bindings, or the function set (ADR-0012): the set
   // stands where the base layer does, so everything below reads and writes
   // it as it would the base layer, and edit puts the draft back.
   const functionKey = state.functionKey;
   const view = effectiveView(state.view, info, functionKey);
   const usual = state.draft;
-  // A hand-written file that extends another (PRO-19, ADR-0013): what the
+  // A hand-written file that extends another (ADR-0013): what the
   // profile does not bind is the parent's, shown here as plain bindings. The
   // edits of it go to the profile's own file (writeBack): the first one makes
   // the key the profile's own.

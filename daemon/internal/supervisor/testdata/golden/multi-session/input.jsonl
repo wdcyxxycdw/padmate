@@ -1,4 +1,4 @@
-# A lock with two slots (DMN-09): Pad A's east holds Space and Pad B's
+# A lock with two slots: Pad A's east holds Space and Pad B's
 # west holds Shift when the session locks at 500, which lets go of both.
 # Taps of south on either pad during the lock map nothing. After the
 # unlock at 1000, both do nothing until they are pressed again.

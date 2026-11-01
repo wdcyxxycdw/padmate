@@ -6,7 +6,7 @@ import {
 } from "../shared/overlay";
 import { firstMappedSlot } from "./overlay-hints";
 
-// A script's panels (SCR-22, ADR-0014). hud.panel(id, content) keeps a panel
+// A script's panels (ADR-0014). hud.panel(id, content) keeps a panel
 // in the script's runtime; the daemon's periodic engine.activity state event
 // gives the slot that runs the script a "panels" list while it has any. This
 // takes that list out of the event and hands it to the overlay, and tells the

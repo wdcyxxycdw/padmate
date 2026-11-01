@@ -1,6 +1,6 @@
-// Package spike holds throwaway measurement code for the M0d goja spike
-// (SPK-03). Its conclusions are in docs/adr/0010-scripting-runtime.md;
-// the code itself is a stand-in, not the M5 script host (SCR-01).
+// Package spike holds throwaway measurement code for the M0d goja spike.
+// Its conclusions are in docs/adr/0010-scripting-runtime.md;
+// the code itself is a stand-in, not the M5 script host.
 //
 // Do not extend it, import it or copy it from M5 code: the real host is
 // written from the script design, in its own package, and

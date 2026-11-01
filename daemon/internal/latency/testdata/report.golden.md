@@ -1,4 +1,4 @@
-## 端到端延迟（ENG-11）
+## 端到端延迟
 
 **gate: evaluated**
 
@@ -50,7 +50,7 @@ Notes:
 
 ---
 
-## 端到端延迟（ENG-11）
+## 端到端延迟
 
 **GATE NOT EVALUATED** (skipped): no injection (PADMATE_TEST_INJECT unset)
 
@@ -83,7 +83,7 @@ Notes:
 
 ---
 
-## SendInput 单独（ENG-11）
+## SendInput 单独
 
 **GATE NOT EVALUATED** (off): info only
 

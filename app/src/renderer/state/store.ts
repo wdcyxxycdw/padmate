@@ -67,7 +67,7 @@ import {
 } from "./settings-model";
 
 export const LOG_LIMIT = 256;
-/** How long a window capture waits for a click into another app (PRO-16). */
+/** How long a window capture waits for a click into another app. */
 export const CAPTURE_TIMEOUT_MS = 30_000;
 /** apps.recent keeps at most this many; live updates keep the same bound. */
 export const RECENT_APPS_LIMIT = 12;
@@ -107,7 +107,7 @@ export interface OutputPreview {
   dryRun: boolean;
 }
 /**
- * The last press that ran an action (UI-44): an engine.activity decision
+ * The last press that ran an action: an engine.activity decision
  * with reason "dispatch". The mapping page shows it while padmate's own
  * window is in front.
  */
@@ -127,10 +127,10 @@ export interface KeyPreview {
  */
 export interface BasicSettings {
   sendToOwnWindow: boolean;
-  /** output.eventGapMs (OUT-17): whole milliseconds between key events. */
+  /** output.eventGapMs: whole milliseconds between key events. */
   eventGapMs: number;
   /**
-   * The feedback switches (UI-27, ADR-0015): config.json's feedback.rumble,
+   * The feedback switches (ADR-0015): config.json's feedback.rumble,
    * led, pause and lowBattery. Each is on unless the file says false.
    */
   rumble: boolean;
@@ -160,16 +160,16 @@ export interface ReportOptions {
   inline?: () => boolean;
 }
 /**
- * What the controller chips show (UI-35): the action's name or its shortcut.
+ * What the controller chips show: the action's name or its shortcut.
  * The control's own name went away with ADR-0013.
  */
 export type LabelDisplay = "actions" | "keys";
 /**
- * Start at sign-in (UI-19), see PadmateState.startup; and the overlay's
- * toasts, position and opacity (HUD-05), see overlay-settings.ts.
+ * Start at sign-in, see PadmateState.startup; and the overlay's
+ * toasts, position and opacity, see overlay-settings.ts.
  */
 export type { OverlaySettings, StartupState };
-/** localStorage key: "done" once the first-run page (UI-38) is not offered. */
+/** localStorage key: "done" once the first-run page is not offered. */
 export const ONBOARDING_KEY = "padmate.onboarding";
 interface InputEvent {
   kind: string;
@@ -185,7 +185,7 @@ interface EngineState {
   slots: SlotState[];
   localDryRun?: boolean;
   sendToOwnWindow?: boolean;
-  /** The power of each controller that has read one (IN-12). */
+  /** The power of each controller that has read one. */
   batteries?: BatteryReading[];
 }
 
@@ -206,7 +206,7 @@ export interface PadmateState {
   inputs: Record<number, PadInput>;
   logs: LogEntry[];
   /**
-   * The event list of the diagnostics page (UI-20, ADR-0016): the latest
+   * The event list of the diagnostics page (ADR-0016): the latest
    * ACTIVITY_LIMIT rows from engine.activity, oldest first, kept while
    * connected whatever page is open, and cleared when a connection is made
    * again. The shell does not subscribe to it (see App's selection), or each
@@ -221,7 +221,7 @@ export interface PadmateState {
   selectedDevice: number | null;
   language: Language;
   labelDisplay: LabelDisplay;
-  /** HUD-05: kept in localStorage, pushed to Main with the language. */
+  /** Kept in localStorage, pushed to Main with the language. */
   overlay: OverlaySettings;
   page: Page;
   busy: boolean;
@@ -247,19 +247,19 @@ export interface PadmateState {
   libraryBusy: boolean;
   librarySave: LibrarySave;
   /**
-   * The first-run page (UI-38) no longer opens by itself: it went to the
+   * The first-run page no longer opens by itself: it went to the
    * main page or was closed, or the library had profiles besides the fixed
    * default once in this browser profile.
    */
   onboardingDone: boolean;
   /**
-   * A repair of config.json (PRO-29, ADR-0013) the user has not confirmed:
+   * A repair of config.json (ADR-0013) the user has not confirmed:
    * the daemon backed the file up and reset what had errors. The shell
    * shows one dialog for it; acknowledgeConfigRepair closes it.
    */
   configRepair: ConfigRepair | null;
   /**
-   * Start at sign-in (UI-19, ADR-0001): the daemon's own entry, read on
+   * Start at sign-in (ADR-0001): the daemon's own entry, read on
    * connect, with refresh and refreshStartup. null until it answers, and
    * with a daemon that has no startup.get.
    */
@@ -278,7 +278,7 @@ export interface PadmateState {
    */
   setStartup(enabled: boolean, options?: ReportOptions): Promise<string>;
   /**
-   * Identify (IN-13): the controller with this key (DeviceEntry.key) buzzes
+   * Identify: the controller with this key (DeviceEntry.key) buzzes
    * and flashes for at most a second and a half. Resolves to the cues it
    * gave (all false: nothing to show), or to null when it did not: the
    * shell's alert says why. It does not take the page's busy state, since it
@@ -318,7 +318,7 @@ export interface PadmateState {
   ): Promise<LibraryOutcome<{ id: string; name: string }>>;
   /**
    * Changes only the name; the caller guards an unsaved mapping draft. The
-   * fixed default keeps its name (PRO-28).
+   * fixed default keeps its name.
    */
   renameProfile(
     id: string,
@@ -331,11 +331,11 @@ export interface PadmateState {
    * profile (the fixed default first), or removes id's rules, and asks
    * again. A refusal it cannot resolve (the startup profile, a conflict)
    * undoes both, so a failed delete changes nothing. The fixed default is
-   * never deleted (PRO-28).
+   * never deleted.
    */
   deleteProfile(id: string, options?: ReportOptions): Promise<LibraryOutcome>;
   /**
-   * Saves profile id as a .padmate file where the user chooses (PRO-20),
+   * Saves profile id as a .padmate file where the user chooses,
    * named after its name in the UI; resolves to false when the user
    * cancels. The caller saves the mapping page's edits first.
    */
@@ -344,7 +344,7 @@ export interface PadmateState {
     options?: ReportOptions,
   ): Promise<LibraryOutcome<boolean>>;
   /**
-   * Adds a .padmate file as a profile (PRO-20): without options the user
+   * Adds a .padmate file as a profile: without options the user
    * picks the file; { exists: true } asks the caller to repeat the call
    * with its token and a profile to replace or a new name. The list is
    * read again after a write.
@@ -367,7 +367,7 @@ export interface PadmateState {
   saveSettings(settings: Partial<BasicSettings>): Promise<void>;
   setLanguage(language: Language): void;
   setLabelDisplay(display: LabelDisplay): void;
-  /** Changes the given overlay settings (HUD-05); an invalid value is ignored. */
+  /** Changes the given overlay settings; an invalid value is ignored. */
   setOverlay(change: Partial<OverlaySettings>): void;
   setPage(page: Page): void;
   /** Marks the first-run page done, so it never opens by itself again. */
@@ -599,7 +599,7 @@ export function createPadmateStore(api: PadmateAPI) {
         set({ startup });
     }
 
-    // HUD-05: tells Main what the overlay needs from the UI: the language of
+    // Tells Main what the overlay needs from the UI: the language of
     // its toasts and the three settings. Main checks it and ignores what is
     // invalid. It is sent at start and with every change; a failure leaves the
     // overlay as it was, and the next push repeats all of it.
@@ -718,7 +718,7 @@ export function createPadmateStore(api: PadmateAPI) {
     }
 
     /**
-     * Keeps a row of the event list (UI-20): not while recording is paused.
+     * Keeps a row of the event list: not while recording is paused.
      * The ring is updated in a microtask, after the rest of the batch that
      * the event came with.
      */
@@ -738,7 +738,7 @@ export function createPadmateStore(api: PadmateAPI) {
       });
     }
 
-    /** A press that ran an action (UI-44); other decisions are ignored. */
+    /** A press that ran an action; other decisions are ignored. */
     function pressed(event: DecisionActivity) {
       const decision = event.decision;
       if (
@@ -791,7 +791,7 @@ export function createPadmateStore(api: PadmateAPI) {
           } else if (input.kind === "added") void refresh();
           else if (input.kind === "remapped") {
             // SDL releases nothing when a mapping changes, so a control shown
-            // as held may never send its release under the new mapping (IN-18).
+            // as held may never send its release under the new mapping.
             const inputs = { ...get().inputs };
             delete inputs[input.device];
             set({ inputs });
@@ -906,7 +906,7 @@ export function createPadmateStore(api: PadmateAPI) {
               typeof change.revision === "string" ? change.revision : "",
             );
           else if (change.kind === "configRepaired") {
-            // The daemon repaired config.json while running (PRO-29): no
+            // The daemon repaired config.json while running: no
             // profile changed, the file did.
             if (
               typeof change.backup === "string" &&
@@ -1496,7 +1496,7 @@ export function createPadmateStore(api: PadmateAPI) {
                 output.eventGapMs = settings.eventGapMs;
               next = { ...next, output };
             }
-            // A switch goes in feedback only when it is off (UI-27).
+            // A switch goes in feedback only when it is off.
             for (const key of FEEDBACK_SWITCHES) {
               const on = settings[key];
               if (on !== undefined)

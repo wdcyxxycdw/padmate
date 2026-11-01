@@ -90,9 +90,9 @@ func TestHostCurrentSurfaceMatchesFilteredDeclarations(t *testing.T) {
 		}
 		assertMemberArity(t, name, object, want)
 	}
-	// pad.info is declared as DeviceInfo rather than an inline object. SCR-05
-	// supplies its runtime snapshot; this check also catches empty placeholders.
-	// Its battery is there once the gamepad has read one (SCR-23).
+	// pad.info is declared as DeviceInfo rather than an inline object. The
+	// runtime supplies its snapshot; this check also catches empty placeholders.
+	// Its battery is there once the gamepad has read one.
 	powered := NewHostWithOptions(HostOptions{Clock: clock.NewFake(), Pad: PadState{
 		Connected: true, Info: input.DeviceInfo{Name: "Pad", Type: "xboxone"}, Key: "k",
 		Power: input.Power{State: input.PowerDischarging, Percent: 80}, HasPower: true,

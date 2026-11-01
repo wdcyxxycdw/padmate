@@ -16,7 +16,7 @@ import { DEFAULT_STEPS } from "./mapwizard";
 const config = (devices: Config["devices"]): Config =>
   ({ schemaVersion: 0, devices }) as Config;
 
-describe("custom mappings in config.json (IN-18)", () => {
+describe("custom mappings in config.json", () => {
   it("knows a controller with a mapping saved under its key", () => {
     const saved = config({
       "030000007e05/p:x": { mapping: "ff,*,a:b0,platform:Windows" },

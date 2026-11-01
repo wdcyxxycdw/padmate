@@ -1,5 +1,5 @@
-// What Main, the main window's page and the overlay's page share (HUD-04,
-// HUD-05, HUD-03, SCR-22, ADR-0014): the channels Main sends on, the page-side
+// What Main, the main window's page and the overlay's page share
+// (ADR-0014): the channels Main sends on, the page-side
 // API the overlay's preload exposes, the preferences the UI pushes to Main and
 // the rules for what crosses. Main -> overlay only; the overlay can send
 // nothing back.
@@ -7,13 +7,13 @@
 /** The channel of a toast, from Main to the overlay's preload. */
 export const overlayToastChannel = "overlay:toast";
 
-/** The channel of the page's settings (HUD-05), from Main to the overlay's preload. */
+/** The channel of the page's settings, from Main to the overlay's preload. */
 export const overlayPrefsChannel = "overlay:prefs";
 
-/** The channel of the key hints (HUD-03), from Main to the overlay's preload. */
+/** The channel of the key hints, from Main to the overlay's preload. */
 export const overlayHintsChannel = "overlay:hints";
 
-/** The channel of a script's panels (SCR-22), from Main to the overlay's preload. */
+/** The channel of a script's panels, from Main to the overlay's preload. */
 export const overlayPanelsChannel = "overlay:panels";
 
 /** A toast is one line: at most this many characters (code points) cross. */
@@ -21,9 +21,9 @@ export const maxToastLength = 200;
 
 /** How long a toast holds before it fades out, in ms, when nothing says otherwise. */
 export const defaultToastHoldMs = 1500;
-/** A script's toast (SCR-22) holds for at least this long, in ms. */
+/** A script's toast holds for at least this long, in ms. */
 export const minToastHoldMs = 500;
-/** A script's toast (SCR-22) holds for at most this long, in ms. */
+/** A script's toast holds for at most this long, in ms. */
 export const maxToastHoldMs = 10000;
 
 /**
@@ -51,8 +51,8 @@ export function toastTextFrom(payload: unknown): string | undefined {
 }
 
 /**
- * How long a toast holds, as the daemon words it for a script's toast
- * (SCR-22): a whole number of ms from minToastHoldMs to maxToastHoldMs.
+ * How long a toast holds, as the daemon words it for a script's toast:
+ * a whole number of ms from minToastHoldMs to maxToastHoldMs.
  * undefined for anything else, which means the default hold.
  */
 export function toastHoldFrom(value: unknown): number | undefined {
@@ -66,8 +66,8 @@ export function toastHoldFrom(value: unknown): number | undefined {
 
 /**
  * A toast message as the preload accepts it: the text as toastTextFrom has
- * it and, when the sender gave a valid hold (SCR-22), `ms`. A toast of the
- * state changes (HUD-04) has no `ms`; so does one whose `ms` is not valid,
+ * it and, when the sender gave a valid hold, `ms`. A toast of the
+ * state changes has no `ms`; so does one whose `ms` is not valid,
  * and the page then holds for the default.
  */
 export function toastFrom(
@@ -82,7 +82,7 @@ export function toastFrom(
 /** The UI languages; the toast texts follow the one the UI is in. */
 export type OverlayLanguage = "zh-CN" | "en";
 
-/** Where the overlay sits on its display's work area (HUD-05). */
+/** Where the overlay sits on its display's work area. */
 export type OverlayPosition = "bottom" | "top";
 
 /** The pill's opacity in percent: 40 to 100 in steps of 5 in the UI. */
@@ -91,7 +91,7 @@ export const overlayOpacityMax = 100;
 export const overlayOpacityStep = 5;
 
 /**
- * What the UI keeps about the overlay and pushes to Main (HUD-05): the toasts
+ * What the UI keeps about the overlay and pushes to Main: the toasts
  * and the language they are in, where the window sits and how opaque the pill
  * is. The UI keeps it in its localStorage (store.ts), not in config.json;
  * Main knows it only from the pushes.
@@ -145,7 +145,7 @@ export function parseOverlayPrefs(value: unknown): Partial<OverlayPrefs> {
   return prefs;
 }
 
-/** What the overlay's page is told about itself: the pill's opacity (HUD-05). */
+/** What the overlay's page is told about itself: the pill's opacity. */
 export interface OverlayPageSettings {
   opacity: number;
 }
@@ -161,7 +161,7 @@ export function pageSettingsFrom(
   return opacity === undefined ? undefined : { opacity };
 }
 
-// The key hints (HUD-03). While the button bound to the hints action is held
+// The key hints. While the button bound to the hints action is held
 // the daemon lists, in its state events, what each other control of the
 // current layer does; Main passes the list on and the page draws it as a
 // panel next to the toast area. The window grows for it (setBounds only) and
@@ -183,7 +183,7 @@ export const hintsRowHeight = 18;
 export const hintsPanelPadding = 10;
 /** Between the panel and the toast area, in px. */
 export const hintsGap = 8;
-/** A script's panels (SCR-22) show at most this many panels. */
+/** A script's panels show at most this many panels. */
 export const maxScriptPanels = 4;
 /** A script's panels show at most this many rows (titles count); more end in a line "…". */
 export const maxPanelRows = 16;
@@ -340,7 +340,7 @@ export function overlayHeightForHints(count: number): number {
   return windowHeightFor(hintsPanelHeight(count));
 }
 
-// A script's panels (SCR-22). hud.panel(id, content) in a script keeps a
+// A script's panels. hud.panel(id, content) in a script keeps a
 // panel of rows [left, right] in the daemon, which lists the panels in the
 // state events of the slot that runs the script. Main passes those of the
 // first mapped slot on and the page draws them where the key hints go, one
@@ -479,8 +479,8 @@ export function overlayHeightForPanels(rows: number): number {
  */
 export interface OverlayAPI {
   /**
-   * Calls listener with the text of each toast and, for a script's toast
-   * (SCR-22), how long it holds in ms; the returned function stops it.
+   * Calls listener with the text of each toast and, for a script's toast,
+   * how long it holds in ms; the returned function stops it.
    */
   onToast(listener: (text: string, ms?: number) => void): () => void;
   /**
@@ -490,14 +490,14 @@ export interface OverlayAPI {
    */
   onPrefs(listener: (settings: OverlayPageSettings) => void): () => void;
   /**
-   * Calls listener with each hints message (HUD-03): the entries to show, or
+   * Calls listener with each hints message: the entries to show, or
    * none to hide the panel. At once with the latest one Main has sent, if
    * any (an empty one hides), then with each change; the returned function
    * stops it.
    */
   onHints(listener: (message: OverlayHintsMessage) => void): () => void;
   /**
-   * Calls listener with each panels message (SCR-22): the panels of a
+   * Calls listener with each panels message: the panels of a
    * script to show, or none to hide them. At once with the latest one Main
    * has sent, if any (an empty one hides), then with each change; the
    * returned function stops it.

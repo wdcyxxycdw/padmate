@@ -1,5 +1,5 @@
 // Command pecheck checks the built Windows executables of the daemon and the
-// CLI against the hygiene policy of internal/pecheck (PKG-11): layout, sections,
+// CLI against the hygiene policy of internal/pecheck: layout, sections,
 // entropy, the import table and the Windows functions padmate binds at run time,
 // the last two against goldens in internal/pecheck/testdata.
 //

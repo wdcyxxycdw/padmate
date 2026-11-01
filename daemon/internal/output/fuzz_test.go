@@ -76,7 +76,7 @@ var fuzzSeeds = []struct {
 	{"queued then held", []byte{fzTap, 3, 0, fzTap, 1, 3, fzDown, 2, 0}},
 	{"queued release fails", []byte{fzTap, 3, 0, fzTap, 1, 3, fzFail, 0, 1, fzAdvance, 0, 40}},
 	// Z's release failed twice and is pending. A tap of Z waits if the resend
-	// before it fails again, and starts at once if it works (OUT-10).
+	// before it fails again, and starts at once if it works.
 	{"tap on pending key", []byte{fzDown, 0, 0, fzFail, 0, 1, fzUp, 0, 0, fzFail, 0, 0, fzTap, 1, 0, fzAdvance, 1, 20}},
 	{"tap on pending key resent", []byte{fzDown, 0, 0, fzFail, 0, 1, fzUp, 0, 0, fzTap, 1, 0}},
 	{"taps merged on pending key", []byte{
@@ -210,7 +210,7 @@ func (fz *fuzzer) inject(events []output.KeyEvent) (int, error) {
 		if want := withUp(h.Press, e.Up); e != want {
 			fz.t.Fatalf("%s: sent %+v for a key pressed with %+v", fz.desc, e, h.Press)
 		}
-		// OUT-05: presses, modifiers first, then releases, modifiers last.
+		// Presses, modifiers first, then releases, modifiers last.
 		r := eventRank(e)
 		if r < rank {
 			fz.t.Fatalf("%s: batch [%s] is out of order", fz.desc, eventsString(events))
@@ -436,7 +436,7 @@ func (fz *fuzzer) heldByDown(id output.KeyID) bool {
 // expectTap updates the model for a Tap of the sided chord whose main key is
 // main, which the gate lets through. A tap on a key that Down holds presses
 // it once more. Otherwise it waits behind its main key while the key is in
-// the ledger (OUT-10): held by another tap, or pending release, where it
+// the ledger: held by another tap, or pending release, where it
 // stays until a release is injected; it merges into the waiting tap of the
 // key, if any. The Arbiter first resends the pending releases, so a pending
 // key is free for this tap if that resend injects its release (retryFreed).
@@ -567,7 +567,7 @@ func (fz *fuzzer) syncQueue(released func(output.Owner) bool, blocked bool, earl
 	for _, q := range fz.queued {
 		if next < len(got) && q == got[next] {
 			// A queued tap waits while its main key is in the ledger, held by
-			// a tap or pending release (OUT-10), and not held by Down.
+			// a tap or pending release, and not held by Down.
 			if _, inLedger := fz.held()[q.Main]; !inLedger || fz.heldByDown(q.Main) {
 				fz.t.Fatalf("%s: ready queue item remained: %+v", fz.desc, q)
 			}

@@ -129,7 +129,7 @@ func TestOpenCloseTwice(t *testing.T) {
 // TestHints checks the hints read back after SDL_Init for each preset:
 // the three hints Open always sets first, then the preset's, then the
 // other backend hints and the Joy-Con hints, each once. Joy-Cons are not
-// combined, and the grip is left to SDL (IN-07).
+// combined, and the grip is left to SDL.
 func TestHints(t *testing.T) {
 	lib := inputtest.Library(t)
 	inputtest.Unsetenv(t, input.HintCombineJoyCons, input.HintVerticalJoyCons)
@@ -354,7 +354,7 @@ func TestDetachReleases(t *testing.T) {
 }
 
 // TestVirtualAllButtons presses and releases every SDL gamepad button, the
-// extended ones (paddle1–4, misc1–6, touchpad; IN-06) too, one after
+// extended ones (paddle1–4, misc1–6, touchpad) too, one after
 // another and then all together. TestNamesMatchControl checks that these
 // names are the control names that profiles bind.
 func TestVirtualAllButtons(t *testing.T) {
@@ -425,7 +425,7 @@ func TestVirtualAllButtons(t *testing.T) {
 	}
 }
 
-// TestVirtualReattachSameKey checks the DeviceKeys (IN-09) of virtual
+// TestVirtualReattachSameKey checks the DeviceKeys of virtual
 // gamepads, which have no serial and no path: a gamepad that is detached
 // and attached again gets its key back, two with the same name are #0 and
 // #1, and one with another name has another GUID.
@@ -695,7 +695,7 @@ func TestVirtualJoyCon(t *testing.T) {
 	}
 }
 
-// TestVirtualJoyConKeys checks the DeviceKeys (IN-09) of virtual Joy-Cons:
+// TestVirtualJoyConKeys checks the DeviceKeys of virtual Joy-Cons:
 // an L and an R of the same name differ by product, and two L of the same
 // name, connected at once, are #0 and #1. Gamepads with the same USB ids
 // share one name, as VirtualDesc says.
@@ -772,7 +772,7 @@ func TestCloseWithVirtual(t *testing.T) {
 }
 
 // TestSampleTicks checks the readings that map Event.Time onto latency
-// Stamps (ENG-11): they calibrate SDL's clock to within 10 µs, and the
+// Stamps: they calibrate SDL's clock to within 10 µs, and the
 // event of a virtual gamepad maps into the SetButton call that sent it,
 // since SDL stamps it in the SDL_UpdateJoysticks that SetButton makes.
 func TestSampleTicks(t *testing.T) {
@@ -944,7 +944,7 @@ func TestJoystickOnly(t *testing.T) {
 
 // TestGoneNotReported attaches a virtual device and detaches it before
 // T-input handles its ADDED events, as SDL does with a Joy-Con that it
-// folds into a pair (IN-07). SDL still calls a removed gamepad a gamepad
+// folds into a pair. SDL still calls a removed gamepad a gamepad
 // and keeps its name, but the Source reports nothing of it: no
 // DeviceAdded with an empty GUID, and no DeviceRemoved.
 func TestGoneNotReported(t *testing.T) {

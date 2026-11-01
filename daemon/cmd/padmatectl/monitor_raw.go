@@ -16,7 +16,7 @@ import (
 )
 
 // "padmatectl monitor --raw" prints the elements of the joysticks as the
-// device has them (IN-17, ADR-0012): buttons, axes and hats by index, the
+// device has them (ADR-0012): buttons, axes and hats by index, the
 // events the mapping wizard works from. They are no gamepad events: a
 // joystick that SDL has no gamepad mapping for shows its elements here, and
 // a gamepad shows them next to its mapped events.

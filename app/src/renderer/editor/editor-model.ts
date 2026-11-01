@@ -70,7 +70,7 @@ export function canonicalControl(control: string) {
 
 /**
  * Whether a control follows how far a stick or a trigger is pushed, so a
- * repeat on it may set minRateHz (ANA-12, ANA-15): a stick direction
+ * repeat on it may set minRateHz: a stick direction
  * (diagonals too), active, inner or outer, a half axis, lt, rt, lt.full or
  * rt.full. The same list as the daemon's control.Control.HasDepth; knob
  * ticks, d-pad diagonals and buttons have no depth.
@@ -104,7 +104,7 @@ export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
   return next;
 }
 /**
- * The function key (MAP-27, ADR-0012): one of View (back), Menu (start) and
+ * The function key (ADR-0012): one of View (back), Menu (start) and
  * the Xbox button (guide), chosen in the settings (config.json functionKey)
  * and the same for every profile and controller. It holds no bindings of its
  * own. While it is held, the other controls use the profile's function set
@@ -356,12 +356,12 @@ function filledAction(action: ProfileAction): ProfileAction | null {
 }
 
 /**
- * The draft as the editor saves it (UI-43): a part still being filled in
+ * The draft as the editor saves it: a part still being filled in
  * (a shortcut, a step of a sequence or a script name left empty) is left
  * out, and so is a gesture left with nothing and then a binding left
  * empty. The rest of the edits are saved meanwhile; the draft keeps the
  * empty parts until they are filled in. A draft read from a file of an
- * older format version (0) is saved at the current one (PRO-01). The four
+ * older format version (0) is saved at the current one. The four
  * feedback switches that moved to config.json (ADR-0015) are not written: the
  * daemon no longer reads them, so a save drops them, and a feedback object
  * left with nothing goes too. The bindings on back, start and guide stay
@@ -369,7 +369,7 @@ function filledAction(action: ProfileAction): ProfileAction | null {
  * the settings (ADR-0012), and the daemon ignores the one that is. A file of
  * the old functionKeys is saved as the functionSet it stands for, without
  * functionKeys (the daemon never rewrites a file by itself), and functionSet
- * is written only when it has bindings. A profile based on another (PRO-19)
+ * is written only when it has bindings. A profile based on another
  * is given that one as parent: a control the edits leave with nothing, that
  * the parent binds, is written as an empty binding, which is how a profile
  * says the key does nothing here. Left out, the parent's binding would come
@@ -501,20 +501,20 @@ function withoutRetiredSwitches(
 }
 
 /**
- * The precision action (MOU-05): while its gesture is held, every stick of
+ * The precision action: while its gesture is held, every stick of
  * the profile that moves the pointer moves at this fraction of its speed. It
  * holds no key, so it only means something on a press or a hold. The drawer
  * no longer offers it (ADR-0013); a file's one still works and is named.
  */
 export type PrecisionAction = ProfileMouseAction & { op: "precision" };
 /**
- * The key hints action (HUD-03): while its gesture is held, the overlay lists
+ * The key hints action: while its gesture is held, the overlay lists
  * what the other controls of the current layer do. It holds no key and has
  * nothing to set, so like precision it only means something on a press or a
  * hold. The drawer no longer offers it (ADR-0013) either.
  */
 export type HintsAction = Extract<ProfileAction, { type: "hud" }>;
-/** The jump action (MOU-08): puts the pointer somewhere. The file sets it. */
+/** The jump action: puts the pointer somewhere. The file sets it. */
 export type JumpAction = ProfileMouseAction & { op: "jump" };
 /** The fraction the daemon uses when a precision action sets no factor. */
 export const precisionDefault = 0.3;
@@ -576,7 +576,7 @@ export function actionSummary(action?: ProfileAction): string {
   }
 }
 /**
- * A step of a sequence action (MAP-22) in a few characters: its shortcut,
+ * A step of a sequence action in a few characters: its shortcut,
  * its wait in milliseconds, or its text, quoted and cut.
  */
 export function stepSummary(step: ProfileSequenceStep): string {
@@ -661,10 +661,10 @@ export function setBaseBinding(
 /**
  * An action the GUI shows but cannot create: layer actions (ADR-0012),
  * profile switches (one app, one profile) and a legacy script's actions,
- * which the GUI no longer adds (SCR-50: keys run macros instead), and a
- * pointer jump (MOU-08), which only the file sets. It is locked in the editor
- * and saved exactly as the file has it. A sequence and a text (MAP-22, OUT-21)
- * are the step editor's own (UI-31), so they are not here.
+ * which the GUI no longer adds (keys run macros instead), and a
+ * pointer jump, which only the file sets. It is locked in the editor
+ * and saved exactly as the file has it. A sequence and a text
+ * are the step editor's own, so they are not here.
  */
 export type FileOnlyAction =
   | ProfileLayerAction
@@ -927,7 +927,7 @@ export function missingMacroText(file: string, language?: string): string {
 /**
  * The daemon's "binding has no action" warning about a key of the base layer
  * (or of the function set) that has only its label: a key named but whose shortcut is not recorded
- * yet (OUT-18), or a stick click that holds
+ * yet, or a stick click that holds
  * the stick's display name. The controller shows such a key as not set, so
  * the editor drops the warning.
  */

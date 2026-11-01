@@ -11,7 +11,7 @@ import (
 
 const mapGUID = "ff00d0df317374207261772070007600"
 
-// TestDevicesMappingRouting (IN-18): "devices mapping set|reset" call
+// TestDevicesMappingRouting: "devices mapping set|reset" call
 // devices.setMapping and devices.resetMapping with the controller and the
 // mapping; without --device the only connected controller is the one.
 func TestDevicesMappingRouting(t *testing.T) {

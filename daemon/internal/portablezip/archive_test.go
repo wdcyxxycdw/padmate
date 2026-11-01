@@ -188,7 +188,7 @@ func writeFixture(t *testing.T, root, name, data string) {
 	}
 }
 
-// ENG-17: the README comes in two languages, and the documents link between
+// The README comes in two languages, and the documents link between
 // them, so a package that has one must have the other.
 func TestRequiredRepoFilesHaveBothReadmes(t *testing.T) {
 	for _, name := range []string{"README.md", "README.zh-CN.md"} {

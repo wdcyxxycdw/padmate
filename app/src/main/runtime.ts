@@ -24,7 +24,7 @@ let launches = 0;
 
 /**
  * hud subscribes each connection made, so a daemon that is started again is
- * subscribed as the UI wants it then (SCR-22: with the hud topic while the
+ * subscribed as the UI wants it then (with the hud topic while the
  * overlay is up).
  */
 export async function createDaemonManager(
@@ -33,7 +33,7 @@ export async function createDaemonManager(
   hud: HudSubscription,
 ): Promise<DaemonManager> {
   const options = runtimeOptions();
-  // A data folder that cannot be made is the daemon's to report (UI-45).
+  // A data folder that cannot be made is the daemon's to report.
   await mkdir(options.dataDir, { recursive: true }).catch(() => {});
   return new DaemonManager({
     attempts: 6,
@@ -74,7 +74,7 @@ export async function createDaemonManager(
       }
     },
     launch: () => {
-      // UI-45: a report of its own for each start, read once the daemon
+      // A report of its own for each start, read once the daemon
       // has exited; padmated also removes it first, and writes it only
       // when it does not start.
       const report = join(

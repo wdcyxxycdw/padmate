@@ -155,7 +155,7 @@ func TestCheckSignaturesReadsPublisherName(t *testing.T) {
 	if err := os.Remove(update); err != nil {
 		t.Fatal(err)
 	}
-	// Since the publish block of electron-builder.yml (PKG-10) every build has the
+	// Since the publish block of electron-builder.yml every build has the
 	// file. Without it the updater has no publisher to compare a downloaded
 	// update's signer with, so a signed build that lacks it is a mistake.
 	if got := joined(CheckSignatures(root, installer, opts)); !strings.Contains(got, "resources/app-update.yml: ") {
@@ -229,8 +229,8 @@ func TestPublisherNames(t *testing.T) {
 	}
 }
 
-// The two kinds of build write two kinds of resources\app-update.yml (PKG-09,
-// PKG-10): the unsigned one has the source and the cache folder only, the
+// The two kinds of build write two kinds of resources\app-update.yml:
+// the unsigned one has the source and the cache folder only, the
 // signed one adds publisherName as a list. CheckTree reads the source and does
 // not need publisherName (an unsigned build verifies); -signed is the check
 // that needs it, and both read the very same text.

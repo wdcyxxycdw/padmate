@@ -19,7 +19,7 @@ import (
 )
 
 // comboSource is the part of an *input.Source that a change of the
-// emergency combos needs (UI-19, ADR-0017). A source without it, such as
+// emergency combos needs (ADR-0017). A source without it, such as
 // a test's fake, keeps the combos it picked.
 type comboSource interface {
 	// RepickCombos picks every gamepad's combo again on T-input, where the
@@ -66,7 +66,7 @@ func (r *liveRun) combos(infos []input.DeviceInfo) []rpcCombo {
 // applyLiveSettings applies the global timing, the function key, the emergency
 // combos, the stick calibrations, the gamepad mappings and the feedback
 // switches of next, the effective config just stored, where they differ from
-// prev, the one before (UI-19, ADR-0017, IN-14, UI-27, ADR-0015, ADR-0012).
+// prev, the one before (ADR-0017, ADR-0015, ADR-0012).
 // The caller holds configApplyMu; this takes profileMu after it, the only
 // order the two are taken in.
 func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
@@ -87,7 +87,7 @@ func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
 	}
 	if !reflect.DeepEqual(calibrations(prev), calibrations(next)) && r.sup != nil {
 		// A slot that holds a stick gives up what the new values no longer
-		// recognize and presses nothing (IN-14).
+		// recognize and presses nothing.
 		ctx, cancel := context.WithTimeout(context.Background(), calibrationTimeout)
 		if err := r.sup.RefreshCalibration(ctx); err != nil {
 			errs = append(errs, fmt.Errorf("stick calibration not applied: %w", err))
@@ -97,7 +97,7 @@ func (r *liveRun) applyLiveSettings(prev, next *profile.Config) error {
 		cancel()
 	}
 	if !slices.Equal(profile.DeviceMappings(prev.Devices), profile.DeviceMappings(next.Devices)) {
-		// Custom gamepad mappings (IN-18): SDL reads them by GUID, at once.
+		// Custom gamepad mappings: SDL reads them by GUID, at once.
 		if err := r.applyMappings(next); err != nil {
 			errs = append(errs, err)
 		}

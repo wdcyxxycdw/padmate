@@ -10,7 +10,7 @@ import (
 )
 
 // profiles.list and macros.list carry when each profile's folder and each
-// macro's file was created, in Unix milliseconds (UI-41, SCR-51): the
+// macro's file was created, in Unix milliseconds: the
 // management pages list by it. macros.list is sorted by the name without
 // the extension, so "复制全部 2.ts" follows "复制全部.ts".
 func TestIPCListsCarryCreated(t *testing.T) {

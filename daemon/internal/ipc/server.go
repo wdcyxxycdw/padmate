@@ -20,11 +20,11 @@ const maxClients = 16
 const maxBatchRequests = 64
 
 // Topics are the subscription topics. daemon.exiting is published, with
-// PublishSync, right before the daemon stops at the user's request (DMN-22,
-// ADR-0001). hud carries the scripts' toasts (SCR-22); a client subscribing
+// PublishSync, right before the daemon stops at the user's request
+// (ADR-0001). hud carries the scripts' toasts; a client subscribing
 // to it is an overlay, so scripts see host.has("hud") true. input.raw carries
 // the raw joystick events of the controllers that devices.rawInfo asked for
-// (IN-17, ADR-0012); the mapping wizard subscribes to it while it is open.
+// (ADR-0012); the mapping wizard subscribes to it while it is open.
 var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "hud", "input.raw"}
 
 type event struct {
@@ -96,7 +96,7 @@ func (h *Hub) PublishTo(topic string, data any, accept func(*Session) bool) {
 // PublishSync publishes data as Publish does, then waits until every
 // session that subscribes to topic has written it to its connection, has
 // dropped it (its queue was full) or has closed, or until ctx is done. It
-// returns the sessions that wrote it, which a tray exit waits for (DMN-22).
+// returns the sessions that wrote it, which a tray exit waits for.
 // A write that returned has put the line in the connection's buffer: the
 // client still reads it after the daemon closes its end. Never call it on
 // the mapping path.

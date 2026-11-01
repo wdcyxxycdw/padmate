@@ -1,4 +1,4 @@
-/* Profiles page (UI-17, UI-18, PRO-28, UI-42): profile cards with the icons
+/* Profiles page: profile cards with the icons
    of their apps, the fixed default first, and the library dialogs. Colors
    come from theme.css. */
 .page-column-profiles {
@@ -146,7 +146,7 @@
   font-size: 12.5px;
 }
 
-/* Bound apps as large icons (UI-42): the icon opens a small menu; the name
+/* Bound apps as large icons: the icon opens a small menu; the name
    is its tooltip. A binding that is off is greyed. */
 .app-icons {
   margin: 0;
@@ -266,7 +266,7 @@ button.app-icon-button[aria-expanded="true"] {
   color: var(--red);
 }
 
-/* 从已安装的软件中选择… (UI-46): a searchable list of apps with icons. */
+/* 从已安装的软件中选择…: a searchable list of apps with icons. */
 .app-choose-dialog {
   width: min(480px, calc(100vw - 48px));
 }
@@ -369,7 +369,7 @@ button.app-icon-button[aria-expanded="true"] {
   white-space: nowrap;
 }
 
-/* The report of an AntiMicroX import (PRO-21). */
+/* The report of an AntiMicroX import. */
 .amgp-report-dialog {
   width: min(640px, calc(100vw - 48px));
 }
@@ -411,7 +411,7 @@ button.app-icon-button[aria-expanded="true"] {
   overflow-wrap: anywhere;
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .app-choice:hover {
     outline: 1px solid ButtonText;

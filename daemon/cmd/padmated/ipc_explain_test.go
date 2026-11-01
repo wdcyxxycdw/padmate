@@ -73,7 +73,7 @@ func TestIPCActivateAndExplainLayers(t *testing.T) {
 }
 
 // profiles.explain lists the function set beside the layers and says whether
-// the function key is held (MAP-27, ADR-0012, ADR-0016, ADR-0012). The set,
+// the function key is held (ADR-0012, ADR-0016, ADR-0012). The set,
 // when it binds the control and the function key is held now, wins over the
 // layers; a binding on the function key itself is ignored.
 func TestIPCExplainFunctionKeys(t *testing.T) {

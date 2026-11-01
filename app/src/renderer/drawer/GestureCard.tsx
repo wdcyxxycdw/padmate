@@ -78,7 +78,7 @@ function names(list: Gesture[], language: Language | undefined) {
 }
 
 /**
- * The added wait of one gesture (UI-12): a short tag for the card header and
+ * The added wait of one gesture: a short tag for the card header and
  * one plain sentence for the expanded card. Empty when nothing waits.
  */
 export function delayNote(
@@ -156,7 +156,7 @@ export function gestureSummary(
         return notSet(language);
       return <Keycaps keys={action.keys} language={language} />;
     }
-    // A script (macro, SCR-50): its name, or a warning when it is gone.
+    // A script (macro): its name, or a warning when it is gone.
     case "macro": {
       const lost = missing.includes(action.file);
       const text = actionText(action, language, actions, profiles, missing);
@@ -176,7 +176,7 @@ export function gestureSummary(
         </span>
       );
     }
-    // The key hints (HUD-03) are the editor's own and hold no key: just
+    // The key hints are the editor's own and hold no key: just
     // their name.
     case "hud":
       return (
@@ -184,9 +184,9 @@ export function gestureSummary(
           {actionText(action, language, actions, profiles)}
         </span>
       );
-    // A sequence (MAP-22) is read like a list of shortcuts, with its waits and
-    // texts among them; a text (OUT-21) by what it types, cut short. Both are
-    // the step editor's own (UI-31), so neither is locked. Until something is
+    // A sequence is read like a list of shortcuts, with its waits and
+    // texts among them; a text by what it types, cut short. Both are
+    // the step editor's own, so neither is locked. Until something is
     // filled in, they say so as a shortcut does.
     case "sequence":
       if (action.steps.every(isEmptyStep)) return notSet(language);
@@ -201,8 +201,8 @@ export function gestureSummary(
       );
     }
     // Set in the file only: shown locked (one app, one profile; ADR-0012;
-    // a legacy script's actions, SCR-50; a pointer jump, MOU-08). Precision
-    // (MOU-05) is the editor's own and holds no key: its name and factor.
+    // a legacy script's actions; a pointer jump). Precision
+    // is the editor's own and holds no key: its name and factor.
     case "script":
     case "profile":
     case "layer":

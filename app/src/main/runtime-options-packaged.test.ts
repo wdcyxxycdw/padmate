@@ -24,7 +24,7 @@ const packaged = (env: NodeJS.ProcessEnv) =>
     env: { ...context.env, ...env },
   });
 
-describe("packaged application in test mode (PKG-03)", () => {
+describe("packaged application in test mode", () => {
   it("uses the private folders, a private pipe and a dry-run daemon", () => {
     const options = packaged(test);
     expect(options.packagedTest).toBe(true);
@@ -138,7 +138,7 @@ describe("packaged application in test mode (PKG-03)", () => {
   });
 });
 
-describe("the update feed of the packaged test mode (PKG-10)", () => {
+describe("the update feed of the packaged test mode", () => {
   const feed = (url: string | undefined, env: NodeJS.ProcessEnv = test) =>
     packaged({
       ...env,

@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// rpcIdentify is devices.identify {device} (IN-13): the controller the
+// rpcIdentify is devices.identify {device}: the controller the
 // selector names, a connection ID or a DeviceKey as in devices.list, buzzes
 // and flashes for at most a second and a half so that the user can tell which
 // it is. It answers which cues the controller gave, {rumble, led, player};

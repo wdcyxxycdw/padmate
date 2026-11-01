@@ -1,4 +1,4 @@
-// Exporting the shortcut table (OUT-18) from the More menu: the format
+// Exporting the shortcut table from the More menu: the format
 // choice and the save through Main.
 import { useState } from "react";
 import { useStore } from "zustand";
@@ -59,8 +59,8 @@ export function useSheetExport({
     if (!draft) return;
     try {
       // The table lists what is saved: a shortcut cleared in the drawer is
-      // not in it, nor counted as a setting (UI-43). It lists what the profile
-      // takes from the profile it is based on too (PRO-19).
+      // not in it, nor counted as a setting. It lists what the profile
+      // takes from the profile it is based on too.
       const sheet = shortcutSheet(
         withInherited(savedForm(draft, parent), parent),
         options,

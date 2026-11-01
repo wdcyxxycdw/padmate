@@ -15,10 +15,10 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// MacroDir is the folder that holds macros (SCR-50, ADR-0011): each
+// MacroDir is the folder that holds macros (ADR-0011): each
 // top-level .ts or .js file in it, not a .d.ts declaration, is one macro.
 // The script library is the one in the data folder, which every library
-// profile runs its macros from (SCR-51); a --profile file without a
+// profile runs its macros from; a --profile file without a
 // library runs them from the one next to it. A legacy script.entry must
 // not be in its profile folder's.
 const MacroDir = "macros"
@@ -36,7 +36,7 @@ const MacroTypesDir = ".padmate"
 const MaxMacroName = 40
 
 // MaxMacros is the most macros a macros folder may have: the script
-// library that every profile shares (SCR-51).
+// library that every profile shares.
 const MaxMacros = 64
 
 // MacroNameKind says why CheckMacroFile refused a name. The UI shows one
@@ -368,7 +368,7 @@ func MacroActionCounts(data []byte) (map[string]int, error) {
 // whether the folder lists a file under exactly its name, as the runtime
 // finds it. A name CheckMacroFile refuses is Parse's error and gets no
 // warning. Only the syntax of data matters: a syntax error gives none.
-// padmatectl validate warns with it (SCR-50); Parse does not, as a missing
+// padmatectl validate warns with it; Parse does not, as a missing
 // file must not keep the profile from loading.
 func MissingMacros(data []byte, listed func(file string) bool) Diagnostics {
 	root, serr := scan(data)

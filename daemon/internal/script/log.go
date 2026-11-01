@@ -27,7 +27,7 @@ type LogEntry struct {
 	Device             input.DeviceID
 	DeviceKey, Profile string
 	// Macro is the file of the macro that logged, empty for the legacy
-	// script (SCR-50).
+	// script.
 	Macro string
 }
 

@@ -302,7 +302,7 @@ func TestSendRemappedBacklog(t *testing.T) {
 }
 
 // A joystick that gets a mapping is reported twice with one id, the joystick
-// and then the gamepad (IN-18), and one that loses it is removed and reported
+// and then the gamepad, and one that loses it is removed and reported
 // as a joystick again. These tests keep the line right when the consumer does
 // not read, as the single DeviceAdded per device did before.
 

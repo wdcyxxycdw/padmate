@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-// The product statistics of padmated (DMN-15, ADR-0016).
+// The product statistics of padmated (ADR-0016).
 //
 // A Recorder keeps the latest RingSize latencies of each device: L is the time
 // from T-input receiving the event of an input edge (input.Event.Stamp) to the
 // return of the Send call that carries its keys (output.InputMark). It is
-// measured in the daemon on every real key, unlike the bench of ENG-11, whose
+// measured in the daemon on every real key, unlike the end-to-end bench, whose
 // L starts at SDL's own timestamp and which only the tests run (ARCHITECTURE
 // §13).
 const (
@@ -21,8 +21,8 @@ const (
 	// came and went, whose samples the least recently written ring gives up.
 	MaxDevices = 8
 	// WarnP99 is the product threshold of the statistics: a p99 above it is
-	// shown as a warning. It is also the target of the bench (ENG-11,
-	// ARCHITECTURE §13), whose plan takes it from here.
+	// shown as a warning. It is also the target of the bench
+	// (ARCHITECTURE §13), whose plan takes it from here.
 	WarnP99 = 1500 * time.Microsecond
 	// WarnMinSamples is how many samples a device needs before its p99 can
 	// warn: a p99 of a handful of samples is its maximum.

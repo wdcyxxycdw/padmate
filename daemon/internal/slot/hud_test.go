@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// hudScriptBridge is a runtime whose script keeps hud panels (SCR-22).
+// hudScriptBridge is a runtime whose script keeps hud panels.
 type hudScriptBridge struct{ *scriptSlotBridge }
 
 func (b hudScriptBridge) HUDPanels() []script.HUDPanel { return b.host.HUDPanels() }

@@ -1,4 +1,4 @@
-// Macro file names (SCR-50, ADR-0011): the rule of the daemon's
+// Macro file names (ADR-0011): the rule of the daemon's
 // profile.CheckMacroFile, which Main and the renderer share. The cases in
 // daemon/testdata/macro-names.json are checked by both.
 
@@ -12,7 +12,7 @@ export type MacroNameKind =
 
 /** The most characters (code points) a macro's name may have. */
 export const maxMacroName = 40;
-/** The most scripts the library may hold (SCR-51: all profiles together). */
+/** The most scripts the library may hold (all profiles together). */
 export const maxMacros = 64;
 
 // Windows refuses \ / : * ? " < > |; "." would allow .d.ts, hidden files

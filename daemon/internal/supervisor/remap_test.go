@@ -8,12 +8,12 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// remapped is the DeviceRemapped event of info (IN-18).
+// remapped is the DeviceRemapped event of info.
 func remapped(info *input.DeviceInfo) input.Event {
 	return input.Event{Device: info.ID, Kind: input.DeviceRemapped, Info: info}
 }
 
-// TestRemapReleasesHeldKeys (IN-18, invariant 1): SDL releases nothing when a
+// TestRemapReleasesHeldKeys (invariant 1): SDL releases nothing when a
 // mapping changes, so a control held by the old mapping may never send its
 // release. The router treats DeviceRemapped as a reset of the device: the key
 // goes up at once, and a physical hold that goes on counts again only after it
@@ -117,7 +117,7 @@ func TestRemapOfUnmappedAndUnknownDevices(t *testing.T) {
 	}
 }
 
-// TestUpgradeAndDowngrade (IN-18): the second DeviceAdded of a joystick, now
+// TestUpgradeAndDowngrade: the second DeviceAdded of a joystick, now
 // a gamepad, gives it a slot; its removal and a DeviceAdded without a mapping
 // leave it listed as unmapped again, and release what it held.
 func TestUpgradeAndDowngrade(t *testing.T) {

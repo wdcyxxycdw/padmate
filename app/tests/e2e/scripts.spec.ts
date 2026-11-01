@@ -21,7 +21,7 @@ interface Stubs {
   nextScript?: string;
 }
 
-// Scripts (SCR-50): the editor is recorded (PADMATE_UI_EDITOR_LOG), the
+// Scripts: the editor is recorded (PADMATE_UI_EDITOR_LOG), the
 // open dialog returns the file the test chose, and the fake controller runs
 // the scripts in the daemon's dry run.
 async function stubDialogs(app: ElectronApplication) {
@@ -89,7 +89,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     const daemon = await FixtureClient.connect(f);
     client = daemon;
     const folder = join(f.path, "data", "profiles", "paint");
-    // The script library (SCR-51): one folder for every profile.
+    // The script library: one folder for every profile.
     const macros = join(f.path, "data", "macros");
     const readMacro = (name: string) => readFile(join(macros, name), "utf8");
     const profile = async () =>
@@ -125,7 +125,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     await expect.poll(() => opened(f)).toEqual([join(macros, "复制全部.ts")]);
 
     // 2. The drawer binds it to A's 点按 (the key's only mapping, so a press
-    // in the file: ADR-0013), replacing its shortcut, saved at once (UI-43);
+    // in the file: ADR-0013), replacing its shortcut, saved at once;
     // the fake controller runs it, and the mapping page's key preview names
     // it.
     await page.getByRole("button", { name: "映射", exact: true }).click();
@@ -162,7 +162,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     const preview = page.getByTestId("key-preview");
     await runs(async () => {
       await expect(preview).toHaveText("S → 复制全部");
-      // One drawing of the control (UI-44) and one of the script (SCR-50).
+      // One drawing of the control and one of the script.
       // The fake pad is a standard one: its face keys are drawn by position,
       // with the pressed one lit (ADR-0013).
       const control = preview.locator(".control-icon");
@@ -177,7 +177,7 @@ test("scripts are created, bound to a key, imported, renamed and deleted", async
     // Keys are named as the connected (standard) pad prints them, after
     // the profile whose key runs the script.
     await expect(card(page, "复制全部")).toContainText("E2E paint：S 点按");
-    // The page is the library, whichever profile is open (SCR-51): the
+    // The page is the library, whichever profile is open: the
     // fixed default in use does not hide the script, and the card still
     // names the profile whose key runs it.
     await rpc(f, "profiles.activate", { id: "default" });

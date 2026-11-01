@@ -30,7 +30,7 @@ export const daemonTopics = [
 ] as const satisfies readonly DaemonEvent["topic"][];
 /**
  * The raw joystick events of the controllers the mapping wizard asked for with
- * devices.rawInfo (IN-17, ADR-0012). The one topic of ipc.Topics that is not in
+ * devices.rawInfo (ADR-0012). The one topic of ipc.Topics that is not in
  * daemonTopics: the wizard subscribes to it while it is open (a new subscribe
  * call replaces the list), and the default subscription, which a daemon from
  * before this topic must accept, leaves it out.
@@ -61,9 +61,9 @@ export function isDisconnectedError(error: unknown): boolean {
 
 /**
  * Subscribes to daemonTopics; a new list replaces the one before. A daemon
- * from before SCR-22 refuses a list with hud, which it does not know: the UI
+ * from before the hud topic refuses a list with hud, which it does not know: the UI
  * then goes without it and a script's toasts do not show. One from before
- * DMN-22 refuses daemon.exiting as well: without that too, and the tray's 退出
+ * daemon.exiting refuses that as well: without that too, and the tray's 退出
  * shows as a lost connection.
  *
  * With `hud: false` the list leaves out hud from the start. The daemon tells
@@ -71,7 +71,7 @@ export function isDisconnectedError(error: unknown): boolean {
  * subscribes to hud, so the UI asks for it only while its overlay is up
  * (hud-subscription.ts).
  *
- * With `raw: true` every list ends with input.raw (IN-17): the mapping wizard
+ * With `raw: true` every list ends with input.raw: the mapping wizard
  * is open. A daemon that does not know it refuses all of them, and the wizard
  * cannot work with it anyway.
  */
@@ -138,7 +138,7 @@ export class BridgeClient {
       this.fail(new Error("Could not start the authenticated daemon bridge")),
     );
     // The connection ends once the output is read: Node may report the
-    // exit before the last lines, such as daemon.exiting (DMN-22). Output
+    // exit before the last lines, such as daemon.exiting. Output
     // that stays open after the exit ends it a moment later.
     child.on("close", () => this.fail(new Error(bridgeDisconnected)));
     child.on("exit", () => {

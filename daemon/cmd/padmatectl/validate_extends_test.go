@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Profile inheritance (PRO-19, ADR-0012): validate reads the parents of a
+// Profile inheritance (ADR-0012): validate reads the parents of a
 // profile of a library from the same library.
 
 const (

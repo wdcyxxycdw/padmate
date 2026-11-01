@@ -54,7 +54,7 @@ func (s *Supervisor) StartReload(ctx context.Context, prog *engine.Program) (gen
 	return gen, func(ctx context.Context) error { return s.awaitAll(ctx, bs, "reload") }, nil
 }
 
-// CheckInvariants checks the router's invariants (IN-08) on the slots of a
+// CheckInvariants checks the router's invariants on the slots of a
 // Status, given the keys of the connected gamepads that match
 // Config.Device and how many gamepads wait:
 //   - (i) the homes of the assigned slots are pairwise distinct;

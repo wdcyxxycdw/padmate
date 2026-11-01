@@ -128,7 +128,7 @@ func (s *rpcInputSource) emit(e input.Event) error {
 	if e.Time == 0 {
 		e.Time = uint64(clock.Real().Now())
 	}
-	// T-input stamps the edges of a real gamepad as SDL returns them (DMN-15); the
+	// T-input stamps the edges of a real gamepad as SDL returns them; the
 	// fake gamepad stamps them as they are queued, so that the E2E measures too.
 	if e.Stamp == 0 && (e.Kind == input.ButtonDown || e.Kind == input.ButtonUp || e.Kind == input.AxisMotion) {
 		e.Stamp = latency.Now()

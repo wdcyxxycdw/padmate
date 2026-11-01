@@ -17,7 +17,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// Tests of the stick calibration of a controller (IN-14) in a slot: the slot
+// Tests of the stick calibration of a controller in a slot: the slot
 // asks for the calibration of the controller it has, by its DeviceKey.
 
 var unset = math.NaN()

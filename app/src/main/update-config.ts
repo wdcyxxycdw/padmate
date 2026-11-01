@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// The constants of the automatic update (PKG-10, ADR-0018). Only Main uses
+// The constants of the automatic update (ADR-0018). Only Main uses
 // them; the window never names a URL or a folder.
 
 /**
@@ -53,7 +53,7 @@ export function updaterCacheRoot(
 }
 
 /**
- * The installed application's test mode (PKG-03, PKG-10) downloads below its
+ * The installed application's test mode downloads below its
  * private browser data: electron-updater keeps its cache below the
  * LOCALAPPDATA of the process, so that variable is pointed there, before the
  * first download. Returns the folder.

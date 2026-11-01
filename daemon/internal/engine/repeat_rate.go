@@ -9,8 +9,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// This file is the rate-modulated repeat (ANA-12, ANA-15) and the response
-// curves (ANA-13). A repeat that sets minRateHz goes at minRateHz when its
+// This file is the rate-modulated repeat and the response
+// curves. A repeat that sets minRateHz goes at minRateHz when its
 // control has just reached its activation threshold, and at its rate at full
 // travel; how far a control is pushed is its depth, and the curve of its stick
 // or trigger shapes what lies between. The curve acts on the depth for the rate

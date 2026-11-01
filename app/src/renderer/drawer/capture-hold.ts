@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 // A shortcut capture owns the keyboard and the focus of the window while it
 // runs (at most 30 seconds): a field that loses focus ends its capture and
 // commits the chord it heard so far. Something that opens by itself and takes
-// the focus, such as the update dialog the automatic check opens (PKG-10),
+// the focus, such as the update dialog the automatic check opens,
 // waits until no capture runs.
 let running = 0;
 const listeners = new Set<() => void>();

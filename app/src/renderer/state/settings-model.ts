@@ -1,4 +1,4 @@
-// Pure helpers for the global settings (UI-19): config.json's timing,
+// Pure helpers for the global settings: config.json's timing,
 // emergency combos and function key, and start at sign-in. Config helpers take a parsed
 // config.json and return a new object, or null when the change alters
 // nothing; they never mutate their input and keep members they do not know.
@@ -88,7 +88,7 @@ export function setGlobalTiming(
 }
 
 /**
- * The function key config.json chooses (UI-30, ADR-0012): Menu unless it says
+ * The function key config.json chooses (ADR-0012): Menu unless it says
  * View or the Xbox button. Anything else it holds reads as Menu, as the
  * daemon reads it.
  */
@@ -115,7 +115,7 @@ export function setFunctionKey(
 }
 
 /**
- * The feedback switches of config.json (UI-27, ADR-0015), in the order the
+ * The feedback switches of config.json (ADR-0015), in the order the
  * Settings page shows them: 震动, 灯光, 暂停提示, 低电提醒.
  */
 export const FEEDBACK_SWITCHES = [
@@ -263,7 +263,7 @@ export function startupFailureText(
 }
 
 /**
- * What a failed identify of a controller says (IN-13): the controller has
+ * What a failed identify of a controller says: the controller has
  * gone (-32004), or the daemon could not make it buzz and flash, which its
  * log explains.
  */
@@ -280,7 +280,7 @@ export function identifyFailureText(
 }
 
 /**
- * The tags of a controller's row for its power (IN-12): the charge, "电量 80%",
+ * The tags of a controller's row for its power: the charge, "电量 80%",
  * when it reports one, and "充电中" while it charges. Only a controller that
  * discharges or charges has a battery to show: nothing for one whose power is
  * not read or unknown, or that is wired (plugged in, or behind a receiver that

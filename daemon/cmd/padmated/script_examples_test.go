@@ -511,7 +511,7 @@ func TestM6ExamplesTypecheck(t *testing.T) {
 	}
 }
 
-// docsFeedbackExample is the controller feedback example script (SCR-23):
+// docsFeedbackExample is the controller feedback example script:
 // rumble, the light and the battery, each on a button.
 func docsFeedbackExample(t *testing.T) string {
 	t.Helper()
@@ -619,7 +619,7 @@ func TestScriptingDocFeedbackExampleTypechecks(t *testing.T) {
 
 // A gesture that a script's handler takes leaves a decision with reason
 // script, and a press that waits for its tap or hold leaves an unbound one
-// that says what it waits for (ADR-0016, ENG-20): the decisions of the
+// that says what it waits for (ADR-0016): the decisions of the
 // production engine, Slot and script runtime over the shipped tabmate example.
 func TestM6ExampleTabmateDecisions(t *testing.T) {
 	var got []string

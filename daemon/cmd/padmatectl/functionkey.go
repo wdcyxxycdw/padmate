@@ -6,7 +6,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// parseFunctionKey reads the value of --function-key (MAP-27, ADR-0012): one of
+// parseFunctionKey reads the value of --function-key (ADR-0012): one of
 // the controls that can be the function key, by its canonical name, as
 // config.json's functionKey writes it. validate and trace read no config.json,
 // so the flag stands in for it.

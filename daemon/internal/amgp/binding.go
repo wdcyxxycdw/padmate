@@ -408,7 +408,7 @@ func (cv *converter) partition(bb *binding, at loc, p *partition, idx int, multi
 	cv.place(bb, at, g, cv.zone(at, chosen, false, btn))
 }
 
-// turbo turns AntiMicroX's turbo into a repeat of taps (MAP-23). AntiMicroX
+// turbo turns AntiMicroX's turbo into a repeat of taps. AntiMicroX
 // presses the keys for half the interval and releases them for the other
 // half, starting at once. padmate repeats a tap without waiting at the
 // rate of one per period, and the binding's press and gap times give the

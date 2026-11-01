@@ -1,5 +1,5 @@
-// Package control names the gamepad controls a profile can bind (IN-04,
-// ARCHITECTURE §7.1). Names describe where a control sits, not what is
+// Package control names the gamepad controls a profile can bind
+// (ARCHITECTURE §7.1). Names describe where a control sits, not what is
 // printed on it, so one profile works the same on Xbox, PlayStation and
 // Nintendo pads: "south" is the bottom face button, which is A on Xbox,
 // Cross on PlayStation and B on Nintendo. The package also accepts the Xbox
@@ -49,7 +49,7 @@ const (
 	Paddle3
 	Paddle4
 	Touchpad
-	// LT and RT are virtual buttons driven by the trigger axes (ANA-01).
+	// LT and RT are virtual buttons driven by the trigger axes.
 	LT
 	RT
 	LSUp
@@ -88,8 +88,8 @@ const (
 	LeftTriggerNegative
 	RightTriggerPositive
 	RightTriggerNegative
-	// Stick rings, virtual knob ticks and the second stage of the triggers
-	// (ANA-10, ANA-11, ANA-14). They are appended after the half axes so that
+	// Stick rings, virtual knob ticks and the second stage of the triggers.
+	// They are appended after the half axes so that
 	// no existing value changes.
 	LSInner
 	LSOuter
@@ -243,11 +243,11 @@ func (c Control) String() string {
 func (c Control) IsValid() bool { return c >= South && c <= lastControl }
 
 // DefaultFunctionKey is the function key when config.json does not choose
-// one: Start (Menu, Options, Plus; MAP-27, ADR-0012).
+// one: Start (Menu, Options, Plus, ADR-0012).
 const DefaultFunctionKey = Start
 
 // CanBeFunctionKey reports whether c is one of the controls that config.json
-// can make the function key: Back, Start and Guide (MAP-27, ADR-0012). There
+// can make the function key: Back, Start and Guide (ADR-0012). There
 // is only one function key at a time, the same for every profile: it sends
 // nothing and cannot be bound, and while it is held the other controls use
 // the profile's function set first. Every other control, these two included,
@@ -265,8 +265,8 @@ func (c Control) IsVirtual() bool { return c >= LT }
 
 // HasDepth reports whether c follows how far a stick or a trigger is pushed:
 // a stick direction, active, inner or outer, a half axis, LT, RT or the
-// second stage of a trigger. A repeat may give such a control a minimum rate
-// (ANA-12, ANA-15). The knob ticks, the d-pad diagonals and the buttons have
+// second stage of a trigger. A repeat may give such a control a minimum rate.
+// The knob ticks, the d-pad diagonals and the buttons have
 // no depth.
 func (c Control) HasDepth() bool {
 	switch {

@@ -262,9 +262,9 @@ func TestPrinterReloadOncePerGen(t *testing.T) {
 	}
 }
 
-// TestPrinterPause: a pause and a resume (DMN-06) are notes, as a reload
+// TestPrinterPause: a pause and a resume are notes, as a reload
 // is: none in JSON lines. In live mode OnPause gives the state; in a
-// replay each ComboHeld (DMN-07) toggles it, as the slot does.
+// replay each ComboHeld toggles it, as the slot does.
 func TestPrinterPause(t *testing.T) {
 	const (
 		paused  = "       0.000  mapping paused: release all\n"
@@ -294,7 +294,7 @@ func TestPrinterPause(t *testing.T) {
 	}
 }
 
-// TestPrinterSuspend: each change of the system's suspension (DMN-09),
+// TestPrinterSuspend: each change of the system's suspension,
 // alone and with the user's pause, gives its note; a pause or a resume
 // while suspended says that the suspension holds the mapping. JSON lines
 // have no notes.
@@ -394,7 +394,7 @@ func eastDown(t *testing.T) engine.Decision {
 // TestPrinterSlotColumn: with showSlots the header and the decision rows of
 // every slot start the input column at one offset, "send" is 2 columns
 // right of it, and a note starts at the slot column. Without it the rows
-// are those of one slot, as before IN-08.
+// are those of one slot.
 func TestPrinterSlotColumn(t *testing.T) {
 	d := eastDown(t)
 	space := output.KeyEvent{Key: keys.MustParse("Space").Key(), Scan: 0x39}
@@ -457,7 +457,7 @@ func TestPrinterSlotColumn(t *testing.T) {
 	}
 }
 
-// TestPrinterHaptic: the haptic of a binding (MAP-25) is a line "haptic
+// TestPrinterHaptic: the haptic of a binding is a line "haptic
 // slot=N preset" under the decision, indented like a send line, at the
 // clock's time; the JSON lines of --decisions have none.
 func TestPrinterHaptic(t *testing.T) {
@@ -495,7 +495,7 @@ func TestPrinterHaptic(t *testing.T) {
 }
 
 // TestPrinterFeedback: what a slot's engine asks the controller to show
-// (M3, HUD-08, UI-27) is a line "feedback slot=N mode=N [paused] [pulse] [color]"
+// (M3) is a line "feedback slot=N mode=N [paused] [pulse] [color]"
 // under the decision that caused it, indented like a send line, at the
 // clock's time. A line is printed when a pulse starts or what it shows
 // changes, so a refresh that changes nothing is silent; the JSON lines of

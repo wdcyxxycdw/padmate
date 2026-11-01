@@ -49,7 +49,7 @@ type DispatchOptions struct {
 	IdleN int
 }
 
-// DefaultDispatch is the SPK-03 run: 100k timed dispatches, and 100
+// DefaultDispatch is the goja spike run: 100k timed dispatches, and 100
 // after each idle gap.
 func DefaultDispatch() DispatchOptions {
 	return DispatchOptions{Warmup: 10000, N: 100000, AllocN: 2000, IdleN: 100}

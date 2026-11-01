@@ -34,8 +34,8 @@ const tx = (language: Language, zh: string, en: string) =>
 export { listControlName };
 
 /**
- * UI-08: every binding of the edited layer in one list, or of the function
- * set when the page shows it (UI-30); the function key is listed as such, and
+ * Every binding of the edited layer in one list, or of the function
+ * set when the page shows it; the function key is listed as such, and
  * there is nothing to open on it.
  */
 export function BindingsListDialog({
@@ -61,11 +61,11 @@ export function BindingsListDialog({
     pad,
     functionKey,
   );
-  // The profile a hand-written file extends (PRO-19, ADR-0013): what it takes
+  // The profile a hand-written file extends (ADR-0013): what it takes
   // from it is in the list too, as the profile's own.
   const parent = useStore(editor, (value) => value.parent);
   // The list shows what is saved: a shortcut cleared in the drawer is not in
-  // it, though the draft keeps its empty card (UI-43).
+  // it, though the draft keeps its empty card.
   const profile = useMemo(
     () => (draft ? savedForm(draft, parent) : null),
     [draft, parent],

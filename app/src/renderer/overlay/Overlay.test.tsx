@@ -131,7 +131,7 @@ function reduceMotion(reduced: boolean) {
   return query;
 }
 
-describe("the overlay page (HUD-01)", () => {
+describe("the overlay page", () => {
   it("has its root element, hidden, and a toast element with nothing in it", () => {
     render(<Overlay api={fakeApi().api} />);
     expect(root().getAttribute("data-visible")).toBe("false");
@@ -175,7 +175,7 @@ describe("the overlay page (HUD-01)", () => {
   });
 });
 
-describe("a toast (HUD-04)", () => {
+describe("a toast", () => {
   it("shows the text at once, then fades out after the fade in and the hold, and is gone", () => {
     const { api, send } = fakeApi();
     render(<Overlay api={api} />);
@@ -303,7 +303,7 @@ describe("a toast (HUD-04)", () => {
     error.mockRestore();
   });
 
-  it("holds for as long as a script's toast says (SCR-22), the fades as before", () => {
+  it("holds for as long as a script's toast says, the fades as before", () => {
     const { api, send } = fakeApi();
     render(<Overlay api={api} />);
     send("脚本提示", 4000);
@@ -385,7 +385,7 @@ describe("a toast (HUD-04)", () => {
   });
 });
 
-describe("the opacity setting (HUD-05)", () => {
+describe("the opacity setting", () => {
   const opacityOf = () => root().style.getPropertyValue("--overlay-opacity");
 
   it("is 100 % until Main says otherwise", () => {
@@ -464,7 +464,7 @@ describe("the overlay's style", () => {
         `\\.overlay-toast\\[data-phase="in"\\] \\{\\s*opacity: 1;\\s*transition-duration: ${toastFadeInMs}ms;`,
       ),
     );
-    // The root switches at once: the SPK-09 E2E reads its opacity right
+    // The root switches at once: the overlay E2E reads its opacity right
     // after toggling it.
     const rootRules = css
       .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -504,7 +504,7 @@ describe("the overlay's style", () => {
   });
 });
 
-describe("the key hints panel (HUD-03)", () => {
+describe("the key hints panel", () => {
   const panel = () => screen.getByTestId("overlay-hints");
   const rows = () =>
     [...panel().querySelectorAll(".overlay-hint")].map((row) => [
@@ -795,7 +795,7 @@ describe("the key hints panel (HUD-03)", () => {
   });
 });
 
-describe("the key hints panel's style (HUD-03)", () => {
+describe("the key hints panel's style", () => {
   // The declarations of the first rule with exactly this selector.
   const rule = (selector: string) => {
     const start = css.indexOf(`${selector} {`);
@@ -870,7 +870,7 @@ describe("the key hints panel's style (HUD-03)", () => {
   });
 });
 
-describe("a script's panels (SCR-22)", () => {
+describe("a script's panels", () => {
   const panels = () => screen.getByTestId("overlay-panels");
   const hintsPanel = () => screen.getByTestId("overlay-hints");
   const rows = () =>
@@ -1166,7 +1166,7 @@ describe("a script's panels (SCR-22)", () => {
   });
 });
 
-describe("a script's panels' style (SCR-22)", () => {
+describe("a script's panels' style", () => {
   // The declarations of the first rule with exactly this selector.
   const rule = (selector: string) => {
     const start = css.indexOf(`${selector} {`);

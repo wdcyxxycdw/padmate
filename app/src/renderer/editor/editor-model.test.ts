@@ -80,7 +80,7 @@ describe("mapping drafts", () => {
     expect(next.script).toEqual(source.script);
     expect(source.layers.base.a).toBeDefined();
   });
-  it("keeps the haptic of a binding that another edit does not touch (MAP-25)", () => {
+  it("keeps the haptic of a binding that another edit does not touch", () => {
     const withHaptic: Profile = {
       ...source,
       layers: {
@@ -157,7 +157,7 @@ describe("scripts (macros) keys run", () => {
   });
 });
 
-describe("sequence and text actions (MAP-22, OUT-21)", () => {
+describe("sequence and text actions", () => {
   const sequence: ProfileAction = {
     type: "sequence",
     steps: [{ keys: "Ctrl+A" }, { wait: 100 }, { text: "你好\n世界" }],
@@ -166,7 +166,7 @@ describe("sequence and text actions (MAP-22, OUT-21)", () => {
     type: "text",
     text: "Best regards,\tKim 😀 and the rest",
   };
-  it("are the step editor's own (UI-31), so they are not file-only", () => {
+  it("are the step editor's own, so they are not file-only", () => {
     expect(isFileOnlyAction(sequence)).toBe(false);
     expect(isFileOnlyAction(text)).toBe(false);
   });
@@ -310,7 +310,7 @@ describe("profile switches from the file", () => {
       true,
     );
     expect(isFileOnlyAction({ type: "keys", keys: "F13" })).toBe(false);
-    // A legacy script's actions are kept but no longer set (SCR-50); keys
+    // A legacy script's actions are kept but no longer set; keys
     // run scripts (macros) instead.
     expect(isFileOnlyAction({ type: "script", name: "brush" })).toBe(true);
     expect(isFileOnlyAction({ type: "macro", file: "复制全部.ts" })).toBe(
@@ -370,7 +370,7 @@ describe("savedForm", () => {
     expect(draft).toEqual(before);
   });
 
-  it("keeps the haptic of a binding while its shortcut is being filled in (MAP-25)", () => {
+  it("keeps the haptic of a binding while its shortcut is being filled in", () => {
     // The haptic is the binding's own, not the action's: the empty shortcut
     // leaves, the haptic and the label stay, and a binding left with only a
     // haptic is kept (it is a setting the user made).
@@ -402,7 +402,7 @@ describe("savedForm", () => {
 
   it("writes the current profile format version", () => {
     // A file of version 0 is opened as it is; a save rewrites the whole
-    // document, so it is written at version 1 (PRO-01).
+    // document, so it is written at version 1.
     const draft = {
       schemaVersion: 0,
       name: "p",
@@ -547,7 +547,7 @@ describe("label-only warning", () => {
   });
 });
 
-describe("controls with a depth (ANA-12, ANA-15)", () => {
+describe("controls with a depth", () => {
   it("lists the same controls as the daemon's HasDepth", () => {
     const withDepth = [
       "ls.up",
@@ -621,7 +621,7 @@ describe("controls with a depth (ANA-12, ANA-15)", () => {
   });
 });
 
-describe("the key hints action (HUD-03)", () => {
+describe("the key hints action", () => {
   const action = { type: "hud", op: "hints" } as const;
 
   it("is named for the editor in both languages", () => {
@@ -657,7 +657,7 @@ describe("the key hints action (HUD-03)", () => {
   });
 });
 
-describe("the precision action (MOU-05)", () => {
+describe("the precision action", () => {
   const action = { type: "mouse", op: "precision", factor: 0.3 } as const;
 
   it("is named with its factor as a percentage", () => {
@@ -722,7 +722,7 @@ describe("the precision action (MOU-05)", () => {
   });
 });
 
-describe("the pointer jump from the file (MOU-08)", () => {
+describe("the pointer jump from the file", () => {
   const jump = { type: "mouse", op: "jump", x: 0.5, y: 0.25 } as const;
 
   it("is file-only, since the editor cannot set it", () => {

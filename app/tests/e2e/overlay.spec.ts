@@ -19,7 +19,7 @@ import {
   rpc,
 } from "./helpers";
 
-// SPK-09 and HUD-01 (ADR-0014): the overlay window never takes the
+// ADR-0014: the overlay window never takes the
 // foreground, and its window has the styles that keep it from doing so.
 //
 // Focus-dependent, like the key preview and the native capture specs: padmate's
@@ -32,7 +32,7 @@ import {
 //
 // The foreground is read with `padmate-probe window --json`, built by
 // `npm run prepare:e2e`: GetForegroundWindow and GetWindowLongPtrW only. The
-// spec sends no OS keys or mouse input: the HUD-04 and HUD-05 cases operate
+// spec sends no OS keys or mouse input: the toast and overlay-settings cases operate
 // the main window's page through Playwright's DOM input only.
 
 const WS_EX_TOPMOST = 0x8;
@@ -139,7 +139,7 @@ async function expectForeground(main: string, when: string): Promise<void> {
   );
 }
 
-test("the overlay never takes the foreground, and its window has the right styles (SPK-09, HUD-01)", async () => {
+test("the overlay never takes the foreground, and its window has the right styles", async () => {
   test.setTimeout(180000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;
@@ -238,7 +238,7 @@ test("the overlay never takes the foreground, and its window has the right style
     expect(afterContent?.visible).toBe(true);
     expectStyles(afterContent?.exStyle ?? 0);
     console.log(
-      `SPK-09 content toggles: ${toggles} done, foreground unchanged, exStyle 0x${((afterContent?.exStyle ?? 0) >>> 0).toString(16)}`,
+      `overlay content toggles: ${toggles} done, foreground unchanged, exStyle 0x${((afterContent?.exStyle ?? 0) >>> 0).toString(16)}`,
     );
 
     // Block 2 (spike only, the product never does this): hide() and
@@ -264,7 +264,7 @@ test("the overlay never takes the foreground, and its window has the right style
     expect(afterCycles?.visible).toBe(true);
     expectStyles(afterCycles?.exStyle ?? 0);
     console.log(
-      `SPK-09 hide/showInactive cycles: ${toggles} done, foreground unchanged, exStyle 0x${((afterCycles?.exStyle ?? 0) >>> 0).toString(16)}`,
+      `overlay hide/showInactive cycles: ${toggles} done, foreground unchanged, exStyle 0x${((afterCycles?.exStyle ?? 0) >>> 0).toString(16)}`,
     );
 
     // The main window still is the first window, and still works.
@@ -360,7 +360,7 @@ test("the overlay window is made again once after its renderer crashed, and not 
   }
 });
 
-// HUD-04 (ADR-0014): the overlay tells, for a moment, what just changed. The
+// ADR-0014: the overlay tells, for a moment, what just changed. The
 // daemon's state events make a toast when the active profile changes, mapping
 // is paused or resumed, or the layer changes (here: profile and pause; the
 // fixture's profile has one layer). Not while padmate's own window is
@@ -437,7 +437,7 @@ function mainFocused(app: ElectronApplication): Promise<boolean | undefined> {
   );
 }
 
-test("the overlay shows a toast for a profile switch, a pause and a resume, but not while the main window is focused (HUD-04)", async () => {
+test("the overlay shows a toast for a profile switch, a pause and a resume, but not while the main window is focused", async () => {
   test.setTimeout(180000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;
@@ -533,7 +533,7 @@ test("the overlay shows a toast for a profile switch, a pause and a resume, but 
     );
 
     // 3. The language is the UI's: set to English in Settings (the page
-    // pushes it to Main, HUD-05), the next toasts are English.
+    // pushes it to Main), the next toasts are English.
     await openSettings(opened.page);
     await opened.page
       .getByRole("combobox", { name: "语言" })
@@ -557,7 +557,7 @@ test("the overlay shows a toast for a profile switch, a pause and a resume, but 
   }
 });
 
-// IN-12 (ADR-0015): a controller that discharges to 15% is announced on the
+// ADR-0015: a controller that discharges to 15% is announced on the
 // overlay, once per episode and also while the main window is in front (the
 // editor shows the battery only on the settings page); charging and a new drop
 // is announced again. The fixture daemon has no battery and no motors:
@@ -578,7 +578,7 @@ interface FakeAlerts {
 }
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
-test("the overlay tells a low battery once per episode, and the fake controller is asked for the alert (IN-12)", async ({}, info) => {
+test("the overlay tells a low battery once per episode, and the fake controller is asked for the alert", async ({}, info) => {
   test.setTimeout(180000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;
@@ -667,7 +667,7 @@ test("the overlay tells a low battery once per episode, and the fake controller 
   }
 });
 
-// HUD-05 (ADR-0014): Settings → 浮层 has three rows: 提示消息 (on or off),
+// ADR-0014: Settings → 浮层 has three rows: 提示消息 (on or off),
 // 位置 (底部 or 顶部) and 不透明度 (40-100 %). They are the UI's own, kept in
 // its localStorage, and the page pushes them to Main, which moves the window
 // (setBounds only), gates the toasts and tells the overlay's page the opacity.
@@ -730,7 +730,7 @@ function pageOpacity(page: Page): Promise<string> {
   );
 }
 
-test("the overlay follows the position, toast and opacity settings (HUD-05)", async () => {
+test("the overlay follows the position, toast and opacity settings", async () => {
   test.setTimeout(240000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;
@@ -920,7 +920,7 @@ test("the overlay follows the position, toast and opacity settings (HUD-05)", as
   }
 });
 
-// HUD-03 (ADR-0014): the 按键提示 action lists, while its button is held, what
+// ADR-0014: the 按键提示 action lists, while its button is held, what
 // the other controls of the current layer do. The daemon puts the list in its
 // state events (every 250 ms), Main passes it to the overlay's page, and the
 // window grows for the panel (setBounds only: the bottom edge stays, the toast
@@ -948,7 +948,7 @@ function hintRows(page: Page): Promise<Row[]> {
   );
 }
 
-test("holding the button bound to the key hints lists the layer's bindings in the overlay, and letting go hides them (HUD-03)", async () => {
+test("holding the button bound to the key hints lists the layer's bindings in the overlay, and letting go hides them", async () => {
   test.setTimeout(240000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;
@@ -1069,7 +1069,7 @@ test("holding the button bound to the key hints lists the layer's bindings in th
   }
 });
 
-// SCR-22 (ADR-0014): a script's hud.toast and hud.panel reach the overlay. The
+// ADR-0014: a script's hud.toast and hud.panel reach the overlay. The
 // UI subscribes to the daemon's hud topic while its overlay exists (the daemon
 // then tells scripts so: host.has("hud")), shows a script's toast as the pill,
 // and draws the panels the daemon lists in its state events where the key
@@ -1097,7 +1097,7 @@ function panelLines(page: Page): Promise<string[]> {
   );
 }
 
-test("a script's hud.toast and hud.panel show in the overlay, and the panels go when the script removes them (SCR-22)", async () => {
+test("a script's hud.toast and hud.panel show in the overlay, and the panels go when the script removes them", async () => {
   test.setTimeout(240000);
   const f: Fixture = await fixture();
   let app: ElectronApplication | undefined;

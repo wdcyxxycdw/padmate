@@ -10,7 +10,7 @@ export const supportedUpdateState: UpdateState = {
 };
 
 /**
- * An update API for the tests of the window's side (PKG-10): the state is
+ * An update API for the tests of the window's side: the state is
  * the test's to push, as Main pushes it on padmate:updateState.
  */
 export function updateApi(initial: UpdateState = supportedUpdateState) {

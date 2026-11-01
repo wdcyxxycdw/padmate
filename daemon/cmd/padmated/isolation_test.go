@@ -63,7 +63,7 @@ func TestPrivateInstanceWithoutDirectoryKeepsOffTheDefault(t *testing.T) {
 }
 
 // A private instance is a development build for the startup entry: it never
-// writes the user's real Run value (UI-19).
+// writes the user's real Run value.
 func TestPrivateInstanceIsADevelopmentBuild(t *testing.T) {
 	name, _ := privateInstance("", "", "", `\\.\pipe\padmate-private`, "", t.TempDir())
 	if !devBuild(name, "") {

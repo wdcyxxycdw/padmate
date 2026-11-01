@@ -1,5 +1,5 @@
 {
-  "comment": "Macro file names (SCR-50, ADR-0011) shared by profile.CheckMacroFile and the UI's check: kind is empty for a name that passes, otherwise the first rule it breaks (extension, empty, invalid for non-NFC, length, char, invalid). same lists pairs that profile.SameMacroName must treat as the same name, or not.",
+  "comment": "Macro file names (ADR-0011) shared by profile.CheckMacroFile and the UI's check: kind is empty for a name that passes, otherwise the first rule it breaks (extension, empty, invalid for non-NFC, length, char, invalid). same lists pairs that profile.SameMacroName must treat as the same name, or not.",
   "files": [
     {"file": "复制全部.ts", "kind": ""},
     {"file": "下一个笔刷.js", "kind": ""},

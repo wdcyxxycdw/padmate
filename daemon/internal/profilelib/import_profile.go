@@ -15,7 +15,7 @@ import (
 const maxUniqueNames = 200
 
 // ImportProfile adds a profile.json that another format was converted to
-// (PRO-21, the import of AntiMicroX files) to the library as a new profile.
+// (the import of AntiMicroX files) to the library as a new profile.
 // It uses the path of Import for an archive that holds nothing but
 // profile.json: the folder is written and synced without the writer lock
 // and renamed into place under it, the ID is made from the name (NewID), and

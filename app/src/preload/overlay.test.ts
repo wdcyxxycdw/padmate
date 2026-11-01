@@ -73,7 +73,7 @@ const hiddenHints = { entries: [], language: "zh-CN", position: "bottom" };
 
 const kept = [
   {
-    name: "panels (SCR-22)",
+    name: "panels",
     channel: overlayPanelsChannel,
     on: (api: OverlayAPI, listener: (message: unknown) => void) =>
       api.onPanels(listener),
@@ -82,7 +82,7 @@ const kept = [
     invalid: [{ panels: "none" }, { position: "top" }, null, "panels"],
   },
   {
-    name: "key hints (HUD-03)",
+    name: "key hints",
     channel: overlayHintsChannel,
     on: (api: OverlayAPI, listener: (message: unknown) => void) =>
       api.onHints(listener),

@@ -67,11 +67,11 @@ test("a key runs a script, ownership and IME warnings, real Markdown and PNG sho
       .getByTestId("action-type")
       .getByRole("radio", { name: "脚本", exact: true })
       .click();
-    // Picking a script is one edit, saved at once (UI-43).
+    // Picking a script is one edit, saved at once.
     await page
       .getByRole("combobox", { name: "选择脚本", exact: true })
       .selectOption({ label: "下一个笔刷" });
-    // The pick is one undo step (UI-43): Ctrl+Z puts the shortcut back and
+    // The pick is one undo step: Ctrl+Z puts the shortcut back and
     // Ctrl+Y the script, with the focus still on the list. A pad that
     // reports a button must not hold it back while its keys cannot reach
     // this window.
@@ -145,7 +145,7 @@ test("a key runs a script, ownership and IME warnings, real Markdown and PNG sho
     await client.call("fake.release", { control: "east" });
     await openControl(page, "south");
     const shortcut = page.getByRole("group", { name: "快捷键", exact: true });
-    // A shortcut is recorded, never typed (OUT-18).
+    // A shortcut is recorded, never typed.
     await expect(
       page.getByTestId("mapping-editor").getByRole("textbox", {
         name: "快捷键",
@@ -598,7 +598,7 @@ test("single-layer editing keeps the rest of a layered file and locks profiles t
     defaultLayer: "base",
     // The four switches that moved to config.json (ADR-0015) and the members
     // that stayed in the profile: an edit of the mapping drops the first and
-    // rewrites none of the others (UI-27).
+    // rewrites none of the others.
     feedback: {
       rumble: true,
       led: false,
@@ -721,7 +721,7 @@ test("menus near the bottom of the drawer open inside the visible drawer", async
   }
 });
 
-// MAP-25: 触感 under 高级 in the key drawer is saved as the binding's haptic,
+// 触感 under 高级 in the key drawer is saved as the binding's haptic,
 // and the daemon asks the controller for it once for each press of the key.
 // The fake input daemon has no motors: fake.effects lists what it was asked
 // for, an Event-class program of the preset (a "play" call).
@@ -770,7 +770,7 @@ test("触感 in the key drawer is saved, and a press of the key plays it once on
     const select = drawer.getByRole("combobox", { name: "触感", exact: true });
     await expect(select).toHaveValue("");
     await select.selectOption({ label: "轻点" });
-    // The pick is one edit, saved at once (UI-43), and the daemon reloads it.
+    // The pick is one edit, saved at once, and the daemon reloads it.
     await expect.poll(haptic).toBe("tick");
     await expect(drawer.getByText("已设置：触感")).toBeVisible();
     await page.screenshot({ path: info.outputPath("key-haptic.png") });
@@ -799,7 +799,7 @@ test("触感 in the key drawer is saved, and a press of the key plays it once on
   }
 });
 
-// UI-27 (ADR-0015): the four switches of Settings · 反馈 are saved as
+// ADR-0015: the four switches of Settings · 反馈 are saved as
 // config.json's feedback, and the daemon follows them as soon as the file is
 // saved, with no reload of the profile. The fake input daemon has no motors or
 // lights: fake.effects lists the ambient state it was asked for, with the pulse
@@ -956,7 +956,7 @@ test("the 反馈 switches in Settings are saved, and the fake controller follows
   }
 });
 
-// UI-27: every card of the 配置 page has 配置设置… as the first item of its
+// Every card of the 配置 page has 配置设置… as the first item of its
 // menu. It opens the dialog for that card's profile without activating it or
 // leaving the page, and the changes are saved to that profile only.
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.

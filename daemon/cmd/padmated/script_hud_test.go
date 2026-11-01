@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/simtest"
 )
 
-// The panels a slot reports are those of its running script (SCR-22):
+// The panels a slot reports are those of its running script:
 // none while the runtime is paused or stopped, a resumed runtime starts
 // with none, and the old profile's runtime that a failed switch leaves
 // installed shows none under the new profile.

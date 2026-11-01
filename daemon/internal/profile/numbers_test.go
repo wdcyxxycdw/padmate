@@ -267,8 +267,8 @@ func TestWholeNumberConfig(t *testing.T) {
 	}
 	checkWhole(t, cases, func(data []byte) Diagnostics { _, ds := ParseConfig(data); return ds })
 
-	// The repair leaves out the member that has the number and keeps the rest
-	// (PRO-29): a combo goes as a whole, since it needs its holdMs.
+	// The repair leaves out the member that has the number and keeps the rest:
+	// a combo goes as a whole, since it needs its holdMs.
 	for _, c := range cases {
 		member := strings.TrimSuffix(c.ptr, "/holdMs")
 		if c.name != "panic combo" {

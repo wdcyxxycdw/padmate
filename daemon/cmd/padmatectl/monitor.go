@@ -105,8 +105,8 @@ flags:
                   gamepad nothing. Through the daemon, only the
                   capabilities and the battery that it last read are
                   known: connection and player index say so.
-  --raw           also print the raw elements of the joysticks, by index
-                  (IN-17), which the mapping wizard works from: a joystick
+  --raw           also print the raw elements of the joysticks, by index,
+                  which the mapping wizard works from: a joystick
                   that SDL has no gamepad mapping for shows only these.
                   A line is the time, the device ID, "raw" and
                     button N down|up

@@ -17,7 +17,7 @@ import (
 // the installer (always latest.yml, even for a release candidate, because the
 // publish block pins channel: latest, UpdateChannel) and that a release
 // uploads to the download site, last, after the installer and its .sha256
-// (PKG-10, ADR-0018). It is the contract with the Worker that redirects the
+// (ADR-0018). It is the contract with the Worker that redirects the
 // address of the site to the installer it names (its path), and with the
 // application that reads it.
 const UpdateFile = "latest.yml"
@@ -37,7 +37,7 @@ type UpdateInfoFile struct {
 	SHA512 string
 	// Size is the size in bytes, or negative when the entry has none:
 	// electron-builder 26.17.0 writes no size for the nsis target (measured on
-	// a build with the github provider, PKG-10; the generic provider goes
+	// a build with the github provider; the generic provider goes
 	// through the same createUpdateInfo, which gives the same shape and only
 	// rewrites the url of the files entry for github), only a differential
 	// package adds one.

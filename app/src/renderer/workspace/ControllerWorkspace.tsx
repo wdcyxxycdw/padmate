@@ -257,7 +257,7 @@ export function ControllerWorkspace({
   const open =
     selected && !isFunctionKey(selected, functionKey) ? selected : undefined;
   const input = useStore(store, (value) => value.inputs[info.id]);
-  // The sticks this controller has its own calibration for (IN-14), as a
+  // The sticks this controller has its own calibration for, as a
   // string so the selector's result compares by value.
   const calibratedText = useStore(store, (value) => {
     const key = value.status?.devices.find(
@@ -280,7 +280,7 @@ export function ControllerWorkspace({
   );
   const draft = useStore(editor, (value) => value.draft);
   const allRegistrations = useStore(editor, (value) => value.registrations);
-  // The usual bindings, or the function set (UI-30, ADR-0012).
+  // The usual bindings, or the function set (ADR-0012).
   const view = effectiveView(
     useStore(editor, (value) => value.view),
     info,
@@ -296,10 +296,10 @@ export function ControllerWorkspace({
   );
   const scriptEntry = useStore(editor, (value) => value.description?.entry);
   const profiles = useStore(editor, (value) => value.profiles);
-  // The profile a hand-written file extends (PRO-19, ADR-0013): its bindings
+  // The profile a hand-written file extends (ADR-0013): its bindings
   // show here as the profile's own.
   const parent = useStore(editor, (value) => value.parent);
-  // The profile's scripts (SCR-50): the drawer picks from them, and a key
+  // The profile's scripts: the drawer picks from them, and a key
   // that runs a missing one says so.
   const macros = useStore(editor, (value) => value.macros);
   const editedId = useStore(editor, (value) => value.id);
@@ -329,7 +329,7 @@ export function ControllerWorkspace({
   const notice = useStore(editor, hasEditorNotice);
   const [previewing, setPreviewing] = useState(false);
   useUndoShortcuts(editor, store);
-  // A chip's right-click (UI-36) asks the drawer to open its menu once. The
+  // A chip's right-click asks the drawer to open its menu once. The
   // request drops back to 0 after the drawer has seen it, so a drawer part
   // that mounts later (another control, the drawer opened again) stays closed.
   const [menu, setMenu] = useState({ request: 0, pending: false });
@@ -343,7 +343,7 @@ export function ControllerWorkspace({
   );
   // The chips show what is saved: a shortcut cleared in the drawer is unset
   // at once, though the draft keeps its empty card until the gesture is
-  // deleted (UI-43). A key emptied that the parent binds stays empty.
+  // deleted. A key emptied that the parent binds stays empty.
   const shown = useMemo(
     () => (draft ? savedForm(draft, parent) : null),
     [draft, parent],
@@ -423,7 +423,7 @@ export function ControllerWorkspace({
           hint={!open && !notice && !previewing}
           functionKey={functionKey}
         />
-        {/* The key preview (UI-44) above the notice, where the hint is. */}
+        {/* The key preview above the notice, where the hint is. */}
         <div className="workspace-bottom">
           <KeyPreview
             store={store}

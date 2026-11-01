@@ -20,8 +20,8 @@ import (
 // errors. A stage runs only if the previous ones found no errors; warnings
 // do not stop it. Diagnostics are in file order. Parse never panics.
 //
-// A document of an older schemaVersion is migrated in memory first (Migrate,
-// PRO-06), so every version this build reads parses the same way and the
+// A document of an older schemaVersion is migrated in memory first (Migrate),
+// so every version this build reads parses the same way and the
 // resolved Profile has SchemaVersion CurrentSchema. A newer version is
 // refused with the message of Migrate. A schemaVersion that is not a
 // non-negative integer is left to the schema stage to describe. The

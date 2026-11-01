@@ -1,5 +1,5 @@
-// A profile file that has `extends`, as the editor treats it (PRO-19, ADR-0012,
-// ADR-0012, ADR-0013). The UI no longer makes a profile extend another or
+// A profile file that has `extends`, as the editor treats it
+// (ADR-0012, ADR-0013). The UI no longer makes a profile extend another or
 // marks what it inherits, but the file format still allows it and the daemon
 // still merges the files, so a file that has it is edited as the profile it
 // does.

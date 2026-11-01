@@ -16,7 +16,7 @@ function fixture() {
   return { state, target, handlers: updateHandlers(target) };
 }
 
-describe("update handlers (PKG-10)", () => {
+describe("update handlers", () => {
   it("declares the renderer argument counts", () => {
     const { handlers } = fixture();
     expect(

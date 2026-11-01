@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// tracesDir holds the recorded traces (ENG-08): testdata/traces of the
+// tracesDir holds the recorded traces: testdata/traces of the
 // daemon module, one directory per device.
 var tracesDir = filepath.Join("..", "..", "testdata", "traces")
 

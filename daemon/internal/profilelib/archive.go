@@ -19,12 +19,12 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// An exported profile (PRO-20) is a zip file, "<name>.padmate", holding
+// An exported profile is a zip file, "<name>.padmate", holding
 // ArchiveManifest and the profile folder below ArchiveFolder: profile.json
 // and every other folder and file in it except HistoryDir and a macros
 // folder, the files only scripts, JSON and text (archiveFileProblem), and
-// in its macros folder the library's macros that profile.json runs
-// (SCR-51). An archive from before the library has the profile's whole
+// in its macros folder the library's macros that profile.json runs.
+// An archive from before the library has the profile's whole
 // macros folder there instead; both import the same way (Import). The
 // import limits are the copy limits (MaxCopyEntries, MaxCopyBytes,
 // MaxCopyDepth) and MaxArchiveBytes for the file itself.
@@ -233,7 +233,7 @@ func (l *Library) readExport(root *os.Root, id string) (items, macros []copyItem
 			files = r.Profile.MacroFiles()
 			if r.Merged != nil {
 				// A profile that extends another is exported whole, so that
-				// whoever imports it needs no parent (PRO-19, ADR-0012).
+				// whoever imports it needs no parent (ADR-0012).
 				flat, err := l.flatten(id, item.data)
 				if errors.Is(err, ErrInheritedScript) {
 					return nil, nil, &UnsupportedError{Path: id + "/profile.json", Reason: err.Error()}

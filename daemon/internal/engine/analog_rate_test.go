@@ -13,8 +13,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the rate-modulated repeat and the response curves (ANA-12, ANA-13,
-// ANA-15). A repeat with minRateHz goes at minRateHz when its control has just
+// Tests of the rate-modulated repeat and the response curves.
+// A repeat with minRateHz goes at minRateHz when its control has just
 // reached its activation threshold, and at rateHz at full travel; the stick's
 // or trigger's curve shapes what lies between. The trigger RT is the main
 // subject: its raw value is exact (stage fractions of 32767), so the depth of a

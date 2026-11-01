@@ -29,7 +29,7 @@ func TestWriteMarkdown(t *testing.T) {
 		{"send→hook", sum(2000, 40, 50, 70, 900, 1450.5)},
 	}
 	evaluated := Report{
-		Title:       "端到端延迟（ENG-11）",
+		Title:       "端到端延迟",
 		Env:         env,
 		Calibration: "width 0.1 µs; SDL 10000000 Hz = QPC 10000000 Hz; start and end agree",
 		Gate:        GateEvaluated,
@@ -51,7 +51,7 @@ func TestWriteMarkdown(t *testing.T) {
 		Notes: []string{"L is t_ret − t_sdl."},
 	}
 	skipped := Report{
-		Title:       "端到端延迟（ENG-11）",
+		Title:       "端到端延迟",
 		Env:         env,
 		Calibration: "width 0.1 µs",
 		Gate:        GateSkipped,
@@ -64,7 +64,7 @@ func TestWriteMarkdown(t *testing.T) {
 		Notes: []string{"No SendInput: the rows time the no-op sender."},
 	}
 	off := Report{
-		Title:      "SendInput 单独（ENG-11）",
+		Title:      "SendInput 单独",
 		Env:        Environment{Date: "2026-09-25T01:02:03Z", GoVersion: "go1.27.0", OS: "linux", NumCPU: 4, GOMAXPROCS: 2, Freq: 1_000_000_000},
 		Gate:       GateOff,
 		GateReason: "info only",

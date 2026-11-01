@@ -1,4 +1,4 @@
-// Package amgp imports an AntiMicroX profile (.amgp, PRO-21, ADR-0012) as a
+// Package amgp imports an AntiMicroX profile (.amgp, ADR-0012) as a
 // padmate profile.
 //
 // Import takes the bytes of the file and returns the text of a profile.json,

@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/installerpkg"
 )
 
-// The wizard of the installer (PKG-13, ADR-0018), driven through its real
+// The wizard of the installer (ADR-0018), driven through its real
 // windows as a person would: the folder page, the progress and the finish page.
 // The windows appear on screen for a moment, so this runs only with
 // PADMATE_TEST_INSTALLER_INTERACTIVE=1, like the uninstaller's questions. It

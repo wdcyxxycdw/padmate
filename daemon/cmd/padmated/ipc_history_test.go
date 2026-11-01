@@ -14,7 +14,7 @@ import (
 )
 
 // TestIPCProfileHistoryAndRestore: profiles.put keeps the replaced
-// profile.json (PRO-17); profiles.restore puts a kept version back with
+// profile.json; profiles.restore puts a kept version back with
 // put's revision check, applies it to the running mapping at once and
 // publishes profile.changed like a save.
 func TestIPCProfileHistoryAndRestore(t *testing.T) {

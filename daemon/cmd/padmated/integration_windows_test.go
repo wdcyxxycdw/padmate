@@ -155,7 +155,7 @@ func (pt *probeTest) finish(want []output.KeyEvent) {
 	checkKeys(t, "the probe", seenKeys, want, pt.hkl, pt.pid)
 }
 
-// TestPadToProbe is ENG-10: a virtual gamepad's presses go through live
+// TestPadToProbe is the end-to-end injection test: a virtual gamepad's presses go through live
 // mode with --inject and SendInput to padmate-probe (probeTest); also the
 // release of a held key when the gamepad is unplugged, when the profile
 // is saved and on the exit path (CLAUDE.md invariant 1, with real
@@ -198,7 +198,7 @@ func TestPadToProbe(t *testing.T) {
 	pt.reported(n, "a: tap")
 
 	// b. East holds Space, and unplugging A releases it: SDL lifts east
-	// before it reports the removal (IN-05), which then finds nothing held.
+	// before it reports the removal, which then finds nothing held.
 	press(t, a, "east", true)
 	n += len(space)
 	pt.reported(n, "b: press of east")
@@ -217,8 +217,8 @@ func TestPadToProbe(t *testing.T) {
 	n += len(tap)
 	pt.reported(n, "c: tap")
 
-	// d. A save of the profile while east holds Space releases it
-	// (PRO-03). Space released, the slot runs the saved profile: the
+	// d. A save of the profile while east holds Space releases it.
+	// Space released, the slot runs the saved profile: the
 	// release of east does nothing (ADR-0007), and its next press holds
 	// F13.
 	press(t, a2, "east", true)
@@ -237,7 +237,7 @@ func TestPadToProbe(t *testing.T) {
 	pt.finish(want)
 }
 
-// TestPadsToProbe is IN-08 with real output: two virtual gamepads, each on
+// TestPadsToProbe is the multi-gamepad case with real output: two virtual gamepads, each on
 // a slot of its own, hold F13 on east through live mode with --inject and
 // SendInput to padmate-probe (probeTest). The slots share the key: it goes
 // down at the first press, and up at the last release only, be it a
@@ -326,7 +326,7 @@ const profileMenuMask = `{"schemaVersion": 0, "name": "menu mask", "layers": {"b
 	`"west": {"press": {"type": "keys", "keys": "Alt+Tab", "mode": "tap"}}, ` +
 	`"north": {"press": {"type": "keys", "keys": "F13", "mode": "tap"}}}}}` + "\n"
 
-// TestMenuMaskToProbe is the automatic acceptance of OUT-08 (ADR-0004):
+// TestMenuMaskToProbe is the automatic acceptance of the menu mask (ADR-0004):
 // the release of a lone Alt or LWin of a virtual gamepad goes through
 // live mode with --inject and SendInput to padmate-probe (probeTest)
 // right after a press and a release of the mask key, vk 0xE8 (the probe
@@ -405,7 +405,7 @@ func TestMenuMaskToProbe(t *testing.T) {
 	pt.finish(want)
 }
 
-// TestComboToProbe is DMN-07 with real output: while east holds F13, a
+// TestComboToProbe is the panic combo with real output: while east holds F13, a
 // virtual gamepad holds back and start, its panic combo, for
 // comboTestHold, through live mode with --inject and SendInput to
 // padmate-probe (probeTest). OnCombo lets go of F13 from T-input, and the
@@ -485,7 +485,7 @@ func TestComboToProbe(t *testing.T) {
 	}
 }
 
-// TestSessionToProbe is DMN-09 with real output and the real session
+// TestSessionToProbe is the session release with real output and the real session
 // watcher, which polls only once an hour here: while east holds F13, a
 // lock of the session, sent to winsession's own window (winsessiontest),
 // releases F13 within a second through live mode with --inject and

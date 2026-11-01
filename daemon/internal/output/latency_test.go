@@ -47,7 +47,7 @@ func (s *scriptSender) sends(from int) string {
 }
 
 // TestArbiterBenchSends pins the Send accounting of the latency benchmark
-// (ENG-11) for its key set: a hold edge makes one Arbiter command, which
+// for its key set: a hold edge makes one Arbiter command, which
 // makes exactly one Send with 1 (F13) or 3 (Ctrl+Shift+F14) events unless
 // SendInput injects fewer events or a release is pending. A latency
 // measurement that pairs each edge with its Sends has to tell these cases
@@ -172,11 +172,11 @@ func reportLatency(b *testing.B, lat []time.Duration) {
 	b.ReportMetric(float64(s.Max), "max-ns")
 }
 
-// BenchmarkLatencyDo measures one command through the T-output Loop (ENG-11,
-// the Do hop of ADR-0005) from a caller locked to its thread, as a slot
+// BenchmarkLatencyDo measures one command through the T-output Loop
+// (the Do hop of ADR-0005) from a caller locked to its thread, as a slot
 // loop is: noop is the bare round trip, and downup alternates
 // Remote().Down and Up of F13, which make one Send each. downup-held is
-// downup with a held-key log (OUT-14) in a temporary directory: each op
+// downup with a held-key log in a temporary directory: each op
 // writes it once, before the press's Send or after the release's. The
 // gapped variants idle between ops, so that the loop thread parks; their
 // sleep counts toward -benchtime but not toward the per-op times, and

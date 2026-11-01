@@ -252,7 +252,7 @@ function ProfileMenu({
       ? state.status?.slots.find((slot) => slot.device === state.selectedDevice)
           ?.profile
       : "";
-  // The fixed default goes by 默认 / Default whatever it stores (PRO-28).
+  // The fixed default goes by 默认 / Default whatever it stores.
   const name =
     (isDefaultProfile(active) ? defaultProfileName(language) : "") ||
     draft?.name ||
@@ -484,7 +484,7 @@ export function App({ store }: { store: PadmateStore }) {
   );
   const backButton = useRef<HTMLButtonElement>(null);
   const [profileSettings, setProfileSettings] = useState(false);
-  // 配置设置 opened from a card of the 配置 page (UI-27): the card's profile,
+  // 配置设置 opened from a card of the 配置 page: the card's profile,
   // and the editor of the open dialog, which closing the window saves too.
   const [cardSettings, setCardSettings] = useState<string | null>(null);
   const cardEditor = useRef<EditorStore | null>(null);
@@ -496,7 +496,7 @@ export function App({ store }: { store: PadmateStore }) {
   const [bindingsList, setBindingsList] = useState(false);
   const [selected, setSelected] = useState<string>();
   const [toast, setToast] = useState("");
-  // The first-run page (UI-38); see shouldOffer for when it opens itself.
+  // The first-run page; see shouldOffer for when it opens itself.
   const [firstRun, setFirstRun] = useState(false);
   // Opens the profile menu from the empty mapping page; see MenuButton.
   const [menuRequest, setMenuRequest] = useState(0);
@@ -533,7 +533,7 @@ export function App({ store }: { store: PadmateStore }) {
       editor.getState().setGlobalTiming({});
     }
   }, [editor, state.config]);
-  // The function key the settings choose (UI-30, ADR-0012): the mapping
+  // The function key the settings choose (ADR-0012): the mapping
   // page names it and does not edit its own bindings.
   useEffect(() => {
     editor
@@ -571,7 +571,7 @@ export function App({ store }: { store: PadmateStore }) {
     if (state.page === "overview") void editor.getState().refreshMacros();
   }, [editor, state.page]);
   useEffect(() => state.start(), [state.start]);
-  // Closing the window (UI-43): a field still being typed in is committed
+  // Closing the window: a field still being typed in is committed
   // as if it was left, and Main waits for the saves (a few seconds at most).
   useEffect(() => {
     const api = store.getState().api;
@@ -604,7 +604,7 @@ export function App({ store }: { store: PadmateStore }) {
   useEffect(() => {
     if (offer) setFirstRun(true);
   }, [offer]);
-  // Edits are saved as they are made (UI-43); leaving the mapping page
+  // Edits are saved as they are made; leaving the mapping page
   // finishes a gesture that is still waiting to be saved.
   const navigate = (page: Page) => {
     if (state.page === "overview" && page !== "overview")
@@ -715,7 +715,7 @@ export function App({ store }: { store: PadmateStore }) {
       : state.page === "profiles"
         ? "profilesTitle"
         : "settingsTitle";
-  // The mapping service did not start (UI-45): the window only says why.
+  // The mapping service did not start: the window only says why.
   const failure = state.connection.failure;
   if (
     failure &&
@@ -739,7 +739,7 @@ export function App({ store }: { store: PadmateStore }) {
             {overview ? (
               <>
                 {/* The page's name for a screen reader; the profile menu is
-                    what a sighted user sees in its place (UI-24). */}
+                    what a sighted user sees in its place. */}
                 <h1 className="visually-hidden">{t("overview")}</h1>
                 <ProfileMenu
                   state={state}
@@ -946,7 +946,7 @@ export function App({ store }: { store: PadmateStore }) {
         api={state.api}
         onConfirm={() => void state.acknowledgeConfigRepair()}
       />
-      {/* PKG-10: a version on offer, the download, the install. */}
+      {/* A version on offer, the download, the install. */}
       <UpdateDialogs api={state.api} language={language} />
     </div>
   );

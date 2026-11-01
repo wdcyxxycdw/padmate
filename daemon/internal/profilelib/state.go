@@ -59,7 +59,7 @@ func (l *Library) ReadConfig() (*profile.Config, string, error) {
 }
 
 // ErrInvalidState is the error of a state.json with errors, which
-// padmated replaces by an empty state (PRO-29), unlike one it cannot read.
+// padmated replaces by an empty state, unlike one it cannot read.
 var ErrInvalidState = errors.New("state.json has errors")
 
 // ReadState returns the saved state, empty for a missing state.json. A

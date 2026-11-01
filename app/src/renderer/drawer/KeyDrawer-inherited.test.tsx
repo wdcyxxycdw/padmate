@@ -16,8 +16,8 @@ import { fakeCapture, shortcutValue } from "../testing/capture-fixture";
 import { editorAPIFixture } from "../testing/editor-api-fixture";
 import { KeyDrawer } from "./KeyDrawer";
 
-// The key drawer of a hand-written profile file that extends another (PRO-19,
-// ADR-0012, ADR-0013): what it takes from the parent is shown as plain
+// The key drawer of a hand-written profile file that extends another
+// (ADR-0012, ADR-0013): what it takes from the parent is shown as plain
 // bindings, with no mark and no way to give a key back; the first edit makes
 // the key the profile's own.
 

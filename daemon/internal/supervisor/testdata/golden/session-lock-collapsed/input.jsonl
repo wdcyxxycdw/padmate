@@ -1,4 +1,4 @@
-# A lock that ends before the router looks (DMN-09): east holds Space;
+# A lock that ends before the router looks: east holds Space;
 # the lock and the unlock at 500 come in one group, so the router sees the
 # lock only as collapsed. The lock's gate still let go of Space, and the
 # slot cancels east's cycle: east does nothing until it is pressed again

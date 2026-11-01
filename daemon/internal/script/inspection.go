@@ -85,7 +85,7 @@ type Inspection struct {
 	RestartCount int      `json:"restartCount"`
 	Permanent    bool     `json:"permanent"`
 	Metadata     Metadata `json:"metadata"`
-	// Macros are the macros of the runtime with a problem (SCR-50): the
+	// Macros are the macros of the runtime with a problem: the
 	// latest error of each run, sorted by file, and the macros disabled
 	// after an interruption. A runtime built afterwards clears the errors,
 	// as it does LastError; a disabled macro stays until its file changes.

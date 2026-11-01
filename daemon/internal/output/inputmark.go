@@ -5,7 +5,7 @@ import (
 )
 
 // InputMark is the input edge that a slot is handling, for the latency
-// statistics (DMN-15, ADR-0016): the Stamp that T-input read when it received
+// statistics (ADR-0016): the Stamp that T-input read when it received
 // the edge (input.Event.Stamp), and the key of the device it came from
 // (input.DeviceKey), which the statistics are kept under. A zero Stamp is no
 // edge.
@@ -24,7 +24,7 @@ type InputMark struct {
 }
 
 // MarkInput sets the input edge that the following commands of this
-// RemoteArbiter answer, until MarkInput(0, "") clears it (DMN-15). Only the
+// RemoteArbiter answer, until MarkInput(0, "") clears it. Only the
 // commands that press keys carry it: Down, DownFor, Up, Tap, TapSequence,
 // Sequence, TypeText and their variants with completion. Repeats, pointer
 // moves, StopRepeat and the release of owners do not, and neither does any

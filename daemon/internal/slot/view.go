@@ -17,7 +17,7 @@ type View struct {
 	Info       input.DeviceInfo
 	HasControl [control.Count]bool
 	HasAxis    [control.AxisCount]bool
-	// Panels are the hud panels of the slot's script runtime (SCR-22), nil
+	// Panels are the hud panels of the slot's script runtime, nil
 	// when it has none.
 	Panels []script.HUDPanel
 }

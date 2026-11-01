@@ -57,11 +57,10 @@ type rpcStatus struct {
 	ProfileID       string                  `json:"profileId"`
 	Slots           []rpcSlot               `json:"slots"`
 	Devices         []supervisor.DeviceView `json:"devices"`
-	// Combos is the emergency combo of each device, as T-input detects it
-	// (UI-19).
+	// Combos is the emergency combo of each device, as T-input detects it.
 	Combos []rpcCombo `json:"combos"`
-	// ConfigRepair is the repair of config.json the UI has not shown yet
-	// (PRO-29); absent when there is none.
+	// ConfigRepair is the repair of config.json the UI has not shown yet;
+	// absent when there is none.
 	ConfigRepair *rpcConfigRepair `json:"configRepair,omitempty"`
 }
 
@@ -75,12 +74,12 @@ type rpcSlot struct {
 	Layers  rpcLayers      `json:"layers"`
 	Latches []string       `json:"latches"`
 	Mode    int            `json:"mode"`
-	// Hints is the key hints (HUD-03) while a hints action is held: the label
+	// Hints is the key hints while a hints action is held: the label
 	// of what each control does in the current layer stack. It is absent when
 	// the hints are off, and an empty array when they are on with nothing to
 	// show.
 	Hints *[]rpcHint `json:"hints,omitempty"`
-	// Panels are the hud panels the slot's script keeps (SCR-22), in the
+	// Panels are the hud panels the slot's script keeps, in the
 	// order first set; absent when there are none.
 	Panels []rpcPanel `json:"panels,omitempty"`
 }

@@ -43,7 +43,7 @@ func alertPlays(ctx context.Context, t *testing.T, client *jrpc2.Client) []fakeP
 	return out
 }
 
-// TestFakeBattery (IN-12): fake.battery makes the fake gamepad report a power,
+// TestFakeBattery: fake.battery makes the fake gamepad report a power,
 // as a real driver does, so the whole alert can be seen without a battery:
 // devices.list shows it, an alert is an Alert-class play with pulse3 and the
 // blink in fake.effects, a charge re-arms the alert, and the next drop

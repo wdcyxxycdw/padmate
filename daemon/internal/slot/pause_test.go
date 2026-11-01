@@ -349,7 +349,7 @@ func comboTrace(t *testing.T, trace string) []input.Event {
 	return evs
 }
 
-// TestReplayCombo: in Replay, a ComboHeld (DMN-07) pauses a running slot,
+// TestReplayCombo: in Replay, a ComboHeld pauses a running slot,
 // which lets go of its keys, the tap in flight included, at the time of
 // the ComboHeld; the next one resumes it. OnEvent sees each, State does
 // not change, and neither is an unknown input. A release that fails goes

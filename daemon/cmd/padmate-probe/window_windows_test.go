@@ -12,7 +12,7 @@ import (
 // checks the plumbing, not the value of an extended style: the desktop window
 // is not known to have a style other than 0, so a wrong GWL_EXSTYLE index
 // would go unnoticed here. The style of a window with known flags is
-// SPK-09's E2E (app/tests/e2e/overlay.spec.ts), where the overlay must have
+// the overlay E2E's (app/tests/e2e/overlay.spec.ts), where the overlay must have
 // WS_EX_NOACTIVATE, WS_EX_TRANSPARENT and WS_EX_TOPMOST.
 func TestWinWindowReader(t *testing.T) {
 	r, err := newWindowReader()

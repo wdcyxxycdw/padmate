@@ -9,7 +9,7 @@ import (
 
 // RefreshFeedback has every slot publish its layer and feedback state again
 // (slot.Slot.RefreshFeedback): padmated calls it after a committed config.json
-// changed the global feedback switches (UI-27, ADR-0015), so the lights and
+// changed the global feedback switches (ADR-0015), so the lights and
 // the player lights follow them at once. Each slot does it behind the edges
 // delivered so far. It returns once every slot has done it, with ctx.Err() or
 // ErrStopped like Sync. It must not be called from a slot's goroutine.

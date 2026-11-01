@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/supervisor"
 )
 
-// latencyEast is the binding of the latency benchmarks (ENG-11): east
+// latencyEast is the binding of the latency benchmarks: east
 // holds F13, so that each edge makes one Send.
 const latencyEast = `"east": {"press": {"type": "keys", "keys": "F13", "mode": "hold"}}`
 
@@ -45,8 +45,8 @@ func (s *sigSender) Send(events []output.KeyEvent) (int, error) {
 }
 
 // BenchmarkLatencyRoute measures one east edge from the Events channel
-// through the router, the slot loop and the Do hop to T-output's Send
-// (ENG-11), with no SDL, on a Supervisor configured as padmated's:
+// through the router, the slot loop and the Do hop to T-output's Send,
+// with no SDL, on a Supervisor configured as padmated's:
 // MaxSlots slots, the gamepad on the first, real clock, slot loops and
 // T-output locked to their threads. One op pushes an edge, down and up in turn, and waits for its
 // Send. The per-op time ends at the stamp the Sender takes on T-output,

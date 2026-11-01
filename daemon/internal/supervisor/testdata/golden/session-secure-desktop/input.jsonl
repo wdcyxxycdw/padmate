@@ -1,4 +1,4 @@
-# The secure desktop and a lock during it (DMN-09): east holds Space
+# The secure desktop and a lock during it: east holds Space
 # when UAC switches to the secure desktop at 500, which lets go of it. The
 # session locks at 800 and unlocks at 1200, while the secure desktop is
 # still up; a tap of south at 1000 maps nothing. The switch back at 1500

@@ -1,4 +1,4 @@
-// The names of the app that the user documents quote (ENG-17, ENG-18).
+// The names of the app that the user documents quote.
 //
 // This table is outside src/renderer on purpose: the test reads every source
 // file of the renderer for the strings of the app, and a table inside it would

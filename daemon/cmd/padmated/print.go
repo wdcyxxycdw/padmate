@@ -42,8 +42,8 @@ type fbShown struct {
 // lights on.
 var fbStart = fbShown{mode: 1, led: true}
 
-// feedback prints what slot's engine asks the controller to show (M3,
-// HUD-08): the mode, which the player lights show with the global lights
+// feedback prints what slot's engine asks the controller to show:
+// the mode, which the player lights show with the global lights
 // switch on, whether the mapping is paused, and the pulses and the color, as the line
 // "feedback slot=0 mode=1 paused pulse x1 210ms gap=100 color=#FFAA00" under
 // the decision or note that caused it, at the time of the clock. The pulse and
@@ -91,8 +91,8 @@ func (p *printer) feedback(slot uint8, f engine.Feedback) {
 	p.endLine()
 }
 
-// haptic prints the haptic that slot's engine asks the controller for
-// (MAP-25, HUD-10), as the line "haptic slot=0 tick" under the decision that
+// haptic prints the haptic that slot's engine asks the controller for,
+// as the line "haptic slot=0 tick" under the decision that
 // caused it, at the time of the clock. The JSON lines of --decisions have
 // decisions and sends only, so it prints none there.
 func (p *printer) haptic(slot uint8, h engine.Haptic) {
@@ -118,8 +118,8 @@ func valueOrDash(s string) string {
 	return s
 }
 
-// printer is the dry-run output.Sender (OUT-09). It prints each batch of
-// key events the Arbiter sends through a MenuMask (OUT-08) and, through
+// printer is the dry-run output.Sender. It prints each batch of
+// key events the Arbiter sends through a MenuMask and, through
 // the slots' hooks, each decision and device event, in the order they
 // happen: a table for people, or JSON lines with --decisions. Send never
 // fails, so the Arbiter never retries; the first write error sticks in the
@@ -152,8 +152,8 @@ type printer struct {
 	// paused is whether the mapping is paused, for the ComboHeld events of
 	// a replay, each of which toggles it.
 	paused bool
-	// suspended is the reasons the system suspends the mapping for
-	// (DMN-09), as the supervisor's OnSuspend last gave them in live mode;
+	// suspended is the reasons the system suspends the mapping for,
+	// as the supervisor's OnSuspend last gave them in live mode;
 	// a replay has none.
 	suspended winsession.Reason
 	// moved holds each slot's last event when it moved an axis: the
@@ -216,8 +216,8 @@ func newPrinter(w *bufio.Writer, clk clock.Clock, jsonl bool, prog *engine.Progr
 	return p
 }
 
-// showSlots adds the slot column, for live mode with several slots
-// (IN-08): decision rows show their slot after the time, and JSON
+// showSlots adds the slot column, for live mode with several slots:
+// decision rows show their slot after the time, and JSON
 // decisions start with it. Call it before the first line.
 func (p *printer) showSlots() {
 	p.mu.Lock()
@@ -257,7 +257,7 @@ func (p *printer) text(s string) {
 // not a key: the moves are summed into a line of their own, such as
 // "move +46,-12", at most one in 100 ms (print_pointer.go), and a jump prints
 // as "jump 32768,32768". They keep their order among the keys of the send. A
-// character of a typed text (the Unicode events of OUT-21) is not a key either:
+// character of a typed text (Unicode events) is not a key either:
 // the characters of a text are joined into a line of their own, such as
 // `text "你好"` (print_text.go), and keep their order among the keys too.
 func (p *printer) Send(evs []output.KeyEvent) (int, error) {
@@ -381,7 +381,7 @@ func (p *printer) decision(slot uint8, d engine.Decision) {
 
 // event notes ev, the slot's OnEvent in a replay, before the slot handles
 // it: "device 1 added", "device 1 removed: release all", and for a
-// ComboHeld, which toggles the pause (DMN-07), the pause's note.
+// ComboHeld, which toggles the pause, the pause's note.
 func (p *printer) event(ev input.Event) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -449,7 +449,7 @@ func (p *printer) reload(_ uint8, gen uint32) {
 
 // pause notes a pause of the mapping, "mapping paused: release all", or a
 // resume, "mapping resumed" (setPaused), the supervisor's OnPause in live
-// mode (DMN-06, DMN-07). The log says what did it. The router calls it
+// mode. The log says what did it. The router calls it
 // after it has asked T-output to let go of every key (output.Loop.Block),
 // and T-input asks before it sends the ComboHeld, so that release may
 // come before the note or after it, as may the slots' cancels. In a
@@ -480,7 +480,7 @@ func (p *printer) setPaused(paused bool) {
 }
 
 // suspend notes a change of the reasons the system suspends the mapping
-// for (DMN-09), was to now, the supervisor's OnSuspend in live mode:
+// for, was to now, the supervisor's OnSuspend in live mode:
 // "mapping suspended (lock): release all" when it starts, only "mapping
 // suspended (lock)" when the pause has released every key already, or
 // when the reasons change, such as "mapping suspended (lock,desktop)";
@@ -557,7 +557,7 @@ func (p *printer) row(t string, cells ...string) {
 // edgeName names a key event as a send line shows it: + for a press, -
 // for a release, then the key's name, or its code when it has none, such
 // as "+LCtrl", "-Z", "+sc:0x2C", "+vk:0x13" or "+vk:0xE8", the menu mask
-// key (OUT-08), or "+WheelUp" for a mouse key.
+// key, or "+WheelUp" for a mouse key.
 func edgeName(e output.KeyEvent) string {
 	sign := "+"
 	if e.Up {

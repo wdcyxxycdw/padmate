@@ -77,7 +77,7 @@ function fixture(
   };
 }
 
-describe("profile archive handlers (PRO-20)", () => {
+describe("profile archive handlers", () => {
   it("declares the renderer argument counts", () => {
     const { handlers } = fixture(() => ({}));
     expect(

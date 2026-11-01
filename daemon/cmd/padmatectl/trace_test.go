@@ -117,7 +117,7 @@ func TestTracePointerEndingPushed(t *testing.T) {
 	}
 }
 
-// A typed text (OUT-21) is one output line a character, with the character
+// A typed text is one output line a character, with the character
 // quoted, where the keys are one line an event: `+B`, `text "你"`. The units of a
 // surrogate pair and the release of a unit are not lines of their own.
 func TestTraceSenderTypedText(t *testing.T) {

@@ -27,7 +27,7 @@ const recent = [
   { exe: "share.exe", path: "\\\\server\\apps\\share.exe", elevated: false },
 ];
 
-describe("bound app icons (UI-42)", () => {
+describe("bound app icons", () => {
   it("finds the executable of a rule", () => {
     expect(iconPath("D:\\Apps\\Clip\\clip.exe", [])).toBe(
       "D:\\Apps\\Clip\\clip.exe",
@@ -88,7 +88,7 @@ describe("bound app icons (UI-42)", () => {
   });
 });
 
-describe("finding a path for a rule by file name (UI-42)", () => {
+describe("finding a path for a rule by file name", () => {
   it("asks Main once for a name it finds, in any case", async () => {
     const api = { resolveAppPath: vi.fn(async () => "C:\\SAI\\sai2.exe") };
     expect(await loadAppPath(api, "sai2.exe")).toBe("C:\\SAI\\sai2.exe");
@@ -137,7 +137,7 @@ describe("finding a path for a rule by file name (UI-42)", () => {
   });
 });
 
-describe("a rule's icon, however its path is found (UI-42)", () => {
+describe("a rule's icon, however its path is found", () => {
   const icon = (path: string) => `data:image/png;base64,${path}`;
   function mains(
     options: {

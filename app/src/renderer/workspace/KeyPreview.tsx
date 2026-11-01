@@ -19,9 +19,9 @@ const windowFocused = () =>
   typeof document.hasFocus === "function" ? document.hasFocus() : true;
 
 /**
- * One line on the mapping page (UI-44) saying what the pad sends, such as
- * "A → Ctrl+Shift+Z", or "A → 复制全部" with the script icon for a script
- * (SCR-50): shown for each press that runs an action while
+ * One line on the mapping page saying what the pad sends, such as
+ * "A → Ctrl+Shift+Z", or "A → 复制全部" with the script icon for a script:
+ * shown for each press that runs an action while
  * padmate's own window is in front, then it fades. The control is drawn as
  * the pad shows it (ControlIcon); screen readers read its name instead. It
  * never takes the focus, and screen readers read it politely.

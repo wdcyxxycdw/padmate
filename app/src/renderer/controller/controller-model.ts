@@ -198,7 +198,7 @@ export function controllerLabels(
 
 /**
  * Which of the three keys a function key can be (back, start, guide) a pad
- * has (MAP-27, ADR-0012). A single Joy-Con held sideways has no back, only
+ * has (ADR-0012). A single Joy-Con held sideways has no back, only
  * − or +, and Capture or Home. A pad without the function key has no function
  * key: its other keys work as usual.
  */

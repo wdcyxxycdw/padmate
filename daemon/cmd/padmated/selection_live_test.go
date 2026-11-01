@@ -260,7 +260,7 @@ func TestConfigRestartRequiredOnlyForStartupFields(t *testing.T) {
 		}
 	}
 	// A device entry that does not ignore its device is the same as none, and
-	// the stick calibration of a device applies at once (IN-14).
+	// the stick calibration of a device applies at once.
 	for _, text := range []string{
 		`{"schemaVersion":0,"timing":{"holdMs":300}}`,
 		`{"schemaVersion":0,"timing":{"holdMs":300},"devices":{"` + key + `":{"calibration":{"ls":{"deadzone":0.2}}}}}`,
@@ -277,7 +277,7 @@ func TestConfigRestartRequiredOnlyForStartupFields(t *testing.T) {
 	if !ignoredStartup.configNeedsRestart(mustConfig(t, `{"schemaVersion":0,"devices":{"`+key+`":{"calibration":{"ls":{"deadzone":0.2}}}}}`)) {
 		t.Error("un-ignoring a device needs no restart")
 	}
-	// Timing applies at once (UI-19).
+	// Timing applies at once.
 	if text := `{"schemaVersion":0,"timing":{"holdMs":400},"devices":{"` + strings.Repeat("ab", 16) + `":{"ignored":false}}}`; r.configNeedsRestart(mustConfig(t, text)) {
 		t.Errorf("%s: restart", text)
 	}
@@ -293,7 +293,7 @@ func TestConfigRestartRequiredOnlyForStartupFields(t *testing.T) {
 }
 
 // TestLiveSettingsCalibration: the calibration of a device is next's, its
-// ignored flag startup's (IN-14).
+// ignored flag startup's.
 func TestLiveSettingsCalibration(t *testing.T) {
 	a, b, c := strings.Repeat("aa", 16), strings.Repeat("bb", 16), strings.Repeat("cc", 16)
 	startup := mustConfig(t, `{"schemaVersion":0,"devices":{"`+a+`":{"ignored":true,"calibration":{"ls":{"deadzone":0.1}}},"`+b+`":{"ignored":false}}}`)
@@ -334,7 +334,7 @@ func stick(src *fakeSource, x float64) {
 
 // TestConfigPutAppliesCalibrationLive: a config.put with the calibration of
 // the connected controller applies at once, without a restart, to the stick
-// that is held, and presses nothing by itself (IN-14).
+// that is held, and presses nothing by itself.
 func TestConfigPutAppliesCalibrationLive(t *testing.T) {
 	tl, src, _ := startSelectionLiveWith(t, `{"schemaVersion":0}`, calibratedProfile, nil)
 	client := rpcTestClient(t, tl.liveRun)

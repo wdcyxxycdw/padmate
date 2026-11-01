@@ -24,7 +24,7 @@ const HostGlobal = "__padmate"
 const BundleGlobal = "__padmate_bundle"
 
 // MacroGlobal is the global variable that receives a macro's exports
-// (SCR-50, ADR-0011). esbuild declares it with a top-level var, which a
+// (ADR-0011). esbuild declares it with a top-level var, which a
 // script cannot delete: each macro the host loads overwrites it, and the
 // host reads its default export, the macro's function, after each.
 const MacroGlobal = "__padmate_macro"
@@ -51,7 +51,7 @@ type BuildOptions struct {
 	// cache key; an empty API is accepted for callers that only need a
 	// bundle and uses the host's default.
 	API string
-	// Macro builds a macro (SCR-50, SCR-51): Root is the macros folder,
+	// Macro builds a macro: Root is the macros folder,
 	// Entry must be a top-level file of it whose name passes
 	// profile.CheckMacroFile, named exactly as it is on disk, and the
 	// bundle gets the macro's padmate module and MacroGlobal. Without
@@ -327,7 +327,7 @@ func inMacroDir(root, p string) bool {
 
 // inHistory reports whether the existing file path, once every link in it
 // is resolved, is in root's profile.HistoryDir: the profile library keeps
-// earlier versions of profile.json there (PRO-17). They are never script
+// earlier versions of profile.json there. They are never script
 // source, so Build refuses an entry or import in it. root must be
 // canonical.
 func inHistory(root, path string) bool {

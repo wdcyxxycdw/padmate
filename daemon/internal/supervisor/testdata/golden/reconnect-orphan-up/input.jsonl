@@ -1,4 +1,4 @@
-# XInput (SPK-01): Pad A holds east and south when it is
+# XInput: Pad A holds east and south when it is
 # unplugged. SDL sends their ups, then removed. The pad comes back with a
 # new id while both are still held; XInput reports no down for them, just
 # an up of each when it is released. Those orphan ups do nothing and do not

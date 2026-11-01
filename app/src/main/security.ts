@@ -73,7 +73,7 @@ export function validateProfileID(value: unknown): string {
     throw new Error("Invalid profile ID");
   return value;
 }
-// The executable whose icon the profiles page shows (UI-42): an absolute
+// The executable whose icon the profiles page shows: an absolute
 // path on a local drive ("C:\Apps\paint.exe", slashes either way) to an
 // .exe. A UNC or device path is refused, so reading an icon never reaches
 // the network, and so are relative parts, wildcards and stream names.
@@ -95,7 +95,7 @@ export function validateAppIconPath(value: unknown): string {
   return path;
 }
 // The file name of an executable as a rule names it ("krita.exe"), which the
-// renderer asks Main to find a path for (UI-42): no folder, drive, wildcard
+// renderer asks Main to find a path for: no folder, drive, wildcard
 // or stream, so the name can only ever select an App Paths key, a MuiCache
 // entry or a Start Menu program.
 export function validateExeName(value: unknown): string {
@@ -135,7 +135,7 @@ export function validateDeviceKey(value: unknown): string {
   if (key === "") throw new Error("Invalid device selector");
   return key;
 }
-// An SDL gamepad mapping string for devices.setMapping (IN-18, ADR-0012): at
+// An SDL gamepad mapping string for devices.setMapping (ADR-0012): at
 // most the 2048 characters the daemon accepts (sdlmapping.MaxLen), printable
 // ASCII. The daemon parses it, normalises it and checks its GUID against the
 // controller's; this only keeps what is not a mapping out of the request.
@@ -262,7 +262,7 @@ export function macroImportName(base: string): string {
   return `${stem}${extension}`;
 }
 
-// A profile archive (PRO-20), as the daemon's profilelib.MaxArchiveBytes:
+// A profile archive, as the daemon's profilelib.MaxArchiveBytes:
 // Main refuses a larger file before reading it, and a larger export.
 export const maxArchiveBytes = 4 * 1024 * 1024;
 export const archiveExtension = "padmate";
@@ -378,7 +378,7 @@ export function validateScriptImportOptions(
   return { token: options.token };
 }
 
-// The backup of a repaired config.json (PRO-29), as the daemon names it in
+// The backup of a repaired config.json, as the daemon names it in
 // the data folder: config.broken-YYYYMMDD-HHMMSS.json, with -2, -3 when
 // that name is taken. Only this form crosses from the renderer; Main joins
 // it to its own data folder, so no path does.

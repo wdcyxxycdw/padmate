@@ -3,7 +3,7 @@ package main
 import "testing"
 
 // TestGoldenMacros replays testdata/macro-replay/trace.jsonl with the
-// profile there, which only runs macros (SCR-50), as text and with
+// profile there, which only runs macros, as text and with
 // --decisions, and compares the transcript with replay.golden: the keys
 // of each run, a press during a run ignored, the keys of a run released
 // when it ends, and a missing macro reported once.

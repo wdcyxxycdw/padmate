@@ -33,12 +33,12 @@ type scriptDefinition struct {
 	mu   sync.RWMutex
 	root string
 	// library is the data folder whose macros folder, the script library,
-	// every profile's macros come from (SCR-51); "" without a library, when
+	// every profile's macros come from; "" without a library, when
 	// they come from the macros folder beside the --profile file.
 	library string
 	cfg     *profile.ScriptConfig
 	// macros are the macro files the profile's actions run, sorted, without
-	// repeats (SCR-50): a runtime builds only these.
+	// repeats: a runtime builds only these.
 	macros    []string
 	watch     bool
 	log       *slog.Logger
@@ -46,8 +46,8 @@ type scriptDefinition struct {
 	// Connected before the factory starts; both endpoints are concurrency-safe.
 	environment   *script.Environment
 	profileSwitch func(uint32, string) error
-	// feedback is the profile's feedback settings, which a script's effects obey
-	// (SCR-23): the rumble and led switches, and the strength and the pulses of
+	// feedback is the profile's feedback settings, which a script's effects obey:
+	// the rumble and led switches, and the strength and the pulses of
 	// its presets.
 	feedback profile.Feedback
 	// errorCue, when set, is called on the slot goroutine when the script of the
@@ -119,7 +119,7 @@ func (d *scriptDefinition) useProfile(p *profile.Profile) {
 }
 
 // useLibrary has the profiles' macros come from the script library of the
-// data folder dir (SCR-51).
+// data folder dir.
 func (d *scriptDefinition) useLibrary(dir string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -173,7 +173,7 @@ func (d *scriptDefinition) rootDir() string {
 }
 
 // scriptRootLocked returns the folder of the legacy script's files: the
-// profile's own, or, for a script it inherits (PRO-19, ADR-0012), the
+// profile's own, or, for a script it inherits (ADR-0012), the
 // folder of the parent that has it; the caller holds mu.
 func (d *scriptDefinition) scriptRootLocked() string {
 	if d.cfg != nil && d.cfg.Origin != "" && d.library != "" {
@@ -300,7 +300,7 @@ func (a scriptArbiter) TapWithCompletion(o output.Owner, c keys.Chord, d time.Du
 }
 
 // TypeTextWithCompletion types text for key.type and the text steps of
-// key.sequence (SCR-26). The slot's RemoteArbiter has it; any other arbiter
+// key.sequence. The slot's RemoteArbiter has it; any other arbiter
 // ends the text at once as dropped and canceled.
 func (a scriptArbiter) TypeTextWithCompletion(o output.Owner, text string, gap time.Duration, done func(output.TapCompletion)) error {
 	if arb, ok := a.arb.(interface {
@@ -441,7 +441,7 @@ func (r *scriptRuntime) Dispatch(e slot.ScriptEvent) (consumed bool, dispatchErr
 	return result.Consumed, err
 }
 
-// RunMacro starts a run of the macro file (SCR-50). The slot calls it
+// RunMacro starts a run of the macro file. The slot calls it
 // whatever the runtime's state; the slot itself drops a trigger while it is
 // paused or waits for its Resync. While a runtime builds, at the start,
 // after a release or for a reload, the building lifecycle remembers each
@@ -527,7 +527,7 @@ func (r *scriptRuntime) Wake() <-chan struct{} { return r.wake }
 
 func (r *scriptRuntime) WaitForInitialResync() bool { return r.waitResync }
 
-// HUDPanels are the hud panels of the running script (SCR-22). There are
+// HUDPanels are the hud panels of the running script. There are
 // none while the runtime is paused, stopped or not running, and none of the
 // old profile's runtime that a failed switch leaves installed: they do not
 // belong to the profile the slot now shows (RunMacro treats it the same way).

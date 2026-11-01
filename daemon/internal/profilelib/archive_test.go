@@ -483,8 +483,8 @@ func profileNamed(name string) string {
 	return `{"schemaVersion":0,"name":` + string(data) + `,"layers":{"base":{}}}`
 }
 
-// A profile's macros (SCR-50) travel in its archive: the library's
-// macros that it runs (SCR-51), with Chinese and spaced names, go into the
+// A profile's macros travel in its archive: the library's
+// macros that it runs, with Chinese and spaced names, go into the
 // archive's macros folder, and an import puts them into its library. The
 // library's other macros, the modules no macro imports (TestExportMacroModules
 // has the ones that travel) and generated declarations stay behind.
@@ -580,7 +580,7 @@ func TestExportImportMacros(t *testing.T) {
 	}
 }
 
-// A macro's imports travel with it (SCR-51): the modules it imports from
+// A macro's imports travel with it: the modules it imports from
 // the library, and the ones they import in turn, below the archive's
 // macros folder; a sibling macro it imports too. What no macro imports,
 // and what an import cannot reach (outside the macros folder, or a file

@@ -19,8 +19,8 @@ import (
 //go:embed config.schema.json
 var configSchemaJSON []byte
 
-// DefaultProfileID is the library ID of the fixed default profile (PRO-28,
-// ADR-0008): automatic selection uses it for every application no rule
+// DefaultProfileID is the library ID of the fixed default profile
+// (ADR-0008): automatic selection uses it for every application no rule
 // binds. The library creates it, with no mapping, when it is missing; it
 // cannot be deleted or renamed, but it can be edited like any profile.
 const DefaultProfileID = "default"
@@ -39,12 +39,12 @@ type Config struct {
 	Timing            Timing
 	Output            OutputSettings
 	Safety            SafetySettings
-	// FunctionKey is the one function key, back, start or guide (MAP-27,
-	// ADR-0012), the same for every profile and controller. DefaultConfig has
+	// FunctionKey is the one function key, back, start or guide
+	// (ADR-0012), the same for every profile and controller. DefaultConfig has
 	// control.DefaultFunctionKey; the zero value, such as a Config built by
 	// hand, means the same (FunctionKeyOrDefault).
 	FunctionKey control.Control
-	// Feedback holds the four controller feedback switches (UI-27, ADR-0015),
+	// Feedback holds the four controller feedback switches (ADR-0015),
 	// global for every profile and controller.
 	Feedback FeedbackSwitches
 }

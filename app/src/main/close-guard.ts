@@ -1,13 +1,13 @@
 /** How long closing waits for the renderer's saves at most. */
 export const CLOSE_WAIT_MS = 3000;
 /**
- * How long the daemon's tray exit waits for them (DMN-22): inside the 2 s
+ * How long the daemon's tray exit waits for them: inside the 2 s
  * the daemon itself waits for ui.exitReady, so the answer still reaches it.
  */
 export const EXIT_WAIT_MS = 1800;
 
 /**
- * Closing the window waits for the mapping page's saves (UI-43), without
+ * Closing the window waits for the mapping page's saves, without
  * asking the user anything: the first close is held while the renderer is
  * asked to finish, and its answer, or the time limit, closes the window.
  * The daemon's tray exit asks the same way (settle) and quits by itself.
@@ -46,8 +46,8 @@ export class CloseGuard {
   }
 
   /**
-   * The daemon is exiting for good (DMN-22, the tray's 退出 or the
-   * installer's exit, PKG-04): has the
+   * The daemon is exiting for good (the tray's 退出 or the
+   * installer's exit): has the
    * renderer finish its saves like a held close, without closing the
    * window. Resolves once it has answered, or after waitMs, or at once when
    * there is none to ask or the guard has let go. The caller then quits.
@@ -70,7 +70,7 @@ export class CloseGuard {
 
   /**
    * Closing no longer waits: the daemon, which writes the saves, is
-   * stopping (DMN-22), or there is nothing to save (UI-45). A held close
+   * stopping, or there is nothing to save. A held close
    * goes ahead.
    */
   abandon(): void {
@@ -81,9 +81,9 @@ export class CloseGuard {
 
   /**
    * Waits for the saves again. settle ends in the state that lets every close
-   * through; an install that then does not start (PKG-10) leaves the
+   * through; an install that then does not start leaves the
    * application running, and closing it must wait for the renderer's saves
-   * like before (UI-43). Not after abandon: the application is quitting then.
+   * like before. Not after abandon: the application is quitting then.
    */
   rearm(): void {
     if (this.state === "closing" && !this.abandoned) this.state = "open";

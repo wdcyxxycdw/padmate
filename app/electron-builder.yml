@@ -1,4 +1,4 @@
-# The Windows installer (PKG-03, PKG-06). `task package:installer VERSION=v0.14.0`
+# The Windows installer. `task package:installer VERSION=v0.14.0`
 # stages the daemon, the CLI, SDL3.dll and the documents in ../dist/installer-stage
 # (daemon/tools/packageinstaller), builds the app, and runs electron-builder with
 # the version from VERSION (app/scripts/package-installer.mjs).
@@ -11,7 +11,7 @@ executableName: padmate
 copyright: Copyright (c) 2026 padmate contributors
 directories:
   output: ../dist/installer
-# The source of the automatic update (PKG-10, ADR-0018): the download site,
+# The source of the automatic update (ADR-0018): the download site,
 # which holds latest.yml and the installers in its root. With --publish never
 # this only makes electron-builder write resources\app-update.yml and
 # latest.yml next to the installer; nothing is uploaded from here, and the
@@ -49,9 +49,8 @@ extraResources:
     to: .
 # Runs after electron-builder has edited padmate.exe's resources and signed it,
 # and before NSIS packs it. electron-builder reads the numeric file version out
-# of the string "0.15.1-rc.1" as 0.15.0.1, so this writes MAJOR.MINOR.PATCH.0
-# (PKG-06); that edit drops the signature, so the hook signs the file again
-# (PKG-09).
+# of the string "0.15.1-rc.1" as 0.15.0.1, so this writes MAJOR.MINOR.PATCH.0;
+# that edit drops the signature, so the hook signs the file again.
 afterSign: ./scripts/stamp-exe-version.mjs
 win:
   target:
@@ -113,5 +112,5 @@ nsis:
   deleteAppDataOnUninstall: false
   uninstallDisplayName: padmate
   # Stops the daemon before files are replaced or removed, and cleans up
-  # after an uninstall (PKG-04, PKG-05). build/installer.nsh.
+  # after an uninstall. build/installer.nsh.
   include: build/installer.nsh

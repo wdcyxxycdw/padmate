@@ -321,7 +321,7 @@ func TestMacroRefEdits(t *testing.T) {
 }
 
 // RenameMacroRefsAll renames several macros at once: a file renamed to the
-// old name of another is not renamed twice (SCR-51's migration and import
+// old name of another is not renamed twice (the library's migration and import
 // number a file "a 2.ts" while "a 2.ts" itself becomes "a 3.ts").
 func TestRenameMacroRefsAll(t *testing.T) {
 	data := []byte(`{"layers":{"base":{"south":{"tap":{"type":"macro","file":"a.ts"},"hold":{"type":"macro","file":"a 2.ts"}},` +

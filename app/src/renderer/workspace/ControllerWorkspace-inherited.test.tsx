@@ -14,8 +14,8 @@ import {
 import { editorAPIFixture } from "../testing/editor-api-fixture";
 import { ControllerWorkspace } from "./ControllerWorkspace";
 
-// The mapping page of a hand-written profile file that extends another (PRO-19,
-// ADR-0013): the chips of what it takes from the parent look like its own, with
+// The mapping page of a hand-written profile file that extends another
+// (ADR-0013): the chips of what it takes from the parent look like its own, with
 // no mark.
 
 vi.mock("../drawer/KeyDrawer", () => ({ KeyDrawer: () => null }));

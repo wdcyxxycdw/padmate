@@ -8,7 +8,7 @@ import (
 )
 
 // RefreshCalibration has every slot ask Config.Calibration again for the
-// calibration of its controller and apply it (IN-14): padmated calls it after
+// calibration of its controller and apply it: padmated calls it after
 // a committed config.json changed. Each slot does it behind the edges
 // delivered so far (slot.Slot.RefreshCalibration), so a stick held across the
 // change gives up what the new values no longer recognize, through the normal

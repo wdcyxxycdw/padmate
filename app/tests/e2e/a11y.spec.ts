@@ -17,7 +17,7 @@ import {
 import { editorFixture } from "./editor-fixture";
 import { cleanup, fixture, launch, rpc, setWindowSize } from "./helpers";
 
-// UI-24: the accessibility of the real window, in the part that needs layout:
+// The accessibility of the real window, in the part that needs layout:
 // axe-core with contrast and target size on, Windows high contrast (forced
 // colors), the keyboard, the Esc hold that ends a shortcut capture, and
 // zoom. The part that does not need layout runs in jsdom with `task ci`

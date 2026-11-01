@@ -155,7 +155,7 @@ func TestTriggerThresholds(t *testing.T) {
 	}
 }
 
-// Turbo (MAP-23): the period must come out as the interval.
+// Turbo: the period must come out as the interval.
 func TestTurbo(t *testing.T) {
 	for _, tc := range []struct {
 		interval   int

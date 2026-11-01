@@ -13,7 +13,7 @@ import (
 )
 
 // ConfigRepair is a config.json with errors that ReadRepairedConfig
-// repaired (PRO-29).
+// repaired.
 type ConfigRepair struct {
 	// ConfigRepair says what the repair reset: the members, or the whole
 	// file for one that could not be parsed.
@@ -40,7 +40,7 @@ var configClock = time.Now
 const repairAttempts = 3
 
 // ReadRepairedConfig is ReadConfig for padmated, which never stops at a
-// config.json with errors (PRO-29): it returns the settings of the repair
+// config.json with errors: it returns the settings of the repair
 // (profile.RepairConfig), and with write, first copies the file to a new
 // backup in the data folder, config.broken-YYYYMMDD-HHMMSS.json in local
 // time (config.broken-…-2.json and so on when the name is taken: no

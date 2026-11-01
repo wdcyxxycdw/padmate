@@ -6,14 +6,14 @@ import (
 )
 
 // stickCal is the deadzone and saturation one stick recognizes with when the
-// controller's calibration changes the profile's (IN-14).
+// controller's calibration changes the profile's.
 type stickCal struct {
 	on                   bool
 	deadzone, saturation float64
 }
 
 // SetCalibration sets the stick calibration of the controller this engine
-// belongs to (IN-14, ARCHITECTURE §7.5): the deadzone and saturation cal sets
+// belongs to (ARCHITECTURE §7.5): the deadzone and saturation cal sets
 // replace the program's for that stick, one it leaves out keeps the program's,
 // and nil, or a calibration that sets nothing, goes back to the program's. The
 // Program stays shared and unchanged; the calibration is the engine's, like

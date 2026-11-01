@@ -10,7 +10,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is what T-input reads about a gamepad's power (IN-12, ADR-0015):
+// This file is what T-input reads about a gamepad's power (ADR-0015):
 // the battery state and charge, as the states of the script API. A value is
 // not part of DeviceInfo, which is a static snapshot (and the info of
 // traces): it changes while the gamepad is connected, and travels as
@@ -168,7 +168,7 @@ func batteryFromXInput(driver string) bool { return driver == "xinput" || driver
 // readPower reads the power of the gamepad d, when power events are on, and
 // sends it as of time t when it is not the one sent last. It does nothing
 // for a device without a gamepad, which has no power to read, or a dormant
-// one, which is reported removed (IN-30).
+// one, which is reported removed.
 func (s *Source) readPower(d *device, t uint64) {
 	if !s.power || d.powerFn == nil || d.dormant {
 		return

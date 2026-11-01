@@ -2,11 +2,11 @@
 // key each scan code gives, which characters it types, and which key types
 // each printable ASCII character.
 //
-// "padmate-probe dump-layout" (ENG-06) writes one Fixture per layout into
+// "padmate-probe dump-layout" writes one Fixture per layout into
 // daemon/testdata/layouts. Dump, WithLoaded and the table readers
 // VKToScan and Chars, which read a layout through the Win32 keyboard
-// functions, are Windows-only; the layout resolver (output.Resolver,
-// OUT-04) reads the foreground layout with the same two readers. Fixture,
+// functions, are Windows-only; the layout resolver (output.Resolver)
+// reads the foreground layout with the same two readers. Fixture,
 // Load and Marshal build on every OS, so that tests of the key table and
 // of the resolver run on Linux against the recorded layouts.
 package kblayout

@@ -44,7 +44,7 @@ type Firing struct {
 	at      int64
 }
 
-// Watchdog is the SPK-03 stand-in for the script watchdog, not
+// Watchdog is the goja spike's stand-in for the script watchdog, not
 // the M5 one. A goroutine polls the thread CPU time of the call running
 // on the slot thread and interrupts the runtime when it is over budget.
 // Begin and End bracket every call; the mutex makes sure an Interrupt

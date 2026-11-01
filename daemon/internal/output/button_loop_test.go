@@ -185,7 +185,7 @@ func TestRemoteReleaseOwnerButtons(t *testing.T) {
 	})
 }
 
-// The held-key log of OUT-14 keeps the buttons in the VK slots of its third
+// The held-key log keeps the buttons in the VK slots of its third
 // bitmap, VK_LBUTTON 0x01, VK_RBUTTON 0x02, VK_MBUTTON 0x04, VK_XBUTTON1 0x05
 // and VK_XBUTTON2 0x06, with the format and version unchanged. The wheel keys
 // are not in it.

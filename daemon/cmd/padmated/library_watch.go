@@ -62,7 +62,7 @@ func (r *liveRun) watchLibrary() {
 				defer close(done)
 				r.runProfileWatch(child, w, func(c watch.Change) { r.reloadProfileFor(child, target, c) })
 			})
-			// The parents of the profile (PRO-19, ADR-0012) are watched too:
+			// The parents of the profile (ADR-0012) are watched too:
 			// when one of them is saved, the profile reloads with the new
 			// merge. They stop with the profile's watcher.
 			for _, parent := range target.parents {

@@ -32,7 +32,7 @@ function setup(
   return { showConfigBackup, onConfirm, ...view };
 }
 
-describe("the repaired settings file dialog (PRO-29)", () => {
+describe("the repaired settings file dialog", () => {
   it("shows nothing without a repair", () => {
     setup({ repair: null });
     expect(screen.queryByRole("dialog")).toBeNull();

@@ -19,7 +19,7 @@ import (
 const usageHead = `usage: spk01 [--preset NAME] [--hint NAME=VALUE]... [--duration D]
              [--log FILE] [--virtual-rate HZ]
 
-The SPK-01 spike: padmated's input side in its real shape. The main
+The tray spike: padmated's input side in its real shape. The main
 thread runs the tray (an icon with a Quit item), T-input reads SDL on its
 own thread, and the process has no window that can take the focus. spk01
 waits 500ms for the connected devices, records every event for
@@ -207,7 +207,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 // recording window.
 func setUpTray(st *stopper) {
 	systray.SetIcon(trayIcon)
-	systray.SetTooltip("padmate SPK-01 spike")
+	systray.SetTooltip("padmate tray spike")
 	quit := systray.AddMenuItem("Quit", "Stop recording and exit")
 	go func() {
 		<-quit.ClickedCh

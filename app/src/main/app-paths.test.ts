@@ -69,7 +69,7 @@ function source(
   return { value, installed, registered, launched, isFile, order };
 }
 
-describe("an exe name from the renderer (UI-42)", () => {
+describe("an exe name from the renderer", () => {
   it.each([
     "krita.exe",
     "Clip Studio Paint.exe",
@@ -108,7 +108,7 @@ describe("an exe name from the renderer (UI-42)", () => {
   });
 });
 
-describe("finding an executable by its name (UI-42)", () => {
+describe("finding an executable by its name", () => {
   it("takes the program of the Start Menu with that file name, in any case", async () => {
     const s = source({ installed: [krita], files: [krita.path] });
     const resolve = appPathResolver(s.value);

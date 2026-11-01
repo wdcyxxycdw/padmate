@@ -59,7 +59,7 @@ func TestKeyOf(t *testing.T) {
 }
 
 // TestKeyOfJoyCon checks the keys of Joy-Cons shaped like SDL's HIDAPI
-// ones (IN-07): a lone Joy-Con by its serial, the MAC address, and the
+// ones: a lone Joy-Con by its serial, the MAC address, and the
 // pair by its two serials, never by its fixed path.
 func TestKeyOfJoyCon(t *testing.T) {
 	const (

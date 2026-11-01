@@ -20,7 +20,7 @@ import (
 )
 
 // HistoryDir is the hidden folder in profiles/<id>/ that keeps earlier
-// versions of profile.json (PRO-17). ValidID never accepts the name, Copy
+// versions of profile.json. ValidID never accepts the name, Copy
 // skips it, Remove deletes it with the folder, and the script compiler
 // refuses an entry or import in it.
 const HistoryDir = profile.HistoryDir

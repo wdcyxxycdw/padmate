@@ -53,7 +53,7 @@ describe("normaliseChord", () => {
     ["XBUTTON2", "MouseX2"],
     ["lctrl+LButton", "Ctrl+MouseLeft"],
     ["shift+ctrl+xbutton2", "Ctrl+Shift+MouseX2"],
-    // The volume and media keys (OUT-20) fold in case, and the W3C names
+    // The volume and media keys fold in case, and the W3C names
     // fold into the names of the daemon.
     ["volumeup", "VolumeUp"],
     ["VOLUMEMUTE", "VolumeMute"],
@@ -107,7 +107,7 @@ describe("normaliseChord", () => {
   });
 });
 
-describe("the volume and media keys (OUT-20)", () => {
+describe("the volume and media keys", () => {
   it("list the names of the daemon", () => {
     expect(mediaKeys).toEqual([
       "VolumeUp",
@@ -140,7 +140,7 @@ describe("the volume and media keys (OUT-20)", () => {
   });
 });
 
-describe("the names of the volume and media keys (OUT-20)", () => {
+describe("the names of the volume and media keys", () => {
   it.each<[MediaKey, string, string]>([
     ["VolumeUp", "音量加", "Volume up"],
     ["VolumeDown", "音量减", "Volume down"],

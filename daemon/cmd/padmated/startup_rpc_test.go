@@ -150,8 +150,8 @@ func TestStartupRPCDryRunMode(t *testing.T) {
 
 // TestDevelopmentBuildWritesNoStartupEntry: a development or test build
 // (an instance name or IPC pipe of its own) never creates or writes the
-// user's startup entry, whatever the tray or a client asks (UI-19,
-// ADR-0017, ADR-0001).
+// user's startup entry, whatever the tray or a client asks
+// (ADR-0017, ADR-0001).
 func TestDevelopmentBuildWritesNoStartupEntry(t *testing.T) {
 	for _, tc := range []struct {
 		instance, pipe string

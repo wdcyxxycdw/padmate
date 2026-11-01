@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
 )
 
-// A runtime's hud panels go with it (SCR-22): the runtime a swap installs
+// A runtime's hud panels go with it: the runtime a swap installs
 // starts with none, the one it replaces shows none, an interruption leaves
 // no current runtime and the restarted one starts empty, and so does every
 // runtime after a permanent stop.

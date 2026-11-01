@@ -27,16 +27,16 @@ interface ManagerOptions {
 /**
  * The UI's connection to the daemon. connect tries the running daemon
  * first and starts one when there is none. A start that does not lead to
- * a connection ends "failed" (UI-45): the daemon exited, with its report
+ * a connection ends "failed": the daemon exited, with its report
  * or without, could not be run, or never answered. A connection that ends
- * later is "disconnected", unless the daemon said it is exiting (DMN-22).
+ * later is "disconnected", unless the daemon said it is exiting.
  */
 export class DaemonManager {
   state: ConnectionState = { phase: "connecting" };
   private connection?: DaemonConnection;
   private inFlight?: Promise<void>;
   private closed = false;
-  // The daemon is stopping for good (DMN-22): calls still go through
+  // The daemon is stopping for good: calls still go through
   // until the connection ends, so the UI can save its last edits.
   private leaving = false;
   private launched = false;
@@ -71,8 +71,8 @@ export class DaemonManager {
   }
 
   /**
-   * The daemon is stopping for good (DMN-22, the tray's 退出 or the
-   * installer's exit, PKG-04): the end of its connection is no loss to
+   * The daemon is stopping for good (the tray's 退出 or the
+   * installer's exit): the end of its connection is no loss to
    * show, and nothing connects again. Calls still go through while the
    * connection lasts, for the last saves and the answer ui.exitReady.
    */

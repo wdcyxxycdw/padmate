@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// The limits of the controller effects of a script (SCR-23, API 0.17).
+// The limits of the controller effects of a script (API 0.17).
 const (
 	// effectsPerSecond is how many effect calls a runtime may make in a second
 	// of the slot clock. A call that stops something is not counted.
@@ -25,7 +25,7 @@ const (
 	rumbleMaxMs = haptic.MaxStepMs
 )
 
-// Effects is where the rumble and LED calls of a script go (SCR-23): the
+// Effects is where the rumble and LED calls of a script go: the
 // effect queue of padmated. The host calls it on the slot goroutine within
 // the script's budget, so no method may block; the gamepad is named by the
 // connection id its slot has (PadState.Info.ID).

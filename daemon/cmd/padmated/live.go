@@ -41,7 +41,7 @@ import (
 const liveMaxMs = uint64(24 * time.Hour / time.Millisecond)
 
 // emergencyEvent is the named event that padmatectl release-all signals
-// (DMN-20, ADR-0006). The tests' TestMain sets a name of their own, so that
+// (ADR-0006). The tests' TestMain sets a name of their own, so that
 // no test takes a release-all meant for a padmated that runs.
 var emergencyEvent = emergency.Name
 
@@ -59,10 +59,10 @@ const watchStopWait = time.Second
 var instanceName string
 var acquireInstance = instance.Acquire
 
-// live runs live mode (DMN-02) until ctx is done, the session ends or the
+// live runs live mode until ctx is done, the session ends or the
 // SDL input or the output stops, and returns the exit code. When it does
-// not start it returns exitStartup, after writing why to --startup-report
-// (UI-45), also when starting panics: startLive has released what it
+// not start it returns exitStartup, after writing why to --startup-report,
+// also when starting panics: startLive has released what it
 // started, and the GUI build has no stderr for the panic.
 func live(ctx context.Context, opts options, stdout, stderr io.Writer) (code int) {
 	started := false
@@ -166,8 +166,8 @@ type liveConfig struct {
 	// let the session end, and the process with it. It may set the exit
 	// code to 1. nil leaves the log open.
 	closeLog func(code *int)
-	// heldFile is the path of the held-key log of --inject (OUT-14,
-	// ADR-0006), which T-output sweeps at the start; empty keeps none. live
+	// heldFile is the path of the held-key log of --inject
+	// (ADR-0006), which T-output sweeps at the start; empty keeps none. live
 	// sets it to %LOCALAPPDATA%\padmate\run\held.bin. The dry run never
 	// uses it. Most tests leave it empty, so that they never touch the
 	// user's log; TestLatencyLive and the held-key tests put it in a
@@ -183,7 +183,7 @@ type liveConfig struct {
 	// means output.SystemHeldIdentity. The held-key tests set one of their
 	// own.
 	heldIdentity func() (output.HeldIdentity, error)
-	// emergencyName is the named event of padmatectl release-all (DMN-20);
+	// emergencyName is the named event of padmatectl release-all;
 	// empty means emergencyEvent. testConfig gives each test a name of its
 	// own.
 	emergencyName string
@@ -193,8 +193,8 @@ type liveConfig struct {
 	// watchStop is how long the exit path waits for the watcher to stop;
 	// zero means watchStopWait.
 	watchStop time.Duration
-	// exitReadyWait is how long an exit waits for the UIs to save
-	// (DMN-22); zero means exitReadyWait.
+	// exitReadyWait is how long an exit waits for the UIs to save;
+	// zero means exitReadyWait.
 	exitReadyWait time.Duration
 	// open opens SDL; nil means input.Open. The tests set the library, or
 	// return a fake.
@@ -206,17 +206,17 @@ type liveConfig struct {
 	slots int
 	// onEvent, when set, receives every event a slot handles, before the
 	// printer does (supervisor.Config.OnEvent). Only tests set it: the
-	// latency benchmark stamps t_slot there (ENG-11). It runs on the slot's
+	// latency benchmark stamps t_slot there. It runs on the slot's
 	// goroutine and must not block or wake anything.
 	onEvent func(slot uint8, e input.Event)
 	// processes is a read-only diagnostic source; nil uses the OS snapshot.
 	processes func() ([]string, error)
-	// session starts the watcher of the session's events (DMN-09); nil
+	// session starts the watcher of the session's events; nil
 	// means winsession.Start. The tests pass a fake, or the real one with
 	// a Config of their own.
 	session func(winsession.Config) (sessionWatcher, error)
 	// startup returns the login startup entry of the tray and the startup
-	// RPCs (UI-19); nil means systemStartup, which gives a development or
+	// RPCs; nil means systemStartup, which gives a development or
 	// test build none. Only tests set it, with a fake entry.
 	startup func(options) (startupSetting, error)
 	// openWindow opens padmate's window for a double click on the tray
@@ -272,7 +272,7 @@ type eventSource interface {
 	// claims, when its runtime stops); the effect queue calls it.
 	Stop(input.Stop) error
 	// Identify gives the cues of a gamepad for the user to tell it from the
-	// others (IN-13), and says which it can give. It does not go through the
+	// others, and says which it can give. It does not go through the
 	// effect queue: its caller wants the answer.
 	Identify(input.DeviceID) (haptic.Cues, error)
 }
@@ -329,14 +329,14 @@ type liveRun struct {
 	loop      *output.Loop
 	sup       *supervisor.Supervisor
 	scriptDef *scriptDefinition
-	// macroChecks keeps what macros.list found of each macro (SCR-50).
+	// macroChecks keeps what macros.list found of each macro.
 	macroChecks macroChecks
 	effects     *effectQueue
-	// battery is the low-battery tracker (IN-12), fed by the supervisor's
+	// battery is the low-battery tracker, fed by the supervisor's
 	// OnPower.
 	battery *batteryTracker
 	// latencyStats are the latency statistics of T-output, per DeviceKey
-	// (DMN-15, ipc_latency.go).
+	// (ipc_latency.go).
 	latencyStats *latency.Recorder
 	// cancel stops Run; ran is closed once Run has returned, after runErr
 	// is set.
@@ -372,7 +372,7 @@ type liveRun struct {
 	// suspErrs counts the output errors while the system suspends the
 	// mapping, which are logged at debug level only.
 	suspErrs atomic.Int64
-	// emergencyStop cancels the DMN-20 named-event watcher before T-output
+	// emergencyStop cancels the emergency named-event watcher before T-output
 	// shuts down, so no late release races its final ReleaseAll;
 	// emergencyDone is closed once it has returned. Both are nil when the
 	// event could not be created.
@@ -386,20 +386,20 @@ type liveRun struct {
 	// selectionWake asks the foreground worker to re-evaluate the current
 	// foreground after a config change, which is not a foreground switch.
 	selectionWake chan struct{}
-	// recent lists the latest foreground programs for apps.recent (PRO-16).
+	// recent lists the latest foreground programs for apps.recent.
 	recent recentApps
 	// startup is the login startup entry, shared by the tray and the
-	// startup RPCs (UI-19, ADR-0001).
+	// startup RPCs (ADR-0001).
 	startup *startupControl
-	// configNotice is the repair of config.json the UI has not shown yet
-	// (PRO-29), nil when there is none: status.get reports it until
+	// configNotice is the repair of config.json the UI has not shown yet,
+	// nil when there is none: status.get reports it until
 	// config.repairSeen.
 	configNotice atomic.Pointer[rpcConfigRepair]
-	// uiExit is the registered UIs a tray exit waits for (DMN-22).
+	// uiExit is the registered UIs a tray exit waits for.
 	uiExit uiExits
 	// raw keeps who asked for the raw joystick events and publishes them
-	// (ipc_mapping.go, IN-17); mappingOutcome is what the last application of
-	// the gamepad mappings found (IN-18).
+	// (ipc_mapping.go); mappingOutcome is what the last application of
+	// the gamepad mappings found.
 	raw            rawFeed
 	mappingOutcome atomic.Pointer[mappingOutcome]
 
@@ -448,24 +448,24 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	} else if open == nil {
 		open = func(o input.Options) (eventSource, error) { return input.Open(o) }
 	}
-	// T-input calls OnCombo when a gamepad has held its panic combo
-	// (DMN-07), before it sends the ComboHeld that pauses the mapping, or
+	// T-input calls OnCombo when a gamepad has held its panic combo,
+	// before it sends the ComboHeld that pauses the mapping, or
 	// resumes it: Block lets go of every key at once, without waiting for
 	// the router, and never blocks T-input. A combo held before T-output
 	// has started finds nothing held; the router's pause, or resume, sets
 	// the gate.
 	//
-	// T-input also watches the receivers (IN-30, ADR-0002): a Switch Pro
+	// T-input also watches the receivers (ADR-0002): a Switch Pro
 	// protocol gamepad behind a USB receiver whose heartbeat stops is
 	// reported removed, so its slot releases every key. It logs to log.
 	//
 	// ComboFor reads the effective config at each pick, so that a changed
-	// safety.panic applies at the next RepickCombos (UI-19); before r
+	// safety.panic applies at the next RepickCombos; before r
 	// exists it is the startup config.
 	//
 	// PowerEvents makes T-input send each gamepad's battery state as
 	// DevicePower events, which the supervisor keeps for devices.list and
-	// status.get (IN-12); the fake IPC input has none.
+	// status.get; the fake IPC input has none.
 	var loopRef atomic.Pointer[output.Loop]
 	var runRef atomic.Pointer[liveRun]
 	settings := func() *profile.Config {
@@ -568,7 +568,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	arbiterOpts.Resolve = resolver.Resolve
 	arbiterOpts.Preview = r.previewOutput
 	// T-output records the latency of every key it sends for an input edge
-	// (DMN-15, ipc_latency.go).
+	// (ipc_latency.go).
 	r.latencyStats = latency.NewRecorder()
 	arbiterOpts.Latency = r.latencyStats.Record
 	r.loop = output.StartLoop(clk, sender, output.LoopOptions{
@@ -601,7 +601,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	r.reportSweep(sweep)
 	r.effects = startEffectQueue(effectSender{feedback: src.SetFeedback, play: src.Play, light: src.SetLight, stop: src.Stop}, log)
 	// The rumble and LED calls of scripts, and the buzz of one that fails, go
-	// through it (SCR-23). Both are set before the first slot runs.
+	// through it. Both are set before the first slot runs.
 	r.scriptDef.environment.SetEffects(scriptEffects{run: r})
 	r.scriptDef.errorCue = r.scriptErrorCue
 	r.battery = newBatteryTracker()
@@ -619,10 +619,10 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	if opts.settings != nil {
 		scfg.IgnoreDevice = func(key input.DeviceKey) bool { return opts.settings.Devices[key.String()].Ignored }
 	}
-	// The stick calibration of each controller (IN-14) applies at once: a
+	// The stick calibration of each controller applies at once: a
 	// slot asks for it through the effective config.
 	scfg.Calibration = r.deviceCalibration
-	// The feedback switches (UI-27, ADR-0015) are global and apply at once, as
+	// The feedback switches (ADR-0015) are global and apply at once, as
 	// the stick calibration does: the engines read the effective config.
 	scfg.Switches = r.feedbackSwitches
 	pr := r.pr
@@ -672,14 +672,14 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 			Paused: f.Paused,
 		}
 		// The player lights show the mode of the layer while the profile's
-		// lights are on (HUD-08); with them off the mode is 0, which gives the
+		// lights are on; with them off the mode is 0, which gives the
 		// index back.
 		if f.LED {
 			fb.PlayerMode = f.Mode
 		}
 		r.effects.post(fb)
 	}
-	// The haptics of the bindings and the knob ticks (MAP-25, HUD-10) are
+	// The haptics of the bindings and the knob ticks are
 	// one-shot effects of the Event class: they wait in the queue's bounded
 	// line, and the Mixer decides what they may interrupt. Posting never
 	// blocks the slot.
@@ -695,7 +695,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 			Strength: h.Strength, ShortMs: h.ShortMs, GapMs: h.GapMs,
 		})
 	}
-	// The power of each controller (IN-12) goes to the low-battery tracker, on
+	// The power of each controller goes to the low-battery tracker, on
 	// the router's goroutine; it alerts through the effect queue, the tray's
 	// notices and, with the state event's batteries, the overlay.
 	scfg.OnPower = r.onPower
@@ -746,7 +746,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 }
 
 // reportSweep tells stderr and the log what the startup sweep of the
-// held-key log did (OUT-14), which T-output ran before its first command.
+// held-key log did, which T-output ran before its first command.
 // It never stops padmated: the keys the sweep could not release stay in
 // the log, for the pause, release-all, Stop and the next start; a corrupt
 // log, or one of another boot or logon session, has been reset, and what
@@ -791,7 +791,7 @@ func keyNames(evs []output.KeyEvent) []string {
 	return names
 }
 
-// startEmergency listens for padmatectl release-all (DMN-20, ADR-0006):
+// startEmergency listens for padmatectl release-all (ADR-0006):
 // it creates the named event on startLive's goroutine, so that a
 // release-all right after startLive returns reaches it, and waits on it on
 // a goroutine of its own. Each signal releases every key through
@@ -841,7 +841,7 @@ func (r *liveRun) stopEmergency() {
 	r.emergencyStop = nil
 }
 
-// startSession starts the watcher of the session's events (DMN-09). Its
+// startSession starts the watcher of the session's events. Its
 // changes suspend the mapping: Supervisor.Suspend lets go of every key at
 // once and never waits. The end of the session and WM_CLOSE stop
 // padmated as a stop signal does. Its Barrier, which the system's sleep
@@ -943,7 +943,7 @@ func (r *liveRun) reloadProfileFor(ctx context.Context, expected *liveProfile, c
 }
 
 // reloadDependentLocked reloads the running profile when a parent of its
-// chain (PRO-19) was saved: the profile's own file is read again and merged
+// chain was saved: the profile's own file is read again and merged
 // with the parents as they are now. It changes nothing if the chain, with
 // the sums of its files, is what runs. When the file cannot be read, a
 // program may hold it open for a moment, the text that the running profile
@@ -1027,7 +1027,7 @@ func (r *liveRun) reloadProfileLocked(ctx context.Context, expected *liveProfile
 		return ctx.Err()
 	}
 	if c.Sum == r.sum && slices.Equal(p.Parents, target.parents) {
-		// The profile's own text is what runs, and so are its parents (PRO-19):
+		// The profile's own text is what runs, and so are its parents:
 		// a touch of a parent's file, or a save that reverts one.
 		r.log.Debug("profile unchanged", "file", path)
 		return nil

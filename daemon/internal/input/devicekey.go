@@ -16,7 +16,7 @@ import (
 // port, and does not count. Identical gamepads connected at the same time,
 // with the same GUID and serial or path (or neither, like SDL virtual and
 // XInput gamepads), are told apart by N. The canonical text is also the
-// persisted identity in state.json (PRO-11).
+// persisted identity in state.json.
 type DeviceKey struct {
 	GUID   string // DeviceInfo.GUID
 	Serial string // DeviceInfo.Serial, when the device has one

@@ -436,7 +436,7 @@ function ConflictsSection({
 }
 
 /**
- * Diagnostics (UI-20, UI-21, UI-22, IN-24, ADR-0016), a view inside Settings
+ * Diagnostics (ADR-0016), a view inside Settings
  * like the logs: what happened to the latest presses and why a press did
  * nothing, how long padmate took to send the keys, and software that may
  * hold the controller.

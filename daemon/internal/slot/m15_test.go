@@ -14,8 +14,8 @@ import (
 )
 
 // TestRingKnobAndSecondStageCapabilities checks which pads have the controls
-// of the rings, the knob and the second trigger stage (ANA-10, ANA-11,
-// ANA-14): the rings and the ticks of a stick need both its axes, the second
+// of the rings, the knob and the second trigger stage:
+// the rings and the ticks of a stick need both its axes, the second
 // stage the trigger axis.
 func TestRingKnobAndSecondStageCapabilities(t *testing.T) {
 	// Axis masks are by axis number - 1: leftx, lefty, rightx, righty,

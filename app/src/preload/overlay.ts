@@ -11,7 +11,7 @@ import {
   toastFrom,
 } from "../shared/overlay";
 
-// The overlay's preload (HUD-04, HUD-05, HUD-03, SCR-22, ADR-0014). The
+// The overlay's preload (ADR-0014). The
 // overlay is a sandboxed, context-isolated page with no Node; this exposes
 // four things to it: a listener for the toasts Main sends, one for its
 // settings (the opacity), one for the key hints and one for a script's

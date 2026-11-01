@@ -1,6 +1,6 @@
 // Which chip of the controller picture a profile binding key belongs to. Its
 // own module, with nothing heavy to import: the overlay's page names controls
-// too (HUD-03, control-names.ts) and must not load the controller workspace.
+// too (control-names.ts) and must not load the controller workspace.
 import { canonicalControl } from "../editor/editor-model";
 
 /**

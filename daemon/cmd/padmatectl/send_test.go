@@ -20,7 +20,7 @@ import (
 // TestMain disables the real sender: no unit test of this package may
 // inject keys. Tests that exercise the sending path install a fakeSender;
 // the injection test builds and runs the binary instead. release-all
-// signals an event of the tests' own, never a running padmated's (DMN-20).
+// signals an event of the tests' own, never a running padmated's.
 func TestMain(m *testing.M) {
 	newSender = func() (output.Sender, error) {
 		return nil, errors.New("test: the real sender is disabled in unit tests")

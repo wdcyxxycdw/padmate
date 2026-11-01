@@ -11,7 +11,7 @@ import (
 // checkGoExecutable runs the hygiene check of internal/pecheck on a daemon or
 // CLI executable ("padmated", "padmatectl"): layout, sections, entropy, the
 // import table and the Windows functions it binds, against the committed
-// goldens (PKG-11). It reads the file as it was installed, signature included.
+// goldens. It reads the file as it was installed, signature included.
 // An executable of an earlier build (earlierBuild) is not compared with the
 // goldens, which are the lists of this source: what an earlier release binds
 // is its own. Its layout, its version resource and the denylist are checked.

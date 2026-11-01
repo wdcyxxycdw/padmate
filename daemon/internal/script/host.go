@@ -118,8 +118,8 @@ type HostOptions struct {
 	Environment *Environment
 	// SwitchProfile must only enqueue a request; it must not wait for slots.
 	SwitchProfile func(string) error
-	// DisabledMacros remembers the macros stopped after an interruption
-	// (SCR-50); the runtimes of one slot share it, so a rebuilt runtime
+	// DisabledMacros remembers the macros stopped after an interruption;
+	// the runtimes of one slot share it, so a rebuilt runtime
 	// does not load them again until their file changes. A Lifecycle
 	// creates one when it is nil.
 	DisabledMacros *DisabledMacros
@@ -138,7 +138,7 @@ type PadState struct {
 	Analog         profile.Analog
 	AnalogResolved bool
 	// Power is the battery state the gamepad last reported, HasPower false until
-	// it reported one (pad.info.battery, IN-12).
+	// it reported one (pad.info.battery).
 	Power    input.Power
 	HasPower bool
 }
@@ -151,7 +151,7 @@ type OutputEvent struct {
 	Time  clock.Time
 	Owner output.Owner
 	Chord keys.Chord
-	// Text is the character of a key.type or a text step that was typed (SCR-26);
+	// Text is the character of a key.type or a text step that was typed;
 	// Spec and Chord are empty then.
 	Text string
 }
@@ -198,10 +198,10 @@ type Host struct {
 	// watchdogCalls counts the calls made under a watchdog; tests use it.
 	watchdogCalls int
 	// panels are the runtime's hud panels in the order first set; toasts counts
-	// the toasts of the current second (SCR-22).
+	// the toasts of the current second.
 	panels []HUDPanel
 	toasts rateWindow
-	// The effects of the script on its gamepad (SCR-23): effectRate counts the
+	// The effects of the script on its gamepad: effectRate counts the
 	// calls of the current second, effectDev is the gamepad they went to, rumbling
 	// and lit say that a rumble or the LED may be on it, and rumbleBody and
 	// rumbleTrig are the two channels of the rumble that run. cancelEffects ends

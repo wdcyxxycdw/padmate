@@ -6,7 +6,7 @@ import type { Language } from "../state/store";
 export type Parsed<T> = { value: T } | { error: string };
 
 /**
- * A text field that commits on Enter or when it loses focus (UI-43), so
+ * A text field that commits on Enter or when it loses focus, so
  * one finished entry is one save and one undo step. Text that does not
  * parse is not committed: the field keeps it and shows the error. Escape
  * puts the committed value back.

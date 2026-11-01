@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/sdlmapping"
 )
 
-// Custom gamepad mappings (IN-18, ADR-0012). A mapping is an SDL mapping
+// Custom gamepad mappings (ADR-0012). A mapping is an SDL mapping
 // string, "GUID,name,a:b0,…": it makes SDL read a joystick that it does not
 // know as a gamepad, or reads a known one differently.
 //
@@ -74,7 +74,7 @@ func (m mappingSet) guids() []string {
 // dbText returns the mappings as the lines of an SDL mapping database file.
 func (m mappingSet) dbText() string {
 	var b strings.Builder
-	b.WriteString("# padmate custom gamepad mappings (IN-18); rewritten by padmated\n")
+	b.WriteString("# padmate custom gamepad mappings; rewritten by padmated\n")
 	for _, g := range m.guids() {
 		b.WriteString(m[g].DBLine())
 		b.WriteByte('\n')

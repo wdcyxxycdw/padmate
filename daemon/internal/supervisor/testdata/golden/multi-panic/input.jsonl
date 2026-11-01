@@ -1,4 +1,4 @@
-# Two slots (DMN-07): the combo of any gamepad pauses every slot. Pad A
+# Two slots: the combo of any gamepad pauses every slot. Pad A
 # has slot 0 and holds south (Space); Pad B has slot 1 and holds back+start,
 # the function keys, which send nothing. B's combo fires at 2300 and pauses, which
 # lets go of A's Space. While paused, A's tap of south maps nothing. B's

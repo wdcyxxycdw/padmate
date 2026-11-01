@@ -16,7 +16,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// Profile inheritance (PRO-19, ADR-0012). A profile of the library may name
+// Profile inheritance (ADR-0012). A profile of the library may name
 // another, its parent, in a top-level "extends": what the profile does not
 // write is taken from the parent, which may have a parent of its own.
 //

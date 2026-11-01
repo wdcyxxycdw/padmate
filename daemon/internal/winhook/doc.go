@@ -15,10 +15,10 @@
 // decides on the hook thread which events are of interest at all; the rest
 // pass straight to the next hook, with nothing copied and nothing swallowed.
 //
-// padmate uses it in padmate-probe (ENG-06) to record what SendInput really
+// padmate uses it in padmate-probe to record what SendInput really
 // injected, and in tests that must swallow their own injected keys and mouse
 // events so they never reach the foreground application or the window under
-// the cursor. Shortcut capture (OUT-15, M11) will reuse it. The Event and
+// the cursor. Shortcut capture (M11) will reuse it. The Event and
 // MouseEvent types build on every OS so that code formatting events can be
 // tested on Linux; Start is Windows-only.
 package winhook

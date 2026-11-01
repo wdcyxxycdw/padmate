@@ -45,7 +45,7 @@ function invalid(
 const zh = (failure: StartFailure) => startFailureText(failure, "zh-CN");
 const en = (failure: StartFailure) => startFailureText(failure, "en");
 
-describe("start failure text (UI-45)", () => {
+describe("start failure text", () => {
   it("says the owner's broken config.json as the owner asked", () => {
     const failure = invalid("config", [
       {

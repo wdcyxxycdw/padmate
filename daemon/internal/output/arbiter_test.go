@@ -263,7 +263,7 @@ func TestArbiterDownUp(t *testing.T) {
 	s.expectStats(output.ArbiterStats{})
 }
 
-// TestArbiterChordOrder checks OUT-05: modifiers go down first in
+// TestArbiterChordOrder checks the chord order: modifiers go down first in
 // canonical order and come up last, each direction in one batch.
 func TestArbiterChordOrder(t *testing.T) {
 	tests := []struct {
@@ -1029,7 +1029,7 @@ func TestArbiterPendingPressed(t *testing.T) {
 
 // TestArbiterTapOnPendingMain: a tap whose main key's release failed twice
 // (a ReleaseAll left Z and LCtrl pending) waits for a release that is
-// injected (OUT-10), in a queue with one tap per main key. The resend that
+// injected, in a queue with one tap per main key. The resend that
 // comes first in the tap's command decides: if it injects the release, the
 // key is free and the tap starts at once. FuzzArbiter's model once treated
 // pending keys as free (corpus 58c4f94561fbda16).

@@ -10,7 +10,7 @@ const on = {
   mode: "inject",
 } as const;
 
-describe("start at sign-in in a packaged application under test (PKG-03)", () => {
+describe("start at sign-in in a packaged application under test", () => {
   it("never asks the daemon to set the entry, and still reads it", async () => {
     const call = vi.fn<DaemonCall>(async () => on);
     const handlers = startupHandlers(call, true);

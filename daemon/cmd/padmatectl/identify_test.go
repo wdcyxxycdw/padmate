@@ -52,7 +52,7 @@ func newIdentifyRig(t *testing.T, list string) *identifyRig {
 
 const onePad = `[{"info":{"id":3,"name":"Pad"},"key":"0300/p:fake3","slot":0,"status":"mapped","disabled":false}]`
 
-// TestIdentifyWithoutDevice (IN-13): with one controller connected the flag
+// TestIdentifyWithoutDevice: with one controller connected the flag
 // is optional, since the daemon needs one: padmatectl asks devices.list and
 // identifies the only controller, whatever its status, by its connection ID.
 // With none or several it does not pick one, and asks nothing of any.

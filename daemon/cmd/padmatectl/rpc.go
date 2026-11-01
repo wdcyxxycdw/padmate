@@ -132,7 +132,7 @@ one from --name is refused (-32021). Several AntiMicroX sets become layers;
 the profile only ever holds what padmate can run, and is checked like any
 other. --json prints {id,name,report:[...],revision,applied} instead of the
 text. A file that is refused (-32024) writes nothing.
-devices mapping set gives SDL a gamepad mapping for a controller (IN-18): a joystick
+devices mapping set gives SDL a gamepad mapping for a controller: a joystick
 that SDL does not know becomes a gamepad at once, and one it knows is read
 differently. MAPPING is an SDL mapping string, "GUID,name,a:b0,b:b1,...", whose
 GUID is the controller's (devices lists it); @FILE reads it from a file of at

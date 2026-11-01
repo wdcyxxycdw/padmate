@@ -21,7 +21,7 @@ func (r *scriptRuntime) SetProfileKey(key string) error {
 	// must never continue running the old application's handlers or timers.
 	err := r.stopCurrent()
 	r.profileKey = key
-	// The library's macros are the same files in every profile (SCR-51):
+	// The library's macros are the same files in every profile:
 	// one disabled after an interruption stays so until its file changes.
 	r.macroErrors = nil
 	return err

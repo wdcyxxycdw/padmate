@@ -23,7 +23,7 @@ type ArbiterOptions struct {
 	Preview func(keys.Chord, bool)
 	// Resolve turns a chord into its stroke; only Stroke.Down is used. nil
 	// means ChordStroke (US layout); a Resolver's Resolve follows the
-	// foreground layout (NewResolver, OUT-04).
+	// foreground layout (NewResolver).
 	Resolve func(keys.Chord) (Stroke, error)
 	// RetryInterval is how long to wait before resending releases that
 	// failed twice. 0 means DefaultRetryInterval.
@@ -33,12 +33,12 @@ type ArbiterOptions struct {
 	MinPress time.Duration
 	MinGap   time.Duration
 	// EventGap is the minimum time between two key events the Arbiter
-	// injects (OUT-17, config.json output.eventGapMs). 0 sends each
+	// injects (config.json output.eventGapMs). 0 sends each
 	// command's events in one Send call; above 0 every event goes out in
 	// its own Send, at least EventGap after the previous one (SetEventGap).
 	EventGap time.Duration
 	// Latency receives the latency statistics of the input edges that the slots
-	// mark (InputMark, DMN-15): the key of the mark and the time from its stamp to
+	// mark (InputMark): the key of the mark and the time from its stamp to
 	// the return of the first real Send of the command that carries it. It runs
 	// on T-output inside sendOnce, so it must not block, allocate or call the
 	// Arbiter or the Loop (latency.Recorder.Record is one). It is not called
@@ -48,7 +48,7 @@ type ArbiterOptions struct {
 	Latency func(key string, d time.Duration)
 }
 
-// Arbiter owns the keyboard state of the daemon (OUT-06). Owners hold
+// Arbiter owns the keyboard state of the daemon. Owners hold
 // chords with Down and Up, tap them, and are released together with
 // ReleaseOwners; the Arbiter reference-counts every physical key, so a key
 // goes down with its first reference and up with its last, and sends only
@@ -85,7 +85,7 @@ type ArbiterOptions struct {
 // (CLAUDE.md invariant 1). A command rejected for its arguments (an
 // invalid owner or chord, or a chord that does not resolve) sends nothing.
 //
-// SetBlocked closes a gate on presses (DMN-06): while it is closed, a
+// SetBlocked closes a gate on presses: while it is closed, a
 // Down, DownFor, Tap, TapSequence, Sequence, RepeatTap, Repeat or TypeText with a valid owner and chord presses nothing and
 // holds nothing, without resolving the chord; it only resends the pending
 // releases and counts in ArbiterStats.Blocked. Up, ReleaseOwners,
@@ -97,15 +97,15 @@ type ArbiterOptions struct {
 //
 // Sequence runs a list of steps that tap a shortcut, wait or type a text, in one
 // queue that the owner's release, the gate and the end of the loop cancel as a
-// whole (MAP-22, ADR-0012). See arbiter_sequence.go.
+// whole (ADR-0012). See arbiter_sequence.go.
 //
 // TypeText types a text with KEYEVENTF_UNICODE events, a character per Send
-// (OUT-21, ADR-0012). Such an event is not held: it has no keyState and no bit
+// (ADR-0012). Such an event is not held: it has no keyState and no bit
 // in the held-key log, and its release is in the batch of its press. Only a
 // release that failed twice is kept, as a pending release (Arbiter.stuck, in
 // Held, PendingReleases and the retries). See arbiter_text.go.
 //
-// With an event gap (SetEventGap, OUT-17) the events of every command
+// With an event gap (SetEventGap) the events of every command
 // wait in one queue and go out one per Send, the gap apart; ReleaseOwners
 // and ReleaseAll still send at once (pace.go).
 //
@@ -156,7 +156,7 @@ type Arbiter struct {
 	pointerErrAt  clock.Time
 	pointerErrSet bool
 	preview       func(keys.Chord, bool)
-	// latency and mark are DMN-15: the sink of ArbiterOptions.Latency, and the input
+	// latency and mark are the latency statistics': the sink of ArbiterOptions.Latency, and the input
 	// mark of the command under way, which Loop.run sets for a command that carries
 	// one and sendOnce spends (endMark).
 	latency func(string, time.Duration)
@@ -430,7 +430,7 @@ func (a *Arbiter) startTap(o Owner, hold time.Duration, done func(TapCompletion)
 	r.done = done
 	// With an event gap the hold counts from the Send of each press, as
 	// MinPress does: once the tap ends, it is the minimum of the keys the
-	// tap presses (keepHold, OUT-17).
+	// tap presses (keepHold).
 	if a.paced() {
 		r.minPress = max(hold, 0)
 		a.commitDue()
@@ -525,7 +525,7 @@ func (a *Arbiter) flushTapCompletions() {
 // faster than the gap, or for a Down merged into an earlier press of its
 // main key, which does not hold its modifiers (mergeDown); Up drops o's
 // repeat still queued, unless the Down pressed only modifiers, its main key
-// down already, which would then go down and up alone (OUT-17). It also does
+// down already, which would then go down and up alone. It also does
 // nothing for a chord whose main key is a mouse button: a button that is down
 // is never pressed again, whatever the profile says (it rejects such a repeat,
 // so this is defense in depth).
@@ -818,7 +818,7 @@ func (a *Arbiter) newRef(o Owner) *ref {
 // take adds a reference to the key of e for o and reports whether the key
 // goes down with it: it was up, or only pending release. Then e becomes
 // the key's press and a pending release is dropped; with an event gap the
-// key may go up and down again instead (again, pressAgain, OUT-17). main
+// key may go up and down again instead (again, pressAgain). main
 // is the main key of a Down.
 func (a *Arbiter) take(o Owner, e KeyEvent, minPress time.Duration, main bool) bool {
 	id := e.ID()
@@ -1057,7 +1057,7 @@ func (a *Arbiter) sendBatchAll(batch []KeyEvent) error {
 		return errors.Join(err, rerr)
 	}
 	for _, e := range ups[m:] {
-		// The release of a press the key was pressed again behind (OUT-17)
+		// The release of a press the key was pressed again behind
 		// is not pending: the key's new press holds it. The key may be down
 		// until that press's release, which a forced release must send.
 		if ks := a.keys[e.ID()]; ks != nil && (ks.refs > 0 || ks.waitPress) {
@@ -1127,7 +1127,7 @@ func (a *Arbiter) sendOnce(batch []KeyEvent) (int, error) {
 			}
 		case ks.refs > 0 || ks.waitPress || slices.ContainsFunc(batch[i+1:], e.sameKey) ||
 			len(a.outbox) > 0 && a.queuedFor(e.ID()):
-			// The release of a key pressed again behind it (take, OUT-17):
+			// The release of a key pressed again behind it (take):
 			// the press after it starts the physical minimum anew. Its keyState
 			// stays while any later event of the key is to go out, also one
 			// this Send failed to inject or an extra press still queued: the

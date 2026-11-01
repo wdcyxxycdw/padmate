@@ -99,7 +99,7 @@ func (r *liveRun) rpcDescribeScript(ctx context.Context, req *jrpc2.Request) (an
 		return rpcScriptDescription{Metadata: script.EmptyMetadata()}, nil
 	}
 	if origin := prof.Script.Origin; origin != "" && r.cfg.opts.library != nil {
-		// An inherited script (PRO-19) is in the folder of the parent that has it.
+		// An inherited script is in the folder of the parent that has it.
 		root = filepath.Join(r.cfg.opts.library.Dir(), "profiles", origin)
 	}
 	cfg := *prof.Script

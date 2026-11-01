@@ -109,7 +109,7 @@ describe("UI and daemon lifecycle", () => {
     expect(connect).toHaveBeenCalledTimes(3);
   });
 
-  it("stops waiting when the started daemon exits with its report (UI-45)", async () => {
+  it("stops waiting when the started daemon exits with its report", async () => {
     const started = daemon();
     const connect = vi.fn(unavailable);
     const changes: ConnectionState[] = [];
@@ -375,7 +375,7 @@ describe("UI and daemon lifecycle", () => {
     });
   });
 
-  it("shows nothing when the daemon said it is exiting (DMN-22)", async () => {
+  it("shows nothing when the daemon said it is exiting", async () => {
     const bridge = connection();
     const changed = vi.fn();
     const connect = vi.fn(async () => bridge);
@@ -397,7 +397,7 @@ describe("UI and daemon lifecycle", () => {
     await expect(manager.call("status.get")).rejects.toThrow("disconnected");
   });
 
-  it("rejects a call without a connection with the error that says so (SCR-22)", async () => {
+  it("rejects a call without a connection with the error that says so", async () => {
     const manager = new DaemonManager({
       connect: unavailable,
       launch: running,
@@ -410,7 +410,7 @@ describe("UI and daemon lifecycle", () => {
     expect(isDisconnectedError(rejected)).toBe(true);
   });
 
-  it("still carries the last saves and the answer to the daemon while it exits (DMN-22)", async () => {
+  it("still carries the last saves and the answer to the daemon while it exits", async () => {
     const bridge = connection();
     const call = vi.fn(async () => ({ saved: true }));
     bridge.call = call as unknown as typeof bridge.call;

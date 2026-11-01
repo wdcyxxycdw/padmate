@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// latencyEast is the binding of the latency benchmarks (ENG-11): east
+// latencyEast is the binding of the latency benchmarks: east
 // holds F13, so that each edge is one Arbiter command and one Send.
 const latencyEast = `"east": {"press": {"type": "keys", "keys": "F13", "mode": "hold"}}`
 
@@ -31,7 +31,7 @@ func (c *countSender) Send(events []output.KeyEvent) (int, error) {
 }
 
 // BenchmarkLatencyHandle measures Slot.Handle of one east edge, down and up
-// in turn (ENG-11): the engine and the Arbiter on the caller's goroutine,
+// in turn: the engine and the Arbiter on the caller's goroutine,
 // which is slot→send without the Do hop to T-output (BenchmarkLatencyDo
 // measures the hop). It reports the p50, p99 and max of the per-op times.
 func BenchmarkLatencyHandle(b *testing.B) {

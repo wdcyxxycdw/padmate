@@ -37,7 +37,7 @@ type StageOptions struct {
 	Log               io.Writer
 }
 
-// Stage writes what the installer packs next to the Electron app (PKG-03):
+// Stage writes what the installer packs next to the Electron app:
 // the files of the portable preview, which portablezip checks (the tag's
 // version in both executables, the pinned SDL3.dll, the license of every
 // linked module), the licenses of the npm packages the window bundles

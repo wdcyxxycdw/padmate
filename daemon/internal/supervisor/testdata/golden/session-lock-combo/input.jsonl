@@ -1,4 +1,4 @@
-# The combo during a lock (DMN-07, DMN-09): the lock at 300 lets go of
+# The combo during a lock: the lock at 300 lets go of
 # Space, which east holds. Back and start go down during the lock, and the
 # combo fires at 2600: it pauses the mapping, which releases nothing more.
 # The unlock at 3000 leaves it paused, so a tap of south maps nothing; the

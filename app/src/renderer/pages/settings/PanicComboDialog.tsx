@@ -87,7 +87,7 @@ export function ComboKeys({
 }
 
 /**
- * Records a new emergency combo on the controller (UI-19). While it is
+ * Records a new emergency combo on the controller. While it is
  * open the mapping is paused for the capture, and input still comes: the
  * buttons held together, once all are released, are the new combo. It
  * edits the family of device's combo only.

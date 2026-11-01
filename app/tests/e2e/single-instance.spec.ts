@@ -22,7 +22,7 @@ const mainWindowMinimized = (app: ElectronApplication) =>
         ?.isMinimized() ?? null,
   );
 
-// PKG-10 (ADR-0018): one window of padmate per set of browser data. After an
+// ADR-0018: one window of padmate per set of browser data. After an
 // update the installer starts padmate again, and a click on the shortcut twice
 // would otherwise open two. Electron keys the lock by the userData folder, and
 // the tests give each run a folder of its own, so the runs of the other specs

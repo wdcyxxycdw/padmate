@@ -132,7 +132,7 @@ describe("the settings M15 adds", () => {
   });
 });
 
-describe("the depth rate (ANA-12, ANA-13, ANA-15)", () => {
+describe("the depth rate", () => {
   const repeat = (minRateHz?: number) => ({
     type: "keys" as const,
     keys: "Z",

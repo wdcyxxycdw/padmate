@@ -1,4 +1,4 @@
-# The pause outlives the gamepad (DMN-06, DMN-07). Pad A holds south
+# The pause outlives the gamepad. Pad A holds south
 # (Space) and back+start: the combo fires at 2300 and pauses, which lets
 # go of Space. A lets go of everything and is unplugged. It comes back
 # with a new id and the same info, so it reconnects to its slot, still

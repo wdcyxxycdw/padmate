@@ -26,7 +26,7 @@ function fixture(reply: (method: string, params: unknown) => unknown) {
   return { call, handlers: deviceHandlers(call) };
 }
 
-describe("mapping handlers (IN-18, IN-19)", () => {
+describe("mapping handlers", () => {
   it("asks devices.setMapping with the controller and the mapping, and returns what it needs of the answer", async () => {
     const { call, handlers } = fixture(() => mappingAnswer);
     await expect(handlers.mappingSet.run("7", text)).resolves.toEqual({
@@ -149,7 +149,7 @@ describe("mapping handlers (IN-18, IN-19)", () => {
   });
 });
 
-describe("raw watch handlers (IN-17, IN-19)", () => {
+describe("raw watch handlers", () => {
   it("start and stop go through the one RawWatch, with a checked selector", async () => {
     const start = vi.fn(async (_device: string) => ({ id: 7 }));
     const stop = vi.fn(async (_device: string) => {});

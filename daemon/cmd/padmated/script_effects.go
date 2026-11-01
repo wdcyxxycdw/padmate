@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script"
 )
 
-// The rumble and LED calls of scripts (SCR-23, ADR-0010) reach a controller
+// The rumble and LED calls of scripts (ADR-0010) reach a controller
 // through the effect queue, as every other effect does, in the Script class of
 // the Mixer: a script's buzz never cuts the pulses of a layer, and it ends
 // with the runtime that asked for it.

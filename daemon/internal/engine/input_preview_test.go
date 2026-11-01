@@ -39,7 +39,7 @@ func TestInputPreviewIsIndependentAndNeverDispatches(t *testing.T) {
 		t.Fatalf("preview dispatched source output/callbacks: %q -> %q, %d -> %d", before, r.String(), calls, callbacks)
 	}
 	// The source trigger is past fullPress, which the preview has copied: the
-	// fall to 16000 releases the second stage too (ANA-14).
+	// fall to 16000 releases the second stage too.
 	want := []engine.ButtonEvent{{Time: clock.Time(time.Millisecond), Control: control.South}, {Time: clock.Time(2 * time.Millisecond), Control: control.LTFull}, {Time: clock.Time(10 * time.Millisecond), Control: control.LSUp, Down: true}}
 	if !reflect.DeepEqual(seen, want) {
 		t.Fatalf("preview events=%+v, want %+v", seen, want)

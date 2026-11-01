@@ -1,6 +1,6 @@
-// The timing of a toast (HUD-04, ADR-0014). The fades are CSS transitions on
+// The timing of a toast (ADR-0014). The fades are CSS transitions on
 // the toast's opacity (overlay.css, which must use the same durations); the
-// page times the phases. A script's toast (SCR-22) says how long it holds.
+// page times the phases. A script's toast says how long it holds.
 
 import { defaultToastHoldMs } from "../../shared/overlay";
 

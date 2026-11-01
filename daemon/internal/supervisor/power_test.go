@@ -32,7 +32,7 @@ func batteryOf(t *testing.T, r *router, id input.DeviceID) *input.Power {
 	return nil
 }
 
-// TestRouterStoresPower (IN-12): the router keeps the latest power of each
+// TestRouterStoresPower: the router keeps the latest power of each
 // gamepad it holds, mapped, waiting or ignored; the view omits it until
 // one was read. A removed gamepad keeps nothing, and the same gamepad
 // back with a new id starts without a value until it reads again. No slot
@@ -190,7 +190,7 @@ func programWithFeedback(t *testing.T, feedback string) *engine.Program {
 	return prog
 }
 
-// TestRouterOnPower (IN-12): OnPower gets each DevicePower of a gamepad the
+// TestRouterOnPower: OnPower gets each DevicePower of a gamepad the
 // router holds, after the router stored it, with the identity of the gamepad
 // (its key, which a revival keeps), whether a slot holds it and the feedback of
 // the profile it is mapped with. A gamepad that waits has the default

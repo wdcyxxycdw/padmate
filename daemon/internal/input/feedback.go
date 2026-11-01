@@ -17,8 +17,8 @@ import (
 // to ask for an effect all end there:
 //
 //   - SetFeedback, the ambient state of the layer and the pause (M3);
-//   - Play, a preset of the Event, Script or Alert class (MAP-25, SCR-23);
-//   - Identify, the cues that tell a user which controller is which (IN-13).
+//   - Play, a preset of the Event, Script or Alert class;
+//   - Identify, the cues that tell a user which controller is which.
 //
 // A request is addressed to a DeviceID, the id the events of a gamepad carry
 // (so a gamepad that came back from the receiver watchdog is reached by its
@@ -46,8 +46,8 @@ type Feedback struct {
 	PulseMs  int
 	GapMs    int
 	Strength uint16
-	// PlayerMode is the mode number of the layer, for the player lights
-	// (HUD-08): mode n from 1 to MaxPlayerMode lights the light of player n
+	// PlayerMode is the mode number of the layer, for the player lights:
+	// mode n from 1 to MaxPlayerMode lights the light of player n
 	// (index n-1) on a gamepad that has them, and any other value, 0 among
 	// them, gives the ambient claim of the lights back, which restores the
 	// index the gamepad had. The caller sends 0 when the global led switch is
@@ -72,7 +72,7 @@ type Effect struct {
 	// only Blinks, or that plays Steps.
 	Preset haptic.Preset
 	// Steps, when there are any, are the rumble program to play in place of a
-	// preset: a script's pad.rumble (SCR-23). The Mixer limits them (a step to
+	// preset: a script's pad.rumble. The Mixer limits them (a step to
 	// haptic.MaxStepMs, a program to haptic.MaxSteps); the caller does not
 	// change them afterwards. An effect has a Preset or Steps, not both.
 	Steps []haptic.Step
@@ -89,7 +89,7 @@ type Effect struct {
 	Blink bool
 }
 
-// Light is a request for the LED of a gamepad (SCR-23): the class claims the
+// Light is a request for the LED of a gamepad: the class claims the
 // color, which shows while no stronger class claims it (haptic.Mixer.SetLED),
 // or, with Release, gives its claim up, and the color of the class below shows
 // again.
@@ -105,7 +105,7 @@ type Light struct {
 	Release bool
 }
 
-// Stop is a request to end what a class has going on a gamepad (SCR-23): its
+// Stop is a request to end what a class has going on a gamepad: its
 // rumble program if that is the one running, and with Everything also its LED
 // and player-light claims (haptic.Mixer.StopRumble, Cancel).
 type Stop struct {
@@ -270,7 +270,7 @@ func (s *Source) advanceEffects(now time.Time) {
 }
 
 // openDevice returns the connected device with the public id id: not
-// dormant, which is reported removed (IN-30).
+// dormant, which is reported removed.
 func (s *Source) openDevice(id DeviceID) *device {
 	for _, d := range s.devices {
 		if d.pub == id && !d.dormant {
@@ -382,7 +382,7 @@ func (s *Source) play(e Effect, now time.Time) error {
 }
 
 // Identify makes the gamepad give its cues for the user to tell it from the
-// others (IN-13): three buzzes (750 ms), three white flashes of a color LED
+// others: three buzzes (750 ms), three white flashes of a color LED
 // (1250 ms), or a chase over the player lights that no other gamepad holds
 // (1.5 s), whichever it can, side by side. It returns which cues the gamepad
 // gives, none for one that can do nothing.
@@ -421,7 +421,7 @@ func effectClass(c haptic.Class) bool {
 }
 
 // SetLight makes the class of l claim the LED of its gamepad, or gives the
-// claim up (SCR-23). A gamepad without an LED, or whose color a stronger class
+// claim up. A gamepad without an LED, or whose color a stronger class
 // claims, ignores it; it is not an error. It returns ErrNoDevice for a gamepad
 // that is not connected.
 func (s *Source) SetLight(l Light) error {
@@ -451,7 +451,7 @@ func (s *Source) setLight(l Light, now time.Time) error {
 	return m.SetLED(dv, l.Class, l.Color, now)
 }
 
-// Stop ends what the class of st has going on its gamepad (SCR-23): the rumble
+// Stop ends what the class of st has going on its gamepad: the rumble
 // program if it is that class's, and the LED and player-light claims too with
 // Everything. It is not an error when there is nothing to end. It returns
 // ErrNoDevice for a gamepad that is not connected.

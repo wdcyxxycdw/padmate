@@ -22,7 +22,7 @@ describe("isolated development runtime", () => {
     expect(options.daemon).toContain(".cache\\ui-bin\\padmated.exe");
     expect(options.childEnv.LOCALAPPDATA).toContain(".cache\\ui-local");
     expect(options.childEnv.PADMATE_PIPE).toBe(options.pipe);
-    // UI-45: the report comes first, so a usage error after it is reported.
+    // The report comes first, so a usage error after it is reported.
     expect(options.daemonLaunch(report).args).toEqual([
       "--startup-report",
       report,
@@ -38,7 +38,7 @@ describe("isolated development runtime", () => {
     // The 添加软件 list is the real Start Menu unless a run names a file.
     expect(options.appsFile).toBe("");
   });
-  it("lists the programs of a file only in a development run that asks (UI-46)", () => {
+  it("lists the programs of a file only in a development run that asks", () => {
     const env = { PADMATE_UI_APPS_FILE: "D:\\test space\\apps.json" };
     expect(resolveRuntimeOptions({ ...context, env }).appsFile).toBe(
       "D:\\test space\\apps.json",

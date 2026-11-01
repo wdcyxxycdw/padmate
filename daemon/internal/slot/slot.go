@@ -38,7 +38,7 @@ type Arbiter interface {
 	Tap(output.Owner, keys.Chord, time.Duration) error
 	Repeat(output.Owner, keys.Chord) error
 	TapSequence(output.Owner, []keys.Chord, time.Duration, time.Duration) error
-	// Sequence runs the steps of a sequence or text action (MAP-22, OUT-21): the
+	// Sequence runs the steps of a sequence or text action: the
 	// Arbiter queues it behind the sequences before it and cancels it with the
 	// owner.
 	Sequence(o output.Owner, steps []keys.Step, hold, gap time.Duration) error
@@ -95,14 +95,14 @@ type scriptResyncWaiter interface{ WaitForInitialResync() bool }
 type scriptConfigurator interface{ Configured() bool }
 
 // scriptNeeder says whether the profile needs the runtime at all: it has a
-// legacy entry, or one of its actions runs a macro (SCR-50). A runtime only
+// legacy entry, or one of its actions runs a macro. A runtime only
 // needed for macros does not take over input; the slot keeps its Resync
 // gate and release bookkeeping. A runtime without it is needed exactly when
 // it is configured.
 type scriptNeeder interface{ Needed() bool }
 
 // inputMarker is optional: an Arbiter that measures the latency of the keys an
-// input edge causes (DMN-15, ADR-0016). The slot marks the edge it is handling
+// input edge causes (ADR-0016). The slot marks the edge it is handling
 // with MarkInput(stamp, deviceKey), and clears the mark (a zero stamp) when it
 // has handled it. *output.RemoteArbiter is one, and *output.Arbiter is not: a
 // replay on a local Arbiter measures nothing.
@@ -130,19 +130,19 @@ type Config struct {
 	// Clock is the Arbiter's clock, for a RemoteArbiter its Loop's. The
 	// engine's input times are its Now.
 	Clock clock.Clock
-	// Trace, when set, receives every engine.Decision (ENG-20), before the
+	// Trace, when set, receives every engine.Decision, before the
 	// key commands it causes. It must not call back into the Slot.
 	Trace          func(engine.Decision)
 	OnLayerChange  func(engine.LayerState)
 	Feedback       func(engine.Feedback)
 	FeedbackDevice func(input.DeviceID, engine.Feedback)
-	// OnHaptic, when set, receives the one-shot haptics of the engine (MAP-25,
-	// HUD-10) with the controller the slot has, 0 when it has none yet. It is
+	// OnHaptic, when set, receives the one-shot haptics of the engine
+	// with the controller the slot has, 0 when it has none yet. It is
 	// called on the slot's goroutine and must not block or call back into the
 	// Slot.
 	OnHaptic func(input.DeviceID, engine.Haptic)
-	// Switches, when set, returns the global feedback switches (UI-27,
-	// ADR-0015) the engine reads at each feedback state and haptic
+	// Switches, when set, returns the global feedback switches
+	// (ADR-0015) the engine reads at each feedback state and haptic
 	// (engine.Options.Switches). It is called on the slot's goroutine, must not
 	// block, and returns what the last committed config.json says; nil means
 	// every switch on.
@@ -152,16 +152,16 @@ type Config struct {
 	// key commands the event causes. It must not call back into the Slot.
 	OnEvent func(input.Event)
 	// Paused starts the slot paused, as SetPaused(true) would, without
-	// sending anything (DMN-06).
+	// sending anything.
 	Paused bool
-	// Calibration, when set, returns the stick calibration (IN-14) of the
+	// Calibration, when set, returns the stick calibration of the
 	// controller with the canonical DeviceKey key, nil when it has none. The
 	// slot calls it on its own goroutine when it gets a controller and at
 	// RefreshCalibration; it must not block, and returns what the last
 	// committed config.json says.
 	Calibration func(key string) *profile.Calibration
 	// Power, when set, returns the battery state that the gamepad with this
-	// connection id last reported (IN-12), false when it has reported none. The
+	// connection id last reported, false when it has reported none. The
 	// slot calls it on its own goroutine each time it copies the gamepad's state
 	// for a script (pad.info.battery), so it must not block: padmated's is a
 	// read of an immutable table.
@@ -206,7 +206,7 @@ type Slot struct {
 	scriptCanceled     [control.Count]bool
 	// macroCanceled is set at each press of a control, when the slot is
 	// paused or waits for its Resync: that press cycle runs no macro, its
-	// release, tap or hold included (SCR-50). Unlike scriptCanceled it is
+	// release, tap or hold included. Unlike scriptCanceled it is
 	// not cleared at the release, so it holds with or without a legacy
 	// script.
 	macroCanceled      [control.Count]bool
@@ -342,7 +342,7 @@ func (s *Slot) Handle(ev input.Event) {
 		return
 	}
 	// The keys this edge causes are measured from the Stamp that T-input read
-	// when it received it (DMN-15). Only here: the edges that the slot queued for
+	// when it received it. Only here: the edges that the slot queued for
 	// a starting script are handled later, by handleInput alone, and what the
 	// timers of Advance send is not an edge's.
 	s.marker.MarkInput(ev.Stamp, s.deviceKey)
@@ -530,7 +530,7 @@ func (s *Slot) Advance() {
 	s.updatePad(s.clk.Now())
 }
 
-// ReleaseAll lets go of every key of the slot at once (OUT-07): the engine
+// ReleaseAll lets go of every key of the slot at once: the engine
 // ends every press cycle, then the Arbiter releases the keys of every
 // owner with the slot's index, of any generation, and ends their pending
 // taps. The controls that are down produce nothing until they are pressed
@@ -539,7 +539,7 @@ func (s *Slot) Advance() {
 //
 // A runtime that only runs macros is rebuilt at once, when the slot is not
 // paused and not waiting for its Resync: no press restarts it, as one does
-// a legacy script's (SCR-50).
+// a legacy script's.
 func (s *Slot) ReleaseAll() error {
 	err := s.releaseAll()
 	s.restartMacros()
@@ -597,7 +597,7 @@ func (s *Slot) releaseOwn() error {
 	return s.arb.ReleaseOwners(func(o output.Owner) bool { return o.Slot == s.index })
 }
 
-// SetPaused pauses the slot, or resumes it when on is false (DMN-06).
+// SetPaused pauses the slot, or resumes it when on is false.
 // SetPaused(true) puts the engine in paused mode, which ends every press
 // cycle as ReleaseAll does, then releases like ReleaseAll and returns the
 // Arbiter's error; releases that failed are retried by Advance. Until
@@ -636,7 +636,7 @@ func (s *Slot) SetPaused(on bool) error {
 // Config.Paused, and until SetPaused(false).
 func (s *Slot) Paused() bool { return s.eng.Paused() }
 
-// Reload switches the slot to prog, a new profile generation gen (PRO-03):
+// Reload switches the slot to prog, a new profile generation gen:
 // the engine's Reload, then the release of ReleaseAll, whose error goes to
 // Errors; later commands carry gen. The controls down stay down, each
 // doing nothing until it is pressed again, and State does not change.
@@ -755,14 +755,14 @@ func (s *Slot) Owner(o engine.OwnerID) output.Owner {
 // end, it goes on until the caller's ReleaseAll, so a trace may end with the
 // stick deflected. In M1a only tap ends and
 // retries of failed Sends make deadlines, so that fails only while Send
-// keeps failing; OUT-11's repeat while a control is held will need an end
+// keeps failing; a repeat while a control is held will need an end
 // time for Replay. It does not ReleaseAll: the caller does. With no
 // events, Replay only runs the deadlines left, such as those after a
 // ReleaseAll. With a RemoteArbiter it does not step the Arbiter's
 // deadlines: the Loop runs them on its own timer.
 //
 // A ComboHeld event, which input.ExpandCombos inserts, toggles the pause
-// (DMN-07) as padmated does for all slots, instead of going to Handle:
+// as padmated does for all slots, instead of going to Handle:
 // Config.OnEvent sees it, then SetPaused(!Paused()) runs, whose error goes
 // to Errors. State does not change.
 //

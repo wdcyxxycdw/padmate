@@ -85,7 +85,7 @@ import "./analog-editor.css";
 /**
  * Props shared by the analog panels that the key drawer embeds.
  * The drawer owns the header and notices; panels only edit the draft, which
- * the editor saves at once, and only its base key set (ADR-0012, UI-43).
+ * the editor saves at once, and only its base key set (ADR-0012).
  */
 export interface AnalogPanelProps {
   profile: Profile;
@@ -115,7 +115,7 @@ export interface AnalogPanelProps {
    */
   menuRequest?: number;
   /**
-   * The sticks the live controller has its own calibration for (IN-14): its
+   * The sticks the live controller has its own calibration for: its
    * dead zone and outer edge then replace this profile's on that controller.
    */
   calibrated?: { ls: boolean; rs: boolean };
@@ -131,7 +131,7 @@ const diagonalGrid: Direction[] = [
 ];
 const allDirections: Direction[] = [...cardinalDirections, ...diagonalGrid];
 
-/** The response curves a stick or trigger offers (ANA-13). */
+/** The response curves a stick or trigger offers. */
 function curveOptions(language: Language) {
   const t = (zh: string, en: string) => tx(language, zh, en);
   return [
@@ -220,7 +220,7 @@ function Issues({
 }
 
 /**
- * Opens a panel's parameter menu (UI-36): on a right click inside the panel,
+ * Opens a panel's parameter menu: on a right click inside the panel,
  * or when the drawer sends a new `menuRequest`. A collapsed section that holds
  * the menu (the stick's 高级) opens first, so the menu can take focus.
  */
@@ -298,7 +298,7 @@ function StickBody({
   // acts like; the first edit saved from here writes it (see emit).
   const shown = shownStickMode(stick.mode);
   const knob = stick.mode === "knob";
-  // The stick moves the pointer (MOU-01): no directions and no ticks.
+  // The stick moves the pointer: no directions and no ticks.
   const mouse = stick.mode === "mouse";
   // Only the standard modes send directions, so only they have direction settings.
   const directional = !knob && !mouse;
@@ -322,7 +322,7 @@ function StickBody({
     onChange(settleStickMode(next, group), options);
   const update = (patch: ProfileStick, options?: EditOptions) =>
     emit(setAnalogSettings(profile, group, { ...stored, ...patch }), options);
-  // The tick of a knob step (HUD-10): off leaves no key in the file.
+  // The tick of a knob step: off leaves no key in the file.
   const setKnobTick = (on: boolean) => {
     const next: ProfileStick = { ...stored };
     if (on) next.knobTick = true;
@@ -917,7 +917,7 @@ function StickBody({
   );
 }
 
-/** The arrow-key and WASD presets for up, right, down and left (ANA-09). */
+/** The arrow-key and WASD presets for up, right, down and left. */
 function PresetButtons({
   language,
   disabled,
@@ -1120,7 +1120,7 @@ function StickVisual({
   const py = center + y * scale * radius;
   const clamp = (value: number) => Math.max(0, Math.min(1, value));
   const half = settings.diagonalWidth / 2;
-  // A knob (ANA-11) and a pointer stick (MOU-01) have no direction sectors to mark.
+  // A knob and a pointer stick have no direction sectors to mark.
   const boundaries =
     settings.mode === "fourWayDiagonal" ||
     settings.mode === "knob" ||
@@ -1130,7 +1130,7 @@ function StickVisual({
         ? [45, 135, 225, 315]
         : [45, 135, 225, 315].flatMap((angle) => [angle - half, angle + half]);
   // The outer ring starts outerThreshold of the way from the dead zone to
-  // full push (ANA-10), where the daemon reads the push depth from.
+  // full push, where the daemon reads the push depth from.
   const outerRadius =
     clamp(
       settings.deadzone +

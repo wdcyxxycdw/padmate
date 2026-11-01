@@ -1,6 +1,6 @@
-// The first-run page (UI-38, ADR-0008): it waits for a controller, says
+// The first-run page (ADR-0008): it waits for a controller, says
 // which one is connected, then goes to the main page by itself. The main
-// page shows the fixed default profile (PRO-28), which maps nothing; setting
+// page shows the fixed default profile, which maps nothing; setting
 // the keys is left to the user. The page makes nothing.
 import { useEffect, useRef } from "react";
 import { ConflictNotices } from "../pages/ConflictNotices";

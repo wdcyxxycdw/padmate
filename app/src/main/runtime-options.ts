@@ -10,8 +10,8 @@ export interface RuntimeContext {
 }
 
 /**
- * The address an installed application in test mode (PKG-03) may take its
- * updates from (PKG-10): plain http on this machine, no credentials, query or
+ * The address an installed application in test mode may take its
+ * updates from: plain http on this machine, no credentials, query or
  * fragment. The test serves latest.yml and a stand-in installer there. Any
  * other text is no feed.
  */
@@ -38,7 +38,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
   const { packaged, root, resources, appData, env } = context;
   const cache = join(root, ".cache");
   // A test that launches the installed application (the Playwright spec
-  // app/tests/e2e/packaged.spec.ts, PKG-03) names three private folders and
+  // app/tests/e2e/packaged.spec.ts) names three private folders and
   // the flag; the application then keeps to them like a development run does,
   // with its bundled daemon and CLI, and starts that daemon with --dry-run
   // and never --inject. Any one of the four missing, it is the real application.
@@ -101,13 +101,13 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
       ? { APPDATA: join(daemonHome, "Roaming"), PADMATE_IPC_DIR: ipcDir }
       : {}),
   };
-  // Where a daemon this UI starts says why it did not start (UI-45): one
+  // Where a daemon this UI starts says why it did not start: one
   // file per start, in the UI's own browser data, which tests isolate.
   const startupReports = join(userData, "startup-reports");
   const harness = !packaged && env.PADMATE_UI_TEST_HARNESS === "1";
   // The command of one start, whose report goes to report. A packaged UI
   // starts the daemon like a normal app, sending real keys (ADR-0001);
-  // padmate's own window in front still only previews them (OUT-25).
+  // padmate's own window in front still only previews them.
   // Development builds and tests keep the dry run. --startup-report comes
   // first, so a usage error after it is reported too; the test harness, a
   // Go test executable that takes no padmated flags, reads it from its
@@ -133,7 +133,7 @@ export function resolveRuntimeOptions(context: RuntimeContext) {
   // an editor; a packaged UI always starts one.
   const editorLog = developmentValue("PADMATE_UI_EDITOR_LOG", "");
   // E2E runs list the programs of this JSON file in the 添加软件 dialog
-  // (UI-46) instead of reading the real Start Menu; a packaged UI never.
+  // instead of reading the real Start Menu; a packaged UI never.
   const appsFile = developmentValue("PADMATE_UI_APPS_FILE", "");
   // E2E runs that moved their window to the secondary display
   // (PADMATE_E2E_DISPLAY=secondary, tests/e2e/helpers.ts placeWindow) put

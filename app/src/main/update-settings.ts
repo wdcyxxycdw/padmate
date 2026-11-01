@@ -58,7 +58,7 @@ function validTime(value: number): boolean {
 }
 
 /**
- * The settings of the automatic update in <userData>\updates.json (PKG-10).
+ * The settings of the automatic update in <userData>\updates.json.
  * They are the window's own, so they work without the daemon and without
  * config.json. current is what the next read sees; writes follow one after
  * another and each replaces the file whole (a temporary file, then a rename),

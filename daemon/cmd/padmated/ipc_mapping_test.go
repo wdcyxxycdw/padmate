@@ -19,7 +19,7 @@ import (
 )
 
 // These tests are the daemon half of the mapping wizard and the custom
-// gamepad mappings (IN-17, IN-18, IN-19, ADR-0012). A fake input stands in for
+// gamepad mappings (ADR-0012). A fake input stands in for
 // SDL; the SDL side is tested in internal/input and in
 // TestMappingWizardWithVirtualJoystick.
 
@@ -578,8 +578,8 @@ func TestRawEventsGoOnlyToTheConnectionsThatAsked(t *testing.T) {
 }
 
 // TestInputTopicCarriesTheRemap: a client that follows the input topic keeps
-// the state of every control, and SDL releases nothing when a mapping changes
-// (IN-18), so it is told: a "remapped" row with the device as it is now, and
+// the state of every control, and SDL releases nothing when a mapping changes,
+// so it is told: a "remapped" row with the device as it is now, and
 // the client resets what it holds for the device.
 func TestInputTopicCarriesTheRemap(t *testing.T) {
 	tl, src := startMappingLive(t, `{"schemaVersion":0}`, nil)

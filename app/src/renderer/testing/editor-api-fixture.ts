@@ -109,7 +109,7 @@ export function editorAPIFixture() {
         player: false,
       }),
     ),
-    // The mapping wizard (IN-19): a joystick with no mapping, two buttons.
+    // The mapping wizard: a joystick with no mapping, two buttons.
     rawWatchStart: vi.fn(
       async (_device: string): Promise<RawInfo> => ({
         device: "030000007e05/p:x",
@@ -196,7 +196,7 @@ export function editorAPIFixture() {
     markConfigRepairSeen: vi.fn(async (_backup: string) => {}),
     showConfigBackup: vi.fn(async (_backup: string) => {}),
     setOverlayPrefs: vi.fn(async (_prefs: OverlayPrefs) => {}),
-    // The automatic update (PKG-10): a build that cannot update, the state a
+    // The automatic update: a build that cannot update, the state a
     // development run has. A test of the update dialogs replaces them.
     getUpdateState: vi.fn(async (): Promise<UpdateState> => initialUpdateState),
     checkForUpdate: vi.fn(async (): Promise<UpdateState> => initialUpdateState),

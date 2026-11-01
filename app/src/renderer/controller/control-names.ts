@@ -1,4 +1,4 @@
-// A control's name as the UI lists it (UI-08, SCR-50): the key list and the
+// A control's name as the UI lists it: the key list and the
 // scripts page name every control the daemon can report the same way.
 
 import { canonicalControl } from "../editor/editor-model";

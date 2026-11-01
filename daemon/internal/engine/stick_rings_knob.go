@@ -8,7 +8,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 )
 
-// This file is the stick rings (ANA-10) and the virtual knob (ANA-11). Both
+// This file is the stick rings and the virtual knob. Both
 // are recognizers on top of stickReading, driven by updateStick, Apply and
 // settleVirtual (ARCHITECTURE §7.5).
 
@@ -162,7 +162,7 @@ func (e *Engine) settleKnob(now clock.Time, which int) {
 // tick the next one waits for the minimum period of the key its control
 // resolves to (tap press plus tap gap), so the output keeps up with it. A
 // tick whose control nothing binds is dropped. With knobTick the step also
-// plays the tick haptic (HUD-10), just before its key; a dropped tick plays
+// plays the tick haptic, just before its key; a dropped tick plays
 // none.
 func (e *Engine) emitKnob(now clock.Time, which int) {
 	s := &e.sticks[which]
@@ -184,7 +184,7 @@ func (e *Engine) emitKnob(now clock.Time, which int) {
 	}
 	_, b, _, _ := e.lookup(c, GesturePress)
 	s.knobNext = now.Add(max(time.Nanosecond, e.repeatMinimum(b)))
-	// The tick of the knob (HUD-10) is played where the step's binding is
+	// The tick of the knob is played where the step's binding is
 	// dispatched (runAction, knobTick), not here: only the dispatch knows
 	// whether a declarative binding ran.
 	e.stepButton(now, c, true, false)

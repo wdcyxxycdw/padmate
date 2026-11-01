@@ -8,7 +8,7 @@ import type { ProfileDocument } from "../../src/shared/api";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, fixture, launch, recordShortcut } from "./helpers";
 
-// UI-31, MAP-22, OUT-20 (ADR-0012, ADR-0013): the steps of a sequence (a
+// ADR-0012, ADR-0013: the steps of a sequence (a
 // shortcut or a wait) and the media keys, in the key drawer. The fake pad is a
 // standard one: south is printed S. The fixture's south taps Ctrl+Z.
 

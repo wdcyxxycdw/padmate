@@ -8,12 +8,12 @@ import {
   toastHoldFrom,
 } from "../shared/overlay";
 
-// What the overlay says when something changes (HUD-04, ADR-0014). The
+// What the overlay says when something changes (ADR-0014). The
 // daemon already tells the UI everything in its periodic engine.activity
 // state events; this takes the changes out of them. reduceToast is a pure
 // function of the last state, one event and what Main knows (is the editor
 // in front); OverlayToaster is the thin shell that keeps the state, the
-// language and the on/off switch the UI pushed (HUD-05) and hands the text to
+// language and the on/off switch the UI pushed and hands the text to
 // the overlay.
 //
 // Only the first mapped slot is followed for now. A profile switch, a pause or
@@ -21,12 +21,12 @@ import {
 // changes in one event show the first of them in that order, because a toast
 // replaces the one before it at once.
 //
-// A script's hud.toast (SCR-22) reaches the UI as an event of the topic hud
+// A script's hud.toast reaches the UI as an event of the topic hud
 // and is shown as the same pill, from any slot, whether or not the main
 // window is focused (the main window does not show it). It follows the toast
 // switch like the others.
 //
-// A low battery (IN-12) is told when a controller's "low" in the state event's
+// A low battery is told when a controller's "low" in the state event's
 // batteries goes from false to true: the daemon says low only while the alert
 // of the episode is raised, so a controller with the alert switched off, one
 // that is plugged in or one that has not read a charge makes none, and one that
@@ -155,7 +155,7 @@ function firstSlot(slots: unknown): Observed["slot"] {
   return first;
 }
 
-// The controllers of the event's batteries (IN-12): the ones with a key and a
+// The controllers of the event's batteries: the ones with a key and a
 // boolean "low". Undefined when the event has no list.
 function batteriesOf(value: unknown): BatteryObserved[] | undefined {
   if (!Array.isArray(value)) return undefined;
@@ -386,7 +386,7 @@ export interface ScriptToast {
 
 /**
  * The toast in a hud event, `{ kind: "toast", slot, text, ms }` as the daemon
- * sends it (SCR-22), checked here: the text must be a string that is not empty
+ * sends it, checked here: the text must be a string that is not empty
  * as a toast line, and ms a whole number from 500 to 10000 ms, else the
  * default hold. undefined for any other event. The slot is not looked at: a
  * toast from any slot shows.
@@ -413,7 +413,7 @@ export interface ToasterHost {
  * connection, so nothing in it throws.
  *
  * The language the texts are in and whether there are toasts at all come from
- * the UI, which pushes them (HUD-05, configure). Until it has, they are
+ * the UI, which pushes them (configure). Until it has, they are
  * Chinese and on. With toasts off the state still moves on: what changed
  * meanwhile is not told when they are turned on again; a script's toast is
  * not shown, and not told later either.

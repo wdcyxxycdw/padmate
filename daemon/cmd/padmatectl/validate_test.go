@@ -40,7 +40,7 @@ var validateFixtures = []string{
 const labelOnly = "testdata/label-only.json"
 
 // functionKeys is a profile with the sets of the old functionKeys format
-// (MAP-27, ADR-0012), and a binding on back, an ordinary control since
+// (ADR-0012), and a binding on back, an ordinary control since
 // ADR-0012. functionSet is the same in the new format, with a binding on the
 // default function key, start, in the layer and in the set: validate compiles
 // with the default, which ignores them, so they are not listed.
@@ -329,7 +329,7 @@ func TestValidateMissingMacros(t *testing.T) {
 	}
 
 	// A profile of a library, profiles/<id>/profile.json, runs its macros
-	// from the script library of the data folder (SCR-51), not from a
+	// from the script library of the data folder, not from a
 	// macros folder of its own.
 	data := t.TempDir()
 	library := filepath.Join(data, "profiles", "paint", "profile.json")
@@ -580,7 +580,7 @@ func TestValidateMousePointer(t *testing.T) {
 	}
 }
 
-// A HUD hints action (HUD-03, ADR-0014) validates on a press or a hold; on a
+// A HUD hints action (ADR-0014) validates on a press or a hold; on a
 // gesture that does not last while the control is held, with another operation
 // or with a property of another action it is an error, also with the JSON
 // output.

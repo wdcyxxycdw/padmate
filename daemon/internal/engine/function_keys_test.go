@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the function key (MAP-27, ADR-0012): one of back, start
+// Tests of the function key (ADR-0012): one of back, start
 // and guide, start unless Compile is told otherwise, sends nothing, stays out
 // of gesture recognition, and while it is held the other controls look their
 // binding up in the profile's function set first.
@@ -383,7 +383,7 @@ func TestFunctionKeyAddsNoDelay(t *testing.T) {
 	}
 }
 
-// The decisions (ENG-20) show the function key edges, with reason function and
+// The decisions show the function key edges, with reason function and
 // no cycle, level or binding, and the level of a binding found in the set,
 // function:<the key>.
 func TestFunctionKeyDecisions(t *testing.T) {
@@ -650,7 +650,7 @@ func TestFunctionKeyReloadChangesTheKey(t *testing.T) {
 	})
 }
 
-// The key hints (HUD-03) show the set while the function key is held, and the
+// The key hints show the set while the function key is held, and the
 // normal bindings for the controls the set lacks. A center key that is not the
 // function key is an ordinary control and is listed; the function key is not,
 // whatever its layers bind on it.
@@ -726,7 +726,7 @@ func TestFunctionKeyHints(t *testing.T) {
 	})
 }
 
-// A script (SCR-05) sees no function key: a handler on it never runs, and
+// A script sees no function key: a handler on it never runs, and
 // Options.Button is not asked about it; pad.isDown still reads it
 // (ControlDown). The other center keys are ordinary: their handlers run. A
 // global() handler is above the set, a base handler is below it.
@@ -845,7 +845,7 @@ func TestFunctionKeyButtonCallback(t *testing.T) {
 	}
 }
 
-// The levels of a registry (ENG-21) are below the set of the held function key.
+// The levels of a registry are below the set of the held function key.
 func TestFunctionKeyAboveARegistry(t *testing.T) {
 	b := &profile.Binding{ID: "/reg/south", Control: control.South, Press: &profile.Action{ID: "/reg/south/press", Type: profile.ActionKeys, Mode: profile.ModeHold, Keys: keys.MustParse("R")}}
 	level := fakeLevel{name: "reg", bindings: map[control.Control]*profile.Binding{control.South: b, control.East: {ID: "/reg/east", Control: control.East, Press: &profile.Action{ID: "/reg/east/press", Type: profile.ActionKeys, Mode: profile.ModeHold, Keys: keys.MustParse("S")}}}}

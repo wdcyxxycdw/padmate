@@ -8,7 +8,7 @@ import (
 )
 
 // RefreshCalibration asks Config.Calibration again for the calibration of the
-// slot's controller and applies it (IN-14): after a committed config.json
+// slot's controller and applies it: after a committed config.json
 // changed, the supervisor runs it on every slot as a job. A slot without a
 // controller, or without Config.Calibration, has nothing to calibrate. What
 // the new values no longer recognize is released through the engine's normal

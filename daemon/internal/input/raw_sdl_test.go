@@ -8,7 +8,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input/inputtest"
 )
 
-// These tests are the raw joystick stream (IN-17, ADR-0012): the elements of
+// These tests are the raw joystick stream (ADR-0012): the elements of
 // a joystick as SDL reads them, for the wizard and "padmatectl monitor
 // --raw". Only a device that was asked for sends them, they never reach
 // Events, and they are not the events that slots or the combo watch see.

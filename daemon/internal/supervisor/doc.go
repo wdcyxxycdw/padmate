@@ -1,4 +1,4 @@
-// Package supervisor runs padmated's slots (DMN-02): the router, which
+// Package supervisor runs padmated's slots: the router, which
 // hands each slot the events of its gamepad, and the supervision of the
 // slot loops. It is what ADR-0005 calls the supervisor: T-input
 // (input.Source) feeds one channel, and the router, the goroutine of Run,
@@ -17,8 +17,8 @@
 // removal of the one before. When input dropped events, every slot gets a
 // reset in order with its edges: the held state is unknown, so padmate
 // lets go of everything (CLAUDE.md invariant 1). Config.Dropped counts the
-// drops of every gamepad together, so a drop resets every slot (a reset
-// per gamepad is IN-27); the reset comes after the events queued in Events
+// drops of every gamepad together, so a drop resets every slot (there is
+// no reset per gamepad); the reset comes after the events queued in Events
 // when the router saw the drop, but not in order with a Sync's barriers.
 //
 // Each slot runs slot.RunLoop on a goroutine of its own, under a runner
@@ -32,8 +32,8 @@
 // *PanicError.
 //
 // There are Config.Slots slots, MaxSlots by default, all running from Run
-// on, with or without a gamepad (IN-08). Each connected gamepad that
-// matches Config.Device either has a slot or waits in line (IN-05): one
+// on, with or without a gamepad. Each connected gamepad that
+// matches Config.Device either has a slot or waits in line: one
 // that connects goes to the back, and one that loses its slot to the
 // front. A slot is assigned:
 //   - to a gamepad that connects while a slot is free: it takes the free
@@ -82,7 +82,7 @@
 // Output that several slots make at the same instant reaches Output in no
 // set order; each slot's own keeps its order.
 //
-// Reload switches every slot to a new program (PRO-03). Config.Program is
+// Reload switches every slot to a new program. Config.Program is
 // generation 1, and each Reload takes the next, for all slots, when the
 // router takes it; the gamepads, homes and the line stay as they are. The
 // router sends each slot a barrier with the program behind the edges
@@ -96,9 +96,9 @@
 // queued for it meanwhile, those sent before Reload included, map with
 // the new program.
 //
-// Pause pauses the mapping of every slot, or resumes it (DMN-06): the
+// Pause pauses the mapping of every slot, or resumes it: the
 // router owns the user's pause for all slots and tells Config.OnPause of
-// each change. An input.ComboHeld event on Events toggles it too (DMN-07),
+// each change. An input.ComboHeld event on Events toggles it too,
 // from any gamepad, one that waits or that Config.Device leaves out
 // included; no slot gets the event, and it neither takes a slot over nor
 // confirms one. Output's user gate goes first: Output.BlockFor(BlockUser)
@@ -109,7 +109,7 @@
 // for a combo the id of its gamepad, and the reasons of a suspension
 // under way.
 //
-// Suspend sets the reasons of the system's suspension (DMN-09): the
+// Suspend sets the reasons of the system's suspension: the
 // session is locked, disconnected, on another desktop, going to sleep or
 // ending (winsession.Reason), apart from the user's pause. It never waits:
 // it closes Output's system gate at once (Output.BlockFor(BlockSystem)),

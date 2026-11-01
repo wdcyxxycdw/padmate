@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profilelib"
 )
 
-// rpcConfigRepair is a repair of config.json (PRO-29) the UI has not
+// rpcConfigRepair is a repair of config.json the UI has not
 // shown yet: status.get's configRepair until config.repairSeen, and the
 // data of profile.changed {kind:"configRepaired"} for a repair after the
 // start. The UI shows one dialog that names Backup and can open its
@@ -63,7 +63,7 @@ func logConfigRepair(log *slog.Logger, repair *profilelib.ConfigRepair) {
 	log.Warn("config.json had errors; repaired", append(attrs, "backup", repair.Backup)...)
 }
 
-// readConfig reads config.json as padmated does after the start (PRO-29):
+// readConfig reads config.json as padmated does after the start:
 // a file with errors is backed up and repaired (ReadRepairedConfig), the
 // repair logged, and the UI told: status.get's configRepair and
 // profile.changed {kind:"configRepaired"} with the revision of the

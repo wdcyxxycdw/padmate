@@ -12,7 +12,7 @@ import (
 )
 
 // These tests need the SDL library, as those of source_test.go do. They
-// hold the pause combo (DMN-07) on virtual gamepads.
+// hold the pause combo on virtual gamepads.
 
 // comboHold is the hold time of the combos in these tests.
 const comboHold = 50 * time.Millisecond
@@ -264,7 +264,7 @@ func TestComboQueueFull(t *testing.T) {
 }
 
 // TestComboRepickVirtual changes the combo that ComboFor gives while a
-// virtual gamepad holds the old one, and calls RepickCombos (UI-19): the
+// virtual gamepad holds the old one, and calls RepickCombos: the
 // old combo no longer fires, and the new one fires once its members are
 // pressed after the change, without reopening the Source.
 func TestComboRepickVirtual(t *testing.T) {

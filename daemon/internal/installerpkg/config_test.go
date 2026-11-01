@@ -47,7 +47,7 @@ func TestElectronBuilderConfig(t *testing.T) {
 	if got := configValue(t, config, "artifactName"); got != want {
 		t.Errorf("artifactName is %q, want %q", got, want)
 	}
-	// A wizard (PKG-13), per user, no administrator rights (PKG-03). It
+	// A wizard, per user, no administrator rights. It
 	// finishes with "run padmate" ticked, makes a Start Menu and a desktop
 	// shortcut (ADR-0018), and has no license page (TestNoLicensePage).
 	for key, value := range map[string]string{
@@ -75,7 +75,7 @@ func TestElectronBuilderConfig(t *testing.T) {
 
 // electron-builder writes padmate.exe's numeric file version from the string
 // "0.15.1-rc.1" as 0.15.0.1; the afterSign hook rewrites it to the tag's three
-// numbers, which checkElectronVersion wants (PKG-06). Without the hook only a
+// numbers, which checkElectronVersion wants. Without the hook only a
 // prerelease of a version with PATCH 0 passes, by luck.
 func TestElectronBuilderStampsFileVersion(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
@@ -85,7 +85,7 @@ func TestElectronBuilderStampsFileVersion(t *testing.T) {
 	}
 	script := string(readApp(t, strings.TrimPrefix(hook, "./")))
 	// The hook writes the version into a file electron-builder has already signed,
-	// which drops the signature, and signs again (PKG-09).
+	// which drops the signature, and signs again.
 	for _, want := range []string{"export default", "fileVersionMS", "fileVersionLS", "ignoreCert", "signIf"} {
 		if !strings.Contains(script, want) {
 			t.Errorf("%s does not contain %q", hook, want)
@@ -103,7 +103,7 @@ func TestInstallerScript(t *testing.T) {
 	text := string(nsh)
 	for _, want := range []string{
 		"!macro customHeader", "!macro customInit", "!macro customCheckAppRunning", "!macro customUnInstall",
-		// The wizard (PKG-13): padmate's own folder page after the skipped
+		// The wizard: padmate's own folder page after the skipped
 		// install-mode page, and the rule for the folder in its own file.
 		"!macro customInstallMode", "!macro customPageAfterChangeDir", "!insertmacro PadmateDirPage",
 		`!include "padmate-wizard.nsh"`, "!insertmacro PadmatePathFunctions", "!insertmacro PadmatePageFunctions",
@@ -145,7 +145,7 @@ func TestInstallerScript(t *testing.T) {
 
 // electron-builder's installer keeps a copy of itself, as large as it is, in
 // %LOCALAPPDATA%\padmate-updater for a differential update, which padmate does
-// not use (PKG-10 downloads whole installers), and its uninstaller leaves it.
+// not use (the automatic update downloads whole installers), and its uninstaller leaves it.
 // The install deletes it at its end, and a full uninstall again. The shared
 // function removes the folder only when it is empty; what an update downloaded
 // is deleted by a full uninstall alone (TestFullUninstallDeletesTheUpdateCache).
@@ -197,7 +197,7 @@ func customMacro(t *testing.T, text, name string) string {
 	return text[start : start+end]
 }
 
-// The wizard never asks for administrator rights (PKG-13): the page for "all
+// The wizard never asks for administrator rights: the page for "all
 // users or only me" ends in Abort for the installer, so that the code after it,
 // which elevates on /allusers, never runs, and the start of the installer
 // ignores /allusers and a machine-wide record. Both need to be in the script
@@ -301,7 +301,7 @@ func TestNoLicensePage(t *testing.T) {
 // Whether and how padmate.exe is signed is decided by PADMATE_SIGN in the
 // environment of app/scripts/package-installer.mjs, never by this file: it holds
 // no certificate, thumbprint, password or account, and the default build signs
-// nothing (PKG-09, ADR-0018).
+// nothing (ADR-0018).
 func TestElectronBuilderSigningConfig(t *testing.T) {
 	config := string(readApp(t, "electron-builder.yml"))
 	for _, key := range []string{

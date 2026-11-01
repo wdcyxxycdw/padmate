@@ -90,7 +90,7 @@ it.skipIf(!validator)(
           press: { type: "keys", keys: "F15" },
         };
       cases.push(triggers);
-      // The settings of the advanced editor (UI-28): a knob with its ticks and
+      // The settings of the advanced editor: a knob with its ticks and
       // rings, the second stage, a rate that follows the push depth, and the
       // two-stage set-up of M12 moved to lt.full.
       const key = (keys: string, repeat?: object) => ({
@@ -127,7 +127,7 @@ it.skipIf(!validator)(
         "lefttrigger+": key("F7", { rateHz: 8, minRateHz: 8 }),
       });
       cases.push(advanced);
-      // The pointer (UI-33): both sticks move it, one with every setting, and
+      // The pointer: both sticks move it, one with every setting, and
       // the precision action on a press and on a hold.
       const pointer = empty();
       pointer.analog = {

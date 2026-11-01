@@ -166,7 +166,7 @@ func (r *liveRun) applyOwnOutput(enabled bool) error {
 	return r.loop.Do(func(*output.Arbiter) error { return nil })
 }
 
-// applyEventGap sets output.eventGapMs on T-output (OUT-17); the caller
+// applyEventGap sets output.eventGapMs on T-output; the caller
 // holds configApplyMu. The gap is set whatever the Sends it makes return:
 // their errors are logged as output errors, and only a closed loop fails.
 func (r *liveRun) applyEventGap(ms int) error {
@@ -242,7 +242,7 @@ func (r *liveRun) uiMethods(methods handler.Map, session *ipc.Session, owner uin
 		return map[string]bool{"registered": true, "localDryRun": r.ownMode.Load()}, nil
 	}
 	// ui.exitReady is the UI's answer to daemon.exiting (reason "tray" or
-	// "installer", DMN-22): it has saved its last edit and quits. exiting is
+	// "installer"): it has saved its last edit and quits. exiting is
 	// false when no exit is under way, and the answer then counts for
 	// nothing.
 	methods["ui.exitReady"] = func(_ context.Context, req *jrpc2.Request) (any, error) {

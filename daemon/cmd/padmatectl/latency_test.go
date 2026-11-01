@@ -47,7 +47,7 @@ func newLatencyRig(t *testing.T) *latencyRig {
 	return rig
 }
 
-// TestLatencyCommand (DMN-15, ADR-0016): padmatectl latency prints the result of
+// TestLatencyCommand (ADR-0016): padmatectl latency prints the result of
 // latency.get as JSON like the other daemon commands; --device selects one
 // controller, --reset calls latency.reset (of that controller, else of all)
 // instead, and --json is compact. It takes no positional arguments.

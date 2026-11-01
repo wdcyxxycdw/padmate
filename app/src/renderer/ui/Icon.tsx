@@ -17,9 +17,9 @@ const paths = {
   error: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM9 9l6 6M15 9l-6 6",
   info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v6M12 7.5v.01",
   refresh: "M20 8a8 8 0 1 0 .9 6M20 3v5h-5",
-  /** Out of the tray: a file saved elsewhere (PRO-20). */
+  /** Out of the tray: a file saved elsewhere. */
   export: "M12 15V4M7 9l5-5 5 5M5 20h14",
-  /** Into the tray: a file brought in (PRO-20). */
+  /** Into the tray: a file brought in. */
   import: "M12 4v11M7 10l5 5 5-5M5 20h14",
   folder: "M3 6h6l2 2h10v11H3z",
   file: "M6 3h8l5 5v13H6zM14 3v5h5",
@@ -34,7 +34,7 @@ const paths = {
   lock: "M5 11h14v9H5zM8 11V8a4 4 0 0 1 8 0v3",
   sliders: "M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4",
   script: "m8 7-5 5 5 5M16 7l5 5-5 5",
-  /** A program's window: stands in for an app without an icon of its own (UI-42). */
+  /** A program's window: stands in for an app without an icon of its own. */
   app: "M3 5h18v14H3zM3 9.5h18M6.5 7.25h.01M9.5 7.25h.01",
   more: "",
 } as const;

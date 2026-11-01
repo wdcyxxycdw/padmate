@@ -23,16 +23,16 @@ import (
 
 var update = flag.Bool("update", false, "rewrite testdata/golden/*/output.trace, and decisions.jsonl and haptics.trace where they exist, from the current output (create an empty one to add it)")
 
-// TestGolden replays each case of testdata/golden (ENG-09): the profile
+// TestGolden replays each case of testdata/golden: the profile
 // (profile.json, or the file profile.path names relative to the case),
 // input.trace driven through a Slot and then the exit path, ReleaseAll.
-// The key output, through a MenuMask as padmated injects it (OUT-08), must
+// The key output, through a MenuMask as padmated injects it, must
 // match output.trace, the decisions decisions.jsonl when the case has one, and
-// the haptics (MAP-25, HUD-10) haptics.trace when it has one: a line for each
+// the haptics haptics.trace when it has one: a line for each
 // call of Config.OnHaptic, such as "tick@104" for a tick at 104 ms.
 //
 // A profile with macro actions gets a fake runtime that only runs macros
-// (fakeMacros, SCR-50): a run of "F13.ts" presses F13 for 100 ms.
+// (fakeMacros): a run of "F13.ts" presses F13 for 100 ms.
 func TestGolden(t *testing.T) {
 	dirs, err := filepath.Glob(filepath.Join("testdata", "golden", "*"))
 	if err != nil || len(dirs) == 0 {

@@ -335,7 +335,7 @@ func (p *eventPrinter) print(e hookEvent) error {
 	return err
 }
 
-// vkPacket is VK_PACKET, the VK of an event typed by KEYEVENTF_UNICODE (OUT-21).
+// vkPacket is VK_PACKET, the VK of an event typed by KEYEVENTF_UNICODE.
 const vkPacket = 0xE7
 
 // formatEvent formats e in the human format, such as

@@ -72,7 +72,7 @@ describe("authenticated CLI bridge", () => {
     client.close();
   });
 
-  it("delivers a script's toast, the hud topic (SCR-22)", async () => {
+  it("delivers a script's toast, the hud topic", async () => {
     const { child, client, events } = fixture();
     child.stdout.write('{"ready":true,"pid":42,"protocol":1}\n');
     await client.ready;
@@ -110,7 +110,7 @@ describe("authenticated CLI bridge", () => {
     await expect(client.call("status.get")).rejects.toThrow("disconnected");
   });
 
-  it("reads what the bridge wrote before it exited (DMN-22)", async () => {
+  it("reads what the bridge wrote before it exited", async () => {
     const { child, client, events } = fixture();
     const closed = vi.fn();
     client.onClose(closed);
@@ -166,14 +166,14 @@ describe("subscribe", () => {
     });
   });
 
-  it("goes without hud when the daemon does not know it (SCR-22)", async () => {
+  it("goes without hud when the daemon does not know it", async () => {
     const call = vi.fn().mockRejectedValueOnce(refused()).mockResolvedValue({});
     await subscribe(call);
     expect(call).toHaveBeenCalledTimes(2);
     expect(call).toHaveBeenLastCalledWith("subscribe", { topics: withoutHud });
   });
 
-  it("goes without hud and daemon.exiting when the daemon knows neither (DMN-22)", async () => {
+  it("goes without hud and daemon.exiting when the daemon knows neither", async () => {
     const call = vi
       .fn()
       .mockRejectedValueOnce(refused())
@@ -230,7 +230,7 @@ describe("subscribe", () => {
   });
 });
 
-describe("isDisconnectedError (SCR-22)", () => {
+describe("isDisconnectedError", () => {
   it("knows what a call to an ended bridge says", async () => {
     const { child, client } = fixture();
     child.stdout.write('{"ready":true,"pid":42,"protocol":1}\n');

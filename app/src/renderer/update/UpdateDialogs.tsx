@@ -10,7 +10,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * The blocking dialogs of the automatic update (PKG-10, ADR-0018): a version
+ * The blocking dialogs of the automatic update (ADR-0018): a version
  * on offer, the download, the install, and how a check, a download or an install
  * that the person started ended. Main decides which one shows (the state's
  * dialog); this only draws it and sends back the choice. Closing a dialog

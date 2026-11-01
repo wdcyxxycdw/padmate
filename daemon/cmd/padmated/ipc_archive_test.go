@@ -189,8 +189,8 @@ func TestIPCImportReplacesActiveProfile(t *testing.T) {
 	}
 }
 
-// A profile's macros travel with profiles.export and profiles.import
-// (SCR-50, SCR-51, PRO-20): the archive carries the library's macros that
+// A profile's macros travel with profiles.export and profiles.import:
+// the archive carries the library's macros that
 // the profile runs, not the declarations macros.create wrote, and an
 // import puts them into the script library. The same bytes are used;
 // other bytes under the same name are rpcCodeMacroConflict before

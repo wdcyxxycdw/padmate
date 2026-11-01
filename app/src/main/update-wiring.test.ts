@@ -35,7 +35,7 @@ const pins = (needle: string | RegExp) =>
     )
     .map(({ path }) => path);
 
-describe("how electron-updater is held (PKG-10, ADR-0018)", () => {
+describe("how electron-updater is held (ADR-0018)", () => {
   it("is imported by one file, at the version the notes were read from", () => {
     expect(pins(/from "electron-updater|require\("electron-updater/)).toEqual([
       "src/main/updater-electron.ts",
@@ -147,7 +147,7 @@ describe("how the update code is wired into Main", () => {
       /openExternal: \(url\) => \{\s*if \(!isManualDownloadURL\(url\)\)\s*throw new Error\("Not the download address"\);\s*return shell\.openExternal\(url\);/,
     );
     // The other place that opens an address is the one Windows Settings page
-    // of the Xbox button's notice (system-settings.ts, UI-30): the handler
+    // of the Xbox button's notice (system-settings.ts): the handler
     // table calls the shell with the one address that file allows.
     expect(pins("shell.openExternal(").sort()).toEqual([
       "src/main/index.ts",

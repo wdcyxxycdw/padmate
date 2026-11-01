@@ -18,7 +18,7 @@ export function conflictName(process: string): string {
   return process;
 }
 
-/** The kinds of controller Steam Input has a setting for (IN-24), in plain words. */
+/** The kinds of controller Steam Input has a setting for, in plain words. */
 function steamClassName(kind: string, language: Language): string {
   switch (kind) {
     case "xbox":
@@ -49,7 +49,7 @@ export function conflictClasses(
 
 /**
  * What to do about running software. Steam with the classes of controller it
- * may manage (IN-24) says which controllers and where to turn Steam Input off;
+ * may manage says which controllers and where to turn Steam Input off;
  * padmate cannot see Steam's virtual controller, so it only says "may".
  */
 export function conflictAdvice(

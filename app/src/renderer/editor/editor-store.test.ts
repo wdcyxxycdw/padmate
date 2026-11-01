@@ -404,7 +404,7 @@ describe("merged edits", () => {
     expect(api.putProfile).toHaveBeenCalledOnce();
   });
 
-  it("says while an edit waits for its save or a save runs (SCR-50)", async () => {
+  it("says while an edit waits for its save or a save runs", async () => {
     vi.useFakeTimers();
     const { api, store } = setup();
     await store.getState().activate(context);
@@ -690,7 +690,7 @@ describe("switching", () => {
   });
 });
 
-describe("review fixes (UI-43)", () => {
+describe("review fixes", () => {
   const withNorth = (store: EditorStore, press: unknown): Profile => {
     const next = structuredClone(draft(store));
     next.layers.base = {
@@ -917,7 +917,7 @@ describe("review fixes (UI-43)", () => {
   });
 });
 
-// The profile format is frozen at version 1 (PRO-01). Files of version 0 open
+// The profile format is frozen at version 1. Files of version 0 open
 // as they are; the editor never rewrites one until the user edits it, and
 // then it writes the whole document at the current version.
 describe("the profile format version", () => {
@@ -965,8 +965,8 @@ describe("the profile format version", () => {
   });
 });
 
-// The mapping page shows the usual bindings or the function set (UI-30,
-// ADR-0012); which one is view state, not part of the profile.
+// The mapping page shows the usual bindings or the function set
+// (ADR-0012); which one is view state, not part of the profile.
 describe("the shown key set (function key)", () => {
   const key = (value: string) =>
     ({ type: "keys", keys: value, mode: "tap" }) as const;

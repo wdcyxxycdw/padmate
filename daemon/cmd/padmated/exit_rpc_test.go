@@ -30,7 +30,7 @@ func stoppedCode(tl *testLive) <-chan int {
 }
 
 // TestDaemonExitInstallerWaitsForUI: daemon.exit {reason:"installer"} runs
-// the tray's exit (DMN-22, PKG-04): it replies at once, lets go of every
+// the tray's exit: it replies at once, lets go of every
 // key and pauses the mapping, tells the UIs, waits until the UI has saved
 // its last edit and answered ui.exitReady, then takes the exit path.
 func TestDaemonExitInstallerWaitsForUI(t *testing.T) {

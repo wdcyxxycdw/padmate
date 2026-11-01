@@ -24,7 +24,7 @@ function switchLabel(key: FeedbackSwitch, language: Language): string {
 }
 
 /**
- * Settings → 反馈 (UI-27, ADR-0015): the four controller feedback switches,
+ * Settings → 反馈 (ADR-0015): the four controller feedback switches,
  * global for every profile and controller. They are config.json's feedback
  * members, saved like the other rows of the page, and the daemon applies them
  * at once. A row is its name and its switch, nothing else.

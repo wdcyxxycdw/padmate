@@ -3,7 +3,7 @@ package input
 import "github.com/Zyko0/go-sdl3/sdl"
 
 // This file and its per-OS parts bind the SDL functions that go-sdl3
-// v0.1.1 lacks or binds wrongly (SPK-10). bindExt resolves them in the
+// v0.1.1 lacks or binds wrongly. bindExt resolves them in the
 // library that loadLibrary loaded, by the same path, so they always come
 // from the same module as go-sdl3's own bindings.
 //
@@ -17,7 +17,7 @@ import "github.com/Zyko0/go-sdl3/sdl"
 // return the struct (sdlext_other.go).
 //
 // go-sdl3 v0.1.1 binds none of SDL's HID API (SDL_hid_*), which the
-// receiver watchdog reads reports with (IN-30, hidbeat.go). Its C int
+// receiver watchdog reads reports with (hidbeat.go). Its C int
 // results are 32 bits wide: on x64 only EAX is defined, so the Windows
 // bindings convert the register to int32 before they compare it. On
 // Windows/amd64 reading allocates nothing; elsewhere purego's

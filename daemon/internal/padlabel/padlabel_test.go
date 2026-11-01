@@ -101,7 +101,7 @@ func TestLabelsMatchUI(t *testing.T) {
 	}
 }
 
-// TestName: what the tray calls a binding's control (DMN-13): the label
+// TestName: what the tray calls a binding's control: the label
 // of the control on the mapping page, paddles and misc buttons included,
 // and a stick or trigger for its directions and half axes.
 func TestName(t *testing.T) {

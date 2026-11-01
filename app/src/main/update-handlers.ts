@@ -23,7 +23,7 @@ function validateDismissal(value: unknown): UpdateDismissal {
   return value;
 }
 
-// The window's side of the automatic update (PKG-10). It sends no version, no
+// The window's side of the automatic update. It sends no version, no
 // address and no file: the download site is opened with no argument (Main
 // owns the address, update-config.ts), and the only things the window chooses
 // are the two buttons and the switch.

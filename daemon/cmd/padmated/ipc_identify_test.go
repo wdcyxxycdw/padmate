@@ -25,7 +25,7 @@ func identifyCalls(src *fakeSource) []effectCall {
 	return got
 }
 
-// TestIPCIdentify (IN-13): devices.identify asks the source for the cues of
+// TestIPCIdentify: devices.identify asks the source for the cues of
 // the one controller the selector names, a connection ID or a DeviceKey, and
 // answers which it can give. It works for every status a controller has,
 // mapped, waiting, ignored and unmapped, and while the mapping is paused,

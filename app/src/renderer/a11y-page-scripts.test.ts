@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// UI-24: the functions the Electron pass of tests/e2e/a11y.spec.ts runs inside
+// The functions the Electron pass of tests/e2e/a11y.spec.ts runs inside
 // the page (tests/a11y/page-scripts.ts). That pass is not part of `task ci`, so
 // what they decide is proved here, in jsdom, on small documents.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

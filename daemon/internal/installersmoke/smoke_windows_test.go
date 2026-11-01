@@ -23,7 +23,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/installerpkg"
 )
 
-// The smoke test of the built installer (SPK-07). It installs into a folder
+// The smoke test of the built installer. It installs into a folder
 // the test makes, with spaces and Chinese in its name, and touches the user's
 // real state only transiently and only where an installer must: the Settings >
 // Apps entry and its install key under HKCU, and the Start Menu and desktop
@@ -42,7 +42,7 @@ import (
 // override, not the real one.
 //
 // The update-style step runs the installer as --updated /S, as the automatic
-// update does, over a running daemon (PKG-10). It never passes --force-run:
+// update does, over a running daemon. It never passes --force-run:
 // that start is made by Explorer as the user, in the real environment, so the
 // new padmate.exe would use the real data folder and send keys. runCommand
 // refuses the flag. The relaunch after a real update is the owner's to check.
@@ -52,7 +52,7 @@ import (
 //	PADMATE_TEST_INSTALLER_INTERACTIVE=1  also answers the uninstaller's message
 //	                                  boxes (they appear on screen for a moment)
 //	PADMATE_INSTALLER_SIGNED_SUBJECT  optional: the publisher the installed files, the
-//	                                  uninstaller included, must be signed by (PKG-09)
+//	                                  uninstaller included, must be signed by
 //	PADMATE_INSTALLER_SIGNED_ALLOW_UNTRUSTED_ROOT=1  accept a self-signed test certificate
 //	PADMATE_INSTALLER_SIGNED_NO_TIMESTAMP=1          do not demand a timestamp
 const (
@@ -672,7 +672,7 @@ func (s *smoke) checkInstalled(tag installerpkg.Tag, earlier bool) {
 }
 
 // checkInstalledAs is checkInstalled for an installation that may also be older
-// than the automatic update (PKG-10): the first installer of an upgrade
+// than the automatic update: the first installer of an upgrade
 // (older is true when it is named as the older of two) has no
 // resources\app-update.yml, and the tree check does not ask for it
 // (installerpkg.TreeOptions.NoUpdateConfig). The two options compose: an
@@ -774,7 +774,7 @@ func TestInstallerSmoke(t *testing.T) {
 	t.Logf("test root %s, install folder %s", s.root, s.inst)
 
 	// Another padmated, outside the installation, that no installer step may
-	// touch: a development build or a portable copy (PKG-04). It runs from a
+	// touch: a development build or a portable copy. It runs from a
 	// copy of the first installation's daemon, so it exists once that is installed.
 	var survivor *daemon
 
@@ -884,7 +884,7 @@ func TestInstallerSmoke(t *testing.T) {
 		}
 	}
 
-	// What the automatic update runs (PKG-10, ADR-0018): the downloaded
+	// What the automatic update runs (ADR-0018): the downloaded
 	// installer as --updated /S, silent, over the running daemon, without /D=
 	// (the folder is the recorded one) and without --force-run (that start is
 	// made by Explorer as the user, with the real data folder and --inject, and
@@ -1041,7 +1041,7 @@ func TestInstallerSmoke(t *testing.T) {
 			s.write(s.updaterCopy, stand)
 		}
 
-		// And an update that was downloaded and never installed (PKG-10): the
+		// And an update that was downloaded and never installed: the
 		// full uninstall deletes the folder with it. Under the test override
 		// that folder is the test root's own, so no real update is at risk.
 		updateCache := filepath.Join(s.local, "padmate-updater")

@@ -174,7 +174,7 @@ func TestFakeInputQueueFullDoesNotAcceptLostEdge(t *testing.T) {
 }
 
 // The fake gamepad's key must be one config.json accepts, or the UI can not
-// save settings for it, such as a calibration (IN-14): ParseDeviceKey wants
+// save settings for it, such as a calibration: ParseDeviceKey wants
 // the 32 hex digits of a real SDL GUID.
 func TestFakeInputDeviceKeyIsCanonical(t *testing.T) {
 	src := newRPCInputSource(input.Options{})

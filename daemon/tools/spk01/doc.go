@@ -1,4 +1,4 @@
-// Command spk01 is the SPK-01 spike: padmated's input side in its real
+// Command spk01 is the tray spike: padmated's input side in its real
 // shape, to check SDL's joystick backends, background input and the CPU
 // cost of T-input.
 //

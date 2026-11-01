@@ -10,7 +10,7 @@ import {
 const xbox = controllerLabels("xboxone");
 const switchPro = controllerLabels("switchpro");
 
-describe("key preview line (UI-44)", () => {
+describe("key preview line", () => {
   it("names the control as the pad prints it", () => {
     for (const [control, labels, want] of [
       ["south", xbox, "A"],
@@ -97,7 +97,7 @@ describe("key preview line (UI-44)", () => {
     expect(keyPreviewText(preview, xbox, undefined, "en")).toBe("A → LMB");
   });
 
-  it("shows the script a macro action runs, without the extension (SCR-50)", () => {
+  it("shows the script a macro action runs, without the extension", () => {
     expect(previewAction("macro 复制全部.ts")).toBe("复制全部");
     expect(previewAction("macro 按住 Shift.js")).toBe("按住 Shift");
     // Script actions of the legacy script do not name macros.
@@ -136,7 +136,7 @@ describe("key preview line (UI-44)", () => {
     expect(previewAction("script missing")).toBe("missing");
   });
 
-  it("shows a precision action with its share of the speed (MOU-05)", () => {
+  it("shows a precision action with its share of the speed", () => {
     expect(previewAction("mouse precision 0.3")).toBe("精确模式 30%");
     expect(previewAction("mouse precision 0.05", [], "zh-CN")).toBe(
       "精确模式 5%",
@@ -162,7 +162,7 @@ describe("key preview line (UI-44)", () => {
     ).toEqual({ control: "LB", sends: "Precision 50%", macro: false });
   });
 
-  it("shows the key hints action by name (HUD-03)", () => {
+  it("shows the key hints action by name", () => {
     expect(previewAction("hud hints")).toBe("按键提示");
     expect(previewAction("hud hints", [], "en")).toBe("Key hints");
     expect(
@@ -178,14 +178,14 @@ describe("key preview line (UI-44)", () => {
     expect(previewAction("hud other")).toBeNull();
   });
 
-  it("shows the volume and media keys by name (OUT-20)", () => {
+  it("shows the volume and media keys by name", () => {
     expect(previewAction("tap VolumeUp")).toBe("音量加");
     expect(previewAction("tap Ctrl+MediaNext")).toBe("Ctrl+下一首");
     expect(previewAction("tap MediaPlayPause", [], "en")).toBe("Play/Pause");
     expect(previewAction("hold VolumeMute", [], "en")).toBe("Mute");
   });
 
-  it("shows the text a text action types (OUT-21)", () => {
+  it("shows the text a text action types", () => {
     expect(previewAction('text "你好"')).toBe("输入文字「你好」");
     expect(previewAction('text "你好"', [], "en")).toBe("Type “你好”");
     // The decision quotes the text as Go does: a newline is \n on the line.
@@ -203,7 +203,7 @@ describe("key preview line (UI-44)", () => {
     expect(previewAction("text abc")).toBeNull();
   });
 
-  it("shows the steps of a sequence action (MAP-22)", () => {
+  it("shows the steps of a sequence action", () => {
     expect(
       previewAction('sequence: Ctrl+A, wait 100, text "你好", Enter'),
     ).toBe("Ctrl+A, 100 ms, “你好”, Enter");

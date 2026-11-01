@@ -1,4 +1,4 @@
-# A reconnect during sleep (DMN-09): east holds Space when the machine
+# A reconnect during sleep: east holds Space when the machine
 # goes to sleep at 500, which lets go of it. Pad A goes away at 600 and
 # comes back with a new id at 1000, still asleep, and east goes down: the
 # slot starts held, so it maps nothing. The wake at 1500 queries the

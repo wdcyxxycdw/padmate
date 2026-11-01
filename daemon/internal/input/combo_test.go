@@ -293,7 +293,7 @@ func TestComboWatchPick(t *testing.T) {
 
 // TestComboWatchRepick checks that Repick gives every device the combo
 // pick gives it now, with the Info it had, and that a hold under way
-// fires neither combo until the new members are pressed again (UI-19).
+// fires neither combo until the new members are pressed again.
 func TestComboWatchRepick(t *testing.T) {
 	standard := input.Combo{Buttons: []string{"back", "start"}, Hold: time.Second}
 	joycon := input.Combo{Buttons: []string{"leftshoulder", "rightshoulder"}, Hold: time.Second}
@@ -427,7 +427,7 @@ func TestComboNotInTraces(t *testing.T) {
 }
 
 // TestComboWatchForgetsHeldMembersOnRemap: SDL does not release what is held
-// when a mapping changes (IN-18), so back held before the remap may never be
+// when a mapping changes, so back held before the remap may never be
 // released: the hold of the combo must start again with both pressed anew.
 func TestComboWatchForgetsHeldMembersOnRemap(t *testing.T) {
 	w := input.NewComboWatch(func(info input.DeviceInfo) input.Combo { return input.DefaultCombo(info, false) })

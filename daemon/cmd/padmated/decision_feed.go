@@ -71,7 +71,7 @@ const (
 	feedUnrouted
 )
 
-// decisionFeed gets the engine's decisions (ENG-20) from the slots, and the
+// decisionFeed gets the engine's decisions from the slots, and the
 // button edges of gamepads that no slot maps from the router, and publishes
 // them as engine.activity events for the diagnostics page (ADR-0016).
 //

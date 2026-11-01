@@ -13,7 +13,7 @@ const icon = (control: string, type: string, buttonMask?: number) =>
     controllerLabels(type, {}, buttonMask),
   );
 
-describe("control icons of the key preview (UI-44)", () => {
+describe("control icons of the key preview", () => {
   it("draws a control the icon sets have with its icon (ADR-0013)", () => {
     // The table of which icon is in pad-icon.test.tsx; here, that it is used.
     expect(icon("south", "xboxone")).toEqual({

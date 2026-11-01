@@ -21,7 +21,7 @@ async function seed(files: string[]): Promise<string> {
   return pending;
 }
 
-describe("the update downloaded by an earlier run (PKG-10)", () => {
+describe("the update downloaded by an earlier run", () => {
   it("is deleted once the application has that version", async () => {
     const pending = await seed([setup("1.0.1"), "update-info.json"]);
     await expect(

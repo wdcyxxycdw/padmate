@@ -16,7 +16,7 @@ import (
 )
 
 // MacroRunLimit is how long a run of a macro may last: past it the run is
-// canceled and its keys are released (SCR-50).
+// canceled and its keys are released.
 const MacroRunLimit = 60 * time.Second
 
 var (
@@ -128,7 +128,7 @@ func attributeMacro(file string, phase Phase, err error) error {
 	clone := &Error{Cause: de.Cause, Diagnostics: slices.Clone(de.Diagnostics)}
 	for i := range clone.Diagnostics {
 		d := &clone.Diagnostics[i]
-		// A macro is built with its macros folder as the root (SCR-51), so
+		// A macro is built with its macros folder as the root, so
 		// the other files are named relative to the folder already.
 		if d.File == "" {
 			d.File = file

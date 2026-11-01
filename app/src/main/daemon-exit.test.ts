@@ -15,7 +15,7 @@ function fixture() {
   return { deliver, trayExit, route: routeDaemonEvents({ deliver, trayExit }) };
 }
 
-describe("the daemon's exit event (DMN-22, PKG-04)", () => {
+describe("the daemon's exit event", () => {
   it("quits the UI once for the tray's 退出, never telling the renderer", () => {
     const { deliver, trayExit, route } = fixture();
     route({ topic: "daemon.exiting", data: { reason: "tray" } });
@@ -25,7 +25,7 @@ describe("the daemon's exit event (DMN-22, PKG-04)", () => {
     expect(deliver).not.toHaveBeenCalled();
   });
 
-  it("quits the UI once for the installer's exit (PKG-04), like the tray's", () => {
+  it("quits the UI once for the installer's exit, like the tray's", () => {
     const { deliver, trayExit, route } = fixture();
     route({ topic: "daemon.exiting", data: { reason: "installer" } });
     expect(trayExit).toHaveBeenCalledOnce();
@@ -74,7 +74,7 @@ describe("the daemon's exit event (DMN-22, PKG-04)", () => {
   });
 });
 
-describe("quitting after the saves (DMN-22, G9)", () => {
+describe("quitting after the saves (G9)", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -173,7 +173,7 @@ describe("quitting after the saves (DMN-22, G9)", () => {
   });
 });
 
-describe("the window's close during the tray exit (DMN-22)", () => {
+describe("the window's close during the tray exit", () => {
   it("holds a close while the exit waits for the saves", () => {
     const guard = vi.fn(() => false);
     expect(

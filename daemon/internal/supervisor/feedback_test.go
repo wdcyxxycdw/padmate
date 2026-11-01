@@ -29,7 +29,7 @@ func (h *switchesHolder) get() profile.FeedbackSwitches   { return *h.v.Load() }
 func (h *switchesHolder) set(sw profile.FeedbackSwitches) { h.v.Store(&sw) }
 
 // TestSwitchesReachEverySlot: Config.Switches is the global feedback switches
-// of every slot's engine (UI-27, ADR-0015). A haptic follows the rumble switch
+// of every slot's engine (ADR-0015). A haptic follows the rumble switch
 // at once; RefreshFeedback has every slot publish its state again, with the
 // current switches, behind the edges delivered so far; and a slot without a
 // controller publishes with device 0 (padmated drops that).

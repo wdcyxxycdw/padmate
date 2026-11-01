@@ -14,7 +14,7 @@ import (
 )
 
 // TestRepeatStopsAfterRelease checks M2's acceptance that repeat stops as
-// soon as its control is released (OUT-11): through a slot and its
+// soon as its control is released: through a slot and its
 // Arbiter, no edge comes later than tapPressMs + 10 ms after the release,
 // whatever the phase of the release in the repeat period, and nothing is
 // held before ReleaseAll.

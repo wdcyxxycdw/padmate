@@ -51,7 +51,7 @@ export interface ChipSegment {
   divider?: string;
   /** Marks a script action. */
   script?: boolean;
-  /** Marks a script (macro) a gesture runs (SCR-50), shown with its icon. */
+  /** Marks a script (macro) a gesture runs, shown with its icon. */
   macro?: boolean;
   /** The macro's file is missing: a warning colour. */
   missing?: boolean;
@@ -60,7 +60,7 @@ export interface ChipSegment {
   hold?: boolean;
 }
 
-/** What one controller chip shows (UI-39). */
+/** What one controller chip shows. */
 export interface ChipInfo {
   /** Main text: the binding label, the action, or the control name. */
   title: string;
@@ -86,7 +86,7 @@ export interface ChipInfo {
    * control does otherwise, greyed, under a note (ADR-0012).
    */
   inherited?: boolean;
-  /** A gesture runs a script whose file is missing (SCR-50). */
+  /** A gesture runs a script whose file is missing. */
   missing?: boolean;
 }
 
@@ -114,7 +114,7 @@ function isStickMovement(control: string): boolean {
   return control === "leftstick" || control === "rightstick";
 }
 
-/** The rings of a stick (ANA-10) and the second stage of a trigger (ANA-14). */
+/** The rings of a stick and the second stage of a trigger. */
 function stageKeys(control: string): string[] {
   if (control === "leftstick" || control === "rightstick") {
     const group = control === "leftstick" ? "ls" : "rs";
@@ -347,7 +347,7 @@ function describeStick(
   const group = control === "leftstick" ? "ls" : "rs";
   // The click is the press cell's (its own chip): this is the movement only.
   const extras = stageSegments(profile, control, language, names);
-  // A stick that moves the pointer sends no key (MOU-01): the chip says so,
+  // A stick that moves the pointer sends no key: the chip says so,
   // and direction keys or ticks left in the file are not its summary.
   if (profile.analog?.[group]?.mode === "mouse") {
     const mouse = tx(language, "鼠标", "Mouse");
@@ -358,7 +358,7 @@ function describeStick(
       extras,
     };
   }
-  // A knob sends its two ticks and no direction (ANA-11): its keys are the
+  // A knob sends its two ticks and no direction: its keys are the
   // summary, and direction keys left in the file are not.
   if (profile.analog?.[group]?.mode === "knob") {
     const ticks = [`${group}.cw`, `${group}.ccw`].flatMap((key) =>
@@ -449,7 +449,7 @@ function describeRaw(
   };
 }
 
-/** The chip of the function key (UI-30): tagged, and nothing to edit. */
+/** The chip of the function key: tagged, and nothing to edit. */
 export function functionKeyChip(language: Language): ChipInfo {
   return {
     title: tx(language, "功能键", "Function key"),
@@ -535,7 +535,7 @@ export function controllerChips({
   actions?: { name: string; label?: string }[];
   /** Library profiles, to name the target of a profile switch. */
   profiles?: { id: string; name?: string }[];
-  /** Macro files bindings run that the macros folder lacks (SCR-50). */
+  /** Macro files bindings run that the macros folder lacks. */
   missing?: readonly string[];
   /** Entry file of the profile's script, named when a script owns a control. */
   scriptEntry?: string;
@@ -605,7 +605,7 @@ export function controllerChips({
     const main = movement
       ? describeStick(profile, control, language, names)
       : describeBinding(binding, language, names);
-    // A trigger's second stage follows its first (ANA-14).
+    // A trigger's second stage follows its first.
     const description =
       (main && (control === "lefttrigger" || control === "righttrigger")
         ? {

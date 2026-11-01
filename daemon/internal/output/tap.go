@@ -12,7 +12,7 @@ import (
 // Sender injects keyboard and mouse events (a mouse event is one with
 // KeyEvent.Mouse set: a wheel notch, or a button down or up) and the Unicode
 // events of a text (KeyEvent.Unicode: one UTF-16 code unit typed by
-// KEYEVENTF_UNICODE, OUT-21). A Sender that cannot type a Unicode event must
+// KEYEVENTF_UNICODE). A Sender that cannot type a Unicode event must
 // say so in its count, as for any event it did not inject.
 type Sender interface {
 	// Send injects events in order as one batch, which other input cannot

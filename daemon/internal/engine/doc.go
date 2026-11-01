@@ -1,4 +1,4 @@
-// Package engine is the declarative mapping engine (MAP-01, ARCHITECTURE
+// Package engine is the declarative mapping engine (ARCHITECTURE
 // §4, §7): a pure state machine that turns control edges into key
 // commands.
 //
@@ -29,10 +29,10 @@
 // §7.4): a hold-mode press remembers its chord, and the release lets go of
 // that chord without looking the binding up again.
 //
-// The trigger axes drive the virtual controls LT and RT (ANA-01, §7.6): a
+// The trigger axes drive the virtual controls LT and RT (§7.6): a
 // trigger presses at TriggerPress of its travel and releases at
 // TriggerRelease, with nothing in between (hysteresis). A second stage,
-// LTFull and RTFull (ANA-14), presses at TriggerFullPress and releases at
+// LTFull and RTFull, presses at TriggerFullPress and releases at
 // TriggerFullRelease; LT stays down while it is, it presses after LT and
 // releases before it.
 //
@@ -40,24 +40,24 @@
 //
 // A stick that is active (pushed past directionThreshold) is in the inner
 // ring, or in the outer ring from outerThreshold on, until it falls
-// RingHysteresis below it (ANA-10): LSInner and LSOuter (RS*) are overlays
+// RingHysteresis below it: LSInner and LSOuter (RS*) are overlays
 // like LSActive. With mode "knob" the stick sends no directions; every
 // knobStepDeg of rotation queues one tick, LSCW or LSCCW, which Apply sends
 // as a press and a release of that control, at most one per call and not
-// closer than the key can follow (ANA-11). The queue is one revolution long.
+// closer than the key can follow. The queue is one revolution long.
 // The knob reads the angle KnobSettle after an axis input, when both axes of
 // a report are in, not at the input.
 //
 // # Ending every cycle
 //
 // CancelAll ends every active cycle. It sends nothing but the Up of the
-// latched chords (MAP-10): the slot then has the Arbiter release the rest
-// of the keys (OUT-07, §8.2). It also drops buffered edges, pending
+// latched chords: the slot then has the Arbiter release the rest
+// of the keys (§8.2). It also drops buffered edges, pending
 // gestures, multi-tap windows, repeats and overlays. Controls stay down in
 // the engine's view, so their physical release does nothing and a trigger
 // must fall to TriggerRelease or below before it presses again.
 // Reset also forgets which controls are down, for a device that went away.
-// Reload (PRO-03) runs CancelAll and then looks every later press up in
+// Reload runs CancelAll and then looks every later press up in
 // the new Program: a control held across it does nothing until it is
 // released and pressed again, and is never pressed again by the reload. The
 // one thing it does not stop is the pointer of a stick still pushed in mode
@@ -67,7 +67,7 @@
 //
 // # Paused mode
 //
-// Pause (DMN-06) runs CancelAll and keeps the engine paused until Resume:
+// Pause runs CancelAll and keeps the engine paused until Resume:
 // a press still starts a cycle and looks its binding up, but the cycle is
 // canceled at once, with ReasonPaused, and sends nothing, so its release
 // sends nothing either. Resume sends nothing and presses nothing again: a
@@ -79,7 +79,7 @@
 //
 // With Options.Trace set, the engine reports a Decision for every step
 // that changes or could change something, and for every cycle CancelAll
-// ends (ENG-20): the control, the edge, the cycle, what the lookup found
+// ends: the control, the edge, the cycle, what the lookup found
 // and why the engine did what it did. A decision comes before the output
 // it causes, so a trace of both reads as cause, then effect; a cancel
 // decision comes before the Arbiter releases the keys.
@@ -96,7 +96,7 @@
 //
 // While a gesture with both a tap and a hold is pending, the button edges
 // that come after it wait in a buffer and replay in their order once it
-// resolves (MAP-09); only the release of a control already dispatched goes
+// resolves; only the release of a control already dispatched goes
 // at once, and only when nothing is buffered. Only the decision, the hold
 // or tap action, comes before the edges the gesture captured: the pending
 // control's own release decides a tap from its place in the buffer and
@@ -105,15 +105,15 @@
 // the original times of replayed edges: a replayed press's hold threshold
 // and a replayed release's multi-tap window count from them.
 //
-// The lookup of a binding walks the active levels (ENG-21, M3): the
+// The lookup of a binding walks the active levels (M3): the
 // Registry's when Options.Registry is set, otherwise the overlays from the
 // top, then the base layer and common. Above them is the set of the function
 // key that is held, if there is one and it binds the control.
 //
 // # Function keys
 //
-// One of back, start and guide is the function key (MAP-27, ADR-0012,
-// ADR-0012, function_keys.go): start unless Compile is given another with
+// One of back, start and guide is the function key (ADR-0012,
+// function_keys.go): start unless Compile is given another with
 // WithFunctionKey. Its edges never enter gesture recognition: it starts no
 // cycle, is not buffered, interrupts nothing, sends nothing and is not shown
 // to a script, so it adds no delay to any key. It only decides which set of

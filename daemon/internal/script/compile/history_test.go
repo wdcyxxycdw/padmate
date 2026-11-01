@@ -11,7 +11,7 @@ import (
 )
 
 // TestBuildRefusesHistory checks that the profile library's folder of saved
-// profile.json versions (PRO-17) is inside the script root but never script
+// profile.json versions is inside the script root but never script
 // source: no import, computed import or entry may reach it.
 func TestBuildRefusesHistory(t *testing.T) {
 	root := t.TempDir()
@@ -78,7 +78,7 @@ func TestBuildRefusesHistory(t *testing.T) {
 }
 
 // TestCacheKeyIgnoresHistory checks that the cache key leaves out the
-// profile library's saved versions (PRO-17), which Build never reads: a
+// profile library's saved versions, which Build never reads: a
 // save that adds, prunes or replaces one does not change the key, and the
 // key's walk does not hold a snapshot open while the save deletes it. A
 // folder of that name below the root is ordinary source.

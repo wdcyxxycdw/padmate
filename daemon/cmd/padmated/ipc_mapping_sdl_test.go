@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// TestMappingWizardWithVirtualJoystick (IN-17, IN-18, IN-19, ADR-0012) goes
+// TestMappingWizardWithVirtualJoystick (ADR-0012) goes
 // through the wizard's calls against SDL's own virtual joystick, which SDL
 // reads as no gamepad until it has a mapping: the elements come as input.raw
 // events and no key is sent; a mapping turns it into a gamepad that maps like
@@ -170,7 +170,7 @@ func TestMappingWizardWithVirtualJoystick(t *testing.T) {
 	checkBalanced(t, tl.stdout.String())
 }
 
-// TestRemapWhileHeldReleasesTheKey (IN-18, invariant 1): SDL releases nothing
+// TestRemapWhileHeldReleasesTheKey (invariant 1): SDL releases nothing
 // when it changes the mapping of a gamepad, and the button that was held reads
 // as another element afterwards; the key it held goes up at once, and nothing
 // stays held when the old button is let go.

@@ -26,7 +26,7 @@ type Profile struct {
 	Script         *ScriptConfig
 	Common         *Layer
 	Layers         []*Layer
-	// FunctionSet is the function set the file writes (MAP-27, ADR-0012): the
+	// FunctionSet is the function set the file writes (ADR-0012): the
 	// bindings used while the function key is held; nil when the file has no
 	// functionSet. Unlike a function key's set of FunctionKeys it may bind back,
 	// start and guide. The engine reads EffectiveFunctionSet, not this.
@@ -36,8 +36,8 @@ type Profile struct {
 	// valid, and EffectiveFunctionSet merges it into the one set when
 	// there is no FunctionSet.
 	FunctionKeys *FunctionKeys
-	// Extends is the library ID of the profile this one builds on (PRO-19,
-	// ADR-0012), "" for a profile that does not. The profile is already the
+	// Extends is the library ID of the profile this one builds on
+	// (ADR-0012), "" for a profile that does not. The profile is already the
 	// merge of the whole chain: every member is the child's own or inherited.
 	Extends string
 	// Parents are the profiles of the chain, nearest first, with the sum of
@@ -61,7 +61,7 @@ type FunctionKeys struct {
 const FunctionSetName = "function"
 
 // FunctionLevel returns the name that the function set has as a level of the
-// lookup and in decisions (ENG-20) while function key c is the one: "function:back",
+// lookup and in decisions while function key c is the one: "function:back",
 // "function:start" or "function:guide", and "" when c cannot be the function
 // key (control.Control.CanBeFunctionKey). The colon keeps it apart from the
 // name of a layer, which is free text, the way a script's "layer:x" scope is.
@@ -135,12 +135,12 @@ type ScriptConfig struct {
 	Params map[string]any
 	TickHz int
 	// Origin is the library ID of the profile whose folder holds Entry, when
-	// the script is inherited (PRO-19): the entry is relative to that
+	// the script is inherited: the entry is relative to that
 	// profile's folder, not to the child's. "" is the profile's own.
 	Origin string
 }
 
-// Analog contains the profile-wide analog recognizer settings (ANA-02..08).
+// Analog contains the profile-wide analog recognizer settings.
 // Values are resolved to defaults by Parse, so the engine can use them
 // without consulting JSON or platform state.
 type Analog struct {
@@ -165,26 +165,25 @@ type Stick struct {
 	DirectionDelayMs   int
 	DiagonalFallback   string
 	// OuterThreshold is the normalized depth, measured like
-	// DirectionThreshold, at which the stick enters its outer ring (ANA-10).
+	// DirectionThreshold, at which the stick enters its outer ring.
 	OuterThreshold float64
-	// KnobStepDeg is the rotation that gives one knob tick in mode "knob"
-	// (ANA-11).
+	// KnobStepDeg is the rotation that gives one knob tick in mode "knob".
 	KnobStepDeg int
-	// KnobTick gives a haptic tick for each knob step that sends a key (HUD-10,
-	// ADR-0015). It does nothing without mode "knob", and the file may still
+	// KnobTick gives a haptic tick for each knob step that sends a key
+	// (ADR-0015). It does nothing without mode "knob", and the file may still
 	// set it: the editor keeps a stick's other settings when its mode changes.
 	KnobTick bool
-	// Curve shapes the push depth that a repeat with MinRateHz follows
-	// (ANA-13): CurveLinear (the default), CurveQuadratic or CurveCubic. Empty
+	// Curve shapes the push depth that a repeat with MinRateHz follows:
+	// CurveLinear (the default), CurveQuadratic or CurveCubic. Empty
 	// in a model built by hand means linear. In mode "mouse" it also shapes the
-	// pointer speed (MOU-04).
+	// pointer speed.
 	Curve string
 	// MouseSpeed is the pointer speed of the stick in mode "mouse" at full
-	// travel, in mouse movement units per second (MOU-04); 0 in a model built by
+	// travel, in mouse movement units per second; 0 in a model built by
 	// hand means DefaultMouseSpeed.
 	MouseSpeed int
 	// MouseSmoothingMs is the time constant of the exponential moving average of
-	// the pointer's velocity in mode "mouse" (MOU-06); 0 follows the stick at once.
+	// the pointer's velocity in mode "mouse"; 0 follows the stick at once.
 	MouseSmoothingMs int
 }
 
@@ -204,14 +203,14 @@ type Trigger struct {
 	Press   float64
 	Release float64
 	// FullPress and FullRelease are the hysteresis of the second stage,
-	// lt.full and rt.full (ANA-14).
+	// lt.full and rt.full.
 	FullPress   float64
 	FullRelease float64
-	// Curve is the Stick.Curve of a trigger (ANA-13, ANA-15).
+	// Curve is the Stick.Curve of a trigger.
 	Curve string
 }
 
-// The response curves of a stick or trigger (ANA-13).
+// The response curves of a stick or trigger.
 const (
 	CurveLinear    = "linear"
 	CurveQuadratic = "quadratic"
@@ -240,8 +239,8 @@ func DefaultAnalog() Analog {
 }
 
 // Feedback configures the controller indications: the pulses and colors of
-// layer changes and pause (M3), the haptics of bindings (MAP-25), the knob
-// ticks (HUD-10), the player lights (HUD-08) and the low-battery alert (IN-12).
+// layer changes and pause (M3), the haptics of bindings, the knob
+// ticks, the player lights and the low-battery alert.
 // It holds their times, strength and pause color only. The switches that
 // turn them off (rumble, led, pause and lowBattery) are global since
 // ADR-0015: they are Config.Feedback, and a profile's feedback object that
@@ -299,10 +298,10 @@ func (l *Layer) Binding(c control.Control) *Binding {
 type Binding struct {
 	// ID is the JSON Pointer of the binding object as written, such as
 	// "/layers/base/south" or "/layers/base/a" for the alias: a stable name
-	// for decisions (ENG-20) and the UI.
+	// for decisions and the UI.
 	ID        string
 	Control   control.Control // resolved from the key, alias or canonical
-	Label     string          // MAP-03; "" when absent
+	Label     string          // "" when absent
 	Press     *Action         // nil when absent
 	Release   *Action
 	Tap       *Action
@@ -315,7 +314,7 @@ type Binding struct {
 	Latch     bool
 	Block     bool
 	// Haptic is the haptic the controller gives each time a gesture of the
-	// binding runs (MAP-25, ADR-0015); 0 for none. It is the binding's, not
+	// binding runs (ADR-0015); 0 for none. It is the binding's, not
 	// an action's, so it plays for every gesture, once per dispatch. A block
 	// binding runs nothing and plays none.
 	Haptic haptic.Preset
@@ -413,7 +412,7 @@ type Action struct {
 	Type     ActionType
 	Keys     keys.Chord // for ActionKeys
 	Sequence []keys.Chord
-	// Steps are the steps of an ActionSequence (MAP-22, ADR-0012): shortcuts to
+	// Steps are the steps of an ActionSequence (ADR-0012): shortcuts to
 	// tap, waits and texts to type, in order. ActionText has none: its Text is the
 	// one text.
 	Steps   []keys.Step
@@ -461,8 +460,8 @@ type Repeat struct {
 	DelaySet bool // distinguishes an explicit zero from the default delay
 	RateHz   int  // 0 means DefaultRepeatRateHz
 	// MinRateHz, when above 0, makes the rate follow how far the control is
-	// pushed: MinRateHz at its activation threshold, the rate at full travel
-	// (ANA-12). Only controls derived from a stick or trigger may use it
+	// pushed: MinRateHz at its activation threshold, the rate at full travel.
+	// Only controls derived from a stick or trigger may use it
 	// (Control.HasDepth), and it must not exceed the rate.
 	MinRateHz int
 }
@@ -546,21 +545,21 @@ const (
 	// ActionProfile requests a switch to a library profile.
 	ActionProfile
 	// ActionMacro runs a macro, a file in the profile's MacroDir, once
-	// (SCR-50, ADR-0011).
+	// (ADR-0011).
 	ActionMacro
-	// ActionMouse changes how the pointer moves: precision (MOU-05) slows the
-	// sticks in mode "mouse" while the gesture is held, jump (MOU-08) puts the
+	// ActionMouse changes how the pointer moves: precision slows the
+	// sticks in mode "mouse" while the gesture is held, jump puts the
 	// pointer somewhere (ADR-0004, section 5).
 	ActionMouse
-	// ActionHUD controls the overlay: hints (HUD-03) shows the labels of the
+	// ActionHUD controls the overlay: hints shows the labels of the
 	// bindings of the current layer stack while the gesture is held (ADR-0014).
 	// It sends no key.
 	ActionHUD
 	// ActionSequence runs steps one after the other when its gesture fires: taps
-	// a shortcut, waits, types a text (MAP-22, ADR-0012). It holds nothing, so it
+	// a shortcut, waits, types a text (ADR-0012). It holds nothing, so it
 	// fits every gesture, like a macro.
 	ActionSequence
-	// ActionText types a text when its gesture fires (OUT-21, ADR-0012). It holds
+	// ActionText types a text when its gesture fires (ADR-0012). It holds
 	// nothing, so it fits every gesture.
 	ActionText
 )
@@ -632,7 +631,7 @@ func (t ActionType) String() string {
 type Mode uint8
 
 const (
-	// ModeHold keeps the shortcut down while the control is held (MAP-02).
+	// ModeHold keeps the shortcut down while the control is held.
 	ModeHold Mode = iota + 1
 	// ModeTap taps the shortcut once when the gesture fires.
 	ModeTap

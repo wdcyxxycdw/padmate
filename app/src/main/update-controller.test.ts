@@ -126,7 +126,7 @@ function setup(
 /** Lets the promises that are ready run, without moving the clock. */
 const settle = () => vi.advanceTimersByTimeAsync(0);
 
-describe("the update controller: when it checks (PKG-10)", () => {
+describe("the update controller: when it checks", () => {
   it("does nothing in a build that cannot update", async () => {
     const t = setup({ supported: false });
     t.controller.start();
@@ -714,7 +714,7 @@ describe("the update controller: the download", () => {
   });
 });
 
-describe("the update controller: the install (PKG-10, ADR-0018)", () => {
+describe("the update controller: the install (ADR-0018)", () => {
   async function downloaded() {
     const t = setup();
     t.answers.push("1.0.1");

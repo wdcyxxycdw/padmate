@@ -17,7 +17,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 )
 
-// TestMonitorRawIPC (IN-17): "monitor --raw" through the daemon pauses the
+// TestMonitorRawIPC: "monitor --raw" through the daemon pauses the
 // mapping (capture.start), asks for the raw events of the device it names
 // (devices.rawInfo) and prints the input.raw events of that device only,
 // next to the usual input events.

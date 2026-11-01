@@ -1,4 +1,4 @@
-// A pad control drawn the way the pad shows it, for the key preview (UI-44):
+// A pad control drawn the way the pad shows it, for the key preview:
 // so "A → D" does not read as two keys. A control that the vendored icon
 // sets draw (ADR-0013, pad-icon.tsx) is that icon. The few they do not
 // draw keep padmate's own shapes (inline SVG, letters from CSS data-label,

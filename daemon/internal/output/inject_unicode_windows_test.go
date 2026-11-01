@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// TestInjectUnicodeText (OUT-21, ADR-0012) injects what TypeText sends for a short
+// TestInjectUnicodeText (ADR-0012) injects what TypeText sends for a short
 // text, and checks what a low-level hook sees: every Unicode event as VK_PACKET
 // with the UTF-16 unit in its scan code, the right message, LLKHF_INJECTED, the tag
 // and the nonce, and swallowed by the hook, so that nothing is typed into the

@@ -1,4 +1,4 @@
-/* Controller stage: 3D model, chips and leader lines (ADR-0012, UI-39). */
+/* Controller stage: 3D model, chips and leader lines (ADR-0012). */
 .controller-3d {
   position: relative;
   flex: 1;
@@ -262,7 +262,7 @@
   );
   transform: translateX(-50%);
 }
-/* With the editor notice showing, the key preview line (UI-44) stacks above
+/* With the editor notice showing, the key preview line stacks above
    it, about 100px from the bottom together: the chip keeps clear of both. */
 .controller-view:has(.editor-notice) .stage-chip[data-placement="bottom"] {
   top: min(
@@ -716,7 +716,7 @@
   border: 0;
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .stage-chip[data-active="true"] {
     border-width: 3px;

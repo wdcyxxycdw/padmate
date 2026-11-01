@@ -19,7 +19,7 @@ type PadSnapshot struct {
 	HasControl [control.Count]bool
 	HasAxis    [control.AxisCount]bool
 	Analog     profile.Analog
-	// Power is the battery state the gamepad last reported (IN-12), HasPower
+	// Power is the battery state the gamepad last reported, HasPower
 	// false until it has reported one: a script reads it as pad.info.battery.
 	Power    input.Power
 	HasPower bool

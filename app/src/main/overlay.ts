@@ -15,7 +15,7 @@ import {
 } from "../shared/overlay";
 import { baseWebPreferences } from "./security";
 
-// The overlay window (HUD-01, SPK-09, ADR-0014): a second window of the UI
+// The overlay window (ADR-0014): a second window of the UI
 // that is made once, never takes the foreground and lets the mouse through.
 // This file is plain logic over a small window interface, so that the
 // options, the placement and the lifecycle are tested without Electron;
@@ -23,11 +23,11 @@ import { baseWebPreferences } from "./security";
 //
 // Nothing here may show, focus, raise or hide the window: the one call that
 // shows it is showInactive(), once. A window that took the foreground would
-// be padmate's own window in front, and the daemon then stops sending keys
-// (OUT-25). What the page shows is sent to it as a message (a toast, HUD-04;
-// its opacity, HUD-05; key hints, HUD-03; a script's panels, SCR-22): that
-// changes the page, never the window. Where the window sits (HUD-05) and how
-// tall it is while key hints or panels show (HUD-03, SCR-22) are a setBounds
+// be padmate's own window in front, and the daemon then stops sending keys.
+// What the page shows is sent to it as a message (a toast,
+// its opacity, key hints, a script's panels): that
+// changes the page, never the window. Where the window sits and how
+// tall it is while key hints or panels show are a setBounds
 // and nothing more.
 
 export interface Rect {
@@ -60,11 +60,11 @@ export const overlaySize = {
   width: 480,
   height: overlayToastAreaHeight,
 } as const;
-/** The tallest the window gets while key hints or a script's panels show, in DIP (HUD-03, SCR-22). */
+/** The tallest the window gets while key hints or a script's panels show, in DIP. */
 export { overlayMaxHeight };
 /** Distance of the window's bottom edge from the work area's, in DIP. */
 export const overlayBottomGap = 48;
-/** Distance of the window's top edge from the work area's, in DIP (HUD-05). */
+/** Distance of the window's top edge from the work area's, in DIP. */
 export const overlayTopGap = 48;
 /**
  * Whether mouse moves are forwarded to the page below the click-through
@@ -78,13 +78,13 @@ export const overlayForwardMouse = false;
 
 /**
  * 480x160 at the centre of the work area's bottom, 48 above its bottom edge,
- * or with position "top" at the centre of its top, 48 below its top edge
- * (HUD-05). Not the whole screen: a topmost window that covers a display is
+ * or with position "top" at the centre of its top, 48 below its top edge.
+ * Not the whole screen: a topmost window that covers a display is
  * taken for a full-screen program. A work area smaller than that shrinks the
  * window, and one without room for the gap keeps as much of the gap as
  * fits; it never leaves the area.
  *
- * Key hints (HUD-03) and a script's panels (SCR-22) make the window taller, up
+ * Key hints and a script's panels make the window taller, up
  * to overlayMaxHeight: the edge
  * next to the screen's edge stays where it is (the bottom edge at the bottom,
  * the top edge at the top), so the toast area does not move and the panel
@@ -134,7 +134,7 @@ export function chooseOverlayDisplay(
 
 /**
  * The overlay's window options. Its renderer is sandboxed like the main
- * window's. Its preload (HUD-04, preload/overlay.ts) only listens for
+ * window's. Its preload (preload/overlay.ts) only listens for
  * toasts: the page cannot call Main.
  */
 export function overlayWindowOptions(
@@ -182,13 +182,13 @@ export interface OverlayWindow {
   getBounds(): Rect;
   /** Shows the window without activating it. */
   showInactive(): void;
-  /** Sends a toast to the page (HUD-04); ms is how long it holds, if not the default. Only its content changes. */
+  /** Sends a toast to the page; ms is how long it holds, if not the default. Only its content changes. */
   toast(text: string, ms?: number): void;
-  /** Sends the page its settings (HUD-05). Only its content changes. */
+  /** Sends the page its settings. Only its content changes. */
   prefs(settings: OverlayPageSettings): void;
-  /** Sends the page key hints, or none to hide them (HUD-03). Only its content changes. */
+  /** Sends the page key hints, or none to hide them. Only its content changes. */
   hints(message: OverlayHintsMessage): void;
-  /** Sends the page a script's panels, or none to hide them (SCR-22). Only its content changes. */
+  /** Sends the page a script's panels, or none to hide them. Only its content changes. */
   panels(message: OverlayPanelsMessage): void;
   destroy(): void;
   isDestroyed(): boolean;
@@ -229,24 +229,24 @@ export class OverlayController {
   private stopped = false;
   // The window is made again once after its renderer died, not forever.
   private recreated = false;
-  // Where the window sits and how opaque the pill is (HUD-05): what the UI
+  // Where the window sits and how opaque the pill is: what the UI
   // last said, which a window made later starts with too.
   private position: OverlayPosition;
   private opacity: number;
-  // Key hints (HUD-03): how many entries the window is tall for, the hints on
+  // Key hints: how many entries the window is tall for, the hints on
   // show (sent again to a window made after a crash) and the timer that
   // shrinks the window once the panel has faded out.
   private hintCount = 0;
   private shownHints: Omit<OverlayHintsMessage, "position"> | undefined;
   private shrink: ReturnType<typeof setTimeout> | undefined;
-  // A script's panels (SCR-22), the same way: how many rows the window is
+  // A script's panels, the same way: how many rows the window is
   // tall for, the panels on show and the timer of their shrink.
   private panelRows = 0;
   private shownPanels: Omit<OverlayPanelsMessage, "position"> | undefined;
   private shrinkPanels: ReturnType<typeof setTimeout> | undefined;
   private gaveUp = false;
   private gaveUpListener: (() => void) | undefined;
-  // Whether a window is up now: its page has drawn its first frame (SCR-22).
+  // Whether a window is up now: its page has drawn its first frame.
   private ready = false;
   private readyListener: (() => void) | undefined;
 
@@ -278,7 +278,7 @@ export class OverlayController {
    * Calls listener whenever a window is ready: its page has drawn its first
    * frame and the window is shown. That is the first window, and the one made
    * again after its renderer died; at once if one is ready already. The
-   * window is up for the UI's purposes from then on (SCR-22: a script is told
+   * window is up for the UI's purposes from then on (a script is told
    * there is an overlay), not from when it is only being made.
    */
   onReady(listener: () => void): void {
@@ -303,8 +303,8 @@ export class OverlayController {
   }
 
   /**
-   * Tells the page to show a toast (HUD-04), holding for ms if that is given
-   * (a script's toast, SCR-22). Nothing happens without a window; the window
+   * Tells the page to show a toast, holding for ms if that is given
+   * (a script's toast). Nothing happens without a window; the window
    * itself is not touched, so a toast cannot take the foreground.
    */
   toast(text: string, ms?: number): void {
@@ -319,7 +319,7 @@ export class OverlayController {
   }
 
   /**
-   * Shows key hints in the page, or with no entries hides them (HUD-03). The
+   * Shows key hints in the page, or with no entries hides them. The
    * window grows to fit the panel first and shrinks back after the panel
    * has faded out; both are a setBounds with the edge next to the screen's
    * edge fixed, never a show, focus or raise. Nothing happens without a
@@ -348,7 +348,7 @@ export class OverlayController {
   }
 
   /**
-   * Shows a script's panels in the page, or with none hides them (SCR-22),
+   * Shows a script's panels in the page, or with none hides them,
    * the way hints() does: the window grows to fit them first and shrinks back
    * after they have faded out, by setBounds only. The page shows the hints and
    * not the panels while the hints are up, so the window is as tall as the
@@ -375,7 +375,7 @@ export class OverlayController {
   }
 
   /**
-   * Takes the position and opacity the UI chose (HUD-05); a field that is
+   * Takes the position and opacity the UI chose; a field that is
    * missing or the same as before changes nothing. A new position is a
    * setBounds on the window and a new opacity a message to its page: the
    * window is not shown, focused or raised.

@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// Text input (OUT-21, ADR-0012). TypeText types a text one character at a time
+// Text input (ADR-0012). TypeText types a text one character at a time
 // with KEYEVENTF_UNICODE, so the layout, the IME and the modifier keys padmate
 // holds play no part: each UTF-16 code unit is a press and a release of
 // VK_PACKET carrying the unit, and the two units of a character outside the Basic

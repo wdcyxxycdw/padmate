@@ -39,7 +39,7 @@ var benchPads = [benchPadsMax]string{"lat1bench pad", "lat2bench pad", "lat3benc
 // and south (3 events) of the first pad; row H presses one on each pad,
 // so that no two slots hold a key and each edge is still one Send. The
 // keys have no character, so resolving them reads no layout, and neither
-// Alt nor Win, so no menu opens and MenuMask inserts nothing (OUT-08); a
+// Alt nor Win, so no menu opens and MenuMask inserts nothing; a
 // key that got past the hook would do nothing in almost every program.
 var (
 	benchControls = [benchPadsMax]string{"east", "south", "west", "north"}
@@ -69,7 +69,7 @@ const (
 )
 
 // benchMacroProfile returns the profile of row M: benchProfile's bindings
-// and a macro on leftshoulder (SCR-50), so each slot has a runtime that
+// and a macro on leftshoulder, so each slot has a runtime that
 // only runs macros.
 func benchMacroProfile() string {
 	return strings.Replace(benchProfile(), `"base":{`, `"base":{"leftshoulder":{"press":{"type":"macro","file":"`+benchMacroFile+`"}},`, 1)
@@ -258,7 +258,7 @@ type bench struct {
 	env      latency.Environment
 }
 
-// TestLatencyLive measures the end-to-end latency of live mode (ENG-11):
+// TestLatencyLive measures the end-to-end latency of live mode:
 // virtual gamepads drive padmated's live mode in this process, from SDL
 // through T-input, the router, the slots and the engine to T-output, the
 // Arbiter and the Sender. L = t_ret − t_sdl runs from SDL's timestamp of
@@ -377,7 +377,7 @@ func TestLatencyLive(t *testing.T) {
 	cfg.log = logging.New(tl.log, slog.LevelInfo) // as in production: debug lines would load the hot path
 	cfg.onEvent = b.st.onEvent
 	// As in production, T-output writes the held-key log before each
-	// press (OUT-14), in slot->send; in a TempDir, so the user's log is
+	// press, in slot->send; in a TempDir, so the user's log is
 	// untouched, and with nothing reported down, so the sweep sends nothing.
 	cfg.heldFile = filepath.Join(t.TempDir(), "held.bin")
 	cfg.keyDown = func(output.KeyEvent) bool { return false }
@@ -961,7 +961,7 @@ func (b *bench) result(d benchDone, r benchRow, samples []benchSample, c latency
 		row.Note = strings.TrimPrefix(row.Note+fmt.Sprintf("; %d pads, one edge each per step", r.pads), "; ")
 	}
 	if r.macros {
-		row.Note = strings.TrimPrefix(row.Note+"; a macro bound, its runtime ready (SCR-50)", "; ")
+		row.Note = strings.TrimPrefix(row.Note+"; a macro bound, its runtime ready", "; ")
 	}
 	return row
 }
@@ -1046,13 +1046,13 @@ func (b *bench) report(rows, split []latency.Row, g latency.Gate, reason, calib 
 	env := b.env
 	env.Extra = append(append(append([]string(nil), b.envHead...), b.devices()...), b.envTail...)
 	rep := latency.Report{
-		Title: "padmate 端到端延迟（ENG-11）", Env: env, Calibration: calib, Gate: g, GateReason: reason,
+		Title: "padmate 端到端延迟", Env: env, Calibration: calib, Gate: g, GateReason: reason,
 		Rows: rows, Split: split,
 		Notes: []string{
 			"L = t_ret − t_sdl: from SDL's timestamp of a virtual gamepad's edge (SDL_GetTicksNS, mapped onto QPC by the calibration) to the return of the Send that carries its keys, through T-input, the router, the slot, the engine, T-output, the Arbiter, the ledger and MenuMask.",
 			"sdl→slot = t_slot − t_sdl, with t_slot read in slot.Handle before engine.Step; slot→send = t_send − t_slot; send→ret = t_ret − t_send; send→hook = the hook stamp of the Send's first event − t_send; hook→ret = t_ret − that of its last event, negative when the hook ran after SendInput returned. cmd→sdl = t_sdl − t_cmd is not in L: T-input picks up a virtual gamepad's command between its 2 ms waits.",
 			"Each edge presses or releases a button bound to hold keys, and makes one Send: east F13 (1 event), south Ctrl+Shift+F14 (3). Each step of row H presses or releases east, south, west (F17) and north (F18), one on each of four pads, in turn. The driver waits for each step's Sends and, with SendInput, until the hook has seen their events, then idles the row's gap.",
-			"Row E uses the no-op Sender: the pipeline without SendInput. Row M is row B's edges after a switch to the same profile with a macro bound to leftshoulder, which no row presses (SCR-50): each slot has a script runtime that only runs macros; compare it with row B. A1/A3, B1/B3 and C1/C3 split the gated rows by events per Send, for information.",
+			"Row E uses the no-op Sender: the pipeline without SendInput. Row M is row B's edges after a switch to the same profile with a macro bound to leftshoulder, which no row presses: each slot has a script runtime that only runs macros; compare it with row B. A1/A3, B1/B3 and C1/C3 split the gated rows by events per Send, for information.",
 			"The virtual gamepad's reply to SetButton wakes the driver goroutine inside sdl→slot, which a real gamepad does not: sdl→slot and L are pessimistic by that wake-up.",
 			"SendInput returns only once the test's low-level hook has handled the batch (see \"hook ran before SendInput returned\"), so send→ret and L include waking the hook's thread. padmated installs no hook; with no other low-level hook in the system SendInput would not wait for one, which cannot be measured, since every injected key must be swallowed.",
 		},

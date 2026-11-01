@@ -117,8 +117,8 @@ func makeInput(e KeyEvent, extra uintptr) input {
 	return in
 }
 
-// makeUnicodeInput converts a Unicode event (a UTF-16 code unit of a typed text,
-// OUT-21) into a keyboard input with KEYEVENTF_UNICODE: wVk 0, the code unit in
+// makeUnicodeInput converts a Unicode event (a UTF-16 code unit of a typed
+// text) into a keyboard input with KEYEVENTF_UNICODE: wVk 0, the code unit in
 // wScan, and KEYEVENTF_KEYUP for a release. The system makes a VK_PACKET key of
 // it for the foreground thread, and the layout, the IME and NumLock do not come
 // into it; neither KEYEVENTF_SCANCODE nor KEYEVENTF_EXTENDEDKEY is set.

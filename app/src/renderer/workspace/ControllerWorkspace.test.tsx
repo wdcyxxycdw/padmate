@@ -682,7 +682,7 @@ it("hides the hint while the notice shows an editor error", async () => {
   expect(container.querySelector(".controller-hint")).not.toBeNull();
 });
 
-it("shows what a press sends where the hint was (UI-44)", async () => {
+it("shows what a press sends where the hint was", async () => {
   const editor = await editorFor(paint);
   const shell = createPadmateStore(editorAPIFixture() as unknown as PadmateAPI);
   const focus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
@@ -720,7 +720,7 @@ it("shows what a press sends where the hint was (UI-44)", async () => {
   }
 });
 
-// UI-30 (ADR-0012): one of View, Menu and the Xbox button is the function key
+// ADR-0012: one of View, Menu and the Xbox button is the function key
 // (config.json functionKey, Menu unless it says otherwise); the page edits the
 // usual bindings or the function set it switches to.
 describe("the function key", () => {

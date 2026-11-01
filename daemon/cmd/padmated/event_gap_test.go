@@ -56,7 +56,7 @@ func sendLines(out string) []string {
 	return lines
 }
 
-// TestConfigPutAppliesEventGapLive: output.eventGapMs (OUT-17) is read at
+// TestConfigPutAppliesEventGapLive: output.eventGapMs is read at
 // startup and applied at once by config.put, without a restart: with a gap
 // each key event is its own send line, with 0 a chord is one.
 func TestConfigPutAppliesEventGapLive(t *testing.T) {
@@ -152,7 +152,7 @@ func TestReplayEventGap(t *testing.T) {
 }
 
 // TestReplayEventGapRepeat: a typematic repeat faster than the gap does
-// not pile up behind it (OUT-17): no press goes out after the button, and
+// not pile up behind it: no press goes out after the button, and
 // the chord goes up within a few gaps, however long it was held.
 func TestReplayEventGapRepeat(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "repeat.json")

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { type ElectronApplication, expect, test } from "@playwright/test";
 import { cleanup, fixture, launch, rpc, setWindowSize } from "./helpers";
 
-// 设置 → 诊断 (UI-20, UI-21, UI-22; ADR-0016): the list of the latest presses,
+// 设置 → 诊断 (ADR-0016): the list of the latest presses,
 // the sentence for a press that did nothing, and the latency figures.
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.

@@ -1,22 +1,22 @@
 // Command padmated is the padmate daemon: gamepad input, the mapping
 // engine, keyboard output, scripting, the tray icon and IPC.
 //
-// It maps up to 4 gamepads live (DMN-02, DMN-03, IN-08): SDL input on
+// It maps up to 4 gamepads live: SDL input on
 // T-input, the supervisor and its slot loops, and T-output with the
 // Resolver. With --dry-run the printer is the output.Sender and nothing
-// is injected (OUT-09); only --inject presses keys, through SendInput,
+// is injected; only --inject presses keys, through SendInput,
 // which only sender_windows.go constructs (CLAUDE.md invariants 3 and 6,
 // checked by TestNoSendInput and forbidigo). Saving the profile reloads
-// it (PRO-03): a watcher (package watch) polls the file on a goroutine of
+// it: a watcher (package watch) polls the file on a goroutine of
 // its own, and Supervisor.Reload switches the slots to the new program.
-// The panic combo pauses the mapping and resumes it (DMN-07): T-input
+// The panic combo pauses the mapping and resumes it: T-input
 // finds it and lets go of every key through output.Loop.Block, and the
 // ComboHeld it sends toggles the supervisor's pause. The session's events
-// suspend the mapping (DMN-09): winsession sees the lock, a disconnected
+// suspend the mapping: winsession sees the lock, a disconnected
 // session, sleep, the end of the session and the secure desktop, and
 // Supervisor.Suspend lets go of every key; the end of the session and
 // WM_CLOSE stop padmated as Ctrl+C does. --fake-input replays recorded
-// input in dry-run mode instead (DMN-01), with the ComboHeld events that
+// input in dry-run mode instead, with the ComboHeld events that
 // input.ExpandCombos inserts, and watches nothing: neither the profile
 // nor the session.
 package main
@@ -61,14 +61,14 @@ const usageHead = `usage: padmated --profile FILE (--dry-run | --inject) [--deci
        padmated --startup-report FILE <live mode flags>
        padmated -version
 
-Live mode (DMN-02) maps the gamepads with the profile until Ctrl+C. It
+Live mode maps the gamepads with the profile until Ctrl+C. It
 needs one of --dry-run, which prints the keys padmated would press and
 injects nothing, or --inject, which presses them in the foreground
 window. When it stops, it releases every key still held.
 On Windows the desktop entry also shows a tray icon. Its menu pauses or
 resumes mapping, enables startup at login using the current profile and
-output mode, or exits: it tells the IPC clients first (daemon.exiting,
-DMN-22), so that the UI quits too, then releases all keys. --tray=false
+output mode, or exits: it tells the IPC clients first (daemon.exiting),
+so that the UI quits too, then releases all keys. --tray=false
 hides this UI.
 Startup is off until enabled from the menu; it uses absolute paths.
 If an instance is already running, this invocation authenticates to its
@@ -78,11 +78,11 @@ input modes must match; explicit conflicting startup settings fail.
 match); --profile switches files in a standalone instance. A data directory
 without a profile only acknowledges the existing instance. File paths are
 made absolute before forwarding. No second input or output loop starts.
-Up to 4 gamepads are mapped at once (IN-08), each on a slot of its own,
+Up to 4 gamepads are mapped at once, each on a slot of its own,
 all with the profile; an idle one is mapped too, so leave it out with
 --device. They share one keyboard: a key two of them hold goes up when
 the last lets go, and a modifier one holds combines with the keys of
-another. More wait in line (IN-05): one that connects goes to the back,
+another. More wait in line: one that connects goes to the back,
 one that loses its slot to the front. A mapped gamepad keeps its slot
 once it presses a button, until it leaves. Before that, a waiting
 gamepad takes the slot over with a button press, which is mapped; of
@@ -96,7 +96,7 @@ button yet keeps that slot as its own; otherwise it takes the slot back
 from that stand-in (a slot belongs to the last gamepad that found it
 free or pressed a button on it, or to the stand-in that kept it).
 
-Saving the profile reloads it (PRO-03), unless --watch=false: padmated
+Saving the profile reloads it, unless --watch=false: padmated
 looks at the file every 100 ms, and once its size and modification time
 have stayed the same for 200 ms it reads it and maps with it from then
 on. The reload releases every key held,
@@ -108,7 +108,7 @@ at the top of the profile's macros folder: saving one the profile runs
 rebuilds the script runtimes, which ends the scripts running.
 
 Holding back and start together for 2 s (SL and SR on a single Joy-Con)
-pauses the mapping (DMN-07): padmated releases every key held, and
+pauses the mapping: padmated releases every key held, and
 presses map to nothing until the combo is held for 2 s again, which
 resumes it; a control held through the resume does nothing until it is
 pressed again. Any gamepad can hold it, also one that waits for a slot
@@ -117,13 +117,13 @@ combo of the device it replays.
 
 Locking the computer, disconnecting the session, sleep, signing out or
 shutting down, and the secure desktop (such as a UAC prompt) suspend
-the mapping in live mode (DMN-09): padmated releases every key held,
+the mapping in live mode: padmated releases every key held,
 and presses map to nothing until they are over; a control held through
 the end does nothing until it is pressed again. A pause stays on after
 it. When the session ends, or taskkill without /f asks padmated to
 close, it stops as for Ctrl+C.
 
-With --fake-input FILE padmated replays recorded input instead (DMN-01): JSON
+With --fake-input FILE padmated replays recorded input instead: JSON
 lines as "padmatectl monitor --json" and "padmatectl record" write them,
 mapped in virtual time. It replays one device, the first with a button
 or axis event, with its times rebased to its first event. At the end of
@@ -168,7 +168,7 @@ the mode and the chord, label the binding's label, binding its JSON
 pointer and owner the owner of the keys sent. A send line is one batch:
 +Key presses, -Key releases; vk:0xE8 is the menu mask, pressed and
 released right before the release of an Alt or Win key that nothing was
-pressed with (OUT-08); in live mode the keys are those --inject would
+pressed with; in live mode the keys are those --inject would
 press for the keyboard layout of the foreground window. "device N
 added", "device N removed: release all", "profile reloaded: release
 all", "mapping paused: release all", "mapping resumed", "mapping
@@ -189,7 +189,7 @@ A stick that moves the pointer prints "move +dx,+dy", the sum of the moves
 of 100 ms, at the time of the first of them, and the jump action "jump x,y"
 (0 to 65535 across the desktop); with --decisions {"t":8,"move":[104,0]}
 and {"t":400,"jump":[32768,32768]}.
-A typed text (OUT-21) prints its characters as one line, text "你好", at the
+A typed text prints its characters as one line, text "你好", at the
 time of the first (a character within 250 ms of the one before joins the
 line, up to 80 characters; control characters and quotes are escaped);
 with --decisions {"t":8,"text":"你好"}. A newline and a tab in the text are
@@ -197,17 +197,17 @@ Enter and Tab taps and print as send lines. The media and volume keys print
 by name, such as +VolumeUp.
 With --inject padmated prints only the header.
 
-The log (DMN-03) is JSON lines, to stderr, or, when padmated has no
+The log is JSON lines, to stderr, or, when padmated has no
 stderr, to %APPDATA%\padmate\logs\padmated.log. --log-file F appends to
 F instead, or with "-" writes to stderr always; the file only grows
-until DMN-11 rotates it. A replay logs only at debug level.
+until it is rotated. A replay logs only at debug level.
 
 Exits 0, also when Ctrl+C, the end of the session or the tray's exit
 stops live mode, or when the running instance took the request; 1 if
 the profile, the fake input or the log of a replay has errors or cannot
 be opened, the SDL input or the output stops, the output cannot be
 written, or a replay is interrupted; 2 for a usage error; 3 when live
-mode does not start (UI-45): the data folder, config.json, state.json,
+mode does not start: the data folder, config.json, state.json,
 the profile or the log has errors or cannot be opened, another instance
 runs and does not take the request, SDL does not start, the IPC
 endpoint or the output cannot be created, or starting panics.
@@ -238,7 +238,7 @@ flags:
   --inject           press the keys in the foreground window (live mode)
   --decisions        with --dry-run, print JSON lines instead, and the
                      header to stderr: each decision as
-                     {"t":20,"control":"south",...} (ENG-20), with
+                     {"t":20,"control":"south",...}, with
                      several slots {"slot":0,"t":20,...}, and each
                      batch as {"t":20,"send":["-Z"]}, t in ms
   --fake-input [FILE] replay FILE; without FILE, accept fake input over IPC
@@ -331,7 +331,7 @@ func runContextUI(ctx context.Context, args []string, stdout, stderr io.Writer, 
 			fmt.Fprintln(stderr, "padmated:", err)
 			return 1
 		}
-		// A replay never writes the data folder (PRO-29).
+		// A replay never writes the data folder.
 		if opts.configRepair != nil {
 			fmt.Fprintln(stderr, "padmated: config.json has errors; this replay runs without them:", opts.configRepair.Err)
 		}
@@ -351,9 +351,9 @@ func runContextUI(ctx context.Context, args []string, stdout, stderr io.Writer, 
 }
 
 // options are padmated's flags. --fake-input replays the file in virtual
-// time and exits. The name stays: IPC-09 (M9) builds on the --fake-input
-// mode, whose fake.press, fake.release and fake.axis methods feed a
-// running daemon instead of the gamepads.
+// time and exits. The name stays: the IPC methods fake.press, fake.release
+// and fake.axis build on the --fake-input mode and feed a running daemon
+// instead of the gamepads.
 type options struct {
 	forwardArgs        []string // parsed startup arguments, before local library resolution
 	explicitFlags      []string
@@ -363,7 +363,7 @@ type options struct {
 	missingLastProfile string // the remembered profile resolveLibrary found gone
 	// defaultCreated and defaultErr say what resolveLibrary's
 	// EnsureDefault did, for live mode to log; macroMigration and
-	// macroMigrationErr what its MigrateMacros did (SCR-51).
+	// macroMigrationErr what its MigrateMacros did.
 	defaultCreated     bool
 	defaultErr         error
 	macroMigration     profilelib.MacroMigration
@@ -381,11 +381,11 @@ type options struct {
 	logFile            string
 	tray               bool
 	ui                 func(*liveRun) int
-	// startupReport is where a failed start says why (UI-45); usageProblem
+	// startupReport is where a failed start says why; usageProblem
 	// is the usage error parseFlags printed.
 	startupReport, usageProblem string
-	// configRepair is what resolveLibrary's ReadRepairedConfig repaired
-	// (PRO-29), nil for a config.json without errors. stateErr is why
+	// configRepair is what resolveLibrary's ReadRepairedConfig repaired,
+	// nil for a config.json without errors. stateErr is why
 	// state.json was not used; stateReset whether it was then reset, and
 	// stateResetErr why that failed.
 	configRepair  *profilelib.ConfigRepair
@@ -489,7 +489,7 @@ func parseFlags(args []string, stdout, stderr io.Writer) (opts options, code int
 	return opts, 2, false
 }
 
-// openLog opens the log of opts (DMN-03). When it does not open, it
+// openLog opens the log of opts. When it does not open, it
 // prints the error and ok is false. closeLog closes the log, and sets
 // *code to 1 when that fails.
 func openLog(opts options, stderr io.Writer) (log *slog.Logger, closeLog func(code *int), ok bool) {
@@ -544,9 +544,9 @@ func dryRun(ctx context.Context, opts options, stdout, stderr io.Writer) (code i
 
 // replayDryRun prints the header and replays evs, the events of dev,
 // through prog with the dry-run printer, and returns the exit code. The
-// printer is below a MenuMask, as the Loop's Sender is in live mode
-// (OUT-08), so the replay prints the keys live mode would press. Among
-// evs go the ComboHeld events that T-input would send (DMN-07), for the
+// printer is below a MenuMask, as the Loop's Sender is in live mode,
+// so the replay prints the keys live mode would press. Among
+// evs go the ComboHeld events that T-input would send, for the
 // default combo of dev's type, a single Joy-Con held sideways as without
 // the hint SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS: each pauses the
 // mapping, or resumes it. The header counts the events of the input only.
@@ -580,7 +580,7 @@ func replayDryRun(ctx context.Context, opts options, p *profile.Profile, prog *e
 		Feedback: func(f engine.Feedback) { pr.feedback(0, f) },
 	}
 	if st := opts.settings; st != nil {
-		// The feedback switches of config.json (UI-27, ADR-0015) shape the
+		// The feedback switches of config.json (ADR-0015) shape the
 		// printed haptics and feedback states as they do the live ones.
 		sw := st.Feedback
 		sc.Switches = func() profile.FeedbackSwitches { return sw }
@@ -664,7 +664,7 @@ func parseProfile(path string, data []byte, stderr io.Writer, settings ...*profi
 }
 
 // parseProfileIn is parseProfile for library profile id when lib is not
-// nil: its extends is resolved with the library (PRO-19, ADR-0012), and a
+// nil: its extends is resolved with the library (ADR-0012), and a
 // problem in a parent's file is printed with that file's path. Without a
 // library, or an id (the file that --profile names, the disabled profile),
 // extends is an error.

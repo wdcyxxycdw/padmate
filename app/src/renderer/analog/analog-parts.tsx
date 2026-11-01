@@ -134,7 +134,7 @@ export function BindingSummary({
       ) : action.type === "keys" ? (
         <Keycaps keys={action.keys} language={language} />
       ) : action.type === "macro" ? (
-        // A script (SCR-50): its icon and name, a warning when it is gone.
+        // A script: its icon and name, a warning when it is gone.
         <span
           className="analog-summary-text analog-summary-macro"
           data-missing={missing.includes(action.file) || undefined}
@@ -182,7 +182,7 @@ export function ScriptBadge({ language }: { language: Language }) {
 }
 
 /**
- * A number field committed on Enter or when it loses focus (UI-43). Only
+ * A number field committed on Enter or when it loses focus. Only
  * values within [min, max] are committed; other text stays with an error.
  */
 function useNumberField({
@@ -822,8 +822,8 @@ export function clearParameterClipboard() {
 }
 
 /**
- * Copy, paste and reset of one stick's, trigger's or d-pad's parameters
- * (UI-36). `disabled` (a read-only profile) still allows copying.
+ * Copy, paste and reset of one stick's, trigger's or d-pad's parameters.
+ * `disabled` (a read-only profile) still allows copying.
  */
 export function ParamsMenu({
   kind,

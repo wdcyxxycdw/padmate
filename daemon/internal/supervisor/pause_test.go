@@ -112,7 +112,7 @@ func TestPauseAPI(t *testing.T) {
 	h.checkNoWarnings()
 }
 
-// TestPauseCombo: a ComboHeld toggles the pause (DMN-07), whichever
+// TestPauseCombo: a ComboHeld toggles the pause, whichever
 // gamepad it comes from: the slot's, one that waits for a slot, one the
 // device filter leaves out, or an id the router does not know. No slot
 // gets it, and it takes no slot over.

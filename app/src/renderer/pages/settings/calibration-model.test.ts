@@ -19,7 +19,7 @@ import {
 const KEY = "03000000de2800000fff000000000000";
 const base: Config = { schemaVersion: 0 };
 
-describe("stick calibration of a controller (IN-14)", () => {
+describe("stick calibration of a controller", () => {
   it("writes one member of one stick under the controller's key", () => {
     expect(setStickCalibration(base, KEY, "ls", { deadzone: 0.22 })).toEqual({
       schemaVersion: 0,

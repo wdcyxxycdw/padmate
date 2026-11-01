@@ -9,7 +9,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * 恢复默认映射 (IN-18, ADR-0012): takes the mapping of the controller's GUID
+ * 恢复默认映射 (ADR-0012): takes the mapping of the controller's GUID
  * away, after a confirm. SDL then reads its own mapping for the controller, or
  * none, and the controller is listed as unrecognised again. A failure stays in
  * the dialog.

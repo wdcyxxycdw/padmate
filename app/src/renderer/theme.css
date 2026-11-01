@@ -109,7 +109,7 @@ button:disabled {
 .mono {
   font-family: var(--mono);
 }
-/* Reduced motion (UI-24): a person who asks the system for less motion gets
+/* Reduced motion: a person who asks the system for less motion gets
    none from the window: a transition or an animation ends as it starts. The
    rules that say so for one thing (the recording dot, the stage) still do. */
 @media (prefers-reduced-motion: reduce) {

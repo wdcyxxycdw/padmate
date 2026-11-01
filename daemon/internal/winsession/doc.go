@@ -1,5 +1,5 @@
 // Package winsession watches the Windows session for what must suspend the
-// mapping (DMN-09): the workstation locked, the session disconnected, the
+// mapping: the workstation locked, the session disconnected, the
 // input desktop not ours (the secure desktop of UAC or Ctrl+Alt+Del), the
 // machine going to sleep and the session ending.
 //

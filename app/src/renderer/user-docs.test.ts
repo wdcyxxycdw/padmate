@@ -1,4 +1,4 @@
-// ENG-17: the user documents come in two languages, and the two must say the
+// The user documents come in two languages, and the two must say the
 // same thing in the same shape. For each pair (README, the guide chapters,
 // the known limitations, the input troubleshooting) this
 // checks that the files match one for one, that they have the same blocks

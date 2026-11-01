@@ -7,7 +7,7 @@ import (
 )
 
 // settingsOff is the default config.json with the named global feedback
-// switches (UI-27, ADR-0015) off: "rumble", "led", "pause" and "lowBattery".
+// switches (ADR-0015) off: "rumble", "led", "pause" and "lowBattery".
 func settingsOff(off ...string) *profile.Config {
 	c := profile.DefaultConfig()
 	for _, name := range off {

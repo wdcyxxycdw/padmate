@@ -213,7 +213,7 @@ var wantTable = []pin{
 	{name: "Key.", kind: phys, scan: 0x34, vk: 0xBE},
 	{name: "Key/", kind: phys, scan: 0x35, vk: 0xBF},
 
-	// Media and volume keys (ADR-0012, OUT-20): E0-extended scan codes of the
+	// Media and volume keys (ADR-0012): E0-extended scan codes of the
 	// Microsoft set-1 table and the VK_VOLUME_* and VK_MEDIA_* constants.
 	{name: "VolumeUp", kind: med, scan: 0x30, ext: true, vk: 0xAF},
 	{name: "VolumeDown", kind: med, scan: 0x2E, ext: true, vk: 0xAE},
@@ -365,7 +365,7 @@ func TestMouseKeys(t *testing.T) {
 	}
 }
 
-// The media and volume keys (ADR-0012, OUT-20) are keyboard keys of their own
+// The media and volume keys (ADR-0012) are keyboard keys of their own
 // kind. They sit behind the character and physical keys and before the mouse
 // keys, so that no keyboard key moves; each has an E0 scan code and the VK of
 // its VK_VOLUME_* or VK_MEDIA_* constant, and the W3C name as an alias.
@@ -478,7 +478,7 @@ func TestMediaKeys(t *testing.T) {
 }
 
 func TestFunctionKeys(t *testing.T) {
-	// OUT-03: F13-F21 are 0x64-0x6C, F22 0x6D, F23 0x6E, F24 0x76;
+	// F13-F21 are 0x64-0x6C, F22 0x6D, F23 0x6E, F24 0x76;
 	// VK_F13..VK_F24 are 0x7C..0x87. None is E0-extended.
 	scans := []uint8{0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x76}
 	for i, scan := range scans {

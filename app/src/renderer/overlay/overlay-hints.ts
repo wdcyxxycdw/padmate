@@ -1,4 +1,4 @@
-// What the overlay's key hints panel (HUD-03, ADR-0014) shows and in which
+// What the overlay's key hints panel (ADR-0014) shows and in which
 // order. The daemon lists the controls in no order that matters to a reader;
 // the panel puts them in the order a pad is laid out (face buttons, shoulders,
 // triggers, D-pad, centre buttons, sticks, the rest) and shows the first

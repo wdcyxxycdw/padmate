@@ -17,7 +17,7 @@ const ProductSwitchPro = 0x2009
 // SDL 3.4.16 gives a Switch Pro Controller (the HIDAPI Switch mapping, as
 // read from the source), with a heartbeat (VirtualDesc.Heartbeat), so that
 // a Source with Options.ReceiverTimeout watches it as it watches a
-// receiver (IN-30). It models SDL's mapping and the heartbeat reports,
+// receiver. It models SDL's mapping and the heartbeat reports,
 // not the device.
 func SwitchPro(name string) input.VirtualDesc {
 	return input.VirtualDesc{

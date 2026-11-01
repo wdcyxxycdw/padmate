@@ -31,7 +31,7 @@ jobs:
           cache-dependency-path: daemon/go.mod
       - run: go vet ./...
       - run: go build ./...
-      # PKG-11, as task pe:check does after task build: the layout, the imports
+      # As task pe:check does after task build: the layout, the imports
       # and the Windows functions of the built daemon and CLI against the lists
       # in internal/pecheck/testdata. The build is a real one (bin/), not go build.
       - name: Build the daemon and the CLI
@@ -57,7 +57,7 @@ jobs:
       - name: Generated files are up to date
         shell: bash
         run: go generate ./... && git diff --exit-code && test -z "$(git status --porcelain)"
-      # The end-to-end injection tests (ENG-10, ENG-11, OUT-08, ADR-0004,
+      # The end-to-end injection tests (ADR-0004,
       # ADR-0006): real SendInput on the runner, a throwaway VM, and still
       # every key is swallowed by a hook that a canary proved live first.
       # One package at a time, so that one test's hooks never see
@@ -71,7 +71,7 @@ jobs:
           PADMATE_TEST_INJECT: "1"
           PADMATE_REQUIRE_SDL: "1"
           PADMATE_REQUIRE_SESSION: "1"
-      # The latency harness (ENG-11) on few samples: the hot-path
+      # The latency harness on few samples: the hot-path
       # benchmarks, SendInput alone, and a virtual gamepad driving live mode,
       # with every key swallowed by the test's own hook. It fails only when
       # the harness does, and publishes the numbers with no target: a shared

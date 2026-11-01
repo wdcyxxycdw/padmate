@@ -26,12 +26,12 @@ import (
 // first, as a second padmated would.
 //
 // PADMATE_M10_STARTUP_REPORT, an absolute path, is the --startup-report of
-// the start (UI-45): the UI passes it in the environment, as a test
+// the start: the UI passes it in the environment, as a test
 // executable takes no flags of padmated's. When the start fails, the
 // executable exits as padmated does, 2 or exitStartup, after the report is
 // written; an E2E makes it fail with a config.json in
 // PADMATE_M10_DATA_DIR that cannot be read, a folder: one with errors is
-// repaired (PRO-29).
+// repaired.
 func TestM10UIHarness(t *testing.T) {
 	if os.Getenv("PADMATE_M10_HARNESS") != "1" {
 		t.Skip("Electron E2E subprocess only")
@@ -61,9 +61,9 @@ func TestM10UIHarness(t *testing.T) {
 }
 
 // TestM10UIHarnessStartupReport runs the harness as the E2E does, in a
-// process of its own (UI-45): with a config.json it cannot read (a
+// process of its own: with a config.json it cannot read (a
 // folder) it exits exitStartup and writes the report; with a config.json
-// that has errors, which it repairs (PRO-29), it removes the stale report
+// that has errors, which it repairs, it removes the stale report
 // and serves the E2E's pipe until it is killed, as the E2E's cleanup
 // does.
 func TestM10UIHarnessStartupReport(t *testing.T) {

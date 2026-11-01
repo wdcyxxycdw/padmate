@@ -14,7 +14,7 @@ import (
 )
 
 // markRig is a Slot over a Loop's RemoteArbiter on a fake clock, with the
-// latency sink of the Arbiter (DMN-15, ADR-0016): which input edges end in a
+// latency sink of the Arbiter (ADR-0016): which input edges end in a
 // measurement, and under which key.
 type markRig struct {
 	t    *testing.T
@@ -98,7 +98,7 @@ func (r *markRig) want(what string, keys ...string) {
 	}
 }
 
-// TestSlotMarksHandledEdges (DMN-15): the slot marks the keys of an input edge it
+// TestSlotMarksHandledEdges: the slot marks the keys of an input edge it
 // handles with the edge's Stamp and its device key: a press and a release of
 // a hold binding are one sample each. An event without a Stamp (a trace, a
 // replay) is not measured, and neither is a key that nothing sends: a
@@ -212,7 +212,7 @@ func (c *coldRuntime) InputStatus() (bool, bool) {
 	return c.pending, c.ready
 }
 
-// TestSlotReplayedScriptInputUnmarked (DMN-15, ADR-0016): an edge that the slot
+// TestSlotReplayedScriptInputUnmarked (ADR-0016): an edge that the slot
 // queued while the script starts, and replays later, is not measured: its
 // Stamp is old, and the user waited for the script, not for padmate. The
 // first edge after the replay is.
@@ -279,7 +279,7 @@ func TestSlotMarkProtocol(t *testing.T) {
 	s2.Handle(stamped("east", false))
 }
 
-// TestSlotMarkNoAllocs (DMN-15): marking an edge adds no allocation to the path
+// TestSlotMarkNoAllocs: marking an edge adds no allocation to the path
 // from Handle through the Loop to the Send and the Recorder: a press and a
 // release with a Stamp allocate exactly as many times as the same without one.
 // (The Loop allocates a reply channel and a closure per command, and the test's

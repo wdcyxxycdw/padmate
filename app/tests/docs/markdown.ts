@@ -1,4 +1,4 @@
-// Reads the user documents (ENG-17): the pieces of a Markdown file that the
+// Reads the user documents: the pieces of a Markdown file that the
 // two languages of a document must share. It is not a Markdown parser. It
 // knows what these documents use: ATX headings, fenced code, inline code,
 // lists, tables, quotes and inline links.

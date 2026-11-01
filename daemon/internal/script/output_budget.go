@@ -19,7 +19,7 @@ const OutputBurst = 100
 // belongs to the runtime: tokens refill at OutputRate per second and the
 // bucket is capped at OutputBurst. Taps also have one pending entry per main
 // key, which belongs to the scope: each run of a macro forks the runtime's
-// budget (SCR-50), so two macros can tap the same key at once while both
+// budget, so two macros can tap the same key at once while both
 // draw on one bucket. The budget is owned by the runtime's slot loop and is
 // not safe for concurrent use.
 type OutputBudget struct {

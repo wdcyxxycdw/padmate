@@ -1,5 +1,5 @@
 // Package simtest is the shared test harness of the output, engine and
-// script tests (ENG-19). Its trace notation writes input edges and output
+// script tests. Its trace notation writes input edges and output
 // key events as one line of text, such as "+LCtrl@0 +Z@0 -Z@20 -LCtrl@20",
 // so tests state expected behavior in the same form they report it.
 //

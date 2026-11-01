@@ -1,4 +1,4 @@
-// KeySpec chords as apps see them, for the shortcut table (OUT-18): sides of
+// KeySpec chords as apps see them, for the shortcut table: sides of
 // modifiers dropped, aliases folded, scan codes of F13–F24 named. Pure.
 import type { ProfileAction } from "../../shared/generated/schema";
 import type { Gesture } from "./editor-model";
@@ -28,7 +28,7 @@ const mainChars = [
 ];
 const functionKeys = Array.from({ length: 24 }, (_, i) => `F${i + 1}`);
 /**
- * The mouse buttons (ADR-0004, MOU-02, MOU-11). Unlike the wheel keys they
+ * The mouse buttons (ADR-0004). Unlike the wheel keys they
  * have a held state: a hold binding keeps the button down, as it does a key.
  */
 export const mouseButtons = [
@@ -63,7 +63,7 @@ export const mouseKeys = [...mouseButtons, ...wheelKeys] as const;
 export type MouseKey = (typeof mouseKeys)[number];
 const mouseKeySet = new Set<string>(mouseKeys);
 /**
- * The volume and media keys (ADR-0012, OUT-20): keyboard keys the daemon sends
+ * The volume and media keys (ADR-0012): keyboard keys the daemon sends
  * by virtual-key code, whatever the layout. Like every key but a modifier they
  * end a chord and never start one.
  */

@@ -10,7 +10,7 @@ import (
 // It is read on the engine's goroutine before a button press is dispatched.
 // A control that the set of the held function key binds is "global", the
 // nearest scope of the script API: the handlers of base and of the layers
-// are not for it (MAP-27).
+// are not for it.
 func (e *Engine) InputScope(c control.Control) string {
 	if set, _ := e.prog.functionSet(e.fnActive); set != nil && set.Binding(c) != nil {
 		return "global"
@@ -145,7 +145,7 @@ func (e *Engine) emitFeedback(pulse bool) { e.publishFeedback(pulse, false) }
 // publishFeedback gives the feedback hook the state of the layer and of the
 // pause. pulse asks for the pulses; pauseChange says the state changed because
 // the mapping paused or resumed, whose pulse and color the global pause switch
-// switches off (UI-27, ADR-0015). That switch works through rumble and led:
+// switches off (ADR-0015). That switch works through rumble and led:
 // the pulse still needs the rumble switch, the pause color the led switch.
 // The switches are read now, so a state published again after a change of
 // config.json (RefreshFeedback) follows it.

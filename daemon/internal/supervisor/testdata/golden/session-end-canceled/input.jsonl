@@ -1,4 +1,4 @@
-# A canceled sign-out (DMN-09): WM_QUERYENDSESSION at 500 lets go of
+# A canceled sign-out: WM_QUERYENDSESSION at 500 lets go of
 # Space, which east holds, and a tap of south maps nothing. An app cancels
 # the sign-out at 700 (WM_ENDSESSION with FALSE); east does nothing, and
 # south taps at 1100.

@@ -11,7 +11,7 @@ import (
 
 // TestEventGapDownForMinimumBehindFailedRelease: a DownFor of a key that is
 // down and has two releases queued (its tap's, and the tap's behind it)
-// presses it again behind both (OUT-17), and its minimum belongs to that
+// presses it again behind both, and its minimum belongs to that
 // press alone. The first release fails and its one resend fails too, two
 // Send calls for one release: the second queued release is still ahead of
 // the DownFor's press, so the press before it is let go of after its own

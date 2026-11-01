@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/engine"
 )
 
-// TestPause checks paused mode (DMN-06): Pause cancels every cycle and
+// TestPause checks paused mode: Pause cancels every cycle and
 // sends nothing, a press while paused ends its cycle at once with
 // ReasonPaused, and Resume sends nothing. "reload@t" in the input switches
 // the engine to the program of reloaded, or to the same program when it is

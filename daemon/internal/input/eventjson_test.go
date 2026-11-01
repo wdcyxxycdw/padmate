@@ -348,7 +348,7 @@ func FuzzReadEvents(f *testing.F) {
 	for _, tt := range badLines {
 		f.Add([]byte(tt.text))
 	}
-	// The recorded traces (ENG-08).
+	// The recorded traces.
 	root := filepath.Join("..", "..", "testdata", "traces")
 	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err == nil && !d.IsDir() && filepath.Ext(path) == ".jsonl" {

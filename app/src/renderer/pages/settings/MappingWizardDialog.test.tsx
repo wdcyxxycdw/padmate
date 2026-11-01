@@ -22,7 +22,7 @@ import { MappingWizardDialog } from "./MappingWizardDialog";
 
 // The wizard cannot get raw events from the fake input of the E2E daemon, so
 // it is covered here with a fake input.raw stream: the dialog is given an API
-// whose onEvent the test drives (IN-19, ADR-0012). The real wizard needs a
+// whose onEvent the test drives (ADR-0012). The real wizard needs a
 // controller (ARCHITECTURE §14).
 
 const guid = "ff00aabb000000000000000000007600";
@@ -207,7 +207,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("starting the wizard (IN-19)", () => {
+describe("starting the wizard", () => {
   it("pauses the mapping first, then watches the controller by its connection ID", async () => {
     const s = await setup();
     expect(

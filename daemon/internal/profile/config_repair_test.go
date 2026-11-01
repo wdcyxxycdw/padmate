@@ -27,7 +27,7 @@ func repaired(t *testing.T, data string, validDevice func(string) bool) (string,
 }
 
 // TestRepairConfigResetsWhatDoesNotParse: a file that is not a JSON
-// object at all is replaced by the defaults (PRO-29).
+// object at all is replaced by the defaults.
 func TestRepairConfigResetsWhatDoesNotParse(t *testing.T) {
 	for _, data := range []string{
 		``, `   `, `{"schemaVersion":0,`, `{"schemaVersion":0,"enabled":true,}`, `{schemaVersion:0}`,
@@ -46,7 +46,7 @@ func TestRepairConfigResetsWhatDoesNotParse(t *testing.T) {
 
 // TestRepairConfigKeepsValidMembers: each error resets only the smallest
 // member around it to its default; every other member stays, in its
-// order, with its bytes (PRO-29).
+// order, with its bytes.
 func TestRepairConfigKeepsValidMembers(t *testing.T) {
 	const rules = `"rules":[{"exe":"paint.exe","profile":"paint"},{"exe":"C:\\Program Files\\Krita\\krita.exe","profile":"krita","enabled":false}]`
 	for _, tc := range []struct {
@@ -120,7 +120,7 @@ func TestRepairConfigKeepsValidMembers(t *testing.T) {
 		want:    `{"schemaVersion":0,"output":{"sendToOwnWindow":true}}`,
 		members: []string{"/output/eventGapMs"},
 	}, {
-		// IN-14: a calibration of a stick whose pair cannot hold goes as a
+		// A calibration of a stick whose pair cannot hold goes as a
 		// whole stick; the rest of the device stays, the ignored flag too.
 		name:    "calibration stick",
 		data:    `{"schemaVersion":0,"devices":{"k":{"ignored":true,"calibration":{"ls":{"deadzone":0.5,"saturation":0.4},"rs":{"deadzone":0.18}}}}}`,

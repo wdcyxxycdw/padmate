@@ -1,4 +1,4 @@
-// The layout of the diagnostics page's event list (UI-20), as far as a test
+// The layout of the diagnostics page's event list, as far as a test
 // without a layout engine can say it: jsdom has no widths, so the rules that
 // keep a wide badge or an English gesture name from running into the next
 // column are read from the style sheet. The widths themselves were measured in

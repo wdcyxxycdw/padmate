@@ -16,13 +16,13 @@ import (
 )
 
 // rpcConflict is a program status.get reports as possibly holding the
-// controller (IN-15). Message and Document, a file of the repository, are
+// controller. Message and Document, a file of the repository, are
 // for developers reading the raw status ("padmatectl rpc status.get"); the
 // UI words its notices from Process alone, as the installed app has no
 // docs folder.
 //
-// Kind is "conflict" for a program that is running, and "steamInput" (IN-24,
-// ADR-0016) for the Steam Input settings that may govern the connected
+// Kind is "conflict" for a program that is running, and "steamInput"
+// (ADR-0016) for the Steam Input settings that may govern the connected
 // gamepads while Steam runs: Classes lists them (diagnostics.SteamClass,
 // "xbox", "playstation", "switch", "steamHardware"). padmate cannot see that
 // Steam took a gamepad, so the entry says which settings may.
@@ -111,9 +111,9 @@ func (r *liveRun) stopDiagnostics() {
 }
 
 // conflictList is what status.get reports as possibly holding the controller
-// (IN-15) while the programs running are running, as ConflictingProcesses
+// while the programs running are running, as ConflictingProcesses
 // names them: one entry for each, and, while Steam runs, one for the Steam
-// Input settings that may govern the connected gamepads (IN-24).
+// Input settings that may govern the connected gamepads.
 func (r *liveRun) conflictList(ctx context.Context, running []string) []rpcConflict {
 	conflicts := []rpcConflict{}
 	for _, name := range running {
@@ -128,7 +128,7 @@ func (r *liveRun) conflictList(ctx context.Context, running []string) []rpcConfl
 }
 
 // steamInputConflict is the conflict of the Steam Input settings that may
-// govern the gamepads padmate maps or could map (IN-24, ADR-0016), from their
+// govern the gamepads padmate maps or could map (ADR-0016), from their
 // type, vendor, product and driver. A gamepad that padmate ignores is not one:
 // Steam taking it over costs padmate nothing. It reports false when no class
 // applies, or when the gamepads cannot be listed now.
@@ -176,11 +176,11 @@ func (r *liveRun) checkMissingControls(ctx context.Context) {
 	}
 }
 
-// The tray's notices (DMN-13) are short and written-style, and name no
+// The tray's notices are short and written-style, and name no
 // file of the repository: the installed app has no docs folder.
 
 // conflictNotice is the notice of name, a running program that may hold
-// the controller (IN-15), as diagnostics.ConflictingProcesses names it.
+// the controller, as diagnostics.ConflictingProcesses names it.
 func conflictNotice(name string) tray.Notification {
 	advice := name + " 可能拦截手柄输入。如有异常，请先退出该程序。"
 	switch name {

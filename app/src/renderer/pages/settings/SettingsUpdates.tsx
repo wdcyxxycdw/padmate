@@ -7,7 +7,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * Settings · 更新 (PKG-10, ADR-0018): 自动检查更新 and 检查更新. The switch is
+ * Settings · 更新 (ADR-0018): 自动检查更新 and 检查更新. The switch is
  * the window's own setting (Main keeps it in updates.json), so it works
  * without the mapping service and is not gated on config.json. It has no note
  * (ADR-0013): the switch needs none; a check goes to the download site

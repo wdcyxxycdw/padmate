@@ -39,9 +39,9 @@ func PowerParts(p input.Power) []string {
 }
 
 // PresentWithPower keeps a full line per mapped pad for the menu: the pad's name
-// and its profile, and its power (IN-12) when the daemon has read one, from
-// power by the pad's DeviceKey; nothing of layers or latched controls (DMN-18,
-// the owner's G10), so the tooltip shows no control IDs or layer names. The
+// and its profile, and its power when the daemon has read one, from
+// power by the pad's DeviceKey; nothing of layers or latched controls (the
+// owner's decision), so the tooltip shows no control IDs or layer names. The
 // tooltip does not have the power either: Windows limits the hover tooltip to
 // 127 UTF-16 code units, including separators but excluding NUL, which the name
 // and the profile fill. The icon's badge is the first mapped pad's mode, the

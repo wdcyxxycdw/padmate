@@ -79,7 +79,7 @@ func TestRecordIPCRejectsMalformedStream(t *testing.T) {
 	}
 }
 
-// TestMonitorListIPCShowsBattery (IN-12): "monitor --list" through the daemon
+// TestMonitorListIPCShowsBattery: "monitor --list" through the daemon
 // prints the battery that devices.list carries, "not read" for a gamepad
 // without one, and says that the connection and the player index are for
 // --direct. The --json form stays the trace format.
@@ -132,7 +132,7 @@ func TestMonitorListIPCShowsBattery(t *testing.T) {
 	}
 }
 
-// TestMonitorIPCShowsAMappingChange (IN-18): through the daemon, "monitor"
+// TestMonitorIPCShowsAMappingChange: through the daemon, "monitor"
 // prints the joystick that got a mapping as the gamepad it is now, and the
 // remap of a gamepad, as it does with --direct. A repeat of the device that
 // devices.list gave is still dropped.

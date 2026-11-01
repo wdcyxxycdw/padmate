@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Profile inheritance in the library (PRO-19, ADR-0012). A profile.json may
+// Profile inheritance in the library (ADR-0012). A profile.json may
 // name another profile of the library in "extends"; profile.Resolve merges
 // the chain, reading each parent through Read, so every read is bounded and
 // confined by os.Root like any other. Nothing here rewrites a file because it

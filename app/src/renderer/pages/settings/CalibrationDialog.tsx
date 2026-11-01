@@ -64,10 +64,10 @@ function applyDraft(config: Config, key: string, draft: Draft): Config | null {
 export const IDENTIFY_COOLDOWN_MS = 2000;
 
 /**
- * Settings → 手柄调校 (IN-14, IN-13, IN-18, IN-19): the connected controllers,
+ * Settings → 手柄调校: the connected controllers,
  * each with a button that makes it buzz and flash, to tell which it is, and one
  * that opens its calibration dialog. A controller whose battery the daemon has
- * read says so beside its name (IN-12): "电量 80%", and "充电中" while it
+ * read says so beside its name: "电量 80%", and "充电中" while it
  * charges. A joystick that SDL does not know is listed too, as "未识别为手柄"
  * with 建立映射… (the mapping wizard); a known controller has 重新映射… in the
  * menu of its row, and 恢复默认映射 when config.json holds a mapping of its own.
@@ -411,7 +411,7 @@ function CalibrationSlider({
 }
 
 /**
- * Calibration of one controller (IN-14): the dead zone and outer edge of each
+ * Calibration of one controller: the dead zone and outer edge of each
  * stick it has, against a live view of the stick. A move is written to
  * config.json under the controller's key after SAVE_DELAY_MS without another,
  * and when the dialog closes. Until a stick is moved it shows the values of

@@ -1,4 +1,4 @@
-// Icons of the apps bound to a profile (UI-42). Main reads an icon from an
+// Icons of the apps bound to a profile. Main reads an icon from an
 // executable's path; this finds the path for a rule. A rule written as a
 // path names it. A rule by file name ("krita.exe") uses an app seen in the
 // foreground this session (apps.recent), or the path the app had when it

@@ -1,4 +1,4 @@
-# The pause indication switched off (feedback.pause, UI-27). The layer cycle
+# The pause indication switched off (feedback.pause). The layer cycle
 # at 100 ms pulses twice and shows the color of alt; the panic combo at 2600 ms
 # pauses the mapping, and shows no pulse and not the pause color: the color of
 # alt stays; the resume at 6100 ms is as quiet. The layer cycle at 7000 ms is

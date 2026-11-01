@@ -34,7 +34,7 @@ const goldenCmd = "go test ./internal/supervisor -run TestGolden"
 // between two events, and after the last.
 const goldenSteps = 10000
 
-// TestGolden replays each case of testdata/golden (IN-05, IN-08): the
+// TestGolden replays each case of testdata/golden: the
 // events of input.jsonl (input.ReadEvents, the format of padmatectl
 // record), in the order of the file, through a Supervisor of the profile
 // (profile.json, or the file profile.path names relative to the case, such
@@ -43,7 +43,7 @@ const goldenSteps = 10000
 // has them (1 without). Among the events, input.ExpandCombos inserts the
 // ComboHeld events a Source would send, with the default combos of the
 // horizontal grip (comboOf), as padmated's replay does: each toggles the
-// pause (DMN-07). Before each event the fake clock moves to its time,
+// pause. Before each event the fake clock moves to its time,
 // stopping at each deadline on the way, and a Sync follows each stop and
 // each event; after the last, the clock steps through the deadlines left,
 // Run ends and the output loop stops. The keys injected must match
@@ -51,7 +51,7 @@ const goldenSteps = 10000
 // suspension slots.txt; nothing may be held at the end, and nothing logged
 // at WARN or above.
 //
-// A case with a session.txt drives the system's suspension (DMN-09)
+// A case with a session.txt drives the system's suspension
 // through a real winsession.Tracker that queries a fake world:
 //
 //	@<ms> world [locked=true|false|unknown] [state=active|disconnected|fail] [desktop=input|other|fail]
@@ -367,7 +367,7 @@ func (w *slotsWriter) runDeadlines(limit clock.Time) {
 }
 
 // writeSuspension writes the lines of slots.txt of the changes of the
-// suspension in lines, the log lines since the previous Sync (DMN-09). The
+// suspension in lines, the log lines since the previous Sync. The
 // last must leave now, Status.Suspended.
 func (w *slotsWriter) writeSuspension(now winsession.Reason, lines []logRecord) {
 	at := w.h.clk.Now().AppendMs(nil)
@@ -479,7 +479,7 @@ func readGolden(t *testing.T, path string, update bool) string {
 	return text
 }
 
-// session is the system of a case's session.txt (DMN-09): the fake world
+// session is the system of a case's session.txt: the fake world
 // its Tracker queries, and the groups of lines after startup.
 type session struct {
 	world   sessionWorld

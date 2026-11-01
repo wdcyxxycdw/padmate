@@ -52,7 +52,7 @@ const saved = (api: ReturnType<typeof editorAPIFixture>): Profile => {
   return JSON.parse(call?.[1] ?? "{}");
 };
 
-describe("配置设置 holds the name and the timing only (UI-27, ADR-0015)", () => {
+describe("配置设置 holds the name and the timing only (ADR-0015)", () => {
   it("has no feedback section and no switch: they are in the global settings", async () => {
     await open();
     expect(
@@ -127,7 +127,7 @@ describe("配置设置 holds the name and the timing only (UI-27, ADR-0015)", ()
     });
   });
 
-  it("keeps the name field's own name while it shows an error (UI-24)", async () => {
+  it("keeps the name field's own name while it shows an error", async () => {
     await open(base);
     const name = screen.getByRole("textbox", { name: "名称" });
     fireEvent.change(name, { target: { value: "" } });
@@ -152,7 +152,7 @@ describe("配置设置 holds the name and the timing only (UI-27, ADR-0015)", ()
   });
 });
 
-describe("a file that has extends (PRO-19, ADR-0013)", () => {
+describe("a file that has extends (ADR-0013)", () => {
   const library = (): ProfileEntry[] => [
     { id: "default", name: "default", default: true },
     { id: "paint", name: "Paint" },

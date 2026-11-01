@@ -886,7 +886,7 @@ func statBlocked(want uint64) func(*output.Arbiter) error {
 	}
 }
 
-// TestLoopBlockReasons: each owner keeps the gate closed on its own (DMN-09).
+// TestLoopBlockReasons: each owner keeps the gate closed on its own.
 // Opening one owner leaves the gate closed while the other keeps it, and
 // every closing call runs a ReleaseAll, which the second one shows by
 // resending the release the first left pending.
@@ -1019,7 +1019,7 @@ func TestLoopBlockForInvalid(t *testing.T) {
 // TestRemoteArbiterMatchesArbiter runs the same random commands, with the
 // same Send failures, on an Arbiter and through a RemoteArbiter: the
 // output and the errors must be the same. Some steps change the event gap
-// (OUT-17) or move both clocks; the plain Arbiter then runs its due work
+// or move both clocks; the plain Arbiter then runs its due work
 // as the Loop does, before each command and after each step.
 func TestRemoteArbiterMatchesArbiter(t *testing.T) {
 	fake := clock.NewFake()
@@ -1172,7 +1172,7 @@ func isPanic(err error, pe *output.PanicError) bool {
 }
 
 // TestLoopMasksMenuKey: the Loop's Sender is a MenuMask, so the release of
-// a lone Alt is masked and that of Alt+Tab is not (OUT-08).
+// a lone Alt is masked and that of Alt+Tab is not.
 func TestLoopMasksMenuKey(t *testing.T) {
 	lt := startLoop(t, output.LoopOptions{})
 	lt.do(down(ownerA, "Alt"))

@@ -111,7 +111,7 @@
   align-items: center;
   gap: 10px;
 }
-/* A slider and its value in a settings row (the overlay's opacity, HUD-05);
+/* A slider and its value in a settings row (the overlay's opacity);
    the slider itself is styled with the calibration sliders, below. */
 .page-range {
   flex: none;
@@ -144,8 +144,8 @@
   font-size: 12px;
   white-space: nowrap;
 }
-/* What a controller's row says about it, under its name (the identify note,
-   IN-13); the same size as a hint, which the rows otherwise do without. */
+/* What a controller's row says about it, under its name (the identify
+   note); the same size as a hint, which the rows otherwise do without. */
 .row-note {
   color: var(--text-3);
   font-size: 12px;
@@ -160,7 +160,7 @@
   white-space: nowrap;
 }
 
-/* Scripts (UI-41, SCR-50): 新建 and 导入 on top, then one card per script
+/* Scripts: 新建 and 导入 on top, then one card per script
    of the active profile, missing files and the legacy script last. */
 .page-macro-toolbar {
   display: flex;
@@ -642,7 +642,7 @@
   margin-right: 2px;
 }
 
-/* Settings → 按键判定 millisecond fields (UI-19). */
+/* Settings → 按键判定 millisecond fields. */
 .page-ms {
   flex: none;
 }
@@ -654,7 +654,7 @@
   border-color: rgba(255, 138, 128, 0.6);
 }
 
-/* The emergency combo dialog (UI-19). */
+/* The emergency combo dialog. */
 .combo-dialog {
   width: min(440px, calc(100vw - 48px));
 }
@@ -685,7 +685,7 @@
   color: var(--red);
 }
 
-/* The mapping wizard (IN-19). */
+/* The mapping wizard. */
 .wizard-dialog {
   width: min(520px, calc(100vw - 48px));
 }
@@ -790,7 +790,7 @@
   color: var(--text);
 }
 
-/* The controller calibration dialog (IN-14). */
+/* The controller calibration dialog. */
 .page-muted {
   color: var(--text-4);
   font-weight: 400;
@@ -924,7 +924,7 @@
   font-size: 12px;
 }
 
-/* Diagnostics (UI-20, UI-21, UI-22, IN-24; ADR-0016): a view inside Settings,
+/* Diagnostics (ADR-0016): a view inside Settings,
    with the events of the latest presses, the latency figures and the
    software that may hold the controller. */
 .page-column-diagnostics {
@@ -1109,7 +1109,7 @@
   font: 600 16px var(--mono);
   font-variant-numeric: tabular-nums;
 }
-/* Only the daemon's own verdict colors a figure (UI-22). */
+/* Only the daemon's own verdict colors a figure. */
 .page-latency-pad[data-warn] [data-figure="p99"] dd {
   color: var(--amber);
 }
@@ -1117,7 +1117,7 @@
   margin: 0;
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .page-search:focus-within {
     outline: 2px solid Highlight;

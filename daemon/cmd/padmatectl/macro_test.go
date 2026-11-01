@@ -12,7 +12,7 @@ import (
 )
 
 // macro list|new|import|rename|delete go to the daemon's macros.* methods,
-// which manage the script library of every profile (SCR-51), so they take
+// which manage the script library of every profile, so they take
 // no profile; import reads FILE itself, bounded, and sends its base name.
 func TestMacroRouting(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "复制 全部.ts")

@@ -8,7 +8,7 @@ import (
 
 // DeviceID identifies a connected device: the SDL joystick instance id,
 // or for a device that the receiver watchdog reported removed and that came
-// back, a new id counted down from 2³²−1 (IN-30). It is unique while the
+// back, a new id counted down from 2³²−1. It is unique while the
 // device stays connected and is never reused within a process.
 type DeviceID uint32
 
@@ -45,8 +45,8 @@ type DeviceInfo struct {
 	Serial string `json:"serial"`
 	// IsGamepad is false for a joystick without a gamepad mapping. Such
 	// devices are reported but not read as a gamepad; their elements are the
-	// raw stream (Source.RawStart, IN-17), and adding a mapping for their GUID
-	// turns them into a gamepad, reported again with the same id (IN-18).
+	// raw stream (Source.RawStart), and adding a mapping for their GUID
+	// turns them into a gamepad, reported again with the same id.
 	IsGamepad bool `json:"gamepad"`
 	// Virtual is true for an SDL virtual joystick, such as the one
 	// AttachVirtual adds.
@@ -104,7 +104,7 @@ const (
 	// DeviceState is a complete wake-time snapshot. It is never dropped
 	// and is routing metadata, not an input trace record.
 	DeviceState
-	// DevicePower is the power of a gamepad (IN-12): its battery state and
+	// DevicePower is the power of a gamepad: its battery state and
 	// charge, as of its first read and each change. Only a Source with
 	// Options.PowerEvents sends it. Like DeviceState it is routing metadata,
 	// not an input trace record: it is never written to or read from traces
@@ -112,8 +112,8 @@ const (
 	// a newer one of the same device replaces one that still waits.
 	DevicePower
 	// DeviceRemapped is sent when SDL changed the mapping of a gamepad that
-	// stays a gamepad (SDL_EVENT_GAMEPAD_REMAPPED; a mapping was added or reset,
-	// IN-18). Info is the device as it is now: its button and axis masks may
+	// stays a gamepad (SDL_EVENT_GAMEPAD_REMAPPED; a mapping was added or
+	// reset). Info is the device as it is now: its button and axis masks may
 	// have changed. SDL does not release what is held when it remaps, so the
 	// consumer treats the event as a reset of the device: everything of it is
 	// released, and a control that is held counts again only once it has been
@@ -152,8 +152,8 @@ type Event struct {
 	// Stamp is latency.Now as T-input read it right after SDL returned the
 	// event, for ButtonDown, ButtonUp and AxisMotion of a Source and of
 	// padmated's fake input; 0 for all other events and for events that come
-	// from a trace. It is the start of the latency statistics (DMN-15,
-	// ARCHITECTURE §13). It is not written to traces (WriteEvent).
+	// from a trace. It is the start of the latency statistics
+	// (ARCHITECTURE §13). It is not written to traces (WriteEvent).
 	Stamp  latency.Stamp `json:"-"`
 	Device DeviceID
 	Kind   EventKind

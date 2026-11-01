@@ -1,8 +1,8 @@
 import type { EditorHandler } from "./library-handlers";
 
 /**
- * The one page of Windows Settings the window can ask Main to open (UI-30,
- * ADR-0012): Gaming → Game Bar, where the switch "Allow your controller to
+ * The one page of Windows Settings the window can ask Main to open
+ * (ADR-0012): Gaming → Game Bar, where the switch "Allow your controller to
  * open Game Bar" lives ("Open Xbox Game Bar using this button on a
  * controller" on older Windows). The Xbox button of a controller
  * opens the Game Bar through Windows itself, which padmate cannot stop and

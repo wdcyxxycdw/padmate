@@ -67,7 +67,7 @@ type traceSender struct {
 
 func (s *traceSender) Send(events []output.KeyEvent) (int, error) {
 	if text := output.TypedText(events); text != "" {
-		// A typed character (OUT-21): its press and release, and the two units of a
+		// A typed character: its press and release, and the two units of a
 		// surrogate pair, are one line, such as `text "你"`.
 		s.w.write(s.clk.Now(), "output", "text "+strconv.Quote(text), engine.Decision{})
 	}
@@ -117,7 +117,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "padmatectl trace:", profile.ReadError(*profilePath, err))
 		return 2
 	}
-	// A profile of a library may extend another (PRO-19): its parents are
+	// A profile of a library may extend another: its parents are
 	// read from the same library, and the trace runs the merge.
 	var p *profile.Profile
 	var ds profile.Diagnostics
@@ -181,7 +181,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	w := &traceWriter{w: stdout, json: *asJSON}
 	sender := &traceSender{clk: clk, w: w}
 	timing := prog.Timing()
-	// No event gap (OUT-17): trace reads no config.json, so each command's
+	// No event gap: trace reads no config.json, so each command's
 	// keys are one send line, as with output.eventGapMs 0.
 	arb := output.NewArbiter(clk, sender, output.ArbiterOptions{MinPress: time.Duration(timing.TapPressMs) * time.Millisecond, MinGap: time.Duration(timing.TapGapMs) * time.Millisecond})
 	s, err := slot.New(slot.Config{Gen: 1, Program: prog, Arbiter: arb, Clock: clk,

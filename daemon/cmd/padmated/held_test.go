@@ -20,7 +20,7 @@ import (
 // profile.
 const spaceScan = 0x39
 
-// The held-key log (OUT-14, ADR-0006): "PDMH", version 4, the logon
+// The held-key log (ADR-0006): "PDMH", version 4, the logon
 // time, the session and the logon session of the run, and the bitmaps,
 // one bit per key.
 const (
@@ -138,7 +138,7 @@ func (tl *testLive) pressEast(t *testing.T, src *fakeSource, s *heldSender) {
 // TestLiveHeldSweep: with --inject, T-output releases the keys the last
 // run left in the held-key log that are down before the first edge, and
 // padmated says so on stderr and in the log; later presses are in the log
-// before they go out, and the exit removes it (OUT-14).
+// before they go out, and the exit removes it.
 func TestLiveHeldSweep(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "run", "held.bin")
 	s := &heldSender{}

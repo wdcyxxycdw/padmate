@@ -1,7 +1,7 @@
 name: release
 
-# PKG-07: a v* tag builds the Windows installer and leaves it, with its SHA-256
-# and its latest.yml (PKG-10), in a draft release for the owner to publish: a
+# A v* tag builds the Windows installer and leaves it, with its SHA-256
+# and its latest.yml, in a draft release for the owner to publish: a
 # pre-release when the version has a prerelease part (v1.0.0-rc.1), the latest
 # release otherwise (v1.0.0). Every step is a task that runs the same way on a
 # developer machine:
@@ -21,7 +21,7 @@ name: release
 # workflow_dispatch builds the same for a tag name that need not exist yet; the
 # draft release then names the commit it was built from.
 #
-# Signing (PKG-09) is off unless the repository variable PADMATE_SIGN is azure
+# Signing is off unless the repository variable PADMATE_SIGN is azure
 # (Azure Artifact Signing). It is the one mode a GitHub runner can do: store signs with a
 # certificate in the runner's Windows certificate store, which a runner does
 # not have, and pfx reads a file of the machine, which a secret is not. The
@@ -137,7 +137,7 @@ jobs:
         run: task package:installer VERSION="$VERSION"
       # Installs the installer, then installs it over itself while a daemon runs
       # (the installer must stop it), as an update does (--updated /S), and
-      # uninstalls it: SPK-07 on a clean runner.
+      # uninstalls it: the installer smoke test on a clean runner.
       #
       # A signed build is also checked where electron-builder leaves nothing to
       # check: the installed files and the uninstaller (deleted from

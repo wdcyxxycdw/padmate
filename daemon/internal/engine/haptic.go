@@ -8,7 +8,7 @@ import (
 )
 
 // Haptic is a one-shot haptic the engine asks the controller for: the preset
-// of a binding that has one (MAP-25), or the tick of a knob step (HUD-10). It
+// of a binding that has one, or the tick of a knob step. It
 // carries what the profile's feedback says about the strength and the pulses,
 // so whoever plays it needs nothing of the profile. It is passed by value and
 // never allocates.
@@ -47,8 +47,8 @@ func hapticSettingsOf(p *profile.Profile) hapticSettings {
 	}
 }
 
-// knobTick reports whether a dispatch of control c plays the knob tick
-// (HUD-10): c is a tick control (ls.cw, ls.ccw, rs.cw, rs.ccw) of a stick in
+// knobTick reports whether a dispatch of control c plays the knob tick:
+// c is a tick control (ls.cw, ls.ccw, rs.cw, rs.ccw) of a stick in
 // mode "knob" with knobTick. Only emitKnob presses a tick control, so its
 // dispatch is a knob step that a declarative binding ran.
 func (e *Engine) knobTick(c control.Control) bool {

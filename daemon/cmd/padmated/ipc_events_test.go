@@ -28,7 +28,7 @@ func TestIPCProductionTopicsIncludeLabelLatchAndProfile(t *testing.T) {
 	if err := client.CallResult(ctx, "subscribe", map[string]any{"topics": ipc.Topics}, new(any)); err != nil {
 		t.Fatal(err)
 	}
-	// A foreground change publishes app.foreground (PRO-16).
+	// A foreground change publishes app.foreground.
 	tl.onForeground(focusApp("paint.exe"))
 	button(src, "south", true)
 	button(src, "south", false)
@@ -50,9 +50,9 @@ func TestIPCProductionTopicsIncludeLabelLatchAndProfile(t *testing.T) {
 	if err := client.CallResult(ctx, "profiles.put", map[string]string{"id": "paint", "revision": profilelib.Revision([]byte(source)), "text": source + "\n"}, new(any)); err != nil {
 		t.Fatal(err)
 	}
-	// What the tray's exit publishes (DMN-22), without exiting.
+	// What the tray's exit publishes, without exiting.
 	tl.announceExit("tray")
-	// What a script's hud.toast sends (SCR-22; TestIPCScriptHUD runs a script).
+	// What a script's hud.toast sends (TestIPCScriptHUD runs a script).
 	hudEvents{hub: tl.liveRun.events}.Toast(0, "ipc production topic marker", 1500)
 	for _, topic := range ipc.Topics {
 		if topic == "input.raw" {

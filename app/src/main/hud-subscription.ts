@@ -1,6 +1,6 @@
 import { isDisconnectedError, managerDisconnected, subscribe } from "./bridge";
 
-// The daemon's hud topic (SCR-22, ADR-0014). The daemon tells a script that an
+// The daemon's hud topic (ADR-0014). The daemon tells a script that an
 // overlay is there (host.has("hud")) while some client subscribes to hud, and
 // a new subscribe call replaces the client's whole list of topics. So the UI
 // asks for hud only while its overlay is up: from the moment the overlay's
@@ -15,7 +15,7 @@ import { isDisconnectedError, managerDisconnected, subscribe } from "./bridge";
 // next connection is made as the overlay is then.
 //
 // The same object holds the one other topic the UI asks for only at times:
-// input.raw, while the mapping wizard is open (IN-17, ADR-0012). A change of
+// input.raw, while the mapping wizard is open (ADR-0012). A change of
 // that wish is waited for (rawUp): the wizard asks the daemon for a
 // controller's raw events only once the daemon has the subscription. A
 // connection that ends takes the wizard's watch with it, so the wish does not

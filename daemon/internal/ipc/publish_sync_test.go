@@ -51,7 +51,7 @@ func subscribedPipe(t *testing.T, hub *Hub, topics ...string) *lineChannel {
 
 // TestPublishSyncReturnsOnceWritten: PublishSync waits for the sessions
 // that subscribe to the topic, until each has written the event to its
-// connection, and not for the others (DMN-22).
+// connection, and not for the others.
 func TestPublishSyncReturnsOnceWritten(t *testing.T) {
 	hub := NewHub()
 	reader := subscribedPipe(t, hub, "daemon.exiting")

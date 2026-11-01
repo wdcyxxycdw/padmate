@@ -18,9 +18,9 @@ import (
 // and hold holding the same chord, a press action next to a timeOnly tap
 // and hold (so its release, a tap too, has an edge decision), typematic
 // repeat on press and on hold, release, a tap-mode sequence, a sequence action
-// and a text action (they hold nothing, MAP-22, OUT-21), a latch, the
+// and a text action (they hold nothing), a latch, the
 // three interrupt policies, and layer hold and toggle of the overlay fn,
-// which rebinds some of the controls. The function set (MAP-27) rebinds more
+// which rebinds some of the controls. The function set rebinds more
 // of them, with every kind of action it may hold.
 const fuzzProfile = `{"schemaVersion": 0, "name": "fuzz", "layers": {
   "base": {
@@ -69,17 +69,17 @@ var fuzzLatched = keys.MustParse("Ctrl")
 
 // FuzzGestures drives an Engine over fuzzProfile with random edges, waits,
 // pauses, cancels, resets and reloads, and checks with a ledger that it
-// never leaves a key held (ENG-12, invariant 1). Each byte is one
+// never leaves a key held (invariant 1). Each byte is one
 // operation: its low 4 bits select it.
 //
 //	0–7   press the control fuzzControls[op] if it is up, else release it;
 //	      with the high bit set, Options.Button consumes the edge, as a
-//	      script does (SCR-05): a consumed press leaves the control up in
+//	      script does: a consumed press leaves the control up in
 //	      the engine, so its release is stale, and a consumed release ends
 //	      the cycle without its tap or release action; with bit 6 set
 //	      (0x40) it is a center key instead: start for an even op, back for
 //	      an odd one, pressed if up, else released. The first program's
-//	      function key is start and the second's back (MAP-27, ADR-0012), so
+//	      function key is start and the second's back (ADR-0012), so
 //	      the other one is an ordinary control that nothing binds
 //	8     wait max(1, next byte) ms
 //	9     wait until the next deadline
@@ -92,13 +92,13 @@ var fuzzLatched = keys.MustParse("Ctrl")
 //
 // Waits run every deadline on the way at its time, as slot.Replay does.
 // The ledger fails at an Up without a Down, a Repeat of a chord that is not
-// held, a Repeat of a cycle whose control is physically up (OUT-11: the
+// held, a Repeat of a cycle whose control is physically up (the
 // control of a cycle comes from the decisions), a Down, Tap or Repeat while
 // paused, and a negative tap hold. After CancelAll, Pause, Reset and Reload
 // it forgets what is held, as the slot's ReleaseOwners does. It also fails
 // when the decisions about the edges themselves, the press decision of
 // each press and the up decision of each release, do not come in the order
-// the edges were stepped (ARCHITECTURE §7.7, MAP-09): a release that goes
+// the edges were stepped (ARCHITECTURE §7.7): a release that goes
 // ahead of an earlier buffered press lets the keys and layers its cycle
 // holds go before that press replays. Only the gesture decisions (tap,
 // hold, multi-tap and release actions) may come earlier; an edge the
@@ -128,7 +128,7 @@ func FuzzGestures(f *testing.F) {
 	f.Add([]byte("01&110"))                                               // a buffered release behind timeOnly
 	f.Add([]byte{6, 0x81, 1, 1, 6, 1})                                    // consumed press: its stale release waits behind timeOnly
 	f.Add([]byte{1, 8, 250, 6, 0x81, 9, 9, 6})                            // consumed release of a hold while timeOnly is pending
-	f.Add([]byte{'0', '1', '&', 0xB1, '1', '0'})                          // the MAP-09 input, north's buffered release consumed
+	f.Add([]byte{'0', '1', '&', 0xB1, '1', '0'})                          // the replay-in-order input, north's buffered release consumed
 	f.Add([]byte{0x86, 1, 0x81, 1, 6})                                    // consumed press of the timeOnly control, consumed release of north
 	f.Add([]byte{3, 6, 3, 3, 3, 9, 6})                                    // south's window waits for its press, buffered behind timeOnly
 	f.Add([]byte{6, 3, 3, 8, 240, 3, 3, 9, 6})                            // a replayed release opens a window that is over already

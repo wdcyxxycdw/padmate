@@ -16,7 +16,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/output"
 )
 
-// "padmatectl send" (OUT-01) injects key chords directly with SendInput.
+// "padmatectl send" injects key chords directly with SendInput.
 // It is a development and debugging command: it bypasses the daemon, and
 // with it the Output Arbiter, which is the only writer of keyboard output
 // inside the daemon (CLAUDE.md invariant 3). Each chord still goes through

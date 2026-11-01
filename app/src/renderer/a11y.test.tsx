@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// UI-24: axe-core over what the app renders, in jsdom: every page, the
+// axe-core over what the app renders, in jsdom: every page, the
 // drawer, the menus and every dialog. It is the part of the accessibility
 // check that `task ci` runs; the rules that need layout (contrast, target
 // size, scrolling) are covered by theme-contrast.test.ts and by the Electron
@@ -925,7 +925,7 @@ describe("dialogs that are rendered on their own", () => {
   });
 });
 
-// The automatic update (PKG-10) came in a stream of its own: its dialogs and
+// The automatic update came in a stream of its own: its dialogs and
 // the settings row of a build that can update are checked here the way every
 // other dialog is. The editor's fixture is a build that cannot update, so the
 // pages above only show "开发版不检查更新".

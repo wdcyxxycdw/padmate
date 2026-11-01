@@ -8,8 +8,8 @@
 // tool generates by probing the linked goja; lib.padmate-goja.d.ts, generated
 // with it, is the TypeScript standard library to type-check scripts against.
 //
-// BuildOptions.Macro builds a macro (SCR-50, ADR-0011), a top-level file
-// of a macros folder, the build's root (the script library's, SCR-51): its
+// BuildOptions.Macro builds a macro (ADR-0011), a top-level file
+// of a macros folder, the build's root (the script library's): its
 // padmate module has only the members of MacroExports, read from the
 // macro's own bridge, and using another one is a build error. A legacy
 // entry cannot be in its profile's macros folder.

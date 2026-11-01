@@ -1,10 +1,10 @@
-// Package installerpkg prepares and checks the NSIS installer (PKG-03,
-// PKG-06): it validates the version tag the one version of a release
+// Package installerpkg prepares and checks the NSIS installer:
+// it validates the version tag the one version of a release
 // comes from, lays out the files electron-builder packs next to the app,
 // and reads the version back from the built artifacts. It also checks what
-// the build does to them: the PE hygiene of the executables (PKG-11, pe.go),
-// their Authenticode signatures and the publisher in app-update.yml (PKG-09,
-// sign.go), and latest.yml against the installer (updateinfo.go).
+// the build does to them: the PE hygiene of the executables (pe.go),
+// their Authenticode signatures and the publisher in app-update.yml
+// (sign.go), and latest.yml against the installer (updateinfo.go).
 package installerpkg
 
 import (

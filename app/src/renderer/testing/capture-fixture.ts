@@ -1,4 +1,4 @@
-// Tests record shortcuts the way the user does (OUT-18): through native
+// Tests record shortcuts the way the user does: through native
 // capture, since a shortcut cannot be typed.
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { vi } from "vitest";

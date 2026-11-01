@@ -8,7 +8,7 @@ import {
 } from "@playwright/test";
 import { cleanup, fixture, launch, root, rpc } from "./helpers";
 
-// 配置 → 导入… of an AntiMicroX file (PRO-21, ADR-0012): .amgp and .xml go to
+// 配置 → 导入… of an AntiMicroX file (ADR-0012): .amgp and .xml go to
 // the daemon as data, the report is listed by severity in a dialog, and the new
 // profile opens with its 打开配置 button (Esc and the close button only close
 // the report).
@@ -102,7 +102,7 @@ test("导入… takes an AntiMicroX .amgp, lists what did not come over whole, a
     expect(await inUse()).toBe("paint");
 
     // 打开配置: the new profile is in use on the mapping page, and the key
-    // drawer says it has more key groups than the page edits (UI-39).
+    // drawer says it has more key groups than the page edits.
     await report.getByRole("button", { name: "打开配置", exact: true }).click();
     await expect(report).toHaveCount(0);
     await expect(rail("映射")).toHaveAttribute("aria-current", "page");

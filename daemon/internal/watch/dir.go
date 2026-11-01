@@ -33,7 +33,7 @@ type DirChange struct {
 
 // DirWatcher polls the regular files at the top of a folder, those its
 // filter selects, by name, size and modification time: the macros folder
-// of a profile (SCR-50). Like a Watcher it debounces: once the listing has
+// of a profile. Like a Watcher it debounces: once the listing has
 // stayed the same for Debounce after it changed, Run's function gets the
 // names that differ from the listing of the last change, or of Run's
 // start. It reads no content. A missing folder lists no file; an error of

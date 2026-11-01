@@ -1,4 +1,4 @@
-// UI-24: Windows high contrast. A forced color scheme drops background-only and
+// Windows high contrast. A forced color scheme drops background-only and
 // shadow-only states, so every state the stylesheets show that way needs a
 // block in @media (forced-colors: active). The Electron pass of
 // app/tests/e2e/a11y.spec.ts proves the result in a real window by comparing

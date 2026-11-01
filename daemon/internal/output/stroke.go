@@ -31,7 +31,7 @@ func mustLookup(name string) keys.Key {
 	return k
 }
 
-// ChordStroke returns the events that tap c on the US layout (OUT-05): the
+// ChordStroke returns the events that tap c on the US layout: the
 // modifiers go down in canonical order, then the key; Up is the exact
 // reverse. When the key needs Shift on the US layout (only Plus, which is
 // Shift+=) and c holds no Shift of either side, LShift is pressed around

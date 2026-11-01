@@ -14,7 +14,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the key hints (HUD-03, ADR-0014): a HUD hints action is held like a
+// Tests of the key hints (ADR-0014): a HUD hints action is held like a
 // precision action, ends on every path that ends a held action, and while it
 // holds the engine keeps the list of what the controls do in the current layer
 // stack.
@@ -546,7 +546,7 @@ func TestHintsViewIsACopy(t *testing.T) {
 	}
 }
 
-// The levels of a registry (ENG-21) decide the list as they decide a press: the
+// The levels of a registry decide the list as they decide a press: the
 // top level that has a binding wins, and a binding that blocks hides the control.
 func TestHintsResolveThroughARegistry(t *testing.T) {
 	prog := compileLayers(t, `{"schemaVersion":1,"name":"reg","layers":{"base":{}}}`)

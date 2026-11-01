@@ -25,7 +25,7 @@ function fixture(source: Partial<IconSource> = {}) {
   return { thumbnail, fileIcon, handlers, run };
 }
 
-describe("app icons (UI-42)", () => {
+describe("app icons", () => {
   it("takes one path", () => {
     expect(fixture().handlers.appIcon?.count).toBe(1);
   });

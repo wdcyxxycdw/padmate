@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/haptic"
 )
 
-// The player lights follow the mode of the layer (HUD-08): Feedback.PlayerMode
+// The player lights follow the mode of the layer: Feedback.PlayerMode
 // is the ambient claim of the Mixer for them. These tests need no SDL; the
 // recording gamepads are the ones of feedback_test.go.
 

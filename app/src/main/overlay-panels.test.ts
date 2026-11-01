@@ -15,7 +15,7 @@ interface SlotInit {
 }
 
 // One entry of engine.activity's slots, as the daemon writes it; panels only
-// while the slot's script keeps any (SCR-22).
+// while the slot's script keeps any.
 function slot({ slot, device = 7 + slot, panels }: SlotInit) {
   return {
     slot,

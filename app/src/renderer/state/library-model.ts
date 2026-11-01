@@ -1,4 +1,4 @@
-// Pure helpers for the profile library page (UI-17, UI-18, PRO-16, PRO-28):
+// Pure helpers for the profile library page:
 // the automatic-switch rules in config.json, profile IDs and names, the
 // fixed default profile, and the messages for library failures. Nothing
 // here talks to the daemon.
@@ -24,7 +24,7 @@ const tx = (language: Language, zh: string, en: string) =>
 export const MAX_PROFILE_NAME = 64;
 
 /**
- * The library ID of the fixed default profile (PRO-28, ADR-0008): every app
+ * The library ID of the fixed default profile (ADR-0008): every app
  * no rule binds uses it. It cannot be deleted or renamed, and the UI names
  * it 默认 / Default whatever name it stores.
  */
@@ -806,7 +806,7 @@ export function nextActiveAfterDelete(
 }
 
 // ---------------------------------------------------------------------------
-// Profiles that extend others (PRO-19, ADR-0012, ADR-0013): the UI no longer
+// Profiles that extend others (ADR-0012, ADR-0013): the UI no longer
 // makes them, but a file that has `extends` still works.
 
 /**
@@ -840,9 +840,9 @@ export type LibraryFailureKind =
   | "active"
   /** The library ID is taken. */
   | "exists"
-  /** The fixed default profile cannot be deleted (PRO-28). */
+  /** The fixed default profile cannot be deleted. */
   | "fixedDelete"
-  /** The fixed default profile cannot be renamed (PRO-28). */
+  /** The fixed default profile cannot be renamed. */
   | "fixedRename"
   /** The folder holds links or special files, or is too big to copy. */
   | "unsupported"
@@ -853,15 +853,15 @@ export type LibraryFailureKind =
   | "brokenConfig"
   /** The profile document has errors. */
   | "brokenProfile"
-  /** A profile based on the one deleted cannot be written out whole first (PRO-19). */
+  /** A profile based on the one deleted cannot be written out whole first. */
   | "childBlocked"
-  /** The profile folder holds what an export refuses (PRO-20). */
+  /** The profile folder holds what an export refuses. */
   | "notExportable"
-  /** The daemon refused a profile file (PRO-20); reason is an ArchiveProblem. */
+  /** The daemon refused a profile file; reason is an ArchiveProblem. */
   | "archive"
-  /** Main refused a profile file (PRO-20); reason is a ProfileFileProblem. */
+  /** Main refused a profile file; reason is a ProfileFileProblem. */
   | "file"
-  /** The daemon refused an AntiMicroX file (PRO-21); reason is an AmgpProblem. */
+  /** The daemon refused an AntiMicroX file; reason is an AmgpProblem. */
   | "amgp"
   | "error";
 
@@ -1095,7 +1095,7 @@ export function failureText(
   }
 }
 
-/** Why the daemon refused a profile file (PRO-20). */
+/** Why the daemon refused a profile file. */
 function archiveText(reason: string | undefined, language: Language): string {
   switch (reason) {
     case "version":
@@ -1137,7 +1137,7 @@ function archiveText(reason: string | undefined, language: Language): string {
   }
 }
 
-/** Why the daemon refused an AntiMicroX file (PRO-21). */
+/** Why the daemon refused an AntiMicroX file. */
 function amgpText(reason: string | undefined, language: Language): string {
   switch (reason) {
     case "size":
@@ -1189,7 +1189,7 @@ function amgpText(reason: string | undefined, language: Language): string {
   }
 }
 
-/** Why Main refused a profile file (PRO-20). */
+/** Why Main refused a profile file. */
 function fileText(reason: string | undefined, language: Language): string {
   switch (reason) {
     case "size":

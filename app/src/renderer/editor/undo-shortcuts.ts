@@ -84,7 +84,7 @@ export function padChanged(
  * Whether a pad may send keys to padmate's own window: 在 padmate 窗口中也
  * 发送按键 is on and a pad is connected. A pad's Ctrl+Z then reaches the
  * window within milliseconds, before its input event, so the keys cannot
- * be told apart and none of them undoes (UI-43).
+ * be told apart and none of them undoes.
  */
 export function padSendsHere(
   state: Pick<PadmateState, "status" | "config">,
@@ -108,7 +108,7 @@ export function padSettingKnown(
 }
 
 /**
- * Whether the pad holds Ctrl+Z and the like back (UI-43). With 在 padmate
+ * Whether the pad holds Ctrl+Z and the like back. With 在 padmate
  * 窗口中也发送按键 on, a pad's own Ctrl+Z reaches the window before its input
  * event does: nothing undoes. With it known to be off, no pad can send keys
  * here, so what a pad reports (a button the daemon never saw released, a
@@ -135,7 +135,7 @@ const capturing = () =>
   );
 
 /**
- * Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z on the mapping page (UI-43). Text
+ * Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z on the mapping page. Text
  * fields, open dialogs and shortcut capture keep the keys; while a pad may
  * send keys to this window (padHoldsUndo), they do nothing.
  */

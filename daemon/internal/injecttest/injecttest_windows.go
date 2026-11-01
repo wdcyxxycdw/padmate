@@ -370,7 +370,7 @@ func (r *Recorder) Canary(t testing.TB, nonce uint32) {
 //
 // It is for keyboard events: a batch with a mouse event stops the test before
 // anything is injected. InjectFencedMixed injects those, once MouseCanary has
-// proven the mouse hook live. A batch with a Unicode press (OUT-21) needs
+// proven the mouse hook live. A batch with a Unicode press needs
 // UnicodeCanary first, and one that leaves a unit pressed is refused too.
 func (r *Recorder) InjectFenced(t testing.TB, nonce uint32, events []output.KeyEvent) []winhook.Event {
 	t.Helper()

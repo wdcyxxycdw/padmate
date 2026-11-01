@@ -71,7 +71,7 @@ export interface UpdateControllerDeps {
   openExternal: (url: string) => Promise<void> | void;
   /**
    * Lets the window finish its saves before the application quits: the
-   * close guard's settle (UI-43). Resolves when they are done or time is up.
+   * close guard's settle. Resolves when they are done or time is up.
    */
   flush: () => Promise<void>;
   /** Makes closing wait for the saves again (CloseGuard.rearm). */
@@ -90,7 +90,7 @@ function codeOf(error: unknown): string {
 }
 
 /**
- * The automatic update (PKG-10, ADR-0018): when to look for a new version,
+ * The automatic update (ADR-0018): when to look for a new version,
  * what to tell the person, and the install, which waits for the saves and
  * runs only when they ask. It decides; electron-updater (UpdaterLike) does
  * the network, the checksum and the installer. Everything else it needs comes

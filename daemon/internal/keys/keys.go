@@ -44,7 +44,7 @@ const (
 	// has no scan code, no VK and no layout; Key.Mouse says which input it is.
 	// It can be the main key of a chord, never a modifier.
 	KindMouse
-	// KindMedia is a volume or media key (ADR-0012, OUT-20): VolumeUp,
+	// KindMedia is a volume or media key (ADR-0012): VolumeUp,
 	// VolumeDown, VolumeMute, MediaPlayPause, MediaNext, MediaPrevious and
 	// MediaStop. It is a keyboard key with an E0 scan code and the VK of its
 	// VK_VOLUME_* or VK_MEDIA_* constant, and the output layer sends it by VK
@@ -373,7 +373,7 @@ const genericMods = ModCtrl | ModShift | ModAlt | ModWin
 // made only of modifiers: "Ctrl+Z" becomes "LCtrl+Z" and "Ctrl+Shift"
 // becomes "LCtrl+LShift". The result is canonical and presses the same US
 // keys in the same order, since a generic modifier maps to its left key.
-// The Output Arbiter counts keys by this form (OUT-06). The zero Chord
+// The Output Arbiter counts keys by this form. The zero Chord
 // stays zero.
 func (c Chord) Sided() Chord {
 	if !c.IsValid() {

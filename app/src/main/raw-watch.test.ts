@@ -29,7 +29,7 @@ function fixture(
   return { call, up, log, watch: new RawWatch(call, { up }) };
 }
 
-describe("RawWatch.start (IN-17, IN-19)", () => {
+describe("RawWatch.start", () => {
   it("subscribes to input.raw first, then asks the daemon for the controller's raw events", async () => {
     const { watch, log } = fixture();
     await expect(watch.start("7")).resolves.toEqual({

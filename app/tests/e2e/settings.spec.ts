@@ -6,7 +6,7 @@ import { cleanup, fixture, launch, rpc } from "./helpers";
 
 test.use({ actionTimeout: 15000 });
 
-// UI-19: config.json's timing and emergency combo apply without a restart.
+// config.json's timing and emergency combo apply without a restart.
 // The window is in front, so a press is only previewed (output.preview).
 
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
@@ -146,7 +146,7 @@ test("紧急暂停 records a new combo pressed on the controller", async ({}, in
   }
 });
 
-// PRO-29: a settings file with an error in one member is repaired; the page
+// A settings file with an error in one member is repaired; the page
 // shows what stayed and the default for what was reset, never "无法读取".
 // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured fixture parameter.
 test("a repaired settings file keeps its valid settings and resets the combo that had the error", async ({}, info) => {
@@ -194,7 +194,7 @@ test("a repaired settings file keeps its valid settings and resets the combo tha
   }
 });
 
-// IN-13: 识别 on a 手柄调校 row asks the daemon to identify the controller.
+// 识别 on a 手柄调校 row asks the daemon to identify the controller.
 // The fake input daemon has nothing to buzz or light: it says which cues its
 // capabilities allow (PADMATE_FAKE_CAPS; rumble, a color LED and player
 // lights unless set) and records what it was asked, with the programs the

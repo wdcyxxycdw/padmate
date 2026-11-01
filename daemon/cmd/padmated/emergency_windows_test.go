@@ -10,7 +10,7 @@ import (
 )
 
 // TestLiveEmergencyRelease: startLive creates the event of padmatectl
-// release-all before it returns (DMN-20), so a Trigger right after it,
+// release-all before it returns, so a Trigger right after it,
 // with no gamepad yet, reaches padmated; a later one releases the key
 // held. The event is the test's own (testConfig), not the real one.
 func TestLiveEmergencyRelease(t *testing.T) {

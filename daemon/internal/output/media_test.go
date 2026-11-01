@@ -9,7 +9,7 @@ import (
 
 var mediaKeyNames = []string{"VolumeUp", "VolumeDown", "VolumeMute", "MediaPlayPause", "MediaNext", "MediaPrevious", "MediaStop"}
 
-// A media key is an ordinary key to the Arbiter (OUT-20): it goes down with its
+// A media key is an ordinary key to the Arbiter: it goes down with its
 // first reference and up with its last, whatever it is sent by, and can be
 // tapped, held, repeated and combined with modifiers.
 func TestArbiterMediaKeys(t *testing.T) {

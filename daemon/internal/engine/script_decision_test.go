@@ -52,7 +52,7 @@ func TestReasonScriptString(t *testing.T) {
 }
 
 // A script that handles or swallows a gesture, or that leaves a scripted
-// press with nothing to run, leaves a decision (ADR-0016, ENG-20). Before
+// press with nothing to run, leaves a decision (ADR-0016). Before
 // it a scripted press that resolved to nothing left none at all.
 func TestScriptDecisions(t *testing.T) {
 	entry := func(c control.Control, g engine.Gesture, scope string) engine.GestureEntry {

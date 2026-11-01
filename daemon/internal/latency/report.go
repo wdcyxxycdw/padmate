@@ -73,7 +73,7 @@ type Report struct {
 // is one of the last few.
 const minP999 = 1000
 
-// WriteMarkdown writes the report in the style of SPK-03: a heading, the
+// WriteMarkdown writes the report in the style of the goja spike's: a heading, the
 // gate line, the environment as a list, the calibration, then the tables.
 // The gate line comes first, so that a report whose gate was not
 // evaluated cannot be read as a pass.

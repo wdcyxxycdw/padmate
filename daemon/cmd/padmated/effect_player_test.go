@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// The global feedback switches (UI-27, ADR-0015) and the player lights (HUD-08)
+// The global feedback switches (ADR-0015) and the player lights
 // reach the controller as the ambient state of input.Feedback: PlayerMode is
 // the mode number while the lights switch is on, and 0 otherwise. A fake source
 // stands in for the Source, so no controller is reached and no SDL is needed.
@@ -59,7 +59,7 @@ func startModes(t *testing.T, text string, off ...string) (*testLive, *fakeSourc
 	return tl, src
 }
 
-// TestLivePlayerLightsFollowTheMode (HUD-08): the mode of the layer is the
+// TestLivePlayerLightsFollowTheMode: the mode of the layer is the
 // PlayerMode of the ambient state the source gets for the slot's gamepad: 1
 // for base, 2 for alt, 3 for third, and again 1 (and, past 4, a mode that no
 // light shows, which the Source takes as none).
@@ -86,7 +86,7 @@ func TestLivePlayerLightsFollowTheMode(t *testing.T) {
 
 // TestLiveLightsOffMeansNoPlayerMode: with the lights switch off there is no
 // color and no PlayerMode, whatever the layer, so the Source gives the index
-// back and leaves the lights alone (UI-27). The pulses are another switch.
+// back and leaves the lights alone. The pulses are another switch.
 func TestLiveLightsOffMeansNoPlayerMode(t *testing.T) {
 	tl, src := startModes(t, profileModes(""), "led")
 	const dev = input.DeviceID(1)
@@ -123,7 +123,7 @@ func TestLiveRumbleOffKeepsTheLights(t *testing.T) {
 	}
 }
 
-// TestLivePauseSwitch (UI-27): pausing and resuming the mapping asks for the
+// TestLivePauseSwitch: pausing and resuming the mapping asks for the
 // pause pulse and color with the default profile, and for nothing but the
 // state with the pause switch off: no pulse, and the color of the layer. The
 // profile's retired pause member does nothing (ADR-0015).
@@ -168,7 +168,7 @@ func TestLivePauseSwitch(t *testing.T) {
 	}
 }
 
-// TestLiveLightsOffAppliesWithoutReload (UI-27, ADR-0015): turning the lights
+// TestLiveLightsOffAppliesWithoutReload (ADR-0015): turning the lights
 // switch off in config.json re-publishes the state of the slot without a color
 // and without a mode, so the Source releases the LED and the player lights;
 // the profile is not reloaded (no key is let go, no script restarts), and the

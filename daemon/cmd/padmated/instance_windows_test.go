@@ -33,7 +33,7 @@ func TestLiveInstanceBeforeProfileAndLog(t *testing.T) {
 	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("second instance touched log: %v", err)
 	}
-	// The running instance did not answer (UI-45).
+	// The running instance did not answer.
 	if data, err := os.ReadFile(report); err != nil || !strings.Contains(string(data), `"kind":"instance","cause":"unavailable"`) {
 		t.Fatalf("report %s: %v", data, err)
 	}

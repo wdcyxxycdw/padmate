@@ -11,7 +11,7 @@ import { editorFixture } from "./editor-fixture";
 import { FixtureClient } from "./fixture-client";
 import { cleanup, launch, recordShortcut, setWindowSize } from "./helpers";
 
-// The advanced analog editor (UI-28, M15): the knob and its ticks, the rings
+// The advanced analog editor (M15): the knob and its ticks, the rings
 // and the second stage of a trigger. Every edit is read back from the profile
 // file the daemon has on disk, and a few are driven through the fake pad.
 

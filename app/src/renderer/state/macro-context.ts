@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import type { MacroList, ScriptStatusEntry } from "../../shared/api";
 
-/** What the key drawer knows about the script library (SCR-50, SCR-51). */
+/** What the key drawer knows about the script library. */
 export interface MacroContextValue {
   /** macros.list: the whole library, or null while unknown. */
   list: MacroList | null;

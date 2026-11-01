@@ -40,7 +40,7 @@ tasks:
       - go run ./tools/packagezip -version "{{.VERSION}}" -root .. -bin ../bin -out ../dist
 
   package:installer:
-    desc: "Build the Windows x64 installer (NSIS, per user, no administrator) of VERSION=vX.Y.Z in dist/installer, and check that every part has that version (PKG-03, PKG-06). Run task app:install first; the first run downloads electron-builder's NSIS tools. INSTALLER_BIN=DIR builds the daemon and CLI there instead of bin/; INSTALLER_OUT=ABSOLUTE_DIR (inside .cache or dist) writes the installer there; PADMATE_SIGN=store|pfx|azure signs it and verify then demands the signatures of PADMATE_SIGN_SUBJECT (-signed); VERIFY_FLAGS adds flags to verify, for example '-update-info' (PKG-09)"
+    desc: "Build the Windows x64 installer (NSIS, per user, no administrator) of VERSION=vX.Y.Z in dist/installer, and check that every part has that version. Run task app:install first; the first run downloads electron-builder's NSIS tools. INSTALLER_BIN=DIR builds the daemon and CLI there instead of bin/; INSTALLER_OUT=ABSOLUTE_DIR (inside .cache or dist) writes the installer there; PADMATE_SIGN=store|pfx|azure signs it and verify then demands the signatures of PADMATE_SIGN_SUBJECT (-signed); VERIFY_FLAGS adds flags to verify, for example '-update-info'"
     dir: daemon
     platforms: [windows]
     vars:
@@ -64,7 +64,7 @@ tasks:
       - go run ./tools/packageinstaller verify -version "{{.VERSION}}" -dist "{{.INSTALLER_DIST}}" {{.SIGNED_FLAG}} {{.VERIFY_FLAGS}}
 
   test:installer:
-    desc: "Install, upgrade and uninstall the built installer under the test override (SPK-07, Windows); with PADMATE_TEST_INSTALLER_INTERACTIVE=1 in the environment it also drives the wizard and uninstaller windows (PKG-13). INSTALLER=ABSOLUTE_PATH of the installer (default: the one of VERSION in dist/installer); UPGRADE=ABSOLUTE_PATH of a second build to install over it (may be the same file). Needs no padmate installed; see"
+    desc: "Install, upgrade and uninstall the built installer under the test override (Windows); with PADMATE_TEST_INSTALLER_INTERACTIVE=1 in the environment it also drives the wizard and uninstaller windows. INSTALLER=ABSOLUTE_PATH of the installer (default: the one of VERSION in dist/installer); UPGRADE=ABSOLUTE_PATH of a second build to install over it (may be the same file). Needs no padmate installed"
     dir: daemon
     platforms: [windows]
     vars:
@@ -84,7 +84,7 @@ tasks:
       - node scripts/publish-r2.mjs --version "{{.VERSION}}" {{.CLI_ARGS}}
 
   test:sign:
-    desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (PKG-09, opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
+    desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
     platforms: [windows]
     dir: app
     env:
@@ -93,7 +93,7 @@ tasks:
       - node scripts/test-sign.mjs
 
   pe:check:
-    desc: "Check bin/padmated.exe and bin/padmatectl.exe: sections, entropy, import table and the Windows functions they bind, against internal/pecheck/testdata (PKG-11). task pe:check -- -update rewrites the goldens after a deliberate change"
+    desc: "Check bin/padmated.exe and bin/padmatectl.exe: sections, entropy, import table and the Windows functions they bind, against internal/pecheck/testdata. task pe:check -- -update rewrites the goldens after a deliberate change"
     dir: daemon
     platforms: [windows]
     cmds:
@@ -107,7 +107,7 @@ tasks:
       - go run ./tools/sdlfetch -out ../bin
 
   spk01:
-    desc: Build the SPK-01 spike (tray on the main thread, T-input, GUI subsystem) into bin/spk01.exe next to the pinned SDL3.dll
+    desc: Build the tray spike (tray on the main thread, T-input, GUI subsystem) into bin/spk01.exe next to the pinned SDL3.dll
     dir: daemon
     platforms: [windows]
     deps: [sdl]
@@ -115,7 +115,7 @@ tasks:
       - go build -ldflags "-H=windowsgui {{.LDFLAGS}}" -o ../bin/spk01{{exeExt}} ./tools/spk01
 
   spk03:
-    desc: Run the SPK-03 spike (goja dispatch and activation, esbuild, watchdog, QueryThreadCycleTime) and print its Markdown report; flags after --, e.g. task spk03 -- -dispatch 10000
+    desc: Run the goja spike (goja dispatch and activation, esbuild, watchdog, QueryThreadCycleTime) and print its Markdown report; flags after --, e.g. task spk03 -- -dispatch 10000
     dir: daemon
     cmds:
       - go run ./tools/spk03 {{.CLI_ARGS}}
@@ -168,7 +168,7 @@ tasks:
       # without SDL3.dll.
       PADMATE_REQUIRE_SDL: "1"
       # TestSessionToProbe: fail, not skip, when the session already
-      # suspends the mapping at the start (DMN-09).
+      # suspends the mapping at the start.
       PADMATE_REQUIRE_SESSION: "1"
     cmds:
       - go test -p 1 -count=1 -v ./internal/injecttest ./internal/output ./internal/winhook ./cmd/padmatectl ./cmd/padmated
@@ -185,7 +185,7 @@ tasks:
       - go test -p 1 -count=1 -v -run '^(TestDumpMatchesFixtures|TestSystemLayoutsMatchFixtures)$' ./internal/kblayout ./internal/output
 
   bench:
-    desc: "Measure the end-to-end latency (ENG-11, Windows): hot-path benchmarks (with the engine's zero-allocation Gestures, ENG-13), SendInput alone, then a virtual gamepad drives live mode with real SendInput that a hook swallows; reports in bin/; about 4.5 min (task bench BENCH_SCALE=5 for a longer run, at most 10)"
+    desc: "Measure the end-to-end latency (Windows): hot-path benchmarks (with the engine's zero-allocation Gestures), SendInput alone, then a virtual gamepad drives live mode with real SendInput that a hook swallows; reports in bin/; about 4.5 min (task bench BENCH_SCALE=5 for a longer run, at most 10)"
     dir: daemon
     platforms: [windows]
     deps: [sdl]

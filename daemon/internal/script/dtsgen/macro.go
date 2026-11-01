@@ -11,7 +11,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/script/compile"
 )
 
-// MacroTemplate is a new macro (SCR-50, ADR-0011): it runs once each time
+// MacroTemplate is a new macro (ADR-0011): it runs once each time
 // its key is pressed. Its comments address the user, in Chinese like the
 // UI.
 const MacroTemplate = `// 按下绑定的键时从头运行一次，保存后自动生效。

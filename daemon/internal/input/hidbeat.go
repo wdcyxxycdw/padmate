@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-// This file reads the heartbeat of a receiver (IN-30, watchdog.go): the
+// This file reads the heartbeat of a receiver (watchdog.go): the
 // HID input reports of its device, through a second handle that T-input
 // opens beside SDL's. Windows gives each open handle every input report,
 // in a buffer of its own (hidapi's HidD_SetNumInputBuffers, 64 reports),

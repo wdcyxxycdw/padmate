@@ -36,7 +36,7 @@ export function hasEditorNotice(state: NoticeState): boolean {
 }
 
 /**
- * The mapping page saves each edit at once (UI-43, ADR-0008), so there is
+ * The mapping page saves each edit at once (ADR-0008), so there is
  * no save bar: this line only shows when a save failed or was refused, the
  * file changed elsewhere, an edit was lost to a switch, the profile is not
  * in effect, or it has problems.

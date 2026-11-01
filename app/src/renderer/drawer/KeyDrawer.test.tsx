@@ -114,7 +114,7 @@ async function setup(
 
 const base = (editor: EditorStore) => editor.getState().draft?.layers.base;
 
-/** Types into a text field and leaves it, which commits the text (UI-43). */
+/** Types into a text field and leaves it, which commits the text. */
 function commit(field: Element, init: { target: { value: string } }) {
   fireEvent.change(field, init);
   fireEvent.blur(field);
@@ -839,7 +839,7 @@ it("explains the waits of mappings in one sentence and tags the header", async (
   expect(screen.getByTestId("gesture-delay").textContent).toContain("300 ms");
 });
 
-it("names the haptic of a key in the validation results (MAP-25)", () => {
+it("names the haptic of a key in the validation results", () => {
   const bad = {
     severity: "error" as const,
     pointer: "/layers/base/north/haptic",
@@ -889,7 +889,7 @@ it("keeps the key's own timing, interruption policy, latch and block under 高�
   expect(screen.queryByTestId("binding-block")).toBeNull();
 });
 
-it("sets the key's haptic under 高级 and takes the key out again for 无 (MAP-25)", async () => {
+it("sets the key's haptic under 高级 and takes the key out again for 无", async () => {
   const { editor, record } = await setup(paint, "south");
   fireEvent.click(screen.getByText("高级"));
   const haptic = screen.getByRole("combobox", { name: "触感" });
@@ -1472,7 +1472,7 @@ const triggers: Profile = {
   },
 };
 
-it("counts the second stage's script with the trigger's (ANA-14)", async () => {
+it("counts the second stage's script with the trigger's", async () => {
   const { editor } = await setup(triggers, "lefttrigger");
   act(() =>
     editor.setState({

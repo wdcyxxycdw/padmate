@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the stick calibration of a controller (IN-14): its deadzone and
+// Tests of the stick calibration of a controller: its deadzone and
 // saturation replace the profile's for that controller.
 
 func cal(ls, rs *profile.StickCalibration) *profile.Calibration {

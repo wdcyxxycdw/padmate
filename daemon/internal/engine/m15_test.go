@@ -16,8 +16,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Tests of the stick rings (ANA-10), the virtual knob (ANA-11) and the second
-// trigger stage (ANA-14).
+// Tests of the stick rings, the virtual knob and the second
+// trigger stage.
 
 // holdKey is a binding of a press that holds the key.
 func holdKey(name, key string) string {
@@ -407,7 +407,7 @@ func TestKnobReversalCancelsQueuedTicks(t *testing.T) {
 	balanced(t, r)
 }
 
-// TestKnobRateLimit is the automatic acceptance of ANA-11: a knob spun three
+// TestKnobRateLimit is the automatic acceptance of the knob: a knob spun three
 // revolutions in 100 ms never emits ticks closer than the key can follow, the
 // tap press plus the tap gap, 40 ms with the defaults.
 func TestKnobRateLimit(t *testing.T) {

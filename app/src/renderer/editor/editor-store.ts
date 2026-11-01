@@ -33,7 +33,7 @@ export interface EditorContext {
   connection: string;
 }
 
-/** How an edit joins the undo history (UI-43). */
+/** How an edit joins the undo history. */
 export interface EditOptions {
   /**
    * Edits with the same key in a row (a slider drag, arrow keys held on
@@ -45,7 +45,7 @@ export interface EditOptions {
   hold?: boolean;
   /**
    * false: not an undo step, and undo and redo keep it. Renaming the
-   * profile is not undone (UI-43), so a step taken back keeps the name.
+   * profile is not undone, so a step taken back keeps the name.
    */
   history?: false;
 }
@@ -63,7 +63,7 @@ interface EditorState {
   /**
    * An edit waits in a merge group or a save is running. The scripts page
    * keeps renaming, deleting and removing, which rewrite profile.json,
-   * unavailable meanwhile (SCR-50).
+   * unavailable meanwhile.
    */
   saving: boolean;
   /** Reading the profile; nothing can be edited meanwhile. */
@@ -98,12 +98,12 @@ interface EditorState {
   registrations: ScriptRegistration[];
   scriptError: string;
   /**
-   * The script library (macros.list, SCR-50, SCR-51): the drawer's script
+   * The script library (macros.list): the drawer's script
    * list and the files bindings run that are missing. null until read.
    */
   macros: MacroList | null;
   /**
-   * The profile this one's file says it extends (PRO-19, ADR-0012), merged
+   * The profile this one's file says it extends (ADR-0012), merged
    * with its own parents, to show what this one takes from it; null when it
    * extends none (the usual case: the UI no longer writes `extends`,
    * ADR-0013), before it is read, or when it cannot be (the profile's problem
@@ -113,8 +113,8 @@ interface EditorState {
   parent: ParentProfile | null;
   /**
    * Which set of bindings the mapping page shows and edits: the usual one, or
-   * the function set that applies while the function key is held (UI-30,
-   * ADR-0012). View state, not part of the profile; it is the usual one again
+   * the function set that applies while the function key is held
+   * (ADR-0012). View state, not part of the profile; it is the usual one again
    * whenever a profile is loaded.
    */
   view: KeyView;
@@ -220,7 +220,7 @@ export function createEditorStore(api: PadmateAPI) {
   // The parent last read, which cannot be asked from inside shown() below.
   let heldParent: ParentProfile | null = null;
   // What a draft saves as (savedForm), to compare with the file. A key it
-  // empties that the parent binds is saved as an empty binding (PRO-19).
+  // empties that the parent binds is saved as an empty binding.
   const form = (draft: Profile) =>
     stableStringify(savedForm(draft, heldParent));
   // form of the file as last read or saved, and its problems.
@@ -244,7 +244,7 @@ export function createEditorStore(api: PadmateAPI) {
   };
   // A key with only its label is not set yet, which the controller shows;
   // the daemon's "binding has no action" about it is expected here. So is the
-  // one about a key the profile empties that its parent binds (PRO-19).
+  // one about a key the profile empties that its parent binds.
   const shown = (
     diagnostics: ProfileDiagnostic[] | undefined,
     draft: Profile | null,
@@ -685,7 +685,7 @@ export function createEditorStore(api: PadmateAPI) {
       if (!state.context || !state.draft) return;
       // A changed macros folder (profile.changed {kind:"macros"}) keeps the
       // revision; the list is read either way. So is the parent, whose file
-      // may be what changed (PRO-19).
+      // may be what changed.
       void macros();
       void parentView();
       void profileList();

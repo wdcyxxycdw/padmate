@@ -16,7 +16,7 @@ type DeviceView struct {
 	Slot     int              `json:"slot"`
 	Status   string           `json:"status"`
 	Disabled bool             `json:"disabled"`
-	// Battery is the latest power the gamepad reported (IN-12): absent until
+	// Battery is the latest power the gamepad reported: absent until
 	// T-input has read one, and for a device without a gamepad. It is
 	// dropped with the gamepad's removal, so a gamepad that comes back with
 	// a new id has none until it reads again.

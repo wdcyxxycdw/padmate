@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// The media and volume keys (ADR-0012, OUT-20) are KeySpec names the parser
+// The media and volume keys (ADR-0012) are KeySpec names the parser
 // accepts at runtime in every API version; their TypeScript names are declared
 // from API 0.21 (MediaKey, and Key as the union with it), where the sequence and
 // text members come too. Before it, Key is as it was: no declaration of the

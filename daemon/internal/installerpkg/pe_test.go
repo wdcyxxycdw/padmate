@@ -140,7 +140,7 @@ func putFile(t *testing.T, src, dst string, packer bool) {
 	}
 }
 
-// PKG-11: package:installer's verify and the installer smoke test both go
+// The verify of task package:installer and the installer smoke test both go
 // through CheckTree and CheckInstaller, so those are where the PE check has to
 // be called. Each of the four calls is held by a message only it can make.
 func TestCheckTreeAndCheckInstallerRunThePECheck(t *testing.T) {
@@ -203,9 +203,9 @@ func TestCheckTreeAndCheckInstallerRunThePECheck(t *testing.T) {
 
 // The first installer of an upgrade test can be older than this source in two
 // independent ways: EarlierBuild leaves out the
-// comparison of its executables with this source's goldens (PKG-11), and
+// comparison of its executables with this source's goldens, and
 // NoUpdateConfig leaves out resources\app-update.yml, which a release from
-// before the automatic update lacks (PKG-10). Each option excuses its own
+// before the automatic update lacks. Each option excuses its own
 // thing only, and together they excuse both and nothing else.
 func TestCheckTreeEarlierBuildAndNoUpdateConfigCompose(t *testing.T) {
 	tiny := tinyExe(t)

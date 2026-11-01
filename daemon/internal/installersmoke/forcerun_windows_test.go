@@ -7,7 +7,7 @@ import (
 
 // An installer run with --force-run starts padmate.exe through Explorer, as
 // the user, in the real environment: the real data folder, a daemon that sends
-// keys. The smoke test must never run one (ADR-0018, PKG-10); the check is
+// keys. The smoke test must never run one (ADR-0018); the check is
 // here so that it can not be talked out of by a later edit.
 func TestRefuseForceRun(t *testing.T) {
 	for _, args := range []string{

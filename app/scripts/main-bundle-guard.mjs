@@ -1,4 +1,4 @@
-// A guard of the main process bundle (PKG-10, ADR-0018).
+// A guard of the main process bundle (ADR-0018).
 //
 // The installed application has no node_modules (electron-builder.yml packs
 // none), so every package the main process uses must be bundled into

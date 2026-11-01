@@ -46,8 +46,8 @@ const setupChinese =
 const installerCache = /(?:^|\\)Microsoft\\Installer\\/i;
 
 /**
- * Whether a shortcut's name or a program's file name names a setup tool
- * (UI-46): an installer, uninstaller, updater, repair or recovery tool, or a
+ * Whether a shortcut's name or a program's file name names a setup tool:
+ * an installer, uninstaller, updater, repair or recovery tool, or a
  * crash or error reporter, none of which is a program to bind a profile to.
  * The ".exe" of a file name does not count.
  */
@@ -158,7 +158,7 @@ async function accept(
 }
 
 /**
- * The programs of the Start Menu (UI-46): every shortcut that leads to an
+ * The programs of the Start Menu: every shortcut that leads to an
  * existing local .exe, named by the shortcut, once per executable (the
  * first shortcut that names it wins), sorted by name. Reading is bounded:
  * MAX_DEPTH folders down, MAX_SHORTCUTS shortcuts, MAX_APPS programs, and
@@ -257,7 +257,7 @@ export const PARTIAL_SCAN_CACHE_MS = 30_000;
 
 /**
  * Readings of the Start Menu shared by the picker and by the search for a
- * program's path (UI-42). fresh() reads again, as every opening of the
+ * program's path. fresh() reads again, as every opening of the
  * picker does, and keeps that reading; cached() serves the last reading for
  * SCAN_CACHE_MS. Calls that overlap share one reading, so the scan (bounded
  * by SCAN_TIMEOUT_MS) is never run twice at once. A reading that fails is
@@ -328,7 +328,7 @@ export async function listFixtureApps(
 }
 
 /**
- * The programs list and the .exe file dialog of the 添加软件 menu (UI-46).
+ * The programs list and the .exe file dialog of the 添加软件 menu.
  * The renderer supplies no path to either; a chosen file is checked like a
  * bound app's icon path before it is handed back.
  */

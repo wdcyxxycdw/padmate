@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// The held-key log of OUT-14 (ADR-0006) is a file of heldSize bytes: the
+// The held-key log (ADR-0006) is a file of heldSize bytes: the
 // magic "PDMH", a little-endian uint32 version, the HeldIdentity of the
 // run that wrote it (HeldIdentity.put), and three bitmaps of 256 bits, one
 // bit per KeyID. Bitmap 0 has the scan codes without E0, bitmap 1 those
@@ -23,9 +23,9 @@ import (
 // down (ADR-0004), are never in it. Version 2 had no identity and version 3 a
 // boot time where LogonTime is: the sweep resets both as corrupt. The buttons
 // did not change the format or the version: an older padmated reads their
-// bits as keys sent by those VKs. The media and volume keys (OUT-20) are sent
+// bits as keys sent by those VKs. The media and volume keys are sent
 // by VK as well and so have a bit of bitmap 2 like Pause; the Unicode events of
-// a typed text (OUT-21) never have one.
+// a typed text never have one.
 const (
 	heldMagic   = "PDMH"
 	heldVersion = 4
@@ -55,7 +55,7 @@ type heldBits [3 * 256 / 8]byte
 // heldBit returns the byte and the bit of id in heldBits. ok is false for
 // the menu mask key, which is never logged, for a wheel notch (no state that
 // outlives the process), for a Unicode event (a unit of a typed text, which is
-// never held, OUT-21), and for a VK above 0xFF or 0. A mouse button has the
+// never held), and for a VK above 0xFF or 0. A mouse button has the
 // bit of its VK (buttonVK).
 func heldBit(id KeyID) (idx int, mask byte, ok bool) {
 	var bit int
@@ -233,7 +233,7 @@ var (
 	removeHeld   = os.Remove
 )
 
-// heldLog is the held-key log of a Loop (OUT-14, ADR-0006), open for its
+// heldLog is the held-key log of a Loop (ADR-0006), open for its
 // whole run. The ledger marks the presses of a batch before it sends them
 // and settles the log after, so that the file has every key that may be
 // down whenever the process is killed. Only the loop goroutine uses it.

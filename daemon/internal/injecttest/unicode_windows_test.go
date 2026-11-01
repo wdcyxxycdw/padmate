@@ -26,7 +26,7 @@ func unicodeEvent(seq uint64, nonce uint32, unit uint16, up, swallowed bool) win
 
 // The Unicode canary is the release of a unit that is not a character: nothing
 // an application would type if the hook let it through, and the one thing a test
-// needs to prove that the hook is handed the tag of a Unicode event (OUT-21).
+// needs to prove that the hook is handed the tag of a Unicode event.
 func TestUnicodeCanaryEvent(t *testing.T) {
 	c := UnicodeCanaryEvent()
 	if !c.Unicode || !c.Up || c.Unit != UnicodeCanaryUnit || c.Key.IsValid() || c.Mouse != 0 || c.ByVK {

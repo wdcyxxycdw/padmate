@@ -8,7 +8,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The HUD hints action (HUD-03, ADR-0014): {"type":"hud","op":"hints"} parses on
+// The HUD hints action (ADR-0014): {"type":"hud","op":"hints"} parses on
 // a press or a hold, with nothing else to set.
 func TestHUDHintsAction(t *testing.T) {
 	const src = `{

@@ -19,7 +19,7 @@ import {
 import { UPDATE_SETTINGS_FILE, UpdateSettingsStore } from "./update-settings";
 import { createElectronUpdater } from "./updater-electron";
 
-// The automatic update (PKG-10, ADR-0018) as Main holds it: the pieces of
+// The automatic update (ADR-0018) as Main holds it: the pieces of
 // update-controller.ts, update-settings.ts and updater-electron.ts put together
 // with the window's close guard and the browser. index.ts only calls this.
 
@@ -68,7 +68,7 @@ export async function createUpdates(host: {
       return shell.openExternal(url);
     },
     // The install ends with the application quitting: the window finishes
-    // its saves first (UI-43), and closing waits for them again if the
+    // its saves first, and closing waits for them again if the
     // install does not start.
     flush: () => host.closeGuard.settle(CLOSE_WAIT_MS),
     rearm: () => host.closeGuard.rearm(),

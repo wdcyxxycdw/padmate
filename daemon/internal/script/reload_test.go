@@ -60,7 +60,7 @@ func TestReloaderDebouncesAndSuccessfulSwapReleasesOldOwner(t *testing.T) {
 	}
 }
 
-// OnInstall tells the owner that the reloader installed a runtime (SCR-23: the
+// OnInstall tells the owner that the reloader installed a runtime (the
 // owner ends a failure episode with it) and only then. A candidate that does
 // not build, or whose onActivate fails, installs nothing; the automatic
 // restart after an interruption installs a runtime through Swap as well, but

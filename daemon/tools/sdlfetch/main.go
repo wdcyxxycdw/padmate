@@ -1,4 +1,4 @@
-// Command sdlfetch downloads the pinned SDL3.dll (PKG-01, `task sdl`).
+// Command sdlfetch downloads the pinned SDL3.dll (`task sdl`).
 //
 // Run it from daemon/:
 //

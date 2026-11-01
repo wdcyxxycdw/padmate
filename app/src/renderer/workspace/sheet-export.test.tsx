@@ -17,7 +17,7 @@ import { useSheetExport } from "./sheet-export";
 afterEach(cleanup);
 
 // The shortcut table of a profile that is based on another lists what it takes
-// from that one (PRO-19, OUT-18).
+// from that one.
 
 const parent: Profile = {
   schemaVersion: 1,

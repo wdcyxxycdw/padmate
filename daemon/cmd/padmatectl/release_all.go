@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/emergency"
 )
 
-// releaseAllEvent is the named event release-all signals (DMN-20); the
+// releaseAllEvent is the named event release-all signals; the
 // tests' TestMain sets a name of their own.
 var releaseAllEvent = emergency.Name
 

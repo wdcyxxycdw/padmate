@@ -111,7 +111,7 @@ var fuzzSeeds = []struct {
 	{"combo pending", []byte{fzDown, 1, 0, 0, fzCombo, 1, 0, 5, fzDown, 4, 0, 5, fzCombo, 1, 0, 5, fzUp, 1, 0, 5, fzDown, 1, 0, 5,
 		fzReleaseAll, 1, 0, 5, fzCombo, 1, 0, 5, fzDown, 5, 0, 5}},
 	{"failed combo", []byte{fzDown, 1, 0, 0, fzDown, 4, 0, 0, fzFail, 2, 1, 10, fzCombo, 0, 0, 0, fzDown, 5, 0, 3, fzCombo, 1, 0, 5, fzDown, 6, 0, 5}},
-	// The function key (MAP-27, start) has no engine cycle: the model must not
+	// The function key (start) has no engine cycle: the model must not
 	// count one, or the owner of the next hold is off by one.
 	{"function key takes no cycle", []byte{fzPause, 0, 0, 0, fzDown, 9, 0, 5, fzPause, 0, 0, 5, fzDown, 4, 0, 5, fzUp, 9, 0, 5}},
 }
@@ -405,7 +405,7 @@ func (fz *fuzzer) released(what string, err error) {
 }
 
 // press starts a cycle of control c in the model: canceled while paused. The
-// function key (MAP-27, start unless the program says otherwise) has no cycle:
+// function key (start unless the program says otherwise) has no cycle:
 // the engine does not count one, so the model does not either, and nothing it
 // binds is a hold of fuzzHolds.
 func (fz *fuzzer) press(c control.Control) {

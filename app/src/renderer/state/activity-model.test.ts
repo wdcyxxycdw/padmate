@@ -114,7 +114,7 @@ function reasonNamesOf(source: string): string[] {
   return [...entries.matchAll(/"([^"\n]*)"/g)].map((m) => m[1]);
 }
 
-describe("the sentence for every reason (UI-21, ADR-0016)", () => {
+describe("the sentence for every reason (ADR-0016)", () => {
   const goReasons = () =>
     reasonNamesOf(
       readFileSync(
@@ -652,7 +652,7 @@ describe("where and how a row is named", () => {
   });
 });
 
-describe("the ring (UI-20)", () => {
+describe("the ring", () => {
   const rows = (from: number, to: number) =>
     Array.from({ length: to - from }, (_, index) =>
       row({ reason: "spurious", cycle: from + index }),

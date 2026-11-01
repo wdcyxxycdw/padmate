@@ -8,8 +8,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// This file is the stick that moves the mouse pointer (MOU-01, MOU-04, MOU-05,
-// MOU-06; ADR-0004, section 5). A stick in mode "mouse" has a target velocity,
+// This file is the stick that moves the mouse pointer (ADR-0004,
+// section 5). A stick in mode "mouse" has a target velocity,
 // set at each axis input of the stick from its position: the direction of the
 // push, at mouseSpeed times the curve of its depth times the precision factor.
 // The depth is how far the stick is pushed between the edge of the deadzone and

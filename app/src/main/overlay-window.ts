@@ -8,13 +8,13 @@ import {
 import type { OverlayHost } from "./overlay";
 
 /**
- * The Electron side of the overlay (HUD-01, ADR-0014). The window is only
+ * The Electron side of the overlay (ADR-0014). The window is only
  * ever shown by showInactive() (overlay.ts); this file adds nothing that
  * could activate it. Its page cannot navigate, open windows or attach
- * webviews, like the main window's. A toast (HUD-04) is a message to the page
- * on overlayToastChannel, the page's settings (HUD-05) one on
- * overlayPrefsChannel, the key hints (HUD-03) one on overlayHintsChannel and a
- * script's panels (SCR-22) one on overlayPanelsChannel, Main to page only.
+ * webviews, like the main window's. A toast is a message to the page
+ * on overlayToastChannel, the page's settings one on
+ * overlayPrefsChannel, the key hints one on overlayHintsChannel and a
+ * script's panels one on overlayPanelsChannel, Main to page only.
  */
 export function electronOverlayHost(options: {
   pageURL: string;

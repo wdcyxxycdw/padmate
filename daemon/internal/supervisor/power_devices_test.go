@@ -12,7 +12,7 @@ func powerOf(id input.DeviceID, state input.PowerState, percent int) input.Event
 	return input.Event{Device: id, Kind: input.DevicePower, Power: &p}
 }
 
-// TestDevicesCarryBattery (IN-12): Devices, which devices.list and
+// TestDevicesCarryBattery: Devices, which devices.list and
 // status.get show, carries the latest power of each gamepad, for a mapped
 // one, a waiting one and an ignored one; it is left out until a power is
 // read, and is gone with the gamepad. OnInput never sees a DevicePower.

@@ -55,14 +55,14 @@ type TreeOptions struct {
 	// EarlierBuild says that the tree was built from an earlier source than this
 	// one (the first installer of an upgrade test): the imports and Windows
 	// functions of padmated.exe and padmatectl.exe are then not compared with
-	// the goldens of this source (PKG-11), which a release between the two may
+	// the goldens of this source, which a release between the two may
 	// have changed, and its documents are not checked (v1.0.0 and earlier
 	// installed all of docs/). Its resources\app-update.yml may also name the
 	// source of its time, GitHub up to v1.0.2 (CheckEarlierUpdateConfig). The
 	// rest of the PE check still applies.
 	EarlierBuild bool
 	// NoUpdateConfig leaves out resources\app-update.yml, which a release
-	// from before the automatic update (PKG-10) does not have: the first
+	// from before the automatic update does not have: the first
 	// installer of an upgrade test may be one. A file that is there is still read.
 	NoUpdateConfig bool
 }
@@ -70,7 +70,7 @@ type TreeOptions struct {
 // CheckTree reads the version and the files of an installation (or of the
 // tree it is installed from) and returns what is wrong with it, one
 // message per problem, none when it is complete and every part has the
-// version of the tag (PKG-06): padmate.exe, its package.json inside
+// version of the tag: padmate.exe, its package.json inside
 // app.asar, and the daemon and CLI that sit in resources\bin.
 func CheckTree(ctx context.Context, opts TreeOptions) []string {
 	var problems []string
@@ -89,7 +89,7 @@ func CheckTree(ctx context.Context, opts TreeOptions) []string {
 		add("resources/app.asar: %v", err)
 	} else {
 		data, err := ReadAsarFile(asar, "package.json")
-		// The main process is one file that needs nothing installed (PKG-10).
+		// The main process is one file that needs nothing installed.
 		bundle, bundleErr := ReadAsarFile(asar, MainBundle)
 		_ = asar.Close()
 		var pkg struct{ Name, Version, Main string }
@@ -174,7 +174,7 @@ func CheckTree(ctx context.Context, opts TreeOptions) []string {
 
 // CheckInstaller checks the installer file of a release: its name, the
 // product version NSIS wrote into its version resource, and that it asks for
-// no administrator rights (PKG-03, PKG-13).
+// no administrator rights.
 func CheckInstaller(file string, tag Tag) []string {
 	var problems []string
 	if got := filepath.Base(file); got != tag.InstallerName() {
@@ -283,7 +283,7 @@ func readVersionInfoFile(file string) (VersionInfo, error) {
 // installation, with the backslash in front of it, is longer than
 // MaxRelativePath characters (as Windows counts them, in UTF-16 units). The
 // wizard leaves that much room when it checks the folder a person chose, so a
-// longer one would make an installation fail halfway (PKG-13).
+// longer one would make an installation fail halfway.
 func longPaths(root string) []string {
 	var found []string
 	err := filepath.WalkDir(root, func(path string, _ fs.DirEntry, err error) error {

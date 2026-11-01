@@ -45,7 +45,7 @@ type GestureEvent struct {
 
 // ScriptActionEvent asks the script runtime to run an action: a named
 // action of the legacy script (profile.ActionScript), or a macro
-// (profile.ActionMacro, SCR-50) when Macro is its file name. Name and Args
+// (profile.ActionMacro) when Macro is its file name. Name and Args
 // are empty for a macro.
 type ScriptActionEvent struct {
 	Name  string
@@ -100,7 +100,7 @@ func setGesture(b *profile.Binding, g Gesture, a *profile.Action) {
 // for the whole control. Script handlers remain reachable because they can pass.
 // fn is the function key held when the press arrived (control.Invalid for
 // none): its set is the level after the script's global() handlers and before
-// every layer (MAP-27, ARCHITECTURE §7.3). A script event of its bindings has
+// every layer (ARCHITECTURE §7.3). A script event of its bindings has
 // the scope "global", the nearest scope of the script API, which has no scope
 // for the function keys.
 func (e *Engine) scriptPlan(c, fn control.Control) (*gesturePlan, *profile.Binding) {

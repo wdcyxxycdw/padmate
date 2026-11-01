@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/padlabel"
 )
 
-// The limits of the hud API (SCR-22, API 0.16). The UI cuts toasts to the
+// The limits of the hud API (API 0.16). The UI cuts toasts to the
 // same 200 characters and panel texts to the 40 of its key hints.
 const (
 	hudToastLength     = 200
@@ -26,7 +26,7 @@ const (
 	hudPanels          = 4
 )
 
-// HUD is the overlay a script's hud API reaches (SCR-22): whether one is
+// HUD is the overlay a script's hud API reaches: whether one is
 // connected and where toasts go. The host calls it on the slot goroutine
 // within the script's budget, so neither method may block.
 type HUD interface {

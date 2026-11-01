@@ -12,7 +12,7 @@ import (
 
 // "padmatectl monitor --list" prints, besides the device lines, a block per
 // gamepad with what SDL says about it that DeviceInfo does not carry:
-// capabilities, power, connection state and player index (IN-12). Directly
+// capabilities, power, connection state and player index. Directly
 // they come from SDL's read-only getters (input.Source.Readout), which send
 // the pad nothing; through the daemon only the capabilities and the
 // battery of devices.list are known.

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// PKG-10 with UI-24: Main opens the update dialog by itself (the automatic
+// Main opens the update dialog by itself (the automatic
 // check, 30 seconds after the window starts). A shortcut capture is running
 // at that moment? The dialog takes the focus, the field loses it, and a field
 // that loses focus commits the chord it heard so far: a half-pressed chord

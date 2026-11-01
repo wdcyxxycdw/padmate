@@ -52,12 +52,12 @@ type router struct {
 	profileKey string
 	program    *engine.Program // router-owned current settings, ordered with reload barriers
 	// seq counts the assignments; route.seq is the count at a route's
-	// current one (IN-08).
+	// current one.
 	seq uint64
-	// paused is the user's pause (DMN-06); Supervisor.paused mirrors it.
+	// paused is the user's pause; Supervisor.paused mirrors it.
 	paused bool
 	// suspended is the reasons of the system's suspension the router
-	// applied (DMN-09), and suspCount the count of Supervisor.susp it
+	// applied, and suspCount the count of Supervisor.susp it
 	// applied them at; Supervisor.suspended mirrors suspended. Every slot
 	// is paused while the mapping is held: paused, or suspended for any
 	// reason (held); Supervisor.held mirrors that.
@@ -77,7 +77,7 @@ type device struct {
 	snapshotDrops uint64
 	hasSnapshot   bool
 	recovery      suspendControls
-	// power is the latest DevicePower (IN-12), nil until one came. It goes
+	// power is the latest DevicePower, nil until one came. It goes
 	// with the device: a gamepad that comes back has a new id and a new
 	// record, which T-input reads again.
 	power *input.Power
@@ -274,8 +274,8 @@ func (r *router) event(e input.Event) {
 	case input.DeviceRemapped:
 		r.remapped(e)
 	case input.ComboHeld:
-		// The combo of any gamepad T-input opened toggles the pause
-		// (DMN-07), also of one that waits, one the filter leaves out, or
+		// The combo of any gamepad T-input opened toggles the pause,
+		// also of one that waits, one the filter leaves out, or
 		// one whose DeviceAdded went missing. It is no control: no slot
 		// gets it, and it neither takes a slot over nor confirms one.
 		r.setPaused(!r.paused, "combo", e.Device)
@@ -346,7 +346,7 @@ func (r *router) added(e input.Event) {
 	// It takes the free slot of the lowest index, if any, and a
 	// provisional stand-in on the slot whose home is its key keeps that
 	// slot, as its home now. When every slot is taken, it takes that slot
-	// back from the stand-in instead (IN-08).
+	// back from the stand-in instead.
 	home := r.standIn(d.key)
 	if free := r.free(); free != nil {
 		if home != nil {
@@ -411,7 +411,7 @@ func (r *router) standIn(key input.DeviceKey) *route {
 }
 
 // rehome makes the provisional stand-in on rt its home: the gamepad of
-// the old home connected and took a free slot instead (IN-08). rt gets
+// the old home connected and took a free slot instead. rt gets
 // no edge, so what the stand-in holds stays held; it stays provisional,
 // with the age of its assignment.
 func (r *router) rehome(rt *route) {
@@ -486,7 +486,7 @@ func (r *router) reclaim(rt *route, d *device, e input.Event) {
 // ago, whatever its home, at d's press e: the press shows which gamepad
 // is in use, so the slot becomes d's own at once. The oldest holder is
 // the likeliest to be idle, such as one that took a slot at startup, and
-// a stand-in just handed a slot the likeliest to be in hand (IN-08). It
+// a stand-in just handed a slot the likeliest to be in hand. It
 // returns the route, or nil when d does not wait or no slot is
 // provisional.
 func (r *router) takeOver(d *device, e input.Event) *route {
@@ -528,7 +528,7 @@ func (r *router) status(rt *route) {
 	})
 }
 
-// remapped handles DeviceRemapped (IN-18): SDL changed the mapping of a
+// remapped handles DeviceRemapped: SDL changed the mapping of a
 // gamepad that stays one. SDL releases nothing when it does, and a control
 // held under the old mapping may never send its release, so the device is
 // reset like after a loss of events (Edge.Reset): the slot releases every key
@@ -592,7 +592,7 @@ func (r *router) removed(e input.Event) {
 		r.status(rt)
 		return
 	}
-	// The first in line takes the slot at once (IN-05), provisionally, at
+	// The first in line takes the slot at once, provisionally, at
 	// the time of the removal.
 	r.handOff(rt, r.queue[0], e.Time, true)
 }
@@ -895,7 +895,7 @@ func (r *router) storeHold() {
 	r.s.held.Store(r.held())
 }
 
-// setPaused pauses the mapping, or with on false resumes it (DMN-06),
+// setPaused pauses the mapping, or with on false resumes it,
 // unless the user's pause is so already; by says what did it for the log
 // and OnPause, and id is the gamepad that did, 0 for none. Output's user
 // gate goes first: closing it lets go of every key and drops every press
@@ -930,7 +930,7 @@ func (r *router) setPaused(on bool, by string, id input.DeviceID) {
 }
 
 // syncSuspend applies the suspension that Supervisor.Suspend set since the
-// router last looked (DMN-09). It returns false when Events is closed.
+// router last looked. It returns false when Events is closed.
 //
 // It goes in two steps, so that a suspension set and cleared again before
 // the router looked still holds the slots for that moment. First, when a

@@ -20,7 +20,7 @@ export const REG_MAX_OUTPUT = 1024 * 1024;
 
 /**
  * Where Main looks for the path of an executable that a rule names by file
- * name only (UI-42): the Start Menu's programs, then the registry's App
+ * name only: the Start Menu's programs, then the registry's App
  * Paths, then the MuiCache, in that order.
  */
 export interface AppPathSource {
@@ -87,7 +87,7 @@ async function find(exe: string, source: AppPathSource): Promise<string> {
 }
 
 /**
- * Finds the path of the executable named exe (UI-42), "" when there is none:
+ * Finds the path of the executable named exe, "" when there is none:
  * the Start Menu program with that file name (the first by name when
  * several have it), else the file an App Paths key names, else a path the
  * MuiCache remembers; the last two must be a local path to an existing .exe.
@@ -129,7 +129,7 @@ export function appPathResolver(
 }
 
 /**
- * The renderer's ask for a path by exe name (UI-42). Only a bare .exe file
+ * The renderer's ask for a path by exe name. Only a bare .exe file
  * name is accepted (validateExeName); the answer is a local path or "".
  */
 export function appPathHandlers(

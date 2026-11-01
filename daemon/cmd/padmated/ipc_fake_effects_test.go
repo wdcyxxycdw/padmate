@@ -250,7 +250,7 @@ func TestFakeEffectsRejectedInHardwareMode(t *testing.T) {
 	}
 }
 
-// TestFakeIPCEffectsShowTheFeedbackSwitches (UI-27, HUD-08): fake.effects shows
+// TestFakeIPCEffectsShowTheFeedbackSwitches: fake.effects shows
 // the ambient state the fake gamepad was given, with the mode of the layer the
 // player lights show and the color; an E2E reads it to see what the switches of
 // the settings dialog do, which no controller shows.

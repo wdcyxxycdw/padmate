@@ -15,8 +15,8 @@ import (
 )
 
 // TestPresentationTracksMapping: each pad's line names the pad and its
-// profile only, never layers or latched controls (DMN-18, the owner's
-// G10).
+// profile only, never layers or latched controls (the owner's
+// decision).
 func TestPresentationTracksMapping(t *testing.T) {
 	views := []slot.View{{Index: 0, Device: 8, Info: input.DeviceInfo{Name: "Xbox Wireless Controller"}, Mapping: engine.View{
 		Profile: "绘画", Layers: engine.LayerState{Base: "base", Overlays: []string{"ink"}},
@@ -64,7 +64,7 @@ func TestTooltipUTF16BoundAndFullDetails(t *testing.T) {
 	}
 }
 
-// TestPresentWithPower (IN-12): the power of a pad is appended to its line in
+// TestPresentWithPower: the power of a pad is appended to its line in
 // the menu, by the pad's DeviceKey, and is not in the tooltip, whose 127 units
 // the name and the profile fill. A pad whose power is unknown, that is plugged
 // in (wired) or that has none keeps its line: the menu shows a battery only

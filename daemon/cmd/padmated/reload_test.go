@@ -213,8 +213,8 @@ func (g *gateWriter) Write(p []byte) (int, error) {
 // gen returns the generation of slot 0.
 func (rl *reloadLive) gen() uint32 { return rl.sup.Status().Slots[0].Gen }
 
-// TestLiveReload: saving the profile while east holds Space reloads it
-// (PRO-03). The reload releases Space once, the release of east then does
+// TestLiveReload: saving the profile while east holds Space reloads it.
+// The reload releases Space once, the release of east then does
 // nothing, and south maps with the new profile.
 func TestLiveReload(t *testing.T) {
 	rl := startReloadLive(t, profileZ)

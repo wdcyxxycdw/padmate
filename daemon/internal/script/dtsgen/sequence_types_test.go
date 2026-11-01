@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// key.sequence, key.type and SequenceStep came with API 0.21 (SCR-26, ADR-0012):
+// key.sequence, key.type and SequenceStep came with API 0.21 (ADR-0012):
 // 0.17's declarations have none of them, 0.21's have all.
 func TestSequenceAPIBoundary(t *testing.T) {
 	for _, tc := range []struct {

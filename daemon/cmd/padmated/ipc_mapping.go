@@ -21,8 +21,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/supervisor"
 )
 
-// The mapping wizard and custom mappings of the daemon (IN-17, IN-18, IN-19,
-// ADR-0012): devices.rawInfo and the input.raw topic give the UI the elements
+// The mapping wizard and custom mappings of the daemon
+// (ADR-0012): devices.rawInfo and the input.raw topic give the UI the elements
 // of a joystick, devices.setMapping and devices.resetMapping save and apply a
 // mapping for it.
 
@@ -38,15 +38,14 @@ const (
 	rpcCodeMappingUnsupported = -32026
 )
 
-// mappingSource is the part of an *input.Source that custom mappings need
-// (IN-18). A source without it, such as a test's fake, keeps config.json's
+// mappingSource is the part of an *input.Source that custom mappings need.
+// A source without it, such as a test's fake, keeps config.json's
 // mappings without applying them.
 type mappingSource interface {
 	SetMappings([]string) (input.MappingReport, error)
 }
 
-// rawSource is the part of an *input.Source that the raw stream needs
-// (IN-17).
+// rawSource is the part of an *input.Source that the raw stream needs.
 type rawSource interface {
 	RawEvents() <-chan input.RawEvent
 	RawStart(input.DeviceID) (input.RawInfo, error)
@@ -112,7 +111,7 @@ type rawFeed struct {
 }
 
 // rpcRaw is the data of an input.raw event: the element of a joystick that
-// changed (IN-17). Device is the connection ID, as in the input topic; kind is
+// changed. Device is the connection ID, as in the input topic; kind is
 // button (value 1 or 0), axis (value -32768..32767) or hat (value the
 // direction mask: up 1, right 2, down 4, left 8, 0 centered).
 type rpcRaw struct {
@@ -294,7 +293,7 @@ func (r *liveRun) mappingMethods(methods handler.Map, session *ipc.Session) {
 			return rpcRawInfo{Device: dev.Key, ID: id, GUID: dev.Info.GUID, Gamepad: dev.Info.IsGamepad, AxisRest: []int16{}}, nil
 		}
 		// A gamepad sends its keys as the user presses what the wizard asks for,
-		// and the press of one that waits for a slot takes a slot over (IN-05): the
+		// and the press of one that waits for a slot takes a slot over: the
 		// mapping must be paused first (capture.start). A joystick that SDL has no
 		// mapping for maps to nothing.
 		if dev.Info.IsGamepad && !r.sup.Status().Capturing {
@@ -448,7 +447,7 @@ func (r *liveRun) changeMapping(ctx context.Context, dev supervisor.DeviceView, 
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	// A file with errors is repaired first (PRO-29), as config.get does.
+	// A file with errors is repaired first, as config.get does.
 	_, _, _ = r.readConfig(l)
 	data, revision, err := l.ConfigText()
 	if err != nil {

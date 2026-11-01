@@ -16,7 +16,7 @@ import type { UpdaterLike } from "./update-controller";
 export interface ElectronUpdaterOptions {
   /** app.getVersion(), put in the User-Agent. */
   version: string;
-  /** The installed application started by a test (PKG-03). */
+  /** The installed application started by a test. */
   packagedTest: boolean;
   /** The test's loopback feed (runtime-options.ts); undefined for the real application. */
   feed: string | undefined;
@@ -32,7 +32,7 @@ export interface ElectronUpdaterOptions {
 const SHARED_STAGING_ID = "00000000-0000-0000-0000-000000000000";
 
 /**
- * The installed application's updater (PKG-10, ADR-0018): latest.yml and the
+ * The installed application's updater (ADR-0018): latest.yml and the
  * installer of the download site in update-config.ts, a silent NSIS install,
  * and nothing happens unless the person says so (UpdateController decides).
  * The site sees the address and a User-Agent of padmate and its version; no
@@ -65,7 +65,7 @@ export function createElectronUpdater(
   updater.autoDownload = false;
   updater.autoInstallOnAppQuit = false;
   updater.allowDowngrade = false;
-  // The whole installer: PKG-05 deletes the copy a differential download needs.
+  // The whole installer: the uninstall deletes the copy a differential download needs.
   updater.disableDifferentialDownload = true;
   updater.disableWebInstaller = true;
   updater.requestHeaders = {

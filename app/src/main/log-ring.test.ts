@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LogRing } from "./log-ring";
 
-describe("the updater's log ring (PKG-10)", () => {
+describe("the updater's log ring", () => {
   it("keeps the latest lines with their level, oldest first", () => {
     const ring = new LogRing(3, () => 0);
     ring.info("one");

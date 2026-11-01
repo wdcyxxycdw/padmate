@@ -26,14 +26,14 @@ interface ScriptPanels {
 }
 
 /**
- * The overlay's whole content (HUD-01, HUD-04, HUD-03, SCR-22, ADR-0014): the
+ * The overlay's whole content (ADR-0014): the
  * toast Main sends when something changed or a script asks for one, one at a
  * time, the key hints panel while the hints button is held and the panels a
  * script keeps. A new toast replaces the one before at once; each fades in,
  * holds (for the time a script's toast names, else 1500 ms) and fades out
  * (CSS transitions on the toast's opacity, overlay.css).
  *
- * The pill's opacity (HUD-05) is the UI's choice, which Main sends as
+ * The pill's opacity is the UI's choice, which Main sends as
  * settings: it multiplies the opacity the pill fades to, as the custom
  * property --overlay-opacity on the root (overlay.css). 100 % until Main has
  * said otherwise. The hints panel's background follows it too.
@@ -47,13 +47,13 @@ interface ScriptPanels {
  * announces text that is put into one that exists. The hints panel is the
  * same, for the same reason.
  *
- * The key hints (HUD-03) are a panel of up to maxHintsShown rows of
+ * The key hints are a panel of up to maxHintsShown rows of
  * "control  what it does" in two columns, on the side of the toast area that
  * is away from the screen's edge (Main makes the window taller for it and the
  * toast area stays where it was). It fades in and out over hintsFadeMs; the
  * entries stay on the page until the fade out is over.
  *
- * A script's panels (SCR-22) are drawn in the same place and style: one row
+ * A script's panels are drawn in the same place and style: one row
  * per line, a panel's title first, then its rows as "left  right", up to
  * maxPanelRows rows in all and a last line "…" for more. They fade as the
  * hints do. While the hints are on the page they are held back, and come

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// The parts of an installation that the automatic update (PKG-10, ADR-0018)
+// The parts of an installation that the automatic update (ADR-0018)
 // depends on, and that CheckTree reads: the main process of the window, which
 // must be one file that needs nothing installed, and resources\app-update.yml,
 // which electron-builder writes for the update source.
@@ -178,7 +178,7 @@ func cacheDirProblems(values map[string]string) []string {
 // electron-builder writes from the publish block of electron-builder.yml: the
 // source is the download site (the generic provider, UpdateURL, UpdateChannel),
 // and the cache folder is the one the installer deletes. publisherName is there
-// only in a signed build (PKG-09) and is not required here.
+// only in a signed build and is not required here.
 func CheckUpdateConfig(data []byte) []string {
 	values := updateConfigValues(data)
 	return append(downloadSiteProblems(values), cacheDirProblems(values)...)

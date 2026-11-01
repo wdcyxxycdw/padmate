@@ -8,7 +8,7 @@ type View struct {
 	Layers  LayerState
 	Latches []string
 	Mode    int
-	// Hints is the key hints (HUD-03) while a hints action is held: the entry
+	// Hints is the key hints while a hints action is held: the entry
 	// of each control with something to show in the current layer stack, in
 	// control order. It is nil when the hints are off and not nil, possibly
 	// empty, when they are on.

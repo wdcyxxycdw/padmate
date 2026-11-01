@@ -52,7 +52,7 @@ describe("Segmented", () => {
     expect(stops()).toEqual([-1, 0, -1]);
   });
 
-  it("has a tab stop when no option matches, so the keyboard can reach it (UI-24)", () => {
+  it("has a tab stop when no option matches, so the keyboard can reach it", () => {
     const change = vi.fn();
     render(
       <Segmented label="选择" options={options} value="" onChange={change} />,

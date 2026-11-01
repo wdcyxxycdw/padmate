@@ -43,7 +43,7 @@ describe("close guard", () => {
     expect(close).not.toHaveBeenCalled();
   });
 
-  it("stops waiting for saves when the daemon is exiting (DMN-22)", () => {
+  it("stops waiting for saves when the daemon is exiting", () => {
     const { ask, close, guard: closing } = guard();
     closing.abandon();
     expect(closing.hold()).toBe(false);
@@ -70,7 +70,7 @@ describe("close guard", () => {
   });
 });
 
-describe("waiting for saves when the daemon exits (DMN-22, G9)", () => {
+describe("waiting for saves when the daemon exits (G9)", () => {
   /** Settles into a flag, so a test can tell when it resolved. */
   function settling(closing: CloseGuard, waitMs?: number) {
     const state = { done: false };
@@ -160,7 +160,7 @@ describe("waiting for saves when the daemon exits (DMN-22, G9)", () => {
   });
 });
 
-describe("taking the saves back after an install that did not start (PKG-10)", () => {
+describe("taking the saves back after an install that did not start", () => {
   it("asks the renderer again when a window closes after a settle was rearmed", async () => {
     vi.useFakeTimers();
     const { ask, close, guard: closing } = guard();
@@ -177,7 +177,7 @@ describe("taking the saves back after an install that did not start (PKG-10)", (
     expect(ask).toHaveBeenCalledOnce();
 
     // The install failed and the application goes on: closing waits for the
-    // saves again (UI-43).
+    // saves again.
     closing.rearm();
     expect(closing.hold()).toBe(true);
     expect(ask).toHaveBeenCalledTimes(2);

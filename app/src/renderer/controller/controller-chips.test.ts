@@ -661,7 +661,7 @@ describe("chips of mouse buttons (ADR-0004)", () => {
   });
 });
 
-describe("chips for the rings, the knob and the second stage (UI-28)", () => {
+describe("chips for the rings, the knob and the second stage", () => {
   const file = (
     base: Profile["layers"]["base"],
     analog?: Profile["analog"],
@@ -804,7 +804,7 @@ describe("chips for the rings, the knob and the second stage (UI-28)", () => {
   });
 });
 
-describe("chips for a stick that moves the pointer (MOU-01, UI-33)", () => {
+describe("chips for a stick that moves the pointer", () => {
   const file = (
     base: Profile["layers"]["base"],
     analog: Profile["analog"] = { ls: { mode: "mouse" } },
@@ -914,7 +914,7 @@ describe("chips for a stick that moves the pointer (MOU-01, UI-33)", () => {
   });
 });
 
-describe("chips for the mouse actions (MOU-05, MOU-08)", () => {
+describe("chips for the mouse actions", () => {
   const file = (base: Profile["layers"]["base"]): Profile => ({
     schemaVersion: 1,
     name: "pointer",

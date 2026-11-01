@@ -1,4 +1,4 @@
-// Command spk03 is the SPK-03 spike: goja and esbuild measured with the
+// Command spk03 is the goja spike: goja and esbuild measured with the
 // benchmark script and the stand-in host of internal/script/spike.
 //
 // `task spk03` runs it with `go run`; flags go after --, as in

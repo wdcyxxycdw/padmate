@@ -1,4 +1,4 @@
-// What the jsdom accessibility pass (a11y.test.tsx, UI-24) renders and how it
+// What the jsdom accessibility pass (a11y.test.tsx) renders and how it
 // asks axe. Not part of the app: only the tests import it.
 import { act, render, screen } from "@testing-library/react";
 import axe, { type AxeResults, type RunOptions } from "axe-core";

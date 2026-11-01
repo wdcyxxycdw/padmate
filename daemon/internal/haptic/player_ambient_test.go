@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// The ambient claim of the player lights is what HUD-08 uses: the mode of the
+// The ambient claim of the player lights is what the mode lights use: the mode of the
 // layer lights the player light of that number, while the profile's lights
 // are on. These tests pin the Mixer's side of it: the claim follows the
 // requests, is gated by the capability, is given back on every path, and

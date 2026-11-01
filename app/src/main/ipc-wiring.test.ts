@@ -25,20 +25,20 @@ describe("Electron IPC wiring", () => {
     const list = /var Topics = \[\]string\{([^}]*)\}/.exec(server)?.[1];
     expect(list).toBeDefined();
     const published = [...(list ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-    // input.raw (IN-17) is the daemon's last topic and the mapping wizard's
+    // input.raw is the daemon's last topic and the mapping wizard's
     // alone: the default subscription leaves it out (rawInputTopic).
     expect(published.at(-1)).toBe(rawInputTopic);
     expect([...daemonTopics]).toEqual(published.slice(0, -1));
     // subscribe (bridge.test.ts) asks for daemonTopics, hud included while
     // the overlay is up; each connection made subscribes through the one
-    // HudSubscription (hud-subscription.test.ts, SCR-22).
+    // HudSubscription (hud-subscription.test.ts).
     expect(source("./runtime.ts")).toContain(
       "await hud.open((method, params) => bridge.call(method, params));",
     );
     expect(source("./runtime.ts")).not.toContain("subscribe(");
   });
 
-  it("asks for the hud topic only while the overlay is up, from its window being ready until it is given up, on each connection (SCR-22)", () => {
+  it("asks for the hud topic only while the overlay is up, from its window being ready until it is given up, on each connection", () => {
     const main = source("./index.ts");
     // The daemon tells scripts an overlay is there while somebody subscribes
     // to hud: not before the window is ready, not once it will not come back.
@@ -59,9 +59,9 @@ describe("Electron IPC wiring", () => {
     expect(main).not.toMatch(/\bsubscribe\(/);
   });
 
-  it("handles daemon.exiting in Main, before the event buffer (DMN-22)", () => {
-    // The overlay's toasts (HUD-04), key hints (HUD-03) and a script's
-    // panels (SCR-22) see the same events, after the buffer. A script's
+  it("handles daemon.exiting in Main, before the event buffer", () => {
+    // The overlay's toasts, key hints and a script's
+    // panels see the same events, after the buffer. A script's
     // toast (the hud topic) is for the overlay alone: the page never gets it.
     expect(source("./index.ts")).toMatch(
       /createDaemonManager\(\s*routeDaemonEvents\(\{\s*deliver: \(event\) => \{(?:\s*\/\/[^\n]*)*\s*if \(event\.topic !== "hud"\) events\.push\(event\);\s*toasts\.handle\(event\);\s*hints\.handle\(event\);\s*panels\.handle\(event\);\s*\},/,
@@ -72,7 +72,7 @@ describe("Electron IPC wiring", () => {
     );
   });
 
-  it("saves before the UI quits for the tray, and tells the daemon (DMN-22, G9)", () => {
+  it("saves before the UI quits for the tray, and tells the daemon (G9)", () => {
     const main = source("./index.ts");
     // The exit waits for the renderer through the close guard, answers the
     // daemon with ui.exitReady and quits only after that.
@@ -90,7 +90,7 @@ describe("Electron IPC wiring", () => {
     expect(bridge).toContain('"config.repairSeen"');
   });
 
-  it("pushes the overlay's settings through the one handler that checks them (HUD-05)", () => {
+  it("pushes the overlay's settings through the one handler that checks them", () => {
     // Renderer -> preload -> the handler table, where only the main window's
     // page is trusted; Main -> the overlay's page is a separate, receive-only
     // channel (security.test.ts).
@@ -105,7 +105,7 @@ describe("Electron IPC wiring", () => {
     );
   });
 
-  it("identifies a controller through one fixed method, from the row's key to devices.identify (IN-13)", () => {
+  it("identifies a controller through one fixed method, from the row's key to devices.identify", () => {
     // Renderer -> preload -> Main's handler table, which checks the key ->
     // the daemon's devices.identify, which the UI bridge lets through.
     expect(source("../shared/api.ts")).toContain(
@@ -131,7 +131,7 @@ describe("Electron IPC wiring", () => {
     );
   });
 
-  it("watches the raw events of one controller and saves its mapping through fixed methods (IN-17, IN-18, IN-19)", () => {
+  it("watches the raw events of one controller and saves its mapping through fixed methods", () => {
     // Renderer -> preload -> Main's handler table, which checks the selector
     // and the mapping -> the daemon's methods, which the UI bridge lets through.
     const api = source("../shared/api.ts");
@@ -189,7 +189,7 @@ describe("Electron IPC wiring", () => {
       expect(main).toMatch(place);
   });
 
-  it("imports an AntiMicroX profile as data through one fixed method (PRO-21)", () => {
+  it("imports an AntiMicroX profile as data through one fixed method", () => {
     // Main reads the chosen file; the daemon is given its bytes, never a path.
     const handlers = source("./archive-handlers.ts");
     expect(handlers).toContain('"profiles.importAmgp"');
@@ -209,7 +209,7 @@ describe("Electron IPC wiring", () => {
     expect(handlers).toContain('new Set([".amgp", ".xml"])');
   });
 
-  it("reads and clears the latency through two fixed methods, from the diagnostics page to latency.get and latency.reset (DMN-15)", () => {
+  it("reads and clears the latency through two fixed methods, from the diagnostics page to latency.get and latency.reset", () => {
     // Renderer -> preload -> Main's handler table, which checks the selector
     // -> the daemon's methods, which the UI bridge lets through.
     const api = source("../shared/api.ts");
@@ -339,7 +339,7 @@ describe("Electron IPC wiring", () => {
     for (const name of library) expect(channels).toContain(name);
   });
 
-  it("reads a profile with its parents merged through a checked ID, read-only (PRO-19)", () => {
+  it("reads a profile with its parents merged through a checked ID, read-only", () => {
     const main = source("./index.ts");
     // The renderer supplies only the profile ID; the daemon method is Main's.
     expect(main).toMatch(

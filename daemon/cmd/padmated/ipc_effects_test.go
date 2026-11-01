@@ -86,7 +86,7 @@ func startFakeEffectsScriptIn(t *testing.T, caps, profile string, watch bool, of
 	return tl, rpcTestClient(t, tl.liveRun), dir
 }
 
-// TestIPCScriptEffects (SCR-23): a script's members reach the fake gamepad as
+// TestIPCScriptEffects: a script's members reach the fake gamepad as
 // Script-class effects through the effect queue; the error of a script buzzes
 // once; and everything the script has going ends when its runtime is paused.
 func TestIPCScriptEffects(t *testing.T) {

@@ -1,4 +1,4 @@
-# A lock while paused (DMN-06, DMN-09): the combo fires at 2300 and
+# A lock while paused: the combo fires at 2300 and
 # pauses the mapping, which lets go of Space. The lock at 2500 and the
 # unlock at 3000 change nothing: the mapping stays paused, and a tap of
 # south maps nothing. The combo resumes at 5600, which presses nothing;

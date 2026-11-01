@@ -304,7 +304,7 @@ function checkedPath(
 }
 
 /**
- * The scripts page's script library (SCR-50, SCR-51). The
+ * The scripts page's script library. The
  * renderer supplies file names (and a profile ID for a legacy script)
  * only: Main picks and reads an imported file itself, and the paths the
  * daemon names for an editor never leave Main.

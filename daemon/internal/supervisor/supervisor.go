@@ -21,11 +21,10 @@ import (
 
 const (
 	// MaxSlots is the most slots a Supervisor has, and how many it has
-	// when Config.Slots is 0: up to this many gamepads are mapped at once
-	// (IN-08).
+	// when Config.Slots is 0: up to this many gamepads are mapped at once.
 	MaxSlots = 4
 	// firstGen is the profile generation of Config.Program; each Reload
-	// takes the next (PRO-03).
+	// takes the next.
 	firstGen = 1
 	// defaultEdgeBuffer is the capacity of a slot's edge channel when
 	// Config.EdgeBuffer is 0.
@@ -69,7 +68,7 @@ type Config struct {
 	// run on that slot's loop goroutine.
 	ScriptFactory func(index uint8, gen uint32, clk clock.Clock, arb slot.Arbiter) (slot.ScriptRuntime, error)
 	// ScriptConfigured reports whether the current profile needs its script
-	// runtime: a legacy script, or an action that runs a macro (SCR-50). A
+	// runtime: a legacy script, or an action that runs a macro. A
 	// slot assigned while it does gets the Resync barrier that starts its
 	// dormant runtime. A nil callback treats every ScriptFactory as
 	// configured.
@@ -82,14 +81,14 @@ type Config struct {
 	// IgnoreDevice excludes a canonical identity from mapping, while the
 	// router still observes its state and emergency combos. It must not block.
 	IgnoreDevice func(input.DeviceKey) bool
-	// Calibration returns the stick calibration (IN-14) of the gamepad with
+	// Calibration returns the stick calibration of the gamepad with
 	// the canonical DeviceKey string key, nil when it has none. A slot asks
 	// when it gets a gamepad, at each profile Reload and at
 	// RefreshCalibration, on its own goroutine, so it must not block and must
 	// be safe for concurrent use; it returns what the last committed
 	// config.json says. Nil means no gamepad is calibrated.
 	Calibration func(key string) *profile.Calibration
-	// Switches returns the global feedback switches (UI-27, ADR-0015) of every
+	// Switches returns the global feedback switches (ADR-0015) of every
 	// slot's engine (engine.Options.Switches). It is called on the slots'
 	// goroutines, concurrently, so it must not block and must be safe for
 	// concurrent use; it returns what the last committed config.json says. A
@@ -108,18 +107,18 @@ type Config struct {
 	OnEvent func(slot uint8, e input.Event)
 	// OnInput sees every source event on the router, including ignored and
 	// waiting devices and input while mapping is held, but for DevicePower,
-	// which is routing metadata that Devices reports (IN-12). It must not
+	// which is routing metadata that Devices reports. It must not
 	// block.
 	OnInput func(e input.Event)
 	// OnUnrouted, when set, is called on the router's goroutine with each
 	// ButtonDown and ButtonUp of a gamepad that no slot maps, and why, one of
 	// the Unrouted constants (padmated's diagnostics events, ADR-0016). A
-	// press that takes a slot over (IN-05) is routed, so it is not one. It
+	// press that takes a slot over is routed, so it is not one. It
 	// must not block or call the Supervisor.
 	OnUnrouted func(e input.Event, why string)
 	// OnPower, when set, is called on the router's goroutine with each
 	// DevicePower of a gamepad the router holds that passes the device filter
-	// and the ignore setting (IN-12): padmated's low-battery tracker. It runs
+	// and the ignore setting: padmated's low-battery tracker. It runs
 	// after the router has stored the value for Devices. It must not block or
 	// call the Supervisor.
 	OnPower       func(u PowerUpdate)
@@ -130,8 +129,8 @@ type Config struct {
 	// OnFeedbackDevice is the device-scoped form used by padmated. The
 	// DeviceID is zero when the slot has not been assigned yet.
 	OnFeedbackDevice func(slot uint8, id input.DeviceID, f engine.Feedback)
-	// OnHapticDevice receives the one-shot haptics of each slot (MAP-25,
-	// HUD-10): the preset of a binding each time a gesture of it is dispatched,
+	// OnHapticDevice receives the one-shot haptics of each slot:
+	// the preset of a binding each time a gesture of it is dispatched,
 	// and the tick of a knob step. padmated posts them to its effect queue. It
 	// runs on the slot's goroutine, the slots call it concurrently, and the
 	// DeviceID is zero when the slot has no controller. It must not block.
@@ -143,13 +142,13 @@ type Config struct {
 	// program and calls nothing. It must not block.
 	OnReload func(slot uint8, gen uint32)
 	// OnPause, when set, is called on the router's goroutine each time the
-	// mapping is paused or resumed (DMN-06), with the new state and what
+	// mapping is paused or resumed, with the new state and what
 	// did it: "api" for Pause, "combo" for an input.ComboHeld event
-	// (DMN-07) (padmated's printer). It must not block or call the
+	// (padmated's printer). It must not block or call the
 	// Supervisor.
 	OnPause func(paused bool, by string)
 	// OnSuspend, when set, is called on the router's goroutine each time
-	// the reasons the router applied for Suspend change (DMN-09), with
+	// the reasons the router applied for Suspend change, with
 	// the reasons before and after, once the slots have the edges of the
 	// change (padmated's printer). It must not block or call the
 	// Supervisor.
@@ -165,12 +164,12 @@ type Config struct {
 type Status struct {
 	Capturing bool
 	Slots     []SlotStatus
-	// Paused is set while the user's pause is on (DMN-06): from when the
+	// Paused is set while the user's pause is on: from when the
 	// router has closed Output's gate for a pause until it opens it again.
 	// A suspension still holds the mapping when it is not set.
 	Paused bool
-	// Suspended is the reasons the system suspends the mapping for
-	// (DMN-09), as the router last applied them; none while it maps.
+	// Suspended is the reasons the system suspends the mapping for,
+	// as the router last applied them; none while it maps.
 	Suspended winsession.Reason
 }
 
@@ -187,11 +186,11 @@ type SlotStatus struct {
 	// one's, or, while Provisional, the one the slot was first handed away
 	// from (a chain of hand-offs keeps it); zero when none is assigned.
 	// When that gamepad reconnects, it takes a free slot if there is one,
-	// and this slot's Home becomes the assigned one's (IN-08); otherwise it
+	// and this slot's Home becomes the assigned one's; otherwise it
 	// takes this slot back.
 	Home input.DeviceKey
 	// Provisional is set while the assigned gamepad pressed no button on
-	// the enabled slot since it got the slot, but for a take-over (IN-05):
+	// the enabled slot since it got the slot, but for a take-over:
 	// a waiting gamepad's press can take the slot over.
 	Provisional bool
 	// Gen is the profile generation of the running slot: it changes once
@@ -236,12 +235,12 @@ type Supervisor struct {
 	suspended atomic.Uint32
 	held      atomic.Bool
 
-	// powers is the latest power of each connected gamepad (IN-12), by connection
+	// powers is the latest power of each connected gamepad, by connection
 	// id, an immutable table that the router replaces when one changes and the
 	// slots read for pad.info.battery (powerOf).
 	powers atomic.Pointer[map[input.DeviceID]input.Power]
 
-	// The suspension (DMN-09), set by Suspend under susMu: susp holds the
+	// The suspension, set by Suspend under susMu: susp holds the
 	// reasons last set in its bits 0-7, and from bit 8 up counts the calls
 	// that added a reason; suspSeen is every reason set since the router
 	// last took them (takeSuspend); suspWake wakes the router.
@@ -419,7 +418,7 @@ func (s *Supervisor) syncRequest(ctx context.Context, req syncRequest) ([]*barri
 }
 
 // Reload switches every slot, a free one too, to prog, the next profile
-// generation (PRO-03), one for all slots, and returns that generation.
+// generation, one for all slots, and returns that generation.
 // For each slot it is a ReleaseAll (slot.Slot.Reload): the engine ends
 // every press cycle, the slot lets go of all its keys, of every
 // generation, and its taps, and the controls down stay down and do
@@ -491,8 +490,8 @@ func (s *Supervisor) startReloadProfile(ctx context.Context, prog *engine.Progra
 	}
 }
 
-// Pause pauses the mapping of every slot, or with on false resumes it
-// (DMN-06); a Pause to the state the mapping is in does nothing. The
+// Pause pauses the mapping of every slot, or with on false resumes it;
+// a Pause to the state the mapping is in does nothing. The
 // events sent on Config.Events before Pause was called, the ones still
 // queued included, are routed first, as for Sync. When Pause returns,
 // Output has let go of every key and drops every press
@@ -536,8 +535,8 @@ func (s *Supervisor) Pause(ctx context.Context, on bool) error {
 	return nil
 }
 
-// Suspend sets the reasons the system suspends the mapping for (DMN-09,
-// ADR-0006), none to end the suspension; bits outside
+// Suspend sets the reasons the system suspends the mapping for
+// (ADR-0006), none to end the suspension; bits outside
 // winsession.AllReasons are ignored. The mapping is held while it is
 // suspended or paused (Pause): the two are apart, and neither ends the
 // other.
@@ -572,7 +571,7 @@ func (s *Supervisor) Suspend(r winsession.Reason) {
 // ReleaseAll closes an independent output gate, releases every keyboard
 // reference, then invalidates old script work on each slot before opening the
 // gate. Closing the gate also releases the keys the startup sweep of the
-// held-key log could not (output.Loop.BlockFor, OUT-14). It does not change the router's pause or suspension state. A fresh
+// held-key log could not (output.Loop.BlockFor). It does not change the router's pause or suspension state. A fresh
 // press after this call starts a new script runtime asynchronously.
 func (s *Supervisor) ReleaseAll() error {
 	s.emergency.Lock()

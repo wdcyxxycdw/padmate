@@ -27,7 +27,7 @@ func ValidLibraryID(id string) bool {
 }
 
 // HistoryDir is the hidden folder in a library profile's folder that keeps
-// earlier versions of its profile.json (PRO-17). It is not a valid library
+// earlier versions of its profile.json. It is not a valid library
 // ID, the library never copies it, and the script compiler neither hashes
 // it nor accepts an entry or import in it, although it is inside the
 // script root.

@@ -2,8 +2,8 @@ import type { DaemonEvent } from "../shared/api";
 
 /**
  * Why the daemon stops for good (daemon.exiting): the user's 退出 in its
- * tray (DMN-22), or the installer replacing or removing padmate (PKG-04,
- * `padmatectl quit`). The UI answers both the same way.
+ * tray, or the installer replacing or removing padmate
+ * (`padmatectl quit`). The UI answers both the same way.
  */
 const EXIT_REASONS = ["tray", "installer"] as const;
 export type DaemonExitReason = (typeof EXIT_REASONS)[number];
@@ -15,7 +15,7 @@ function exitReason(data: unknown): DaemonExitReason | undefined {
 }
 
 /**
- * Routes the daemon's events (DMN-22). daemon.exiting with reason "tray",
+ * Routes the daemon's events. daemon.exiting with reason "tray",
  * the user's 退出 in the daemon's tray, or "installer" quits the UI, once
  * (trayExit, with the reason); any other reason changes nothing, and the end
  * of the connection shows as before. The renderer never gets
@@ -43,7 +43,7 @@ export const ACK_WAIT_MS = 500;
 
 /**
  * What the UI does once the daemon announced its exit, the tray's 退出 or the
- * installer's (DMN-22, PKG-04): the renderer finishes its saves like a
+ * installer's: the renderer finishes its saves like a
  * closing window (settle, bounded by the caller), the UI tells the daemon it
  * is ready (ready, ui.exitReady), then
  * it quits. A save that is slow, a daemon that does not answer or a call
@@ -77,7 +77,7 @@ export async function exitAfterSaves(options: {
 }
 
 /**
- * Whether the window's close event is held (DMN-22). While the daemon's exit
+ * Whether the window's close event is held. While the daemon's exit
  * (the tray's or the installer's) waits for the saves, every close is held,
  * because the exit quits by itself. Its own quit closes the window again, and that close must go
  * through: a prevented close cancels the quit and leaves a hidden window

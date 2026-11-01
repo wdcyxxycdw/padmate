@@ -43,7 +43,7 @@ func TestInputDefaultDoesNotFallBackToSDL(t *testing.T) {
 }
 
 // TestDecodeIPCInputRemapped: the input topic is the trace format plus a
-// "remapped" row for a gamepad whose mapping changed (IN-18); traces do not
+// "remapped" row for a gamepad whose mapping changed; traces do not
 // carry it.
 func TestDecodeIPCInputRemapped(t *testing.T) {
 	row := func(data string) ipc.Notification {

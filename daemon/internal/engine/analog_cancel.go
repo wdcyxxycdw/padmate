@@ -116,7 +116,7 @@ func (e *Engine) trackDpadButton(c control.Control, down bool) {
 // to the triggers as they are held: a second stage that is no longer wanted
 // is released, and one that has become wanted is only remembered, not
 // pressed, so the trigger has to fall below fullRelease before it presses
-// again (ANA-14).
+// again.
 func (e *Engine) settleTriggerFull(now clock.Time) {
 	for i, a := range [2]control.Axis{control.LeftTrigger, control.RightTrigger} {
 		v := e.axes[a]

@@ -34,7 +34,7 @@ func TestMissingControlsUseDeviceMasksAndProfileBindings(t *testing.T) {
 		if v.Device != 2 {
 			continue
 		}
-		// The names of the mapping page (DMN-13, the owner's G11), not the
+		// The names of the mapping page (the owner's G11), not the
 		// control IDs lt, paddle1 and rs.up.
 		got := missingControls(tl.cfg.prog, v)
 		want := []string{"背键 1", "LT", "RS"}
@@ -126,7 +126,7 @@ func TestElevationAndSecureDesktopResendFailedRelease(t *testing.T) {
 }
 
 // TestNoticesAreShortAndNameNoRepositoryFile: the tray's notices are
-// written-style and short (DMN-13), and send the user to no docs folder,
+// written-style and short, and send the user to no docs folder,
 // which the installed app does not have.
 func TestNoticesAreShortAndNameNoRepositoryFile(t *testing.T) {
 	notices := []tray.Notification{elevatedNotice("admin.exe"), missingNotice("missing:x", "pad", []string{"LT", "背键 1"})}

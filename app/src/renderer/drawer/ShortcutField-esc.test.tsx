@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// UI-24: recording a shortcut swallows every key, so a keyboard user needs a
+// Recording a shortcut swallows every key, so a keyboard user needs a
 // way out that is not a click: hold Esc for 1 second. The helper only watches
 // the keyboard (it never swallows), so the window sees the Esc press and its
 // release, and times the hold itself. A short Esc is still a shortcut (Esc),
@@ -74,7 +74,7 @@ async function capturing(language: Language = "zh-CN") {
   return { api, emit, view, button, idle, key, helperEsc, pass };
 }
 
-describe("hold Esc to cancel a capture (UI-24)", () => {
+describe("hold Esc to cancel a capture", () => {
   it("ends the capture after 1 second and records nothing, not the Esc that is held", async () => {
     const c = await capturing();
     await c.helperEsc();
@@ -321,7 +321,7 @@ const WINDOW =
   "无法录入快捷键。请点一下 padmate 窗口，确认它在最前面，再重试。";
 const CAP = "录入最长 30 秒，已自动结束。需要的话请重新录入。";
 
-describe("why a capture ended by itself (UI-24)", () => {
+describe("why a capture ended by itself", () => {
   it("says nothing for the ends the user chose or can see", async () => {
     for (const reason of ["blur", "stopped", "replaced"]) {
       cleanup();

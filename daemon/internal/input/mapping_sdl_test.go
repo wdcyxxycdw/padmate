@@ -14,7 +14,7 @@ import (
 )
 
 // These tests are the SDL side of the mapping wizard and custom mappings
-// (IN-17, IN-18, IN-19, ADR-0012). They use SDL virtual joysticks, which SDL
+// (ADR-0012). They use SDL virtual joysticks, which SDL
 // maps to no gamepad until a mapping for their GUID is added.
 
 // rawMapping returns the mapping string of the device with GUID guid that
@@ -421,7 +421,7 @@ func TestMappingsOfOptionsWithAnEnvironmentFile(t *testing.T) {
 }
 
 // TestEmergencyComboAfterAMapping: the emergency combo is picked again when a
-// mapping changes the controller (IN-18). A joystick that a mapping turns
+// mapping changes the controller. A joystick that a mapping turns
 // into a gamepad with back and start has the combo, so holding both pauses;
 // a remap that leaves back out takes it away, and one that puts it back gives
 // it again.

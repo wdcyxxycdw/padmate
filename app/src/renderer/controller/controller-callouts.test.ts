@@ -30,7 +30,7 @@ describe("the function keys among the callouts (ADR-0012)", () => {
   });
 });
 
-describe("the stick callouts (UI-39)", () => {
+describe("the stick callouts", () => {
   const find = (type: string, control: string) =>
     controllerCallouts({ type }).find((callout) => callout.control === control);
 

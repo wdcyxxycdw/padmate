@@ -984,7 +984,7 @@ func TestResolveWheelKeys(t *testing.T) {
 	}
 }
 
-// A media or volume key is no character either (OUT-20): it bypasses the layout,
+// A media or volume key is no character either: it bypasses the layout,
 // so the Resolver never asks for the foreground layout, not even when it cannot
 // be read, and gives ChordStroke's stroke on every layout: the VK with the E0
 // scan code, after the modifiers.

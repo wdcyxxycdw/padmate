@@ -12,7 +12,7 @@ import (
 
 // historyMethods list and restore the earlier versions of a library
 // profile's profile.json that profiles.put and profiles.restore keep
-// (PRO-17, profilelib.History).
+// (profilelib.History).
 func (r *liveRun) historyMethods(methods handler.Map) {
 	methods["profiles.history"] = r.rpcProfileHistory
 	methods["profiles.restore"] = r.rpcRestoreProfile

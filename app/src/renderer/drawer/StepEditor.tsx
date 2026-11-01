@@ -1,4 +1,4 @@
-// The parts of the step editor of the key drawer (UI-31, ADR-0012): a wait
+// The parts of the step editor of the key drawer (ADR-0012): a wait
 // step of a sequence, the buttons that move and remove a step, and the line
 // that reads a sequence. A shortcut step is the shortcut field of
 // BindingEditor. The drawer has no text step any more (ADR-0013); a text step
@@ -100,7 +100,7 @@ export function StepButtons({
 /**
  * The row of a wait step: the milliseconds it waits, counted from the
  * release of the step before it, committed on Enter or when the field is
- * left (UI-43). 1 to 10000; a wait always has a number, so the field is never
+ * left. 1 to 10000; a wait always has a number, so the field is never
  * empty.
  */
 export function WaitStep({

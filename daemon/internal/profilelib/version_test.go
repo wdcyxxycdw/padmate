@@ -7,7 +7,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// The profile format is frozen as version 1 (PRO-01, PRO-06). Version 0 is
+// The profile format is frozen as version 1. Version 0 is
 // the format of the previews: those files load, save, copy, restore and
 // export as they are, and the library never rewrites a file because it is
 // old. Whatever the library writes from nothing is version 1.

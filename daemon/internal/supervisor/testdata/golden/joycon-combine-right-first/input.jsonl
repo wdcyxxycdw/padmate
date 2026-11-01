@@ -1,5 +1,5 @@
 # The mirror of joycon-combine, under --hint
-# SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1 (IN-07, ADR-0002). Joy-Con (R) is
+# SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1 (ADR-0002). Joy-Con (R) is
 # alone: its south tap confirms it, and it holds east. Joy-Con (L) wakes:
 # SDL reports L added, L removed, R removed and the pair added, since it
 # disconnects the left child first, whichever connected first

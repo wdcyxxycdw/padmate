@@ -304,7 +304,7 @@ describe("desktop workspace", () => {
   });
 });
 
-describe("overlay settings (HUD-05)", () => {
+describe("overlay settings", () => {
   const prefs = (change: Record<string, unknown> = {}) => ({
     language: "zh-CN",
     toasts: true,
@@ -523,7 +523,7 @@ describe("overlay settings (HUD-05)", () => {
   });
 });
 
-describe("feedback settings (UI-27, ADR-0015)", () => {
+describe("feedback settings (ADR-0015)", () => {
   const section = () => screen.getByTestId("feedback-settings");
   const rows = () =>
     [...section().querySelectorAll(".row")].map(
@@ -1467,7 +1467,7 @@ describe("settings page", () => {
     expect(document.activeElement).not.toBe(logs);
   });
 
-  it("opens the diagnostics inside Settings, next to the logs, and goes back with the back control or Escape (UI-20)", async () => {
+  it("opens the diagnostics inside Settings, next to the logs, and goes back with the back control or Escape", async () => {
     setup();
     await openDiagnostics();
     const nav = screen.getByRole("navigation");
@@ -1544,7 +1544,7 @@ describe("settings page", () => {
     expect(document.activeElement).not.toBe(button);
   });
 
-  it("shows no events while the connection is down, and starts a new list when it is back (UI-20)", async () => {
+  it("shows no events while the connection is down, and starts a new list when it is back", async () => {
     const { api, event } = setup();
     await screen.findByRole("group", { name: /Test controller/ });
     event("engine.activity", {
@@ -1571,7 +1571,7 @@ describe("settings page", () => {
     );
   });
 
-  it("lists the presses made while another page was open, newest first (UI-20, UI-21)", async () => {
+  it("lists the presses made while another page was open, newest first", async () => {
     const app = setup();
     await screen.findByRole("group", { name: /Test controller/ });
     const decision = (fields: Record<string, unknown>, extra = {}) =>
@@ -1613,7 +1613,7 @@ describe("settings page", () => {
     ]);
   });
 
-  it("does not render the whole window for each press it records (UI-20)", async () => {
+  it("does not render the whole window for each press it records", async () => {
     const onRender = vi.fn();
     const app = setup({ onRender });
     await screen.findByRole("group", { name: /Test controller/ });
@@ -1635,7 +1635,7 @@ describe("settings page", () => {
     expect(onRender).not.toHaveBeenCalled();
   });
 
-  it("shows only why the mapping service did not start, until a retry connects (UI-45)", async () => {
+  it("shows only why the mapping service did not start, until a retry connects", async () => {
     const { api } = setup();
     await screen.findByRole("group", { name: /Test controller/ });
     const connection = vi.mocked(api.onConnection).mock.calls.at(-1)?.[0];
@@ -1700,7 +1700,7 @@ describe("settings page", () => {
     expect(id).toBe("paint");
     expect(JSON.parse(text as string).name).toBe("Renamed");
     fireEvent.click(screen.getByRole("button", { name: "关闭配置设置" }));
-    // Renaming the profile is not undone (UI-43).
+    // Renaming the profile is not undone.
     fireEvent.keyDown(document.body, { key: "z", ctrlKey: true });
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(app.api.putProfile).toHaveBeenCalledOnce();
@@ -1759,7 +1759,7 @@ describe("settings page", () => {
     expect(JSON.parse(text as string).timing).toEqual({ holdMs: 300 });
   });
 
-  it("names the fixed default by its ID and keeps its name (PRO-28)", async () => {
+  it("names the fixed default by its ID and keeps its name", async () => {
     localStorage.setItem("padmate.onboarding", "done");
     setup({
       snapshot: { ...status, profileId: "default" },
@@ -1811,7 +1811,7 @@ describe("settings page", () => {
   });
 });
 
-describe("the function key setting (UI-30, ADR-0012)", () => {
+describe("the function key setting (ADR-0012)", () => {
   const row = () => screen.getByTestId("function-key-setting");
   const group = (name: string | RegExp = /^(功能键|Function key)$/) =>
     within(row()).getByRole("radiogroup", { name });
@@ -2086,7 +2086,7 @@ describe("the function key setting (UI-30, ADR-0012)", () => {
   });
 });
 
-describe("start at sign-in (UI-19)", () => {
+describe("start at sign-in", () => {
   const canStart: StartupState = {
     available: true,
     enabled: false,
@@ -2598,7 +2598,7 @@ describe("profiles in the shell", () => {
   });
 });
 
-describe("配置设置 from a profile card (UI-27)", () => {
+describe("配置设置 from a profile card", () => {
   const library: ProfileEntry[] = [
     { id: "paint", name: "Paint", revision: "p1" },
     { id: "sketch", name: "Sketch", revision: "s1" },
@@ -3115,7 +3115,7 @@ describe("conflicting software", () => {
     ).toBe("page");
   });
 
-  it("says which controllers Steam may take over, and how to stop it, where the notice is shown (IN-24)", async () => {
+  it("says which controllers Steam may take over, and how to stop it, where the notice is shown", async () => {
     setup({
       snapshot: {
         ...status,
@@ -3368,7 +3368,7 @@ describe("page helpers and empty states", () => {
   });
 });
 
-describe("a repaired settings file (PRO-29)", () => {
+describe("a repaired settings file", () => {
   const repair = {
     backup: "config.broken-20261015-191600.json",
     path: "C:dataconfig.broken-20261015-191600.json",
@@ -3431,7 +3431,7 @@ describe("a repaired settings file (PRO-29)", () => {
   });
 });
 
-describe("the tray exit waits for the last save (DMN-22, G9)", () => {
+describe("the tray exit waits for the last save (G9)", () => {
   it("answers Main's request to finish only after a slow save has completed", async () => {
     const app = setup();
     await screen.findByRole("group", { name: /Test controller/ });
@@ -3465,7 +3465,7 @@ describe("the tray exit waits for the last save (DMN-22, G9)", () => {
   });
 });
 
-describe("identify a controller (IN-13)", () => {
+describe("identify a controller", () => {
   const identifyButton = (name = "识别 Test controller") =>
     screen.getByRole("button", { name }) as HTMLButtonElement;
   const note = () => screen.queryByText("该手柄无法震动或闪灯");
@@ -3488,7 +3488,7 @@ describe("identify a controller (IN-13)", () => {
     expect(
       within(row).getByRole("button", { name: "调校 Test controller" }),
     ).toBeTruthy();
-    // 识别, then 调校, then the menu with 重新映射… (IN-18), in one control group.
+    // 识别, then 调校, then the menu with 重新映射…, in one control group.
     expect(
       [...row.querySelectorAll("button")].map(
         (item) => item.textContent || item.getAttribute("aria-label"),
@@ -3688,7 +3688,7 @@ describe("identify a controller (IN-13)", () => {
   });
 });
 
-describe("controller calibration (IN-14)", () => {
+describe("controller calibration", () => {
   const calibrated = (calibration: unknown) => ({
     text: JSON.stringify({
       schemaVersion: 0,
@@ -4022,7 +4022,7 @@ describe("controller calibration (IN-14)", () => {
   });
 });
 
-describe("the battery on the controller's row (IN-12)", () => {
+describe("the battery on the controller's row", () => {
   /** The status with a power on its one controller. */
   const powered = (battery?: DeviceBattery): StatusResult => ({
     ...status,

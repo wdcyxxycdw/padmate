@@ -1,10 +1,10 @@
-// 配置 page (UI-17, UI-18, PRO-16, PRO-20, PRO-28, UI-42): the profile
+// 配置 page: the profile
 // library and the apps bound to each profile, shown by their icons. The
 // fixed default comes first: every app without a binding uses it. Every
 // change is written to config.json at once. A card's 编辑按键 and 复制 are
 // icon buttons, named by aria-label and title. 复制 makes a whole copy
 // (ADR-0013), and the card's menu exports the profile as a .padmate file;
-// 导入… adds one (or converts an AntiMicroX .amgp or .xml file, PRO-21, and
+// 导入… adds one (or converts an AntiMicroX .amgp or .xml file, and
 // lists what did not come over whole).
 import {
   type ReactNode,
@@ -86,7 +86,7 @@ interface BindRequest {
 }
 
 /**
- * A bound app's icon (UI-42), read by Main from its executable: the path of
+ * A bound app's icon, read by Main from its executable: the path of
  * a rule by file name comes from the apps seen lately, the path the app had
  * when it was bound, or Main's own search (resolveAppIcon). Without an icon
  * a generic application icon stands in, never a letter.
@@ -258,13 +258,13 @@ export function ProfilesPage({
    */
   onEditKeys: (id: string) => Promise<void>;
   /**
-   * 配置设置… on a card (UI-27): the shell opens the dialog for profile id
+   * 配置设置… on a card: the shell opens the dialog for profile id
    * where it is, without activating the profile or leaving this page.
    */
   onProfileSettings: (id: string) => void;
   /**
    * Waits until the mapping page's edits of profile id are on disk, before
-   * an export reads the profile or an import replaces it (UI-43).
+   * an export reads the profile or an import replaces it.
    */
   saveEdits?: (id: string) => Promise<unknown>;
   /** Scrolls to this profile's card and focuses its 添加软件, once. */
@@ -288,13 +288,13 @@ export function ProfilesPage({
   const [renaming, setRenaming] = useState<ProfileEntry | null>(null);
   const [deleting, setDeleting] = useState<ProfileEntry | null>(null);
   const [importing, setImporting] = useState(false);
-  // The report of an AntiMicroX import (PRO-21), shown before its profile opens.
+  // The report of an AntiMicroX import, shown before its profile opens.
   const [amgp, setAmgp] = useState<AmgpImported | null>(null);
   const [clash, setClash] = useState<ImportClash | null>(null);
   const [scriptClash, setScriptClash] = useState<ImportScriptClash | null>(
     null,
   );
-  // The profile whose installed-apps dialog is open (UI-46).
+  // The profile whose installed-apps dialog is open.
   const [installedFor, setInstalledFor] = useState<string | null>(null);
   const [pendingBind, setPendingBind] = useState<BindRequest | null>(null);
   const [activating, setActivating] = useState("");
@@ -505,7 +505,7 @@ export function ProfilesPage({
     });
   };
 
-  // ----- Backup (PRO-20) ------------------------------------------------------
+  // ----- Backup ------------------------------------------------------
 
   const exportFile = async (entry: ProfileEntry) => {
     await saveEdits?.(entry.id);
@@ -549,7 +549,7 @@ export function ProfilesPage({
     }
   };
 
-  // 浏览… (UI-46): the .exe the file dialog gives is bound by its name; its
+  // 浏览…: the .exe the file dialog gives is bound by its name; its
   // path gives the icon. A file Main refuses is said in the pill.
   const browse = async (profile: string) => {
     try {
@@ -605,7 +605,7 @@ export function ProfilesPage({
       disabled: broken,
       onSelect: () => onProfileSettings(id),
     };
-    // The fixed default is neither renamed nor deleted (PRO-28).
+    // The fixed default is neither renamed nor deleted.
     const items: MenuEntry[] = fixed
       ? [settingsItem, exportItem]
       : [

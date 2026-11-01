@@ -44,7 +44,7 @@ func TestSecondInstanceForwardsProfile(t *testing.T) {
 				nextArgs = []string{"--data-dir", dir, "--profile-id", "second", "--dry-run", "--fake-input"}
 			}
 			// A report left by an earlier start goes once a start maps, or
-			// the running instance takes its request (UI-45).
+			// the running instance takes its request.
 			report := filepath.Join(dir, "startup-error.json")
 			stale := func() {
 				t.Helper()

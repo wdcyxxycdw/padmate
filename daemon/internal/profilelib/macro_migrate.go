@@ -85,7 +85,7 @@ type journalFile struct {
 }
 
 // MigrateMacros moves each profile's macros folder, from before the script
-// library (SCR-50), into the library's (SCR-51), one profile at a time:
+// library, into the library's, one profile at a time:
 //
 //   - A macro whose name the library does not have moves under its name;
 //     one the library has with the same extension and bytes is deleted

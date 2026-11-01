@@ -13,8 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winfocus"
 )
 
-// maxRecentApps bounds the apps.recent list of the window capture helper
-// (PRO-16).
+// maxRecentApps bounds the apps.recent list of the window capture helper.
 const maxRecentApps = 12
 
 // foregroundTopic carries every accepted foreground executable to the UI.

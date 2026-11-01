@@ -762,7 +762,7 @@ func TestLoopBlockEndsText(t *testing.T) {
 }
 
 // A typed unit is never held, so the held-key log has no bit for one, and the
-// sweep of a log cannot name one (OUT-14, OUT-21).
+// sweep of a log cannot name one.
 func TestHeldLogNeverHasUnicodeEvents(t *testing.T) {
 	for _, unit := range []uint16{'A', 0x4F60, 0xD83D, 0xDE00, 0, 0xE7, 0xFFFF} {
 		b := output.EncodeHeld(output.UnicodeEvent(unit, false), press(t, "LCtrl"))

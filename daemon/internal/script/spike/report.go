@@ -26,7 +26,7 @@ type Options struct {
 	Cycles *CycleOptions
 }
 
-// DefaultOptions are the full SPK-03 run.
+// DefaultOptions are the full goja spike run.
 func DefaultOptions() Options {
 	c := DefaultCycleOptions()
 	return Options{Dispatch: DefaultDispatch(), Runs: 200, Watchdog: DefaultWatchdogCheck(), Cycles: &c}
@@ -48,7 +48,7 @@ type Report struct {
 	Elapsed   time.Duration
 }
 
-// Run makes the SPK-03 measurements. The first esbuild build and goja
+// Run makes the goja spike measurements. The first esbuild build and goja
 // activation of the process are the "first" rows, so call it before
 // anything else in the process uses esbuild or goja.
 func Run(opts Options) (*Report, error) {
@@ -147,7 +147,7 @@ func (r *Report) Rows() []Row {
 func (r *Report) WriteMarkdown(w io.Writer) error {
 	m := &mdWriter{w: w}
 	mc := r.Machine
-	m.printf("## SPK-03 results\n\n")
+	m.printf("## goja spike results\n\n")
 	m.printf("- CPU: %s; %d logical CPUs; GOMAXPROCS %d\n", mc.CPU, mc.LogicalCPUs, mc.GOMAXPROCS)
 	m.printf("- OS: %s\n", mc.OS)
 	m.printf("- Go: %s; GOGC: %s\n", mc.Go, orDefault(mc.GOGC, "unset (100)"))

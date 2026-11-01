@@ -6,7 +6,7 @@ import (
 )
 
 // IsEmpty reports whether c sets no member of any stick: a nil Calibration
-// and a Calibration of empty sticks both calibrate nothing (IN-14).
+// and a Calibration of empty sticks both calibrate nothing.
 func (c *Calibration) IsEmpty() bool {
 	if c == nil {
 		return true
@@ -21,7 +21,7 @@ func (c *Calibration) IsEmpty() bool {
 
 // Calibrated returns a with the stick calibration cal of a controller laid
 // over its sticks: a deadzone or saturation cal sets replaces the profile's,
-// one it leaves out keeps it (IN-14, ARCHITECTURE §7.5). Nothing else of a
+// one it leaves out keeps it (ARCHITECTURE §7.5). Nothing else of a
 // changes.
 //
 // A stick whose calibrated pair does not satisfy 0 <= deadzone < saturation

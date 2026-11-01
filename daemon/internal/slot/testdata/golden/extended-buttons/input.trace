@@ -1,4 +1,4 @@
-# Each extended button (IN-06) pressed for 50 ms, one after another.
+# Each extended button pressed for 50 ms, one after another.
 +paddle1@0 -paddle1@50
 +paddle2@100 -paddle2@150
 +paddle3@200 -paddle3@250

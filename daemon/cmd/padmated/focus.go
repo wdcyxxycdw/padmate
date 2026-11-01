@@ -22,7 +22,7 @@ type liveProfile struct {
 	id, path string
 	sum      [32]byte
 	gen      uint32
-	// parents are the profiles this one extends (PRO-19), nearest first, with
+	// parents are the profiles this one extends, nearest first, with
 	// the sums of the files that were merged: the files the watcher watches
 	// beside its own. publishProfile takes them from the running profile.
 	parents []profile.ParentRef
@@ -163,7 +163,7 @@ func (r *liveRun) onForeground(app winfocus.App) {
 		return
 	}
 	r.foreground.Store(&app)
-	// The capture helper (PRO-16) sees the same filtered foreground.
+	// The capture helper sees the same filtered foreground.
 	r.noteForeground(app)
 	if app.Elevated {
 		r.notice(elevatedNotice(app.Exe))
@@ -180,7 +180,7 @@ func (r *liveRun) onForeground(app winfocus.App) {
 // isOwnUI reports whether app is a padmate UI process that registered over
 // IPC (ui.register) and is still the same live process instance. Its
 // windows never trigger profile selection, as if ignored, so editing a
-// profile in padmate cannot switch the mapping away (UI-18).
+// profile in padmate cannot switch the mapping away.
 func (r *liveRun) isOwnUI(app *winfocus.App) bool {
 	if app == nil || app.PID == 0 {
 		return false
@@ -220,8 +220,8 @@ func (r *liveRun) selectForeground(ctx context.Context, app *winfocus.App) error
 
 // selectApp applies the selection settings to app, the current foreground:
 // its rule's profile, or the fixed default when no rule binds it
-// (ADR-0008). A padmate UI keeps the current profile without a release
-// (UI-18). switched is false when a config change, not a foreground
+// (ADR-0008). A padmate UI keeps the current profile without a release.
+// switched is false when a config change, not a foreground
 // change, asks for the evaluation: releaseOnSwitch "always" then does not
 // release a profile that stays; a profile change still releases, through
 // the same activation as a foreground change.

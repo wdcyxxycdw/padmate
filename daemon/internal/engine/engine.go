@@ -33,21 +33,21 @@ const (
 	DefaultDeadzone           = 0.15
 	DefaultSaturation         = 0.95
 	// DefaultOuterThreshold is the normalized stick depth at which the outer
-	// ring starts (ANA-10). The outer ring ends RingHysteresis below it.
+	// ring starts. The outer ring ends RingHysteresis below it.
 	DefaultOuterThreshold = 0.90
 	// RingHysteresis is how far below its threshold a stick must fall before
 	// it leaves the outer ring.
 	RingHysteresis = 0.05
-	// DefaultKnobStepDeg is the rotation of one virtual knob tick (ANA-11).
+	// DefaultKnobStepDeg is the rotation of one virtual knob tick.
 	DefaultKnobStepDeg = 30
 	// TriggerFullPress is the fraction of its travel at or above which a
-	// trigger also presses the second stage, LTFull or RTFull (ANA-14).
+	// trigger also presses the second stage, LTFull or RTFull.
 	TriggerFullPress = 0.90
 	// TriggerFullRelease is the fraction at or below which the second stage
 	// releases.
 	TriggerFullRelease = 0.80
 	// KnobSettle is how long the knob waits, after an axis input of its
-	// stick, before it reads the angle (ANA-11). The two axes of one report
+	// stick, before it reads the angle. The two axes of one report
 	// reach the slot microseconds apart, and a fast release from a diagonal
 	// would otherwise show an intermediate reading (one axis already at rest,
 	// the other not yet) whose angle is 45 degrees off, and queue a stray
@@ -138,7 +138,7 @@ type Input struct {
 	// SuppressActions ends an already started button cycle without its tap or
 	// release action when a higher priority script consumes the release.
 	SuppressActions bool
-	// fn is the function key that was active when the edge arrived (MAP-27),
+	// fn is the function key that was active when the edge arrived,
 	// control.Invalid when none was. stepButton sets it on the edges it
 	// buffers, so that a press replayed later looks its binding up in the set
 	// of the key that was held when it came, not of the one held when it is
@@ -156,13 +156,13 @@ type Output interface {
 	Tap(o OwnerID, c keys.Chord, hold time.Duration)
 	Repeat(o OwnerID, c keys.Chord)
 	TapSequence(o OwnerID, items []keys.Chord, hold, gap time.Duration)
-	// Sequence runs the steps of a sequence action (MAP-22, ADR-0012): taps a
+	// Sequence runs the steps of a sequence action (ADR-0012): taps a
 	// shortcut, waits, types a text, one after another, hold being the press time
 	// of a tap and gap the least time between two steps and between the characters
 	// of a text. steps is the action's own slice: the output copies what it keeps.
 	// Like TapSequence it holds nothing, and a second one waits for the first.
 	Sequence(o OwnerID, steps []keys.Step, hold, gap time.Duration)
-	// TypeText types the text of a text action (OUT-21), a character at a time,
+	// TypeText types the text of a text action, a character at a time,
 	// gap apart; it is a sequence of one text step.
 	TypeText(o OwnerID, text string, gap time.Duration)
 	RepeatTap(o OwnerID, c keys.Chord, hold time.Duration)
@@ -178,22 +178,22 @@ type Output interface {
 
 // Options configures an Engine.
 type Options struct {
-	// Trace receives every Decision (ENG-20), on the engine's goroutine,
+	// Trace receives every Decision, on the engine's goroutine,
 	// before the output the decision causes. Like the Output, it must not
 	// call back into the Engine. When it is nil the engine builds no
 	// decisions at all.
 	Trace       func(Decision)
 	LayerChange func(LayerState)
 	Feedback    func(Feedback)
-	// Haptic receives the one-shot haptics of the profile (MAP-25, HUD-10;
-	// haptic.go): the preset of a binding each time a gesture of it is
+	// Haptic receives the one-shot haptics of the profile
+	// (haptic.go): the preset of a binding each time a gesture of it is
 	// dispatched, and a tick for each knob step with knobTick. It is called on
 	// the engine's goroutine, like Feedback, and must not block or call back
 	// into the Engine. It is never called while the global rumble switch is
 	// off (Switches) or the profile's feedback has a strength of 0, while the
 	// engine is paused, or by an input preview.
 	Haptic func(Haptic)
-	// Switches returns the global feedback switches (UI-27, ADR-0015: rumble,
+	// Switches returns the global feedback switches (ADR-0015: rumble,
 	// led and pause shape what the engine publishes and plays). The engine asks
 	// each time it publishes a feedback state or plays a haptic, so a change of
 	// config.json applies at once; RefreshFeedback publishes the state again
@@ -204,7 +204,7 @@ type Options struct {
 	Switches func() profile.FeedbackSwitches
 	// Registry, when set, replaces the program's layers in the lookup of a
 	// binding. The engine does not check the bindings it returns: they must
-	// pass CheckBinding (see Level). The set of a held function key (MAP-27)
+	// pass CheckBinding (see Level). The set of a held function key
 	// is not one of its levels: it is above them, from the Program.
 	Registry Registry
 	// Button runs synchronously for each recognized physical or virtual
@@ -215,7 +215,7 @@ type Options struct {
 	// without the Scope, and cannot consume them. Unlike Button it does not make the virtual
 	// controls that no binding uses recognized (a stick direction, a d-pad
 	// diagonal): the slot keeps its macro bookkeeping with it without
-	// changing which controls exist (SCR-50).
+	// changing which controls exist.
 	ButtonObserver func(ButtonEvent)
 	// Gestures supplies script registrations to the existing recognizer.
 	Gestures GestureResolver
@@ -260,7 +260,7 @@ type Feedback struct {
 	// Mode is the mode number of the layer, the number of its pulses (1 for
 	// base and for the first layer of a cycle). Pausing does not change it,
 	// and it is not limited to 1 to 4: whoever shows it on four player lights
-	// takes that into account (HUD-08).
+	// takes that into account.
 	Mode int
 	// LED is the global led switch (ADR-0015): padmate manages the LED and the
 	// player lights of the controller. When it is false the lights are released.
@@ -307,14 +307,14 @@ type Engine struct {
 	triggerFull      [2]bool    // the second stage of LT and RT, as recognized
 	modulated        int        // rate-modulated repeats running (actionState.mod)
 	precision        float64    // the smallest factor of the precision actions held; 0 when none (updatePrecision)
-	hints            hintsState // the key hints (HUD-03): on while a hints action is held, with the list to show (hints.go)
+	hints            hintsState // the key hints: on while a hints action is held, with the list to show (hints.go)
 	// fnActive is the function key (prog.fnKey) while it is held, whose set
 	// the next press looks up first (function_keys.go), else control.Invalid.
 	// It follows the physical state of the key, so CancelAll, Pause and a
 	// Reload with the same function key keep it, and Reset and a Reload that
 	// changes the key clear it.
 	fnActive control.Control
-	// The stick calibration of the controller (IN-14): calSrc as set, cal what
+	// The stick calibration of the controller: calSrc as set, cal what
 	// the sticks recognize with, calIgnored the sticks whose calibration does
 	// not hold with the program. They belong to the controller, so Reload and
 	// Reset keep them.
@@ -326,12 +326,12 @@ type Engine struct {
 type stickState struct {
 	current    [8]bool
 	active     bool
-	inner      bool // recognized ring state (ANA-10)
+	inner      bool // recognized ring state
 	outer      bool
 	pending    [8]bool
 	pendingSet bool
 	deadline   clock.Time
-	// The virtual knob (ANA-11): knobOn when the angle has a reference,
+	// The virtual knob: knobOn when the angle has a reference,
 	// knobRef is that angle, ticks the queued ticks (clockwise positive) and
 	// knobNext the earliest time of the next one. An axis input of a knob
 	// stick sets knobEvalSet and knobEvalAt, the time the angle is read at
@@ -422,7 +422,7 @@ type actionState struct {
 	owner   OwnerID
 	binding *profile.Binding
 	style   profile.RepeatStyle
-	// A rate-modulated repeat (ANA-12) is mod. last is the time of its latest
+	// A rate-modulated repeat is mod. last is the time of its latest
 	// repeat, or of its start; once armed (the initial delay is over: the
 	// first repeat went, or there was no delay), next follows last and the
 	// depth of its control.
@@ -496,7 +496,7 @@ func (e *Engine) Step(in Input) {
 
 // stepTrigger moves the virtual buttons of trigger c, LT or RT, to the raw
 // value v: the first stage with its press and release thresholds, and the
-// second stage (LTFull, RTFull; ANA-14) with its own hysteresis (fullPress,
+// second stage (LTFull, RTFull) with its own hysteresis (fullPress,
 // fullRelease). LT stays down while the second stage is, so the second stage
 // presses after LT and releases before it, in one Step too. A second stage
 // that nothing binds is tracked but not pressed, like the half axes.
@@ -552,7 +552,7 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 		e.physicalReleased[c] = t
 	}
 	if c == e.prog.fnKey {
-		// The function key (MAP-27, ADR-0012) never enters gesture
+		// The function key (ADR-0012) never enters gesture
 		// recognition: no cycle, no buffering, no script, and it does not
 		// interrupt a pending gesture.
 		e.stepFunctionKey(t, down)
@@ -582,14 +582,14 @@ func (e *Engine) stepButton(t clock.Time, c control.Control, down, suppressActio
 		return
 	}
 	if !in.Down {
-		// Repeats stop at the physical release (OUT-11), even when the
+		// Repeats stop at the physical release, even when the
 		// release waits in the buffer: only its Up keeps the input order.
 		e.stopRepeats(c)
 		// The release of a dispatched control (down, not pending) goes at
 		// once when the buffer is empty: no pending gesture captured its
 		// press, so it does not wait for one. Otherwise it joins the buffer
-		// and replays in order, as every edge does (ARCHITECTURE §7.7,
-		// MAP-09): the earlier edges run with the keys and layers this
+		// and replays in order, as every edge does (ARCHITECTURE
+		// §7.7): the earlier edges run with the keys and layers this
 		// control holds, as they came, and an edge of this control still in
 		// the buffer never runs after its release. The pending gestures
 		// ahead of it resolve by their deadlines, so it waits at most their
@@ -908,7 +908,7 @@ func (e *Engine) stickWant(which int) (want [8]bool, active bool) {
 }
 
 // directionsFor returns the direction controls the reading rd of stick
-// which holds down, by its mode. A knob has none (ANA-11), nor has a stick that
+// which holds down, by its mode. A knob has none, nor has a stick that
 // moves the pointer.
 func (e *Engine) directionsFor(which int, rd *stickReading) (want [8]bool) {
 	a, angle := rd.cfg, rd.angle
@@ -1204,8 +1204,8 @@ func (e *Engine) runAction(now clock.Time, c control.Control, st *ctlState, g Ge
 	owner := OwnerID{Source: SourceDecl, Cycle: st.cycle}
 	st.gesture = g
 	e.decide(now, c, EdgeDown, st, a, owner, ReasonDispatch)
-	// The haptic of the binding plays once for the dispatch (MAP-25), and a
-	// knob step's tick (HUD-10) when the binding has none of its own: the
+	// The haptic of the binding plays once for the dispatch, and a
+	// knob step's tick when the binding has none of its own: the
 	// repeats of a held key start at advanceAction and do not come here. A
 	// second gesture of the same cycle at the same instant (the hold that a
 	// press commits at once when the binding has no tap) is the same moment
@@ -1232,7 +1232,7 @@ func (e *Engine) runAction(now clock.Time, c control.Control, st *ctlState, g Ge
 	}
 	if a.Type == profile.ActionMacro {
 		// A macro runs once and holds nothing of the engine's: its keys
-		// are its run's, which the runtime releases (SCR-50).
+		// are its run's, which the runtime releases.
 		if e.script != nil {
 			e.script(ScriptActionEvent{Macro: a.File, GestureEvent: e.gestureEvent(now, c, st, g)})
 		}
@@ -1268,7 +1268,7 @@ func (e *Engine) runAction(now clock.Time, c control.Control, st *ctlState, g Ge
 		e.out.TapSequence(owner, a.Sequence, e.tapPressDuration(st.binding), e.tapGapDuration(st.binding))
 	}
 	// A replayed press or hold whose release waits in the buffer does not
-	// repeat: the control is up already (OUT-11).
+	// repeat: the control is up already.
 	if _, released := e.bufferedRelease(c); a.Repeat != nil && !released {
 		e.startRepeat(now, c, st, a, owner)
 	}
@@ -1482,9 +1482,9 @@ func (e *Engine) flushMultiOnPress(now clock.Time, c control.Control) {
 	}
 }
 
-// CancelAll ends every active press cycle at now (OUT-07 engine level,
-// ARCHITECTURE §7.4). It sends nothing but the Up of the latched chords
-// (MAP-10): the caller has the Arbiter release the cycles' other keys right
+// CancelAll ends every active press cycle at now (the engine's part of
+// the release, ARCHITECTURE §7.4). It sends nothing but the Up of the latched chords:
+// the caller has the Arbiter release the cycles' other keys right
 // after. The controls stay down in the engine's view, so their physical
 // release does nothing, and a trigger presses again only after it falls to
 // TriggerRelease. CancelAll clears everything that would send output
@@ -1557,7 +1557,7 @@ func (e *Engine) cancelAll(now clock.Time, lockPointer bool) {
 	e.settleVirtual(now, false, lockPointer)
 }
 
-// Pause puts the engine in paused mode at now (DMN-06): it runs CancelAll,
+// Pause puts the engine in paused mode at now: it runs CancelAll,
 // so the caller has the Arbiter release the keys right after, and until
 // Resume every press ends its cycle at once and sends nothing. Its
 // decision has ReasonPaused and what the lookup found, and its release is
@@ -1589,7 +1589,7 @@ func (e *Engine) Resume() {
 // Resume.
 func (e *Engine) Paused() bool { return e.paused }
 
-// Reload switches the engine to prog at now (PRO-03): it runs CancelAll,
+// Reload switches the engine to prog at now: it runs CancelAll,
 // then every later press looks its binding up in prog, and the trigger
 // thresholds are prog's. The controls down stay down and canceled, as
 // after CancelAll: the release of one reports the binding its press found

@@ -2,7 +2,7 @@ package main
 
 import "github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 
-// hudEvents is the overlay of the scripts' hud API (SCR-22): an IPC client
+// hudEvents is the overlay of the scripts' hud API: an IPC client
 // subscribing to the topic hud, which the UI does while its overlay is up.
 // Toasts go out as events; panels are in the slots of the periodic state
 // events (rpcSlot.Panels), so a missed event heals itself. Neither method

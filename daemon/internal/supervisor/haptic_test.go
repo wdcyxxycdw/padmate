@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 )
 
-// TestOnHapticDevice: the haptics of each slot (MAP-25) reach
+// TestOnHapticDevice: the haptics of each slot reach
 // Config.OnHapticDevice with the slot's index and its controller's id, from
 // the slot's own goroutine, and a controller that is not assigned plays none.
 func TestOnHapticDevice(t *testing.T) {

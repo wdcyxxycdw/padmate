@@ -49,7 +49,7 @@ function api() {
   };
 }
 
-describe("start-failure page (UI-45)", () => {
+describe("start-failure page", () => {
   it("says which file, where and what is wrong, and focuses 重试", () => {
     render(
       <StartFailure

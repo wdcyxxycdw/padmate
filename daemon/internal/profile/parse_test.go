@@ -472,8 +472,8 @@ func TestModelStrings(t *testing.T) {
 	}
 }
 
-// TestParseM15Analog checks the rings, knob and two-stage trigger settings
-// (ANA-10, ANA-11, ANA-14): the defaults, the values written, and the
+// TestParseM15Analog checks the rings, knob and two-stage trigger settings:
+// the defaults, the values written, and the
 // controls they add.
 func TestParseM15Analog(t *testing.T) {
 	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"m15","layers":{"base":{}}}`))
@@ -578,7 +578,7 @@ func TestParseTwoStageWorkaround(t *testing.T) {
 }
 
 // TestParseCurvesAndMinRate checks the response curves and the rate-modulated
-// repeat (ANA-12, ANA-13, ANA-15): the defaults, the values written, and the
+// repeat: the defaults, the values written, and the
 // controls a minRateHz may be on.
 func TestParseCurvesAndMinRate(t *testing.T) {
 	p, ds := Parse([]byte(`{"schemaVersion":1,"name":"curves","layers":{"base":{}}}`))
@@ -612,7 +612,7 @@ func TestParseCurvesAndMinRate(t *testing.T) {
 	}
 }
 
-// TestParseMinRateErrors checks the rules of minRateHz (ANA-12): not above
+// TestParseMinRateErrors checks the rules of minRateHz: not above
 // the rate, and only on a control that has a depth. Each error is at the
 // minRateHz member.
 func TestParseMinRateErrors(t *testing.T) {

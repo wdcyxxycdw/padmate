@@ -294,7 +294,7 @@ func TestM4VirtualControls(t *testing.T) {
 }
 
 // TestM15Controls checks the controls of the rings, the virtual knob and the
-// second trigger stage (ANA-10, ANA-11, ANA-14): their numbers come after the
+// second trigger stage: their numbers come after the
 // half axes, so no earlier value moved, and they are virtual with no aliases.
 func TestM15Controls(t *testing.T) {
 	if control.RightTriggerNegative+1 != control.LSInner {
@@ -320,7 +320,7 @@ func TestM15Controls(t *testing.T) {
 }
 
 // TestHasDepth checks which controls follow how far a stick or a trigger is
-// pushed (ANA-12, ANA-15): the ones a repeat may give a minRateHz.
+// pushed: the ones a repeat may give a minRateHz.
 func TestHasDepth(t *testing.T) {
 	want := map[string]bool{}
 	for _, name := range []string{
@@ -343,7 +343,7 @@ func TestHasDepth(t *testing.T) {
 }
 
 // Back, Guide and Start are the controls that can be the function key
-// (MAP-27, ADR-0012), and only they; Start is the default.
+// (ADR-0012), and only they; Start is the default.
 func TestCanBeFunctionKey(t *testing.T) {
 	for _, c := range control.All() {
 		want := c == control.Back || c == control.Guide || c == control.Start

@@ -20,7 +20,7 @@ import (
 )
 
 // TestUIBridgeDeliversEventSentRightBeforeClose: what the daemon wrote
-// before it closed the connection, daemon.exiting above all (DMN-22), still
+// before it closed the connection, daemon.exiting above all, still
 // reaches the UI: the bridge prints it before it exits. Each round races
 // the event with the close, behind a burst of log events that a slow UI
 // reads one by one.

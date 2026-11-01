@@ -20,8 +20,8 @@ import (
 // event: a device sends only changes, so the lost edges may be its last
 // releases (CLAUDE.md invariant 1).
 //
-// Pause, when not PauseKeep, pauses or resumes the slot (Slot.SetPaused)
-// (DMN-06). PauseOn goes before the Reset, Resync or Event and PauseOff
+// Pause, when not PauseKeep, pauses or resumes the slot (Slot.SetPaused).
+// PauseOn goes before the Reset, Resync or Event and PauseOff
 // after it, so the presses a Resync brings in stay canceled either way, as
 // they would on a slot that was not behind. A PauseOn on a paused slot
 // does nothing, so a router can mark each edge it delivers while paused:
@@ -35,7 +35,7 @@ type Edge struct {
 	Pause  Pause
 }
 
-// Pause is the pause value of an Edge (DMN-06).
+// Pause is the pause value of an Edge.
 type Pause uint8
 
 const (

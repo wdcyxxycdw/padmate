@@ -9,8 +9,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// DefaultID is the library ID of the fixed default profile (PRO-28,
-// ADR-0008), the profile of every application no rule binds. An existing
+// DefaultID is the library ID of the fixed default profile
+// (ADR-0008), the profile of every application no rule binds. An existing
 // profiles/default folder is the default as it is.
 const DefaultID = profile.DefaultProfileID
 

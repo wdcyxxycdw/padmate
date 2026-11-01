@@ -21,7 +21,7 @@ export const persistentOwnOutput: Config = {
   output: { sendToOwnWindow: true },
 };
 export const oldProfileVersion: Profile = {
-  // @ts-expect-error The profile format is frozen at version 1 (PRO-01); 0 is no longer valid.
+  // @ts-expect-error The profile format is frozen at version 1; 0 is no longer valid.
   schemaVersion: 0,
   name: "paint",
   layers: { base: {} },

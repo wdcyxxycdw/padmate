@@ -15,7 +15,7 @@ function target() {
   return { fake, received };
 }
 
-describe("what the UI pushes about the overlay (HUD-05)", () => {
+describe("what the UI pushes about the overlay", () => {
   it("is the defaults until the first push", () => {
     const preferences = new OverlayPreferences(() => []);
     expect(preferences.value).toEqual(defaultOverlayPrefs);

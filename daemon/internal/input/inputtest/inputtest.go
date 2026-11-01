@@ -1,7 +1,7 @@
 // Package inputtest helps the tests that need SDL: it finds the SDL
 // library, keeps the developer's SDL hints out of a test, and describes
 // virtual Joy-Cons and a virtual Switch Pro gamepad with a heartbeat
-// (SwitchPro, Beats) for the receiver watchdog (IN-30).
+// (SwitchPro, Beats) for the receiver watchdog.
 package inputtest
 
 import (

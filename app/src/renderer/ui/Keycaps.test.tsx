@@ -61,7 +61,7 @@ describe("chordKeys of the mouse buttons", () => {
   });
 });
 
-describe("chordKeys of the volume and media keys (OUT-20)", () => {
+describe("chordKeys of the volume and media keys", () => {
   it.each([
     ["VolumeUp", ["音量加"], ["Volume up"]],
     ["VolumeDown", ["音量减"], ["Volume down"]],

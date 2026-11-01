@@ -38,7 +38,7 @@ type LoopOptions struct {
 	// the errors of the held-key log after the sweep. It must not block or
 	// call the Loop, except Blocking. nil drops them.
 	Errors func(error)
-	// HeldFile is the path of the held-key log (OUT-14, ADR-0006). The loop
+	// HeldFile is the path of the held-key log (ADR-0006). The loop
 	// opens it for its whole run, on its goroutine, and first sweeps what
 	// the last run left in it (Swept). Before every Send it adds the keys
 	// the batch presses, and after it drops the keys the Sender left up, so
@@ -105,18 +105,18 @@ type SweepResult struct {
 // (CLAUDE.md invariant 1). Stop releases through the Arbiter. After a
 // panic the Arbiter's state is suspect, so the loop releases the keys a
 // ledger saw the Sender inject, and ends. The ledger's Sender is a
-// MenuMask over the Loop's Sender (OUT-08, ADR-0004).
+// MenuMask over the Loop's Sender (ADR-0004).
 //
-// With LoopOptions.HeldFile the loop keeps the held-key log (OUT-14,
-// ADR-0006): it sweeps what the last run left in it before its first
+// With LoopOptions.HeldFile the loop keeps the held-key log
+// (ADR-0006): it sweeps what the last run left in it before its first
 // command (Swept), the ledger writes it before and after every Send, and
 // Stop or the release after a panic finish it.
 //
 // BlockFor releases every key and closes the Arbiter's gate on presses
-// (Arbiter.SetBlocked, DMN-06) for one owner without waiting for the loop,
+// (Arbiter.SetBlocked) for one owner without waiting for the loop,
 // so that T-input and the system's session events can pause the output
 // while the loop is busy. The gate stays closed while any owner keeps it
-// closed (DMN-09); Block is BlockFor for BlockUser.
+// closed; Block is BlockFor for BlockUser.
 type Loop struct {
 	clk    clock.Clock
 	errors func(error)
@@ -146,7 +146,7 @@ type Loop struct {
 type command struct {
 	f     func(*Arbiter) error
 	reply chan error // buffered, so the loop never waits for the caller
-	// mark is the input edge the command answers (DMN-15), or nil. It points into
+	// mark is the input edge the command answers, or nil. It points into
 	// the RemoteArbiter of the slot that waits for the reply.
 	mark *InputMark
 }
@@ -205,7 +205,7 @@ func (l *Loop) Swept() SweepResult {
 // the *PanicError.
 func (l *Loop) Do(f func(*Arbiter) error) error { return l.do(f, nil) }
 
-// do is Do for a command that answers the input edge mark (DMN-15), nil for
+// do is Do for a command that answers the input edge mark, nil for
 // none.
 func (l *Loop) do(f func(*Arbiter) error, mark *InputMark) error {
 	if f == nil {
@@ -228,9 +228,9 @@ func (l *Loop) do(f func(*Arbiter) error, mark *InputMark) error {
 type Blocker uint8
 
 const (
-	// BlockUser is the pause (DMN-06, DMN-07); Block uses it.
+	// BlockUser is the pause; Block uses it.
 	BlockUser Blocker = 1 << iota
-	// BlockSystem is the system's suspension of the mapping (DMN-09):
+	// BlockSystem is the system's suspension of the mapping:
 	// lock, session disconnect, sleep, the end of the session and the
 	// secure desktop.
 	BlockSystem
@@ -245,7 +245,7 @@ const (
 	// BlockOwnWindow fences local dry-run transitions while slots cancel
 	// their old input cycles and script runtimes.
 	BlockOwnWindow
-	// BlockExit is the tray's or the installer's exit (DMN-22, PKG-04):
+	// BlockExit is the tray's or the installer's exit:
 	// padmated lets go of every key at once and presses nothing more while
 	// it waits for the UI to save, before it exits. Nothing opens it.
 	BlockExit
@@ -397,7 +397,7 @@ func (l *Loop) run(s Sender, opts LoopOptions) {
 			applyGate()
 			due()
 			// After the due work and the gate, so that their releases cannot end the
-			// measurement of the edge (DMN-15).
+			// measurement of the edge.
 			a.mark = c.mark
 			err := c.f(a)
 			a.mark = nil
@@ -568,10 +568,10 @@ type PanicError struct {
 	Stack []byte // debug.Stack() at the recover
 	// Released are the releases sent after the panic: those of the keys
 	// the ledger saw go down, then those of the held-key log's keys that
-	// the startup sweep could not release and KeyDown reports down (OUT-14).
+	// the startup sweep could not release and KeyDown reports down.
 	// ReleaseErr is the error of sending them (a Send error or a second
 	// panic, in KeyDown too), which names the keys that may be held.
-	// Released never has the mask key (OUT-08); ReleaseErr names it when
+	// Released never has the mask key; ReleaseErr names it when
 	// it may be left down.
 	Released   []KeyEvent
 	ReleaseErr error
@@ -595,8 +595,8 @@ func (e *PanicError) Error() string {
 // MenuMask unchanged and keeps the presses whose key the injected events
 // left down, so that the keys can be released without the Arbiter. With a
 // held-key log it marks the presses of each batch in the log before the
-// MenuMask gets the batch, and settles the log to the keys down after
-// (OUT-14); the log's errors go to report, and the batch goes out anyway.
+// MenuMask gets the batch, and settles the log to the keys down after;
+// the log's errors go to report, and the batch goes out anyway.
 // After a panic in the Sender it does not settle: the log keeps the
 // batch's presses, which the ledger counts as down.
 type ledger struct {
@@ -754,7 +754,7 @@ func (l *ledger) releaseCarriedAfterPanic() (released []KeyEvent, err error) {
 // Loop runs the Arbiter's deadlines itself.
 type RemoteArbiter struct {
 	l *Loop
-	// mark is the input edge that the slot is handling (MarkInput, DMN-15).
+	// mark is the input edge that the slot is handling (MarkInput).
 	mark InputMark
 }
 
@@ -773,7 +773,7 @@ func (r *RemoteArbiter) TapSequence(o Owner, items []keys.Chord, hold, gap time.
 	return r.do(func(a *Arbiter) error { return a.TapSequence(o, items, hold, gap) })
 }
 
-// Sequence runs Arbiter.Sequence on the output loop (MAP-22). The command
+// Sequence runs Arbiter.Sequence on the output loop. The command
 // returns once the sequence is queued and its first steps are run; the loop runs
 // the rest at the Arbiter's deadlines.
 func (r *RemoteArbiter) Sequence(o Owner, steps []keys.Step, hold, gap time.Duration) error {
@@ -798,7 +798,7 @@ func (r *RemoteArbiter) SequenceWithCompletion(o Owner, steps []keys.Step, hold,
 	return err
 }
 
-// TypeText runs Arbiter.TypeText on the output loop (OUT-21). The command
+// TypeText runs Arbiter.TypeText on the output loop. The command
 // returns once the text is queued and its first character typed; the loop types
 // the rest at the Arbiter's deadlines.
 func (r *RemoteArbiter) TypeText(o Owner, text string, gap time.Duration) error {

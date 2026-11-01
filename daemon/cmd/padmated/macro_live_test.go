@@ -19,8 +19,8 @@ const macroProfile = `{"schemaVersion":0,"name":"paint","layers":{"base":{
 "north":{"press":{"type":"macro","file":"不存在.ts"}},
 "leftstick":{"press":{"type":"keys","keys":"F13"}}}}}`
 
-// A profile that only runs macros (SCR-50), from the script library
-// (SCR-51): its runtime starts with the slot's first Resync, so a tap runs
+// A profile that only runs macros, from the script library:
+// its runtime starts with the slot's first Resync, so a tap runs
 // the macro; script.status reports each macro's error by file and the log
 // names the macro. Saving a macro the profile runs rebuilds the runtimes,
 // and every change of the library tells the subscribers; a new macro that

@@ -20,7 +20,7 @@ import {
   startupFailureText,
 } from "./settings-model";
 
-describe("global timing (UI-19)", () => {
+describe("global timing", () => {
   it("reads a millisecond field", () => {
     expect(parseMs("")).toBeNull();
     expect(parseMs("  ")).toBeNull();
@@ -62,7 +62,7 @@ describe("global timing (UI-19)", () => {
   });
 });
 
-describe("emergency combos (UI-19)", () => {
+describe("emergency combos", () => {
   it("sets and removes one family", () => {
     const combo = { buttons: ["west", "east"], holdMs: 3000 };
     const config: Config = {
@@ -127,7 +127,7 @@ describe("emergency combos (UI-19)", () => {
   });
 });
 
-describe("the function key of config.json (UI-30, ADR-0012)", () => {
+describe("the function key of config.json (ADR-0012)", () => {
   it("is Menu unless the file says View or the Xbox button", () => {
     expect(configuredFunctionKey(null)).toBe("start");
     expect(configuredFunctionKey({ schemaVersion: 0 })).toBe("start");
@@ -197,7 +197,7 @@ describe("the function key of config.json (UI-30, ADR-0012)", () => {
   });
 });
 
-describe("start at sign-in (UI-19)", () => {
+describe("start at sign-in", () => {
   const ready = {
     available: true,
     enabled: false,
@@ -229,7 +229,7 @@ describe("start at sign-in (UI-19)", () => {
   });
 });
 
-describe("identify a controller (IN-13)", () => {
+describe("identify a controller", () => {
   it("explains a failure", () => {
     expect(identifyFailureText({ code: -32004 }, "zh-CN")).toBe("手柄已断开。");
     expect(identifyFailureText({ code: -32004 }, "en")).toBe(
@@ -244,7 +244,7 @@ describe("identify a controller (IN-13)", () => {
   });
 });
 
-describe("the feedback switches of config.json (UI-27, ADR-0015)", () => {
+describe("the feedback switches of config.json (ADR-0015)", () => {
   const base: Config = { schemaVersion: 0 };
 
   it("lists the four switches in the order the page shows them", () => {
@@ -324,7 +324,7 @@ describe("the feedback switches of config.json (UI-27, ADR-0015)", () => {
   });
 });
 
-describe("the tags of a controller's battery (IN-12)", () => {
+describe("the tags of a controller's battery", () => {
   it("is the charge, and 'charging' while it charges", () => {
     expect(batteryTags({ state: "discharging", percent: 80 }, "zh-CN")).toEqual(
       ["电量 80%"],

@@ -1,5 +1,4 @@
-// Package profile loads and validates padmate profiles (PRO-01, PRO-02,
-// PRO-04).
+// Package profile loads and validates padmate profiles.
 //
 // Parse checks a profile in three stages. A stage runs only if the previous
 // ones found no errors; warnings never stop it.
@@ -16,13 +15,13 @@
 //     names and the targets of layer actions must exist, every action obeys
 //     the action rules that engine.Compile checks too (ARCHITECTURE §7.7),
 //     and a binding without an action is a warning. The set of bindings
-//     used while the function key is held (MAP-27, ADR-0012), FunctionSet,
+//     used while the function key is held (ADR-0012), FunctionSet,
 //     and the old format's sets, FunctionKeys, are resolved like layers;
 //     which control is the function key is config.json's choice, so a
 //     binding on back, start or guide is kept here and engine.Compile
 //     ignores the one that is.
 //
-// A profile of the library may extend another (PRO-19, ADR-0012): Resolve
+// A profile of the library may extend another (ADR-0012): Resolve
 // merges the chain of parents into one document first (extends.go) and checks
 // that, so a merged profile passes the same three stages, and a diagnostic
 // is reported in the file of the profile that has the problem. Parse is
@@ -45,7 +44,7 @@
 // rejects everything else, naming the milestone that adds it where one
 // does. Later milestones widen it. The action rules, added in M2's audit,
 // reject some profiles the schema accepted before, whose tap-class
-// gestures could hold a key that nothing released (MAP-07).
+// gestures could hold a key that nothing released.
 //
 // The package is pure: no platform dependencies, no clock.
 package profile

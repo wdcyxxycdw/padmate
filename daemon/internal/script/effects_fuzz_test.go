@@ -24,7 +24,7 @@ func jsNumber(f float64) string {
 // What the effects API hands the gamepad always keeps its limits, whatever a
 // script passes: a call either throws a TypeError or sends steps of 1 to 5000
 // ms or a preset that exists; and once the runtime has ended, nothing that the
-// script started is left going (SCR-23).
+// script started is left going.
 func FuzzEffects(f *testing.F) {
 	f.Add(0.5, 1.0, 200.0, "tick", "#FFAA00", uint8(0))
 	f.Add(-3.0, 7.0, 0.0, "pulse5", "red", uint8(1))

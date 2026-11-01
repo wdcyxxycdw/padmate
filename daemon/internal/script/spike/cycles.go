@@ -52,7 +52,7 @@ type CycleOptions struct {
 	ThreadTimesLimit time.Duration
 }
 
-// DefaultCycleOptions returns the full SPK-03 run. It keeps one core busy
+// DefaultCycleOptions returns the full goja spike run. It keeps one core busy
 // for about 3 s, and a second one during CrossThread.
 func DefaultCycleOptions() CycleOptions {
 	return CycleOptions{

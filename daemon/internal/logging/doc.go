@@ -1,4 +1,4 @@
-// Package logging is padmated's log (DMN-03): JSON lines through
+// Package logging is padmated's log: JSON lines through
 // log/slog, to stderr or to a file (ARCHITECTURE §3), and a Limiter for
 // errors that repeat.
 //
@@ -13,7 +13,7 @@
 // hkl and reason (of a key sent as its US key), and at a reload file (the
 // profile watched, as package watch logs it), errors and warnings (the
 // numbers of each) and first (the first error, "line:col: message");
-// input.Source's receiver watchdog (IN-30) adds path (the HID path),
+// input.Source's receiver watchdog adds path (the HID path),
 // reports, still and other (report counts), ids (reports by ID, such as
 // "30:118,21:0,3f:0,81:2,other:0"), timer and status (bytes 1 and 2 of
 // the last full report; status as "0x90"), silent, since, maxGap and

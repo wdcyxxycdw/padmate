@@ -200,7 +200,7 @@ declare module "padmate" {
   export type KeySpec = Key | `${Modifier}+${string}`;   // 运行时严格校验；不表示序列
   /** @since 0.5 */
   export interface TapResult { readonly dropped: boolean }
-  /** `key.sequence` 的一步，与 profile 的 sequence 动作相同（SCR-26，ADR-0012）：`keys` 点按一个快捷键；`wait` 等待 1 至 10000 ms，从上一步的抬起算起（第一步从开始算）；`text` 输入一段文字，1 至 256 个 UTF-16 单元，换行点按 Enter，制表符点按 Tab，不接受别的控制字符。一步只写一个成员，一个序列 1 至 64 步 @since 0.21 */
+  /** `key.sequence` 的一步，与 profile 的 sequence 动作相同（ADR-0012）：`keys` 点按一个快捷键；`wait` 等待 1 至 10000 ms，从上一步的抬起算起（第一步从开始算）；`text` 输入一段文字，1 至 256 个 UTF-16 单元，换行点按 Enter，制表符点按 Tab，不接受别的控制字符。一步只写一个成员，一个序列 1 至 64 步 @since 0.21 */
   export type SequenceStep = { readonly keys: KeySpec; readonly wait?: never; readonly text?: never } | { readonly wait: number; readonly keys?: never; readonly text?: never } | { readonly text: string; readonly keys?: never; readonly wait?: never };
   /** @macro */
   export const key: {

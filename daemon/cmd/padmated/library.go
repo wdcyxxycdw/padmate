@@ -30,19 +30,19 @@ func resolveDataDir(opts *options) (err error) {
 }
 
 // resolveLibrary opens the library of opts.dataDir: it reads config.json,
-// repairing a file with errors (PRO-29: backed up and rewritten, or in a
+// repairing a file with errors (backed up and rewritten, or in a
 // replay, which only reads, in memory; kept in configRepair for live mode
 // to log and tell the UI), and state.json, where errors start an empty
 // state (stateErr; live mode resets the file, a state.json it cannot
 // read stays), creates the fixed default profile when it is missing
-// (PRO-28, ADR-0008; a failure is kept in defaultErr, not fatal), moves
-// the profiles' macros folders into the script library (SCR-51,
-// MigrateMacros; what it did is kept for live mode to log, and a failure
+// (ADR-0008; a failure is kept in defaultErr, not fatal), moves
+// the profiles' macros folders into the script library
+// (MigrateMacros; what it did is kept for live mode to log, and a failure
 // is not fatal either; a replay only reads, so it finds unmoved macros
 // missing), and chooses the startup profile unless --profile names a
 // file. An automatic start (no --profile-id) resumes state.json's last
 // profile and otherwise starts with the default. Its errors are
-// startupErrors (UI-45): of the library, when the data folder cannot be
+// startupErrors: of the library, when the data folder cannot be
 // found or opened (a missing one is a first start), or of a config.json
 // that cannot be read.
 func resolveLibrary(opts *options) error {
@@ -146,7 +146,7 @@ func loadSelectedProfile(opts options, stderr io.Writer) (p *profile.Profile, pr
 }
 
 // loadStartupProfile is loadSelectedProfile with why it failed: a
-// startupError of kind profile (UI-45).
+// startupError of kind profile.
 func loadStartupProfile(opts options, stderr io.Writer) (p *profile.Profile, prog *engine.Program, sum [32]byte, err error) {
 	var data []byte
 	var lib *profilelib.Library

@@ -40,7 +40,7 @@ func (s *textEventSender) Send(events []output.KeyEvent) (int, error) {
 // key.sequence on the real slot loop, the real output loop and the padmated glue
 // (scriptArbiter forwards TypeTextWithCompletion to the RemoteArbiter): the
 // steps run in order with no input after startup, each waiting for the output's
-// notice of the one before, and the Promise ends after the last (SCR-26).
+// notice of the one before, and the Promise ends after the last.
 func TestScriptSequenceIdleSlotRunsThroughOutputLoop(t *testing.T) {
 	clk := clock.Real()
 	sender := &textEventSender{events: make(chan string, 64)}

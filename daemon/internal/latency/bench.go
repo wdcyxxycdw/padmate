@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// The environment of the latency tests (`task bench`, ENG-11).
+// The environment of the latency tests (`task bench`).
 const (
 	EnvBench = "PADMATE_BENCH"       // "1" runs the latency tests
 	EnvScale = "PADMATE_BENCH_SCALE" // sample-count multiplier, (0, 10]; "" is 1

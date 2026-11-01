@@ -1,4 +1,4 @@
-// The function key (MAP-27, UI-30, ADR-0012): one of View (back), Menu (start)
+// The function key (ADR-0012): one of View (back), Menu (start)
 // and the Xbox button (guide), chosen in the settings, holds no bindings of
 // its own; while it is held, the other controls use the profile's function
 // set (profile.functionSet). These are the editor's rules for it.

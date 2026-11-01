@@ -1,5 +1,5 @@
-// Command packageinstaller prepares and checks the installer (PKG-03,
-// PKG-06); `task package:installer` runs it around electron-builder.
+// Command packageinstaller prepares and checks the installer;
+// `task package:installer` runs it around electron-builder.
 //
 //	packageinstaller version -version v0.14.0
 //	packageinstaller stage   -version v0.14.0 [-root ..] [-bin ../bin] [-out ../dist/installer-stage]

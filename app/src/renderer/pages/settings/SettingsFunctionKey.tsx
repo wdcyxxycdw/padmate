@@ -55,7 +55,7 @@ export function functionKeyChoices(pad?: PadNames): FunctionKeyChoice[] {
 }
 
 /**
- * Settings → 通用 → 功能键 (UI-30, ADR-0012): the one key that switches the
+ * Settings → 通用 → 功能键 (ADR-0012): the one key that switches the
  * other keys to the function set while it is held. Global, for every profile
  * and controller, and saved like the other rows of the page. A row is its
  * name and its choice, nothing else: the three keys, each an icon and the name

@@ -34,7 +34,7 @@ function Draft({
   initial?: ProfileBinding;
   language?: Language;
   profiles?: { id: string; name?: string }[];
-  /** The profile's scripts (SCR-50) the drawer picks from. */
+  /** The profile's scripts the drawer picks from. */
   macros?: MacroContextValue;
 }) {
   const [value, setValue] = useState<ProfileBinding>(initial);
@@ -51,7 +51,7 @@ function Draft({
     </MacroContext>
   );
 }
-/** Types into a text field and leaves it, which commits the text (UI-43). */
+/** Types into a text field and leaves it, which commits the text. */
 function commit(field: Element, init: { target: { value: string } }) {
   fireEvent.change(field, init);
   fireEvent.blur(field);
@@ -135,7 +135,7 @@ it("keeps what is held when the window loses focus, with no alert", async () => 
   expect(draft().press).toEqual({ type: "keys", keys: "LAlt" });
   expect(screen.getByRole("button", { name: "录入快捷键" })).toBeDefined();
   // The window losing focus is what ends a capture on its own: it needs
-  // no alert, and the code is never shown (UI-24).
+  // no alert, and the code is never shown.
   expect(screen.queryByRole("alert")).toBeNull();
   await waitFor(() =>
     expect(api.captureStop).toHaveBeenCalledExactlyOnceWith(1),
@@ -558,7 +558,7 @@ it("has no 自动 button and no text entry next to the shortcut (F7, G2)", () =>
   expect(field.textContent).toContain("未设置快捷键");
 });
 
-describe("scripts (SCR-50)", () => {
+describe("scripts", () => {
   const typeRadio = (name: string) =>
     within(screen.getByTestId("action-type")).getByRole("radio", { name });
   const picker = () =>
@@ -719,7 +719,7 @@ describe("scripts (SCR-50)", () => {
   });
 });
 
-describe("the haptic of a binding (MAP-25)", () => {
+describe("the haptic of a binding", () => {
   const options = (select: HTMLElement) =>
     within(select)
       .getAllByRole("option")

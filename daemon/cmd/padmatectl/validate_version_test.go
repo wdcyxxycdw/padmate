@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-// The profile format is frozen at version 1 (PRO-01); version 0 files, the
-// previews' format, still validate (PRO-06) and are never rewritten.
+// The profile format is frozen at version 1; version 0 files, the
+// previews' format, still validate and are never rewritten.
 func TestValidateVersions(t *testing.T) {
 	dir := t.TempDir()
 	write := func(name, version string) string {

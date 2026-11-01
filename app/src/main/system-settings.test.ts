@@ -10,7 +10,7 @@ import {
 const source = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("the Windows Settings page the window can have opened (UI-30, ADR-0012)", () => {
+describe("the Windows Settings page the window can have opened (ADR-0012)", () => {
   it("is the Xbox Game Bar page, which holds the button's switch", () => {
     expect(GAME_BAR_SETTINGS_URL).toBe("ms-settings:gaming-gamebar");
     expect(isAllowedSettingsURL("ms-settings:gaming-gamebar")).toBe(true);

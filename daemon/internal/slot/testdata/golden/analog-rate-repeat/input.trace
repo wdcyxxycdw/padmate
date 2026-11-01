@@ -8,7 +8,7 @@ leftx=0@1200 lefty=-0.95@1200
 leftx=0@1830 lefty=-0.398@1830
 # Let go: the repeat stops.
 leftx=0@2400 lefty=0@2400
-# The right trigger, just past its press threshold: B is held, and repeats after 200 ms at 3 Hz (ANA-15).
+# The right trigger, just past its press threshold: B is held, and repeats after 200 ms at 3 Hz.
 righttrigger=0.3@3000
 # Half way (linear): 7.5 Hz.
 righttrigger=0.65@3600

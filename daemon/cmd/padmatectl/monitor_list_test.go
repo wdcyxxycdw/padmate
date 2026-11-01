@@ -42,7 +42,7 @@ var (
 	wheelInfo = input.DeviceInfo{ID: 7, Name: "Wheel", Type: "unknown"}
 )
 
-// TestMonitorListPrintsPower (IN-12): "monitor --list --direct" prints, under
+// TestMonitorListPrintsPower: "monitor --list --direct" prints, under
 // the device lines, a block per gamepad with what SDL says: its
 // capabilities, power, connection state and player index. The text is
 // the one the hardware matrix takes.

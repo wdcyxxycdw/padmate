@@ -12,7 +12,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profilelib"
 )
 
-// The profile format is frozen at version 1 (PRO-01, PRO-06). Over IPC a
+// The profile format is frozen at version 1. Over IPC a
 // file of version 0 reads, validates and saves as it is (profiles.get shows
 // its own bytes, never the migrated ones), and a file of a newer version is
 // refused with a message that says what to do.

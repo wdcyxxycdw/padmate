@@ -1,4 +1,4 @@
-// The steps of a sequence (MAP-22, UI-31, ADR-0012): what the step editor
+// The steps of a sequence (ADR-0012): what the step editor
 // shows and how its edits become an action. Pure. The drawer offers a
 // shortcut and a wait (ADR-0013); a text step of a file is still told apart.
 import type {
@@ -30,7 +30,7 @@ export function stepKind(step: Step): StepKind {
 
 /**
  * A step still being filled in: its shortcut or text is empty. Such a step is
- * not saved (UI-43) but the draft keeps it. A wait is never empty.
+ * not saved but the draft keeps it. A wait is never empty.
  */
 export function isEmptyStep(step: Step): boolean {
   switch (stepKind(step)) {

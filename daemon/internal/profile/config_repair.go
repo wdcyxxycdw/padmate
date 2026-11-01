@@ -17,7 +17,7 @@ import (
 // writes the file.
 const DefaultConfigText = "{\n  \"schemaVersion\": 0\n}\n"
 
-// ConfigRepair is what RepairConfig did to a config.json (PRO-29).
+// ConfigRepair is what RepairConfig did to a config.json.
 type ConfigRepair struct {
 	// Reset is true when the file was no JSON object at all (a syntax
 	// error, a duplicate key, not UTF-8, another JSON value): the repair
@@ -35,8 +35,8 @@ type ConfigRepair struct {
 // rounds a repair needs.
 const maxRepairRounds = 8
 
-// RepairConfig returns data, a config.json, with every error repaired
-// (PRO-29): each error resets the smallest member around it that has a
+// RepairConfig returns data, a config.json, with every error repaired:
+// each error resets the smallest member around it that has a
 // default, which is leaving the member out, and every other member stays,
 // in its order and with its bytes. An error inside a list resets the
 // whole list, apart from rules, where it resets one rule: a combo with

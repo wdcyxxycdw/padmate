@@ -29,7 +29,7 @@ type Virtual struct {
 	// axis, or -1 for one the gamepad does not have (packIndex).
 	buttons, axes [32]int8
 	// reports queues the heartbeat reports of a gamepad with
-	// VirtualDesc.Heartbeat, for T-input's heartbeat source (IN-30); it is
+	// VirtualDesc.Heartbeat, for T-input's heartbeat source; it is
 	// nil for another. timer is the timer of the next Beat; gone is set
 	// when the gamepad is detached.
 	reports chan virtualReport
@@ -72,13 +72,13 @@ type VirtualDesc struct {
 	Buttons, Axes []string
 	// Heartbeat gives the gamepad a heartbeat of HID reports, which Beat
 	// sends, in place of the reports that T-input reads from a receiver's
-	// device (IN-30). A Source with Options.ReceiverTimeout watches a
+	// device. A Source with Options.ReceiverTimeout watches a
 	// gamepad with it and the ids 057e:2009 (inputtest.SwitchPro) as it
 	// watches a receiver. SDL sees nothing of the reports.
 	Heartbeat bool
 
 	// raw, when set, makes the joystick a plain one with these elements and no
-	// gamepad masks (tests of raw joysticks, IN-17).
+	// gamepad masks (tests of raw joysticks).
 	raw *rawDesc
 }
 
@@ -102,7 +102,7 @@ func (s *Source) AttachVirtual(name string) (*Virtual, error) {
 
 // RawJoystickDesc describes a virtual joystick that SDL has no gamepad
 // mapping for (AttachRawVirtual): a plain device with axes, buttons and hats
-// of its own, such as a DirectInput pad that SDL does not know (IN-17, IN-18).
+// of its own, such as a DirectInput pad that SDL does not know.
 // It is meant for tests.
 type RawJoystickDesc struct {
 	Name                string
@@ -286,7 +286,7 @@ func (v *Virtual) rest() error {
 
 // ID returns the device id of the virtual gamepad as it was attached. A
 // gamepad that the receiver watchdog reported removed comes back with a
-// new id (IN-30), which its DeviceAdded event gives.
+// new id, which its DeviceAdded event gives.
 func (v *Virtual) ID() DeviceID { return DeviceID(v.id) }
 
 // Beat sends one heartbeat report of the gamepad, a full report (0x30)

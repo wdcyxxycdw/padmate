@@ -26,7 +26,7 @@ function topics(call: { mock: { calls: unknown[][] } }, n: number): string[] {
 
 const settle = () => vi.advanceTimersByTimeAsync(0);
 
-describe("subscribe with the raw topic (IN-17, ADR-0012)", () => {
+describe("subscribe with the raw topic (ADR-0012)", () => {
   it("adds input.raw last when the wizard is open, and leaves it out otherwise", async () => {
     const plain = vi.fn(async () => ({}));
     await subscribe(plain);
@@ -68,7 +68,7 @@ function fixture() {
   return { hud, manager, bridge };
 }
 
-describe("rawUp: the wizard asks for the raw events (IN-17)", () => {
+describe("rawUp: the wizard asks for the raw events", () => {
   it("subscribes with input.raw and resolves once the daemon was told, and again without it", async () => {
     const { hud, manager, bridge } = fixture();
     await hud.open(bridge);

@@ -1,4 +1,4 @@
-# Locked at startup (DMN-09): the session is locked when Run starts, so
+# Locked at startup: the session is locked when Run starts, so
 # the slots start held. Pad A connects at 500 and presses east at 600,
 # which maps nothing. After the unlock at 1000, east does nothing until it
 # is pressed again at 1400.

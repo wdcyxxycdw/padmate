@@ -1,4 +1,4 @@
-// Recording a new emergency combo (UI-19) and the mapping wizard (IN-19).
+// Recording a new emergency combo and the mapping wizard.
 // capture.start, through the UI's own bridge connection, pauses the mapping
 // while the controller's input events keep flowing, so pressing the new combo
 // triggers no shortcut. The capture ends when the renderer stops it, and Main

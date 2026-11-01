@@ -51,7 +51,7 @@ interface PendingImport {
 export const pendingArchiveTTL = 2 * 60 * 1000;
 const maxPendingImports = 4;
 
-// An AntiMicroX profile (PRO-21), as the daemon's amgp.MaxBytes: Main refuses
+// An AntiMicroX profile, as the daemon's amgp.MaxBytes: Main refuses
 // a larger file before reading it. These extensions choose that import.
 export const maxAmgpBytes = 1024 * 1024;
 const amgpExtensions = new Set([".amgp", ".xml"]);
@@ -244,11 +244,11 @@ function scriptClashes(value: unknown): ScriptClash[] {
   });
 }
 
-// Backup of one profile (PRO-20): 导出… and 导入… on the profiles page.
+// Backup of one profile: 导出… and 导入… on the profiles page.
 // The daemon makes and checks the archive; Main shows the dialogs and
 // moves at most maxArchiveBytes between the file and the daemon. The
 // renderer supplies a profile ID, a name and a token, never a path. The same
-// 导入… takes an AntiMicroX .amgp or .xml file (PRO-21), chosen by its
+// 导入… takes an AntiMicroX .amgp or .xml file, chosen by its
 // extension: Main reads it (at most maxAmgpBytes) and the daemon converts it.
 export function archiveHandlers(
   options: ArchiveHandlerOptions,

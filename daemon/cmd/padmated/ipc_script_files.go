@@ -28,7 +28,7 @@ const (
 )
 
 // scriptFileMethods write script files into a library profile's folder
-// for the UI's new and import script buttons (PRO-14: only the daemon
+// for the UI's new and import script buttons (only the daemon
 // writes into the library), and name that folder for opening it. None of
 // them edits profile.json: the client sets profile.script through
 // profiles.put with its revision.

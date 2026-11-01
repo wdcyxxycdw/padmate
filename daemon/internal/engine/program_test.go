@@ -134,7 +134,7 @@ func TestBindings(t *testing.T) {
 // Parse returns compiles.
 func TestParseAndCompileAgree(t *testing.T) {
 	// The same rules hold for the bindings of a layer and for those of the
-	// function set (MAP-27), which Parse and Compile read the same way.
+	// function set, which Parse and Compile read the same way.
 	for _, onSet := range []bool{false, true} {
 		t.Run(map[bool]string{false: "layer", true: "function key set"}[onSet], func(t *testing.T) {
 			testParseAndCompileAgree(t, onSet)
@@ -251,7 +251,7 @@ func testParseAndCompileAgree(t *testing.T, onSet bool) {
 		check(g, `{"type": "macro", "file": "复制 (1).ts"}`, &profile.Action{Type: profile.ActionMacro, File: "复制 (1).ts"})
 		check(g, `{"type": "macro", "file": "v1.2.ts"}`, &profile.Action{Type: profile.ActionMacro, File: "v1.2.ts"})
 		// A sequence and a text hold nothing, so they fit every gesture; what is
-		// wrong with one is wrong on all of them (MAP-22, OUT-21).
+		// wrong with one is wrong on all of them.
 		check(g, `{"type": "sequence", "steps": [{"keys": "Ctrl+A"}, {"wait": 100}, {"text": "你好"}]}`, &profile.Action{Type: profile.ActionSequence, Steps: []keys.Step{
 			keys.KeysStep(keys.MustParse("Ctrl+A")), keys.WaitStep(100 * time.Millisecond), keys.TextStep("你好")}})
 		check(g, `{"type": "sequence", "steps": [{"wait": 1}, {"wait": 10000}]}`, &profile.Action{Type: profile.ActionSequence, Steps: []keys.Step{
@@ -288,10 +288,10 @@ func testParseAndCompileAgree(t *testing.T, onSet bool) {
 		check(g, `{"type": "mouse", "op": "precision", "factor": 0.5}`, &profile.Action{Type: profile.ActionMouse, Op: "precision", Factor: 0.5})
 		check(g, `{"type": "mouse", "op": "precision"}`, &profile.Action{Type: profile.ActionMouse, Op: "precision", Factor: 0.3})
 		check(g, `{"type": "mouse", "op": "jump", "x": 0.5, "y": 0.25}`, &profile.Action{Type: profile.ActionMouse, Op: "jump", X: 0.5, Y: 0.25})
-		// A HUD hints action lasts while the control is held too (HUD-03).
+		// A HUD hints action lasts while the control is held too.
 		check(g, `{"type": "hud", "op": "hints"}`, &profile.Action{Type: profile.ActionHUD, Op: "hints"})
 	}
-	// A repeat with minRateHz (ANA-12): not above the rate (12 when rateHz is
+	// A repeat with minRateHz: not above the rate (12 when rateHz is
 	// not written), and only on a control that has a depth.
 	for _, c := range []control.Control{
 		control.West, control.LT, control.LTFull, control.LSUp, control.RSActive, control.LSOuter, control.RightXNegative,

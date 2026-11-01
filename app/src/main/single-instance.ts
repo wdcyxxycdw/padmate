@@ -6,7 +6,7 @@ export interface SingleInstanceHost {
 }
 
 /**
- * Only one padmate window per set of browser data (PKG-10): after an update the
+ * Only one padmate window per set of browser data: after an update the
  * installer starts padmate again, and a person may click its shortcut twice.
  * The second instance quits at once and the first one brings its window to
  * the front (onSecond). Electron keys the lock by the userData folder, so

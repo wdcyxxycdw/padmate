@@ -21,7 +21,7 @@ import { fakeCapture } from "../testing/capture-fixture";
 import { editorAPIFixture } from "../testing/editor-api-fixture";
 
 // The two ticks of a knob, recorded one after the other in the real key
-// drawer (UI-28) while the daemon is slow to answer the first save, as in
+// drawer while the daemon is slow to answer the first save, as in
 // analog-advanced.spec.ts "a knob is set up with its step and ticks". The
 // profile.changed event of the save comes at an awkward moment, and the
 // answer may be lost altogether (the bridge gives up after 10 s). Both

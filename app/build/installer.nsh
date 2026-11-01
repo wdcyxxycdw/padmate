@@ -1,5 +1,5 @@
-﻿; What padmate adds to electron-builder's NSIS installer (PKG-03, PKG-04, PKG-05,
-; PKG-13). electron-builder includes this file through nsis.include and calls
+﻿; What padmate adds to electron-builder's NSIS installer.
+; electron-builder includes this file through nsis.include and calls
 ; the macros below at fixed points: customHeader, customInstallMode and
 ; customPageAfterChangeDir (while the pages are laid out), customInit,
 ; customCheckAppRunning (before files are replaced, and before the uninstaller
@@ -60,7 +60,7 @@
 ; electron-builder's installer leaves a copy of itself, as large as it is, in
 ; %LOCALAPPDATA%\padmate-updater, for the differential download of
 ; electron-updater, and its uninstaller does not remove it. padmate's update
-; (PKG-10) downloads whole installers (disableDifferentialDownload), so
+; downloads whole installers (disableDifferentialDownload), so
 ; customInstall deletes the copy as soon as it is made, and a full uninstall
 ; deletes it again in case that failed. Versions before v0.17.0-rc.3 leave it,
 ; also after their uninstall.
@@ -270,7 +270,7 @@
     Pop $0
   FunctionEnd
 
-  ; Stops the programs of the installation in $padmateDir (PKG-04): asks the
+  ; Stops the programs of the installation in $padmateDir: asks the
   ; daemon to exit and lets go of every key, waits up to ten seconds for the
   ; programs to exit, and ends what is left.
   Function ${PADMATE_UN}PadmateStopDir
@@ -361,7 +361,7 @@
   FunctionEnd
 
   !ifdef BUILD_UNINSTALLER
-    ; The clean-up of a full uninstall (PKG-05).
+    ; The clean-up of a full uninstall.
     Function un.PadmateClean
       Push $0
       Push $1
@@ -408,7 +408,7 @@
       ; had the file open).
       Call un.PadmateDropInstallerCopy
 
-      ; And what the update downloaded (PKG-10): the folder of the copy, with
+      ; And what the update downloaded: the folder of the copy, with
       ; pending\ in it. Only a full uninstall deletes it, never an install or
       ; an upgrade, whose installer may be the file in pending\. The real
       ; folder, as the template's copy is; a test root has its own.

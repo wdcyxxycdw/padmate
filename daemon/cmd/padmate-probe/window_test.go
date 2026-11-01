@@ -91,7 +91,7 @@ func TestHexHWND(t *testing.T) {
 	}
 }
 
-// TestExStyleValues pins the WS_EX_* values the overlay checks (SPK-09)
+// TestExStyleValues pins the WS_EX_* values the overlay checks
 // against the Win32 headers.
 func TestExStyleValues(t *testing.T) {
 	for _, tc := range []struct {

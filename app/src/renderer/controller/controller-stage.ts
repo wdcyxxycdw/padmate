@@ -1,5 +1,5 @@
 // Keeping the controller scene's GPU side between visits to the mapping page
-// (H2, UI-04).
+// (H2).
 //
 // G3 stopped decoding the GLB on every visit, but each visit still made a new
 // WebGL renderer and uploaded the model's ~10 textures to the new context. That

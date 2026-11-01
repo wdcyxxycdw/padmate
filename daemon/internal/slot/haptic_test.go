@@ -13,7 +13,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/slot"
 )
 
-// TestOnHaptic: a haptic of the engine (MAP-25) reaches Config.OnHaptic with
+// TestOnHaptic: a haptic of the engine reaches Config.OnHaptic with
 // the controller the slot has at that moment, 0 when it has none; a paused
 // slot plays none, and a reload takes the new profile's haptics.
 func TestOnHaptic(t *testing.T) {
@@ -76,7 +76,7 @@ func TestOnHaptic(t *testing.T) {
 }
 
 // TestSwitchesAndRefreshFeedback: Config.Switches is the engine's source of the
-// global feedback switches (UI-27, ADR-0015). The rumble switch silences a
+// global feedback switches (ADR-0015). The rumble switch silences a
 // haptic as soon as it is off, and RefreshFeedback has the engine publish the
 // layer and feedback state again with the switches as they are now.
 func TestSwitchesAndRefreshFeedback(t *testing.T) {

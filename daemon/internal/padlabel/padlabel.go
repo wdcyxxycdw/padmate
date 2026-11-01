@@ -1,7 +1,7 @@
 // Package padlabel names a gamepad's controls the way the UI's mapping
 // page does: by what is printed on a pad of that family, such as A, ×, LB,
 // L2 or ZR, rather than by padmate's position names (south, lt, ...). The
-// tray's notices use it (DMN-13). Labels is controllerLabels of
+// tray's notices use it. Labels is controllerLabels of
 // app/src/renderer/controller/controller-model.ts; TestLabelsMatchUI runs the UI's
 // TypeScript and compares the two, so the UI's table stays the source of
 // the names both show. The package is pure data with no platform

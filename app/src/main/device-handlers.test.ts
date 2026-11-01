@@ -9,7 +9,7 @@ function fixture(reply: (method: string, params: unknown) => unknown) {
   return { call, handlers: deviceHandlers(call) };
 }
 
-describe("identify handler (IN-13)", () => {
+describe("identify handler", () => {
   it("declares the renderer argument count", () => {
     const { handlers } = fixture(() => ({}));
     expect(
@@ -120,7 +120,7 @@ const latencyAnswer = {
   warnMinSamples: 50,
 };
 
-describe("latency handlers (DMN-15, UI-22)", () => {
+describe("latency handlers", () => {
   it("declares the renderer argument count", () => {
     const { handlers } = fixture(() => ({}));
     expect(handlers.latencyGet.count).toBe(1);

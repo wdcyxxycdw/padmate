@@ -283,6 +283,5 @@ func (l *HeldLog) Settle(down, sent []KeyEvent) error { return l.h.settle(down, 
 // Finish finishes the log with down left down.
 func (l *HeldLog) Finish(down []KeyEvent) error { return l.h.finish(down) }
 
-// SetInputMark sets the mark that Loop.run would set on a for a command
-// (DMN-15).
+// SetInputMark sets the mark that Loop.run would set on a for a command.
 func SetInputMark(a *Arbiter, m *InputMark) { a.mark = m }

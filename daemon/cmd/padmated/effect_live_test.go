@@ -121,7 +121,7 @@ func playCalls(src *fakeSource, dev input.DeviceID) []input.Effect {
 	return got
 }
 
-// TestLiveHapticRoutesToTheSlotsDevice (MAP-25): the haptic of a binding
+// TestLiveHapticRoutesToTheSlotsDevice: the haptic of a binding
 // reaches the source for the DeviceID of the slot that dispatched it, as an
 // Event-class effect with the profile's strength and pulse times, through the
 // supervisor and the effect queue, and for no other gamepad; a binding without
@@ -175,7 +175,7 @@ func TestLiveHapticRoutesToTheSlotsDevice(t *testing.T) {
 
 // TestLiveHapticSilencedByRumbleOff: with the global rumble switch off the
 // binding still sends its key but nothing is asked of the controller, and
-// nothing is printed (MAP-25, ADR-0015).
+// nothing is printed (ADR-0015).
 func TestLiveHapticSilencedByRumbleOff(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "profile.json")
 	if err := os.WriteFile(path, []byte(profileHaptics(`{}`)), 0o644); err != nil {
@@ -207,7 +207,7 @@ func TestLiveHapticSilencedByRumbleOff(t *testing.T) {
 	}
 }
 
-// TestLiveHapticBurstNeverBlocksTheSlot (MAP-25): a controller that takes its
+// TestLiveHapticBurstNeverBlocksTheSlot: a controller that takes its
 // time with a haptic does not slow the mapping. With the source holding every
 // Play, more presses than the effect queue keeps are all dispatched; once the
 // source goes on, it gets the haptic it was in the middle of and the newest of

@@ -11,7 +11,7 @@ import {
   toastText,
 } from "./overlay-toasts";
 
-// The low-battery toast (IN-12, ADR-0015): told when a controller's "low" in the
+// The low-battery toast (ADR-0015): told when a controller's "low" in the
 // state event's batteries goes from false to true, whichever window is in
 // front, with the controller's name first when there is more than one.
 
@@ -21,7 +21,7 @@ interface Reading {
   percent?: number;
   low: boolean;
   state?: string;
-  /** The number of the alert a low controller is in (the daemon's, IN-12). */
+  /** The number of the alert a low controller is in (the daemon's). */
   episode?: number;
 }
 

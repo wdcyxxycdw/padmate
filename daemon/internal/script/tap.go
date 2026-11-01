@@ -26,7 +26,7 @@ type tapOperation struct {
 	dropped bool
 	resolve func(any) error
 	chord   keys.Chord
-	// seq is set for a key.sequence or key.type (SCR-26, sequence.go): its steps
+	// seq is set for a key.sequence or key.type (sequence.go): its steps
 	// are the operation, and array, single and length are not used.
 	seq *sequenceRun
 }

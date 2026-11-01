@@ -110,7 +110,7 @@ function noteText(note: Note, language: Language): string {
 type Phase = "starting" | "running" | "saving" | "saved" | "error";
 
 /**
- * The mapping wizard (IN-17, IN-19, ADR-0012): for a controller SDL does not
+ * The mapping wizard (ADR-0012): for a controller SDL does not
  * know (建立映射), or one whose mapping is to be redone (重新映射), it asks
  * for each control in turn, finds the element the user used from the
  * controller's raw joystick events, and saves the SDL mapping it builds.

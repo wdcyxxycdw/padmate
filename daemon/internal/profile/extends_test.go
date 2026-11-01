@@ -15,7 +15,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 )
 
-// Profile inheritance (PRO-19, ADR-0012).
+// Profile inheritance (ADR-0012).
 
 // extLib is a library of profile files by ID.
 type extLib map[string]string

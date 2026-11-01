@@ -30,7 +30,7 @@ async function setup(
 const section = () =>
   screen.getByRole("heading", { name: "更新" }).parentElement as HTMLElement;
 
-describe("Settings · 更新 (PKG-10)", () => {
+describe("Settings · 更新", () => {
   it("has the switch and the button, and no note under the switch", async () => {
     await setup();
     const card = section();

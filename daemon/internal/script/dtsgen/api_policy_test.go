@@ -29,7 +29,7 @@ func TestSupportedAPIsFollowThePolicy(t *testing.T) {
 		}
 	}
 	if HostAPI.Major != 0 {
-		t.Fatalf("API %s: the 1.0 rules (SCR-35) are not written yet", HostAPI)
+		t.Fatalf("API %s: the 1.0 rules are not written yet", HostAPI)
 	}
 }
 
@@ -121,7 +121,7 @@ func TestEveryAPIMemberHasAStability(t *testing.T) {
 	}
 }
 
-// The members a macro can use (SCR-50) are the oldest and most used part of
+// The members a macro can use are the oldest and most used part of
 // the API: they are stable, whatever the scripts' stable subset says.
 func TestMacroMembersAreStable(t *testing.T) {
 	macro, err := MacroMembers(HostAPI)

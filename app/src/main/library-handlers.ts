@@ -39,9 +39,9 @@ function recentApp(value: unknown): RecentApp {
   return { exe: app.exe, path: app.path, elevated: app.elevated };
 }
 
-// Profile library management (UI-17) and window capture (PRO-16). Renderer
+// Profile library management and window capture. Renderer
 // arguments are validated here before any request reaches the daemon. The
-// daemon still keeps saved versions of profile.json (PRO-17); the UI no
+// daemon still keeps saved versions of profile.json; the UI no
 // longer lists or restores them (ADR-0008).
 export function libraryHandlers(
   call: DaemonCall,

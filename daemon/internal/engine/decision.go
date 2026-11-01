@@ -11,7 +11,7 @@ import (
 )
 
 // Decision records what the engine did with one input, or with one cycle
-// that CancelAll ended, and why (ENG-20). It is a value whose strings and
+// that CancelAll ended, and why. It is a value whose strings and
 // pointers point into the Program, so building one does not allocate.
 type Decision struct {
 	T       clock.Time
@@ -156,14 +156,14 @@ const (
 	// ReasonSpurious is an ignored input: a down of a control already
 	// down, an up of one already up, or an invalid input.
 	ReasonSpurious
-	// ReasonPaused is a press while the engine is paused (DMN-06): its
+	// ReasonPaused is a press while the engine is paused: its
 	// cycle ends at once, as if CancelAll had ended it, and there is no
 	// output. Its release is ReasonCanceled.
 	ReasonPaused
 	// ReasonBlocked is a layer binding that consumes an input without an action.
 	ReasonBlocked
-	// ReasonFunction is an edge of the function key (MAP-27, ADR-0012,
-	// ADR-0012): it starts no cycle and sends nothing, and only changes which
+	// ReasonFunction is an edge of the function key
+	// (ADR-0012): it starts no cycle and sends nothing, and only changes which
 	// set the next presses look up first. It has no cycle, level or binding.
 	ReasonFunction
 	// ReasonScript is a gesture that a script took (ADR-0016): a handler of

@@ -1,4 +1,4 @@
-// The first-run page (UI-38, ADR-0008) without React: when it opens by
+// The first-run page (ADR-0008) without React: when it opens by
 // itself, what it says is connected and how long it waits before going on.
 import { isDefaultProfile } from "../state/library-model";
 import { activeProfileId, type PadmateState } from "../state/store";
@@ -11,7 +11,7 @@ export const ADVANCE_MS = 1500;
 
 /**
  * The page opens by itself only for someone new: a library session that
- * has answered, with no profiles besides the fixed default (PRO-28), none
+ * has answered, with no profiles besides the fixed default, none
  * other in use, and the page not done. The library is never empty: the
  * daemon keeps the default in it and uses it at first.
  */

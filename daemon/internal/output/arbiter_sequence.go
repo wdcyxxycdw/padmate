@@ -10,7 +10,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// Sequences (MAP-22, ADR-0012). A sequence is a list of steps, each of which
+// Sequences (ADR-0012). A sequence is a list of steps, each of which
 // taps a shortcut, waits or types a text (keys.Step). One queue of the Arbiter
 // runs the whole of it, so that the owner's release (ReleaseOwners, so
 // ReleaseAll, the pause, a reload and a change of profile), the closing of the

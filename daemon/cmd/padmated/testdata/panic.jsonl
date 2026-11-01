@@ -1,5 +1,5 @@
-# The panic combo (DMN-07) with examples/profiles/basic.json. Back and
-# start are the function keys (MAP-27): their edges are decisions with the
+# The panic combo with examples/profiles/basic.json. Back and
+# start are the function keys: their edges are decisions with the
 # reason function and send nothing. Held together for 2 s they pause the
 # mapping at 2600 ms: the pan and the eyedropper held are released, and
 # presses map to nothing. The pan pressed at 5000 is held through the

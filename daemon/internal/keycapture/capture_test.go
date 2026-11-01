@@ -56,7 +56,7 @@ func TestCaptureNeverYieldsMouseKeys(t *testing.T) {
 	}
 }
 
-// The media and volume keys (OUT-20) are recorded under their names, as the
+// The media and volume keys are recorded under their names, as the
 // keyboard sends them: an E0 scan code and the VK of the key. The physical form
 // is the raw E0 scan code, which presses the same key.
 func TestCaptureMediaKeys(t *testing.T) {

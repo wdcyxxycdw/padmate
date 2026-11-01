@@ -1,4 +1,4 @@
-// The rows of the diagnostics page's event list (UI-20, UI-21, ADR-0016): what
+// The rows of the diagnostics page's event list (ADR-0016): what
 // the engine decided about each press, and why a press did nothing, from the
 // engine.activity events of the daemon (ARCHITECTURE §11). Nothing here talks to
 // the daemon or to React; the store keeps the rows (a ring of ACTIVITY_LIMIT) and
@@ -210,7 +210,7 @@ interface Sentence {
 }
 
 /**
- * The sentence for each reason of the engine (decision.go's reasonNames, ENG-20),
+ * The sentence for each reason of the engine (decision.go's reasonNames),
  * and for the variants of a reason, written "reason.variant": the reason's
  * name is the key's part before the dot. A test reads the Go table and fails
  * for a reason that has no sentence here (ADR-0016). dispatch is only the

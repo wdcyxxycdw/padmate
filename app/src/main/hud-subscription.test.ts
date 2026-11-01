@@ -57,7 +57,7 @@ function fixture() {
   return { hud, manager, bridge };
 }
 
-describe("a connection made while the overlay is not up yet (SCR-22)", () => {
+describe("a connection made while the overlay is not up yet", () => {
   it("subscribes without hud, and with it once the overlay's window is ready", async () => {
     const { hud, manager, bridge } = fixture();
     await hud.open(bridge);
@@ -164,7 +164,7 @@ describe("a connection made while the overlay is up", () => {
   });
 });
 
-describe("one subscription change at a time (SCR-22)", () => {
+describe("one subscription change at a time", () => {
   it("lets the latest wish win over those made while a call was on the way", async () => {
     vi.useFakeTimers();
     const slow = pending();
@@ -238,7 +238,7 @@ describe("one subscription change at a time (SCR-22)", () => {
   });
 });
 
-describe("a subscription that failed while the daemon is there (SCR-22)", () => {
+describe("a subscription that failed while the daemon is there", () => {
   it("is tried again after a second, and then left alone", async () => {
     const { hud, manager, bridge } = fixture();
     manager.mockRejectedValueOnce(new Error("Daemon request timed out"));
@@ -319,7 +319,7 @@ describe("a subscription that failed while the daemon is there (SCR-22)", () => 
   });
 });
 
-describe("a subscription that failed for want of a connection (SCR-22)", () => {
+describe("a subscription that failed for want of a connection", () => {
   it.each([
     ["the manager's", managerDisconnected],
     ["the bridge's", bridgeDisconnected],
@@ -382,11 +382,11 @@ describe("a subscription that failed for want of a connection (SCR-22)", () => {
   });
 });
 
-describe("an older daemon (SCR-22)", () => {
+describe("an older daemon", () => {
   it("that does not know hud gets a subscription without it, once", async () => {
     const { hud, manager, bridge } = fixture();
     hud.overlayUp(true);
-    // A daemon from before SCR-22 refuses the list with hud, takes the other.
+    // A daemon from before the hud topic refuses the list with hud, takes the other.
     bridge.mockRejectedValueOnce(refused());
     await hud.open(bridge);
     expect(asked(bridge)).toEqual([true, false]);

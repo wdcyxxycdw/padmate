@@ -59,7 +59,7 @@ func TestNoAllocs(t *testing.T) {
 		"spurious":         {btn(control.East, false), btn(control.LT, true), {Kind: 0}},
 		"trigger crossing": {trig(32767), trig(8000), trig(0), trig(-5), trig(9830), trig(6553)},
 		"stick":            {{Kind: engine.InputAxis, Axis: control.LeftX, Value: 100}},
-		// The function key (MAP-27, start by default): its edges, and a press
+		// The function key (start by default): its edges, and a press
 		// under it, with an ordinary center key (back) pressed in between.
 		"function key":      {btn(control.Start, true), btn(control.Start, false), btn(control.Back, true), btn(control.Back, false)},
 		"function key held": {btn(control.Start, true), btn(control.South, true), btn(control.South, false), btn(control.Back, true), btn(control.Back, false), btn(control.East, true), btn(control.East, false), btn(control.Start, false)},
@@ -127,13 +127,13 @@ func TestNoAllocs(t *testing.T) {
 	}
 }
 
-// gestureAllocProfile has a binding for each M2 path of the engine
-// (ENG-13): tap, double tap and hold with the balanced policy on west,
+// gestureAllocProfile has a binding for each M2 path of the engine:
+// tap, double tap and hold with the balanced policy on west,
 // holdPreferred on north, timeOnly on dpad.up, typematic repeat on east, a
 // tap-mode sequence on leftshoulder, a latch on rightshoulder, and hold
 // and toggle of the overlay fn, which binds south, on dpad.down and
 // dpad.left, a sequence action on leftstick and a text action, and a sequence
-// on hold, on rightstick (MAP-22, OUT-21), and the function set (MAP-27, start
+// on hold, on rightstick, and the function set (start
 // is the function key): it rebinds south and west. misc1 has only a
 // double tap, so a single tap ends its window with no action (ADR-0016).
 const gestureAllocProfile = `{"schemaVersion": 0, "name": "alloc", "layers": {
@@ -386,8 +386,8 @@ var gestureScenarios = []gestureScenario{
 	}, counter{downs: 1, ups: 1, taps: 1}},
 }
 
-// TestNoAllocsGestures checks the allocation contract on the M2 paths
-// (ENG-13): without a trace or a registry, Step and Apply do not allocate
+// TestNoAllocsGestures checks the allocation contract on the M2 paths:
+// without a trace or a registry, Step and Apply do not allocate
 // for taps, holds, multi-taps committed by their window or at their count,
 // interrupts replayed from the buffer, holdPreferred, timeOnly, latches,
 // layers, typematic repeat and sequences. The counts check that each
@@ -515,7 +515,7 @@ func TestNoAllocsWaitingPressAnswers(t *testing.T) {
 	}
 }
 
-// BenchmarkGestures is the ENG-13 report used with -benchmem (task bench):
+// BenchmarkGestures is the allocation report used with -benchmem (task bench):
 // one op runs every scenario of TestNoAllocsGestures once, in virtual
 // milliseconds, without a trace or a registry.
 func BenchmarkGestures(b *testing.B) {
@@ -532,8 +532,8 @@ func BenchmarkGestures(b *testing.B) {
 	}
 }
 
-// TestNoAllocsHaptic checks the allocation contract with Options.Haptic set
-// (MAP-25, HUD-10): the haptic of a binding on each gesture path, and the
+// TestNoAllocsHaptic checks the allocation contract with Options.Haptic set:
+// the haptic of a binding on each gesture path, and the
 // tick of a knob, call the function without a single allocation in Step and
 // Apply. The counts check that each scenario takes its path.
 func TestNoAllocsHaptic(t *testing.T) {

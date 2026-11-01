@@ -1,4 +1,4 @@
-# A sequence and a text action (MAP-22, OUT-21, ADR-0012) in the dry run: the
+# A sequence and a text action (ADR-0012) in the dry run: the
 # steps show as the sends and typed text they cause, a wait only as the time
 # between them. A second trigger of south runs after the first is over.
 {"timeNs":0,"kind":"added","device":3,"info":{"id":3,"name":"left pad","type":"standard","gamepad":true}}

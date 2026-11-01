@@ -13,7 +13,7 @@ import (
 
 const usage = `usage: spk03 [-dispatch N] [-warmup N] [-allocs N] [-idle N] [-runs N] [-cycles=false]
 
-The SPK-03 spike: goja dispatch and activation, esbuild build time, the
+The goja spike: goja dispatch and activation, esbuild build time, the
 watchdog checks and the QueryThreadCycleTime calibration, printed to
 stdout as one Markdown report. It exits 0 once the report is written,
 pass or fail; 1 when a measurement failed; 2 on bad flags.

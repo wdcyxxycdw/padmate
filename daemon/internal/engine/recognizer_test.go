@@ -104,7 +104,7 @@ func TestM2Gestures(t *testing.T) {
 		{"multi hold has no delayed tap", `"west":{"tap":{"type":"keys","keys":"F13"},"doubleTap":{"type":"keys","keys":"F14"},"hold":{"type":"keys","keys":"E"}}`, "+west@0 -west@10 +west@100 wait@350 -west@400 wait@900", "@350 down decl/1 E, @400 up decl/1 E"},
 		{"pause cancels waiting tap", `"west":{"tap":{"type":"keys","keys":"F13"},"doubleTap":{"type":"keys","keys":"F14"}}`, "+west@0 -west@10 pause@30 resume@40 wait@900", ""},
 		// north's first release waits in the buffer behind dpad.up's
-		// pending gesture after north's press was replayed (MAP-09). It
+		// pending gesture after north's press was replayed. It
 		// stays in order: it waits until dpad.up's tap at 70, and so does
 		// west's release, which comes after it; the second press and
 		// release of north follow it. That release decides north's tap,
@@ -174,7 +174,7 @@ func TestM2Gestures(t *testing.T) {
 			"@400 down decl/1 F19, @400 tap decl/2 B 20ms, @400 tap decl/3 Ctrl+Z 20ms, @500 up decl/1 F19"},
 		{"latch consumes next press and release", `"west":{"latch":true,"press":{"type":"keys","keys":"Shift"},"release":{"type":"keys","keys":"F13"}}`, "+west@0 -west@10 +west@20 -west@30", "@0 down decl/1 Shift, @10 tap decl/1 F13 20ms, @20 up decl/1 Shift"},
 		// east's release waits behind south's press, which waits for west's
-		// gesture until 350, but its repeat stops at the release (OUT-11):
+		// gesture until 350, but its repeat stops at the release:
 		// only the Up waits, in order.
 		{"buffered release stops the repeat", eastRepeat30 + "," + westPair + "," + south,
 			"+east@0 +west@100 +south@105 -east@120 -south@400 -west@410",

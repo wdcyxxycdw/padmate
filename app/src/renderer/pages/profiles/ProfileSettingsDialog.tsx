@@ -23,7 +23,7 @@ const tx = (language: Language, zh: string, en: string) =>
   language === "en" ? en : zh;
 
 /**
- * A millisecond field, saved on Enter or when it loses focus (UI-43). Empty
+ * A millisecond field, saved on Enter or when it loses focus. Empty
  * is the global setting. A text field: a number field reports text it
  * cannot parse ("1e") as empty, which would drop the value.
  */
@@ -76,8 +76,7 @@ function TimingRow({
 /**
  * Profile-level settings: the name and the default gesture timing (ADR-0012).
  * The feedback switches are not here: they are global (Settings → 反馈,
- * ADR-0015). Like the mapping page, each change is saved when it is committed
- * (UI-43).
+ * ADR-0015). Like the mapping page, each change is saved when it is committed.
  */
 export function ProfileSettingsDialog({
   open,
@@ -122,7 +121,7 @@ export function ProfileSettingsDialog({
           `留空则使用全局设置（${global[key]} ms）。`,
           `Leave empty to use the global ${global[key]} ms.`,
         );
-  // The fixed default keeps its name (PRO-28); the daemon refuses another.
+  // The fixed default keeps its name; the daemon refuses another.
   const fixed = isDefaultProfile(state.id);
   const name = fixed ? defaultProfileName(language) : profile.name;
   return (
@@ -155,7 +154,7 @@ export function ProfileSettingsDialog({
           fixed={fixed}
           language={language}
           problem={(text) => profileNameProblem(text, state.profiles, state.id)}
-          // Renaming a profile is not undone (UI-43).
+          // Renaming a profile is not undone.
           onCommit={(next) =>
             state.edit({ ...profile, name: next }, { history: false })
           }

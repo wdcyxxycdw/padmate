@@ -124,7 +124,7 @@
 }
 /* The right side keeps its width and the profile button gives way, with an
    ellipsis: at 200% zoom in the smallest window the bar is 353 CSS pixels
-   wide, and the last button would be cut off (UI-24). */
+   wide, and the last button would be cut off. */
 .topbar-end {
   flex: none;
 }
@@ -316,7 +316,7 @@
   gap: 16px;
   text-align: center;
 }
-/* The whole window when the mapping service did not start (UI-45). */
+/* The whole window when the mapping service did not start. */
 .start-failure {
   height: 100%;
   overflow-y: auto;
@@ -447,7 +447,7 @@
   gap: 8px;
   font-weight: 600;
 }
-/* The mark of a binding taken from the profile this one is based on (PRO-19). */
+/* The mark of a binding taken from the profile this one is based on. */
 .bindings-control .tag {
   margin-left: 6px;
   font-weight: 500;
@@ -474,7 +474,7 @@
   color: var(--text-3);
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .nav-item[aria-current="page"] {
     forced-color-adjust: none;

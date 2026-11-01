@@ -47,7 +47,7 @@ interface ControllerProps {
   language?: Language;
   selectedControl?: string;
   onSelectControl?: (control: string) => void;
-  /** A chip was right-clicked (UI-36): it is selected first, then this runs. */
+  /** A chip was right-clicked: it is selected first, then this runs. */
   onMenuControl?: (control: string) => void;
   /** What each chip shows; computed from the profile draft by ControllerWorkspace. */
   chips?: Record<string, ChipInfo>;
@@ -657,7 +657,7 @@ export function Controller({
         <p className="controller-unavailable">{unavailable}</p>
       )}
       {/* One sentence is the group's description; the state of every control
-          is a list of its own, read when the user goes into it (UI-24). */}
+          is a list of its own, read when the user goes into it. */}
       <p id={hintId} className="visually-hidden">
         {instructions}
       </p>

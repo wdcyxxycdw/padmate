@@ -11,7 +11,7 @@ import (
 // TestPresets checks that every preset sets the background hint first,
 // and that every preset but "default" sets every backend hint explicitly,
 // once. No preset sets a Joy-Con hint or repeats another hint of
-// openHints, so that none silently undoes what Open always sets (IN-07).
+// openHints, so that none silently undoes what Open always sets.
 func TestPresets(t *testing.T) {
 	want := []string{"default", "xinput", "rawinput", "hidapi-off", "wgi", "gameinput"}
 	if got := PresetNames(); !slices.Equal(got, want) {

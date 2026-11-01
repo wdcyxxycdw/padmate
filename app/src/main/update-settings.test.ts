@@ -20,7 +20,7 @@ afterEach(async () => {
 const file = () => join(dir, UPDATE_SETTINGS_FILE);
 const stored = async () => JSON.parse(await readFile(file(), "utf8"));
 
-describe("the update settings file (PKG-10)", () => {
+describe("the update settings file", () => {
   it("is updates.json with the checks on, nothing skipped and no check yet", () => {
     expect(UPDATE_SETTINGS_FILE).toBe("updates.json");
     expect(defaultUpdateSettings).toEqual({

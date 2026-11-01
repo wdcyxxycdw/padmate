@@ -91,7 +91,7 @@ func TestLiveMouseButtonReleasedOnEveryPath(t *testing.T) {
 }
 
 // heldMouseLog returns a held-key log of heldTestID whose third bitmap has the
-// bits of the VKs vks: the slots of VK_LBUTTON and its kin (OUT-14).
+// bits of the VKs vks: the slots of VK_LBUTTON and its kin.
 func heldMouseLog(vks ...uint8) []byte {
 	b := heldLogAs(heldTestID)
 	for _, vk := range vks {

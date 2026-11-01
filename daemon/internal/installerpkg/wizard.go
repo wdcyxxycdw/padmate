@@ -21,7 +21,7 @@ const MaxRelativePath = 140
 // mark not counted.
 const MaxPath = 259
 
-// WizardDir is the folder the installation wizard installs into (PKG-13).
+// WizardDir is the folder the installation wizard installs into.
 // offered is the folder its page started with, typed the text of the page's
 // field when Next is pressed. added reports that the folder name was added to
 // what was typed: the wizard then shows the folder and waits for another Next.

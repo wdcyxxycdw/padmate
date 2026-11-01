@@ -44,7 +44,7 @@ import {
   toastTextFrom,
 } from "./overlay";
 
-describe("the text of a toast (HUD-04)", () => {
+describe("the text of a toast", () => {
   it("crosses on one channel of its own, not one of the main window's", () => {
     expect(overlayToastChannel).toBe("overlay:toast");
     expect(overlayToastChannel.startsWith("padmate:")).toBe(false);
@@ -94,7 +94,7 @@ describe("the text of a toast (HUD-04)", () => {
   });
 });
 
-describe("how long a toast holds (SCR-22)", () => {
+describe("how long a toast holds", () => {
   it("is 1500 ms unless a script's toast says otherwise, 500 to 10000 ms", () => {
     expect([defaultToastHoldMs, minToastHoldMs, maxToastHoldMs]).toEqual([
       1500, 500, 10000,
@@ -141,7 +141,7 @@ describe("how long a toast holds (SCR-22)", () => {
   });
 });
 
-describe("the overlay's preferences (HUD-05)", () => {
+describe("the overlay's preferences", () => {
   it("crosses to the overlay's page on a channel of its own", () => {
     expect(overlayPrefsChannel).toBe("overlay:prefs");
     expect(overlayPrefsChannel).not.toBe(overlayToastChannel);
@@ -286,7 +286,7 @@ describe("the overlay's preferences (HUD-05)", () => {
   });
 });
 
-describe("key hints on their way to the page (HUD-03)", () => {
+describe("key hints on their way to the page", () => {
   it("cross on a channel of their own, not one of the main window's", () => {
     expect(overlayHintsChannel).toBe("overlay:hints");
     expect(overlayHintsChannel.startsWith("padmate:")).toBe(false);
@@ -461,7 +461,7 @@ describe("key hints on their way to the page (HUD-03)", () => {
   });
 });
 
-describe("a script's panels on their way to the page (SCR-22)", () => {
+describe("a script's panels on their way to the page", () => {
   const row = (left: string, right: string): [string, string] => [left, right];
 
   it("cross on a channel of their own, not one of the main window's", () => {

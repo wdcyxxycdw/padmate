@@ -1,10 +1,10 @@
 import type { Profile } from "../../shared/generated/schema";
 
-/** Undo steps kept per profile (UI-43). */
+/** Undo steps kept per profile. */
 export const HISTORY_LIMIT = 100;
 
 /**
- * Undo and redo of one profile's edits on the mapping page (UI-43): whole
+ * Undo and redo of one profile's edits on the mapping page: whole
  * drafts, newest last. It lives in the renderer's memory only; the daemon's
  * saved versions (.history) are a separate thing.
  */

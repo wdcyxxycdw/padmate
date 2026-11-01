@@ -5,7 +5,7 @@ import type {
   StartupReportKind,
 } from "./api";
 
-// What the start-failure page (UI-45) says, and Main's dialog when the
+// What the start-failure page says, and Main's dialog when the
 // page cannot show: which file, where in it, and what is wrong, in plain
 // words. A message this file does not know stays padmated's English after
 // a Chinese lead.

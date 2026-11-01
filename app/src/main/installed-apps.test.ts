@@ -74,7 +74,7 @@ function menu(
 const programs = "C:\\ProgramData\\Start Menu\\Programs";
 const user = "C:\\Users\\a\\Start Menu\\Programs";
 
-describe("programs of the Start Menu (UI-46)", () => {
+describe("programs of the Start Menu", () => {
   it("lists shortcuts that lead to an existing local .exe, named by the shortcut", async () => {
     const source = menu(
       {
@@ -309,7 +309,7 @@ describe("programs of the Start Menu (UI-46)", () => {
   });
 });
 
-describe("what the list leaves out (UI-46)", () => {
+describe("what the list leaves out", () => {
   it.each([
     // Installers and setup programs.
     "Visual Studio Installer",
@@ -586,7 +586,7 @@ describe("a fixed list for tests", () => {
   );
 });
 
-describe("a reading of the Start Menu that is kept for a while (UI-42)", () => {
+describe("a reading of the Start Menu that is kept for a while", () => {
   const apps = [{ name: "Krita", exe: "krita.exe", path: "C:\\k\\krita.exe" }];
 
   it("serves the last reading until it is old, and reads again then", async () => {

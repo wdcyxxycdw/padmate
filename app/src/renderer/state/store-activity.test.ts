@@ -8,7 +8,7 @@ import type {
 import { editorAPIFixture } from "../testing/editor-api-fixture";
 import { createPadmateStore } from "./store";
 
-// The event list of the diagnostics page (UI-20, ADR-0016): the store keeps a
+// The event list of the diagnostics page (ADR-0016): the store keeps a
 // ring of rows from engine.activity whatever page is open.
 
 const pad = {

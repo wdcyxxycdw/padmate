@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/clock"
 )
 
-// The event gap (OUT-17, config.json output.eventGapMs): some programs
+// The event gap (config.json output.eventGapMs): some programs
 // miss a modifier that arrives in the same SendInput call as the key it
 // modifies. With a gap the Arbiter keeps the events of its commands in one
 // queue, the outbox, and sends them in order, one per Send, at least the
@@ -56,7 +56,7 @@ import (
 // (Shift alone switching the input method). Nor with
 // Downs: a Down whose main key already has a press queued behind another
 // one of its presses (outEvent.old) merges into the last one (mergeDown),
-// as excess taps of a main key merge (OUT-10): no more than two presses of
+// as excess taps of a main key merge: no more than two presses of
 // a main key wait. What stays is a Down whose main key is a modifier, which
 // does not merge: bindings of modifiers only (Ctrl+Shift, Alt) pressed one
 // after another faster than the gap lets their events out still queue up,
@@ -120,7 +120,7 @@ type releaseGroup struct{ keys []KeyID }
 func (a *Arbiter) EventGap() time.Duration { return a.gap }
 
 // SetEventGap changes the minimum time between two Send calls of key
-// events (OUT-17). A negative gap is 0. The events already queued go out
+// events. A negative gap is 0. The events already queued go out
 // the new gap after the last Send; with 0 they go out at once, in one
 // batch, but for a release whose minimum has not passed and the events
 // behind it (outEvent.at), and every later command sends its events in one
@@ -406,9 +406,9 @@ func (a *Arbiter) oldQueued(id KeyID) bool {
 // mergeDown reports whether a Down whose main key is id merges into the
 // key's last press, which no one references and which waits behind another
 // one of its presses still queued (outEvent.old), as excess taps of a main
-// key merge (OUT-10): it takes the key over, wherever its release is, and
+// key merge: it takes the key over, wherever its release is, and
 // sends nothing. So Downs that come faster than the gap lets their events
-// out do not pile up in the queue (OUT-17). The key stays down across the
+// out do not pile up in the queue. The key stays down across the
 // events queued after its press. Of its modifiers the Down holds only the
 // ones it can take over without a press (takesOver): pressed again, they
 // would go down after the key and up again with nothing between, a hotkey
@@ -535,7 +535,7 @@ func (a *Arbiter) keepMinimum(q *outEvent, ks *keyState) {
 // commitDue queues the waiting releases of keys whose release would have
 // gone out by now without an event gap (zeroDeadline), with their groups
 // (commit), before a command queues presses: those keys were up when the
-// command came, so its keys must not go down while they are (OUT-17).
+// command came, so its keys must not go down while they are.
 func (a *Arbiter) commitDue() {
 	now := a.clk.Now()
 	var set []*keyState
@@ -864,7 +864,7 @@ func (a *Arbiter) pressPending(ks *keyState) bool {
 // than the tap's keys (ref.last), not a newer press of the key by another
 // command, or a release queued for such a press of the key, which was
 // pressed again behind it (pressAgain). Without a gap any keyState of the
-// key, as before OUT-17: a newer one is there only after a failed release.
+// key, as without the pacing: a newer one is there only after a failed release.
 func (a *Arbiter) tapWaits(r *ref) bool {
 	if r.queued > 0 {
 		return true

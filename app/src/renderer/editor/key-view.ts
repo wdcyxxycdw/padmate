@@ -1,4 +1,4 @@
-// Which set of bindings the mapping page shows (UI-30, ADR-0012): the usual
+// Which set of bindings the mapping page shows (ADR-0012): the usual
 // one, or the function set that applies while the function key is held. The
 // choice itself is the editor store's `view`; these are the rules around it
 // that do not need the store.

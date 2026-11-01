@@ -26,7 +26,7 @@ Checks each profile file: its JSON syntax, the profile schema and the
 bindings. A macro that an action runs and the macros folder lacks is a
 warning: the data folder's script library for a profile of a library
 (profiles/<id>/profile.json), otherwise the macros folder next to the
-file. A profile of a library may extend another (PRO-19): the file is
+file. A profile of a library may extend another: the file is
 checked merged with its parents, which are read from the same library, and
 a problem in a parent's file is printed with that file's path and
 position; a parent that is missing or has errors is an error of the
@@ -36,7 +36,7 @@ profile that says which. Bindings are those of the merge. Prints one line per pr
 
 with columns counted in characters, or "path: ok" for a file without
 problems. After a file without errors come its bindings, one per line,
-with the latency the engine adds to the gesture (PRO-04), as
+with the latency the engine adds to the gesture, as
 
   /layers/base/south "Undo": press +0 ms
   /layers/base/start "Later": no action
@@ -59,7 +59,7 @@ flags:
             A profile written to a file of another library, or by itself,
             is read like any profile; an "extends" there is an error.
   --function-key KEY
-            the function key (MAP-27), start, back or guide, that the
+            the function key, start, back or guide, that the
             bindings are compiled with: the bindings on it are ignored and
             not listed. config.json is not read; the default is start.
 `
@@ -78,7 +78,7 @@ type validateJSONBinding struct {
 	Control        string  `json:"control"`
 	Label          string  `json:"label,omitempty"`
 	Gesture        string  `json:"gesture,omitempty"` // "" for a binding without an action
-	Haptic         string  `json:"haptic,omitempty"`  // the preset name (MAP-25), "" for none
+	Haptic         string  `json:"haptic,omitempty"`  // the preset name, "" for none
 	AddedLatencyMs float64 `json:"addedLatencyMs"`
 }
 
@@ -227,7 +227,7 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 
 // missingMacros warns at each action of the profile data at path that
 // runs a macro file the macros folder (macroFolder) does not list under
-// exactly its name, the folder padmated runs them from (SCR-50, SCR-51).
+// exactly its name, the folder padmated runs them from.
 // A folder that cannot be read, other than a missing one, gives no
 // warnings.
 func missingMacros(path string, data []byte) profile.Diagnostics {
@@ -246,8 +246,8 @@ func missingMacros(path string, data []byte) profile.Diagnostics {
 
 // macroFolder returns the macros folder that padmated runs the macros of
 // the profile file path from: for a profile of a library,
-// <data>/profiles/<id>/profile.json, the data folder's script library
-// (SCR-51); otherwise, as for a --profile file without one, the macros
+// <data>/profiles/<id>/profile.json, the data folder's script library;
+// otherwise, as for a --profile file without one, the macros
 // folder next to the file.
 func macroFolder(path string) string {
 	if lib, _, ok := libraryOf(path); ok {
@@ -258,7 +258,7 @@ func macroFolder(path string) string {
 
 // libraryOf returns the library and the ID of the profile whose file path
 // is, when path is <data>/profiles/<id>/profile.json: such a profile can
-// extend another (PRO-19, ADR-0012), which is read from the same library.
+// extend another (ADR-0012), which is read from the same library.
 func libraryOf(path string) (lib *profilelib.Library, id string, ok bool) {
 	abs, err := filepath.Abs(path)
 	if err != nil {

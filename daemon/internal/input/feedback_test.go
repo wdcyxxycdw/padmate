@@ -413,7 +413,7 @@ func TestPlayDoesNotCutAmbientPulses(t *testing.T) {
 	expect(t, e, "@0 rumble "+m3Both+" 70ms", "@170 rumble "+m3Both+" 70ms", "@240 rumble stop")
 }
 
-// An alert (IN-12) plays its preset and flashes the lights side by side, each
+// An alert plays its preset and flashes the lights side by side, each
 // alone when the other is not asked for; it outranks the pulses of the layer and
 // the layer color comes back after the last flash; only an alert blinks.
 func TestPlayAlert(t *testing.T) {
@@ -687,7 +687,7 @@ func TestAttachGamepadRegistersALateOpenedPad(t *testing.T) {
 	}
 }
 
-// A script's rumble (SCR-23) is a program of steps of its own, played in the
+// A script's rumble is a program of steps of its own, played in the
 // Script class: it replaces the script's own earlier one, does not cut the
 // pulses of a layer, and an effect with both a preset and steps is refused.
 func TestPlaySteps(t *testing.T) {
@@ -734,7 +734,7 @@ func TestPlaySteps(t *testing.T) {
 	expect(t, e)
 }
 
-// SetLight (SCR-23): the script's color shows over the layer's and gives the
+// SetLight: the script's color shows over the layer's and gives the
 // layer's back on release; only the script and alert classes may ask.
 func TestSetLight(t *testing.T) {
 	r := newEffectRig(t)
@@ -780,7 +780,7 @@ func TestSetLight(t *testing.T) {
 	expect(t, e)
 }
 
-// Stop (SCR-23) ends the rumble of its class, and with Everything the claims
+// Stop ends the rumble of its class, and with Everything the claims
 // too, and nothing of the other classes.
 func TestStop(t *testing.T) {
 	r := newEffectRig(t)

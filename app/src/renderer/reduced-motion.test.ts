@@ -1,4 +1,4 @@
-// UI-24: with the system asking for reduced motion nothing in the window
+// With the system asking for reduced motion nothing in the window
 // moves on its own. The rule is one for every element, so a transition added
 // later is covered without anyone remembering to.
 import { readFileSync } from "node:fs";

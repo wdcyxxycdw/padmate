@@ -86,7 +86,7 @@ func TestMonitorHintOrder(t *testing.T) {
 
 // TestMonitorFormat prints a session of events through one printer in
 // each mode. Text lines show the DeviceKey of a gamepad; JSON lines stay
-// the ENG-08 format.
+// the trace format.
 func TestMonitorFormat(t *testing.T) {
 	info := &input.DeviceInfo{
 		ID: 3, Name: "Xbox Wireless Controller", Type: "xboxone",
@@ -297,7 +297,7 @@ func (l monitorLine) key() string {
 }
 
 // TestMonitorVirtualBinary runs the built "padmatectl monitor --virtual"
-// with the SDL library (IN-03 acceptance).
+// with the SDL library.
 func TestMonitorVirtualBinary(t *testing.T) {
 	lib := inputtest.Library(t)
 	ctl := injecttest.BuildTool(t, ".")

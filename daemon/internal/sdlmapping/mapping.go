@@ -1,5 +1,5 @@
 // Package sdlmapping parses, checks and formats SDL gamepad mapping strings
-// (IN-18, ADR-0012): "GUID,name,key:value,key:value,...".
+// (ADR-0012): "GUID,name,key:value,key:value,...".
 //
 // It is pure: no SDL, no Windows, no clock. The format is SDL 3.4.16's
 // (src/joystick/SDL_gamepad.c): the name cannot contain a comma, the fields

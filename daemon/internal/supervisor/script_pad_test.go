@@ -50,7 +50,7 @@ func TestScriptPadKeyMatchesSupervisorDuplicateAssignments(t *testing.T) {
 	}
 }
 
-// A script's pad.info.battery (SCR-23) comes from the snapshot the slot copies
+// A script's pad.info.battery comes from the snapshot the slot copies
 // for its runtime: it has no power until the gamepad reported one, shows the
 // latest after the slot's next event, and loses it with the gamepad.
 func TestScriptPadSnapshotCarriesPower(t *testing.T) {

@@ -1,4 +1,4 @@
-# Macros (SCR-50) on every kind of gesture. The golden tests' fake macro
+# Macros on every kind of gesture. The golden tests' fake macro
 # runtime presses the key a macro's file names (F13.ts: F13) for 100 ms,
 # under an owner of each run (TestGolden).
 # press runs at the press, release at the release.

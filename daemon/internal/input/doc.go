@@ -1,4 +1,4 @@
-// Package input reads gamepads through SDL3 (IN-01, IN-02).
+// Package input reads gamepads through SDL3.
 //
 // Open starts T-input, the goroutine that owns SDL (ARCHITECTURE §5). It
 // locks itself to an OS thread for its whole life, and on that thread it
@@ -8,7 +8,7 @@
 // include SDL_NO_SIGNAL_HANDLERS=1, so SIGINT and SIGTERM stay with
 // os/signal instead of becoming SDL_EVENT_QUIT, and
 // SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0, so every Joy-Con is its own
-// gamepad (IN-07). Every SDL call of the package happens on that thread;
+// gamepad. Every SDL call of the package happens on that thread;
 // other goroutines hand it commands through a channel, which it checks
 // between short SDL_WaitEventTimeout calls. The go-sdl3 package also locks
 // the main goroutine to the main thread in its init; nothing in padmate
@@ -22,7 +22,7 @@
 // DeviceRemoved waits in line and follows in order, so that the consumer
 // learns of every connection and disconnection.
 //
-// With Options.OnCombo, T-input also finds the pause combo (DMN-07): a
+// With Options.OnCombo, T-input also finds the pause combo: a
 // ComboWatch sees every event before it is sent, dropped ones included,
 // and tracks the combo members that each gamepad holds itself, without
 // asking SDL. When a gamepad has held its DefaultCombo (back+start, or SL+SR
@@ -31,7 +31,7 @@
 // ComboHeld; ExpandCombos inserts it into a replay with the same watch.
 //
 // With Options.ReceiverTimeout, T-input also watches the receivers
-// (IN-30, ADR-0002): a Switch Pro protocol gamepad behind a USB receiver,
+// (ADR-0002): a Switch Pro protocol gamepad behind a USB receiver,
 // such as GameSir's Nova 2 Lite in Switch mode, stays listed by SDL when
 // it is switched off, and SDL reports no removal. T-input reads the HID
 // reports of such a device through a handle of its own; once it has seen
@@ -57,10 +57,10 @@
 // model what SDL reports for a device such as a Joy-Con.
 //
 // A DeviceID changes each time a device connects. DeviceKey and Registry
-// (IN-09) give a gamepad an identity that stays when it reconnects,
+// give a gamepad an identity that stays when it reconnects,
 // without SDL: KeyOf takes the base of the key from the DeviceInfo, and a
 // Registry numbers identical gamepads. A Registry is used from one
-// goroutine and keeps the keys in memory; persisting them is PRO-11.
+// goroutine and keeps the keys in memory only.
 //
 // The package builds on every OS that go-sdl3 supports; the engine never
 // imports it (CLAUDE.md invariant 2).

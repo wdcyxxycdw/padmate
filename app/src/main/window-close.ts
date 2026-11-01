@@ -8,8 +8,8 @@ type Phase = ConnectionState["phase"];
  * loaded, so a second start (the tray's 打开, the shortcuts) shows the window
  * at once. The window closes for real, and the application quits as before,
  * while it quits anyway (quitting; leaving: a quit held for the saves, or the
- * daemon's exit, DMN-22, whose close must go through), and when there is
- * nothing to come back to: no connection, or no page (UI-45).
+ * daemon's exit, whose close must go through), and when there is
+ * nothing to come back to: no connection, or no page.
  */
 export function closeHides(state: {
   quitting: boolean;

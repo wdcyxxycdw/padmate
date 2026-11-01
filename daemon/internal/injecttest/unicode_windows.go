@@ -9,7 +9,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/winhook"
 )
 
-// Text input (OUT-21, ADR-0012) is typed with KEYEVENTF_UNICODE. The system
+// Text input (ADR-0012) is typed with KEYEVENTF_UNICODE. The system
 // turns such an event into a key whose VK is VK_PACKET (0xE7) and hands the
 // foreground thread the character, so a Unicode event the hook let through is a
 // character typed into whatever window is in front. The Recorder's predicate

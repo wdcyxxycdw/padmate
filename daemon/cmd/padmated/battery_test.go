@@ -25,7 +25,7 @@ type step struct {
 func on(p input.Power, due bool) step  { return step{p, true, due} }
 func off(p input.Power, due bool) step { return step{p, false, due} }
 
-// TestBatteryTracker (IN-12): the thresholds, the hysteresis and the one alert
+// TestBatteryTracker: the thresholds, the hysteresis and the one alert
 // per episode, as a table of readings of one controller.
 func TestBatteryTracker(t *testing.T) {
 	d, c, w, u := input.PowerDischarging, input.PowerCharging, input.PowerWired, input.PowerUnknown

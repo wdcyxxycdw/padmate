@@ -84,7 +84,7 @@ func ValidID(id string) bool {
 // marks the fixed default profile (DefaultID). Created is when the
 // profile's folder was created, in Unix milliseconds, and absent when the
 // platform does not say: not profile.json's, which every save replaces.
-// Extends is the parent the profile.json names (PRO-19), even when it has
+// Extends is the parent the profile.json names, even when it has
 // other problems; Diagnostics are the ones in the profile's own text, and
 // Problem the first error, which may be in a parent's.
 type Entry struct {
@@ -100,7 +100,7 @@ type Entry struct {
 
 // Document is a loaded and validated profile. Revision hashes the original
 // bytes on disk; Data is the migrated form and Path anchors relative scripts.
-// A profile with a parent is the merge of the chain (PRO-19): Profile is the
+// A profile with a parent is the merge of the chain: Profile is the
 // merged profile, Resolved says where its parts come from, and
 // ParentDiagnostics are the problems in the parents' files, which Entry's
 // diagnostics (those of Data) do not have.

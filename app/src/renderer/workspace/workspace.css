@@ -7,7 +7,7 @@
   grid-template-columns: minmax(0, 1fr);
   /* At 150% and 200% zoom the smallest window is a few hundred CSS pixels
      wide: the stage keeps the size its labels were laid out for and the
-     page scrolls, instead of cutting the controller off (UI-24). */
+     page scrolls, instead of cutting the controller off. */
   overflow: auto;
 }
 .controller-workspace[data-editing="true"] {
@@ -52,7 +52,7 @@
 .editor-notice-host > * {
   pointer-events: auto;
 }
-/* UI-44: what the last press sends, while padmate is in front. */
+/* What the last press sends, while padmate is in front. */
 .key-preview {
   align-self: center;
   max-width: 100%;
@@ -87,7 +87,7 @@
   display: inline-flex;
   vertical-align: -4px;
 }
-/* A pad control as the pad shows it (UI-44): a vendored icon, or SVG shapes
+/* A pad control as the pad shows it: a vendored icon, or SVG shapes
    with letters from data-label, colours from the theme. */
 .control-icon {
   position: relative;
@@ -258,7 +258,7 @@
   font-weight: 600;
 }
 
-/* The switch between the usual keys and the sets of the function keys (UI-30). */
+/* The switch between the usual keys and the sets of the function keys. */
 .key-view-bar {
   flex: none;
   display: flex;

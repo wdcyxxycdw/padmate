@@ -1,4 +1,4 @@
-# One haptic for each dispatch of a binding that has one (MAP-25, ADR-0015),
+# One haptic for each dispatch of a binding that has one (ADR-0015),
 # at the time of the dispatch: south's tick at its press; east's confirm at
 # its press, not at the repeats of Space; west's pulse2 when its tap is
 # committed (940), for the second tap of the double tap (1240) and when the

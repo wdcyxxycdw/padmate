@@ -72,7 +72,7 @@ func decodeIPCInput(row ipc.Notification) (input.Event, error) {
 	return events[0], nil
 }
 
-// decodeRemapped decodes the "remapped" row of the input topic (IN-18): a
+// decodeRemapped decodes the "remapped" row of the input topic: a
 // gamepad whose mapping changed, with its info as it is now. It is no trace
 // record, so input.ReadEvents does not know it. ok is false for any other kind.
 func decodeRemapped(data []byte) (e input.Event, ok bool, err error) {
@@ -108,7 +108,7 @@ func decodeRemapped(data []byte) (e input.Event, ok bool, err error) {
 // topic has handled and whether they were gamepads then. The topic is
 // subscribed before devices.list is read, so the list and the rows queued
 // meanwhile overlap and a repeated DeviceAdded is dropped; but a joystick that
-// got a mapping is reported again as a gamepad with the same id (IN-18), and
+// got a mapping is reported again as a gamepad with the same id, and
 // one that lost it is removed and reported again, and those are not repeats.
 type addedSet map[input.DeviceID]bool
 

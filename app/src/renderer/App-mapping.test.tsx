@@ -20,7 +20,7 @@ import { App } from "./App";
 import { createPadmateStore } from "./state/store";
 import { editorAPIFixture } from "./testing/editor-api-fixture";
 
-// Settings → 手柄调校 (IN-18, IN-19, ADR-0012): a controller SDL does not
+// Settings → 手柄调校 (ADR-0012): a controller SDL does not
 // know says so and offers 建立映射…; a known one has 重新映射… in the menu of
 // its row; one with a mapping of its own can have the default back, after a
 // confirm. The wizard itself is covered in pages/settings/MappingWizardDialog.test.tsx.
@@ -171,7 +171,7 @@ const rowOf = (name: string) =>
 beforeEach(() => localStorage.clear());
 afterEach(cleanup);
 
-describe("a controller that SDL does not know (IN-17, IN-19)", () => {
+describe("a controller that SDL does not know", () => {
   it("says so and offers 建立映射…, with nothing to identify or calibrate", async () => {
     setup({ devices: [gamepad, joystick] });
     await openSettings();
@@ -239,7 +239,7 @@ describe("a controller that SDL does not know (IN-17, IN-19)", () => {
   });
 });
 
-describe("a controller SDL knows (IN-18)", () => {
+describe("a controller SDL knows", () => {
   async function menuOf(name = "Test controller") {
     fireEvent.click(screen.getByRole("button", { name: `更多操作 ${name}` }));
     return screen.findByRole("menu");

@@ -2,7 +2,7 @@ package haptic
 
 import "time"
 
-// The lights of an alert (IN-12, the low battery): three red flashes of a
+// The lights of an alert (the low battery): three red flashes of a
 // color LED, or, for a controller that has only player lights, three flashes of
 // all four lights, with the lights out in between. They run next to the buzz of
 // the alert and give the lights back to what was showing when they end.

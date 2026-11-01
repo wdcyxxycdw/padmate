@@ -11,7 +11,7 @@ export type ModelInfo = Pick<
 >;
 
 /**
- * Where one controller chip sits on the stage (UI-39).
+ * Where one controller chip sits on the stage.
  *
  * - `left`/`right`: the side columns. `slot` 2–7 counts from the top. A
  *   stick is two cells in one chip and takes two slots (`span`); `slot` is

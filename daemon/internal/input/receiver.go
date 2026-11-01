@@ -10,7 +10,7 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// This file is the receiver watchdog on T-input (IN-30, ADR-0002); its
+// This file is the receiver watchdog on T-input (ADR-0002); its
 // pure logic is in watchdog.go, its heartbeat sources in hidbeat.go.
 //
 // A watched device lives until its watchdog is lost: T-input then reports
@@ -23,7 +23,7 @@ import (
 // openBeat opens the heartbeat source of the gamepad d, whose DeviceInfo
 // is info and SDL connection state state, connected at t, when the
 // watchdog is on and watches it. A source that does not open leaves the
-// device unwatched, as it was before IN-30.
+// device unwatched, as it was before the watchdog.
 func (s *Source) openBeat(d *device, info *DeviceInfo, state sdl.JoystickConnectionState, t uint64) {
 	if !s.receiver.on() {
 		return

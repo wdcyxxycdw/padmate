@@ -37,7 +37,7 @@ const amgpFile = `<?xml version="1.0" encoding="UTF-8"?>
 </gamecontroller>
 `
 
-// profiles.importAmgp (PRO-21) makes a new library profile from an AntiMicroX
+// profiles.importAmgp makes a new library profile from an AntiMicroX
 // file, and says what it could not carry over.
 func TestIPCImportAmgp(t *testing.T) {
 	dir := t.TempDir()
@@ -108,7 +108,7 @@ func TestIPCImportAmgp(t *testing.T) {
 	}
 
 	// The daemon opens no file: a path, a UNC path and a device path are not
-	// accepted whatever they point at (PRO-20), and nothing is read.
+	// accepted whatever they point at, and nothing is read.
 	local := filepath.Join(t.TempDir(), "Sketch.amgp")
 	if err := os.WriteFile(local, []byte(noName), 0o600); err != nil {
 		t.Fatal(err)

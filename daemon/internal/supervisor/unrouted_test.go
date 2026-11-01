@@ -61,7 +61,7 @@ func TestUnrouted(t *testing.T) {
 		h := start(t, opts{slots: 1, onUnrouted: u.add})
 		h.send(added(padA))
 		h.send(added(padB))
-		h.send(button(2, "south", true)) // padA pressed nothing yet: padB takes the slot (IN-05)
+		h.send(button(2, "south", true)) // padA pressed nothing yet: padB takes the slot
 		h.send(button(2, "south", false))
 		h.sync()
 		if got := u.list(); len(got) != 0 {

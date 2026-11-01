@@ -76,14 +76,14 @@ class FakeWindow {
   toastFails = false;
   settingsFail = false;
   toasts: string[] = [];
-  // How long each toast holds, when it said (SCR-22): undefined for the others.
+  // How long each toast holds, when it said: undefined for the others.
   toastHolds: Array<number | undefined> = [];
-  // The settings sent to the page, in order (HUD-05).
+  // The settings sent to the page, in order.
   settings: OverlayPageSettings[] = [];
-  // The key hints messages sent to the page, in order (HUD-03).
+  // The key hints messages sent to the page, in order.
   hintMessages: OverlayHintsMessage[] = [];
   hintsFail = false;
-  // The script panels messages sent to the page, in order (SCR-22).
+  // The script panels messages sent to the page, in order.
   panelMessages: OverlayPanelsMessage[] = [];
   panelsFail = false;
   private sets = 0;
@@ -227,7 +227,7 @@ describe("where the overlay is", () => {
     });
   });
 
-  it("is 48 below the top of the work area, centred, for the top position (HUD-05)", () => {
+  it("is 48 below the top of the work area, centred, for the top position", () => {
     expect(overlayTopGap).toBe(48);
     expect(overlayBounds(primary.workArea, "top")).toEqual({
       x: 720,
@@ -388,7 +388,7 @@ describe("the overlay window's options", () => {
   it("has the main window's security settings, and its own preload as the one addition", () => {
     expect(options.webPreferences).toEqual({ preload, ...baseWebPreferences });
     // The overlay's preload, not the main window's: the page gets a
-    // listener for toasts and nothing else (HUD-04).
+    // listener for toasts and nothing else.
     expect(options.webPreferences?.preload).toMatch(/overlay\.js$/);
     expect(options.webPreferences).toMatchObject({
       contextIsolation: true,
@@ -481,7 +481,7 @@ describe("making the overlay", () => {
     const overlay = new OverlayController(host);
     expect(() => overlay.start()).not.toThrow();
     await new Promise((done) => setTimeout(done, 10));
-    // A page that never comes is no overlay (SCR-22: a script is told so).
+    // A page that never comes is no overlay (a script is told so).
     expect(overlay.active).toBe(false);
     expect(host.last.destroyed).toBe(true);
     expect(host.windows).toHaveLength(1);
@@ -533,7 +533,7 @@ describe("the overlay never takes the foreground", () => {
   });
 });
 
-describe("a toast (HUD-04)", () => {
+describe("a toast", () => {
   function shown(): { host: FakeHost; overlay: OverlayController } {
     const host = new FakeHost();
     const overlay = new OverlayController(host);
@@ -552,7 +552,7 @@ describe("a toast (HUD-04)", () => {
     expect(host.last.calls).toEqual(["toast", "toast"]);
   });
 
-  it("says how long it holds when it is a script's toast, and nothing when it is not (SCR-22)", () => {
+  it("says how long it holds when it is a script's toast, and nothing when it is not", () => {
     const { host, overlay } = shown();
     overlay.toast("已暂停");
     overlay.toast("脚本提示", 3000);
@@ -604,7 +604,7 @@ describe("a toast (HUD-04)", () => {
   });
 });
 
-describe("the overlay follows the UI's settings (HUD-05)", () => {
+describe("the overlay follows the UI's settings", () => {
   function shown(
     settings: ConstructorParameters<typeof OverlayController>[1] = {},
     secondaryDisplay = false,
@@ -732,7 +732,7 @@ describe("the overlay follows the UI's settings (HUD-05)", () => {
   });
 });
 
-describe("the window's height with key hints (HUD-03)", () => {
+describe("the window's height with key hints", () => {
   const area = { x: 0, y: 0, width: 1920, height: 1040 };
 
   it("is the toast area's height without hints, which is the default size", () => {
@@ -791,7 +791,7 @@ describe("the window's height with key hints (HUD-03)", () => {
   });
 });
 
-describe("key hints (HUD-03)", () => {
+describe("key hints", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -1000,7 +1000,7 @@ describe("key hints (HUD-03)", () => {
   });
 });
 
-describe("a script's panels (SCR-22)", () => {
+describe("a script's panels", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -1312,7 +1312,7 @@ describe("a script's panels (SCR-22)", () => {
   });
 });
 
-describe("the overlay giving up (SCR-22)", () => {
+describe("the overlay giving up", () => {
   it("tells the one who asked when it cannot make a window: no display, or Electron refuses", () => {
     const none = new FakeHost();
     none.list = { primaryId: 1, displays: [] };
@@ -1494,7 +1494,7 @@ describe("the overlay giving up (SCR-22)", () => {
   });
 });
 
-describe("the overlay being up (SCR-22)", () => {
+describe("the overlay being up", () => {
   it("tells the one who asked when a window is ready, not before", () => {
     const host = new FakeHost();
     const ready = vi.fn();
@@ -1806,7 +1806,7 @@ describe("the overlay in the main process", () => {
     expect(main.match(/toasts\.handle\(/g)).toHaveLength(1);
   });
 
-  it("shows a script's panels from the same events, and learns when the overlay is given up (SCR-22)", () => {
+  it("shows a script's panels from the same events, and learns when the overlay is given up", () => {
     expect(main.match(/new OverlayPanels\(/g)).toHaveLength(1);
     expect(main).toMatch(
       /new OverlayPanels\(\{\s*show: \(message\) => \{\s*if \(!overlay\) return false;\s*overlay\.panels\(message\);/,
@@ -1821,7 +1821,7 @@ describe("the overlay in the main process", () => {
     );
   });
 
-  it("takes the UI's settings from one handler and makes the overlay with the latest of them (HUD-05)", () => {
+  it("takes the UI's settings from one handler and makes the overlay with the latest of them", () => {
     // Pushed by the main window's page, through the handler table that only
     // trusts that page; checked by overlay-prefs.ts, then handed on.
     expect(main).toContain(

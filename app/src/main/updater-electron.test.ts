@@ -163,7 +163,7 @@ async function updater(
 const pending = () =>
   join(userData, "updater-home", "Local", "padmate-updater", "pending");
 
-describe("the installed application's updater, in its test mode (PKG-10)", () => {
+describe("the installed application's updater, in its test mode", () => {
   it("finds a version on the feed and downloads it below the private folder, checksum verified", async () => {
     const real = process.env.LOCALAPPDATA;
     const target = await updater();
@@ -263,7 +263,7 @@ describe("the installed application's updater, in its test mode (PKG-10)", () =>
   });
 });
 
-describe("the installed application's updater, in the real application (PKG-10, ADR-0018)", () => {
+describe("the installed application's updater, in the real application (ADR-0018)", () => {
   it("asks the download site for latest.yml, and the test feed is not read", async () => {
     // The real application's address, without the network: net.request
     // refuses every request that is not for this machine.

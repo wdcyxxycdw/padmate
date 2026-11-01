@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-// The JSON line format of events (ENG-08) is that of "padmatectl monitor
+// The JSON line format of events is that of "padmatectl monitor
 // --json": recordings ("padmatectl record", testdata/traces) and the fake
 // input of padmated use it. One object per line:
 //
@@ -49,8 +49,8 @@ var traceKinds = [...]EventKind{DeviceAdded, DeviceRemoved, ButtonDown, ButtonUp
 // WriteEvent writes e as one JSON line, with a single Write. It checks
 // only the kind, which must be one of the format; ComboHeld is not. An
 // Event from a Source, or from ReadEvents, of such a kind reads back the
-// same, but for its Stamp: that is the time T-input received the event
-// (DMN-15), which a trace does not keep.
+// same, but for its Stamp: that is the time T-input received the event,
+// which a trace does not keep.
 func WriteEvent(w io.Writer, e Event) error {
 	if !slices.Contains(traceKinds[:], e.Kind) {
 		return fmt.Errorf("input: event kind %s is not written to traces", e.Kind)

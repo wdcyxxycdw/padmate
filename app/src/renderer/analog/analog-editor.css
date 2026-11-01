@@ -1,4 +1,4 @@
-/* Stick, trigger and d-pad panels inside the key drawer (UI-39). */
+/* Stick, trigger and d-pad panels inside the key drawer. */
 .analog-panel {
   display: flex;
   flex-direction: column;
@@ -639,7 +639,7 @@
   color: var(--text-4);
 }
 
-/* Windows high contrast (UI-24); see the note at the end of ui/ui.css. */
+/* Windows high contrast; see the note at the end of ui/ui.css. */
 @media (forced-colors: active) {
   .analog-bar {
     border-color: ButtonText;

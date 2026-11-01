@@ -6,8 +6,8 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/keys"
 )
 
-// MenuMaskVK is the virtual-key code of the menu mask key (OUT-08,
-// ADR-0004): 0xE8, which Microsoft's virtual-key table lists as
+// MenuMaskVK is the virtual-key code of the menu mask key
+// (ADR-0004): 0xE8, which Microsoft's virtual-key table lists as
 // unassigned.
 const MenuMaskVK = 0xE8
 
@@ -50,7 +50,7 @@ func menuKey(e KeyEvent) int {
 }
 
 // MenuMask is a Sender that keeps a lone Alt or Win from opening the menu
-// bar or the Start menu (OUT-08, ADR-0004). Before the release of LAlt,
+// bar or the Start menu (ADR-0004). Before the release of LAlt,
 // RAlt, LWin or RWin, when no other key was pressed since that key's last
 // press, it inserts a press and a release of the mask key, in the same
 // batch. It sees only the events it forwards, and only those the Sender
@@ -189,7 +189,7 @@ func (m *MenuMask) forward(e KeyEvent) {
 // notch or a button press or release, is not a key press for this: a lone Alt
 // released after Alt+WheelUp or Alt+MouseLeft still gets the mask key, which
 // is harmless, and safe whatever Windows makes of it. Neither is a Unicode
-// event, a unit of a typed text (OUT-21): it is the character that counts, not
+// event, a unit of a typed text: it is the character that counts, not
 // a key, and the extra mask key does no harm.
 func dirtyAfter(dirty uint8, e KeyEvent) uint8 {
 	k := menuKey(e)

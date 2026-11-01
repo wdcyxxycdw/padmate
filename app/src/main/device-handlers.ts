@@ -105,15 +105,15 @@ function mappingResult(value: unknown): MappingResult {
   };
 }
 
-// Identify a controller (IN-13). The renderer passes the key of a controller
+// Identify a controller. The renderer passes the key of a controller
 // it lists; the daemon makes it buzz and flash and says which cues it can
 // give. Nothing but the key goes to the daemon.
 //
-// The latency figures of the diagnostics page (DMN-15, UI-22): read once a
+// The latency figures of the diagnostics page: read once a
 // second while the page is open, and cleared on its button. The renderer
 // passes at most a selector (a connection ID or a key), nothing else.
 //
-// The mapping wizard and custom mappings (IN-17, IN-18, IN-19, ADR-0012): the
+// The mapping wizard and custom mappings (ADR-0012): the
 // raw events of one controller (rawWatchStart, rawWatchStop; raw owns the
 // input.raw subscription), and the SDL mapping string saved or taken away for
 // it. The renderer passes a selector and a checked mapping string; the daemon

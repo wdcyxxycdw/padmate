@@ -173,7 +173,7 @@ export function SettingsPage({
   }, [outcome]);
 
   // The timing rows and the combo dialog write their own config.json
-  // members (UI-19), shown saving like the switches. A change that alters
+  // members, shown saving like the switches. A change that alters
   // nothing writes nothing.
   const failed = (kind: "noLibrary" | "brokenConfig" | "error") => ({
     ok: false as const,
@@ -204,7 +204,7 @@ export function SettingsPage({
     }
   };
 
-  // The calibration dialog (IN-14) writes one change after another while it
+  // The calibration dialog writes one change after another while it
   // is open, each behind the one before (the store queues them), so unlike
   // write it does not turn away a change made while the last one saves.
   const writeCalibration = async (
@@ -226,7 +226,7 @@ export function SettingsPage({
     state.status?.devices.find(
       (entry) => entry.info.id === state.selectedDevice,
     ) ?? state.status?.devices[0];
-  // The daemon's own combo for the controller (UI-19), by its family.
+  // The daemon's own combo for the controller, by its family.
   const combo = deviceCombo(state.status, device?.info.id);
   const family = combo && isPanicFamily(combo.family) ? combo.family : null;
   const parsed = editable ? readConfig(config) : null;
@@ -252,7 +252,7 @@ export function SettingsPage({
   useEffect(() => {
     if (comboFor !== null && comboFor !== comboKey) setComboFor(null);
   }, [comboFor, comboKey]);
-  // Every controller, and joystick that SDL does not know (IN-19), and the one
+  // Every controller, and joystick that SDL does not know, and the one
   // whose calibration is open. When that controller goes away the dialog
   // closes and does not come back.
   const controllers = state.status?.devices ?? [];
@@ -266,7 +266,7 @@ export function SettingsPage({
   useEffect(() => {
     if (calibrationFor !== null && !calibrating) setCalibrationFor(null);
   }, [calibrationFor, calibrating]);
-  // The mapping wizard and 恢复默认映射 (IN-18, IN-19), by connection ID: the
+  // The mapping wizard and 恢复默认映射, by connection ID: the
   // key of a joystick SDL does not know is the same for every one of a model.
   // Each closes when its controller goes away.
   const [wizardFor, setWizardFor] = useState<number | null>(null);
@@ -395,7 +395,7 @@ export function SettingsPage({
                 onChange={(key) => void chooseFunctionKey(key)}
               />
               {startup && (
-                // UI-19: the daemon's own entry; null with a daemon that
+                // The daemon's own entry; null with a daemon that
                 // has no startup.get.
                 <div className="row">
                   <div className="row-text">
@@ -593,7 +593,7 @@ export function SettingsPage({
             </div>
           </section>
 
-          {/* PKG-10: 自动检查更新 and 检查更新; the window's own setting. */}
+          {/* 自动检查更新 and 检查更新; the window's own setting. */}
           <UpdatesSection api={store.getState().api} language={language} />
 
           <section className="page-section">

@@ -101,7 +101,7 @@ func TestGolden(t *testing.T) {
 }
 
 // TestGoldenFeedbackSwitchesOfConfig: a replay obeys the feedback switches of
-// the config.json in --data-dir (UI-27, ADR-0015), as live mode does. The
+// the config.json in --data-dir (ADR-0015), as live mode does. The
 // profile of feedback-pause.json still holds the retired pause switch, set to
 // false, and its golden shows that it is ignored: the pause is shown.
 // Here config.json turns the pause indication off, which the replay then
@@ -156,7 +156,7 @@ func TestAcceptance(t *testing.T) {
 	checkGolden(t, "testdata/acceptance.golden", transcript(t, args...))
 }
 
-// TestReplayCombo: a replay pauses with the panic combo (DMN-07) as live
+// TestReplayCombo: a replay pauses with the panic combo as live
 // mode does. In testdata/panic.jsonl, back and start held together for 2 s
 // pause the mapping at 2600 ms, which releases the keys held; the presses
 // map to nothing until the resume at 6100, and the pan pressed before it
@@ -198,7 +198,7 @@ func TestReplayCombo(t *testing.T) {
 		// back is an ordinary, unbound control here; its press is "paused" as
 		// any press is.
 		{"presses while paused", paused, []string{"3500.000 south down", "4000.000 back down", "5000.000 east down"}},
-		// start is the function key (MAP-27, ADR-0012; the default): every
+		// start is the function key (ADR-0012; the default): every
 		// edge of it, paused or not, is a decision with that reason and
 		// nothing else.
 		{"function key edges", function, []string{
@@ -363,7 +363,7 @@ func TestReplayLogStderr(t *testing.T) {
 }
 
 // TestLogError: a log that does not open stops padmated before anything
-// runs, in both modes: a replay exits 1, live mode exitStartup (UI-45).
+// runs, in both modes: a replay exits 1, live mode exitStartup.
 func TestLogError(t *testing.T) {
 	dir := t.TempDir() // a directory is not a file to append to
 	for _, tc := range []struct {
@@ -381,8 +381,8 @@ func TestLogError(t *testing.T) {
 }
 
 // TestLiveOpenError: when SDL does not load, live mode exits exitStartup
-// with the error, after logging it, and the startup report says so
-// (UI-45). It needs no SDL.
+// with the error, after logging it, and the startup report says so.
+// It needs no SDL.
 func TestLiveOpenError(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv(input.EnvLibrary, filepath.Join(dir, "missing", "SDL3.dll"))

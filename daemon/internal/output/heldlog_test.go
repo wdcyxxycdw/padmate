@@ -123,7 +123,7 @@ func startLoopWith(t *testing.T, opts output.LoopOptions, prepare func(*simtest.
 }
 
 // coverSender checks at every Send that the held-key log has every key
-// the batch presses and every key the Recorder has down (OUT-14: the log
+// the batch presses and every key the Recorder has down (the log
 // is written before the Send).
 type coverSender struct {
 	t    *testing.T

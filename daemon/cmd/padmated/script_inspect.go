@@ -11,8 +11,8 @@ import (
 // maxErrorText bounds an error kept for script.status.
 const maxErrorText = 16 << 10
 
-// rememberError keeps err for script.status: the errors of macros by file
-// (SCR-50), the rest as lastError, which is the legacy script's.
+// rememberError keeps err for script.status: the errors of macros by file,
+// the rest as lastError, which is the legacy script's.
 func (r *scriptRuntime) rememberError(err error) {
 	if err == nil {
 		return
