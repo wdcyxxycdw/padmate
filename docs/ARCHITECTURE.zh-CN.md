@@ -565,6 +565,7 @@ Key      := 命名键 | 字符 | 物理键 | 扫描码 | 鼠标键 | 媒体键 |
 **默认配置与启动选择**
 
 - 实机模式下 `profiles/default/profile.json` 不存在就写入固定默认配置 `{"schemaVersion":1,"name":"默认","layers":{"base":{}}}`；已有的原样保留。重放只读，缺失或不能解析时用内置空配置（`DefaultProfileText`）。
+- **随附配置**（`profilelib.EnsureBundled`，ADR-0008）：`internal/profilelib/bundled/<id>/profile.json` 嵌在 padmated 里。发布版的实机启动（不是 `developmentBuild()`，所以界面的开发守护进程和打包测试模式都不算）对 `<数据目录>\bundled.json`（`{"offered":[…]}`）里还没有的每个 id：库里没有同 id、同名的配置就写入，然后在 config.json 的 rules 末尾加 `{"exe":…,"profile":…}`（字段保持原顺序，缩进写回），除非已有规则的 exe 就是这个文件；本次启动重新读一遍设置。`bundled.json` 解析不了就什么都不提供。现在只有 `csp`（“CSP”），对应 `CLIPStudioPaint.exe`。
 - 只给 `--data-dir` 时恢复 state.json 的上次选择；没有记忆、上次是停用或记忆的配置已不在时用 `default`。`--profile-id` 缺失仍启动失败；它只是起始配置，自动选择开着时启动后约 50 ms 的首次前台评估按规则重选（§9）。
 
 **state.json**

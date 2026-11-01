@@ -99,6 +99,9 @@ func live(ctx context.Context, opts options, stdout, stderr io.Writer) (code int
 		}
 	}()
 	if opts.library == nil && (opts.profileID != "" || opts.dataDir != "") {
+		// Only a release build offers the shipped profiles: a development or
+		// test build's library stays as its tests make it.
+		opts.bundled = !developmentBuild()
 		if err := resolveLibrary(&opts); err != nil {
 			fmt.Fprintln(stderr, "padmated:", err)
 			return startupFailed(opts, stderr, err)
@@ -490,6 +493,12 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	}
 	if opts.defaultErr != nil {
 		log.Warn("default profile not created; it runs without a file until one is saved", "profile", profilelib.DefaultID, "err", opts.defaultErr)
+	}
+	if r := opts.bundledResult; len(r.Added) > 0 || len(r.Rules) > 0 {
+		log.Info("shipped profiles added", "profiles", r.Added, "rules", r.Rules)
+	}
+	if opts.bundledErr != nil {
+		log.Warn("shipped profiles not offered; the next start tries again", "err", opts.bundledErr)
 	}
 	if opts.missingLastProfile != "" {
 		log.Warn("last profile no longer in the library; starting with the default profile", "profile", opts.missingLastProfile)

@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "name": "CSP",
+  "timing": {
+    "tapPressMs": 0,
+    "tapGapMs": 0
+  },
+  "analog": {
+    "ls": {
+      "mode": "knob",
+      "knobStepDeg": 18,
+      "directionThreshold": 0.16,
+      "label": "放缩"
+    },
+    "rs": {
+      "mode": "knob",
+      "knobStepDeg": 18,
+      "directionThreshold": 0.16,
+      "label": "旋转画布"
+    }
+  },
+  "layers": {
+    "base": {
+      "south": {
+        "label": "撤销",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl+Z",
+          "mode": "tap"
+        }
+      },
+      "east": {
+        "press": {
+          "type": "keys",
+          "keys": "LCtrl+D",
+          "mode": "tap"
+        },
+        "label": "取消选择"
+      },
+      "west": {
+        "label": "套索",
+        "press": {
+          "type": "keys",
+          "keys": "M",
+          "mode": "tap"
+        }
+      },
+      "north": {
+        "label": "翻转",
+        "press": {
+          "type": "keys",
+          "keys": "H",
+          "mode": "tap"
+        }
+      },
+      "start": {
+        "label": "笔刷变大",
+        "press": {
+          "type": "keys",
+          "keys": "]"
+        }
+      },
+      "rightstick": {
+        "label": "重置旋转",
+        "press": {
+          "type": "keys",
+          "keys": "Alt+R",
+          "mode": "tap"
+        }
+      },
+      "leftstick": {
+        "label": "拖动画布",
+        "press": {
+          "type": "keys",
+          "keys": "Space",
+          "mode": "hold"
+        }
+      },
+      "dpad.up": {
+        "label": "液化",
+        "press": {
+          "type": "keys",
+          "keys": "J",
+          "mode": "tap"
+        }
+      },
+      "dpad.down": {
+        "label": "反选",
+        "press": {
+          "type": "keys",
+          "mode": "tap",
+          "keys": "LCtrl+LShift+I"
+        }
+      },
+      "dpad.left": {
+        "label": "缩放旋转",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl+T",
+          "mode": "tap"
+        }
+      },
+      "dpad.right": {
+        "label": "自由变形",
+        "press": {
+          "type": "keys",
+          "keys": "Ctrl+Shift+T",
+          "mode": "tap"
+        }
+      },
+      "ls.cw": {
+        "label": "放大画布",
+        "press": {
+          "type": "keys",
+          "keys": "WheelUp",
+          "mode": "tap"
+        }
+      },
+      "ls.ccw": {
+        "label": "缩小画布",
+        "press": {
+          "type": "keys",
+          "keys": "WheelDown",
+          "mode": "tap"
+        }
+      },
+      "rs.cw": {
+        "label": "向右旋转画布",
+        "press": {
+          "type": "keys",
+          "keys": "'",
+          "mode": "tap"
+        }
+      },
+      "rs.ccw": {
+        "label": "向左旋转画布",
+        "press": {
+          "type": "keys",
+          "keys": "-",
+          "mode": "tap"
+        }
+      },
+      "rightshoulder": {
+        "label": "+笔刷尺寸",
+        "press": {
+          "type": "keys",
+          "keys": "]"
+        }
+      },
+      "leftshoulder": {
+        "label": "-笔刷尺寸",
+        "press": {
+          "type": "keys",
+          "keys": "["
+        }
+      },
+      "back": {
+        "label": "吸管",
+        "press": {
+          "type": "keys",
+          "keys": "I"
+        }
+      }
+    }
+  },
+  "functionSet": {
+    "south": {
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+LShift+Z"
+      },
+      "label": "重做"
+    },
+    "west": {
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+C"
+      },
+      "label": "复制"
+    },
+    "east": {
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+V"
+      },
+      "label": "粘贴"
+    },
+    "north": {
+      "press": {
+        "type": "keys",
+        "keys": "Delete"
+      },
+      "label": "删除"
+    },
+    "start": {
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+]"
+      },
+      "label": "提高笔刷透明度"
+    },
+    "leftshoulder": {
+      "label": "-笔刷透明度",
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+["
+      }
+    },
+    "rightshoulder": {
+      "label": "+笔刷透明度",
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+]"
+      }
+    },
+    "back": {
+      "label": "保存",
+      "press": {
+        "type": "keys",
+        "keys": "LCtrl+S"
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@ A profile is a whole set of key settings. You can give each app its own profile;
 Click “Profiles” on the left to open the Profiles page.
 
 - At the top is the “Default” profile, marked “Used by apps without a binding”. It cannot be deleted or renamed, but you can change its keys.
+- padmate comes with a profile named CSP for CLIP STUDIO PAINT, bound to it. It is added once, when padmate starts, and only when you have no profile of that name; if you delete it or its binding, it does not come back. Its function names are in Chinese.
 - Every other profile has a card listing, as icons, the apps it is used for. The one in use says “In use”.
 - Click the pencil button “Edit keys” to edit that profile on the “Mapping” page. Click “Duplicate” to make a copy; changing it does not affect the original, but it has no bound apps.
 - The menu of a card has “Export…”, “Profile settings…”, “Rename…” and “Delete…”. At the top of the page are “Import…” and “New profile”.

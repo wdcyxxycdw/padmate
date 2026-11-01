@@ -364,8 +364,13 @@ type options struct {
 	// defaultCreated and defaultErr say what resolveLibrary's
 	// EnsureDefault did, for live mode to log; macroMigration and
 	// macroMigrationErr what its MigrateMacros did.
-	defaultCreated     bool
-	defaultErr         error
+	defaultCreated bool
+	defaultErr     error
+	// bundled offers the shipped profiles to the library (a release build's
+	// live start); bundledResult and bundledErr say what EnsureBundled did.
+	bundled            bool
+	bundledResult      profilelib.BundledResult
+	bundledErr         error
 	macroMigration     profilelib.MacroMigration
 	macroMigrationErr  error
 	library            *profilelib.Library

@@ -565,6 +565,7 @@ The folder structure is in §3. The data folder is `%APPDATA%\padmate` by defaul
 **The default profile and the starting choice**
 
 - In live mode, when `profiles/default/profile.json` does not exist, the fixed default profile `{"schemaVersion":1,"name":"默认","layers":{"base":{}}}` (named "Default") is written; an existing one is kept as it is. A replay only reads, and uses the built-in empty profile (`DefaultProfileText`) when it is missing or cannot be parsed.
+- **Shipped profiles** (`profilelib.EnsureBundled`, ADR-0008): the profiles in `internal/profilelib/bundled/<id>/profile.json` are embedded in padmated. A live start of a release build (not `developmentBuild()`, so neither the UI's dev daemon nor the packaged test mode) offers each ID not yet in `<data>\bundled.json` (`{"offered":[…]}`): it is written when the library has no profile of that ID or name, and then `{"exe":…,"profile":…}` is appended to config.json's rules, fields kept in their order and indented, unless a rule's exe already names that file; the settings of the start are read again. A `bundled.json` that does not parse offers nothing. Now: `csp` ("CSP") for `CLIPStudioPaint.exe`.
 - With only `--data-dir`, the last choice in state.json is restored; with no memory, when last time was disabled, or when the remembered profile is gone, `default` is used. A missing `--profile-id` still fails the start; it is only the starting profile, and with automatic selection on, the first evaluation of the foreground about 50 ms after the start chooses again by the rules (§9).
 
 **state.json**

@@ -35,7 +35,9 @@ func resolveDataDir(opts *options) (err error) {
 // to log and tell the UI), and state.json, where errors start an empty
 // state (stateErr; live mode resets the file, a state.json it cannot
 // read stays), creates the fixed default profile when it is missing
-// (ADR-0008; a failure is kept in defaultErr, not fatal), moves
+// (ADR-0008; a failure is kept in defaultErr, not fatal), offers the
+// shipped profiles when opts.bundled says so (EnsureBundled; kept in
+// bundledResult and bundledErr, not fatal either), moves
 // the profiles' macros folders into the script library
 // (MigrateMacros; what it did is kept for live mode to log, and a failure
 // is not fatal either; a replay only reads, so it finds unmoved macros
@@ -60,6 +62,16 @@ func resolveLibrary(opts *options) error {
 		return &startupError{kind: "config", file: filepath.Join(opts.dataDir, "config.json"), prefix: "config.json", err: err}
 	}
 	opts.configRepair = repair
+	// The shipped profiles, once each (ADR-0008); a rule it adds is in the
+	// settings of this start.
+	if opts.bundled && !opts.replay() {
+		opts.bundledResult, opts.bundledErr = opts.library.EnsureBundled()
+		if len(opts.bundledResult.Rules) > 0 {
+			if fresh, _, err := opts.library.ReadConfig(); err == nil {
+				settings = fresh
+			}
+		}
+	}
 	state, err := opts.library.ReadState()
 	if err != nil {
 		opts.stateErr, state = err, profile.State{}

@@ -153,3 +153,29 @@ func TestLibraryStartupArgs(t *testing.T) {
 		t.Fatal(args)
 	}
 }
+
+// A release build's live start offers the shipped profiles, and the rule it
+// adds selects CSP in this very start; a development or test build, and a
+// replay, leave the library as it is.
+func TestResolveLibraryOffersTheShippedProfiles(t *testing.T) {
+	dir := t.TempDir()
+	opts := options{dataDir: dir, dryRun: true, bundled: true}
+	if err := resolveLibrary(&opts); err != nil || opts.bundledErr != nil || len(opts.bundledResult.Added) != 1 || opts.bundledResult.Added[0] != "csp" {
+		t.Fatal(opts.bundledResult, opts.bundledErr, err)
+	}
+	if sel := opts.settings.Select(`C:\Apps\CLIPStudioPaint.exe`, profilelib.DefaultID); sel.Profile != "csp" || sel.Reason != "rule" {
+		t.Fatalf("CLIP STUDIO PAINT selects %+v", sel)
+	}
+	if _, err := profilelib.New(dir).Read("csp"); err != nil {
+		t.Fatal(err)
+	}
+
+	other := t.TempDir()
+	opts = options{dataDir: other, dryRun: true}
+	if err := resolveLibrary(&opts); err != nil || len(opts.bundledResult.Added) != 0 {
+		t.Fatal(opts.bundledResult, err)
+	}
+	if _, err := profilelib.New(other).Read("csp"); !os.IsNotExist(err) {
+		t.Fatal("a build that does not offer them added csp", err)
+	}
+}
