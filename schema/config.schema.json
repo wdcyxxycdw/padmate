@@ -204,10 +204,14 @@
           "x-go-field": "Calibration"
         },
         "functionKey": {
-          "description": "The function key of this controller (ADR-0012, ADR-0017): while it is held, the other controls use the profile's functionSet first. It sends nothing and cannot be bound. Which buttons can be it depends on the controller: start (Menu, Options, Plus; the default) or back (View, Create, Share, Minus) on a controller with the standard layout; back (the default) or start on a pair of Joy-Cons; paddle3 (ZR, the default) or paddle1 (R) on a right Joy-Con held sideways, paddle4 (ZL, the default) or paddle2 (L) on a left one; back on a left Joy-Con held upright and start on a right one. A value the controller cannot have is an error where the controller's family is known from its key. When it is left out, the controller has the default of its family, except that a controller with the standard layout takes the retired top-level functionKey. Applies at once.",
+          "description": "The function key of this controller (ADR-0012, ADR-0017): while it is held, the other controls use the profile's functionSet first. It sends nothing and cannot be bound. Which buttons can be it depends on the controller: start (Menu, Options, Plus; the default) or back (View, Create, Share, Minus) on a controller with the standard layout; back (the default) or start on a pair of Joy-Cons; rt (ZR, the default; a trigger, pressed at the profile's trigger threshold) or rightshoulder (R) on a single right Joy-Con, lt (ZL, the default) or leftshoulder (L) on a single left one. A single Joy-Con is always held upright. paddle1 to paddle4 are retired: an older version used them for a Joy-Con held sideways. A value the controller cannot have, such as those, is accepted but ignored with a warning where the controller's family is known from its key, and the default of its family applies; on a standard controller or a pair it is an error. When it is left out, the controller has the default of its family, except that a controller with the standard layout takes the retired top-level functionKey. Applies at once.",
           "enum": [
             "start",
             "back",
+            "lt",
+            "rt",
+            "leftshoulder",
+            "rightshoulder",
             "paddle1",
             "paddle2",
             "paddle3",
@@ -393,19 +397,19 @@
               "$ref": "#/$defs/combo"
             },
             "joyconLeft": {
-              "description": "Horizontal left Joy-Con.",
+              "description": "A single left Joy-Con (always held upright). Its combination can use only the buttons it has: back, the D-pad, leftshoulder, leftstick, misc1, paddle2 (SL), paddle4 (SR); one with another button, such as an older version's sideways one, is ignored with a warning and the built-in combination (SL+SR) applies.",
               "$ref": "#/$defs/combo"
             },
             "joyconRight": {
-              "description": "Horizontal right Joy-Con.",
+              "description": "A single right Joy-Con (always held upright). Its combination can use only the buttons it has: south, east, west, north, start, guide (never used), rightshoulder, rightstick, misc2, paddle1 (SR), paddle3 (SL); one with another button is ignored with a warning and the built-in combination (SL+SR) applies.",
               "$ref": "#/$defs/combo"
             },
             "joyconLeftVertical": {
-              "description": "Vertical left Joy-Con.",
+              "description": "Retired: a single Joy-Con is always held upright now, and its combination is joyconLeft. Still accepted so that an older file loads, but ignored, with a warning.",
               "$ref": "#/$defs/combo"
             },
             "joyconRightVertical": {
-              "description": "Vertical right Joy-Con.",
+              "description": "Retired: a single Joy-Con is always held upright now, and its combination is joyconRight. Still accepted so that an older file loads, but ignored, with a warning.",
               "$ref": "#/$defs/combo"
             }
           },
