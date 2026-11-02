@@ -189,7 +189,8 @@ func TestOpenHintsCombine(t *testing.T) {
 	if want := []Hint{{HintCombineJoyCons, "1"}}; !slices.Equal(got, want) {
 		t.Errorf("openHints sets %v, want %v", got, want)
 	}
-	if slices.ContainsFunc(openHints, func(h Hint) bool { return h.Name == HintVerticalJoyCons }) {
-		t.Errorf("openHints %v set %s, which is left to SDL", openHints, HintVerticalJoyCons)
+	// A single Joy-Con is always held upright: Open sets the vertical hint too.
+	if !slices.Contains(openHints, Hint{HintVerticalJoyCons, "1"}) {
+		t.Errorf("openHints %v do not set %s=1", openHints, HintVerticalJoyCons)
 	}
 }

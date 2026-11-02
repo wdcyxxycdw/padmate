@@ -25,7 +25,7 @@ import (
 //     controllers, auto-connect) and when to scan.
 //   - Which gamepads the connected controllers make: one left and one right
 //     Joy-Con form one pair gamepad ("joyconpair"); every other controller is
-//     a single gamepad, held sideways or, with the vertical hint, upright.
+//     a single gamepad, held upright.
 //     When a side arrives or goes, the old gamepad is reported removed (its
 //     consumer releases everything) before the new one is reported added.
 //   - The events: each report is mapped (package jc2) and compared with the
@@ -195,9 +195,6 @@ type joyCon2Config struct {
 	// connected and read: the entry to remember. It runs on the caller of
 	// Handle and must return at once.
 	OnRemember func(KnownJoyCon2)
-	// Vertical makes a single Joy-Con an upright one
-	// (SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS).
-	Vertical bool
 	// Power turns DevicePower events on.
 	Power bool
 	// Silence and GiveUp override jc2.DefaultSilence and
@@ -212,7 +209,6 @@ type joyCon2Hub struct {
 	tr         JoyCon2Transport
 	emit       func(Event)
 	onRemember func(KnownJoyCon2)
-	vertical   bool
 	power      bool
 	silence    time.Duration
 	giveUp     time.Duration
@@ -244,7 +240,6 @@ func newJoyCon2Hub(c joyCon2Config) *joyCon2Hub {
 		tr:         c.Transport,
 		emit:       c.Emit,
 		onRemember: c.OnRemember,
-		vertical:   c.Vertical,
 		power:      c.Power,
 		silence:    c.Silence,
 		giveUp:     c.GiveUp,
@@ -680,13 +675,10 @@ func (h *joyCon2Hub) layout(now time.Duration) {
 
 // modeOf returns the mode of a gamepad made of the links.
 func (h *joyCon2Hub) modeOf(links []*jc2Link) jc2.Mode {
-	switch {
-	case len(links) == 2:
+	if len(links) == 2 {
 		return jc2.Pair
-	case h.vertical:
-		return jc2.Vertical
 	}
-	return jc2.Horizontal
+	return jc2.Vertical // a single Joy-Con is always held upright
 }
 
 // retire ends the gamepad dev, whose links changed or went silent: it is

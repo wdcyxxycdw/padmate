@@ -6,11 +6,11 @@ import (
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
-// sidewaysL is the button list of inputtest.JoyConLeft, which cannot be
-// imported here; TestSidewaysLCopy keeps the two equal.
-var sidewaysL = []string{
-	"south", "east", "west", "north", "guide", "start", "leftstick",
-	"leftshoulder", "rightshoulder", "paddle2", "paddle4",
+// joyConL is the button list of inputtest.JoyConLeft, which cannot be
+// imported here; TestJoyConLCopy keeps the two equal.
+var joyConL = []string{
+	"back", "leftstick", "leftshoulder",
+	"dpad.up", "dpad.down", "dpad.left", "dpad.right", "misc1", "paddle2", "paddle4",
 }
 
 // bitsOf returns the mask with the bits bs.
@@ -37,7 +37,7 @@ func TestControlMask(t *testing.T) {
 		{"nil axes", axis, nil, 1<<6 - 1, ""},
 		{"no buttons", button, []string{}, 0, ""},
 		{"no axes", axis, []string{}, 0, ""},
-		{"sideways L", button, sidewaysL, bitsOf(0, 1, 2, 3, 5, 6, 7, 9, 10, 17, 19), ""},
+		{"Joy-Con L", button, joyConL, bitsOf(4, 7, 9, 11, 12, 13, 14, 15, 17, 19), ""},
 		{"sticks", axis, []string{"lefty", "leftx"}, bitsOf(0, 1), ""},
 		{"unknown", button, []string{"south", "sl"}, 0, `unknown button "sl"`},
 		{"repeated", button, []string{"south", "east", "south"}, 0, `button "south" is listed twice`},
@@ -88,7 +88,7 @@ func TestPackIndex(t *testing.T) {
 	for i := range none {
 		none[i] = -1
 	}
-	sidewaysMask, err := controlMask("button", sidewaysL, buttonIndex, int(sdl.GAMEPAD_BUTTON_COUNT))
+	joyConMask, err := controlMask("button", joyConL, buttonIndex, int(sdl.GAMEPAD_BUTTON_COUNT))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,8 +99,8 @@ func TestPackIndex(t *testing.T) {
 	}{
 		{"all buttons", 1<<sdl.GAMEPAD_BUTTON_COUNT - 1, identity},
 		// The list is in SDL enum order, so the packed index is the
-		// position in it: south 0, ..., guide 4, ..., paddle4 10.
-		{"sideways L", sidewaysMask, want(buttonIndex, sidewaysL...)},
+		// position in it: back 0, ..., paddle4 9.
+		{"Joy-Con L", joyConMask, want(buttonIndex, joyConL...)},
 		{"sticks", bitsOf(0, 1), want(axisIndex, "leftx", "lefty")},
 		{"left trigger", bitsOf(int(sdl.GAMEPAD_AXIS_LEFT_TRIGGER)), want(axisIndex, "lefttrigger")},
 		{"none", 0, none},
@@ -109,16 +109,16 @@ func TestPackIndex(t *testing.T) {
 			t.Errorf("%s: packIndex(%#x) = %v, want %v", tc.name, tc.mask, got, tc.want)
 		}
 	}
-	// Spot-check the sideways L by name, the buttons it lacks included.
-	p := packIndex(sidewaysMask)
+	// Spot-check the Joy-Con L by name, the buttons it lacks included.
+	p := packIndex(joyConMask)
 	for name, j := range map[string]int8{
-		"south": 0, "east": 1, "west": 2, "north": 3, "guide": 4, "start": 5,
-		"leftstick": 6, "leftshoulder": 7, "rightshoulder": 8, "paddle2": 9, "paddle4": 10,
-		"back": -1, "dpad.up": -1, "dpad.down": -1, "dpad.left": -1, "dpad.right": -1,
-		"rightstick": -1, "misc1": -1, "paddle1": -1, "paddle3": -1,
+		"back": 0, "leftstick": 1, "leftshoulder": 2,
+		"dpad.up": 3, "dpad.down": 4, "dpad.left": 5, "dpad.right": 6, "misc1": 7, "paddle2": 8, "paddle4": 9,
+		"south": -1, "east": -1, "west": -1, "north": -1, "guide": -1, "start": -1,
+		"rightstick": -1, "rightshoulder": -1, "paddle1": -1, "paddle3": -1,
 	} {
 		if i, _ := buttonIndex(name); p[i] != j {
-			t.Errorf("sideways L: %s packs to %d, want %d", name, p[i], j)
+			t.Errorf("Joy-Con L: %s packs to %d, want %d", name, p[i], j)
 		}
 	}
 }

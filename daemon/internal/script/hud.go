@@ -229,7 +229,7 @@ func (h *Host) padLabel(call goja.FunctionCall) goja.Value {
 	}
 	pad := padlabel.Pad{}
 	if state := h.padState; state.Connected {
-		pad = padlabel.Pad{Type: state.Info.Type, ButtonMask: state.Info.ButtonMask, Printed: map[string]string{
+		pad = padlabel.Pad{Type: state.Info.Type, Printed: map[string]string{
 			"south": state.Info.ButtonLabels.South, "east": state.Info.ButtonLabels.East,
 			"west": state.Info.ButtonLabels.West, "north": state.Info.ButtonLabels.North,
 		}}

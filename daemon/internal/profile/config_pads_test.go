@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/wdcyxxycdw/padmate/daemon/internal/control"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/padfamily"
 )
 
@@ -20,13 +21,13 @@ func devPtr(key, rest string) string { return childPointer("/devices", key) + re
 func TestConfigPadMembers(t *testing.T) {
 	c := mustConfig(t, fmt.Sprintf(`{"schemaVersion":0,"devices":{
 		%q:{"functionKey":"back","feedback":{"rumble":false,"led":true},"panic":{"buttons":["start","north"],"holdMs":700},"ignored":true},
-		%q:{"functionKey":"paddle1"}}}`, keyXbox, keyJoyConR))
+		%q:{"functionKey":"rightshoulder"}}}`, keyXbox, keyJoyConR))
 	x := c.Devices[keyXbox]
 	if x.FunctionKey != "back" || !x.Ignored || x.Panic == nil || x.Panic.HoldMs != 700 || x.Feedback == nil ||
 		x.Feedback.Rumble == nil || *x.Feedback.Rumble || x.Feedback.Led == nil || !*x.Feedback.Led || x.Feedback.Pause != nil {
 		t.Errorf("xbox entry: %+v", x)
 	}
-	if c.Devices[keyJoyConR].FunctionKey != "paddle1" {
+	if c.Devices[keyJoyConR].FunctionKey != "rightshoulder" {
 		t.Errorf("joycon entry: %+v", c.Devices[keyJoyConR])
 	}
 	if c.Legacy.Any() {
@@ -69,18 +70,18 @@ func TestConfigPadValidation(t *testing.T) {
 		{"pair: back", dev(keyJoyConPair, `"functionKey":"back"`), ""},
 		{"pair: start", dev(keyJoyConPair, `"functionKey":"start"`), ""},
 		{"pair: a paddle", dev(keyJoyConPair, `"functionKey":"paddle3"`), devPtr(keyJoyConPair, "/functionKey")},
-		{"left: ZL", dev(keyJoyConL, `"functionKey":"paddle4"`), ""},
-		{"left: L", dev(keyJoyConL, `"functionKey":"paddle2"`), ""},
-		{"left: upright minus", dev(keyJoyConL, `"functionKey":"back"`), ""},
-		{"left: the right one's ZR", dev(keyJoyConL, `"functionKey":"paddle3"`), devPtr(keyJoyConL, "/functionKey")},
-		{"left: plus", dev(keyJoyConL, `"functionKey":"start"`), devPtr(keyJoyConL, "/functionKey")},
-		{"right: ZR", dev(keyJoyConR, `"functionKey":"paddle3"`), ""},
-		{"right: R", dev(keyJoyConR, `"functionKey":"paddle1"`), ""},
-		{"right: upright plus", dev(keyJoyConR, `"functionKey":"start"`), ""},
-		{"right: minus", dev(keyJoyConR, `"functionKey":"back"`), devPtr(keyJoyConR, "/functionKey")},
-		// A key that tells nothing of the family accepts any function key.
-		{"no guid: a paddle", dev("k", `"functionKey":"paddle2"`), ""},
+		{"pair: a trigger", dev(keyJoyConPair, `"functionKey":"lt"`), devPtr(keyJoyConPair, "/functionKey")},
+		{"standard: a trigger", dev(keyXbox, `"functionKey":"lt"`), devPtr(keyXbox, "/functionKey")},
+		{"left: ZL", dev(keyJoyConL, `"functionKey":"lt"`), ""},
+		{"left: L", dev(keyJoyConL, `"functionKey":"leftshoulder"`), ""},
+		{"right: ZR", dev(keyJoyConR, `"functionKey":"rt"`), ""},
+		{"right: R", dev(keyJoyConR, `"functionKey":"rightshoulder"`), ""},
+		// A key that tells nothing of the family accepts every function key
+		// that some family has, and a retired paddle with a warning.
+		{"no guid: a trigger", dev("k", `"functionKey":"rt"`), ""},
+		{"no guid: a shoulder", dev("k", `"functionKey":"leftshoulder"`), ""},
 		{"no guid: back", dev("k", `"functionKey":"back"`), ""},
+		{"no guid: a retired paddle", dev("k", `"functionKey":"paddle2"`), ""},
 		{"guide is retired", dev(keyXbox, `"functionKey":"guide"`), devPtr(keyXbox, "/functionKey")},
 		{"a button that is no function key", dev(keyXbox, `"functionKey":"south"`), devPtr(keyXbox, "/functionKey")},
 		{"an alias", dev(keyXbox, `"functionKey":"select"`), devPtr(keyXbox, "/functionKey")},
@@ -114,6 +115,65 @@ func TestConfigPadValidation(t *testing.T) {
 				t.Fatalf("diagnostic %+v; want pointer %s, located", ds[0], tc.pointer)
 			}
 		})
+	}
+}
+
+// TestConfigOldJoyConMembers: a config.json written when a single Joy-Con was
+// held sideways, or either way, still loads whole (no error, so the rest of the
+// file applies), with a warning on each value that no longer fits: a function
+// key a single Joy-Con no longer has (a paddle, back or start), the retired
+// panic families, and a combo with a button the Joy-Con does not have. The
+// controller then has the default of its family, and no key is lost.
+func TestConfigOldJoyConMembers(t *testing.T) {
+	doc := fmt.Sprintf(`{"schemaVersion":0,"enabled":false,
+		"safety":{"panic":{
+			"standard":{"buttons":["back","south"],"holdMs":1500},
+			"joyconLeft":{"buttons":["leftshoulder","rightshoulder"],"holdMs":2000},
+			"joyconLeftVertical":{"buttons":["paddle2","paddle4"],"holdMs":2000},
+			"joyconRightVertical":{"buttons":["paddle3","paddle1"],"holdMs":2000}}},
+		"devices":{
+			%q:{"functionKey":"paddle4","panic":{"buttons":["leftshoulder","rightshoulder"],"holdMs":2000},"feedback":{"rumble":false}},
+			%q:{"functionKey":"start"},
+			%q:{"functionKey":"paddle1"},
+			%q:{"functionKey":"back"}}}`, keyJoyConL, keyJoyConR, "k", keyXbox)
+	c, ds := ParseConfig([]byte(doc))
+	if c == nil || ds.HasErrors() {
+		t.Fatalf("an older file must load: %v", ds)
+	}
+	if c.Enabled {
+		t.Error("the rest of the file does not apply")
+	}
+	warned := map[string]bool{}
+	for _, d := range ds {
+		if d.Severity != SeverityWarning {
+			t.Errorf("diagnostic %v is not a warning", d)
+		}
+		warned[d.Pointer] = true
+	}
+	for _, ptr := range []string{
+		devPtr(keyJoyConL, "/functionKey"), devPtr(keyJoyConL, "/panic/buttons"), devPtr(keyJoyConR, "/functionKey"), devPtr("k", "/functionKey"),
+		"/safety/panic/joyconLeft/buttons", "/safety/panic/joyconLeftVertical", "/safety/panic/joyconRightVertical",
+	} {
+		if !warned[ptr] {
+			t.Errorf("no warning on %s; warned: %v", ptr, ds)
+		}
+	}
+	if warned[devPtr(keyXbox, "/functionKey")] || warned["/safety/panic/standard/buttons"] {
+		t.Errorf("a warning on a value that is still good: %v", ds)
+	}
+	left := c.PadSettings(keyJoyConL, padfamily.JoyConLeft)
+	if left.FunctionKey != control.LT || left.FunctionKeySource != SourceDefault || buttons(left.Panic) != "paddle2+paddle4" || left.PanicSource != SourceDefault {
+		t.Errorf("left: %+v; want the defaults", left)
+	}
+	if left.Feedback.Rumble {
+		t.Error("left: the rest of its entry (feedback) was lost")
+	}
+	right := c.PadSettings(keyJoyConR, padfamily.JoyConRight)
+	if right.FunctionKey != control.RT || right.FunctionKeySource != SourceDefault || buttons(right.Panic) != "paddle3+paddle1" || right.PanicSource != SourceDefault {
+		t.Errorf("right: %+v; want the defaults", right)
+	}
+	if x := c.PadSettings(keyXbox, padfamily.Standard); x.FunctionKey != control.Back || x.FunctionKeySource != SourceDevice {
+		t.Errorf("xbox: %+v; its own good entry applies", x)
 	}
 }
 

@@ -669,42 +669,44 @@ func TestLiveVirtualFivePads(t *testing.T) {
 // TestLiveVirtualJoyCon maps virtual Joy-Cons under padmate's hints (the
 // combine hint is on). SDL pairs only HIDAPI Joy-Cons, never virtual
 // gamepads, so each virtual one is a gamepad of its own: --device selects
-// L alone, and R's presses map nothing. It models SDL's mapping of a
-// sideways Joy-Con (inputtest.JoyConLeft), not the device. L's SL
-// and SR hold Ctrl and Shift, and SDL's recentering at the removal
+// R alone, and L's presses map nothing. It models SDL's mapping of a
+// Joy-Con held upright (inputtest.JoyConRight), not the device. R's R
+// and A hold Shift and Space, and SDL's recentering at the removal
 // releases them, in button order, before the note of the removal.
 func TestLiveVirtualJoyCon(t *testing.T) {
 	inputtest.Unsetenv(t, input.HintCombineJoyCons, input.HintVerticalJoyCons)
-	tl := startTestLive(t, nil, "--dry-run", "--device", "virtual Joy-Con (L)")
+	tl := startTestLive(t, nil, "--dry-run", "--device", "virtual Joy-Con (R)")
 	stderr := tl.stderr.String()
+	// Both Joy-Con hints are set by padmate: pairs combine, a single one is
+	// held upright.
 	for _, want := range []string{"padmated:   SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1\n",
-		"padmated:   SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS unset (SDL's default)\n"} {
+		"padmated:   SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1\n"} {
 		if !strings.Contains(stderr, want) {
 			t.Errorf("stderr has no %q:\n%s", want, stderr)
 		}
 	}
-	r, err := tl.source.AttachVirtualDesc(inputtest.JoyConRight("padmate virtual Joy-Con (R)"))
-	if err != nil {
-		t.Fatalf("AttachVirtualDesc(R): %v", err)
-	}
-	tl.waitFor(t, tl.log, `"msg":"gamepad ignored: it does not match the device filter","id":`+padID(r)+",")
 	l, err := tl.source.AttachVirtualDesc(inputtest.JoyConLeft("padmate virtual Joy-Con (L)"))
 	if err != nil {
 		t.Fatalf("AttachVirtualDesc(L): %v", err)
 	}
-	added := "device " + padID(l) + ` "padmate virtual Joy-Con (L)" added to slot 0`
+	tl.waitFor(t, tl.log, `"msg":"gamepad ignored: it does not match the device filter","id":`+padID(l)+",")
+	r, err := tl.source.AttachVirtualDesc(inputtest.JoyConRight("padmate virtual Joy-Con (R)"))
+	if err != nil {
+		t.Fatalf("AttachVirtualDesc(R): %v", err)
+	}
+	added := "device " + padID(r) + ` "padmate virtual Joy-Con (R)" added to slot 0`
 	tl.waitFor(t, tl.stdout, added)
-	press(t, l, "south", true)
-	press(t, l, "south", false)
+	press(t, r, "south", true)
+	press(t, r, "south", false)
 	tl.waitFor(t, tl.stdout, "send +LCtrl +Z\n")
 	tl.waitFor(t, tl.stdout, "send -Z -LCtrl\n")
 
-	// L and ZL are unbound in basic.json, and R has no slot.
+	// SL and SR are unbound in basic.json, and L has no slot.
 	before := len(sendEdges(tl.stdout.String()))
 	for _, p := range []struct {
 		v       *input.Virtual
 		control string
-	}{{l, "paddle2"}, {l, "paddle4"}, {r, "south"}, {r, "leftshoulder"}} {
+	}{{r, "paddle1"}, {r, "paddle3"}, {l, "leftshoulder"}, {l, "paddle2"}} {
 		press(t, p.v, p.control, true)
 		press(t, p.v, p.control, false)
 	}
@@ -716,28 +718,28 @@ func TestLiveVirtualJoyCon(t *testing.T) {
 	if n := len(sendEdges(tl.stdout.String())); n != before {
 		t.Errorf("%d edges sent after the unbound presses, want %d:\n%s", n, before, tl.stdout)
 	}
-	// T-input keeps the order of the presses, so SL's edge also comes after
+	// T-input keeps the order of the presses, so R's edge also comes after
 	// every edge they could have caused.
-	press(t, l, "leftshoulder", true)
-	tl.waitFor(t, tl.stdout, "send +LCtrl\n")
-	if got := sendEdges(tl.stdout.String())[before:]; !slices.Equal(got, []string{"+LCtrl"}) {
-		t.Errorf("edges sent after the unbound presses and SL: %q, want only +LCtrl", got)
-	}
-	press(t, l, "rightshoulder", true)
+	press(t, r, "rightshoulder", true)
 	tl.waitFor(t, tl.stdout, "send +LShift\n")
+	if got := sendEdges(tl.stdout.String())[before:]; !slices.Equal(got, []string{"+LShift"}) {
+		t.Errorf("edges sent after the unbound presses and R: %q, want only +LShift", got)
+	}
+	press(t, r, "east", true)
+	tl.waitFor(t, tl.stdout, "send +Space\n")
 
-	detach(t, l)
-	removed := "device " + padID(l) + ` "padmate virtual Joy-Con (L)" removed from slot 0: release all`
+	detach(t, r)
+	removed := "device " + padID(r) + ` "padmate virtual Joy-Con (R)" removed from slot 0: release all`
 	tl.waitFor(t, tl.stdout, removed)
 	tl.sync()
 	beforeExit := tl.stdout.String()
-	shift := strings.Index(beforeExit, "send +LShift\n")
-	if shift < 0 {
-		t.Fatalf("no Shift press:\n%s", beforeExit)
+	space := strings.Index(beforeExit, "send +Space\n")
+	if space < 0 {
+		t.Fatalf("no Space press:\n%s", beforeExit)
 	}
-	releases := sendEdges(beforeExit[shift+len("send +LShift\n"):])
+	releases := sendEdges(beforeExit[space+len("send +Space\n"):])
 	slices.Sort(releases)
-	if !slices.Equal(releases, []string{"-LCtrl", "-LShift"}) {
+	if !slices.Equal(releases, []string{"-LShift", "-Space"}) {
 		t.Fatalf("removal left modifiers held or sent extra keys: %q\n%s", releases, beforeExit)
 	}
 	tl.cancel()
@@ -746,14 +748,14 @@ func TestLiveVirtualJoyCon(t *testing.T) {
 	}
 	out := tl.stdout.String()
 	checkBalanced(t, out)
-	if strings.Contains(out, `"padmate virtual Joy-Con (R)" added to slot`) {
-		t.Errorf("R was added to a slot:\n%s", out)
+	if strings.Contains(out, `"padmate virtual Joy-Con (L)" added to slot`) {
+		t.Errorf("L was added to a slot:\n%s", out)
 	}
 	// SDL recentres both buttons before removal. MinPress can defer their
 	// physical releases to removal, which releases in reverse press order.
 	note := strings.Index(out, removed)
-	if shift < 0 || note < shift {
-		t.Fatalf("no %q before %q:\n%s", "send +LShift", removed, out)
+	if space < 0 || note < space {
+		t.Fatalf("no %q before %q:\n%s", "send +Space", removed, out)
 	}
 	if got := sendEdges(out[len(beforeExit):]); len(got) != 0 {
 		t.Errorf("exit sent edges after removal already released everything: %q\n%s", got, out)
@@ -764,8 +766,8 @@ func TestLiveVirtualJoyCon(t *testing.T) {
 }
 
 // TestLiveVirtualJoyConPairSwap follows the replacements of ADR-0002 with
-// virtual gamepads: a lone Joy-Con holds SL, its partner connects and SDL
-// replaces it with the pair, which holds SL too, then loses a Joy-Con and
+// virtual gamepads: a lone Joy-Con holds L, its partner connects and SDL
+// replaces it with the pair, which holds L too, then loses a Joy-Con and
 // is replaced by the one left. Every swap removes the old device while a
 // key is held on it, so each removal releases it (invariant 1) and the new
 // device maps from its first press. The devices are SDL virtual gamepads
@@ -826,10 +828,10 @@ func TestLiveVirtualJoyConPairSwap(t *testing.T) {
 		t.Fatalf("held after the pair's removal: %q\n%s", held, tl.stdout)
 	}
 	l2 := attach(inputtest.JoyConLeft(nameL))
-	press(t, l2, "south", true)
-	press(t, l2, "south", false)
-	tl.waitFor(t, tl.stdout, "send +LCtrl +Z\n")
-	tl.waitFor(t, tl.stdout, "send -Z -LCtrl\n")
+	press(t, l2, "leftshoulder", true)
+	tl.waitForCount(t, tl.stdout, "send +LCtrl\n", 3)
+	press(t, l2, "leftshoulder", false)
+	tl.waitForCount(t, tl.stdout, "send -LCtrl\n", 3)
 
 	tl.cancel()
 	if code := tl.waitCode(t); code != 0 {

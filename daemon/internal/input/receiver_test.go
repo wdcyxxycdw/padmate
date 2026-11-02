@@ -111,7 +111,7 @@ func TestWatchReceiversNoEarlyCombo(t *testing.T) {
 	combos := 0
 	s.onCombo = func() { combos++ }
 	s.watch = NewComboWatch(func(info DeviceInfo) Combo {
-		c := DefaultCombo(info, false)
+		c := DefaultCombo(info)
 		c.Hold = 100 * time.Millisecond
 		return c
 	})

@@ -78,7 +78,6 @@ func (s *Source) startJoyCon2() {
 		Known:       o.Known,
 		AutoConnect: o.AutoConnect,
 		OnRemember:  o.OnRemember,
-		Vertical:    s.VerticalJoyCons(),
 		Power:       s.power,
 		Silence:     o.Silence,
 		GiveUp:      o.GiveUp,

@@ -159,15 +159,15 @@ func TestPadsList(t *testing.T) {
 	if j.Family != "joyconRight" || j.Type != "joyconright" {
 		t.Errorf("joycon = %+v", j)
 	}
-	// Held sideways its ZR is the default and R the other; the retired
+	// Its ZR is the default and R the other; the retired
 	// functionKey does not apply to a Joy-Con.
-	if got := options2(j); !slices.Equal(got, []string{"paddle3=ZR", "paddle1=R"}) {
+	if got := options2(j); !slices.Equal(got, []string{"rt=ZR", "rightshoulder=R"}) {
 		t.Errorf("joycon function keys = %v", got)
 	}
-	if f := j.FunctionKey; f.Default != "paddle3" || f.Effective != "paddle3" || f.Source != "default" {
+	if f := j.FunctionKey; f.Default != "rt" || f.Effective != "rt" || f.Source != "default" {
 		t.Errorf("joycon function key = %+v", f)
 	}
-	if p := j.Panic; strings.Join(p.Effective.Buttons, "+") != "leftshoulder+rightshoulder" || p.Source != "default" {
+	if p := j.Panic; strings.Join(p.Effective.Buttons, "+") != "paddle3+paddle1" || p.Source != "default" {
 		t.Errorf("joycon panic = %+v; the standard entry is not a Joy-Con's", p)
 	}
 	if j.Feedback.Effective.Rumble {
@@ -192,7 +192,7 @@ func TestPadsListOfAFreshInstall(t *testing.T) {
 			t.Errorf("%s: %+v", p.Key, p)
 		}
 	}
-	if c.pad(padXboxKey).FunctionKey.Effective != "start" || c.pad(padJoyConKey).FunctionKey.Effective != "paddle3" {
+	if c.pad(padXboxKey).FunctionKey.Effective != "start" || c.pad(padJoyConKey).FunctionKey.Effective != "rt" {
 		t.Error("family defaults")
 	}
 }
@@ -202,14 +202,14 @@ func TestPadsListOfAFreshInstall(t *testing.T) {
 func TestPadsSet(t *testing.T) {
 	_, _, c := startPadsLive(t, legacyPadConfig)
 	var res rpcPadSet
-	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "paddle1"}, &res); err != nil {
+	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "rightshoulder"}, &res); err != nil {
 		t.Fatal(err)
 	}
-	if !res.Applied || res.Revision == "" || res.Pad.Key != padJoyConKey || res.Pad.FunctionKey.Effective != "paddle1" || res.Pad.FunctionKey.Source != "device" || res.Pad.FunctionKey.Stored != "paddle1" {
+	if !res.Applied || res.Revision == "" || res.Pad.Key != padJoyConKey || res.Pad.FunctionKey.Effective != "rightshoulder" || res.Pad.FunctionKey.Source != "device" || res.Pad.FunctionKey.Stored != "rightshoulder" {
 		t.Fatalf("result = %+v", res)
 	}
 	cfg := c.config()
-	if cfg.Devices[padJoyConKey].FunctionKey != "paddle1" {
+	if cfg.Devices[padJoyConKey].FunctionKey != "rightshoulder" {
 		t.Errorf("config.json = %+v", cfg.Devices[padJoyConKey])
 	}
 	// The retired members and the other controllers are as they were.
@@ -244,7 +244,7 @@ func TestPadsSet(t *testing.T) {
 	}
 	// A repeat of what is stored changes nothing.
 	before := c.pads().Revision
-	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "paddle1"}, &res); err != nil || res.Revision != before {
+	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "rightshoulder"}, &res); err != nil || res.Revision != before {
 		t.Errorf("a repeat: revision %s → %s, %v", before, res.Revision, err)
 	}
 	// An empty request changes nothing either.
@@ -264,7 +264,10 @@ func TestPadsSetRefuses(t *testing.T) {
 		{"no key", map[string]any{"functionKey": "back"}, -32602},
 		{"a key that is no DeviceKey", map[string]any{"key": "nope", "functionKey": "back"}, -32602},
 		{"a controller never seen", map[string]any{"key": padGUID(0x03, 0x1234, 0x5678) + "/s:NEW", "functionKey": "back"}, -32004},
-		{"minus on a right Joy-Con held sideways", map[string]any{"key": padJoyConKey, "functionKey": "back"}, -32602},
+		{"minus on a single right Joy-Con", map[string]any{"key": padJoyConKey, "functionKey": "back"}, -32602},
+		{"a retired paddle on a single right Joy-Con", map[string]any{"key": padJoyConKey, "functionKey": "paddle3"}, -32602},
+		{"the left one's ZL on a right Joy-Con", map[string]any{"key": padJoyConKey, "functionKey": "lt"}, -32602},
+		{"a shoulder on a pad with the standard layout", map[string]any{"key": padXboxKey, "functionKey": "rightshoulder"}, -32602},
 		{"a paddle on a pad with the standard layout", map[string]any{"key": padXboxKey, "functionKey": "paddle1"}, -32602},
 		{"guide", map[string]any{"key": padXboxKey, "functionKey": "guide"}, -32602},
 		{"an alias", map[string]any{"key": padXboxKey, "functionKey": "select"}, -32602},
@@ -380,11 +383,11 @@ func TestPadsRememberedInState(t *testing.T) {
 	if len(pads) != 2 || pads[0].Key != padXboxKey || !pads[0].Connected || pads[1].Key != padJoyConKey || pads[1].Connected || !pads[1].Known || pads[1].Family != "joyconRight" {
 		t.Fatalf("pads = %+v", pads)
 	}
-	if got := options2(pads[1]); !slices.Equal(got, []string{"paddle3=ZR", "paddle1=R"}) {
+	if got := options2(pads[1]); !slices.Equal(got, []string{"rt=ZR", "rightshoulder=R"}) {
 		t.Errorf("function keys of a controller that is gone = %v", got)
 	}
 	// Its settings can be written while it is away.
-	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "paddle1"}, new(any)); err != nil {
+	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "rightshoulder"}, new(any)); err != nil {
 		t.Fatal(err)
 	}
 }

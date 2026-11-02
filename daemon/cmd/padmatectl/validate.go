@@ -59,8 +59,8 @@ flags:
             A profile written to a file of another library, or by itself,
             is read like any profile; an "extends" there is an error.
   --function-key KEY
-            the function key, start, back or paddle1 to paddle4 (the
-            paddles are what a single Joy-Con held sideways has), that the
+            the function key: start, back, leftshoulder, rightshoulder, lt or rt (the
+            shoulders and triggers are what a single Joy-Con has), that the
             bindings are compiled with: the bindings on it are ignored and
             not listed. The function key is a setting of each controller;
             config.json is not read, and the default is start.
@@ -89,7 +89,7 @@ func runValidate(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print one JSON object per file")
 	merged := fs.Bool("merged", false, "print each profile with its parents merged in")
-	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start, back or paddle1 to paddle4")
+	functionKey := fs.String("function-key", "start", "the function key the bindings are compiled with: start, back, leftshoulder, rightshoulder, lt or rt")
 	if code, ok := parseFlags(fs, args, validateUsage, stdout, stderr); !ok {
 		return code
 	}

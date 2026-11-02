@@ -18,7 +18,7 @@ import (
 // slots share one profile, and each runs the Program that has the function key
 // of its own controller.
 
-// fnProfileSrc has a function set that rebinds south and east; paddle3, back and
+// fnProfileSrc has a function set that rebinds south and east; rt, back and
 // start have an ordinary binding in the base layer, which is ignored where the
 // key is the function key.
 const fnProfileSrc = `{"schemaVersion":1,"name":"fn","layers":{"base":{
@@ -26,7 +26,7 @@ const fnProfileSrc = `{"schemaVersion":1,"name":"fn","layers":{"base":{
   "east":{"press":{"type":"keys","keys":"B"}},
   "start":{"press":{"type":"keys","keys":"S"}},
   "back":{"press":{"type":"keys","keys":"V"}},
-  "paddle3":{"press":{"type":"keys","keys":"E"}}}},
+  "rt":{"press":{"type":"keys","keys":"E"}}}},
  "functionSet":{"south":{"press":{"type":"keys","keys":"F1"}},"east":{"press":{"type":"keys","keys":"F2"}},
   "north":{"press":{"type":"keys","keys":"F3"}},"west":{"press":{"type":"keys","keys":"F4"}}}}`
 
@@ -46,6 +46,7 @@ func fnProgram(t testing.TB) *engine.Program {
 // GUIDs of a Joy-Con 2 (R), a Joy-Con 2 pair and an Xbox pad, as padfamily
 // reads them.
 const (
+	guidJoyConLeft  = "030000007e0500006720000000000000"
 	guidJoyConRight = "030000007e0500006620000000000000"
 	guidJoyConPair  = "030000007e0500006820000000000000"
 	guidXbox        = "030000005e040000ff02000000000000"
@@ -75,7 +76,7 @@ func newPadConfig() *padConfig {
 }
 
 func (c *padConfig) functionKey(key string, info input.DeviceInfo) control.Control {
-	return c.cfg.Load().PadSettings(key, input.FamilyOf(info, false)).FunctionKey
+	return c.cfg.Load().PadSettings(key, input.FamilyOf(info)).FunctionKey
 }
 
 // setFunctionKey commits devices.<key>.functionKey = fk ("" takes it away).
@@ -130,7 +131,7 @@ func (h *harness) slotFunctionKey(i int) control.Control {
 }
 
 // Two controllers at the same time with different function keys: a single Joy-Con
-// has paddle3, an Xbox pad start. Each takes the function set under its own key,
+// has rt, an Xbox pad start. Each takes the function set under its own key,
 // and the other's key is an ordinary control with the profile's binding.
 func TestFunctionKeysOfTwoControllers(t *testing.T) {
 	cfg := newPadConfig()
@@ -145,17 +146,17 @@ func TestFunctionKeysOfTwoControllers(t *testing.T) {
 	h.send(added(joyConRight(1, "j1")))
 	h.send(added(xbox(2, "x1")))
 	h.sync()
-	if got := h.slotFunctionKey(0); got != control.Paddle3 {
-		t.Fatalf("the Joy-Con's slot has %s; want paddle3", got)
+	if got := h.slotFunctionKey(0); got != control.RT {
+		t.Fatalf("the Joy-Con's slot has %s; want rt", got)
 	}
 	if got := h.slotFunctionKey(1); got != control.Start {
 		t.Fatalf("the Xbox pad's slot has %s; want start", got)
 	}
-	// Joy-Con: paddle3 then south: F1. Then its start (ordinary) is S.
-	h.send(button(1, "paddle3", true))
+	// Joy-Con: rt then south: F1. Then its start (ordinary) is S.
+	h.send(axis(1, "righttrigger", 20000))
 	h.send(button(1, "south", true))
 	h.send(button(1, "south", false))
-	h.send(button(1, "paddle3", false))
+	h.send(axis(1, "righttrigger", 0))
 	h.send(button(1, "start", true))
 	h.send(button(1, "start", false))
 	h.sync()
@@ -165,13 +166,13 @@ func TestFunctionKeysOfTwoControllers(t *testing.T) {
 	h.send(button(2, "south", true))
 	h.send(button(2, "south", false))
 	h.send(button(2, "start", false))
-	h.send(button(2, "paddle3", true))
-	h.send(button(2, "paddle3", false))
+	h.send(axis(2, "righttrigger", 20000))
+	h.send(axis(2, "righttrigger", 0))
 	h.sync()
 	h.expect("+F1@0 -F1@0 +S@0 -S@0 +F1@0 -F1@0 +E@0 -E@0")
 	mu.Lock()
 	defer mu.Unlock()
-	if want := []string{"0 paddle3"}; !slices.Equal(switched, want) {
+	if want := []string{"0 rt"}; !slices.Equal(switched, want) {
 		t.Errorf("OnFunctionKey calls %q; want %q", switched, want)
 	}
 }
@@ -197,13 +198,13 @@ func TestFunctionKeyAtAttachAndTakeOver(t *testing.T) {
 	h.send(removed(1))
 	h.sync()
 	h.expect("+F1@0 -F1@0")
-	if got := h.slotFunctionKey(0); got != control.Paddle3 {
-		t.Fatalf("slot 0 has %s after the Joy-Con took it; want paddle3", got)
+	if got := h.slotFunctionKey(0); got != control.RT {
+		t.Fatalf("slot 0 has %s after the Joy-Con took it; want rt", got)
 	}
-	h.send(button(2, "paddle3", true))
+	h.send(axis(2, "righttrigger", 20000))
 	h.send(button(2, "east", true))
 	h.send(button(2, "east", false))
-	h.send(button(2, "paddle3", false))
+	h.send(axis(2, "righttrigger", 0))
 	h.sync()
 	h.expect("+F1@0 -F1@0 +F2@0 -F2@0")
 }
@@ -290,13 +291,13 @@ func TestFunctionKeyChangeWhileHeld(t *testing.T) {
 }
 
 // A single Joy-Con turns into a pair: the slot gets a controller of another
-// family, its function key goes from paddle3 to back, and what the Joy-Con held,
+// family, its function key goes from rt to back, and what the Joy-Con held,
 // the function key included, ends with it. The pair turning back is the same.
 func TestFunctionKeyJoyConBecomesAPairAndBack(t *testing.T) {
 	cfg := newPadConfig()
 	h := start(t, opts{slots: 1, program: fnProgram(t), functionKey: cfg.functionKey})
 	h.send(added(joyConRight(1, "j1")))
-	h.send(button(1, "paddle3", true))
+	h.send(axis(1, "righttrigger", 20000))
 	h.send(button(1, "south", true))
 	h.send(button(1, "east", true))
 	h.sync()
@@ -313,8 +314,8 @@ func TestFunctionKeyJoyConBecomesAPairAndBack(t *testing.T) {
 	h.send(button(2, "south", true))
 	h.send(button(2, "south", false))
 	h.send(button(2, "back", false))
-	h.send(button(2, "paddle3", true)) // an ordinary control on the pair
-	h.send(button(2, "paddle3", false))
+	h.send(axis(2, "righttrigger", 20000)) // an ordinary control on the pair
+	h.send(axis(2, "righttrigger", 0))
 	h.send(button(2, "start", true)) // and start
 	h.send(button(2, "start", false))
 	h.sync()
@@ -326,15 +327,15 @@ func TestFunctionKeyJoyConBecomesAPairAndBack(t *testing.T) {
 	h.send(removed(2))
 	h.send(added(joyConRight(3, "j1")))
 	h.sync()
-	if got := h.slotFunctionKey(0); got != control.Paddle3 {
-		t.Fatalf("the Joy-Con has %s; want paddle3", got)
+	if got := h.slotFunctionKey(0); got != control.RT {
+		t.Fatalf("the Joy-Con has %s; want rt", got)
 	}
 	var seen string
 	h.fresh(&seen)
-	h.send(button(3, "paddle3", true))
+	h.send(axis(3, "righttrigger", 20000))
 	h.send(button(3, "south", true))
 	h.send(button(3, "south", false))
-	h.send(button(3, "paddle3", false))
+	h.send(axis(3, "righttrigger", 0))
 	h.sync()
 	if got := h.fresh(&seen); got != "+F1@0 -F1@0" {
 		t.Errorf("the Joy-Con sent %q; want +F1@0 -F1@0", got)
@@ -347,7 +348,7 @@ func TestFunctionKeyUnplugWhileHeld(t *testing.T) {
 	cfg := newPadConfig()
 	h := start(t, opts{slots: 1, program: fnProgram(t), functionKey: cfg.functionKey})
 	h.send(added(joyConRight(1, "j1")))
-	h.send(button(1, "paddle3", true))
+	h.send(axis(1, "righttrigger", 20000))
 	h.send(button(1, "south", true))
 	h.sync()
 	h.expect("+F1@0")
@@ -366,6 +367,89 @@ func TestFunctionKeyUnplugWhileHeld(t *testing.T) {
 	}
 }
 
+func joyConLeft(id input.DeviceID, serial string) *input.DeviceInfo {
+	return &input.DeviceInfo{ID: id, Name: "Joy-Con 2 (L)", GUID: guidJoyConLeft, Serial: serial, Type: "joyconleft", IsGamepad: true}
+}
+
+// Two single Joy-Cons, the left one with its shoulder button (L) as the function
+// key by its setting and the right one with its trigger (ZR) by default, each
+// held with a key under it: the pause, a Reload to another profile and the
+// removal of one let go of all their keys, and nothing is held afterwards (the
+// invariant of ARCHITECTURE section 3, no stuck keys).
+func TestFunctionKeyTriggerAndShoulderExitPaths(t *testing.T) {
+	cfg := newPadConfig()
+	cfg.setFunctionKey(guidJoyConLeft+"/s:l1", "leftshoulder")
+	h := start(t, opts{slots: 2, program: fnProgram(t), functionKey: cfg.functionKey})
+	h.send(added(joyConLeft(1, "l1")))
+	h.send(added(joyConRight(2, "r1")))
+	h.sync()
+	if h.slotFunctionKey(0) != control.LeftShoulder || h.slotFunctionKey(1) != control.RT {
+		t.Fatalf("function keys %s and %s; want leftshoulder and rt", h.slotFunctionKey(0), h.slotFunctionKey(1))
+	}
+	holdBoth := func() {
+		h.send(button(1, "leftshoulder", true))
+		h.send(button(1, "south", true))       // F1
+		h.send(axis(2, "righttrigger", 32767)) // all the way: no second stage
+		h.send(button(2, "east", true))        // F2
+		h.sync()
+	}
+	releaseBoth := func() {
+		h.send(button(1, "south", false))
+		h.send(button(1, "leftshoulder", false))
+		h.send(button(2, "east", false))
+		h.send(axis(2, "righttrigger", 0))
+		h.sync()
+	}
+	holdBoth()
+	h.expectInterleaved("+F1@0", "+F2@0")
+	// Pause: everything is let go; the function keys stay what the controllers
+	// hold (a pause sends nothing and forgets nothing), and the releases send nothing.
+	h.pause(true)
+	if got := len(h.owners()); got != 0 {
+		t.Errorf("%d owners after the pause", got)
+	}
+	releaseBoth()
+	h.pause(false)
+	h.expectInterleaved("+F1@0 -F1@0", "+F2@0 -F2@0")
+	if got := len(h.owners()); got != 0 {
+		t.Errorf("%d owners after the releases", got)
+	}
+	// Held again, then a saved profile (Reload): the keys end, the controllers
+	// keep their function keys.
+	var seen string
+	h.fresh(&seen)
+	holdBoth()
+	if got := len(h.owners()); got != 2 {
+		t.Fatalf("%d owners before the Reload; want 2", got)
+	}
+	h.reload(fnProgram(t), 2)
+	if got := len(h.owners()); got != 0 {
+		t.Errorf("%d owners after the Reload", got)
+	}
+	if h.slotFunctionKey(0) != control.LeftShoulder || h.slotFunctionKey(1) != control.RT {
+		t.Errorf("after the Reload the keys are %s and %s; want leftshoulder and rt", h.slotFunctionKey(0), h.slotFunctionKey(1))
+	}
+	releaseBoth()
+	// The left Joy-Con goes away with its function key held and a key under it.
+	h.send(button(1, "leftshoulder", true))
+	h.send(button(1, "south", true))
+	h.sync()
+	h.send(removed(1))
+	h.sync()
+	if got := len(h.owners()); got != 0 {
+		t.Errorf("%d owners after the unplug", got)
+	}
+	views, err := h.sup.Inspect(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, v := range views {
+		if v.Mapping.FunctionKey != control.Invalid {
+			t.Errorf("slot %d: function key %s still held at the end", v.Index, v.Mapping.FunctionKey)
+		}
+	}
+}
+
 // A Reload (a saved profile) keeps the function key of each controller.
 func TestFunctionKeyReloadKeepsEachControllersKey(t *testing.T) {
 	cfg := newPadConfig()
@@ -374,13 +458,13 @@ func TestFunctionKeyReloadKeepsEachControllersKey(t *testing.T) {
 	h.send(added(xbox(2, "x1")))
 	h.sync()
 	h.reload(fnProgram(t), 2)
-	if h.slotFunctionKey(0) != control.Paddle3 || h.slotFunctionKey(1) != control.Start {
-		t.Fatalf("after the Reload the keys are %s and %s; want paddle3 and start", h.slotFunctionKey(0), h.slotFunctionKey(1))
+	if h.slotFunctionKey(0) != control.RT || h.slotFunctionKey(1) != control.Start {
+		t.Fatalf("after the Reload the keys are %s and %s; want rt and start", h.slotFunctionKey(0), h.slotFunctionKey(1))
 	}
-	h.send(button(1, "paddle3", true))
+	h.send(axis(1, "righttrigger", 20000))
 	h.send(button(1, "south", true))
 	h.send(button(1, "south", false))
-	h.send(button(1, "paddle3", false))
+	h.send(axis(1, "righttrigger", 0))
 	h.sync()
 	h.expect("+F1@0 -F1@0")
 }

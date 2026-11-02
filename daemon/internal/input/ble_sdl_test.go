@@ -104,8 +104,8 @@ func TestJoyCon2NeverPairsWithSwitch1(t *testing.T) {
 		bits    uint16
 		control string
 	}{
-		{"Switch 1 L and Joy-Con 2 R", inputtest.JoyConLeft("padmate sdl L"), "joyconleft", jc2.SideR, "joyconright", 1 << 1, "south"},
-		{"Switch 1 R and Joy-Con 2 L", inputtest.JoyConRight("padmate sdl R"), "joyconright", jc2.SideL, "joyconleft", 1 << 2, "south"},
+		{"Switch 1 L and Joy-Con 2 R", inputtest.JoyConLeft("padmate sdl L"), "joyconleft", jc2.SideR, "joyconright", 1 << 1, "east"},
+		{"Switch 1 R and Joy-Con 2 L", inputtest.JoyConRight("padmate sdl R"), "joyconright", jc2.SideL, "joyconleft", 1 << 2, "dpad.left"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			fake := newExtBLE()

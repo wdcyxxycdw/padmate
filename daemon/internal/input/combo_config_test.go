@@ -6,9 +6,9 @@ import (
 )
 
 func TestConfiguredComboPick(t *testing.T) {
-	s := &Source{comboFor: func(info DeviceInfo, vertical bool) Combo {
-		if info.Type != "xboxone" || vertical {
-			t.Fatal(info, vertical)
+	s := &Source{comboFor: func(info DeviceInfo) Combo {
+		if info.Type != "xboxone" {
+			t.Fatal(info)
 		}
 		return Combo{Buttons: []string{"west"}, Hold: 3 * time.Second}
 	}}

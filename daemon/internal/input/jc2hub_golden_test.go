@@ -101,13 +101,10 @@ func TestHubReplaysCaptures(t *testing.T) {
 		{"L", jc2.SideL, addrL1, serL1, captureCalL},
 	} {
 		lines := readCaptureLines(t, filepath.Join("jc2", "testdata", "capture-"+c.name+".txt"))
-		for _, vertical := range []bool{false, true} {
-			mode := jc2.Horizontal
-			if vertical {
-				mode = jc2.Vertical
-			}
+		{
+			mode := jc2.Vertical
 			t.Run(c.name+"-"+mode.String(), func(t *testing.T) {
-				r := newRig(t, func(cfg *joyCon2Config) { knownAuto(cfg); cfg.Vertical = vertical })
+				r := newRig(t, knownAuto)
 				n := len(r.tr.connectList())
 				r.now = lines[0].at
 				for _, l := range lines {

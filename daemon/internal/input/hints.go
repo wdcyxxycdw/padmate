@@ -38,11 +38,15 @@ const (
 	// "--hint SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=0", or the environment
 	// variable of that name, keeps every Joy-Con apart, as a diagnostic.
 	HintCombineJoyCons = "SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS"
-	// HintVerticalJoyCons is not set by padmate, so SDL's default "0"
-	// (sideways) applies. SDL reads it when it opens a Joy-Con
+	// HintVerticalJoyCons is set to "1" by Open, after the hints above:
+	// padmate always reads a single Joy-Con held upright, and the sideways
+	// grip no longer exists. SDL reads it when it opens a Joy-Con
 	// (SDL_hidapi_switch.c) and for the mapping of a lone one
-	// (SDL_gamepad.c); a pair ignores it. Source reads it back so that
-	// headers record it.
+	// (SDL_gamepad.c); a pair ignores it. Like the hint above it is no
+	// setting: only "--hint SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=0", or the
+	// environment variable of that name, undoes it, as a diagnostic, and
+	// padmate's families, labels and combos assume the upright mapping then
+	// too. Source reads it back so that headers record it.
 	HintVerticalJoyCons = "SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS"
 
 	hintHIDAPI      = "SDL_JOYSTICK_HIDAPI"      // default 1
@@ -61,7 +65,7 @@ var backgroundHint = Hint{HintBackgroundEvents, "1"}
 // since SDL keeps the value set last. No preset does, apart from the
 // background hint that every preset repeats with the same value
 // (TestPresets).
-var openHints = []Hint{backgroundHint, {HintNoSignalHandlers, "1"}, {HintCombineJoyCons, "1"}}
+var openHints = []Hint{backgroundHint, {HintNoSignalHandlers, "1"}, {HintCombineJoyCons, "1"}, {HintVerticalJoyCons, "1"}}
 
 // BackendHints are the hints that select SDL's joystick backends. Source
 // reads them back after SDL_Init, whether or not they were set.

@@ -13,8 +13,8 @@
     "050000007e0500006720000000000000/s:XKW1": {
       "panic": {
         "buttons": [
-          "south",
-          "east"
+          "back",
+          "leftshoulder"
         ],
         "holdMs": 800
       }

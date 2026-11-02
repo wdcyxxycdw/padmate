@@ -152,12 +152,12 @@ func (r *liveRun) deviceCalibration(key string) *profile.Calibration {
 }
 
 // configuredCombo returns the ComboFor of settings, nil without settings.
-func configuredCombo(settings *profile.Config) func(input.DeviceInfo, bool) input.Combo {
+func configuredCombo(settings *profile.Config) func(input.DeviceInfo) input.Combo {
 	if settings == nil {
 		return nil
 	}
-	return func(info input.DeviceInfo, vertical bool) input.Combo {
-		_, c := effectiveCombo(settings, info, vertical)
+	return func(info input.DeviceInfo) input.Combo {
+		_, c := effectiveCombo(settings, info)
 		return c
 	}
 }
@@ -174,26 +174,25 @@ func configuredCombo(settings *profile.Config) func(input.DeviceInfo, bool) inpu
 // combo that fires. settings may be nil. The controller is told by the
 // DeviceKey its info makes (input.KeyOf), whose number N for identical pads is
 // 0: ComboFor is not told which of them it is.
-func effectiveCombo(settings *profile.Config, info input.DeviceInfo, vertical bool) (string, input.Combo) {
-	family := input.FamilyOf(info, vertical)
+func effectiveCombo(settings *profile.Config, info input.DeviceInfo) (string, input.Combo) {
+	family := input.FamilyOf(info)
 	if settings != nil {
 		s := settings.PadSettings(input.KeyOf(&info).String(), family)
 		if s.PanicSource != profile.SourceDefault && !slices.ContainsFunc(s.Panic.Buttons, func(b string) bool { return !info.MayHaveButton(b) }) {
 			return family.PanicFamily(), input.Combo{Buttons: slices.Clone(s.Panic.Buttons), Hold: time.Duration(s.Panic.HoldMs) * time.Millisecond}
 		}
 	}
-	return family.PanicFamily(), input.DefaultCombo(info, vertical)
+	return family.PanicFamily(), input.DefaultCombo(info)
 }
 
 // padFunctionKey is the FunctionKey of the Supervisor's Config: the function
 // key the effective config gives the controller with DeviceKey key and
-// DeviceInfo info (ADR-0017). The grip of a single Joy-Con is judged by its
-// buttons, else by the hint SDL reads.
+// DeviceInfo info (ADR-0017).
 func (r *liveRun) padFunctionKey(key string, info input.DeviceInfo) control.Control {
-	return padFunctionKey(r.selectionConfig(), key, info, r.verticalJoyCons())
+	return padFunctionKey(r.selectionConfig(), key, info)
 }
 
 // padFunctionKey is the function key settings give the controller key.
-func padFunctionKey(settings *profile.Config, key string, info input.DeviceInfo, vertical bool) control.Control {
-	return settings.PadSettings(key, input.FamilyOf(info, vertical)).FunctionKey
+func padFunctionKey(settings *profile.Config, key string, info input.DeviceInfo) control.Control {
+	return settings.PadSettings(key, input.FamilyOf(info)).FunctionKey
 }

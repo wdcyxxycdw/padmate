@@ -161,9 +161,8 @@ func TestReapplyTimingRereadsStartupProfile(t *testing.T) {
 // comboFake is a fake source with the comboSource methods.
 type comboFake struct {
 	*fakeSource
-	vertical bool
-	mu       sync.Mutex
-	repicks  int
+	mu      sync.Mutex
+	repicks int
 }
 
 func (f *comboFake) RepickCombos() error {
@@ -173,8 +172,6 @@ func (f *comboFake) RepickCombos() error {
 	return nil
 }
 
-func (f *comboFake) VerticalJoyCons() bool { return f.vertical }
-
 func (f *comboFake) repicked() int {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -182,13 +179,13 @@ func (f *comboFake) repicked() int {
 }
 
 // TestStatusCombosAndRepick: status.get gives each device the combo
-// T-input detects, by family and grip, and a safety change re-picks the
+// T-input detects, by family, and a safety change re-picks the
 // combos on T-input at once; another change does not.
 func TestStatusCombosAndRepick(t *testing.T) {
 	dir := t.TempDir()
 	writeLibraryProfile(t, dir, "first", `{"schemaVersion":0,"name":"first","layers":{"base":{}}}`)
-	src := &comboFake{fakeSource: newFakeSource(), vertical: true}
-	tl := startLibraryLiveOpen(t, `{"schemaVersion":0,"safety":{"panic":{"joyconLeftVertical":{"buttons":["paddle2","south"],"holdMs":1500}}}}`,
+	src := &comboFake{fakeSource: newFakeSource()}
+	tl := startLibraryLiveOpen(t, `{"schemaVersion":0,"safety":{"panic":{"joyconLeft":{"buttons":["paddle2","leftshoulder"],"holdMs":1500}}}}`,
 		options{dataDir: dir, dryRun: true}, func(input.Options) (eventSource, error) { return src, nil })
 	for i, typ := range []string{"xboxone", "joyconleft", "joyconright"} {
 		id := input.DeviceID(10 + i)
@@ -221,13 +218,13 @@ func TestStatusCombosAndRepick(t *testing.T) {
 	}
 	combos := status()
 	check(combos[10], "standard", 2000, "back", "start")
-	check(combos[11], "joyconLeftVertical", 1500, "paddle2", "south")
-	check(combos[12], "joyconRightVertical", 2000, "paddle3", "paddle1")
+	check(combos[11], "joyconLeft", 1500, "paddle2", "leftshoulder")
+	check(combos[12], "joyconRight", 2000, "paddle3", "paddle1")
 	if n := src.repicked(); n != 0 {
 		t.Fatalf("%d repicks at startup", n)
 	}
 
-	if saved := putConfig(t, client, `{"schemaVersion":0,"timing":{"holdMs":300},"safety":{"panic":{"joyconLeftVertical":{"buttons":["paddle2","south"],"holdMs":1500}}}}`); !saved.Applied {
+	if saved := putConfig(t, client, `{"schemaVersion":0,"timing":{"holdMs":300},"safety":{"panic":{"joyconLeft":{"buttons":["paddle2","leftshoulder"],"holdMs":1500}}}}`); !saved.Applied {
 		t.Fatalf("%+v", saved)
 	}
 	if n := src.repicked(); n != 0 {
@@ -242,7 +239,7 @@ func TestStatusCombosAndRepick(t *testing.T) {
 	}
 	combos = status()
 	check(combos[10], "standard", 1000, "west", "east", "north")
-	check(combos[11], "joyconLeftVertical", 2000, "paddle2", "paddle4")
+	check(combos[11], "joyconLeft", 2000, "paddle2", "paddle4")
 }
 
 // TestConfigPutAppliesComboLive: with fake IPC input, whose source picks

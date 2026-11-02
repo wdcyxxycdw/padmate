@@ -66,7 +66,7 @@ type rpcSlotExplanation struct {
 	Device input.DeviceID   `json:"device"`
 	Layers []rpcLayerResult `json:"layers"`
 	// FunctionKey is the function key of the controller in the slot (ADR-0012,
-	// ADR-0017): "back", "start" or a paddle, the key FunctionSet belongs to.
+	// ADR-0017): "back", "start", "leftshoulder", "rightshoulder", "lt" or "rt", the key FunctionSet belongs to.
 	// For a library profile, which has no controller, it is the function key
 	// of the controllers the daemon knows that have it (Controllers), or the
 	// default if it knows none.
@@ -303,10 +303,9 @@ type functionKeyGroup struct {
 // the standard layout and no settings of its own.
 func (r *liveRun) functionKeyGroups(ctx context.Context) []functionKeyGroup {
 	cfg := r.selectionConfig()
-	vertical := r.verticalJoyCons()
 	var groups []functionKeyGroup
 	for _, p := range r.knownPads(ctx, cfg, time.Now()) {
-		fk := cfg.PadSettings(p.key, p.family(vertical)).FunctionKey
+		fk := cfg.PadSettings(p.key, p.family()).FunctionKey
 		i := slices.IndexFunc(groups, func(g functionKeyGroup) bool { return g.key == fk })
 		if i < 0 {
 			groups = append(groups, functionKeyGroup{key: fk})
@@ -315,7 +314,7 @@ func (r *liveRun) functionKeyGroups(ctx context.Context) []functionKeyGroup {
 		groups[i].controllers = append(groups[i].controllers, p.key)
 	}
 	if len(groups) == 0 {
-		groups = []functionKeyGroup{{key: padFunctionKey(cfg, "", input.DeviceInfo{}, false)}}
+		groups = []functionKeyGroup{{key: padFunctionKey(cfg, "", input.DeviceInfo{})}}
 	}
 	return groups
 }

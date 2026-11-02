@@ -7,11 +7,9 @@ import "math"
 type Mode uint8
 
 const (
-	// Horizontal is a single Joy-Con held sideways, the default: its
-	// buttons are the face buttons and its stick is the left stick.
-	Horizontal Mode = iota + 1
-	// Vertical is a single Joy-Con held upright, like half a gamepad.
-	Vertical
+	// Vertical is a single Joy-Con held upright, like half a gamepad. It is
+	// the only way padmate holds a single Joy-Con.
+	Vertical Mode = iota + 1
 	// Pair is a left and a right Joy-Con as one gamepad: both Vertical
 	// layouts together.
 	Pair
@@ -19,8 +17,6 @@ const (
 
 func (m Mode) String() string {
 	switch m {
-	case Horizontal:
-		return "horizontal"
 	case Vertical:
 		return "vertical"
 	case Pair:
@@ -124,13 +120,10 @@ type Binding struct {
 	To   Control
 }
 
-// StickMap says how the stick becomes two axes. With Swap the raw Y feeds X
-// and the raw X feeds Y, which is the stick of a Joy-Con held sideways.
-// SignX and SignY are +1 or -1. The raw values are Norm's: positive is right
-// and up.
+// StickMap says how the stick becomes two axes. SignX and SignY are +1 or
+// -1. The raw values are Norm's: positive is right and up.
 type StickMap struct {
 	X, Y         Control
-	Swap         bool
 	SignX, SignY int8
 }
 
@@ -143,24 +136,6 @@ type Mapping struct {
 // The mappings, by mode and side. Pair has no table of its own: it is the
 // Vertical mapping of each side.
 var (
-	horizontalL = Mapping{
-		Bindings: []Binding{
-			{ButtonLeft, ControlSouth}, {ButtonDown, ControlEast}, {ButtonUp, ControlWest}, {ButtonRight, ControlNorth},
-			{ButtonSL, ControlLeftShoulder}, {ButtonSR, ControlRightShoulder},
-			{ButtonL, ControlPaddle2}, {ButtonZL, ControlPaddle4},
-			{ButtonMinus, ControlStart}, {ButtonCapture, ControlGuide}, {ButtonLStick, ControlLeftStick},
-		},
-		Stick: StickMap{X: ControlLeftX, Y: ControlLeftY, Swap: true, SignX: -1, SignY: -1},
-	}
-	horizontalR = Mapping{
-		Bindings: []Binding{
-			{ButtonA, ControlSouth}, {ButtonX, ControlEast}, {ButtonB, ControlWest}, {ButtonY, ControlNorth},
-			{ButtonSL, ControlLeftShoulder}, {ButtonSR, ControlRightShoulder},
-			{ButtonR, ControlPaddle1}, {ButtonZR, ControlPaddle3},
-			{ButtonPlus, ControlStart}, {ButtonHome, ControlGuide}, {ButtonC, ControlMisc2}, {ButtonRStick, ControlLeftStick},
-		},
-		Stick: StickMap{X: ControlLeftX, Y: ControlLeftY, Swap: true, SignX: 1, SignY: 1},
-	}
 	verticalL = Mapping{
 		Bindings: []Binding{
 			{ButtonUp, ControlDpadUp}, {ButtonDown, ControlDpadDown}, {ButtonLeft, ControlDpadLeft}, {ButtonRight, ControlDpadRight},
@@ -185,10 +160,6 @@ var (
 // does not exist.
 func mappingOf(mode Mode, side Side) *Mapping {
 	switch {
-	case mode == Horizontal && side == SideL:
-		return &horizontalL
-	case mode == Horizontal && side == SideR:
-		return &horizontalR
 	case (mode == Vertical || mode == Pair) && side == SideL:
 		return &verticalL
 	case (mode == Vertical || mode == Pair) && side == SideR:
@@ -278,9 +249,6 @@ func mapInto(s *State, mode Mode, side Side, r Report, cal StickCal) {
 		}
 	}
 	fx, fy := cal.Norm(r.StickX, r.StickY)
-	if m.Stick.Swap {
-		fx, fy = fy, fx
-	}
 	s.Axes[m.Stick.X-firstAxis] = toAxis(float64(m.Stick.SignX) * fx)
 	s.Axes[m.Stick.Y-firstAxis] = toAxis(float64(m.Stick.SignY) * fy)
 }

@@ -16,26 +16,22 @@ import (
 
 func TestDefaultCombo(t *testing.T) {
 	for _, tc := range []struct {
-		typ      string
-		vertical bool
-		buttons  []string
+		typ     string
+		buttons []string
 	}{
-		{"xboxone", false, []string{"back", "start"}},
-		{"xboxone", true, []string{"back", "start"}},
-		{"ps5", false, []string{"back", "start"}},
-		{"unknown", false, []string{"back", "start"}},
-		{"", true, []string{"back", "start"}},
-		{"joyconpair", false, []string{"back", "start"}},
-		{"joyconpair", true, []string{"back", "start"}},
-		// SL+SR: ARCHITECTURE §7.1.
-		{"joyconleft", false, []string{"leftshoulder", "rightshoulder"}},
-		{"joyconright", false, []string{"leftshoulder", "rightshoulder"}},
-		{"joyconleft", true, []string{"paddle2", "paddle4"}},
-		{"joyconright", true, []string{"paddle3", "paddle1"}},
+		{"xboxone", []string{"back", "start"}},
+		{"ps5", []string{"back", "start"}},
+		{"unknown", []string{"back", "start"}},
+		{"", []string{"back", "start"}},
+		{"joyconpair", []string{"back", "start"}},
+		// SL+SR, which SDL reports as paddles on a Joy-Con held upright:
+		// ARCHITECTURE §7.1.
+		{"joyconleft", []string{"paddle2", "paddle4"}},
+		{"joyconright", []string{"paddle3", "paddle1"}},
 	} {
-		c := input.DefaultCombo(input.DeviceInfo{Type: tc.typ}, tc.vertical)
+		c := input.DefaultCombo(input.DeviceInfo{Type: tc.typ})
 		if !slices.Equal(c.Buttons, tc.buttons) || c.Hold != input.ComboHold {
-			t.Errorf("DefaultCombo(%q, vertical %v) = %+v, want %q for %v", tc.typ, tc.vertical, c, tc.buttons, input.ComboHold)
+			t.Errorf("DefaultCombo(%q) = %+v, want %q for %v", tc.typ, c, tc.buttons, input.ComboHold)
 		}
 	}
 	if input.ComboHold != 2*time.Second {
@@ -168,9 +164,6 @@ func formatCombo(t *testing.T, e input.Event) string {
 	return fmt.Sprintf("%d@%s", e.Device, strconv.FormatFloat(float64(e.Time)/float64(time.Millisecond), 'f', -1, 64))
 }
 
-// horizontal is the pick of replay: the default combo, horizontal grip.
-func horizontal(info input.DeviceInfo) input.Combo { return input.DefaultCombo(info, false) }
-
 // TestComboWatch drives a watch with the default combos and the hold of
 // 2 s through scripts (parseComboScript).
 func TestComboWatch(t *testing.T) {
@@ -200,19 +193,19 @@ func TestComboWatch(t *testing.T) {
 		// the combo of an unknown type.
 		{"no added event", "+back@0 +start@0 fire@2000>1@2000"},
 		// The Info of the added event picks the combo: a single Joy-Con
-		// uses SL+SR, which it reports as the shoulders when held sideways.
-		{"Joy-Con", "add:joyconleft@0 +back@0 +start@0 due- fire@3000 +leftshoulder@3000 +rightshoulder@3100 fire@5100>1@5100"},
-		{"Joy-Con R", "add:joyconright@0 +rightshoulder@0 +leftshoulder@0 fire@2000>1@2000"},
-		{"Joy-Con pair", "add:joyconpair@0 +leftshoulder@0 +rightshoulder@0 due- +back@0 +start@0 fire@2000>1@2000"},
+		// uses SL+SR, which it reports as paddles when held upright.
+		{"Joy-Con", "add:joyconleft@0 +back@0 +start@0 due- fire@3000 +paddle2@3000 +paddle4@3100 fire@5100>1@5100"},
+		{"Joy-Con R", "add:joyconright@0 +paddle3@0 +paddle1@0 fire@2000>1@2000"},
+		{"Joy-Con pair", "add:joyconpair@0 +paddle2@0 +paddle4@0 due- +back@0 +start@0 fire@2000>1@2000"},
 		// A Joy-Con holds SL+SR when its partner connects: SDL replaces it with
 		// the pair (ADR-0002). The hold dies with the device; the pair has its
 		// own combo, back+start, and its own hold time.
-		{"Joy-Con replaced by the pair", "add:joyconleft@0 +leftshoulder@0 +rightshoulder@500 rm@1000 due- fire@3000 2add:joyconpair@1000 2+leftshoulder@1000 2+rightshoulder@1000 due- 2+back@1100 2+start@1200 due@3200 fire@3200>2@3200"},
+		{"Joy-Con replaced by the pair", "add:joyconleft@0 +paddle2@0 +paddle4@500 rm@1000 due- fire@3000 2add:joyconpair@1000 2+paddle2@1000 2+paddle4@1000 due- 2+back@1100 2+start@1200 due@3200 fire@3200>2@3200"},
 		// The pair drops back to the Joy-Con that is left, which holds nothing.
-		{"the pair replaced by a Joy-Con", "add:joyconpair@0 +back@0 +start@500 rm@1000 due- fire@3000 2add:joyconleft@1010 2+leftshoulder@1100 due- 2+rightshoulder@1200 due@3200 fire@3200>2@3200"},
+		{"the pair replaced by a Joy-Con", "add:joyconpair@0 +back@0 +start@500 rm@1000 due- fire@3000 2add:joyconleft@1010 2+paddle2@1100 due- 2+paddle4@1200 due@3200 fire@3200>2@3200"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			w := input.NewComboWatch(horizontal)
+			w := input.NewComboWatch(input.DefaultCombo)
 			runComboScript(t, w, tc.script)
 		})
 	}
@@ -359,7 +352,9 @@ func TestExpandCombos(t *testing.T) {
 		{"at the end", "add@0 +back@0 +start@0 +south@500", []string{"", "", "", "", "@2000"}},
 		{"twice", "add@0 +back@0 +start@0 -start@2500 +start@3000 -back@6000", []string{"", "", "", "@2000", "", "@5000"}},
 		{"removed", "add@0 +back@0 +start@0 rm@1999", nil},
-		{"Joy-Con, horizontal", "add:joyconleft@0 +leftshoulder@0 +rightshoulder@0", []string{"", "", "", "@2000"}},
+		{"Joy-Con L, SL+SR", "add:joyconleft@0 +paddle2@0 +paddle4@0", []string{"", "", "", "@2000"}},
+		{"Joy-Con R, SR+SL", "add:joyconright@0 +paddle3@0 +paddle1@0", []string{"", "", "", "@2000"}},
+		{"Joy-Con, not the sideways shoulders", "add:joyconleft@0 +leftshoulder@0 +rightshoulder@0", nil},
 		{"Joy-Con, not back+start", "add:joyconright@0 +back@0 +start@0 -back@3000", nil},
 		{"no events", "", nil},
 	} {
@@ -376,7 +371,7 @@ func TestExpandCombos(t *testing.T) {
 			if len(tc.want) > len(in) {
 				want = append(want, comboAt(t, tc.want[len(in)]))
 			}
-			got := input.ExpandCombos(in, horizontal)
+			got := input.ExpandCombos(in, input.DefaultCombo)
 			if !slices.EqualFunc(got, want, eventEqual) {
 				t.Errorf("ExpandCombos:\n got %v\nwant %v", got, want)
 			}
@@ -436,7 +431,7 @@ func TestComboNotInTraces(t *testing.T) {
 // when a mapping changes, so back held before the remap may never be
 // released: the hold of the combo must start again with both pressed anew.
 func TestComboWatchForgetsHeldMembersOnRemap(t *testing.T) {
-	w := input.NewComboWatch(func(info input.DeviceInfo) input.Combo { return input.DefaultCombo(info, false) })
+	w := input.NewComboWatch(input.DefaultCombo)
 	const dev = input.DeviceID(7)
 	info := &input.DeviceInfo{ID: dev, Name: "pad", IsGamepad: true}
 	w.Observe(input.Event{Time: 0, Device: dev, Kind: input.DeviceAdded, Info: info})

@@ -75,16 +75,6 @@ func TestLayoutTables(t *testing.T) {
 		want map[Button]string
 		x, y string // the axes the stick feeds
 	}{
-		{Horizontal, SideL, map[Button]string{
-			ButtonLeft: "south", ButtonDown: "east", ButtonUp: "west", ButtonRight: "north",
-			ButtonSL: "leftshoulder", ButtonSR: "rightshoulder", ButtonL: "paddle2", ButtonZL: "paddle4",
-			ButtonMinus: "start", ButtonCapture: "guide", ButtonLStick: "leftstick",
-		}, "leftx", "lefty"},
-		{Horizontal, SideR, map[Button]string{
-			ButtonA: "south", ButtonX: "east", ButtonB: "west", ButtonY: "north",
-			ButtonSL: "leftshoulder", ButtonSR: "rightshoulder", ButtonR: "paddle1", ButtonZR: "paddle3",
-			ButtonPlus: "start", ButtonHome: "guide", ButtonC: "misc2", ButtonRStick: "leftstick",
-		}, "leftx", "lefty"},
 		{Vertical, SideL, map[Button]string{
 			ButtonUp: "dpad.up", ButtonDown: "dpad.down", ButtonLeft: "dpad.left", ButtonRight: "dpad.right",
 			ButtonL: "leftshoulder", ButtonZL: "lefttrigger", ButtonMinus: "back", ButtonCapture: "misc1",
@@ -136,7 +126,7 @@ func TestLayoutInvalid(t *testing.T) {
 	for _, c := range []struct {
 		mode Mode
 		side Side
-	}{{0, SideL}, {Horizontal, 0}, {4, SideR}, {Vertical, 3}} {
+	}{{0, SideL}, {Vertical, 0}, {4, SideR}, {Vertical, 3}, {Mode(1) + 3, SideL}} {
 		if l, ok := Layout(c.mode, c.side); ok || l.Bindings != nil {
 			t.Errorf("Layout(%v, %v) = %+v, %v", c.mode, c.side, l, ok)
 		}
@@ -150,9 +140,9 @@ func TestLayoutInvalid(t *testing.T) {
 		}
 	}
 	// The copy is the caller's.
-	l, _ := Layout(Horizontal, SideL)
+	l, _ := Layout(Vertical, SideL)
 	l.Bindings[0].To = ControlGuide
-	if l2, _ := Layout(Horizontal, SideL); l2.Bindings[0].To != ControlSouth {
+	if l2, _ := Layout(Vertical, SideL); l2.Bindings[0].To != ControlDpadUp {
 		t.Error("Layout shares its table")
 	}
 	if Mode(9).String() != "?" {
@@ -167,10 +157,6 @@ func TestControlsAndAxes(t *testing.T) {
 		buttons []string
 		axes    []string
 	}{
-		{Horizontal, SideL, []string{"south", "east", "west", "north", "guide", "start", "leftstick", "leftshoulder", "rightshoulder", "paddle2", "paddle4"},
-			[]string{"leftx", "lefty"}},
-		{Horizontal, SideR, []string{"south", "east", "west", "north", "guide", "start", "leftstick", "leftshoulder", "rightshoulder", "paddle1", "paddle3", "misc2"},
-			[]string{"leftx", "lefty"}},
 		{Vertical, SideL, []string{"back", "leftstick", "leftshoulder", "dpad.up", "dpad.down", "dpad.left", "dpad.right", "misc1", "paddle2", "paddle4"},
 			[]string{"leftx", "lefty", "lefttrigger"}},
 		{Vertical, SideR, []string{"east", "south", "north", "west", "guide", "start", "rightstick", "rightshoulder", "paddle1", "paddle3", "misc2"},
@@ -235,7 +221,7 @@ func inControlOrder(names []string) bool {
 }
 
 func TestMapButtons(t *testing.T) {
-	for _, mode := range []Mode{Horizontal, Vertical, Pair} {
+	for _, mode := range []Mode{Vertical, Pair} {
 		for _, side := range []Side{SideL, SideR} {
 			l, _ := Layout(mode, side)
 			for _, b := range l.Bindings {
@@ -264,7 +250,7 @@ func TestMapButtons(t *testing.T) {
 		}
 	}
 	// Buttons of the other side do nothing.
-	if s := Map(Horizontal, SideL, pressed(2048, 2048, ButtonA, ButtonB, ButtonX, ButtonY, ButtonPlus), DefaultStick); s != (State{}) {
+	if s := Map(Vertical, SideL, pressed(2048, 2048, ButtonA, ButtonB, ButtonX, ButtonY, ButtonPlus), DefaultStick); s != (State{}) {
 		t.Errorf("R buttons on L: %+v", s)
 	}
 }
@@ -282,18 +268,6 @@ func TestMapSticks(t *testing.T) {
 		x, y   Control // the axes
 		wx, wy int16
 	}{
-		// Held sideways, left Joy-Con turned counterclockwise: its up is the
-		// gamepad's left, its right is the gamepad's up.
-		{"horizontal L up", Horizontal, SideL, calL, 0, 1, ControlLeftX, ControlLeftY, -32767, 0},
-		{"horizontal L down", Horizontal, SideL, calL, 0, -1, ControlLeftX, ControlLeftY, 32767, 0},
-		{"horizontal L right", Horizontal, SideL, calL, 1, 0, ControlLeftX, ControlLeftY, 0, -32767},
-		{"horizontal L left", Horizontal, SideL, calL, -1, 0, ControlLeftX, ControlLeftY, 0, 32767},
-		// Right Joy-Con turned clockwise: its up is the gamepad's right, its
-		// right is the gamepad's down.
-		{"horizontal R up", Horizontal, SideR, calR, 0, 1, ControlLeftX, ControlLeftY, 32767, 0},
-		{"horizontal R down", Horizontal, SideR, calR, 0, -1, ControlLeftX, ControlLeftY, -32767, 0},
-		{"horizontal R right", Horizontal, SideR, calR, 1, 0, ControlLeftX, ControlLeftY, 0, 32767},
-		{"horizontal R left", Horizontal, SideR, calR, -1, 0, ControlLeftX, ControlLeftY, 0, -32767},
 		{"vertical L up", Vertical, SideL, calL, 0, 1, ControlLeftX, ControlLeftY, 0, -32767},
 		{"vertical L right", Vertical, SideL, calL, 1, 0, ControlLeftX, ControlLeftY, 32767, 0},
 		{"vertical R down", Vertical, SideR, calR, 0, -1, ControlRightX, ControlRightY, 0, 32767},
@@ -392,10 +366,6 @@ func TestEmergencyCombos(t *testing.T) {
 		want   []Control
 		reason string
 	}{
-		{"horizontal L", Map(Horizontal, SideL, pressed(2048, 2048, ButtonSL, ButtonSR), DefaultStick),
-			[]Control{ControlLeftShoulder, ControlRightShoulder}, "leftshoulder+rightshoulder"},
-		{"horizontal R", Map(Horizontal, SideR, pressed(2048, 2048, ButtonSL, ButtonSR), DefaultStick),
-			[]Control{ControlLeftShoulder, ControlRightShoulder}, "leftshoulder+rightshoulder"},
 		{"vertical L", Map(Vertical, SideL, pressed(2048, 2048, ButtonSL, ButtonSR), DefaultStick),
 			[]Control{ControlPaddle2, ControlPaddle4}, "paddle2+paddle4"},
 		{"vertical R", Map(Vertical, SideR, pressed(2048, 2048, ButtonSL, ButtonSR), DefaultStick),
@@ -419,7 +389,7 @@ func TestEmergencyCombos(t *testing.T) {
 func TestMapDoesNotAllocate(t *testing.T) {
 	r := pressed(3000, 1000, ButtonA, ButtonZR, ButtonSL)
 	var sink State
-	if n := testing.AllocsPerRun(100, func() { sink = Map(Horizontal, SideR, r, calR) }); n != 0 {
+	if n := testing.AllocsPerRun(100, func() { sink = Map(Vertical, SideR, r, calR) }); n != 0 {
 		t.Errorf("Map allocates %v times", n)
 	}
 	if n := testing.AllocsPerRun(100, func() { sink = MapPair(r, r, calL, calR) }); n != 0 {

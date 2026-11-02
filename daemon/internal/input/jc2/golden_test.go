@@ -16,7 +16,7 @@ var update = flag.Bool("update", false, "rewrite the golden files of testdata/go
 
 // A capture is the input reports of a real Joy-Con 2 with the steps the owner
 // was asked to do (testdata/capture-*.txt). The reports are decoded with Map
-// in horizontal and in vertical mode, and the events that Diff makes from
+// in vertical mode, and the events that Diff makes from
 // them are compared with testdata/golden/<case>.txt.
 //
 // In the right capture the steps "button-x" and "button-y" were pressed
@@ -104,7 +104,7 @@ var captures = []struct {
 func TestGolden(t *testing.T) {
 	for _, c := range captures {
 		lines := readCapture(t, c.file)
-		for _, mode := range []Mode{Horizontal, Vertical} {
+		for _, mode := range []Mode{Vertical} {
 			name := c.name + "-" + mode.String()
 			t.Run(name, func(t *testing.T) {
 				var sb strings.Builder
@@ -234,7 +234,7 @@ func TestCaptureSteps(t *testing.T) {
 						pressedN++
 						seenOnce = true
 						// Every mode maps it to the control its layout says.
-						for _, mode := range []Mode{Horizontal, Vertical} {
+						for _, mode := range []Mode{Vertical} {
 							lay, _ := Layout(mode, c.side)
 							s := Map(mode, c.side, r, c.cal)
 							for _, bind := range lay.Bindings {

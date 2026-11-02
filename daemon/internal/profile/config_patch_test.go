@@ -109,14 +109,14 @@ func TestSetPadSettingsRefuses(t *testing.T) {
 func TestSetPadSettingsResolves(t *testing.T) {
 	f := false
 	in := []byte(fmt.Sprintf(`{"schemaVersion":0,"devices":{%q:{"ignored":true}}}`, keyJoyConR))
-	out, err := SetPadSettings(in, keyJoyConR, PadChange{SetFunctionKey: true, FunctionKey: "paddle1", SetFeedback: true, Feedback: &FeedbackOverrides{Rumble: &f},
+	out, err := SetPadSettings(in, keyJoyConR, PadChange{SetFunctionKey: true, FunctionKey: "rightshoulder", SetFeedback: true, Feedback: &FeedbackOverrides{Rumble: &f},
 		SetPanic: true, Panic: &PanicCombo{Buttons: []string{"south", "east"}, HoldMs: 900}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	c := mustConfig(t, string(out))
 	s := c.PadSettings(keyJoyConR, 0)
-	if s.FunctionKey.String() != "paddle1" || s.Feedback.Rumble || !s.Feedback.LED || buttons(s.Panic) != "south+east" || s.Panic.HoldMs != 900 {
+	if s.FunctionKey.String() != "rightshoulder" || s.Feedback.Rumble || !s.Feedback.LED || buttons(s.Panic) != "south+east" || s.Panic.HoldMs != 900 {
 		t.Errorf("read back %+v", s)
 	}
 	if !c.Devices[keyJoyConR].Ignored {

@@ -116,7 +116,7 @@ func TestFakeIPCRejectedInHardwareMode(t *testing.T) {
 
 func TestFakeInputComboAndSnapshot(t *testing.T) {
 	fired := make(chan struct{}, 1)
-	src := newRPCInputSource(input.Options{OnCombo: func() { fired <- struct{}{} }, ComboFor: func(input.DeviceInfo, bool) input.Combo {
+	src := newRPCInputSource(input.Options{OnCombo: func() { fired <- struct{}{} }, ComboFor: func(input.DeviceInfo) input.Combo {
 		return input.Combo{Buttons: []string{"back", "start"}, Hold: time.Millisecond}
 	}})
 	defer src.Close()

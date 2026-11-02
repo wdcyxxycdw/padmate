@@ -112,7 +112,7 @@ type rpcPad struct {
 	// the current time while connected; absent when not known.
 	LastSeen int64 `json:"lastSeen,omitempty"`
 	// Family is the padfamily name: standard, joyconLeft, joyconRight,
-	// joyconLeftVertical, joyconRightVertical, joyconPair or unknown.
+	// joyconPair or unknown.
 	Family      string            `json:"family"`
 	FunctionKey rpcPadFunctionKey `json:"functionKey"`
 	Feedback    rpcPadFeedback    `json:"feedback"`
@@ -162,14 +162,6 @@ type knownPad struct {
 	connected bool
 	device    input.DeviceID
 	lastSeen  int64
-}
-
-// verticalJoyCons is the grip hint of the input, false for one without it.
-func (r *liveRun) verticalJoyCons() bool {
-	if src, ok := r.src.(comboSource); ok {
-		return src.VerticalJoyCons()
-	}
-	return false
 }
 
 // knownPads returns the controllers cfg or state.json mention or that are
@@ -228,38 +220,37 @@ func (r *liveRun) knownPads(ctx context.Context, cfg *profile.Config, now time.T
 
 // family is the family of a controller: by its buttons when the daemon has
 // seen it, else by its key's GUID.
-func (p knownPad) family(vertical bool) padfamily.Family {
+func (p knownPad) family() padfamily.Family {
 	if p.known {
-		return input.FamilyOf(p.info, vertical)
+		return input.FamilyOf(p.info)
 	}
-	return padfamily.FromGUID(profile.KeyGUID(p.key), vertical)
+	return padfamily.FromGUID(profile.KeyGUID(p.key))
 }
 
 // padLabel is the name printed on the controller for the control c, as the
 // UI's mapping page shows it. The family stands in for a type the daemon has
 // not seen.
 func padLabel(info input.DeviceInfo, family padfamily.Family, c control.Control) string {
-	typ, mask := info.Type, info.ButtonMask
+	typ := info.Type
 	switch family {
 	case padfamily.JoyConPair:
 		typ = "joyconpair"
-	case padfamily.JoyConLeft, padfamily.JoyConLeftVertical:
+	case padfamily.JoyConLeft:
 		typ = "joyconleft"
-	case padfamily.JoyConRight, padfamily.JoyConRightVertical:
+	case padfamily.JoyConRight:
 		typ = "joyconright"
 	}
-	if family.Sideways() {
-		mask |= 1 // a south button, which a Joy-Con held sideways has (padlabel)
-	}
-	if label := padlabel.Labels(padlabel.Pad{Type: typ, ButtonMask: mask})[c.String()]; label != "" {
+	// Name, not Labels: lt and rt, which a single Joy-Con offers as its function
+	// key, are named by their trigger (ZL, ZR).
+	if label := padlabel.Name(c.String(), padlabel.Pad{Type: typ}); label != "" {
 		return label
 	}
 	return c.String()
 }
 
 // padView builds the entry of p from the settings cfg.
-func padView(cfg *profile.Config, p knownPad, vertical bool) rpcPad {
-	family := p.family(vertical)
+func padView(cfg *profile.Config, p knownPad) rpcPad {
+	family := p.family()
 	s := cfg.PadSettings(p.key, family)
 	dev := cfg.Devices[p.key]
 	keys := s.Family.FunctionKeys()
@@ -327,11 +318,10 @@ func (r *liveRun) padsConfig(l *profilelib.Library) (data []byte, revision strin
 }
 
 func (r *liveRun) padViews(ctx context.Context, cfg *profile.Config) []rpcPad {
-	vertical := r.verticalJoyCons()
 	known := r.knownPads(ctx, cfg, time.Now())
 	out := make([]rpcPad, 0, len(known))
 	for _, p := range known {
-		out = append(out, padView(cfg, p, vertical))
+		out = append(out, padView(cfg, p))
 	}
 	return out
 }
@@ -401,7 +391,6 @@ func (r *liveRun) rpcPadsSet(ctx context.Context, req *jrpc2.Request) (any, erro
 	if p.Revision != nil && *p.Revision != revision {
 		return nil, libraryRPCError(&profilelib.ConflictError{Current: revision})
 	}
-	vertical := r.verticalJoyCons()
 	var target *knownPad
 	for _, k := range r.knownPads(ctx, cfg, time.Now()) {
 		if k.key == p.Key {
@@ -412,7 +401,7 @@ func (r *liveRun) rpcPadsSet(ctx context.Context, req *jrpc2.Request) (any, erro
 	if target == nil {
 		return nil, &jrpc2.Error{Code: -32004, Message: "unknown controller: none of that key has been connected or has settings"}
 	}
-	family := target.family(vertical)
+	family := target.family()
 	var change profile.PadChange
 	if p.FunctionKey != nil {
 		change.SetFunctionKey = true
@@ -472,7 +461,7 @@ func (r *liveRun) rpcPadsSet(ctx context.Context, req *jrpc2.Request) (any, erro
 		}
 	}
 	r.log.Info("controller settings saved", "device", p.Key, "family", family.String(), "functionKey", change.SetFunctionKey, "feedback", change.SetFeedback, "panic", change.SetPanic)
-	return rpcPadSet{rpcSaved: saved, Pad: padView(next, *target, vertical)}, nil
+	return rpcPadSet{rpcSaved: saved, Pad: padView(next, *target)}, nil
 }
 
 // rpcPadsMigrate is pads.migrate: it folds the retired top-level functionKey,
@@ -505,10 +494,9 @@ func (r *liveRun) rpcPadsMigrate(ctx context.Context, req *jrpc2.Request) (any, 
 	if p.Revision != nil && *p.Revision != revision {
 		return nil, libraryRPCError(&profilelib.ConflictError{Current: revision})
 	}
-	vertical := r.verticalJoyCons()
 	var refs []profile.PadRef
 	for _, k := range r.knownPads(ctx, cfg, time.Now()) {
-		refs = append(refs, profile.PadRef{Key: k.key, Family: k.family(vertical)})
+		refs = append(refs, profile.PadRef{Key: k.key, Family: k.family()})
 	}
 	out, changed, err := profile.MigratePadSettings(data, refs)
 	if err != nil {

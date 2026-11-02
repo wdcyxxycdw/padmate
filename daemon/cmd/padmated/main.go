@@ -553,16 +553,16 @@ func dryRun(ctx context.Context, opts options, stdout, stderr io.Writer) (code i
 // printer is below a MenuMask, as the Loop's Sender is in live mode,
 // so the replay prints the keys live mode would press. Among
 // evs go the ComboHeld events that T-input would send, for the
-// default combo of dev's type, a single Joy-Con held sideways as without
-// the hint SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS: each pauses the
-// mapping, or resumes it. The header counts the events of the input only.
+// default combo of dev's type (a single Joy-Con is always upright, SL+SR as
+// its paddles): each pauses the mapping, or resumes it. The header counts the
+// events of the input only.
 func replayDryRun(ctx context.Context, opts options, p *profile.Profile, prog *engine.Program, dev device, evs []input.Event, stdout, stderr io.Writer, loggers ...*slog.Logger) int {
 	n := len(evs)
 	comboFor := configuredCombo(opts.settings)
 	if comboFor == nil {
 		comboFor = input.DefaultCombo
 	}
-	evs = input.ExpandCombos(evs, func(info input.DeviceInfo) input.Combo { return comboFor(info, false) })
+	evs = input.ExpandCombos(evs, func(info input.DeviceInfo) input.Combo { return comboFor(info) })
 	clk := clock.NewFake()
 	w := bufio.NewWriter(stdout)
 	// A minute is how long Replay may settle after the last event.
@@ -589,14 +589,13 @@ func replayDryRun(ctx context.Context, opts options, p *profile.Profile, prog *e
 		// The feedback switches (ADR-0015) and the function key of the
 		// controller of config.json (ADR-0017) shape the printed haptics,
 		// feedback states and decisions as they do the live ones. A trace is
-		// read without the grip hint, so a single Joy-Con is judged by its
-		// buttons, or held sideways.
+		// read without a source, so a single Joy-Con is judged by its type.
 		sc.Switches = func(key string) profile.FeedbackSwitches {
 			sw, _ := st.PadFeedback(key)
 			return sw
 		}
 		sc.FunctionKey = func(key string, info input.DeviceInfo) control.Control {
-			return padFunctionKey(st, key, info, false)
+			return padFunctionKey(st, key, info)
 		}
 	}
 	s, err := slot.New(sc)

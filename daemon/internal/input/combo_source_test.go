@@ -157,45 +157,26 @@ func TestComboVirtual(t *testing.T) {
 	}
 }
 
-// withButton returns d with button b too.
-func withButton(d input.VirtualDesc, b string) input.VirtualDesc {
-	d.Buttons = append(slices.Clone(d.Buttons), b)
-	return d
-}
-
 // TestComboVirtualJoyCon holds combos on virtual Joy-Cons, whose USB ids
-// make SDL report them as single Joy-Cons: SL+SR fires, as leftshoulder
-// and rightshoulder when they are held sideways, and as their paddles when
-// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS is in effect, whether Options or
-// the environment sets it. back+start, which a Joy-Con pair has, does not.
+// make SDL report them as single Joy-Cons, held upright as Open's hint
+// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS says: SL+SR fires, as their paddles.
+// Their other buttons, and back+start, which a Joy-Con pair has, do not.
 func TestComboVirtualJoyCon(t *testing.T) {
 	inputtest.Unsetenv(t, input.HintVerticalJoyCons)
-	vertical := []input.Hint{{Name: input.HintVerticalJoyCons, Value: "1"}}
 	for _, tc := range []struct {
 		name  string
 		desc  input.VirtualDesc
-		hints []input.Hint
-		env   string // the hint in the environment; "" leaves it unset
 		typ   string
 		combo []string
 		not   []string
 	}{
-		{"left sideways", withButton(inputtest.JoyConLeft("padmate combo Joy-Con (L)"), "back"), nil, "", "joyconleft",
-			[]string{"leftshoulder", "rightshoulder"}, []string{"back", "start"}},
-		{"right sideways", inputtest.JoyConRight("padmate combo Joy-Con (R)"), nil, "", "joyconright",
-			[]string{"rightshoulder", "leftshoulder"}, []string{"paddle1", "paddle3"}},
-		{"left vertical", inputtest.JoyConLeft("padmate combo Joy-Con (L)"), vertical, "", "joyconleft",
-			[]string{"paddle4", "paddle2"}, []string{"leftshoulder", "rightshoulder"}},
-		{"right vertical", inputtest.JoyConRight("padmate combo Joy-Con (R)"), vertical, "", "joyconright",
-			[]string{"paddle3", "paddle1"}, []string{"leftshoulder", "rightshoulder"}},
-		{"left vertical from the environment", inputtest.JoyConLeft("padmate combo Joy-Con (L)"), nil, "true", "joyconleft",
-			[]string{"paddle2", "paddle4"}, []string{"leftshoulder", "rightshoulder"}},
+		{"left", inputtest.JoyConLeft("padmate combo Joy-Con (L)"), "joyconleft",
+			[]string{"paddle4", "paddle2"}, []string{"back", "leftshoulder"}},
+		{"right", inputtest.JoyConRight("padmate combo Joy-Con (R)"), "joyconright",
+			[]string{"paddle3", "paddle1"}, []string{"start", "rightshoulder"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.env != "" {
-				t.Setenv(input.HintVerticalJoyCons, tc.env)
-			}
-			s, fired := openCombo(t, tc.hints)
+			s, fired := openCombo(t, nil)
 			v, err := s.AttachVirtualDesc(tc.desc)
 			if err != nil {
 				t.Fatalf("AttachVirtualDesc: %v", err)
@@ -279,15 +260,12 @@ func TestComboRepickVirtual(t *testing.T) {
 			default:
 			}
 		},
-		ComboFor: func(input.DeviceInfo, bool) input.Combo { return *current.Load() },
+		ComboFor: func(input.DeviceInfo) input.Combo { return *current.Load() },
 	})
 	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
 	t.Cleanup(s.Close)
-	if s.VerticalJoyCons() {
-		t.Skip(input.HintVerticalJoyCons + " is set in the environment")
-	}
 	v, _ := attach(t, s, "padmate combo pad")
 	id := v.ID()
 	set(t, v, true, "back", "start")

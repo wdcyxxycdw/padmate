@@ -25,16 +25,14 @@ type comboSource interface {
 	// RepickCombos picks every gamepad's combo again on T-input, where the
 	// combos are detected (ADR-0006).
 	RepickCombos() error
-	// VerticalJoyCons is the grip ComboFor gets.
-	VerticalJoyCons() bool
 }
 
 // liveComboFor returns the ComboFor of live mode: the combo of the
 // effective config that current returns at each pick, so that a committed
 // config.json applies at the next RepickCombos.
-func liveComboFor(current func() *profile.Config) func(input.DeviceInfo, bool) input.Combo {
-	return func(info input.DeviceInfo, vertical bool) input.Combo {
-		_, c := effectiveCombo(current(), info, vertical)
+func liveComboFor(current func() *profile.Config) func(input.DeviceInfo) input.Combo {
+	return func(info input.DeviceInfo) input.Combo {
+		_, c := effectiveCombo(current(), info)
 		return c
 	}
 }
@@ -50,14 +48,10 @@ type rpcCombo struct {
 
 // combos returns the emergency combo of each device of infos.
 func (r *liveRun) combos(infos []input.DeviceInfo) []rpcCombo {
-	vertical := false
-	if src, ok := r.src.(comboSource); ok {
-		vertical = src.VerticalJoyCons()
-	}
 	settings := r.selectionConfig()
 	out := make([]rpcCombo, 0, len(infos))
 	for _, info := range infos {
-		family, c := effectiveCombo(settings, info, vertical)
+		family, c := effectiveCombo(settings, info)
 		out = append(out, rpcCombo{Device: info.ID, Family: family, Buttons: c.Buttons, HoldMs: c.Hold.Milliseconds()})
 	}
 	return out

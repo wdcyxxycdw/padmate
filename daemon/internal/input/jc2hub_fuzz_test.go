@@ -28,7 +28,6 @@ func FuzzJoyCon2Hub(f *testing.F) {
 		fz.rig = newRig(t, func(c *joyCon2Config) {
 			b := fz.next()
 			c.AutoConnect = b&1 != 0
-			c.Vertical = b&2 != 0
 			c.Power = b&4 != 0
 			if b&8 != 0 {
 				knownAuto(c)
@@ -54,7 +53,7 @@ func TestHubRandomWalk(t *testing.T) {
 		z := &hubFuzz{data: data}
 		z.rig = newRig(t, func(c *joyCon2Config) {
 			b := z.next()
-			c.AutoConnect, c.Vertical, c.Power = b&1 != 0, b&2 != 0, b&4 != 0
+			c.AutoConnect, c.Power = b&1 != 0, b&4 != 0
 			knownAuto(c)
 			c.AutoConnect = b&1 != 0
 		})

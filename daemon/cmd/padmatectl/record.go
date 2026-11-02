@@ -384,8 +384,8 @@ func addedDevice(e input.Event, key string) string {
 // such as
 //
 //	# padmatectl record v0.1.0; SDL 3.4.16; preset default
-//	# hints in effect: SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 SDL_NO_SIGNAL_HANDLERS=1 SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1
-//	# hints unset (SDL's default): SDL_JOYSTICK_HIDAPI ... SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS
+//	# hints in effect: SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 SDL_NO_SIGNAL_HANDLERS=1 SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1 SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1
+//	# hints unset (SDL's default): SDL_JOYSTICK_HIDAPI ... SDL_JOYSTICK_GAMEINPUT
 //
 // It leaves out the library's path, which names a local directory.
 func traceHeader(padmate, sdl, preset string, hints []input.Hint) string {

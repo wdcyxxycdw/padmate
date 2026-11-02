@@ -4,8 +4,9 @@
   "safety": {
     "panic": {
       "standard": { "buttons": ["guide", "start"], "holdMs": 2000 },
-      "joyconLeft": { "buttons": ["south", "east"], "holdMs": 800 },
-      "joyconRightVertical": { "buttons": ["paddle3", "south"], "holdMs": 900 }
+      "joyconLeft": { "buttons": ["back", "leftshoulder"], "holdMs": 800 },
+      "joyconRight": { "buttons": ["paddle3", "south"], "holdMs": 900 },
+      "joyconRightVertical": { "buttons": ["paddle1", "south"], "holdMs": 950 }
     }
   }
 }

@@ -7,8 +7,9 @@ import (
 )
 
 // The function key (ADR-0012, ADR-0017): back (View), start (Menu) or, on a
-// Joy-Con held sideways, a paddle is the function key, the same in every
-// profile; the controller's settings in config.json choose it
+// Joy-Con held upright, a shoulder button (L, R) or a trigger (ZL, ZR: LT,
+// RT) is the function key, the same in every profile; the controller's
+// settings in config.json choose it
 // (WithFunctionKey of Compile; start by default; Program.ForFunctionKey for
 // the controllers that have another). guide (the Xbox, PS or Home
 // button) cannot be: padmate never maps it, and lookupWith finds nothing on it. It sends nothing and is not bindable: a binding
@@ -33,6 +34,11 @@ import (
 // changes the function key clears it too: the new key is a control like any
 // other until it is pressed again (Reload). The function key has no feedback
 // of its own: no pulse, color, layer or HUD.
+//
+// A trigger as the function key (LT, RT) is the virtual button of the trigger
+// axis, pressed and released at the profile's trigger thresholds like any
+// trigger. Its second stage (lt.full, rt.full) and half axis are never pressed
+// while it is the key (onFunctionKey), and the trigger still holds no output.
 
 // ActiveFunctionKey returns the function key when it is held, and
 // control.Invalid when it is not.
@@ -68,3 +74,21 @@ func (p *Program) functionSet(fn control.Control) (*profile.Layer, string) {
 
 // isFunctionLevel reports whether level is the name of the function set of p.
 func (p *Program) isFunctionLevel(level string) bool { return level != "" && level == p.fnLevel }
+
+// onFunctionKey reports whether c is the function key of p or sits on the same
+// physical control: when the function key is a trigger, its second stage
+// (lt.full, rt.full) and its half axis (lefttrigger+, righttrigger+) are the
+// same trigger, so a binding on them is left out by Compile like one on the
+// key, and the engine never presses them (stepTrigger, stepHalfAxis).
+func (p *Program) onFunctionKey(c control.Control) bool {
+	if c == p.fnKey {
+		return true
+	}
+	switch p.fnKey {
+	case control.LT:
+		return c == control.LTFull || c == control.LeftTriggerPositive
+	case control.RT:
+		return c == control.RTFull || c == control.RightTriggerPositive
+	}
+	return false
+}

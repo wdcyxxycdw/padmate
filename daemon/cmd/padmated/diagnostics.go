@@ -232,7 +232,7 @@ func missingControls(prog *engine.Program, v slot.View) []string {
 		}
 	}
 	slices.Sort(missing)
-	pad := padlabel.Pad{Type: v.Info.Type, ButtonMask: v.Info.ButtonMask, Printed: map[string]string{
+	pad := padlabel.Pad{Type: v.Info.Type, Printed: map[string]string{
 		"south": v.Info.ButtonLabels.South, "east": v.Info.ButtonLabels.East,
 		"west": v.Info.ButtonLabels.West, "north": v.Info.ButtonLabels.North,
 	}}

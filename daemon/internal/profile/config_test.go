@@ -91,7 +91,7 @@ func TestConfigPanicComboBounds(t *testing.T) {
 func TestConfigPanicComboWithGuide(t *testing.T) {
 	c, ds := ParseConfig([]byte(`{"schemaVersion":0,"safety":{"panic":{
 		"standard":{"buttons":["guide","start"],"holdMs":2000},
-		"joyconLeft":{"buttons":["leftshoulder","rightshoulder"],"holdMs":2000}
+		"joyconLeft":{"buttons":["paddle2","paddle4"],"holdMs":2000}
 	}}}`))
 	if c == nil || ds.HasErrors() {
 		t.Fatalf("config %v, diagnostics %v", c, ds)
