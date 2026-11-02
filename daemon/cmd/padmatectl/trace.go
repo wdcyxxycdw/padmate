@@ -27,10 +27,10 @@ timeline from raw input through gesture decisions to keyboard output.
 
 The function key is a setting of each controller, as in padmated: the one the
 controller of the trace has, which follows from its added event (a single
-Joy-Con has a paddle, a pair back, other controllers start) and from the
+Joy-Con has a trigger, a pair back, other controllers start) and from the
 devices.<DeviceKey>.functionKey of the config.json that --config names, if any.
---function-key (start, back or paddle1 to paddle4) overrides it for the whole
-trace. Without --config trace reads no config.json.`
+--function-key (start, back, leftshoulder, rightshoulder, lt or rt) overrides it
+for the whole trace. Without --config trace reads no config.json.`
 
 type traceItem struct {
 	T        json.Number     `json:"t"`
@@ -104,7 +104,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	profilePath := fs.String("profile", "", "profile to load")
 	inputPath := fs.String("input", "", "recorded input trace")
 	asJSON := fs.Bool("json", false, "print JSON timeline items")
-	functionKey := fs.String("function-key", "", "force this function key for the controller: start, back or paddle1 to paddle4")
+	functionKey := fs.String("function-key", "", "force this function key for the controller: start, back, leftshoulder, rightshoulder, lt or rt")
 	configPath := fs.String("config", "", "config.json whose settings of each controller the trace follows")
 	if code, ok := parseFlags(fs, args, traceUsage+"\n", stdout, stderr); !ok {
 		return code
@@ -236,7 +236,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	}
 	if settings != nil {
 		sc.FunctionKey = func(key string, info input.DeviceInfo) control.Control {
-			return settings.PadSettings(key, input.FamilyOf(info, false)).FunctionKey
+			return settings.PadSettings(key, input.FamilyOf(info)).FunctionKey
 		}
 	}
 	s, err := slot.New(sc)

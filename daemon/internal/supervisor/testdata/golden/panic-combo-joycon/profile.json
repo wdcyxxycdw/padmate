@@ -3,8 +3,8 @@
   "name": "panic-joycon",
   "layers": {
     "base": {
-      "leftshoulder": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
-      "rightshoulder": {"press": {"type": "keys", "keys": "LShift", "mode": "hold"}}
+      "paddle2": {"press": {"type": "keys", "keys": "LCtrl", "mode": "hold"}},
+      "paddle4": {"press": {"type": "keys", "keys": "LShift", "mode": "hold"}}
     }
   }
 }

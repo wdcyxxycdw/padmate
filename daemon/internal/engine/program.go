@@ -40,7 +40,7 @@ type Program struct {
 	curves [4]curveKind
 
 	// fnKey is the function key of this Program (ADR-0012, ADR-0017): back,
-	// start or a paddle, never control.Invalid. fnSet is the profile's function
+	// start, a shoulder button or a trigger, never control.Invalid. fnSet is the profile's function
 	// set, nil when it has none, and fnLevel the name that set has in lookups
 	// and decisions, profile.FunctionLevel(fnKey).
 	fnKey   control.Control
@@ -60,7 +60,7 @@ type CompileOption func(*compileOptions)
 type compileOptions struct{ functionKey control.Control }
 
 // WithFunctionKey makes c the function key of the Program (ADR-0012,
-// ADR-0017): back, start or a paddle, the one control that sends nothing,
+// ADR-0017): back, start, a shoulder button or a trigger, the one control that sends nothing,
 // cannot be bound and selects the function set while it is held. Any other
 // control (control.Control.CanBeFunctionKey), guide too, and without this
 // option, means control.DefaultFunctionKey (start). The key is the setting of
@@ -317,7 +317,7 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 			if b != nil && b.Control.Unmappable() {
 				continue
 			}
-			if b != nil && b.Control == fnKey {
+			if b != nil && prog.onFunctionKey(b.Control) {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
@@ -331,7 +331,7 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 			if b != nil && b.Control.Unmappable() {
 				continue
 			}
-			if b != nil && b.Control == fnKey {
+			if b != nil && prog.onFunctionKey(b.Control) {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
@@ -345,7 +345,7 @@ func Compile(p *profile.Profile, opts ...CompileOption) (*Program, error) {
 			if b != nil && b.Control.Unmappable() {
 				continue
 			}
-			if b != nil && b.Control == fnKey {
+			if b != nil && prog.onFunctionKey(b.Control) {
 				prog.fnIgnored = append(prog.fnIgnored, b.ID)
 				continue
 			}
@@ -374,7 +374,7 @@ func (p *Program) addBindingInfo(l *profile.Layer, name string) {
 	bindings := slices.Clone(l.Bindings)
 	slices.SortFunc(bindings, func(a, b *profile.Binding) int { return int(a.Control) - int(b.Control) })
 	for _, b := range bindings {
-		if b.Control == p.fnKey || b.Control.Unmappable() {
+		if p.onFunctionKey(b.Control) || b.Control.Unmappable() {
 			continue // ignored (Compile)
 		}
 		gs := gesturesOf(b)

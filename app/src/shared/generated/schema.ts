@@ -461,7 +461,7 @@ export type ConfigCombo = {
 export type ConfigDevice = {
   "calibration"?: ConfigCalibration;
   "feedback"?: ConfigFeedback;
-  "functionKey"?: "start" | "back" | "paddle1" | "paddle2" | "paddle3" | "paddle4";
+  "functionKey"?: "start" | "back" | "lt" | "rt" | "leftshoulder" | "rightshoulder" | "paddle1" | "paddle2" | "paddle3" | "paddle4";
   "ignored"?: boolean;
   "mapping"?: string;
   "panic"?: ConfigCombo;

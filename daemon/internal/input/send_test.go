@@ -140,7 +140,7 @@ func TestSendFlapping(t *testing.T) {
 func comboSource(capacity int) (*Source, *int) {
 	calls := new(int)
 	s := &Source{events: make(chan Event, capacity), onCombo: func() { *calls++ }}
-	s.watch = NewComboWatch(func(info DeviceInfo) Combo { return DefaultCombo(info, false) })
+	s.watch = NewComboWatch(DefaultCombo)
 	return s, calls
 }
 
@@ -229,23 +229,6 @@ func TestEmitNoCombo(t *testing.T) {
 	}
 	if got := drain(s); !slices.Equal(got, evs) {
 		t.Errorf("delivered %+v, want %+v", got, evs)
-	}
-}
-
-// TestHintTrue checks the reading of a boolean hint.
-func TestHintTrue(t *testing.T) {
-	for _, tc := range []struct {
-		v    string
-		want bool
-	}{
-		{"", false}, {"0", false}, {"00", false}, {"0x1", false},
-		{"false", false}, {"FALSE", false}, {"False", false},
-		{"1", true}, {"true", true}, {"yes", true}, {"2", true},
-		{" 0", true}, {"false ", true}, // SDL does not trim
-	} {
-		if got := hintTrue(tc.v); got != tc.want {
-			t.Errorf("hintTrue(%q) = %v, want %v", tc.v, got, tc.want)
-		}
 	}
 }
 

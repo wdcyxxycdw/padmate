@@ -189,7 +189,7 @@ func FuzzParseReport(f *testing.F) {
 		}
 		// Whatever it decodes to maps to a state without panicking, and
 		// releasing it is the way back to rest.
-		for _, m := range []Mode{Horizontal, Vertical, Pair} {
+		for _, m := range []Mode{Vertical, Pair} {
 			s := Map(m, Side(side), rep, DefaultStick)
 			if got := apply(State{}, Diff(State{}, s)); got != s {
 				t.Fatalf("diff does not reproduce %+v: %+v", s, got)

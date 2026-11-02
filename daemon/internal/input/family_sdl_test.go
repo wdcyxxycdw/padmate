@@ -22,10 +22,8 @@ func TestVirtualFamilyControls(t *testing.T) {
 		{"DualSense Edge", "ps5", inputtest.DualSenseEdge("padmate family Edge"), 0x1fffff, 0x3f},
 		{"Switch Pro", "switchpro", inputtest.SwitchPro("padmate family Pro"), 0xffff, 0x3f},
 		{"Joy-Con pair", "joyconpair", inputtest.JoyConPair("padmate family pair"), 0xfffff, 0x3f},
-		{"Joy-Con (L) sideways", "joyconleft", inputtest.JoyConLeft("padmate family L"), 0xa06ef, 0x3},
-		{"Joy-Con (R) sideways", "joyconright", inputtest.JoyConRight("padmate family R"), 0x506ef, 0x3},
-		{"Joy-Con (L) upright", "joyconleft", inputtest.JoyConLeftUpright("padmate family L up"), 0xafa90, 0x13},
-		{"Joy-Con (R) upright", "joyconright", inputtest.JoyConRightUpright("padmate family R up"), 0x5056f, 0x2c},
+		{"Joy-Con (L)", "joyconleft", inputtest.JoyConLeft("padmate family L"), 0xafa90, 0x13},
+		{"Joy-Con (R)", "joyconright", inputtest.JoyConRight("padmate family R"), 0x5056f, 0x2c},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := open(t, nil)

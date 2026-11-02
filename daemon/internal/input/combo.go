@@ -26,21 +26,17 @@ type Combo struct {
 // DefaultCombo returns the combo of the gamepad info with the hold of
 // ComboHold: back+start, or for a single Joy-Con (joyconleft, joyconright)
 // SL+SR; the families standard and joycon of ARCHITECTURE §10.4, which
-// config.json may set later. SDL reports SL and SR as
-// leftshoulder and rightshoulder when the Joy-Con is held sideways, and as
-// paddles when vertical is set, as it is when the hint
-// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS is in effect: paddle2 and paddle4
-// on the left one, paddle3 and paddle1 on the right one (ARCHITECTURE
-// §7.1). A pair of Joy-Cons has back and start.
-func DefaultCombo(info DeviceInfo, vertical bool) Combo {
+// config.json may set later. A single Joy-Con is always held upright (the
+// hint SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS is set), and SDL reports SL and
+// SR as paddles: paddle2 and paddle4 on the left one, paddle3 and paddle1 on
+// the right one (ARCHITECTURE §7.1). A pair of Joy-Cons has back and start.
+func DefaultCombo(info DeviceInfo) Combo {
 	c := Combo{Hold: ComboHold}
-	switch {
-	case info.Type == "joyconleft" && vertical:
+	switch info.Type {
+	case "joyconleft":
 		c.Buttons = []string{"paddle2", "paddle4"}
-	case info.Type == "joyconright" && vertical:
+	case "joyconright":
 		c.Buttons = []string{"paddle3", "paddle1"}
-	case info.Type == "joyconleft" || info.Type == "joyconright":
-		c.Buttons = []string{"leftshoulder", "rightshoulder"}
 	default:
 		c.Buttons = []string{"back", "start"}
 	}

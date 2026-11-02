@@ -521,7 +521,7 @@ func (e *Engine) stepTrigger(t clock.Time, c control.Control, v int16) {
 		full = false
 	}
 	e.triggerFull[i] = full
-	pressFull := full && !was && e.virtualBound(fc)
+	pressFull := full && !was && !e.prog.onFunctionKey(fc) && e.virtualBound(fc)
 	releaseFull := !full && e.physical[fc]
 	if full && (pressFull || e.physical[fc]) {
 		down = true
@@ -747,13 +747,13 @@ func (e *Engine) stepHalfAxis(t clock.Time, a control.Axis, raw int16) {
 	idx := int(a) * 2
 	if e.halfAxis[idx] != pos {
 		e.halfAxis[idx] = pos
-		if c := halfAxisControl(a, true); pos && e.virtualBound(c) || !pos && e.physical[c] {
+		if c := halfAxisControl(a, true); pos && !e.prog.onFunctionKey(c) && e.virtualBound(c) || !pos && e.physical[c] {
 			e.stepButton(t, c, pos, false)
 		}
 	}
 	if e.halfAxis[idx+1] != neg {
 		e.halfAxis[idx+1] = neg
-		if c := halfAxisControl(a, false); neg && e.virtualBound(c) || !neg && e.physical[c] {
+		if c := halfAxisControl(a, false); neg && !e.prog.onFunctionKey(c) && e.virtualBound(c) || !neg && e.physical[c] {
 			e.stepButton(t, c, neg, false)
 		}
 	}

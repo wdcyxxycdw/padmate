@@ -42,13 +42,6 @@
     "050000007e0500006720000000000000/s:XKW1": {
       "feedback": {
         "rumble": false
-      },
-      "panic": {
-        "buttons": [
-          "leftshoulder",
-          "rightshoulder"
-        ],
-        "holdMs": 3000
       }
     },
     "050000007e0500006820000000000000/s:XKW1+XKW2": {

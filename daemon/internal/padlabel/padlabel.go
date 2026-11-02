@@ -16,7 +16,7 @@ import (
 )
 
 // Pad is what the labels of a gamepad depend on: input.DeviceInfo's
-// Type, ButtonLabels and ButtonMask.
+// Type and ButtonLabels.
 type Pad struct {
 	// Type is SDL's gamepad type, such as "xboxone", "ps5" or
 	// "joyconleft" (input.TypeName).
@@ -24,9 +24,6 @@ type Pad struct {
 	// Printed are SDL's printed face labels by control: "A", "Cross", ...
 	// for south, east, west and north.
 	Printed map[string]string
-	// ButtonMask is SDL's buttons of the pad, 0 when unknown. A single
-	// Joy-Con with a south button and no right stick is held sideways.
-	ButtonMask uint32
 }
 
 // printedSymbols are the symbols the UI shows for SDL's PlayStation face
@@ -51,13 +48,6 @@ func family(typ string) string {
 	return "generic"
 }
 
-// sideways reports whether p is a single Joy-Con held sideways, as the UI
-// tells it: one whose buttons include south but not the right stick, which a
-// right one held upright has with its face buttons.
-func sideways(p Pad) bool {
-	return (p.Type == "joyconleft" || p.Type == "joyconright") && p.ButtonMask&1 != 0 && p.ButtonMask&(1<<8) == 0
-}
-
 // Labels returns the label of each control of p: what controllerLabels
 // of the UI returns, the paddles and misc buttons included (paddleLabels,
 // miscLabel).
@@ -69,7 +59,10 @@ func Labels(p Pad) map[string]string {
 		face = []string{"A", "B", "X", "Y"}
 	case fam == "playstation":
 		face = []string{"×", "○", "□", "△"}
-	case fam == "nintendo" && p.Type != "joyconleft" && p.Type != "joyconright":
+	case fam == "nintendo" && p.Type != "joyconleft":
+		// Printed as on the Switch: the right Joy-Con's own buttons. The
+		// left one, held upright, has no face buttons (its arrows are the
+		// D-pad), so it keeps the position names.
 		face = []string{"B", "A", "Y", "X"}
 	}
 	labels := map[string]string{
@@ -109,13 +102,6 @@ func Labels(p Pad) map[string]string {
 			"back": "−", "start": "+", "guide": "Home",
 		})
 	}
-	if sideways(p) {
-		labels["leftshoulder"], labels["rightshoulder"] = "SL", "SR"
-		labels["start"], labels["guide"] = "+", "Home"
-		if p.Type == "joyconleft" {
-			labels["start"], labels["guide"] = "−", "Capture"
-		}
-	}
 	maps.Copy(labels, paddleLabels(p))
 	for i := 1; i <= 6; i++ {
 		labels[fmt.Sprintf("misc%d", i)] = miscLabel(fam, i)
@@ -134,19 +120,14 @@ func Labels(p Pad) map[string]string {
 
 // paddleLabels names the four paddles (ARCHITECTURE §7.1; SDL's
 // RIGHT_PADDLE1, LEFT_PADDLE1, RIGHT_PADDLE2, LEFT_PADDLE2): a single
-// Joy-Con's are L and ZL, or R and ZR, held sideways, and SL and SR
-// upright; a pair of Joy-Cons has the SL and SR of both sides; a
-// DualSense Edge has its back buttons and Fn buttons. Other pads number
-// them as the Xbox Elite does (P1 to P4): 背键 1 and 2 under the right
-// hand, 3 and 4 under the left.
+// Joy-Con's are its SL and SR, held upright; a pair of Joy-Cons has the SL and
+// SR of both sides; a DualSense Edge has its back buttons and Fn buttons.
+// Other pads number them as the Xbox Elite does (P1 to P4): 背键 1 and 2 under
+// the right hand, 3 and 4 under the left.
 func paddleLabels(p Pad) map[string]string {
 	switch {
-	case p.Type == "joyconleft" && sideways(p):
-		return map[string]string{"paddle2": "L", "paddle4": "ZL"}
 	case p.Type == "joyconleft":
 		return map[string]string{"paddle2": "SL", "paddle4": "SR"}
-	case p.Type == "joyconright" && sideways(p):
-		return map[string]string{"paddle1": "R", "paddle3": "ZR"}
 	case p.Type == "joyconright":
 		return map[string]string{"paddle1": "SR", "paddle3": "SL"}
 	case p.Type == "joyconpair":

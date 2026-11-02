@@ -509,10 +509,11 @@ func TestRecordVirtual(t *testing.T) {
 			!strings.Contains(string(b), " "+input.HintBackgroundEvents+"=1") {
 			t.Errorf("the recording does not start with the header:\n%s", b)
 		}
-		// padmate's Joy-Con hint is set, and SDL's default of the other kept.
+		// padmate's two Joy-Con hints are set: pairs combine, a single one is
+		// upright, and the header says so for whoever replays the trace.
 		for _, want := range []struct{ prefix, word string }{
 			{"# hints in effect: ", input.HintCombineJoyCons + "=1"},
-			{"# hints unset (SDL's default): ", input.HintVerticalJoyCons},
+			{"# hints in effect: ", input.HintVerticalJoyCons + "=1"},
 		} {
 			var words []string
 			for line := range strings.Lines(string(b)) {

@@ -127,9 +127,9 @@ func TestOpenCloseTwice(t *testing.T) {
 }
 
 // TestHints checks the hints read back after SDL_Init for each preset:
-// the three hints Open always sets first, then the preset's, then the
+// the four hints Open always sets first, then the preset's, then the
 // other backend hints and the Joy-Con hints, each once. A left and a right
-// Joy-Con are combined into a pair, and the grip is left to SDL.
+// Joy-Con are combined into a pair, and a single one is held upright.
 func TestHints(t *testing.T) {
 	lib := inputtest.Library(t)
 	inputtest.Unsetenv(t, input.HintCombineJoyCons, input.HintVerticalJoyCons)
@@ -137,6 +137,7 @@ func TestHints(t *testing.T) {
 		{Name: input.HintBackgroundEvents, Value: "1"},
 		{Name: input.HintNoSignalHandlers, Value: "1"},
 		{Name: input.HintCombineJoyCons, Value: "1"},
+		{Name: input.HintVerticalJoyCons, Value: "1"},
 	}
 	for _, name := range input.PresetNames() {
 		hints, _ := input.PresetHints(name)
@@ -154,7 +155,7 @@ func TestHints(t *testing.T) {
 			want[h.Name] = h.Value
 		}
 		want[input.HintCombineJoyCons] = "1"
-		want[input.HintVerticalJoyCons] = ""
+		want[input.HintVerticalJoyCons] = "1"
 		seen := make(map[string]bool)
 		for _, h := range got {
 			if seen[h.Name] {
@@ -191,7 +192,7 @@ func TestHintOverride(t *testing.T) {
 		index int // where Hints has it; -1 for anywhere
 	}{
 		{"combine", input.Hint{Name: input.HintCombineJoyCons, Value: "0"}, 2},
-		{"vertical", input.Hint{Name: input.HintVerticalJoyCons, Value: "1"}, -1},
+		{"vertical", input.Hint{Name: input.HintVerticalJoyCons, Value: "0"}, 3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			hints, _ := input.PresetHints("default")
@@ -575,12 +576,12 @@ func TestVirtualDescErrors(t *testing.T) {
 	}
 }
 
-// TestSidewaysLCopy checks that the internal tests' copy of the sideways
+// TestJoyConLCopy checks that the internal tests' copy of the
 // Joy-Con (L)'s buttons (TestControlMask, TestPackIndex) is still
 // inputtest.JoyConLeft's.
-func TestSidewaysLCopy(t *testing.T) {
-	if got := inputtest.JoyConLeft("").Buttons; !slices.Equal(got, input.SidewaysL) {
-		t.Errorf("inputtest.JoyConLeft buttons %q, the internal tests' copy %q", got, input.SidewaysL)
+func TestJoyConLCopy(t *testing.T) {
+	if got := inputtest.JoyConLeft("").Buttons; !slices.Equal(got, input.JoyConL) {
+		t.Errorf("inputtest.JoyConLeft buttons %q, the internal tests' copy %q", got, input.JoyConL)
 	}
 }
 
@@ -595,10 +596,12 @@ func TestVirtualJoyCon(t *testing.T) {
 		typ       string
 		noButtons []string
 		noAxes    []string
+		held      []string // two buttons in SDL order, held across the removal
+		labels    input.FaceButtonLabels
 	}{
-		{inputtest.JoyConLeft("padmate virtual Joy-Con (L)"), "joyconleft", []string{"dpad.up", "paddle1", "back"}, []string{"rightx", "lefttrigger"}},
-		{inputtest.JoyConRight("padmate virtual Joy-Con (R)"), "joyconright", []string{"dpad.up", "paddle2", "rightstick"}, []string{"rightx", "righttrigger"}},
-		{inputtest.JoyConPair("padmate virtual Joy-Cons"), "joyconpair", []string{"touchpad", "misc2"}, nil},
+		{inputtest.JoyConLeft("padmate virtual Joy-Con (L)"), "joyconleft", []string{"south", "paddle1", "rightshoulder"}, []string{"rightx", "righttrigger"}, []string{"leftstick", "leftshoulder"}, input.FaceButtonLabels{}},
+		{inputtest.JoyConRight("padmate virtual Joy-Con (R)"), "joyconright", []string{"dpad.up", "paddle2", "leftstick"}, []string{"leftx", "lefttrigger"}, []string{"south", "rightshoulder"}, input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"}},
+		{inputtest.JoyConPair("padmate virtual Joy-Cons"), "joyconpair", []string{"touchpad", "misc2"}, nil, []string{"leftshoulder", "rightshoulder"}, input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"}},
 	} {
 		t.Run(tc.typ, func(t *testing.T) {
 			s := open(t, nil)
@@ -620,7 +623,7 @@ func TestVirtualJoyCon(t *testing.T) {
 				ID:           v.ID(),
 				Name:         d.Name,
 				Type:         tc.typ,
-				ButtonLabels: input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"},
+				ButtonLabels: tc.labels,
 				Vendor:       inputtest.VendorNintendo,
 				Product:      d.Product,
 				GUID:         input.VirtualDescGUID(d.Name, d.Vendor, d.Product),
@@ -683,15 +686,15 @@ func TestVirtualJoyCon(t *testing.T) {
 			// SDL releases the held buttons in joystick index order before
 			// it reports the removal.
 			for _, err := range []error{
-				v.SetButton("leftshoulder", true),
-				v.SetButton("rightshoulder", true),
+				v.SetButton(tc.held[0], true),
+				v.SetButton(tc.held[1], true),
 				v.Detach(),
 			} {
 				if err != nil {
 					t.Fatal(err)
 				}
 			}
-			check("leftshoulder down", "rightshoulder down", "leftshoulder up", "rightshoulder up", "removed")
+			check(tc.held[0]+" down", tc.held[1]+" down", tc.held[0]+" up", tc.held[1]+" up", "removed")
 		})
 	}
 }

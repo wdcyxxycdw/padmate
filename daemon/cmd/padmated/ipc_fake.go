@@ -55,7 +55,7 @@ func newRPCInputSourceWith(opts input.Options, caps input.Capabilities) *rpcInpu
 	if pick == nil {
 		pick = input.DefaultCombo
 	}
-	s.combo, s.onCombo = input.NewComboWatch(func(info input.DeviceInfo) input.Combo { return pick(info, false) }), opts.OnCombo
+	s.combo, s.onCombo = input.NewComboWatch(pick), opts.OnCombo
 	for a := control.LeftX; a <= control.RightTrigger; a++ {
 		s.axes[a.String()] = 0
 	}
@@ -217,7 +217,7 @@ func (s *rpcInputSource) armCombo() {
 }
 
 // RepickCombos picks the fake gamepad's combo again, as T-input does for
-// a real one (comboSource); its single Joy-Con grip is never vertical.
+// a real one (comboSource).
 func (s *rpcInputSource) RepickCombos() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -228,8 +228,6 @@ func (s *rpcInputSource) RepickCombos() error {
 	s.armCombo()
 	return nil
 }
-
-func (*rpcInputSource) VerticalJoyCons() bool { return false }
 
 func (s *rpcInputSource) axis(name string, value int16) error {
 	s.mu.Lock()

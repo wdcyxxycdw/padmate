@@ -111,8 +111,8 @@ func (s *Source) Gone() (int, error) {
 	return n, err
 }
 
-// SidewaysL is the internal tests' copy of inputtest.JoyConLeft's buttons.
-var SidewaysL = sidewaysL
+// JoyConL is the internal tests' copy of inputtest.JoyConLeft's buttons.
+var JoyConL = joyConL
 
 // VirtualGUID returns the GUID that SDL gives a virtual gamepad named
 // name.

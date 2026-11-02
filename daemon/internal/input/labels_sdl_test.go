@@ -18,7 +18,8 @@ func TestVirtualButtonLabels(t *testing.T) {
 		{"Xbox", "xboxone", input.VirtualDesc{Name: "padmate Xbox labels", Vendor: 0x045e, Product: 0x0b13}, input.FaceButtonLabels{South: "A", East: "B", West: "X", North: "Y"}},
 		{"PlayStation", "ps5", input.VirtualDesc{Name: "padmate PS labels", Vendor: 0x054c, Product: 0x0ce6}, input.FaceButtonLabels{South: "Cross", East: "Circle", West: "Square", North: "Triangle"}},
 		{"Nintendo", "switchpro", inputtest.SwitchPro("padmate Switch labels"), input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"}},
-		{"JoyConLeft", "joyconleft", inputtest.JoyConLeft("padmate L labels"), input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"}},
+		// An upright left Joy-Con has no face buttons, so SDL prints none.
+		{"JoyConLeft", "joyconleft", inputtest.JoyConLeft("padmate L labels"), input.FaceButtonLabels{}},
 		{"JoyConRight", "joyconright", inputtest.JoyConRight("padmate R labels"), input.FaceButtonLabels{South: "B", East: "A", West: "Y", North: "X"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

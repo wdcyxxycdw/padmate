@@ -216,8 +216,8 @@ func TestSourceJoyCon2PairingFlow(t *testing.T) {
 
 	b.report(id, bLLeft)
 	evs = b.events()
-	if len(evs) != 1 || evs[0].Kind != ButtonDown || evs[0].Control != "south" || evs[0].Device != dev || evs[0].Stamp != 1234 {
-		t.Fatalf("events %v, want the south press with the report's stamp", descs(evs))
+	if len(evs) != 1 || evs[0].Kind != ButtonDown || evs[0].Control != "dpad.left" || evs[0].Device != dev || evs[0].Stamp != 1234 {
+		t.Fatalf("events %v, want the dpad.left press with the report's stamp", descs(evs))
 	}
 
 	// Auto-connect on and a remembered controller: scanning, and the

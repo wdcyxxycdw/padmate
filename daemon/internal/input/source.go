@@ -51,24 +51,24 @@ type Options struct {
 	// Library is the SDL library to load. "" means ResolveLibrary.
 	Library string
 	// Hints are set in order before SDL_Init, after openHints:
-	// SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1, SDL_NO_SIGNAL_HANDLERS=1 and
-	// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1, which Open always sets first.
+	// SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1, SDL_NO_SIGNAL_HANDLERS=1,
+	// SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1 and
+	// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1, which Open always sets first.
 	// A hint here with one of those names overrides it. nil means the
 	// "default" preset. A hint that is also an environment variable keeps
 	// the environment's value, which SDL gives priority.
 	Hints []Hint
 	// OnCombo turns on combo detection: when a gamepad has held
 	// its DefaultCombo for the hold time, T-input calls OnCombo, then
-	// sends a ComboHeld event, which is never dropped. The grip of a
-	// single Joy-Con comes from SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS as
-	// in effect (Hints). OnCombo runs on T-input, so it must return at
-	// once and must not call the Source. nil turns detection off, as
+	// sends a ComboHeld event, which is never dropped. OnCombo runs on
+	// T-input, so it must return at once and must not call the Source. nil
+	// turns detection off, as
 	// "padmatectl monitor" and "record" leave it.
 	OnCombo func()
 	// ComboFor optionally selects an immutable, configured emergency combo.
 	// It runs on T-input and must not block; nil uses DefaultCombo. It may
 	// give another combo after a config change, which RepickCombos applies.
-	ComboFor func(DeviceInfo, bool) Combo
+	ComboFor func(DeviceInfo) Combo
 	// ComboHold replaces ComboHold as the hold time of the combos, for
 	// tests; 0 or less keeps ComboHold.
 	ComboHold time.Duration
@@ -143,7 +143,7 @@ type Source struct {
 
 	onCombo   func()        // Options.OnCombo
 	comboHold time.Duration // Options.ComboHold
-	comboFor  func(DeviceInfo, bool) Combo
+	comboFor  func(DeviceInfo) Combo
 	receiver  receiverTiming // from Options.ReceiverTimeout; zero when off
 	power     bool           // Options.PowerEvents
 	powerPoll time.Duration  // Options.PowerPollEvery, or powerPollEvery
@@ -579,19 +579,6 @@ func (s *Source) init(hints []Hint) error {
 	return nil
 }
 
-// VerticalJoyCons reports whether SDL reports a single Joy-Con held
-// vertically, as the hint SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS in effect
-// says: the grip ComboFor gets.
-func (s *Source) VerticalJoyCons() bool {
-	vertical := false
-	for _, h := range s.hintsRead {
-		if h.Name == HintVerticalJoyCons {
-			vertical = hintTrue(h.Value)
-		}
-	}
-	return vertical
-}
-
 // RepickCombos asks the combo watch on T-input to pick every device's
 // combo again (ComboWatch.Repick), through ComboFor, which now gives
 // another combo: padmated calls it once config.json changed them.
@@ -607,29 +594,20 @@ func (s *Source) RepickCombos() error {
 	})
 }
 
-// comboPick returns the pick of s's ComboWatch: DefaultCombo with the grip
-// of the hint in effect, and Options.ComboHold.
+// comboPick returns the pick of s's ComboWatch: DefaultCombo (or ComboFor)
+// and Options.ComboHold.
 func (s *Source) comboPick() func(DeviceInfo) Combo {
-	vertical := s.VerticalJoyCons()
 	hold := s.comboHold
 	return func(info DeviceInfo) Combo {
-		c := DefaultCombo(info, vertical)
+		c := DefaultCombo(info)
 		if s.comboFor != nil {
-			c = s.comboFor(info, vertical)
+			c = s.comboFor(info)
 		}
 		if hold > 0 {
 			c.Hold = hold
 		}
 		return c
 	}
-}
-
-// hintTrue reports whether SDL reads the hint value v as true, as
-// SDL_GetHintBoolean does with a default of false (SDL_GetStringBoolean in
-// src/SDL_utils.c): "" is the default, and a value that starts with "0" or
-// is "false" in any case is false.
-func hintTrue(v string) bool {
-	return v != "" && v[0] != '0' && !strings.EqualFold(v, "false")
 }
 
 // loop pumps SDL events and runs commands until Close. Each turn also

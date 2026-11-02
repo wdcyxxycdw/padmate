@@ -29,7 +29,7 @@ const padLiveProfile = `{"schemaVersion":1,"name":"first","layers":{"base":{
   "west":{"haptic":"pulse2","press":{"type":"keys","keys":"F13","mode":"tap"}},
   "back":{"press":{"type":"keys","keys":"V"}},
   "start":{"press":{"type":"keys","keys":"S"}},
-  "paddle3":{"press":{"type":"keys","keys":"E"}}}},
+  "rt":{"press":{"type":"keys","keys":"E"}}}},
  "functionSet":{"south":{"press":{"type":"keys","keys":"F1"}},"east":{"press":{"type":"keys","keys":"F2"}}}}`
 
 // startPadLive starts live mode with config and padLiveProfile, and connects
@@ -48,6 +48,15 @@ func startPadLive(t *testing.T, config string) (*testLive, *mappingFake, *rpcTes
 }
 
 func edge(src *mappingFake, dev input.DeviceID, name string, down bool) {
+	if name == "lt" || name == "rt" {
+		// A trigger is an axis: pressed past its threshold, or let go.
+		value := int16(0)
+		if down {
+			value = 20000
+		}
+		src.events <- input.Event{Device: dev, Kind: input.AxisMotion, Control: map[string]string{"lt": "lefttrigger", "rt": "righttrigger"}[name], Value: value}
+		return
+	}
 	kind := input.ButtonUp
 	if down {
 		kind = input.ButtonDown
@@ -85,14 +94,14 @@ func (tl *testLive) sentSince(before string) string {
 // the other controller keeps its function key and its held keys.
 func TestPadsSetFunctionKeyAppliesToThatControllerOnly(t *testing.T) {
 	tl, src, c := startPadLive(t, `{"schemaVersion":0}`)
-	if x, j := tl.slotFunctionKey(t, 0), tl.slotFunctionKey(t, 1); x != control.Start || j != control.Paddle3 {
-		t.Fatalf("function keys of the Xbox pad and the Joy-Con: %s, %s; want start and paddle3", x, j)
+	if x, j := tl.slotFunctionKey(t, 0), tl.slotFunctionKey(t, 1); x != control.Start || j != control.RT {
+		t.Fatalf("function keys of the Xbox pad and the Joy-Con: %s, %s; want start and rt", x, j)
 	}
-	// The Xbox pad: start held, south under it (F1). The Joy-Con: paddle3 held,
+	// The Xbox pad: start held, south under it (F1). The Joy-Con: rt held,
 	// east under it (F2).
 	edge(src, 1, "start", true)
 	edge(src, 1, "south", true)
-	edge(src, 2, "paddle3", true)
+	edge(src, 2, "rt", true)
 	edge(src, 2, "east", true)
 	tl.waitFor(t, tl.stdout, "send +F1\n")
 	tl.waitFor(t, tl.stdout, "send +F2\n")
@@ -112,13 +121,13 @@ func TestPadsSetFunctionKeyAppliesToThatControllerOnly(t *testing.T) {
 	if strings.Contains(after, "F2") {
 		t.Fatalf("the Joy-Con's key was touched by the Xbox pad's setting:\n%s", after)
 	}
-	if x, j := tl.slotFunctionKey(t, 0), tl.slotFunctionKey(t, 1); x != control.Back || j != control.Paddle3 {
-		t.Fatalf("function keys after pads.set: %s, %s; want back and paddle3", x, j)
+	if x, j := tl.slotFunctionKey(t, 0), tl.slotFunctionKey(t, 1); x != control.Back || j != control.RT {
+		t.Fatalf("function keys after pads.set: %s, %s; want back and rt", x, j)
 	}
-	// The Joy-Con still holds paddle3 and east: its release lets go of F2.
+	// The Joy-Con still holds rt and east: its release lets go of F2.
 	edge(src, 2, "east", false)
 	tl.waitFor(t, tl.stdout, "send -F2\n")
-	edge(src, 2, "paddle3", false)
+	edge(src, 2, "rt", false)
 	// The Xbox pad: start is an ordinary control now (S), back the function key.
 	edge(src, 1, "south", false)
 	edge(src, 1, "start", false)
@@ -132,7 +141,7 @@ func TestPadsSetFunctionKeyAppliesToThatControllerOnly(t *testing.T) {
 	tl.waitForCount(t, tl.stdout, "send +F1\n", 2)
 
 	// The same setting again lets go of nothing.
-	edge(src, 2, "paddle3", true)
+	edge(src, 2, "rt", true)
 	edge(src, 2, "east", true) // F2 under the Joy-Con's function key
 	tl.waitForCount(t, tl.stdout, "send +F2\n", 2)
 	before = tl.stdout.String()
@@ -143,18 +152,18 @@ func TestPadsSetFunctionKeyAppliesToThatControllerOnly(t *testing.T) {
 	if got := tl.sentSince(before); strings.Contains(got, "send -") {
 		t.Errorf("a setting that changed nothing let go of keys:\n%s", got)
 	}
-	// And the key the Joy-Con is given: paddle1 (R) in place of ZR.
-	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "paddle1"}, &res); err != nil {
+	// And the key the Joy-Con is given: R in place of ZR.
+	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "functionKey": "rightshoulder"}, &res); err != nil {
 		t.Fatal(err)
 	}
 	if got := tl.sentSince(before); !strings.Contains(got, "-F2") {
 		t.Errorf("the Joy-Con's change did not let go of its F2:\n%s", got)
 	}
-	if got := tl.slotFunctionKey(t, 1); got != control.Paddle1 {
-		t.Errorf("the Joy-Con runs %s; want paddle1", got)
+	if got := tl.slotFunctionKey(t, 1); got != control.RightShoulder {
+		t.Errorf("the Joy-Con runs %s; want rightshoulder", got)
 	}
 	edge(src, 2, "east", false)
-	edge(src, 2, "paddle3", false)
+	edge(src, 2, "rt", false)
 	tl.cancel()
 	if tl.waitCode(t) != 0 {
 		t.Fatal(tl.stderr.String())
@@ -249,29 +258,29 @@ func TestPadsComboIsPerController(t *testing.T) {
 	settings := tl.selectionConfig()
 	xbox := input.DeviceInfo{ID: 1, GUID: padXboxGUID, Serial: "XB1", Type: "xboxone", IsGamepad: true}
 	joy := input.DeviceInfo{ID: 2, GUID: padJoyConGUID, Serial: "XKW2", Type: "joyconright", IsGamepad: true, ButtonMask: buttonMaskOf(inputtest.JoyConRight("r").Buttons)}
-	family, got := effectiveCombo(settings, xbox, false)
+	family, got := effectiveCombo(settings, xbox)
 	if family != "standard" || strings.Join(got.Buttons, "+") != "start+north" || got.Hold != 700*time.Millisecond {
 		t.Errorf("Xbox combo = %s %+v", family, got)
 	}
-	family, got = effectiveCombo(settings, joy, false)
-	if family != "joyconRight" || strings.Join(got.Buttons, "+") != "leftshoulder+rightshoulder" || got.Hold != input.ComboHold {
+	family, got = effectiveCombo(settings, joy)
+	if family != "joyconRight" || strings.Join(got.Buttons, "+") != "paddle3+paddle1" || got.Hold != input.ComboHold {
 		t.Errorf("Joy-Con combo = %s %+v", family, got)
 	}
 	var res rpcPadSet
-	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "panic": map[string]any{"buttons": []string{"leftshoulder", "south"}, "holdMs": 900}}, &res); err != nil {
+	if err := c.call("pads.set", map[string]any{"key": padJoyConKey, "panic": map[string]any{"buttons": []string{"rightshoulder", "south"}, "holdMs": 900}}, &res); err != nil {
 		t.Fatal(err)
 	}
 	settings = tl.selectionConfig()
-	if _, got = effectiveCombo(settings, joy, false); strings.Join(got.Buttons, "+") != "leftshoulder+south" || got.Hold != 900*time.Millisecond {
+	if _, got = effectiveCombo(settings, joy); strings.Join(got.Buttons, "+") != "rightshoulder+south" || got.Hold != 900*time.Millisecond {
 		t.Errorf("Joy-Con combo after pads.set = %+v", got)
 	}
-	if _, got = effectiveCombo(settings, xbox, false); strings.Join(got.Buttons, "+") != "start+north" {
+	if _, got = effectiveCombo(settings, xbox); strings.Join(got.Buttons, "+") != "start+north" {
 		t.Errorf("Xbox combo after the Joy-Con's = %+v", got)
 	}
 	// A controller that lacks a button of its combo keeps the family's.
 	slim := xbox
 	slim.ButtonMask = buttonMaskOf([]string{"south", "start"})
-	if _, got = effectiveCombo(settings, slim, false); strings.Join(got.Buttons, "+") != "back+start" {
+	if _, got = effectiveCombo(settings, slim); strings.Join(got.Buttons, "+") != "back+start" {
 		t.Errorf("a pad without north = %+v; want back+start", got)
 	}
 }
@@ -295,7 +304,7 @@ func TestLiveSettingsCompareThePerControllerSettings(t *testing.T) {
 		"feedback":     `{"schemaVersion":0,"devices":{"` + padXboxKey + `":{"functionKey":"back","feedback":{"rumble":true},"panic":{"buttons":["start","north"],"holdMs":700}}}}`,
 		"combo":        `{"schemaVersion":0,"devices":{"` + padXboxKey + `":{"functionKey":"back","feedback":{"rumble":false},"panic":{"buttons":["start","north"],"holdMs":800}}}}`,
 		"another controller": `{"schemaVersion":0,"devices":{"` + padXboxKey + `":{"functionKey":"back","feedback":{"rumble":false},"panic":{"buttons":["start","north"],"holdMs":700}},"` +
-			padJoyConKey + `":{"functionKey":"paddle1"}}}`,
+			padJoyConKey + `":{"functionKey":"rightshoulder"}}}`,
 		"the retired function key": `{"schemaVersion":0,"functionKey":"back","devices":{"` + padXboxKey + `":{"functionKey":"back","feedback":{"rumble":false},"panic":{"buttons":["start","north"],"holdMs":700}}}}`,
 	} {
 		next, ds := profile.ParseConfig([]byte(text))
@@ -328,16 +337,16 @@ func TestExplainShowsEachControllersFunctionKey(t *testing.T) {
 	if len(x.Slots) != 1 || x.Slots[0].FunctionKey != "start" || !x.Slots[0].IsFunctionKey || x.FunctionKey != "start" || !x.IsFunctionKey || x.Slots[0].FunctionSet.Layer != "function:start" {
 		t.Errorf("start on the Xbox pad: %+v", x)
 	}
-	j := explain(map[string]any{"device": "2", "control": "paddle3"})
-	if len(j.Slots) != 1 || j.Slots[0].FunctionKey != "paddle3" || !j.Slots[0].IsFunctionKey || j.Slots[0].FunctionSet.Layer != "function:paddle3" {
-		t.Errorf("paddle3 on the Joy-Con: %+v", j)
+	j := explain(map[string]any{"device": "2", "control": "rt"})
+	if len(j.Slots) != 1 || j.Slots[0].FunctionKey != "rt" || !j.Slots[0].IsFunctionKey || j.Slots[0].FunctionSet.Layer != "function:rt" {
+		t.Errorf("rt on the Joy-Con: %+v", j)
 	}
 	j = explain(map[string]any{"device": "2", "control": "start"})
-	if len(j.Slots) != 1 || j.Slots[0].FunctionKey != "paddle3" || j.Slots[0].IsFunctionKey {
+	if len(j.Slots) != 1 || j.Slots[0].FunctionKey != "rt" || j.Slots[0].IsFunctionKey {
 		t.Errorf("start on the Joy-Con is an ordinary control: %+v", j)
 	}
 	lib := explain(map[string]any{"id": "first", "control": "south"})
-	if len(lib.Slots) != 2 || lib.Slots[0].FunctionKey != "start" || lib.Slots[1].FunctionKey != "paddle3" ||
+	if len(lib.Slots) != 2 || lib.Slots[0].FunctionKey != "start" || lib.Slots[1].FunctionKey != "rt" ||
 		len(lib.Slots[0].Controllers) != 1 || lib.Slots[0].Controllers[0] != padXboxKey || lib.Slots[1].Controllers[0] != padJoyConKey || lib.FunctionKey != "start" {
 		t.Errorf("library profile: %+v", lib)
 	}

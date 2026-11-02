@@ -41,8 +41,8 @@ const goldenSteps = 10000
 // as testdata/hotplug.json), with Config.Device set to the line of
 // device.txt and Config.Slots to the number in slotcount.txt when the case
 // has them (1 without). Among the events, input.ExpandCombos inserts the
-// ComboHeld events a Source would send, with the default combos of the
-// horizontal grip (comboOf), as padmated's replay does: each toggles the
+// ComboHeld events a Source would send, with the default combos
+// (comboOf), as padmated's replay does: each toggles the
 // pause. Before each event the fake clock moves to its time,
 // stopping at each deadline on the way, and a Sync follows each stop and
 // each event; after the last, the clock steps through the deadlines left,
@@ -276,9 +276,8 @@ func runGolden(t *testing.T, dir string, update bool) {
 	checkText(t, filepath.Join(dir, "slots.txt"), w.b.String(), update)
 }
 
-// comboOf is the combo of each gamepad in a replay: its default with the
-// horizontal grip, as padmated's replay has no hint to tell the grip.
-func comboOf(info input.DeviceInfo) input.Combo { return input.DefaultCombo(info, false) }
+// comboOf is the combo of each gamepad in a replay: its default.
+func comboOf(info input.DeviceInfo) input.Combo { return input.DefaultCombo(info) }
 
 // readOptional returns the trimmed text of the file name of the case in
 // dir, or "" when it has none.

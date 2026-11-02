@@ -21,19 +21,20 @@ import (
 // when the controller or the setting changes, and lets go of everything first.
 
 // fnTestProfile has a function set that rebinds south, and an ordinary binding
-// on east, start and paddle3 in the base layer, which under their function key
+// on east, start and rt in the base layer, which under their function key
 // are ignored.
 const fnTestProfile = `{"schemaVersion":1,"name":"fn","layers":{"base":{
   "south":{"press":{"type":"keys","keys":"A"}},
   "east":{"press":{"type":"keys","keys":"B"}},
   "start":{"press":{"type":"keys","keys":"S"}},
   "back":{"press":{"type":"keys","keys":"V"}},
-  "paddle3":{"press":{"type":"keys","keys":"E"}}}},
+  "rt":{"press":{"type":"keys","keys":"E"}}}},
  "functionSet":{"south":{"press":{"type":"keys","keys":"F1"}}}}`
 
 // GUIDs of a Joy-Con 2 (R) and of a pair (vendor 057e, product 2066 and 2068),
 // which input.FamilyOf and padfamily read as a single right Joy-Con and a pair.
 const (
+	guidJoyConLeft  = "030000007e0500006720000000000000"
 	guidJoyConRight = "030000007e0500006620000000000000"
 	guidJoyConPair  = "030000007e0500006820000000000000"
 )
@@ -68,7 +69,7 @@ func newFnHarness(t *testing.T) *fnHarness {
 	s, err := slot.New(slot.Config{
 		Index: 0, Gen: 1, Program: compileFnProfile(t), Arbiter: h.Arb, Clock: h.Clock,
 		FunctionKey: func(key string, info input.DeviceInfo) control.Control {
-			return h.cfg.Load().PadSettings(key, input.FamilyOf(info, false)).FunctionKey
+			return h.cfg.Load().PadSettings(key, input.FamilyOf(info)).FunctionKey
 		},
 		OnFunctionKey: func(key string, prog *engine.Program) {
 			h.switched = append(h.switched, key+":"+prog.FunctionKey().String())
@@ -120,6 +121,14 @@ func (h *fnHarness) button(t *testing.T, name string, down bool, at int) {
 	h.s.Handle(input.Event{Kind: kind, Control: name})
 }
 
+// axis moves an axis at at ms: a trigger at 20000 is pressed (the virtual
+// button lt or rt), at 0 released.
+func (h *fnHarness) axis(t *testing.T, name string, value int16, at int) {
+	t.Helper()
+	h.at(t, at)
+	h.s.Handle(input.Event{Kind: input.AxisMotion, Control: name, Value: value})
+}
+
 func (h *fnHarness) at(t *testing.T, msec int) {
 	t.Helper()
 	h.Clock.Set(clock.Time(time.Duration(msec) * ms))
@@ -127,7 +136,7 @@ func (h *fnHarness) at(t *testing.T, msec int) {
 
 func (h *fnHarness) programKey() control.Control { return h.s.View().Mapping.ProgramFunctionKey }
 
-// A slot runs the function key of the controller it has: paddle3 for a single
+// A slot runs the function key of the controller it has: rt for a single
 // right Joy-Con, start for a standard pad, the settings of the controller if it
 // has any; a slot with no controller has the standard layout's.
 func TestSlotFunctionKeyFollowsTheController(t *testing.T) {
@@ -138,15 +147,15 @@ func TestSlotFunctionKeyFollowsTheController(t *testing.T) {
 	const joy = guidJoyConRight + "/s:one"
 	const xbox = "0300000000000000000000000000dead/p:x"
 	h.add(t, 1, joy, guidJoyConRight, "joyconright")
-	if got := h.programKey(); got != control.Paddle3 {
-		t.Fatalf("a single right Joy-Con has %s; want paddle3", got)
+	if got := h.programKey(); got != control.RT {
+		t.Fatalf("a single right Joy-Con has %s; want rt", got)
 	}
-	// paddle3 is the function key: it sends nothing, and under it south is F1;
+	// rt is the function key: it sends nothing, and under it south is F1;
 	// start is an ordinary control.
-	h.button(t, "paddle3", true, 10)
+	h.axis(t, "righttrigger", 20000, 10)
 	h.button(t, "south", true, 20)
 	h.button(t, "south", false, 30)
-	h.button(t, "paddle3", false, 40)
+	h.axis(t, "righttrigger", 0, 40)
 	h.button(t, "start", true, 50)
 	h.button(t, "start", false, 60)
 	h.ExpectOutput("+F1@20 -F1@30 +S@50 -S@60")
@@ -154,33 +163,33 @@ func TestSlotFunctionKeyFollowsTheController(t *testing.T) {
 	if got := h.programKey(); got != control.Start {
 		t.Errorf("after the Joy-Con went, %s; want start", got)
 	}
-	// A standard pad on the same slot: start is the function key, paddle3 is
+	// A standard pad on the same slot: start is the function key, rt is
 	// ordinary.
 	h.add(t, 2, xbox, "0300000000000000000000000000dead", "xboxone")
-	h.button(t, "paddle3", true, 100)
-	h.button(t, "paddle3", false, 110)
+	h.axis(t, "righttrigger", 20000, 100)
+	h.axis(t, "righttrigger", 0, 110)
 	h.button(t, "start", true, 120)
 	h.button(t, "south", true, 130)
 	h.button(t, "south", false, 140)
 	h.button(t, "start", false, 150)
 	h.ExpectOutput("+E@100 -E@110 +F1@130 -F1@140")
 	// The standard pad needs no switch: the slot already ran start.
-	if want := []string{joy + ":paddle3", ":start"}; !slices.Equal(h.switched, want) {
+	if want := []string{joy + ":rt", ":start"}; !slices.Equal(h.switched, want) {
 		t.Errorf("OnFunctionKey calls %q; want %q", h.switched, want)
 	}
 }
 
 // A function key the controller has set itself wins, and a Joy-Con that turns
 // into a pair (a new controller on the slot, with the standard buttons) changes
-// from paddle3 to back with everything let go first.
+// from rt to back with everything let go first.
 func TestSlotFunctionKeyJoyConBecomesAPair(t *testing.T) {
 	h := newFnHarness(t)
 	const joy = guidJoyConRight + "/s:one"
 	const pair = guidJoyConPair + "/s:one"
 	h.add(t, 1, joy, guidJoyConRight, "joyconright")
-	h.button(t, "paddle3", true, 10) // the function key
-	h.button(t, "south", true, 20)   // F1, under it
-	h.button(t, "east", true, 30)    // B
+	h.axis(t, "righttrigger", 20000, 10) // the function key
+	h.button(t, "south", true, 20)       // F1, under it
+	h.button(t, "east", true, 30)        // B
 	h.ExpectOutput("+F1@20 +B@30")
 	// The Joy-Con goes: the keys are let go, with the function key held.
 	h.at(t, 40)
@@ -201,7 +210,7 @@ func TestSlotFunctionKeyJoyConBecomesAPair(t *testing.T) {
 	h.button(t, "start", true, 140) // ordinary on a pair whose function key is back
 	h.button(t, "start", false, 150)
 	h.ExpectOutput("+F1@110 -F1@120 +S@140 -S@150")
-	if want := []string{joy + ":paddle3", ":start", pair + ":back"}; !slices.Equal(h.switched, want) {
+	if want := []string{joy + ":rt", ":start", pair + ":back"}; !slices.Equal(h.switched, want) {
 		t.Errorf("OnFunctionKey calls %q; want %q", h.switched, want)
 	}
 }
@@ -266,7 +275,7 @@ func TestSlotFunctionKeyUnplugWhileHeld(t *testing.T) {
 	h := newFnHarness(t)
 	const joy = guidJoyConRight + "/s:one"
 	h.add(t, 1, joy, guidJoyConRight, "joyconright")
-	h.button(t, "paddle3", true, 10)
+	h.axis(t, "righttrigger", 20000, 10)
 	h.button(t, "south", true, 20)
 	h.ExpectOutput("+F1@20")
 	h.at(t, 30)
@@ -274,16 +283,138 @@ func TestSlotFunctionKeyUnplugWhileHeld(t *testing.T) {
 	h.ExpectOutput("-F1@30")
 	simtest.AssertNoneHeld(t, h.Arb, h.Out)
 	h.add(t, 1, joy, guidJoyConRight, "joyconright")
-	// The same Joy-Con comes back with paddle3 still held: it is the function
+	// The same Joy-Con comes back with rt still held: it is the function
 	// key from its next press only, as after any reset.
 	if got := h.s.View().Mapping.FunctionKey; got != control.Invalid {
 		t.Errorf("function key held %s after the Joy-Con came back", got)
 	}
-	h.button(t, "paddle3", true, 40)
+	h.axis(t, "righttrigger", 20000, 40)
 	h.button(t, "south", true, 50)
 	h.button(t, "south", false, 60)
-	h.button(t, "paddle3", false, 70)
+	h.axis(t, "righttrigger", 0, 70)
 	h.ExpectOutput("+F1@50 -F1@60")
+}
+
+// A single Joy-Con's function key held, as its trigger (ZL, by default) or its
+// shoulder button (L, chosen), with a key held under it and another beside it,
+// ends with every way out of the slot (invariant 1): the controller going away,
+// the pause, a Reload to another profile, a change of the setting. After each,
+// nothing is held, the function key is held or not as the engine's rules say,
+// and its release sends nothing.
+func TestSlotJoyConFunctionKeyExitPaths(t *testing.T) {
+	const joyL = guidJoyConLeft + "/s:left"
+	for _, tc := range []struct {
+		name string
+		fk   string // devices.<key>.functionKey, "" for the default
+		hold string // the control that is the function key
+		down func(h *fnHarness, t *testing.T, at int)
+		up   func(h *fnHarness, t *testing.T, at int)
+	}{
+		{"ZL by default", "", "lt",
+			func(h *fnHarness, t *testing.T, at int) { h.axis(t, "lefttrigger", 20000, at) },
+			func(h *fnHarness, t *testing.T, at int) { h.axis(t, "lefttrigger", 0, at) }},
+		{"ZL pulled all the way", "", "lt",
+			func(h *fnHarness, t *testing.T, at int) { h.axis(t, "lefttrigger", 32767, at) },
+			func(h *fnHarness, t *testing.T, at int) { h.axis(t, "lefttrigger", 0, at) }},
+		{"L chosen", "leftshoulder", "leftshoulder",
+			func(h *fnHarness, t *testing.T, at int) { h.button(t, "leftshoulder", true, at) },
+			func(h *fnHarness, t *testing.T, at int) { h.button(t, "leftshoulder", false, at) }},
+	} {
+		// start returns a harness with the Joy-Con attached and everything held.
+		start := func(t *testing.T) *fnHarness {
+			h := newFnHarness(t)
+			if tc.fk != "" {
+				h.set(joyL, tc.fk)
+			}
+			h.add(t, 1, joyL, guidJoyConLeft, "joyconleft")
+			if got := h.programKey().String(); got != tc.hold {
+				t.Fatalf("function key of the program %s; want %s", got, tc.hold)
+			}
+			tc.down(h, t, 10)
+			h.button(t, "south", true, 20) // F1, under the function key
+			h.button(t, "east", true, 30)  // B, beside it
+			h.ExpectOutput("+F1@20 +B@30")
+			if got := h.s.View().Mapping.FunctionKey.String(); got != tc.hold {
+				t.Fatalf("function key held %s; want %s", got, tc.hold)
+			}
+			return h
+		}
+		t.Run(tc.name+"/the controller goes away", func(t *testing.T) {
+			h := start(t)
+			h.at(t, 40)
+			h.remove(1)
+			h.ExpectOutput("-B@40 -F1@40")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+			if got := h.s.View().Mapping.FunctionKey; got != control.Invalid {
+				t.Errorf("function key held %s after the removal", got)
+			}
+		})
+		t.Run(tc.name+"/pause and resume", func(t *testing.T) {
+			h := start(t)
+			h.at(t, 40)
+			if err := h.s.SetPaused(true); err != nil {
+				t.Fatal(err)
+			}
+			h.ExpectOutput("-B@40 -F1@40")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+			if err := h.s.SetPaused(false); err != nil {
+				t.Fatal(err)
+			}
+			// Resuming presses nothing again; the keys still down do nothing.
+			h.button(t, "south", false, 50)
+			h.button(t, "east", false, 51)
+			tc.up(h, t, 52)
+			h.ExpectOutput("")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+			// And the function key works again from its next press.
+			tc.down(h, t, 60)
+			h.button(t, "south", true, 70)
+			h.button(t, "south", false, 80)
+			tc.up(h, t, 90)
+			h.ExpectOutput("+F1@70 -F1@80")
+		})
+		t.Run(tc.name+"/profile switch", func(t *testing.T) {
+			h := start(t)
+			h.at(t, 40)
+			if err := h.s.Reload(compileFnProfile(t), 2); err != nil {
+				t.Fatal(err)
+			}
+			h.ExpectOutput("-B@40 -F1@40")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+			if got := h.programKey().String(); got != tc.hold {
+				t.Errorf("function key of the new program %s; want %s", got, tc.hold)
+			}
+			h.button(t, "south", false, 50)
+			h.button(t, "east", false, 51)
+			tc.up(h, t, 52)
+			h.ExpectOutput("")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+		})
+		t.Run(tc.name+"/the setting changes", func(t *testing.T) {
+			h := start(t)
+			next := "" // the default again, ZL
+			if tc.fk == "" {
+				next = "leftshoulder"
+			}
+			h.set(joyL, next)
+			h.at(t, 40)
+			h.s.RefreshFunctionKey()
+			h.ExpectOutput("-B@40 -F1@40")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+			if got := h.s.View().Mapping.FunctionKey; got != control.Invalid {
+				t.Errorf("function key held %s after the setting changed", got)
+			}
+			if got := h.programKey().String(); got == tc.hold {
+				t.Errorf("function key of the program still %s", got)
+			}
+			// What was down does nothing, and the old key is an ordinary control now.
+			h.button(t, "south", false, 50)
+			h.button(t, "east", false, 51)
+			tc.up(h, t, 52)
+			h.ExpectOutput("")
+			simtest.AssertNoneHeld(t, h.Arb, h.Out)
+		})
+	}
 }
 
 // A Reload to another profile keeps the function key of the controller, and a
@@ -296,15 +427,15 @@ func TestSlotReloadKeepsTheControllerFunctionKey(t *testing.T) {
 	if err := h.s.Reload(compileFnProfile(t), 2); err != nil {
 		t.Fatal(err)
 	}
-	if got := h.programKey(); got != control.Paddle3 {
-		t.Errorf("after the Reload the function key is %s; want paddle3", got)
+	if got := h.programKey(); got != control.RT {
+		t.Errorf("after the Reload the function key is %s; want rt", got)
 	}
-	h.button(t, "paddle3", true, 20)
+	h.axis(t, "righttrigger", 20000, 20)
 	h.button(t, "south", true, 30)
 	h.button(t, "south", false, 40)
-	h.button(t, "paddle3", false, 50)
+	h.axis(t, "righttrigger", 0, 50)
 	h.ExpectOutput("+F1@30 -F1@40")
-	if strings.Join(h.switched, ",") != joy+":paddle3" {
+	if strings.Join(h.switched, ",") != joy+":rt" {
 		t.Errorf("OnFunctionKey calls %q; a Reload is not a switch", h.switched)
 	}
 }

@@ -234,7 +234,14 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		ds = append(ds, Diagnostic{Severity: SeverityWarning, Pointer: ptr, Offset: n.start, Message: msg})
 	}
 	for _, family := range sortedKeys(c.Safety.Panic) {
-		checkCombo(childPointer("/safety/panic", family), c.Safety.Panic[family], fail, warn)
+		ptr := childPointer("/safety/panic", family)
+		combo := c.Safety.Panic[family]
+		checkCombo(ptr, combo, fail, warn)
+		if slices.Contains(padfamily.RetiredPanicFamilies[:], family) {
+			warn(ptr, quote(family)+" is retired: a single Joy-Con is always held upright, and its combo is joyconLeft or joyconRight; the built-in combo applies")
+		} else if f, ok := padfamily.Parse(family); ok {
+			checkComboButtons(ptr, combo, f, warn)
+		}
 	}
 	checkPads(c.Devices, fail, warn)
 	if ds.HasErrors() {
@@ -264,15 +271,38 @@ func checkCombo(ptr string, combo PanicCombo, fail, warn func(pointer, msg strin
 	}
 }
 
+// checkComboButtons warns about the buttons of the emergency combo at the
+// pointer ptr that a controller of family f does not have (a Joy-Con's combo
+// written for the sideways grip, for one): the combo is not used then and the
+// built-in one applies (PanicCombo.UsableFor). A name that is no button, or
+// guide, which checkCombo reports, is not repeated here.
+func checkComboButtons(ptr string, combo PanicCombo, f padfamily.Family, warn func(pointer, msg string)) {
+	var missing []string
+	for _, name := range combo.Buttons {
+		if ctl, ok := control.Parse(name); ok && !ctl.Unmappable() && !f.HasButton(name) {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 {
+		warn(ptr+"/buttons", "this controller has no "+strings.Join(missing, ", ")+": the built-in combo applies")
+	}
+}
+
 // checkPads reports the per-controller settings of the devices of c
 // (ADR-0017) that cannot work: a function key that the controller of the
-// DeviceKey cannot have (what its GUID allows, whatever its grip:
-// padfamily.PossibleFunctionKeys), and an emergency combo with a name that is
-// no button.
+// DeviceKey cannot have (what its GUID allows: padfamily.PossibleFunctionKeys),
+// and an emergency combo with a name that is no button.
+//
+// A single Joy-Con, told by its GUID, or a key that tells nothing, gets
+// warnings instead of errors for a function key or buttons that padmate no
+// longer offers (the paddles, back and start, or the buttons of the sideways
+// grip, which no longer exists): an older file still loads whole, and the
+// controller falls back to the default of its family (Config.PadSettings).
 func checkPads(devices map[string]DeviceSettings, fail, warn func(pointer, msg string)) {
 	for _, key := range sortedKeys(devices) {
 		dev := devices[key]
 		base := childPointer("/devices", key)
+		family := padfamily.FromGUID(KeyGUID(key))
 		if dev.FunctionKey != "" {
 			allowed := padfamily.PossibleFunctionKeys(KeyGUID(key))
 			if fk, ok := control.Parse(dev.FunctionKey); !ok || !slices.Contains(allowed, fk) {
@@ -280,11 +310,17 @@ func checkPads(devices map[string]DeviceSettings, fail, warn func(pointer, msg s
 				for i, c := range allowed {
 					names[i] = c.String()
 				}
-				fail(base+"/functionKey", quote(dev.FunctionKey)+" cannot be the function key of this controller: it can be "+strings.Join(names, ", "))
+				msg := quote(dev.FunctionKey) + " cannot be the function key of this controller: it can be " + strings.Join(names, ", ")
+				if ok && (family.IsSingleJoyCon() || family == padfamily.Unknown) {
+					warn(base+"/functionKey", msg+"; the default applies")
+				} else {
+					fail(base+"/functionKey", msg)
+				}
 			}
 		}
 		if dev.Panic != nil {
 			checkCombo(base+"/panic", *dev.Panic, fail, warn)
+			checkComboButtons(base+"/panic", *dev.Panic, family, warn)
 		}
 	}
 }
@@ -299,6 +335,15 @@ func (p PanicCombo) Usable() bool {
 		}
 	}
 	return true
+}
+
+// UsableFor reports whether the combo can be used by a controller of family
+// f: it is Usable, and f has every button of it (padfamily.Family.HasButton).
+// A single Joy-Con has a part of the buttons only, so a combo that a file
+// wrote for another grip, such as the sideways joyconLeft with leftshoulder
+// and rightshoulder, is not usable on it, and the built-in combo applies.
+func (p PanicCombo) UsableFor(f padfamily.Family) bool {
+	return p.Usable() && !slices.ContainsFunc(p.Buttons, func(b string) bool { return !f.HasButton(b) })
 }
 
 // Selection includes the release decision for a debounced, non-shell

@@ -29,15 +29,12 @@ const (
 	// PlayStation, Switch Pro, GameCube, a pad SDL reports as unknown, and
 	// anything that is not a Joy-Con.
 	Standard
-	// JoyConLeft and JoyConRight are a single Joy-Con held sideways, which is
-	// how padmate holds it unless the vertical hint is set (ARCHITECTURE
-	// §7.1). The Switch 1 Joy-Con and the Joy-Con 2 map the same way.
+	// JoyConLeft and JoyConRight are a single Joy-Con, which padmate always
+	// holds upright (ARCHITECTURE §7.1): SDL gets the hint
+	// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS, and the Joy-Con 2 driver maps
+	// the same way. A sideways grip no longer exists.
 	JoyConLeft
 	JoyConRight
-	// JoyConLeftVertical and JoyConRightVertical are a single Joy-Con held
-	// upright.
-	JoyConLeftVertical
-	JoyConRightVertical
 	// JoyConPair is a left and a right Joy-Con connected together: one
 	// controller with the standard buttons.
 	JoyConPair
@@ -46,9 +43,14 @@ const (
 var names = [...]string{
 	Unknown: "unknown", Standard: "standard",
 	JoyConLeft: "joyconLeft", JoyConRight: "joyconRight",
-	JoyConLeftVertical: "joyconLeftVertical", JoyConRightVertical: "joyconRightVertical",
 	JoyConPair: "joyconPair",
 }
+
+// RetiredPanicFamilies are the members of the retired config.json
+// safety.panic that name a grip padmate no longer has: a Joy-Con held
+// upright is joyconLeft or joyconRight now. A file may still hold them; the
+// daemon reads and ignores them, with a warning (profile.ParseConfig).
+var RetiredPanicFamilies = [...]string{"joyconLeftVertical", "joyconRightVertical"}
 
 // String returns the name of f, which is also its name in JSON. Apart from
 // unknown and joyconPair the names are those of the families of
@@ -73,10 +75,37 @@ func Parse(name string) (Family, bool) {
 func (f Family) IsJoyCon() bool { return f >= JoyConLeft && f <= JoyConPair }
 
 // IsSingleJoyCon reports whether f is a Joy-Con alone.
-func (f Family) IsSingleJoyCon() bool { return f >= JoyConLeft && f <= JoyConRightVertical }
+func (f Family) IsSingleJoyCon() bool { return f == JoyConLeft || f == JoyConRight }
 
-// Sideways reports whether f is a single Joy-Con held sideways.
-func (f Family) Sideways() bool { return f == JoyConLeft || f == JoyConRight }
+// The buttons SDL gives a single Joy-Con held upright, as read from the
+// source of SDL 3.4.16 (SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1;
+// inputtest.JoyConLeft and JoyConRight, jc2.verticalL and verticalR). The
+// triggers are axes, no buttons.
+var (
+	joyConLeftButtons = []string{
+		"back", "dpad.up", "dpad.down", "dpad.left", "dpad.right",
+		"leftshoulder", "leftstick", "misc1", "paddle2", "paddle4",
+	}
+	joyConRightButtons = []string{
+		"south", "east", "west", "north", "guide", "start",
+		"rightshoulder", "rightstick", "misc2", "paddle1", "paddle3",
+	}
+)
+
+// HasButton reports whether a controller of family f has the SDL button
+// named name (input.ButtonName). Only a single Joy-Con is known to lack
+// buttons: every other family answers true, since a pad of the standard
+// layout may have any of them, and it is never asked about a name that is no
+// button.
+func (f Family) HasButton(name string) bool {
+	switch f {
+	case JoyConLeft:
+		return slices.Contains(joyConLeftButtons, name)
+	case JoyConRight:
+		return slices.Contains(joyConRightButtons, name)
+	}
+	return true
+}
 
 // FunctionKeys are the buttons that can be a controller's function key.
 type FunctionKeys struct {
@@ -94,28 +123,20 @@ func (k FunctionKeys) Allows(c control.Control) bool { return slices.Contains(k.
 //
 //   - Standard layout (Standard, Unknown): Start (Menu, Options, +), the
 //     default, or Back (View, Create, Share, −).
-//   - A single Joy-Con held sideways: the big trigger on its side, ZR on the
-//     right one (paddle3) or ZL on the left one (paddle4), the default, or
-//     the shoulder button above it, R (paddle1) or L (paddle2). SDL maps a
-//     sideways Joy-Con's L and ZL to paddle2 and paddle4 and R and ZR to
-//     paddle1 and paddle3, and the Joy-Con 2 driver the same
-//     (ARCHITECTURE §7.1; inputtest.JoyConLeft; jc2.horizontalL).
-//   - A single Joy-Con held upright: the one of Back and Start it has, − on
-//     the left one and + on the right one. There is no second choice: what
-//     it has besides are its shoulder buttons, which are the ones held
-//     most.
+//   - A single Joy-Con, held upright: the big trigger under its index
+//     finger, ZL (LT) on the left one and ZR (RT) on the right one, the
+//     default, or the shoulder button above it, L (LeftShoulder) or R
+//     (RightShoulder). The trigger is a virtual button of the trigger axis
+//     (control.LT, with the thresholds of the profile). − and + are not
+//     offered: they are out of reach while the Joy-Con is held.
 //   - A pair of Joy-Cons: Back (−), the default, or Start (+).
 func (f Family) FunctionKeys() FunctionKeys {
 	var options []control.Control
 	switch f {
 	case JoyConLeft:
-		options = []control.Control{control.Paddle4, control.Paddle2}
+		options = []control.Control{control.LT, control.LeftShoulder}
 	case JoyConRight:
-		options = []control.Control{control.Paddle3, control.Paddle1}
-	case JoyConLeftVertical:
-		options = []control.Control{control.Back}
-	case JoyConRightVertical:
-		options = []control.Control{control.Start}
+		options = []control.Control{control.RT, control.RightShoulder}
 	case JoyConPair:
 		options = []control.Control{control.Back, control.Start}
 	default:
@@ -130,22 +151,22 @@ const DefaultPanicHoldMs = 2000
 
 // DefaultPanic returns the buttons of f's built-in emergency combo
 // (input.DefaultCombo, ARCHITECTURE §10.4), which are held for
-// DefaultPanicHoldMs.
+// DefaultPanicHoldMs: SL and SR on a single Joy-Con, which SDL reports as
+// paddles (paddle2 and paddle4 on the left one, paddle3 and paddle1 on the
+// right one), and back and start on every other controller.
 func (f Family) DefaultPanic() []string {
 	switch f {
-	case JoyConLeft, JoyConRight:
-		return []string{"leftshoulder", "rightshoulder"}
-	case JoyConLeftVertical:
+	case JoyConLeft:
 		return []string{"paddle2", "paddle4"}
-	case JoyConRightVertical:
+	case JoyConRight:
 		return []string{"paddle3", "paddle1"}
 	}
 	return []string{"back", "start"}
 }
 
 // PanicFamily returns the name of the family of config.json's retired
-// safety.panic that covers f: a single Joy-Con by its side and grip, every
-// other controller, a pair of Joy-Cons too, standard.
+// safety.panic that covers f: a single Joy-Con by its side, every other
+// controller, a pair of Joy-Cons too, standard.
 func (f Family) PanicFamily() string {
 	if f.IsSingleJoyCon() {
 		return f.String()
@@ -170,11 +191,8 @@ const (
 // FromGUID returns the family the GUID of a DeviceKey tells, without opening
 // the controller: the vendor and product ids in an SDL GUID (input.GUID)
 // name a Joy-Con, and any other GUID is a controller with the standard
-// layout. It is Unknown for text that is no GUID or has no ids. A single
-// Joy-Con is taken as held upright when vertical is set (the hint
-// SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS), else sideways: the GUID cannot
-// tell, and input.FamilyOf, which sees the buttons, does.
-func FromGUID(guid string, vertical bool) Family {
+// layout. It is Unknown for text that is no GUID or has no ids.
+func FromGUID(guid string) Family {
 	vendor, product, ok := ids(guid)
 	if !ok {
 		return Unknown
@@ -184,14 +202,8 @@ func FromGUID(guid string, vertical bool) Family {
 	}
 	switch product {
 	case productJoyConLeft, productJoyCon2Left:
-		if vertical {
-			return JoyConLeftVertical
-		}
 		return JoyConLeft
 	case productJoyConRight, productJoyCon2Right:
-		if vertical {
-			return JoyConRightVertical
-		}
 		return JoyConRight
 	case productJoyConPair, productJoyCon2Pair:
 		return JoyConPair
@@ -200,20 +212,14 @@ func FromGUID(guid string, vertical bool) Family {
 }
 
 // PossibleFunctionKeys returns every function key a controller with the
-// GUID of a DeviceKey may have, whatever its grip: what config.json can
-// hold for it. For a GUID that tells nothing it is every button that is a
-// function key of some family.
+// GUID of a DeviceKey may have: what config.json can hold for it. For a GUID
+// that tells nothing it is every button that is a function key of some
+// family.
 func PossibleFunctionKeys(guid string) []control.Control {
-	switch f := FromGUID(guid, false); f {
-	case JoyConLeft:
-		return slices.Concat(JoyConLeft.FunctionKeys().Options, JoyConLeftVertical.FunctionKeys().Options)
-	case JoyConRight:
-		return slices.Concat(JoyConRight.FunctionKeys().Options, JoyConRightVertical.FunctionKeys().Options)
-	case Unknown:
-		return []control.Control{control.Start, control.Back, control.Paddle1, control.Paddle2, control.Paddle3, control.Paddle4}
-	default:
+	if f := FromGUID(guid); f != Unknown {
 		return slices.Clone(f.FunctionKeys().Options)
 	}
+	return []control.Control{control.Start, control.Back, control.LT, control.RT, control.LeftShoulder, control.RightShoulder}
 }
 
 // ids reads the vendor and product ids of the SDL GUID guid (32 hex

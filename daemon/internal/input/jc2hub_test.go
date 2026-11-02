@@ -288,27 +288,24 @@ func TestHubPlayerNumbers(t *testing.T) {
 
 func TestHubSingleDeviceInfo(t *testing.T) {
 	for _, tc := range []struct {
-		name     string
-		vertical bool
-		addr     uint64
-		side     jc2.Side
-		serial   string
-		devName  string
-		typ      string
-		product  uint16
-		guid     string
-		buttons  uint32
-		axes     uint8
+		name    string
+		addr    uint64
+		side    jc2.Side
+		serial  string
+		devName string
+		typ     string
+		product uint16
+		guid    string
+		buttons uint32
+		axes    uint8
 	}{
 		// The masks are those of SDL's Switch 1 Joy-Con (family_sdl_test.go),
 		// with the C button of the right one (misc2, bit 21) added.
-		{"L sideways", false, addrL1, jc2.SideL, serL1, "Joy-Con 2 (L)", "joyconleft", 0x2067, "050000007e0500006720000000006200", 0xa06ef, 0x3},
-		{"R sideways", false, addrR1, jc2.SideR, serR1, "Joy-Con 2 (R)", "joyconright", 0x2066, "050000007e0500006620000000006200", 0x2506ef, 0x3},
-		{"L upright", true, addrL1, jc2.SideL, serL1, "Joy-Con 2 (L)", "joyconleft", 0x2067, "050000007e0500006720000000006200", 0xafa90, 0x13},
-		{"R upright", true, addrR1, jc2.SideR, serR1, "Joy-Con 2 (R)", "joyconright", 0x2066, "050000007e0500006620000000006200", 0x25056f, 0x2c},
+		{"L", addrL1, jc2.SideL, serL1, "Joy-Con 2 (L)", "joyconleft", 0x2067, "050000007e0500006720000000006200", 0xafa90, 0x13},
+		{"R", addrR1, jc2.SideR, serR1, "Joy-Con 2 (R)", "joyconright", 0x2066, "050000007e0500006620000000006200", 0x25056f, 0x2c},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			r := newRig(t, func(c *joyCon2Config) { knownAuto(c); c.Vertical = tc.vertical })
+			r := newRig(t, knownAuto)
 			r.now = 123456789 * time.Nanosecond
 			r.mustConnect(tc.addr, tc.side, tc.serial)
 			evs := r.take()
@@ -374,7 +371,7 @@ func TestHubReportsMakeEvents(t *testing.T) {
 	r.now += 15 * time.Millisecond
 	r.report(id, bLLeft|bSL)
 	evs := r.take()
-	equalStrings(t, "press", descs(evs), []string{"down 1 south", "down 1 leftshoulder"})
+	equalStrings(t, "press", descs(evs), []string{"down 1 dpad.left", "down 1 paddle2"})
 	for _, e := range evs {
 		if e.Stamp != 1234 || e.Time != uint64(r.now) {
 			t.Errorf("%s: Stamp %d, Time %d; want the transport's stamp and the hub's time", desc(e), e.Stamp, e.Time)
@@ -382,10 +379,10 @@ func TestHubReportsMakeEvents(t *testing.T) {
 	}
 	r.report(id, bLLeft|bSL) // nothing changed
 	r.report(id, bSL)
-	r.report(id, 0, 2048, 3248) // the stick up by its whole travel, held sideways
+	r.report(id, 0, 2048, 3248) // the stick up by its whole travel
 	r.report(id, 0, 2048, 3248)
 	r.report(id, 0)
-	equalStrings(t, "release and stick", r.takeDesc(), []string{"up 1 south", "up 1 leftshoulder", "axis 1 leftx=-32767", "axis 1 leftx=0"})
+	equalStrings(t, "release and stick", r.takeDesc(), []string{"up 1 dpad.left", "up 1 paddle2", "axis 1 lefty=-32767", "axis 1 lefty=0"})
 	if h := r.trk.heldNames(joyCon2IDBase); len(h) != 0 {
 		t.Errorf("held %v at rest", h)
 	}
@@ -403,8 +400,8 @@ func TestHubUsesStickCalibration(t *testing.T) {
 	if evs := r.take(); len(evs) != 0 {
 		t.Fatalf("events %v at the calibrated center", descs(evs))
 	}
-	r.report(id, 0, cal.NeutralX, cal.NeutralY+cal.PosY) // up by its travel: right-hand horizontal, up is +leftx
-	equalStrings(t, "up", r.takeDesc(), []string{"axis 1 leftx=32767"})
+	r.report(id, 0, cal.NeutralX, cal.NeutralY+cal.PosY) // up by its travel: the right stick, up is -righty
+	equalStrings(t, "up", r.takeDesc(), []string{"axis 1 righty=-32767"})
 }
 
 func TestHubPairFormsAndBreaks(t *testing.T) {
@@ -412,7 +409,7 @@ func TestHubPairFormsAndBreaks(t *testing.T) {
 	l := r.mustConnect(addrL1, jc2.SideL, serL1)
 	equalStrings(t, "L", r.takeDesc(), []string{"added 1 Joy-Con 2 (L)"})
 	r.report(l, bLL)
-	equalStrings(t, "L pressed", r.takeDesc(), []string{"down 1 paddle2"})
+	equalStrings(t, "L pressed", r.takeDesc(), []string{"down 1 leftshoulder"})
 	infoL := r.trk.live[joyCon2IDBase]
 	keyL := KeyOf(infoL)
 
@@ -442,7 +439,7 @@ func TestHubPairFormsAndBreaks(t *testing.T) {
 	// The right Joy-Con goes: the pair is removed, the left one comes back as
 	// a single with a new id and its own, original key.
 	r.lost(rr)
-	equalStrings(t, "R lost", r.takeDesc(), []string{"removed 2", "added 3 Joy-Con 2 (L)", "down 3 west", "down 3 start", "down 3 paddle2"})
+	equalStrings(t, "R lost", r.takeDesc(), []string{"removed 2", "added 3 Joy-Con 2 (L)", "down 3 back", "down 3 leftshoulder", "down 3 dpad.up"})
 	again := r.trk.live[joyCon2IDBase+2]
 	if k := KeyOf(again); k != keyL {
 		t.Errorf("key of the single after the pair = %+v, before = %+v", k, keyL)
@@ -574,7 +571,7 @@ func TestHubWatchdogDormantAndRevival(t *testing.T) {
 	// a fresh press.
 	r.report(id, bLLeft)
 	evs := r.take()
-	equalStrings(t, "revival", descs(evs), []string{"added 2 Joy-Con 2 (L)", "down 2 south"})
+	equalStrings(t, "revival", descs(evs), []string{"added 2 Joy-Con 2 (L)", "down 2 dpad.left"})
 	if k := KeyOf(evs[0].Info); k != key || evs[0].Device == joyCon2IDBase {
 		t.Errorf("revived with key %+v id %d; want key %+v and a new id", k, evs[0].Device, key)
 	}
@@ -631,9 +628,9 @@ func TestHubDormantSideOfAPair(t *testing.T) {
 	}
 	equalStrings(t, "before the silence", r.takeDesc(), []string{"down 2 east"})
 	r.step(100 * time.Millisecond)
-	equalStrings(t, "L silent", r.takeDesc(), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 south"})
+	equalStrings(t, "L silent", r.takeDesc(), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 east"})
 	r.report(rr, bRA|bRB)
-	equalStrings(t, "single R", r.takeDesc(), []string{"down 3 west"})
+	equalStrings(t, "single R", r.takeDesc(), []string{"down 3 south"})
 	// L comes back: the single is replaced by the pair, which shows both
 	// sides' state.
 	r.report(l, bLMinus)
@@ -645,7 +642,7 @@ func TestHubDormantSideOfAPair(t *testing.T) {
 		r.step(100 * time.Millisecond)
 		r.report(l, bLMinus)
 	}
-	equalStrings(t, "R gives up", r.takeDesc(), []string{"removed 4", "added 5 Joy-Con 2 (L)", "down 5 start"})
+	equalStrings(t, "R gives up", r.takeDesc(), []string{"removed 4", "added 5 Joy-Con 2 (L)", "down 5 back"})
 	if d := r.tr.disconnectList(); !slices.Equal(d, []jc2win.LinkID{rr}) {
 		t.Errorf("disconnects %v, want the silent right link", d)
 	}
@@ -676,11 +673,11 @@ func TestHubPairBreaksUpOnSilence(t *testing.T) {
 	}
 	r.step(time.Millisecond)
 	evs := r.take()
-	equalStrings(t, "the pair breaks up", descs(evs), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 south", "down 3 east"})
+	equalStrings(t, "the pair breaks up", descs(evs), []string{"removed 2", "added 3 Joy-Con 2 (R)", "down 3 east", "down 3 north"})
 	if h := r.trk.heldNames(pairID); h != nil {
 		t.Errorf("the removed pair still holds %v", h)
 	}
-	if h := r.trk.heldNames(joyCon2IDBase + 2); !slices.Equal(h, []string{"east", "south"}) {
+	if h := r.trk.heldNames(joyCon2IDBase + 2); !slices.Equal(h, []string{"east", "north"}) {
 		t.Errorf("the single holds %v, want what the right Joy-Con holds", h)
 	}
 	for _, e := range evs {
@@ -707,7 +704,7 @@ func TestHubPairBreaksUpOnSilence(t *testing.T) {
 
 	// The single works on its own.
 	r.report(rr, bRA)
-	equalStrings(t, "single", r.takeDesc(), []string{"up 3 east"})
+	equalStrings(t, "single", r.takeDesc(), []string{"up 3 north"})
 
 	// The silent side reports again while the other is live: the pair is made
 	// again, as for a fresh second connection, with what both hold.
@@ -758,7 +755,7 @@ func TestHubSilenceOfBothSidesOfAPair(t *testing.T) {
 	r.step(jc2.DefaultSilence)
 	equalStrings(t, "both silent", r.takeDesc(), []string{"removed 2"})
 	r.report(l, bLMinus)
-	equalStrings(t, "L back", r.takeDesc(), []string{"added 3 Joy-Con 2 (L)", "down 3 start"})
+	equalStrings(t, "L back", r.takeDesc(), []string{"added 3 Joy-Con 2 (L)", "down 3 back"})
 	r.report(rr, bRA)
 	equalStrings(t, "R back", r.takeDesc(), []string{"removed 3", "added 4 Joy-Con 2 pair", "down 4 east", "down 4 back"})
 }
@@ -1120,7 +1117,7 @@ func TestJoyCon2ControlNames(t *testing.T) {
 		}
 	}
 	// And the lists of controls that a mode has are all known names.
-	for _, mode := range []jc2.Mode{jc2.Horizontal, jc2.Vertical, jc2.Pair} {
+	for _, mode := range []jc2.Mode{jc2.Vertical, jc2.Pair} {
 		for _, side := range []jc2.Side{jc2.SideL, jc2.SideR} {
 			for _, n := range jc2.Controls(mode, side) {
 				if _, ok := buttonIndex(n); !ok {
@@ -1144,25 +1141,21 @@ func TestHubDefaultCombos(t *testing.T) {
 		l, r uint16 // bits per side, 0 for nothing
 	}
 	for _, tc := range []struct {
-		name     string
-		vertical bool
-		pair     bool
-		side     jc2.Side
-		press    press
-		fires    bool
+		name  string
+		pair  bool
+		side  jc2.Side
+		press press
+		fires bool
 	}{
-		{"L sideways SL+SR", false, false, jc2.SideL, press{l: bSL | bSR}, true},
-		{"R sideways SL+SR", false, false, jc2.SideR, press{r: bSL | bSR}, true},
-		{"L sideways SL alone", false, false, jc2.SideL, press{l: bSL}, false},
-		{"L upright SL+SR", true, false, jc2.SideL, press{l: bSL | bSR}, true},
-		{"R upright SL+SR", true, false, jc2.SideR, press{r: bSL | bSR}, true},
-		{"R upright SL alone", true, false, jc2.SideR, press{r: bSL}, false},
-		{"pair Minus+Plus", false, true, 0, press{l: bLMinus, r: bRPlus}, true},
-		{"pair upright Minus+Plus", true, true, 0, press{l: bLMinus, r: bRPlus}, true},
-		{"pair SL+SR of one side", false, true, 0, press{l: bSL | bSR}, false},
+		{"L SL+SR", false, jc2.SideL, press{l: bSL | bSR}, true},
+		{"R SL+SR", false, jc2.SideR, press{r: bSL | bSR}, true},
+		{"L SL alone", false, jc2.SideL, press{l: bSL}, false},
+		{"R SL alone", false, jc2.SideR, press{r: bSL}, false},
+		{"pair Minus+Plus", true, 0, press{l: bLMinus, r: bRPlus}, true},
+		{"pair SL+SR of one side", true, 0, press{l: bSL | bSR}, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			r := newRig(t, func(c *joyCon2Config) { knownAuto(c); c.Vertical = tc.vertical })
+			r := newRig(t, knownAuto)
 			var l, rr jc2win.LinkID
 			switch {
 			case tc.pair:
@@ -1179,7 +1172,7 @@ func TestHubDefaultCombos(t *testing.T) {
 			if rr != 0 {
 				r.report(rr, tc.press.r)
 			}
-			w := NewComboWatch(func(info DeviceInfo) Combo { return DefaultCombo(info, tc.vertical) })
+			w := NewComboWatch(DefaultCombo)
 			for _, e := range r.evs {
 				w.Observe(e)
 			}

@@ -89,7 +89,7 @@ func DefaultPanic(f padfamily.Family) PanicCombo {
 // Config resolves to the defaults.
 func (c *Config) PadSettings(key string, family padfamily.Family) PadSettings {
 	if family == padfamily.Unknown {
-		family = padfamily.FromGUID(KeyGUID(key), false)
+		family = padfamily.FromGUID(KeyGUID(key))
 	}
 	var dev DeviceSettings
 	if c != nil {
@@ -112,10 +112,10 @@ func (c *Config) PadSettings(key string, family padfamily.Family) PadSettings {
 	out.Feedback, out.FeedbackSource = c.PadFeedback(key)
 
 	// The emergency combo.
-	if dev.Panic != nil && dev.Panic.Usable() {
+	if dev.Panic != nil && dev.Panic.UsableFor(family) {
 		out.Panic, out.PanicSource = clonePanic(*dev.Panic), SourceDevice
 	} else if c != nil {
-		if legacy, ok := c.Safety.Panic[family.PanicFamily()]; ok && legacy.Usable() {
+		if legacy, ok := c.Safety.Panic[family.PanicFamily()]; ok && legacy.UsableFor(family) {
 			out.Panic, out.PanicSource = clonePanic(legacy), SourceLegacy
 		}
 	}
@@ -172,7 +172,7 @@ func clonePanic(p PanicCombo) PanicCombo {
 func (c *Config) Materialized(key string, family padfamily.Family) DeviceSettings {
 	dev := c.Devices[key]
 	if family == padfamily.Unknown {
-		family = padfamily.FromGUID(KeyGUID(key), false)
+		family = padfamily.FromGUID(KeyGUID(key))
 	}
 	s := c.PadSettings(key, family)
 	if s.FunctionKeySource == SourceLegacy {

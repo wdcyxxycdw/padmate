@@ -19,12 +19,12 @@ const uiLabels = "../../../app/src/renderer/controller/controller-model.ts"
 const labelDriver = `const [, , module, cases] = process.argv;
 if (!process.features?.typescript) process.exit(3);
 const { controllerLabels } = await import(module);
-process.stdout.write(JSON.stringify(JSON.parse(cases).map((c) => controllerLabels(c.type, c.printed, c.mask))));
+process.stdout.write(JSON.stringify(JSON.parse(cases).map((c) => controllerLabels(c.type, c.printed))));
 `
 
 // labelCases are the pads TestLabelsMatchUI asks both tables about: every
 // SDL gamepad type and one SDL does not define, with and without printed
-// labels, and single Joy-Cons held either way.
+// labels.
 func labelCases() []Pad {
 	types := []string{"unknown", "standard", "xbox360", "xboxone", "ps3", "ps4", "ps5", "switchpro", "joyconleft", "joyconright", "joyconpair", "gamecube", "type99"}
 	printed := []map[string]string{
@@ -36,11 +36,7 @@ func labelCases() []Pad {
 	var cases []Pad
 	for _, typ := range types {
 		for _, labels := range printed {
-			// 0x5ff is a right Joy-Con held upright: face buttons and its own
-			// stick (SDL_gamepad.c).
-			for _, mask := range []uint32{0, 1, 0x7fff &^ 1, 0x5ff} {
-				cases = append(cases, Pad{Type: typ, Printed: labels, ButtonMask: mask})
-			}
+			cases = append(cases, Pad{Type: typ, Printed: labels})
 		}
 	}
 	return cases
@@ -69,12 +65,11 @@ func TestLabelsMatchUI(t *testing.T) {
 	type wire struct {
 		Type    string            `json:"type"`
 		Printed map[string]string `json:"printed"`
-		Mask    uint32            `json:"mask"`
 	}
 	cases := labelCases()
 	in := make([]wire, len(cases))
 	for i, c := range cases {
-		in[i] = wire{c.Type, c.Printed, c.ButtonMask}
+		in[i] = wire(c)
 	}
 	arg, err := json.Marshal(in)
 	if err != nil {
@@ -107,10 +102,10 @@ func TestLabelsMatchUI(t *testing.T) {
 // of the control on the mapping page, paddles and misc buttons included,
 // and a stick or trigger for its directions and half axes.
 func TestName(t *testing.T) {
-	xbox := Pad{Type: "xboxone", ButtonMask: 0x7fff}
+	xbox := Pad{Type: "xboxone"}
 	ps := Pad{Type: "ps5", Printed: map[string]string{"south": "Cross"}}
-	left := Pad{Type: "joyconleft", ButtonMask: 1}
-	vertical := Pad{Type: "joyconleft", ButtonMask: 2}
+	left := Pad{Type: "joyconleft"}
+	right := Pad{Type: "joyconright"}
 	for _, tc := range []struct {
 		control string
 		pad     Pad
@@ -118,7 +113,13 @@ func TestName(t *testing.T) {
 	}{
 		{"south", xbox, "A"}, {"south", ps, "×"}, {"east", Pad{Type: "switchpro"}, "A"}, {"south", Pad{}, "S"},
 		{"lt", xbox, "LT"}, {"lt", ps, "L2"}, {"rt", Pad{Type: "switchpro"}, "ZR"}, {"lefttrigger+", xbox, "LT"}, {"righttrigger-", ps, "R2"},
-		{"leftshoulder", xbox, "LB"}, {"leftshoulder", left, "SL"}, {"leftshoulder", vertical, "L"},
+		{"leftshoulder", xbox, "LB"}, {"leftshoulder", left, "L"}, {"rightshoulder", right, "R"},
+		// A single Joy-Con is always upright: its triggers are ZL and ZR, its
+		// right one has the printed letters, the left one has no face buttons
+		// and keeps the position names.
+		{"lt", left, "ZL"}, {"rt", right, "ZR"}, {"back", left, "−"}, {"start", right, "+"},
+		{"south", right, "B"}, {"east", right, "A"}, {"west", right, "Y"}, {"north", right, "X"},
+		{"south", left, "S"}, {"east", left, "E"}, {"west", left, "W"}, {"north", left, "N"},
 		{"back", xbox, "View"}, {"back", Pad{Type: "xbox360"}, "Back"}, {"guide", ps, "PS"}, {"touchpad", ps, "Touch"},
 		{"ls.up", xbox, "LS"}, {"ls.active", ps, "L3"}, {"rightx+", xbox, "RS"}, {"lefty-", Pad{}, "LS"}, {"leftstick", xbox, "LS"},
 		{"ls.inner", xbox, "LS"}, {"ls.outer", ps, "L3"}, {"rs.cw", xbox, "RS"}, {"rs.ccw", ps, "R3"},
@@ -126,11 +127,8 @@ func TestName(t *testing.T) {
 		{"dpad.up", xbox, "↑"}, {"dpad.downleft", xbox, "↙"},
 		{"paddle1", xbox, "背键 1"}, {"paddle3", xbox, "背键 2"}, {"paddle2", xbox, "背键 3"}, {"paddle4", Pad{}, "背键 4"},
 		{"paddle1", ps, "右背键"}, {"paddle4", ps, "左 Fn"},
-		{"paddle2", left, "L"}, {"paddle4", left, "ZL"}, {"paddle2", vertical, "SL"}, {"paddle4", vertical, "SR"},
-		{"paddle1", Pad{Type: "joyconright", ButtonMask: 2}, "SR"}, {"paddle3", Pad{Type: "joyconright", ButtonMask: 1}, "ZR"},
-		// Upright, a right Joy-Con has face buttons and the right stick: its
-		// SL is a paddle and R its shoulder, as on the left one.
-		{"paddle3", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "SL"}, {"rightshoulder", Pad{Type: "joyconright", ButtonMask: 0x5ff}, "R"},
+		{"paddle2", left, "SL"}, {"paddle4", left, "SR"},
+		{"paddle1", right, "SR"}, {"paddle3", right, "SL"},
 		{"paddle2", Pad{Type: "joyconpair"}, "左 SL"}, {"paddle1", Pad{Type: "joyconpair"}, "右 SR"},
 		{"misc1", xbox, "Share"}, {"misc1", ps, "Mute"}, {"misc1", Pad{Type: "switchpro"}, "Capture"}, {"misc1", Pad{}, "附加键 1"}, {"misc6", xbox, "附加键 6"},
 		{"misc2", xbox, "附加键 2"}, {"misc2", Pad{Type: "joyconright"}, "C 键"}, {"misc2", Pad{Type: "joyconpair"}, "C 键"},

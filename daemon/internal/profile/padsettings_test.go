@@ -49,14 +49,12 @@ func TestPadSettingsDefaults(t *testing.T) {
 	}{
 		{"xbox", DefaultConfig(), keyXbox, padfamily.Standard, control.Start, "back+start"},
 		{"nil config", nil, keyXbox, padfamily.Standard, control.Start, "back+start"},
-		{"joycon L sideways", DefaultConfig(), keyJoyConL, padfamily.JoyConLeft, control.Paddle4, "leftshoulder+rightshoulder"},
-		{"joycon R sideways", DefaultConfig(), keyJoyConR, padfamily.JoyConRight, control.Paddle3, "leftshoulder+rightshoulder"},
-		{"joycon L upright", DefaultConfig(), keyJoyConL, padfamily.JoyConLeftVertical, control.Back, "paddle2+paddle4"},
-		{"joycon R upright", DefaultConfig(), keyJoyConR, padfamily.JoyConRightVertical, control.Start, "paddle3+paddle1"},
+		{"joycon L", DefaultConfig(), keyJoyConL, padfamily.JoyConLeft, control.LT, "paddle2+paddle4"},
+		{"joycon R", DefaultConfig(), keyJoyConR, padfamily.JoyConRight, control.RT, "paddle3+paddle1"},
 		{"pair", DefaultConfig(), keyJoyConPair, padfamily.JoyConPair, control.Back, "back+start"},
 		// A family that is not known is read from the key.
 		{"unknown family, xbox key", DefaultConfig(), keyXbox, padfamily.Unknown, control.Start, "back+start"},
-		{"unknown family, joycon R key", DefaultConfig(), keyJoyConR, padfamily.Unknown, control.Paddle3, "leftshoulder+rightshoulder"},
+		{"unknown family, joycon R key", DefaultConfig(), keyJoyConR, padfamily.Unknown, control.RT, "paddle3+paddle1"},
 		{"unknown family, pair key", DefaultConfig(), keyJoyConPair, padfamily.Unknown, control.Back, "back+start"},
 		{"unknown family, no key", DefaultConfig(), "", padfamily.Unknown, control.Start, "back+start"},
 	} {
@@ -93,7 +91,7 @@ func TestPadSettingsResolution(t *testing.T) {
 		"safety":{"panic":{"standard":{"buttons":["back","south"],"holdMs":1500},"joyconRight":{"buttons":["south","east"],"holdMs":900}}},
 		"devices":{
 			%q:{"functionKey":"start","feedback":{"rumble":true,"led":false},"panic":{"buttons":["start","north"],"holdMs":700}},
-			%q:{"functionKey":"paddle1"},
+			%q:{"functionKey":"rightshoulder"},
 			%q:{"functionKey":"start"}
 		}}`, keyXbox, keyJoyConR, keyJoyConPair))
 
@@ -125,22 +123,22 @@ func TestPadSettingsResolution(t *testing.T) {
 	})
 	t.Run("a joycon keeps its family function key, not the retired one", func(t *testing.T) {
 		s := cfg.PadSettings(keyJoyConL, padfamily.JoyConLeft)
-		if s.FunctionKey != control.Paddle4 || s.FunctionKeySource != SourceDefault {
-			t.Errorf("FunctionKey = %s (%s); want paddle4 (default)", s.FunctionKey, s.FunctionKeySource)
+		if s.FunctionKey != control.LT || s.FunctionKeySource != SourceDefault {
+			t.Errorf("FunctionKey = %s (%s); want lt (default)", s.FunctionKey, s.FunctionKeySource)
 		}
 		// But the feedback switches are for every controller, and the combo
 		// of its family is not the standard one.
 		if s.Feedback.Rumble || s.FeedbackSource != SourceLegacy {
 			t.Errorf("Feedback = %+v (%s)", s.Feedback, s.FeedbackSource)
 		}
-		if buttons(s.Panic) != "leftshoulder+rightshoulder" || s.PanicSource != SourceDefault {
+		if buttons(s.Panic) != "paddle2+paddle4" || s.PanicSource != SourceDefault {
 			t.Errorf("Panic = %v (%s); the joyconRight entry is not the left one's", s.Panic.Buttons, s.PanicSource)
 		}
 	})
 	t.Run("right joycon", func(t *testing.T) {
 		s := cfg.PadSettings(keyJoyConR, padfamily.JoyConRight)
-		if s.FunctionKey != control.Paddle1 || s.FunctionKeySource != SourceDevice {
-			t.Errorf("FunctionKey = %s (%s); want paddle1 (device)", s.FunctionKey, s.FunctionKeySource)
+		if s.FunctionKey != control.RightShoulder || s.FunctionKeySource != SourceDevice {
+			t.Errorf("FunctionKey = %s (%s); want rightshoulder (device)", s.FunctionKey, s.FunctionKeySource)
 		}
 		if buttons(s.Panic) != "south+east" || s.Panic.HoldMs != 900 || s.PanicSource != SourceLegacy {
 			t.Errorf("Panic = %v %d (%s); want the joyconRight entry", s.Panic.Buttons, s.Panic.HoldMs, s.PanicSource)
@@ -180,24 +178,79 @@ func TestPadSettingsLegacyFunctionKeyOfAPair(t *testing.T) {
 }
 
 // TestPadSettingsStaleFunctionKey: a function key the controller's family does
-// not allow (the grip changed, or the family was read wrongly) is not used.
+// not allow (a value an older version wrote: a paddle, − or +, or the other
+// Joy-Con's) is not used: the family's default applies.
 func TestPadSettingsStaleFunctionKey(t *testing.T) {
-	c := mustConfig(t, fmt.Sprintf(`{"schemaVersion":0,"devices":{%q:{"functionKey":"paddle3"},%q:{"functionKey":"back"}}}`, keyJoyConR, keyJoyConL))
 	for _, tc := range []struct {
+		name   string
 		key    string
 		family padfamily.Family
+		stored string
 		want   control.Control
 		source Source
 	}{
-		{keyJoyConR, padfamily.JoyConRight, control.Paddle3, SourceDevice},
-		// Turned upright, the right one has only start.
-		{keyJoyConR, padfamily.JoyConRightVertical, control.Start, SourceDefault},
-		{keyJoyConL, padfamily.JoyConLeftVertical, control.Back, SourceDevice},
-		{keyJoyConL, padfamily.JoyConLeft, control.Paddle4, SourceDefault},
+		{"right: ZR", keyJoyConR, padfamily.JoyConRight, "rt", control.RT, SourceDevice},
+		{"right: R", keyJoyConR, padfamily.JoyConRight, "rightshoulder", control.RightShoulder, SourceDevice},
+		{"left: L", keyJoyConL, padfamily.JoyConLeft, "leftshoulder", control.LeftShoulder, SourceDevice},
+		{"right: the old sideways ZR", keyJoyConR, padfamily.JoyConRight, "paddle3", control.RT, SourceDefault},
+		{"right: the old sideways R", keyJoyConR, padfamily.JoyConRight, "paddle1", control.RT, SourceDefault},
+		{"left: the old sideways ZL", keyJoyConL, padfamily.JoyConLeft, "paddle4", control.LT, SourceDefault},
+		{"left: the old upright minus", keyJoyConL, padfamily.JoyConLeft, "back", control.LT, SourceDefault},
+		{"right: the old upright plus", keyJoyConR, padfamily.JoyConRight, "start", control.RT, SourceDefault},
+		{"left: the right one's", keyJoyConL, padfamily.JoyConLeft, "rt", control.LT, SourceDefault},
 	} {
-		if s := c.PadSettings(tc.key, tc.family); s.FunctionKey != tc.want || s.FunctionKeySource != tc.source {
-			t.Errorf("%s as %s: %s (%s); want %s (%s)", tc.key, tc.family, s.FunctionKey, s.FunctionKeySource, tc.want, tc.source)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			c, ds := ParseConfig([]byte(fmt.Sprintf(`{"schemaVersion":0,"devices":{%q:{"functionKey":%q}}}`, tc.key, tc.stored)))
+			if c == nil {
+				t.Fatalf("the file must still load: %v", ds)
+			}
+			if s := c.PadSettings(tc.key, tc.family); s.FunctionKey != tc.want || s.FunctionKeySource != tc.source {
+				t.Errorf("%s as %s: %s (%s); want %s (%s)", tc.key, tc.family, s.FunctionKey, s.FunctionKeySource, tc.want, tc.source)
+			}
+		})
+	}
+}
+
+// TestPadSettingsStalePanic: a combo that names a button the Joy-Con does not
+// have, which is what an older version's combo for the sideways grip does, is
+// not used, whether the controller's own or the family's retired entry; and the
+// retired families joyconLeftVertical and joyconRightVertical are read by
+// nobody.
+func TestPadSettingsStalePanic(t *testing.T) {
+	c := mustConfig(t, fmt.Sprintf(`{"schemaVersion":0,
+		"safety":{"panic":{
+			"joyconLeft":{"buttons":["leftshoulder","rightshoulder"],"holdMs":900},
+			"joyconRight":{"buttons":["south","east"],"holdMs":800},
+			"joyconLeftVertical":{"buttons":["paddle2","back"],"holdMs":700},
+			"joyconRightVertical":{"buttons":["south","start"],"holdMs":700}}},
+		"devices":{%q:{"panic":{"buttons":["leftshoulder","rightshoulder"],"holdMs":1000}}}}`, keyJoyConL))
+	for _, tc := range []struct {
+		name   string
+		key    string
+		family padfamily.Family
+		want   string
+		hold   int
+		source Source
+	}{
+		{"left, own sideways combo", keyJoyConL, padfamily.JoyConLeft, "paddle2+paddle4", 2000, SourceDefault},
+		{"right, retired family entry that fits", keyJoyConR, padfamily.JoyConRight, "south+east", 800, SourceLegacy},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := c.PadSettings(tc.key, tc.family)
+			if buttons(s.Panic) != tc.want || s.Panic.HoldMs != tc.hold || s.PanicSource != tc.source {
+				t.Errorf("Panic = %v hold %d (%s); want %s, %d (%s)", s.Panic.Buttons, s.Panic.HoldMs, s.PanicSource, tc.want, tc.hold, tc.source)
+			}
+		})
+	}
+	// The sideways combo of the family's entry is no good either.
+	c = mustConfig(t, `{"schemaVersion":0,"safety":{"panic":{"joyconLeft":{"buttons":["leftshoulder","rightshoulder"],"holdMs":900}}}}`)
+	if s := c.PadSettings(keyJoyConL, padfamily.JoyConLeft); buttons(s.Panic) != "paddle2+paddle4" || s.PanicSource != SourceDefault {
+		t.Errorf("Panic = %v (%s); want the built-in combo", s.Panic.Buttons, s.PanicSource)
+	}
+	// A pair is not a single Joy-Con: it takes the standard entry, whatever buttons.
+	c = mustConfig(t, fmt.Sprintf(`{"schemaVersion":0,"devices":{%q:{"panic":{"buttons":["leftshoulder","rightshoulder"],"holdMs":1000}}}}`, keyJoyConPair))
+	if s := c.PadSettings(keyJoyConPair, padfamily.JoyConPair); buttons(s.Panic) != "leftshoulder+rightshoulder" || s.PanicSource != SourceDevice {
+		t.Errorf("pair Panic = %v (%s)", s.Panic.Buttons, s.PanicSource)
 	}
 }
 
@@ -240,7 +293,7 @@ func TestMaterializedKeepsPadSettings(t *testing.T) {
 	safeties := []string{"", `"safety":{"panic":{"standard":{"buttons":["back","south"],"holdMs":1500}}},`,
 		`"safety":{"panic":{"joyconLeft":{"buttons":["south","east"],"holdMs":900},"joyconRightVertical":{"buttons":["guide","east"],"holdMs":900},"standard":{"buttons":["guide","back"],"holdMs":900}}},`}
 	devices := []string{"",
-		fmt.Sprintf(`"devices":{%q:{"functionKey":"start","feedback":{"rumble":true},"panic":{"buttons":["south","east"],"holdMs":800}},%q:{"functionKey":"paddle1"}},`, keyXbox, keyJoyConR)}
+		fmt.Sprintf(`"devices":{%q:{"functionKey":"start","feedback":{"rumble":true},"panic":{"buttons":["south","east"],"holdMs":800}},%q:{"functionKey":"rightshoulder"}},`, keyXbox, keyJoyConR)}
 	families := map[string]padfamily.Family{
 		keyXbox: padfamily.Standard, keyPS: padfamily.Standard, keyJoyConPair: padfamily.JoyConPair,
 		keyJoyConL: padfamily.JoyConLeft, keyJoyConR: padfamily.JoyConRight,
