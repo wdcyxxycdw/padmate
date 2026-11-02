@@ -4,7 +4,7 @@
 
 **让闲置手柄变成生产力。**
 
-padmate 是一款能将常用游戏手柄映射到键盘快捷键的软件。支持自定义功能键、摇杆旋钮以及高级脚本功能，支持 Xbox、PlayStation、Nintendo Switch pro以及Joy-Con一代与二代。用于绘画，剪辑，编程等需要大量快捷键使用的场景。
+padmate 是一款能将常用游戏手柄映射到键盘快捷键的软件。支持自定义功能键、摇杆旋钮以及高级脚本功能，支持 Xbox、PlayStation、Nintendo Switch Pro以及Joy-Con一代与二代。用于绘画，剪辑，编程等需要大量快捷键使用的场景。
 
 适用于 Windows 10 和 11（x64）。
 
