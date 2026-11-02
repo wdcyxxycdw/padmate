@@ -7,7 +7,7 @@
 ## SDL 与手柄
 
 ### 基本行为与 hint
-- **SDL hint**：`input.Open` 在 `SDL_Init` 前设 `SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1`、`SDL_NO_SIGNAL_HANDLERS=1`（否则 SDL 拿走 Ctrl+C）、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1`，再设 preset 和 `--hint`。环境变量里的同名 hint 优先。`SDL_Quit` 重置 hint，每次 Open 重设。
+- **SDL hint**：`input.Open` 在 `SDL_Init` 前设 `SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1`、`SDL_NO_SIGNAL_HANDLERS=1`（否则 SDL 拿走 Ctrl+C）、`SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS=1` 和 `SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1`（单只 Joy-Con 一律按竖握读），再设 preset 和 `--hint`。环境变量里的同名 hint 优先。`SDL_Quit` 重置 hint，每次 Open 重设。
 - **SDL 行为**：SDL 只给打开的手柄发事件，所以 GAMEPAD_ADDED 时就打开。每个轴的第一个值发两次。虚拟手柄的 `VirtualJoystickDesc.Version` 手填 136，改状态后调 `SDL_UpdateJoysticks`。分离时 SDL 先抬起按住的键、轴回中再发 removed，padmate 仍要 ReleaseAll。同进程内设备 id 不复用，重连靠 DeviceKey 认。guide 键的抬起推迟到按下后 250 ms，其间的按下被丢。
 
 ### 设备信息与标识
@@ -51,7 +51,7 @@
 - **DualShock 4**：标准 15 键加 touchpad（触摸板按下），没有麦克风键。触摸位置 padmate 不读。第三方 DS4 的触摸板看它的能力报告；映射里照样有 touchpad，所以界面会给标签，但按下可能没有事件。
 - **DualSense**：再加 misc1（麦克风键）。**Edge**：paddle1 右背键、paddle2 左背键、paddle3 右 Fn、paddle4 左 Fn。蓝牙连接、手柄还发简单报告时（报告 0x01 长 10 或 78 字节），驱动只报 PS 键和触摸板按下，麦克风键和 Edge 的四个键要等增强报告才有。
 - **Switch Pro**：标准 15 键加 misc1（截图键），Home 是 guide。
-- **单只 Joy-Con**：横握（默认）的映射里有 guide，左手那只的 guide 是截图键，右手那只是 Home 键；padmate 不映射 guide，所以横握的左手 Joy-Con 截图键不能用。竖握的左手那只截图键是 misc1。竖握的右手那只也有面键，界面看有没有 rightstick 区分握法。
+- **单只 Joy-Con**：padmate 一律按竖握读（`SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1`，SDL 在打开 Joy-Con 和映射它时读这个 hint）。竖握时左手那只的截图键是 misc1，右手那只的 Home 键是 guide，padmate 不映射 guide。左手那只没有面键（方向键是十字键）；右手那只有 south/east/west/north，印的是 B/A/Y/X，摇杆是 right 摇杆。
 - **一对 Joy-Con**（左右各一只同时连着）：标准 15 键加 misc1（截图键）和 paddle1–4（右 SR、左 SL、右 SL、左 SR）。
 - 触摸位置、陀螺仪和加速度计不是按键，不能映射。SDL 不读 Switch 2 的手柄；Joy-Con 2 由 padmate 自己读（见下一节），其他 Switch 2 手柄不支持。
 
@@ -180,9 +180,10 @@
 - **鼠标模式的摇杆**：`CancelAll` 后仍推着的摇杆要先回死区才恢复（`mouseLock`）；`Reload` 和校准变化不上锁，否则界面自动保存会让指针停住。`inputOnly` 引擎 `Output` 为空，不能调 `Output.Move`/`Jump` 或排 deadline。
 
 ### 功能键
-- 功能键（`Program.fnKey`：`back`、`start` 或某个背键）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
+- 功能键（`Program.fnKey`：`back`、`start`、某个肩键或某个扳机）的边沿在 `stepButton` 里先于 `inputOnly`、`Options.Button` 和缓冲返回，`e.ctl[…]` 永远不是按下的。`cancelAll` 里 `st.down = e.physical[c]` 要排除它；功能键换了的 `Reload` 要清零新功能键原来的 `e.ctl[…]` 并清 `fnActive`。缓冲的边沿带着到达时生效的功能键（`Input.fn`），别在 `press` 里读 `e.fnActive`。
 - **每只手柄的设置（ADR-0017）**：手柄的功能键、反馈开关和紧急组合是 `devices.<DeviceKey>` 的成员；顶层的 `functionKey`、`feedback`、`safety.panic` 已退役，但仍然会读。不先把它们折进各只手柄（`pads.migrate`、`profile.MigratePadSettings`），就不要从文件里去掉它们（`withoutRetired`、手写的改写），否则某只手柄的行为会悄悄变。退役的 `functionKey` 只用于标准布局的手柄：文件里没写时的默认 `start`，不能把一对 Joy-Con 从它的 `back` 上挪走。
-- 单只 Joy-Con 的族按它报告的按键判断（有 `south`、没有 `rightstick` 是横握），和界面的 `isSidewaysJoyCon`、`padlabel.sideways` 一致；按键未知时才看竖握提示。键的 GUID 看不出握法，所以 config 检查接受两种握法的功能键（`padfamily.PossibleFunctionKeys`），只有运行时的族才收窄。当前族不接受的功能键直接跳过，绝不是错误。
+- 单只 Joy-Con 的族只由 `DeviceInfo.Type` 得出（`input.FamilyOf`），凭键的 GUID 里的厂商和产品号得出（`padfamily.FromGUID`）。单只 Joy-Con 不可能有的功能键或组合键（背键、`back`、`start`；左手那只上的 `rightshoulder`）在 config.json 里不是错误：`ParseConfig` 忽略它并给警告，用这一族的默认值，所以为别的布局写的文件照常整份加载。在标准布局的手柄和一对 Joy-Con 上仍是错误，由 `RepairConfig` 修复。当前族不接受的功能键直接跳过，绝不是错误。
+- **引擎的“被忽略的功能键绑定”只是让被绑定的控件免于检查。** `Program.IgnoredFunctionKeyBindings` 记着 `Compile` 从编译检查里拿掉的绑定，但这些绑定仍在它们的层里，`lookupWith` 直接读功能集。所以扳机（`lt`、`rt`）做功能键时，引擎自己要有防护 `Program.onFunctionKey`：它不让 `lt.full`/`rt.full` 和半轴 `lefttrigger+`/`righttrigger+`（和扳机是同一个物理控件）被按下（`stepTrigger`、`stepHalfAxis`）。别指望 `virtualBound`：脚本的按钮处理器（`e.button != nil`）会让每个虚拟控件都显得有绑定。
 - DeviceKey 含 `/`（`…/s:SERIAL`、`…/p:PATH`）：在诊断的 JSON Pointer 里写成 `~1`。拼指针用 `childPointer`，不要自己拼接键。
 - `liveDevices` 有意从已提交的配置里拷贝按手柄的成员；运行时要读的 `DeviceSettings` 新成员必须加在那里，立即生效的 `Config` 新字段要加进 `liveSettings`，并在 `startupFields` 里清掉，否则 `configNeedsRestart` 每改一次就报需要重启。
 - **运行时的功能键是 slot 的，不是 profile 的（ADR-0017）。** `cfg.prog` 和 `Supervisor.Reload` 的 Program 带的是*默认*功能键（`start`）；slot 运行的是 `Program.ForFunctionKey(自己手柄的键)`。所以别用 `prog.FunctionKey()` 判断某只手柄的行为（问 slot 的 `View.ProgramFunctionKey` 或 `PadSettings`），别拿 config.json 的功能键去编译 profile，并记住不同变体的 `IgnoredFunctionKeyBindings` 和 `Bindings()` 不一样。没有手柄的 slot 用 key `""` 去问，得到的是标准布局加退役的顶层 `functionKey`，`onFunctionKey` 对它什么也不说。
@@ -247,7 +248,7 @@
 ### 编辑器：按键、功能键与摇杆
 - **摇杆的两个选中 id**：`leftstick`、`rightstick` 是“旋转”，`leftstick.press`、`rightstick.press` 是“点按”，而绑定键 `leftstick` 是按下摇杆的绑定。绑定键找抽屉经 `calloutFor`，选中 id 找绑定经 `bindingKey`，比较“选中的是不是这个标注”先 `calloutOf`，否则“点按”格没名字、不亮引线。
 - **引线跟着量到的标签走，所以标签移动后必须重画**：`controller-scene.ts` 每一帧都用 `getBoundingClientRect` 量每个标签，但 Joy-Con 的第一帧是在 `Controller` 应用排好的布局之前画的（场景随这一帧把布局交出去，React 在它之后才移动标签），不重画的话，引线就从标签原来的位置出发，留下悬在空中的线头。所以 `Controller` 在布局应用后会通知场景更新；jsdom 测试看不出这个差别，`tests/preview/check-layouts.mjs`（无头 Chromium）看得出。
-- **引线是否交叉取决于舞台尺寸**：标签的像素大小和离舞台边缘的距离不变，而模型随舞台缩放，所以同一种排法在一个尺寸下干净、在另一个尺寸下就交叉，一条引线还可能从另一个键的终点旁不到一个像素处经过。因此一种排法要在一个尺寸网格（`supportedStages`，从 440 × 440 起，即工作区给舞台的最小尺寸）上逐个检查，连同编辑器提示条把下面一排顶起来的情况。在 Joy-Con 2 一对的模型上量过：四个面键加右摇杆占满一列的六个位置时，没有哪种顺序能在所有尺寸上让 Y 的引线避开 B 的终点，所以 `controller-joycon-layout.ts` 从上面一排去指 Y，放在 − 和 + 之间（把一列的位置分得更细、间隔四分之一格，也只有在允许引线从 B 的终点不到一个像素处经过时才行）。样式表里下面一排的位置是为 Xbox 的外壳定死的，高的 Joy-Con 模型（4.1 个单位高：一对，或竖握的单只）在近似正方形的舞台上会伸进去；所以 Joy-Con 的两排改为跟随模型的大小，标签还要避开模型的剪影，用外壳全部顶点投影后的凸包来核对。一条引线离另一条的终点不到 1.5 px 就算相交（`anchorClearance`）。
+- **引线是否交叉取决于舞台尺寸**：标签的像素大小和离舞台边缘的距离不变，而模型随舞台缩放，所以同一种排法在一个尺寸下干净、在另一个尺寸下就交叉，一条引线还可能从另一个键的终点旁不到一个像素处经过。因此一种排法要在一个尺寸网格（`supportedStages`，从 440 × 440 起，即工作区给舞台的最小尺寸）上逐个检查，连同编辑器提示条把下面一排顶起来的情况。在 Joy-Con 2 一对的模型上量过：四个面键加右摇杆占满一列的六个位置时，没有哪种顺序能在所有尺寸上让 Y 的引线避开 B 的终点，所以 `controller-joycon-layout.ts` 从上面一排去指 Y，放在 − 和 + 之间（把一列的位置分得更细、间隔四分之一格，也只有在允许引线从 B 的终点不到一个像素处经过时才行）。样式表里下面一排的位置是为 Xbox 的外壳定死的，高的 Joy-Con 模型（4.1 个单位高：一对，或单只）在近似正方形的舞台上会伸进去；所以 Joy-Con 的两排改为跟随模型的大小，标签还要避开模型的剪影，用外壳全部顶点投影后的凸包来核对。一条引线离另一条的终点不到 1.5 px 就算相交（`anchorClearance`）。
 - **功能键的一套**：编辑功能键的一套时 `swapView` 把它换到 `layers.base` 的位置，凡“看遍所有按键组”的代码都要把 `functionSet` 算进去。哪个键是功能键由手柄定（`devices.<DeviceKey>.functionKey`，经 `Config.PadSettings` 解析，ADR-0017），纯函数都带此参数且无默认值，不要用控件名 `back`、`start` 判断。`guide` 永不映射：列出或计数绑定的代码要连同功能键一起把它排除（界面用 `isIgnoredControl`，守护进程用 `control.Control.Unmappable`），保存时去掉（`savedForm`）。脚本解析控件用 `scriptControl` 而不是 `control.Parse`，紧急组合只有 `PanicCombo.Usable` 时才用。
 - **映射向导的捕获与清理**：向导开的是留着的捕获：窗口 `blur`、锁屏、睡眠调 `windowAway()`，不停止它；关闭、重载、渲染进程崩溃、退出调 `stop()`，断连调 `disconnected()`。不要把 blur 改成 `stop()`（向导开着时切到别的程序，手柄键会发出快捷键），也不要把别的路径改成 `windowAway()`（窗口关了映射还停着）。
 - **快捷键捕获**：start/stop/事件都带 session，卸载时迟到的 start 只能停自己的会话；钩子只观察，自动测试不可真按 Win+L、Ctrl+Alt+Del 或注销。录紧急组合时超时或失败的 `capture.start` 仍可能到达 daemon、`capture.stop` 也可能没发出，所以 `pad-capture.ts` 发过 start 后一直重发 stop 直到确认或断连。
@@ -258,6 +259,7 @@
 - **样式表的先后**：打包时各样式表按第一次被 import 的顺序进 `index.css`，而这个顺序跟着 Biome 排好的 import 走，挪文件或改 import 路径就可能改变层叠。所以 `App.tsx` 最前面按层叠顺序逐个 import 组件的样式表，`theme.css`、`ui.css`、`shell.css` 在最后。新加组件样式表要排进这个列表；挪动或改 import 后，比较 `npm run build` 前后 `out/renderer/assets/index-*.css` 是否逐字节相同。
 - **扫描整个目录的测试留在 `src/renderer/` 第一层**：`forced-colors`、`theme-contrast`、`doc-names` 从自己所在的目录往下扫描，挪进子目录只会扫描那个子目录，别处新加的 `outline: none` 或界面文字不再被查，测试也不会报错。挪样式表时改这两个测试表里的路径。
 - **按路径读渲染进程文件的地方**：`padlabel_test.go` 读 `controller/controller-model.ts`；Main 的 `overlay`、`pad-capture`、`system-settings` 测试，`activity-model`、`mapwizard` 测试（读 daemon 的文件，按目录深度写 `../`）。`pad-icon.tsx` 的 `import.meta.glob` 匹配不到时返回空对象，构建不报错，只有 `pad-icon.test.tsx` 能发现。
+- **`controller-model.ts` 只能导入类型**：daemon 的 `TestLabelsMatchUI` 用 node 直接加载 `app/src/renderer/controller/controller-model.ts`，node 去掉类型，但不解析不带扩展名的路径。它若值导入别的 app 模块（比如 `editor/editor-model`），node 就解析不到该模块，测试失败。那里只写 `import type …`；需要的值放进这个文件自己。
 
 ### 配置库与软件选择
 - **实测：Windows 上打开着的文件不能被改名替换**：`atomicWrite` 先写临时文件再改名，盖到 `profile.json` 上；这时只要有人正读着 `profile.json`（daemon 自己处理 `profiles.get`、保存后重读、搜索索引），改名就失败（共享冲突或拒绝访问），编辑器停在“保存失败”。连续快速修改时也会遇到。`replace` 遇到这类错误会退避重试，约 0.6 s 后才放弃；别的错误立即返回。
