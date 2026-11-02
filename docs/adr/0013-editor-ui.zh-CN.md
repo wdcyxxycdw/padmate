@@ -17,7 +17,7 @@
 ### 二、手柄图
 - 用真实的开放许可 3D 模型（CC BY 4.0，署名在 `app/src/renderer/controller/assets/ATTRIBUTION.md`），固定正面不可旋转，主页面不滚动。
 - 每个物理控件一条引线和一个原生 HTML 按钮，键盘可达。摇杆是上下两格“旋转”“点按”。
-- 标签按当前手柄 SDL 报告的按键给（`buttonMask`、`axisMask`，`padHasControl`）：手柄没有的键不给，比如横握的单只 Joy-Con 没有十字键、右摇杆、扳机和 −。附加键（Share、Capture、麦克风键、Elite 和 Edge 的背键、Edge 的 Fn 键）在手柄下方排成一排，左手的在左、右手的在右，整排夹在两列标签之间。Joy-Con 的标签按引线的终点放，使引线不互相交叉、也不穿过标签：横握的单只 Joy-Con，肩部键（L 和 ZL，或 R 和 ZR）在上面，四个面键在手柄图下面，SL 和 SR 在导轨那一侧的图上方；一对 Joy-Con 没有 SL、SR 的标签，因为两只合在一起时按不到它们（只是图上不显示：守护进程照常读它们，配置里对它们的绑定原样保留）。SDL 还没报告按键时按标准手柄给，PS4、PS5 另有触摸板。外形有四种：PS5 用 DualSense，PS4 和 PS3 用 DualShock 4，Joy-Con 用 Joy-Con 的模型，其余（Xbox、Switch Pro、未知手柄）借用 Xbox。横握的单只 Joy-Con 横着显示，直握的竖着显示。左右两只同时连着时是一个完整手柄（SDL 自己合并），并排显示成一对。
+- 标签按当前手柄 SDL 报告的按键给（`buttonMask`、`axisMask`，`padHasControl`）：手柄没有的键不给，比如单只左 Joy-Con 没有面键、右摇杆、右肩键和 +。附加键（Share、Capture、麦克风键、Elite 和 Edge 的背键、Edge 的 Fn 键）在手柄下方排成一排，左手的在左、右手的在右，整排夹在两列标签之间。Joy-Con 的标签按引线的终点放，使引线不互相交叉、也不穿过标签：单只 Joy-Con 竖着显示，每侧一个肩键标签（L 在外侧的列，ZL 在导轨那一侧的列；右手那只镜像），摇杆的标签在导轨那一侧的列里、SL 和 SR 之间；一对 Joy-Con 没有 SL、SR 的标签，因为两只合在一起时按不到它们（只是图上不显示：守护进程照常读它们，配置里对它们的绑定原样保留）。SDL 还没报告按键时按标准手柄给，PS4、PS5 另有触摸板。外形有四种：PS5 用 DualSense，PS4 和 PS3 用 DualShock 4，Joy-Con 用 Joy-Con 的模型，其余（Xbox、Switch Pro、未知手柄）借用 Xbox。单只 Joy-Con 一律竖着显示。左右两只同时连着时是一个完整手柄（SDL 自己合并），并排显示成一对。
 - Joy-Con 2 有自己的模型，`joycon2-left.glb` 和 `joycon2-right.glb`，按 USB 编号认出：厂商 `0x057e`，产品 `0x2066`（右）、`0x2067`（左）、`0x2068`（一对）；Switch 1 的 Joy-Con 仍用 Switch OLED 的模型。这两份文件取自 NAIT Studio 的 Switch 2 主机模型（CC BY 4.0，“Nintendo Switch 2 Realistic 3D Model”），只保留两只 Joy-Con 2，每只放进自己的坐标系，拆成分别命名的部件，每个部件一份材质。原模型没有贴图，外观由材质的基础色决定。顶点位置、法线和索引量化存储（`KHR_mesh_quantization`；这个素材不用 meshopt），触点针脚和指示灯去掉，摇杆的轴心移到它的底部，倾斜才绕着正确的点。两份文件约 270 KB 和 296 KB。原模型没有 SL、SR、ZL、ZR 的几何，这四个键的引线指向导轨和肩部上的固定位置，文件里用同名的空节点标出，界面只用它放引线。右手那只的 C 键显示为“C 键”。
 - CSP 保持 `connect-src 'none'`，所以模型解码不用 `fetch`，也不依赖外网。
 - 渲染舞台在应用会话里常驻，再进映射页只是把 canvas 放回去，仅在换模型、context 丢失或失败时释放，因为耗时主要在纹理上传。
@@ -52,7 +52,7 @@ padmate 只发快捷键，功能要用户在绘画软件里设到这些键上。
 ### 八、按键符号与图标
 手柄按键的名字只有一个来源：`controllerLabels`，Go 的 `internal/padlabel` 照它写，测试比较两张表；手柄通过 SDL 报告的名字优先。
 
-图标不自己画，用两套开放许可的现成矢量图标：Kenney Input Prompts（CC0，Xbox、PlayStation、Switch 三套，形状和印字照真手柄）和 PromptFont（OFL 1.1，只取 Kenney 没有的摇杆旋转和“任意方向”）。`pad-icon.tsx` 按 `controllerLabels` 给的印字和设备族选图标：面键、十字键、摇杆按下和方向按设备族用对应的一套，其余手柄用 Xbox 的；摇杆“旋转”格和旋钮刻度用 PromptFont 的旋转；PS 键画成 Home 的房子，不画厂商标志；横握的单只 Joy-Con 按位置画，不看 SDL 报告的字母。两套都没有的（斜向、推动阶段、Capture、附加键等）保留原来的徽标。同一套图标用在手柄图标签、抽屉标题、按键预览、设置页、诊断页和映射向导（向导问的是 SDL 标准布局，用 Xbox 一套）。图标的黑白取文字颜色、高亮取强调色，跟着界面配色走；强制颜色模式下保留两种系统色，否则十字键看不出方向。
+图标不自己画，用两套开放许可的现成矢量图标：Kenney Input Prompts（CC0，Xbox、PlayStation、Switch 三套，形状和印字照真手柄）和 PromptFont（OFL 1.1，只取 Kenney 没有的摇杆旋转和“任意方向”）。`pad-icon.tsx` 按 `controllerLabels` 给的印字和设备族选图标：面键、十字键、摇杆按下和方向按设备族用对应的一套，其余手柄用 Xbox 的；摇杆“旋转”格和旋钮刻度用 PromptFont 的旋转；PS 键画成 Home 的房子，不画厂商标志；单只右 Joy-Con 的面键是字母图标（B、A、Y、X），和一对一样。两套都没有的（斜向、推动阶段、Capture、附加键等）保留原来的徽标。同一套图标用在手柄图标签、抽屉标题、按键预览、设置页、诊断页和映射向导（向导问的是 SDL 标准布局，用 Xbox 一套）。图标的黑白取文字颜色、高亮取强调色，跟着界面配色走；强制颜色模式下保留两种系统色，否则十字键看不出方向。
 
 素材来源和处理写在 `app/src/renderer/controller/pad-icons/README.md`，许可原文随文件放；“设置 → 关于与许可”列出两套图标并附 OFL 全文（OFL 要求随副本提供）。代价：渲染进程多约 100 KB 路径数据；小尺寸下 PlayStation 的 SELECT、OPTIONS 等字靠形状认。
 

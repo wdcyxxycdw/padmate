@@ -8,7 +8,7 @@ Related: [ARCHITECTURE §7, §10.3](../ARCHITECTURE.md); [ADR: Profile format](0
 
 The engine and the profile format support layers, many gestures, sequences, inner and outer stick rings, knobs, two-stage triggers and inheritance. Users treat the controller as a shortcut box for painting: "press this button, send that shortcut". So there are two levels. The engine and the file format keep their capabilities, and since the format is frozen it only grows; the UI offers a small subset. What a file has outside the subset still works, and the UI opens and saves it without errors or lost fields; opening it without changes never rewrites the file.
 
-The function key is not the same for every controller. A single Joy-Con has no View or Menu, and held sideways it has large ZL and ZR keys that are easy to press. So the function key, with the feedback switches and the emergency combo, is a setting of each controller and is not on the global side of the Settings page; the page lists the controllers that have connected and puts these settings under each ([ADR: Settings and start at sign-in](0017-settings-and-startup.md)).
+The function key is not the same for every controller. A single Joy-Con has no View or Menu, and − and + are out of reach while it is held, but the large ZL or ZR under the index finger is easy to press. So the function key, with the feedback switches and the emergency combo, is a setting of each controller and is not on the global side of the Settings page; the page lists the controllers that have connected and puts these settings under each ([ADR: Settings and start at sign-in](0017-settings-and-startup.md)).
 
 ## Decision
 
@@ -16,20 +16,18 @@ The function key is not the same for every controller. A single Joy-Con has no V
 The UI edits only `layers.base`, and the UI's wording never mentions "layers". The layer engine, switching layers over IPC/CLI and the script API stay as they are. When a file has other layers, common, layer actions or block, the UI shows them as usual but they cannot be edited; replacing one with another action needs a confirmation. When `defaultLayer` is not base, the whole profile is read-only. For "hold to get another set of keys", use the function key, which adds no latency.
 
 ### 2. A single function key, chosen for each controller
-- A controller has one function key at a time, like a laptop's Fn, and it is the same for every profile. It is a setting of the controller, `devices.<DeviceKey>.functionKey` in config.json, not a global one: controllers do not have the same buttons, and which key is easy to press depends on how the controller is held. While it is held, the other controls first look in the profile's `functionSet`, and use their usual bindings where it sets none.
+- A controller has one function key at a time, like a laptop's Fn, and it is the same for every profile. It is a setting of the controller, `devices.<DeviceKey>.functionKey` in config.json, not a global one: controllers do not have the same buttons, and which key is easy to press depends on the controller. While it is held, the other controls first look in the profile's `functionSet`, and use their usual bindings where it sets none.
 - What a controller may choose depends on its family (`internal/padfamily`); the first is the default:
 
   | Family | Function key |
   |---|---|
   | standard layout (Xbox, PlayStation, Switch Pro, unknown) | `start` (Menu, Options, +), `back` (View, Create, −) |
-  | single Joy-Con held sideways, left | `paddle4` (ZL), `paddle2` (L) |
-  | single Joy-Con held sideways, right | `paddle3` (ZR), `paddle1` (R) |
-  | single Joy-Con held upright, left | `back` (−) only |
-  | single Joy-Con held upright, right | `start` (+) only |
+  | single Joy-Con, left | `lt` (ZL), `leftshoulder` (L) |
+  | single Joy-Con, right | `rt` (ZR), `rightshoulder` (R) |
   | a pair of Joy-Cons (Switch 1 and Joy-Con 2) | `back` (−), `start` (+) |
 
-  A lone Joy-Con held sideways defaults to ZL or ZR, the larger keys that are easy to hit, with L or R as the other choice. A pair defaults to − with + as the other choice. A Joy-Con held upright has only one such button, so it has no choice. `guide` is never a choice.
-- A controller's function key is its own value, else the retired top-level `functionKey` (only for a standard-layout controller; it never moves a Joy-Con off its own default), else the default of its family. A value that the running family does not allow (the grip changed) is skipped and the default applies.
+  A lone Joy-Con defaults to ZL or ZR, the large trigger under the index finger that is easy to hit, with L or R as the other choice; it is always held upright, and − and + are not offered. A pair defaults to − with + as the other choice. A trigger as the function key is the virtual button of its axis, pressed and released at the profile's trigger thresholds; its second stage and half axis are never pressed while it is the function key. `guide` and the paddles are never a choice.
+- A controller's function key is its own value, else the retired top-level `functionKey` (only for a standard-layout controller; it never moves a Joy-Con off its own default), else the default of its family. A value that the running family does not allow (the controller became a pair, say) is skipped and the default applies. In config.json a value that a single Joy-Con cannot have (a paddle, `back`, `start`) is ignored with a warning and the default of its family applies, so an older file still loads whole; for a standard controller or a pair it is an error.
 - Which set applies is decided at the press (like a layer's press owner).
 - The function key's own edges never enter gesture recognition, so it adds latency to no key. It still takes part in the emergency combo.
 - It has no feedback, is not stored in state.json and does not appear in layer events. The function key itself cannot be bound; a binding written for it is ignored when compiling.
@@ -78,11 +76,11 @@ The pure package `internal/amgp` parses `.amgp`; its output always passes `profi
 - For a stick with no mode written, the UI shows "4 directions" until its first edit, while the engine works in `standard`.
 - The single-set UI does not match AntiMicroX's sets; the other layers of an import can be seen in full only in the file.
 - "Tap" has to wait to tell gestures apart when there is also a hold or a double tap.
-- A controller has at most two function keys to choose from, an upright Joy-Con only one; what was set on the Xbox button no longer works.
+- A controller has at most two function keys to choose from; what was set on the Xbox button no longer works.
 - Changing a controller's function key releases the keys that controller holds at that moment, as switching profiles does.
 
 ### To be confirmed by the owner
-- A single Joy-Con held upright has only one function key: − on the left, + on the right.
+- A single Joy-Con offers ZL or L (ZR or R) and not − or +, which are out of reach while it is held.
 - A controller that has not connected since per-controller settings began is folded with the defaults of its family at the first change on the Controllers page; until then the retired global values keep applying.
 - The emergency combo of a controller that is not connected can be neither recorded nor reset until it connects again.
 - Two identical controllers without a serial number share the settings of the first one, the emergency combo included.
@@ -93,7 +91,7 @@ The pure package `internal/amgp` parses `.amgp`; its output always passes `profi
 
 - **Any button as a modifier, or chords pressed together.** Every press of the buttons involved would have to wait longer; one fixed function key is simpler.
 - **A function key built from real layers, or several function keys.** Layers have switch pulses, colors and layer names in the HUD, none of which the function key wants; several function keys would use up View and Menu.
-- **One function key for every controller, in the global settings.** A Joy-Con has no View or Menu, a sideways Joy-Con has larger keys, and a choice that suits one controller does not suit another.
+- **One function key for every controller, in the global settings.** A Joy-Con has no View or Menu and has its own large keys, and a choice that suits one controller does not suit another.
 - **The Xbox button as a choice of function key, with a dialog on the Settings page asking the user to turn off Game Bar.** This was the earlier decision. Game Bar is only one of the conflicts; the user cannot turn off Steam's or the firmware's.
 - **padmate turns off Game Bar itself.** That breaks "do not change global system settings".
 - **`functionKey: "guide"` in config.json as a schema error.** An old file would not load, and the repair would reset the whole member; reading it as `start` has the same effect with no error.
