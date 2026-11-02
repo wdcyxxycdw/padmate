@@ -1,0 +1,17 @@
+# The Worker of https://padmate.download/ (ADR-0018): the download page on /,
+# and the 302 to the newest installer on /latest and for non-browsers on /.
+# Everything else on the site is the R2 bucket padmate.
+# Deploy only through task site:deploy, and only when the owner says so.
+#
+# The routes are exactly / and /latest, never /*: /latest.yml, the installers
+# and the .sha256 files must reach R2 without this Worker, and the
+# application's updates read them.
+name = "padmate-download-root"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+routes = [
+  { pattern = "padmate.download/", zone_id = "b16bea1fc71bd289258d6e0abc088061" },
+  { pattern = "padmate.download/latest", zone_id = "b16bea1fc71bd289258d6e0abc088061" },
+]

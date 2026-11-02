@@ -5,6 +5,7 @@ padmate 是 Windows 上的手柄 → 键盘快捷键映射器。
 
 - `daemon/`：Go 守护进程 `padmated`，以及 CLI `padmatectl` 和开发工具 `padmate-probe`。负责输入（SDL3）、映射引擎、输出（SendInput）、TypeScript 脚本（goja + esbuild）、托盘和 IPC。
 - `app/`：Electron UI 与 overlay。可选组件，关掉它映射照常工作。
+- `site/`：下载站 padmate.download 的 Cloudflare Worker（下载页、`/latest` 直链，见 `site/README.md`）。
 - 许可证 MIT。仓库 `github.com/wdcyxxycdw/padmate`（公开，代码和文档都在这里）。
 
 ## 文档索引
@@ -23,7 +24,7 @@ padmate 是 Windows 上的手柄 → 键盘快捷键映射器。
 任务以 `Taskfile.yml` 为准（各任务何时加入见 ARCHITECTURE §15），`task --list` 列出全部；在仓库任意子目录都能运行，Go 相关命令都在 `daemon/` 下执行：
 
 ```bash
-task ci             # vet → lint → test → build → pe:check → app:gen-check → app:ci，遇错即停
+task ci             # vet → lint → test → build → pe:check → app:gen-check → app:ci → site:test，遇错即停
 task vet            # go vet ./...
 task lint           # golangci-lint run（配置 daemon/.golangci.yml）
 task fmt            # golangci-lint fmt（gofmt + goimports），会改写文件
@@ -49,6 +50,12 @@ task app:prepare    # 单独准备开发 daemon/CLI；先退出占用它们的�
 task app:gen-check  # 三份 schema → Go/TS 生成文件漂移检查（不改文件）
 task app:ci         # TypeScript → Biome → Vitest → 前端构建
 task app:e2e        # Windows 真实 Electron + 私有 fake-input daemon 的 Playwright 验收
+task site:install   # 安装 site/ 的固定 npm 依赖（只有 site:qr 用到，新克隆需要时再运行）
+task site:test      # 下载站 Worker 的测试（node:test，无依赖）
+task site:dev       # wrangler dev 本地运行下载站；读线上真实的 latest.yml 和 GitHub API，不写任何东西
+task site:dry-run   # wrangler deploy --dry-run，只打包校验，不上传
+task site:qr -- --wechat <图片> --alipay <图片> # 解码 owner 的赞赏码图片，重新生成 site/src/qr-codes.js（先 site:install）
+task site:deploy    # 部署下载站 Worker（先查二维码、再测试；写线上的 padmate.download，owner 说“发布”才运行）
 task sdl            # 下载并校验固定版本的 SDL3.dll 到 bin/（仅 Windows；已是正确的 DLL 时不联网）
 task test:sdl       # SDL 测试（虚拟手柄，不需要硬件），PADMATE_REQUIRE_SDL=1：找不到 SDL 就失败
 task spike:tray     # 构建托盘与 T-input 的 spike 到 bin/trayspike.exe（仅 Windows，GUI 子系统）

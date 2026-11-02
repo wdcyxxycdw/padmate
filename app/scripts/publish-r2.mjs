@@ -1,8 +1,9 @@
 // Publishes a release to the download site (ADR-0018): the installer, its
 // .sha256 and latest.yml go to the root of the Cloudflare R2 bucket that
 // https://padmate.download/ serves. The installed application reads latest.yml
-// there (the generic provider of electron-updater), and a Worker on the path /
-// alone redirects the address itself to the installer latest.yml names.
+// there (the generic provider of electron-updater), and the Worker of site/,
+// routed on / and /latest only, redirects the address itself to the installer
+// latest.yml names when the request does not ask for HTML.
 //
 //   node scripts/publish-r2.mjs --version v1.0.3 [--dist DIR] [--dry-run] [--force]
 //
@@ -415,7 +416,8 @@ async function ask(fetch, url, init = {}) {
  * written, and the address itself redirects (302) to the installer. A fresh
  * query on the files keeps an edge that has seen the path before from
  * answering; the address is asked as it is, because the Worker is routed on /
- * alone. The Worker keeps latest.yml for a minute, so the whole round is
+ * and /latest alone, and without an Accept of text/html, so it gets the 302 and
+ * not the page. The Worker keeps latest.yml for a minute, so the whole round is
  * repeated until it passes or the attempts are gone.
  *
  * @param {{

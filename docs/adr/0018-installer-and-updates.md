@@ -47,7 +47,7 @@ Private keys and passwords never pass through AI, and the repository holds no ce
 The low-level keyboard hook is on only while padmatectl "records a shortcut", for at most 30 seconds, and only watches without swallowing. The offline PE check (`task pe:check`) requires the import table and the API list to equal the committed lists, so a new Windows API shows up in review; injection-type APIs are never allowed. Nothing is scanned automatically or uploaded, since cloud services may upload samples automatically.
 
 ### 8. The download site and automatic updates
-- `https://padmate.download/` is a custom domain of a Cloudflare R2 bucket holding the installers, `.sha256` files and `latest.yml`, **stable releases only**. There is no web page: a Worker that routes only `/` reads `latest.yml` and redirects with 302 to the newest installer. Its route cannot be `/*`, or it would stand in front of updates.
+- `https://padmate.download/` is a custom domain of a Cloudflare R2 bucket holding the installers, `.sha256` files and `latest.yml`, **stable releases only**. A Worker is the only code in front of it, and it is routed on exactly `/` and `/latest`. A browser (the `Accept` header includes `text/html`) that opens `/` gets one download page, in Chinese or English by `?lang=` or `Accept-Language`, whose button links straight to the versioned installer. Anything that does not ask for HTML (curl, PowerShell, scripts, old links, the read-back of `task release:r2`) still gets what the address always answered, a 302 to the newest installer. `/latest` is always that 302, the permanent direct link. Both take the newest installer from `latest.yml`. The page is self-contained: the browser makes no request to any other host, and the star count of the GitHub card is fetched by the Worker. **The routes must never be `/*`:** `latest.yml`, the installers and the `.sha256` files go from R2 to the client untouched, and the updater never passes through the Worker.
 - Updates use electron-updater, with the URL written in the code; `channel` must be set, or an rc build would read `rc.yml`.
 - **Downloading and installing happen only with the user's consent**: no automatic download, no automatic install on exit (which would quietly stop mapping while painting), no differential updates. It checks every 24 hours; the setting is stored in the UI's own folder, not in config.json.
 - On failure it offers a "Download manually" link, since a browser can resume a download and electron-updater cannot (the installer is about 135 MB).
@@ -64,6 +64,7 @@ A person runs `task release:r2`; builds never upload, and the task reads no cred
 - The interface language is kept in two places, the window's `localStorage` and `language.json`, because only the file can be read by the installer; a pick made before the file existed is copied into it the next time the window starts.
 - Cloudflare has no guarantees on networks in mainland China. Its security features may challenge an unusual User-Agent, which shows as "could not check for updates"; `/latest.yml` and the installers need skip rules.
 - A published installer cannot be overwritten; a fix means a new version.
+- The download page and the Worker are deployed by hand (`task site:deploy`), separately from a release. A fault in the Worker can break the page and the redirect, but not updates, which read R2 directly.
 
 ## Alternatives given up
 
@@ -74,5 +75,5 @@ A person runs `task release:r2`; builds never upload, and the task reads no cred
 - **electron-builder's own language selector (`displayLanguageSelector`) and desktop shortcut (`createDesktopShortcut`).** The selector lists only languages of the system's code page and cannot be skipped from the command line; the shortcut is made whatever the box says.
 - **Remembering the shortcut box in the registry.** A shortcut the user deleted by hand would come back with the next reinstall; whether the desktop has it now is what the user last chose.
 - **The installer writing the language only when no file exists.** Then a second install in the other language would change nothing although nobody had picked a language.
-- **A download page with a web page, or another server as the download source.** The first is too verbose, the second too slow.
+- **A download site with several pages or a framework, or another server as the download source.** The first is more than one button needs, the second too slow.
 - **Ending processes by name with `taskkill`, PowerShell or wmic, or always running `release-all` after quit.** It would kill development builds and portable copies by mistake, or make padmated elsewhere release keys and destroy scripts.

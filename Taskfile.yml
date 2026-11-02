@@ -83,6 +83,44 @@ tasks:
     cmds:
       - node scripts/publish-r2.mjs --version "{{.VERSION}}" {{.CLI_ARGS}}
 
+  site:test:
+    desc: Test the Worker of the download site (site/, ADR-0018) with node:test and mocked fetch and cache; needs no npm install
+    dir: site
+    cmds:
+      - node --test "test/*.test.js"
+
+  site:dev:
+    desc: Run the download site's Worker locally with wrangler dev (pinned). It reads the real https://padmate.download/latest.yml and the GitHub API, and uploads nothing
+    dir: site
+    cmds:
+      - npx{{if eq OS "windows"}}.cmd{{end}} --yes wrangler@4.151.1 dev
+
+  site:dry-run:
+    desc: Bundle the download site's Worker with wrangler deploy --dry-run into .cache/site-dry-run; uploads nothing
+    dir: site
+    cmds:
+      - npx{{if eq OS "windows"}}.cmd{{end}} --yes wrangler@4.151.1 deploy --dry-run --outdir ../.cache/site-dry-run
+
+  site:install:
+    desc: Install the download site's build-time dependencies (only the QR code tool needs any; the Worker itself has none)
+    dir: site
+    cmds:
+      - npm{{if eq OS "windows"}}.cmd{{end}} ci
+
+  site:qr:
+    desc: "Decode the owner's WeChat appreciation code and Alipay payment code images and regenerate site/src/qr-codes.js: task site:qr -- --wechat <image> --alipay <image>. Run task site:install first"
+    dir: site
+    cmds:
+      - node tools/qr.mjs {{.CLI_ARGS}}
+
+  site:deploy:
+    desc: 'Deploy the download site''s Worker and its routes padmate.download/ and padmate.download/latest to production (ADR-0018). Refuses while the QR codes are placeholders, runs the tests first. Run only when the owner says "发布". Uses the wrangler login of this machine; no credential is read from the repository'
+    dir: site
+    cmds:
+      - node tools/check-qr.mjs
+      - node --test "test/*.test.js"
+      - npx{{if eq OS "windows"}}.cmd{{end}} --yes wrangler@4.151.1 deploy
+
   test:sign:
     desc: "Sign an installer (v0.0.0-signtest.1) with a throwaway self-signed certificate that lives in memory and in .cache/signtest/signtest.pfx (deleted at the end), check the signatures, and check that no certificate store or key file changed; the key files signtool leaves in %APPDATA%/Microsoft/Crypto/Keys are recognised by content (new, GUID container name, the throwaway certificate's public key) and deleted (opt-in, Windows). Builds into .cache/signtest and installs, runs and trusts nothing. Needs the Windows SDK's signtool.exe, task app:install and task sdl first"
     platforms: [windows]
@@ -343,7 +381,7 @@ tasks:
       - npm.cmd run test:e2e
 
   ci:
-    desc: Run Go and frontend checks and builds, stopping at the first failure
+    desc: Run Go, frontend and download-site checks and builds, stopping at the first failure
     cmds:
       - task: vet
       - task: lint
@@ -352,6 +390,7 @@ tasks:
       - task: pe:check
       - task: app:gen-check
       - task: app:ci
+      - task: site:test
 
   clean:
     desc: Remove build output in bin/

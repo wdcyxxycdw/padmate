@@ -22,7 +22,7 @@
 | IPC | 命名管道 JSON-RPC 2.0，token 认证，ACL 限当前用户 | [IPC](adr/0009-ipc.zh-CN.md) |
 | 脚本 | goja + esbuild；与声明式映射共用手势识别和输出 | [脚本运行时](adr/0010-scripting-runtime.zh-CN.md)、[脚本即宏](adr/0011-script-macros.zh-CN.md) |
 | 界面与诊断 | Electron + React；overlay 是第二个窗口 | [编辑界面](adr/0013-editor-ui.zh-CN.md)、[Overlay](adr/0014-overlay.zh-CN.md)、[诊断](adr/0016-diagnostics.zh-CN.md) |
-| 打包 | NSIS 按用户安装；另有便携 zip；更新读 `padmate.download` | [安装包与更新](adr/0018-installer-and-updates.zh-CN.md) |
+| 打包 | NSIS 按用户安装；另有便携 zip；更新读 `padmate.download`，它也有下载页 | [安装包与更新](adr/0018-installer-and-updates.zh-CN.md) |
 
 ## 1. 原则
 
@@ -46,7 +46,7 @@ Electron Main 经子进程 `padmatectl ui-bridge` 连接 `daemon.json` 指向的
 
 ## 3. 目录结构
 
-Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`）：根目录下 `app/node_modules` 里个别 npm 包带 `.go` 文件，会破坏根目录的 `go build ./...`。界面在 `app/`（electron-vite），schema 的唯一源头在 `schema/`。
+Go 模块放在 `daemon/`（源码 `cmd/`、`internal/`、`tools/`、`testdata/`）：根目录下 `app/node_modules` 里个别 npm 包带 `.go` 文件，会破坏根目录的 `go build ./...`。界面在 `app/`（electron-vite），schema 的唯一源头在 `schema/`，下载页和它的 Worker 在 `site/`（§15.5）。
 
 用户数据：`%APPDATA%\padmate\` 放 `config.json`、`state.json`、`profiles\<id>\`、`macros\`（脚本库）、`logs\`、`startup\`（自启长参数文件）；`%LOCALAPPDATA%\padmate\run\` 放 `daemon.json`、`held.bin`。安装目录默认 `%LOCALAPPDATA%\Programs\padmate\`，程序在 `resources\bin\`，不放用户数据。
 
@@ -1282,10 +1282,11 @@ JSON-RPC 标准码（如 -32602）之外：
 
 - **GitHub 草稿发布**（`.github/workflows/release.yml`）：推 `v*` 标签或手动运行，核对 `latest.yml` 与安装包一致，再 `gh release create --draft`。带 `-` 的版本是预发布。
 - **发布到下载站**（`task release:r2 VERSION=vX.Y.Z`，可加 `--dry-run`、`--force`）：由维护者运行，是唯一写 Cloudflare R2 桶 `padmate`（`https://padmate.download/`）的地方，仓库里没有凭据。上传前拒绝：预发布标签、`latest.yml` 与安装包不一致、站上已有这个安装包（发布过的安装包不变）、版本不比站上的新。顺序：安装包、`.sha256`，最后才是 `latest.yml`；上传后从 HTTPS 读回核对。
+- **下载页**（`site/`，详见 [site/README.zh-CN.md](../site/README.zh-CN.md)）：Cloudflare Worker `padmate-download-root`，路由恰好是 `padmate.download/` 和 `padmate.download/latest`，绝不是 `/*`，所以 `latest.yml`、安装包和 `.sha256` 由 R2 直接提供，更新不经过它。`/` 给浏览器（`Accept` 含 `text/html`）下载页，中文或英文，GitHub 仓库的星数由 Worker 去取；其他请求得到 302，指向 `latest.yml` 写的安装包，`/latest` 也永远是这个 302。`latest.yml` 经 Cache API 缓存 60 秒，所以新版本一分钟内出现在页面上。页面没有脚本，浏览器不会向其他主机请求任何东西。`task site:deploy` 只在 owner 说“发布”时运行，用发布机上的 wrangler 写线上的 Worker，仓库里没有凭据。
 
 ### 15.6 Taskfile 任务
 
-以 `Taskfile.yml` 为准，`task --list` 列出全部，常用任务见 [CLAUDE.md](../CLAUDE.md)。`ci` 不含真实注入、强制 SDL、延迟基准和 Playwright。`test:inject` 先 `sdl`，设 `PADMATE_REQUIRE_SDL=1`、`PADMATE_REQUIRE_SESSION=1`。`bench` 约 4.5 分钟，超时的测试不运行 cleanup，所以测试自己检查截止时间（§14）。`test:installer` 会暂写真实的卸载项和快捷方式，机器上装了 padmate 时拒绝运行。
+以 `Taskfile.yml` 为准，`task --list` 列出全部，常用任务见 [CLAUDE.md](../CLAUDE.md)。`ci` 不含真实注入、强制 SDL、延迟基准和 Playwright。`test:inject` 先 `sdl`，设 `PADMATE_REQUIRE_SDL=1`、`PADMATE_REQUIRE_SESSION=1`。`bench` 约 4.5 分钟，超时的测试不运行 cleanup，所以测试自己检查截止时间（§14）。`test:installer` 会暂写真实的卸载项和快捷方式，机器上装了 padmate 时拒绝运行。下载站的测试（`site:test`，Node 自带的测试运行器，无依赖）属于 `ci`；`site:dev` 和 `site:dry-run` 不改线上任何东西，`site:qr` 重新生成页面上的打赏二维码（§15.5）。
 
 ## 16. ADR
 

@@ -22,7 +22,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 | IPC | JSON-RPC 2.0 over a named pipe, token authentication, an ACL limited to the current user | [IPC](adr/0009-ipc.md) |
 | Scripts | goja + esbuild; gesture recognition and output shared with declarative mappings | [Scripting runtime](adr/0010-scripting-runtime.md), [Scripts as macros](adr/0011-script-macros.md) |
 | UI and diagnostics | Electron + React; the overlay is a second window | [Editor UI](adr/0013-editor-ui.md), [Overlay](adr/0014-overlay.md), [Diagnostics](adr/0016-diagnostics.md) |
-| Packaging | A per-user NSIS installer; a portable zip besides; updates read `padmate.download` | [Installer and updates](adr/0018-installer-and-updates.md) |
+| Packaging | A per-user NSIS installer; a portable zip besides; updates read `padmate.download`, which has a download page | [Installer and updates](adr/0018-installer-and-updates.md) |
 
 ## 1. Principles
 
@@ -46,7 +46,7 @@ Electron's Main connects through a child process, `padmatectl ui-bridge`, to the
 
 ## 3. Directory structure
 
-The Go module is in `daemon/` (sources in `cmd/`, `internal/`, `tools/`, `testdata/`): a few npm packages in `app/node_modules` at the root contain `.go` files, which would break `go build ./...` at the root. The UI is in `app/` (electron-vite), and the one source of the schemas is `schema/`.
+The Go module is in `daemon/` (sources in `cmd/`, `internal/`, `tools/`, `testdata/`): a few npm packages in `app/node_modules` at the root contain `.go` files, which would break `go build ./...` at the root. The UI is in `app/` (electron-vite), the one source of the schemas is `schema/`, and the download page and its Worker are in `site/` (§15.5).
 
 User data: `%APPDATA%\padmate\` holds `config.json`, `state.json`, `profiles\<id>\`, `macros\` (the script library), `logs\` and `startup\` (argument files of start at sign-in); `%LOCALAPPDATA%\padmate\run\` holds `daemon.json` and `held.bin`. The installation folder is `%LOCALAPPDATA%\Programs\padmate\` by default; the programs are in `resources\bin\`, and no user data goes there.
 
@@ -1282,10 +1282,11 @@ Other rules:
 
 - **GitHub draft releases** (`.github/workflows/release.yml`): on a pushed `v*` tag or a manual run, it checks that `latest.yml` matches the installer, then runs `gh release create --draft`. A version with `-` is a prerelease.
 - **Publishing to the download site** (`task release:r2 VERSION=vX.Y.Z`, optionally with `--dry-run` or `--force`): run by a maintainer, it is the only thing that writes to the Cloudflare R2 bucket `padmate` (`https://padmate.download/`), and the repository holds no credentials. Before uploading it refuses: a prerelease tag, a `latest.yml` that does not match the installer, an installer already on the site (published installers never change), and a version not newer than the site's. The order: the installer, the `.sha256`, and only then `latest.yml`; after uploading, it reads them back over HTTPS to check.
+- **The download page** (`site/`, details in [site/README.md](../site/README.md)): the Cloudflare Worker `padmate-download-root`, routed on exactly `padmate.download/` and `padmate.download/latest`, never `/*`, so `latest.yml`, installers and `.sha256` files are served by R2 and the updater never passes through it. `/` gives a browser (`Accept` includes `text/html`) the page, Chinese or English, with the star count of the GitHub repository fetched by the Worker; anything else gets the 302 to the installer `latest.yml` names, which is also what `/latest` always does. `latest.yml` is read through the Cache API for 60 seconds, so a release shows on the page within a minute. The page has no script and makes the browser request nothing from another host. `task site:deploy` runs only when the owner says to publish; it writes the live Worker with the wrangler of the release machine, and the repository holds no credential.
 
 ### 15.6 Taskfile tasks
 
-`Taskfile.yml` is the reference, `task --list` lists everything, and the common tasks are in [CLAUDE.md](../CLAUDE.md). `ci` includes no real injection, forced SDL, latency benchmark or Playwright. `test:inject` runs `sdl` first and sets `PADMATE_REQUIRE_SDL=1` and `PADMATE_REQUIRE_SESSION=1`. `bench` takes about 4.5 minutes; a test that times out runs no cleanup, so the tests check their deadlines themselves (§14). `test:installer` temporarily writes real uninstall entries and shortcuts, and refuses to run on a machine with padmate installed.
+`Taskfile.yml` is the reference, `task --list` lists everything, and the common tasks are in [CLAUDE.md](../CLAUDE.md). `ci` includes no real injection, forced SDL, latency benchmark or Playwright. `test:inject` runs `sdl` first and sets `PADMATE_REQUIRE_SDL=1` and `PADMATE_REQUIRE_SESSION=1`. `bench` takes about 4.5 minutes; a test that times out runs no cleanup, so the tests check their deadlines themselves (§14). `test:installer` temporarily writes real uninstall entries and shortcuts, and refuses to run on a machine with padmate installed. The tests of the download site (`site:test`, Node's own runner, no dependencies) are part of `ci`; `site:dev` and `site:dry-run` change nothing online, and `site:qr` regenerates the donation QR codes of the page (§15.5).
 
 ## 16. ADR
 
