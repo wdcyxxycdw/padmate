@@ -23,7 +23,7 @@ padmate 不卡键：正常退出、暂停、手柄断开、锁屏时，它按下
 
 同时按住手柄中间的两个小键 2 秒，所有映射立即暂停，按着的键全部松开。再按住 2 秒恢复。每只手柄有自己的紧急暂停组合。
 
-- Xbox 手柄上是 View 和 Menu，PlayStation 手柄上是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 横握时是 SL 和 SR；左右两只 Joy-Con 同时连着时合成一个手柄，用 − 和 +。
+- Xbox 手柄上是 View 和 Menu，PlayStation 手柄上是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 是 SL 和 SR；左右两只 Joy-Con 同时连着时合成一个手柄，用 − 和 +。
 - 暂停和恢复时手柄会震一下，可在“设置”页的“手柄设置”里，用那只手柄的“暂停提示”关掉。
 
 ### 改成别的组合

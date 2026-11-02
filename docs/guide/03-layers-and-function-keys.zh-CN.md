@@ -11,13 +11,11 @@
 | 手柄 | 默认功能键 | 也可以选 |
 |---|---|---|
 | Xbox、PlayStation、Switch Pro 等 | Menu | View |
-| 单只 Joy-Con，横握，左手那只 | ZL | L |
-| 单只 Joy-Con，横握，右手那只 | ZR | R |
-| 单只 Joy-Con，竖握，左手那只 | − | 没有别的 |
-| 单只 Joy-Con，竖握，右手那只 | + | 没有别的 |
+| 单只 Joy-Con，左手那只 | ZL | L |
+| 单只 Joy-Con，右手那只 | ZR | R |
 | 左右两只 Joy-Con 合成的一个手柄 | − | + |
 
-PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 默认用 ZL 或 ZR，因为这两个键大，好按。竖握的 Joy-Con 中间只有一个键，没有别的可选。
+PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 默认用 ZL 或 ZR，因为这两个键大，好按。单只 Joy-Con 不提供 − 和 +，因为握着时按不到它们。
 
 功能键像笔记本的 Fn 键：
 
@@ -87,6 +85,6 @@ PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Sw
 - 要让某层里的某个键什么也不做，写 `"block": true`。
 - `defaultLayer` 是启动时的 base 层，不写就是 `base`。
 
-View 和 Menu 对应 `back` 和 `start`。单只横握的 Joy-Con 上，ZL、L、ZR、R 对应 `paddle4`、`paddle2`、`paddle3`、`paddle1`。写在当前功能键上的设置不生效，但留在文件里。Xbox 键是 `guide`，写在它上面的设置一律不生效，检查时会给出警告；在映射页改这个配置时，它们会从文件里去掉。功能键的一套写在 `functionSet` 里，写法和层一样。
+View 和 Menu 对应 `back` 和 `start`。单只 Joy-Con 上，ZL、L、ZR、R 对应 `lt`、`leftshoulder`、`rt`、`rightshoulder`。写在当前功能键上的设置不生效，但留在文件里。Xbox 键是 `guide`，写在它上面的设置一律不生效，检查时会给出警告；在映射页改这个配置时，它们会从文件里去掉。功能键的一套写在 `functionSet` 里，写法和层一样。
 
 保存文件后 padmate 自动重新读取。写完可在 `resources\bin` 文件夹运行 `.\padmatectl.exe validate profile.json` 检查，它会指出错在哪里，不改文件。

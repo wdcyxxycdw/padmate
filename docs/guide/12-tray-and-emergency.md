@@ -23,7 +23,7 @@ The status at the top of the window shows “Running” or “Paused”. Nothing
 
 Hold the two small keys in the middle of the controller for 2 seconds, and all mapping pauses at once and every held key is released. Hold them for 2 seconds again to resume. Each controller has its own emergency pause combination.
 
-- On an Xbox controller they are View and Menu, on a PlayStation controller Create (or Share) and Options, and on a Switch Pro controller − and +. A single Joy-Con held sideways uses SL and SR; a left and a right Joy-Con connected together are one controller and use − and +.
+- On an Xbox controller they are View and Menu, on a PlayStation controller Create (or Share) and Options, and on a Switch Pro controller − and +. A single Joy-Con uses SL and SR; a left and a right Joy-Con connected together are one controller and use − and +.
 - The controller buzzes on pause and on resume. You can turn that off for a controller on the “Settings” page, in “Controllers”, with its “Pause alert”.
 
 ### Changing the combination
