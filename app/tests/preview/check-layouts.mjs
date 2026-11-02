@@ -4,7 +4,7 @@
 // saves a PNG of each. Not part of CI: it needs the dev server and a browser.
 //
 //   node tests/preview/check-layouts.mjs [--out <folder>] [--sizes 1100x640,880x600]
-//        [--only left-horizontal,pair] [--gen 1|2] [--lang en|zh-CN] [--notice]
+//        [--only left-vertical,pair] [--gen 1|2] [--lang en|zh-CN] [--notice]
 //        [--url http://127.0.0.1:5199]
 //
 // Exit code 1 if any placement has a problem.
@@ -25,10 +25,7 @@ const option = (name, fallback) => {
 const out = resolve(option("out", join(here, "shots")));
 const url = option("url", "http://127.0.0.1:5199");
 const sizes = option("sizes", "1100x640,880x600,640x640,1400x900").split(",");
-const only = option(
-  "only",
-  "left-horizontal,right-horizontal,left-vertical,right-vertical,pair",
-).split(",");
+const only = option("only", "left-vertical,right-vertical,pair").split(",");
 const gens = option("gen", "1,2").split(",");
 const lang = option("lang", "zh-CN");
 const notice = args.includes("--notice");

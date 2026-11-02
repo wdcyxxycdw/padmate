@@ -31,7 +31,6 @@ import { convexHull, halfHeightOf, type Point3 } from "./controller-layout";
 import {
   controllerLabels,
   controlStrength,
-  isSidewaysJoyCon,
   stickDeflection,
 } from "./controller-model";
 import { type ModelShell, modelShell } from "./controller-models";
@@ -207,11 +206,7 @@ export function buildAssetModel(
     // A Joy-Con is turned or laid out first, then fits the box the other
     // shells fill: 5.6 wide and no taller than the Xbox shell.
     const layout = isJoyConShell(shell)
-      ? layoutJoyCons(
-          asset,
-          shell,
-          isSidewaysJoyCon(info.type, info.buttonMask),
-        )
+      ? layoutJoyCons(asset, shell)
       : undefined;
     const size = new Box3().setFromObject(asset).getSize(new Vector3());
     asset.scale.multiplyScalar(
