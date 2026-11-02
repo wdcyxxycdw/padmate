@@ -32,7 +32,15 @@ export interface Stage {
 /** The part of a callout that decides where its chip is. */
 export type Place = Pick<
   Callout,
-  "placement" | "side" | "slot" | "span" | "offset" | "raised"
+  | "placement"
+  | "side"
+  | "slot"
+  | "slotCompact"
+  | "slotMini"
+  | "span"
+  | "offset"
+  | "raised"
+  | "hang"
 >;
 
 /**
@@ -110,6 +118,7 @@ export function chipMetrics(stage: Stage) {
           cornerGap: 14,
           cornerShift: 24,
           topW: clamp(120, 13 * cqw, 140),
+          pairTopW: 120,
           topGap: 10,
           topRaise: 22,
           topY: clamp(12, 22.6 * cqh - 64, 50 * cqh - 300),
@@ -124,6 +133,7 @@ export function chipMetrics(stage: Stage) {
             cornerGap: 8,
             cornerShift: 16,
             topW: clamp(88, 14 * cqw, 112),
+            pairTopW: 96,
             topGap: 8,
             topRaise: 16,
             topY: clamp(8, 22.6 * cqh - 44, 50 * cqh - 196),
@@ -137,6 +147,7 @@ export function chipMetrics(stage: Stage) {
             cornerGap: 4,
             cornerShift: 10,
             topW: 30,
+            pairTopW: 30,
             topGap: 8,
             topRaise: 12,
             topY: clamp(6, 22.6 * cqh - 36, 50 * cqh - 170),
@@ -228,6 +239,43 @@ export function wideRowsOf(
 }
 
 /**
+ * The slot of the top shoulder-corner chip of a Joy-Con pair, counted from the
+ * model's top edge (see `modelTop`): above the columns, which start about a
+ * slot below it, and which those corners must not cover.
+ */
+export const cornerTopSlot = -1.59;
+/** How far from the stage's top a shoulder corner keeps (where the stack is too tall for the stage). */
+const cornerMargin = 4;
+
+/**
+ * Where the top of a Joy-Con's model is on the stage. The columns of a
+ * Joy-Con's chips hang from it (their slots count from it), so that the top
+ * chips stay by the model's top buttons whatever its size on the stage: the
+ * model grows with the stage, the chips do not.
+ */
+export function modelTop(
+  stage: Stage,
+  wide: Pick<WideRows, "width" | "halfHeight">,
+): number {
+  return stage.height / 2 - wide.halfHeight * modelUnit(stage, wide.width);
+}
+
+/**
+ * How far the shoulder corners of a Joy-Con (all of them) sit lower than their
+ * slots say, so that the top one is no nearer the stage's top than
+ * `cornerMargin` where the model is too near the stage's top for the whole
+ * stack.
+ */
+export function cornerLift(
+  stage: Stage,
+  wide: Pick<WideRows, "width" | "halfHeight">,
+): number {
+  const m = chipMetrics(stage);
+  const top = modelTop(stage, wide) + cornerTopSlot * m.pitch - m.chipH / 2;
+  return Math.max(0, cornerMargin - top);
+}
+
+/**
  * The box of a chip on the stage, as controller-3d.css places it. `rows` is
  * the number of chips in the row below the controller, which shares the
  * width between them, `notice` that the editor notice is showing, which
@@ -243,12 +291,26 @@ export function chipRect(
 ): Rect {
   const m = chipMetrics(stage);
   const middle = stage.height / 2;
-  const slot = place.slot ?? 0;
+  // A Joy-Con's layout is made for each density: where this chip is in this one.
+  const density = stageDensity(stage);
+  const slot =
+    (density === "compact"
+      ? place.slotCompact
+      : density === "mini"
+        ? place.slotMini
+        : undefined) ??
+    place.slot ??
+    0;
   const span = place.span ?? 1;
   const offset = place.offset ?? 0;
   if (place.placement === "left" || place.placement === "right") {
     const height = m.chipH + (span - 1) * m.pitch;
-    const centre = middle + (slot + (span - 1) / 2 - 4) * m.pitch;
+    // The slots of a Joy-Con's columns count from the model's top, the others'
+    // from the stage's middle.
+    const centre =
+      wide && place.hang
+        ? modelTop(stage, wide) + (slot + (span - 1) / 2) * m.pitch
+        : middle + (slot + (span - 1) / 2 - 4) * m.pitch;
     return {
       left:
         place.placement === "left" ? m.sideX : stage.width - m.sideX - m.chipW,
@@ -258,10 +320,14 @@ export function chipRect(
     };
   }
   if (place.placement === "top" && place.side) {
-    const centre = middle + (slot - 4) * m.pitch - m.cornerGap;
     // The corners of a Joy-Con are not drawn in towards the model, whose
-    // shoulders reach as far as the columns' edge.
+    // shoulders reach as far as the columns' edge, and are all moved down
+    // together as far as the top one needs to stay on the stage.
     const shift = wide ? 0 : m.cornerShift;
+    const centre =
+      wide && place.hang
+        ? modelTop(stage, wide) + slot * m.pitch + cornerLift(stage, wide)
+        : middle + (slot - 4) * m.pitch - m.cornerGap;
     return {
       left:
         place.side === "left"
@@ -276,12 +342,14 @@ export function chipRect(
     // A wide row is as wide as a column chip, and shares what the corners
     // leave between the chips of the row.
     const inset = wide?.corners ? m.sideX + m.chipW + m.topGap : m.edge;
+    // The row of a pair (two chips, between its shoulders' leaders) is narrow
+    // (pairTopW at most).
     const pitch = wide?.topWide
       ? Math.min(
           m.chipW + m.topGap,
           (stage.width - 2 * inset) / Math.max(1, wide.tops),
         )
-      : m.topW + m.topGap;
+      : Math.min(m.topW, wide ? m.pairTopW : m.topW) + m.topGap;
     return {
       left: stage.width / 2 + offset * pitch - (pitch - m.topGap) / 2,
       // The row of a Joy-Con sits just above the model.
@@ -358,17 +426,157 @@ export function calloutEdge(
     : { x: center, y: rect.top + rect.height };
 }
 
+/**
+ * How a leader is bent (Callout.route); a leader without one is straight.
+ * Every route leaves the chip along its direction (across for a column's
+ * chip, down for a row's) from the middle of the edge that faces the
+ * controller:
+ *
+ * - `auto`: to a bend, then straight to the part at 45 degrees; where the
+ *   part is too near across for that (less than the run plus a stub), a stub
+ *   of `stubLength` and then straight;
+ * - `steep`: as `auto`, but the bend is near the part, so that the last run
+ *   is steep (for the two shoulder buttons whose parts are 4 pixels apart:
+ *   two leaders at the same angle would run side by side);
+ * - `gap`: for the button that is behind its neighbours, the innermost of a
+ *   diamond: to where the line from the part through the middle of the two
+ *   named controls meets the chip's own line, then straight through the gap.
+ */
+export type Route = "auto" | "steep" | { gap: readonly [string, string] };
+
+/** The length of the first run of an `auto` leader that cannot bend at 45 degrees. */
+export const stubLength = 12;
+/** How far from the part a `steep` leader bends, per pixel it is across. */
+export const steepRun = 0.36;
+/** Below this many pixels across, a routed leader is straight. */
+const straightBelow = 3;
+/** How near to a chip the sloping run of a `steep` leader may come. */
+const steepMargin = 3;
+
+/**
+ * The corners of a leader: from its chip's edge to the part, with the bends
+ * `route` says (see Route). `gap` is the middle of the two controls of a `gap`
+ * route, as projected; `avoid` the boxes of the other chips, which a `steep`
+ * leader's last run keeps off (it takes the `auto` bend where it would cross
+ * one: the chips above a Joy-Con pair are over its shoulders on a short
+ * stage). The path is what controller-scene.ts draws and what a layout is
+ * judged by, whatever the stage's size.
+ */
+export function leaderPath(
+  callout: Pick<Callout, "placement" | "side" | "route">,
+  start: Point,
+  end: Point,
+  gap?: Point,
+  avoid: readonly Rect[] = [],
+): Point[] {
+  const route = callout.route;
+  if (!route) return [start, end];
+  // `along` is the axis a leader leaves its chip on, `across` the other.
+  const horizontal = calloutSide(callout) !== undefined;
+  const along = (p: Point) => (horizontal ? p.x : p.y);
+  const across = (p: Point) => (horizontal ? p.y : p.x);
+  const at = (a: number, c: number): Point =>
+    horizontal ? { x: a, y: c } : { x: c, y: a };
+  const run = along(end) - along(start);
+  const dir = run < 0 ? -1 : 1;
+  const length = Math.abs(run);
+  const side = Math.abs(across(end) - across(start));
+  if (side < straightBelow) return [start, end];
+  const lane = across(start);
+  const bendAt = (position: number): Point[] => [
+    start,
+    at(position, lane),
+    end,
+  ];
+  const auto = () =>
+    side <= length - stubLength
+      ? bendAt(along(end) - dir * side)
+      : bendAt(along(start) + dir * Math.min(stubLength, length));
+  if (route === "auto") return auto();
+  if (route === "steep") {
+    const bend = along(end) - dir * steepRun * side;
+    if (dir * (bend - along(start)) < stubLength) return auto();
+    const path = bendAt(bend);
+    const last = { from: path[1], to: path[2] };
+    return avoid.some((r) => segmentHitsRect(last, r, steepMargin))
+      ? auto()
+      : path;
+  }
+  if (!gap) return auto();
+  // The line from the part through the gap. A leader meets it where it crosses
+  // the chip's own line when that is between the chip and the part; on a stage
+  // where it is not (the line is shallow, the chip's line far from the part),
+  // it goes a stub along the chip's line, then at 45 degrees to the line, then
+  // along it.
+  const lean = across(gap) - across(end);
+  const ahead = along(gap) - along(end);
+  if (lean === 0 || ahead === 0) return auto();
+  const slope = lean / ahead;
+  const lineAt = (position: number) =>
+    across(end) + (position - along(end)) * slope;
+  const t = (lane - across(end)) / lean;
+  const bend = along(end) + t * ahead;
+  if (
+    t > 0 &&
+    dir * (bend - along(start)) >= stubLength &&
+    dir * (along(end) - bend) >= 0
+  )
+    return bendAt(bend);
+  const stub = along(start) + dir * Math.min(stubLength, length);
+  const toward = lineAt(stub) - lane >= 0 ? 1 : -1;
+  const rate = toward - slope * dir;
+  if (rate === 0) return auto();
+  const tau = (lineAt(stub) - lane) / rate;
+  const meet = stub + dir * tau;
+  return tau >= 0 &&
+    dir * (along(end) - meet) >= 0 &&
+    (meet - along(end)) * ahead > 0
+    ? [start, at(stub, lane), at(meet, lane + toward * tau), end]
+    : auto();
+}
+
 /** A control's chip, its leader line, and the callout it belongs to. */
 export interface Leader {
   control: string;
   rect: Rect;
-  segment: Segment;
+  /** The corners of the leader, from its chip to its part (leaderPath). */
+  path: Point[];
+  /**
+   * The control whose part is beside this one's (Callout.twin): a leader may
+   * pass the other's end, which it cannot help.
+   */
+  twin?: string;
+}
+
+/** The straight pieces of a path. */
+export function pathSegments(path: readonly Point[]): Segment[] {
+  return path.slice(1).map((to, index) => ({ from: path[index], to }));
+}
+
+/** Where a leader ends: the part. */
+export const leaderEnd = (leader: Pick<Leader, "path">): Point =>
+  leader.path[leader.path.length - 1];
+
+/** The middle of the two controls of a `gap` route, as projected, if both are known. */
+export function gapOf(
+  callout: Pick<Callout, "route">,
+  points: Readonly<Record<string, Point3>>,
+  modelWidth: number,
+  stage: Stage,
+): Point | undefined {
+  const route = callout.route;
+  if (!route || typeof route === "string") return undefined;
+  const [first, second] = route.gap.map((control) => points[control]);
+  if (!first || !second) return undefined;
+  const a = projectPoint(first, modelWidth, stage);
+  const b = projectPoint(second, modelWidth, stage);
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
 /**
  * The chips and leader lines of a layout on a stage: each leader runs from
  * the middle of the edge of its chip that faces the controller to the
- * projected control (what controller-scene.ts draws).
+ * projected control, bent as its route says (what controller-scene.ts draws).
  */
 export function layoutLeaders(
   callouts: readonly Callout[],
@@ -383,21 +591,22 @@ export function layoutLeaders(
   const wideRows = frame
     ? wideRowsOf(callouts, { width: modelWidth, ...frame })
     : undefined;
-  const leaders: Leader[] = [];
-  for (const callout of callouts) {
-    const point = points[callout.control];
-    if (!point) continue;
-    const rect = chipRect(callout, stage, rows, notice, wideRows);
-    leaders.push({
-      control: callout.control,
-      rect,
-      segment: {
-        from: calloutEdge(callout, rect),
-        to: projectPoint(point, modelWidth, stage),
-      },
-    });
-  }
-  return leaders;
+  const shown = callouts.filter((c) => points[c.control]);
+  const rects = shown.map((c) => chipRect(c, stage, rows, notice, wideRows));
+  return shown.map((callout, index) => ({
+    control: callout.control,
+    rect: rects[index],
+    path: leaderPath(
+      callout,
+      calloutEdge(callout, rects[index]),
+      projectPoint(points[callout.control], modelWidth, stage),
+      gapOf(callout, points, modelWidth, stage),
+      callout.route === "steep"
+        ? rects.filter((_, other) => other !== index)
+        : [],
+    ),
+    ...(callout.twin ? { twin: callout.twin } : {}),
+  }));
 }
 
 const cross = (o: Point, a: Point, b: Point) =>
@@ -588,19 +797,26 @@ export function layoutProblems(
       r.top + r.height > stage.height
     )
       problems.push({ kind: "outside", controls: [a.control] });
+    const pieces = pathSegments(a.path);
     for (const b of leaders.slice(index + 1)) {
-      if (segmentsIntersect(a.segment, b.segment))
+      if (
+        pieces.some((p) =>
+          pathSegments(b.path).some((q) => segmentsIntersect(p, q)),
+        )
+      )
         problems.push({ kind: "cross", controls: [a.control, b.control] });
       if (overlap(a.rect, b.rect))
         problems.push({ kind: "overlap", controls: [a.control, b.control] });
     }
     for (const b of leaders) {
       if (a === b) continue;
-      if (segmentHitsRect(a.segment, b.rect, 1))
+      if (pieces.some((p) => segmentHitsRect(p, b.rect, 1)))
         problems.push({ kind: "through", controls: [a.control, b.control] });
       if (
         clearance > 0 &&
-        distanceToSegment(b.segment.to, a.segment) < clearance
+        a.twin !== b.control &&
+        b.twin !== a.control &&
+        pieces.some((p) => distanceToSegment(leaderEnd(b), p) < clearance)
       )
         problems.push({ kind: "touch", controls: [a.control, b.control] });
     }
@@ -609,5 +825,8 @@ export function layoutProblems(
 }
 
 /** The length of a leader line, in pixels. */
-export const leaderLength = ({ segment: { from, to } }: Leader) =>
-  Math.hypot(to.x - from.x, to.y - from.y);
+export const leaderLength = ({ path }: Leader) =>
+  pathSegments(path).reduce(
+    (sum, { from, to }) => sum + Math.hypot(to.x - from.x, to.y - from.y),
+    0,
+  );

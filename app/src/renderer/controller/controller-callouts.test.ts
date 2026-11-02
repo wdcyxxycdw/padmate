@@ -304,13 +304,11 @@ describe("the callouts follow the controls SDL reports", () => {
   });
 
   it("center a short column on the middle of the stage", () => {
-    // The sideways Joy-Con's stick alone in its column.
-    const info = sdlPads.joyConLeftSideways;
+    // A pad whose only control in a column is a stick (SDL's left stick
+    // button, bit 7, and its two axes).
+    const info = { type: "xboxone", buttonMask: 128, axisMask: 3 };
     expect(callout(info, "leftstick")?.slot).toBe(4);
     expect(callout(info, "leftstick")?.span).toBe(2);
-    // Held upright, its stick and four buttons fill the column.
-    expect(callout(sdlPads.joyConLeftUpright, "leftstick")?.slot).toBe(2);
-    expect(callout(sdlPads.joyConLeftUpright, "dpad.down")?.slot).toBe(7);
     // A full column is where it was.
     expect(callout(sdlPads.ps5, "dpad.up")?.slot).toBe(2);
   });

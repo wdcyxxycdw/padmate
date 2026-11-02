@@ -367,28 +367,29 @@ describe("3D controller component", () => {
         return { update, dispose: vi.fn() };
       },
     );
-    const sideways = { ...info, id: 6, ...sdlPads.joyConRightSideways };
+    const upright = { ...info, id: 6, ...sdlPads.joyConRightUpright };
     const placement = (container: HTMLElement, control: string) =>
       container
         .querySelector(`[data-callout="${control}"]`)
         ?.getAttribute("data-placement");
     const { container, rerender } = render(
-      <Controller info={sideways} t={translator("en")} language="en" />,
+      <Controller info={upright} t={translator("en")} language="en" />,
     );
-    // Before the model, the table's first choice: R and ZR in the corner at
-    // the top, the face buttons below.
-    expect(placement(container, "paddle1")).toBe("top");
-    expect(
-      container
-        .querySelector('[data-callout="paddle1"]')
-        ?.getAttribute("data-side"),
-    ).toBe("right");
-    expect(placement(container, "south")).toBe("bottom");
+    // Before the model, the plan's own places: ZR in the column on the rail's
+    // side, the face buttons in the other.
+    expect(placement(container, "righttrigger")).toBe("left");
+    expect(placement(container, "south")).toBe("right");
     // The model arranged them otherwise (and named them in Chinese, which
     // the chips do not take).
-    const arranged = controllerCallouts(sideways, "zh-CN").map((callout) =>
+    const arranged = controllerCallouts(upright, "zh-CN").map((callout) =>
       callout.control === "south"
-        ? { ...callout, placement: "right" as const, slot: 5 }
+        ? {
+            ...callout,
+            placement: "left" as const,
+            slot: 5,
+            slotCompact: 4,
+            slotMini: 3,
+          }
         : callout,
     );
     expect(screen.getByRole("group").getAttribute("data-arranged")).toBeNull();
@@ -400,22 +401,29 @@ describe("3D controller component", () => {
     // The leaders start on the chips as measured, and the chips just moved:
     // the scene draws them again.
     expect(update.mock.calls.length).toBeGreaterThan(before);
-    expect(placement(container, "south")).toBe("right");
-    expect(placement(container, "paddle1")).toBe("top");
+    expect(placement(container, "south")).toBe("left");
+    // Its slot in each density is the chip's own (controller-3d.css).
+    const south = container.querySelector<HTMLElement>(
+      '[data-callout="south"]',
+    );
+    expect(south?.style.getPropertyValue("--slot")).toBe("5");
+    expect(south?.style.getPropertyValue("--slot-compact")).toBe("4");
+    expect(south?.style.getPropertyValue("--slot-mini")).toBe("3");
+    expect(placement(container, "righttrigger")).toBe("left");
     expect(
       container
-        .querySelector('[data-callout="paddle1"]')
+        .querySelector('[data-callout="righttrigger"]')
         ?.getAttribute("aria-label"),
-    ).toMatch(/^R · /);
-    // Another model starts again from the table.
+    ).toMatch(/^ZR · /);
+    // Another model starts again from the plan.
     rerender(
       <Controller
-        info={{ ...info, id: 7, ...sdlPads.joyConLeftSideways }}
+        info={{ ...info, id: 7, ...sdlPads.joyConPair }}
         t={translator("en")}
         language="en"
       />,
     );
-    expect(placement(container, "south")).toBe("bottom");
+    expect(placement(container, "south")).toBe("right");
   });
 
   it("gives a Joy-Con's rows the wide layout and the model's size, and no other pad", () => {
@@ -451,7 +459,7 @@ describe("3D controller component", () => {
     expect(labels(container)?.style.getPropertyValue("--model-h")).toBe("2.07");
     rerender(
       <Controller
-        info={{ ...info, id: 9, ...sdlPads.joyConRightSideways }}
+        info={{ ...info, id: 9, ...sdlPads.joyConRightUpright }}
         t={translator("en")}
       />,
     );
@@ -1056,26 +1064,27 @@ describe("the controls of the connected pad", () => {
     expect(listed).not.toContain("misc2");
   });
 
-  it("gives a Joy-Con 2 pair its C button, named in the interface's language, and its row of two chips below", () => {
+  it("gives a Joy-Con 2 pair its C button, named in the interface's language, and last in the right column", () => {
     const pair = { ...info, id: 4, ...joyCon2Pads.joyConPair };
     const { container, rerender } = render(
       <Controller info={pair} t={translator("en")} language="en" />,
     );
     const c = container.querySelector<HTMLElement>('[data-callout="misc2"]');
     expect(c?.getAttribute("aria-label")).toMatch(/^C · /);
-    expect(c?.getAttribute("data-placement")).toBe("bottom");
+    expect(c?.getAttribute("data-placement")).toBe("right");
+    // No chip below the pair.
     expect(
       container
         .querySelector<HTMLElement>(".controller-labels")
         ?.style.getPropertyValue("--row-count"),
-    ).toBe("2");
+    ).toBe("0");
     rerender(<Controller info={pair} t={translator("zh-CN")} />);
     expect(
       container
         .querySelector('[data-callout="misc2"]')
         ?.getAttribute("aria-label"),
     ).toMatch(/^C 键 · /);
-    // A Switch OLED pair has no such button: the Capture button alone.
+    // A Switch OLED pair has no such button.
     rerender(
       <Controller
         info={{ ...info, id: 3, ...sdlPads.joyConPair }}
@@ -1083,10 +1092,5 @@ describe("the controls of the connected pad", () => {
       />,
     );
     expect(container.querySelector('[data-callout="misc2"]')).toBeNull();
-    expect(
-      container
-        .querySelector<HTMLElement>(".controller-labels")
-        ?.style.getPropertyValue("--row-count"),
-    ).toBe("1");
   });
 });

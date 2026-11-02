@@ -19,7 +19,12 @@ import {
   type ModelInfo,
 } from "./controller-asset";
 import { type Callout, calloutBox, calloutEdge } from "./controller-callouts";
-import { cameraDistance, cameraSpec } from "./controller-layout";
+import {
+  cameraDistance,
+  cameraSpec,
+  leaderPath,
+  type Rect,
+} from "./controller-layout";
 import { stickActiveThreshold } from "./controller-model";
 import { controllerModels, modelShell } from "./controller-models";
 import {
@@ -63,6 +68,13 @@ function svgNode(tag: string, attributes: Record<string, string | number>) {
 }
 // SVG coordinates to a tenth of a pixel.
 const round = (value: number) => Math.round(value * 10) / 10;
+const midpoint = (
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+) => ({
+  x: (a.x + b.x) / 2,
+  y: (a.y + b.y) / 2,
+});
 
 /**
  * Draws a stick's gauge into `layer`. The group is created once and then only
@@ -406,7 +418,7 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
         );
       }
     };
-    // Each leader runs straight from the chip edge that faces the controller
+    // Each leader runs from the chip edge that faces the controller
     // to the projected control: a dark halo under a light line, so it reads
     // over the model. The chips are measured each frame, so a line meets its
     // chip in every density and whatever the chip's width. A stick's leader
@@ -416,21 +428,27 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
       labels.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
       const back: SVGElement[] = [],
         front: SVGElement[] = [];
+      // Every chip's box first: a steep leader keeps off the others' chips.
+      const boxes = new Map<string, Rect>();
+      for (const callout of model.callouts) {
+        const chip = calloutBox(host, callout.control);
+        const rect = chip?.getBoundingClientRect();
+        if (rect && rect.width > 0 && rect.height > 0)
+          boxes.set(callout.control, {
+            left: rect.left - box.left,
+            top: rect.top - box.top,
+            width: rect.width,
+            height: rect.height,
+          });
+      }
       for (const callout of model.callouts) {
         const control = model.controls.get(callout.control);
-        const chip = calloutBox(host, callout.control);
-        if (!control || !chip) continue;
-        const rect = chip.getBoundingClientRect();
-        if (rect.width <= 0 || rect.height <= 0) continue;
+        const rect = boxes.get(callout.control);
+        if (!control || !rect) continue;
         const anchor = toScreen(model.anchor(control), box);
         const x = round(anchor.x),
           y = round(anchor.y);
-        const start = calloutEdge(callout, {
-          left: rect.left - box.left,
-          top: rect.top - box.top,
-          width: rect.width,
-          height: rect.height,
-        });
+        const start = calloutEdge(callout, rect);
         const sx = round(start.x),
           sy = round(start.y);
         const active = control.strength > 0,
@@ -442,7 +460,38 @@ export function bindControllerScene(stages: StageStore<ModelInfo, SceneStage>) {
           "data-selected": String(selected),
           "data-bound": String(!unboundControls.has(callout.control)),
         });
-        const d = `M ${sx} ${sy} L ${x} ${y}`;
+        // A Joy-Con's leader bends where its route says (leaderPath); the
+        // gap of a route is the middle of two other controls' parts.
+        const route = callout.route;
+        const gapParts =
+          route && typeof route !== "string"
+            ? route.gap.map((name) => model.controls.get(name))
+            : [];
+        const [first, second] = gapParts;
+        const middle =
+          first && second
+            ? midpoint(
+                toScreen(model.anchor(first), box),
+                toScreen(model.anchor(second), box),
+              )
+            : undefined;
+        const path = leaderPath(
+          callout,
+          { x: sx, y: sy },
+          { x, y },
+          middle,
+          callout.route === "steep"
+            ? [...boxes]
+                .filter(([name]) => name !== callout.control)
+                .map(([, r]) => r)
+            : [],
+        );
+        const d = path
+          .map(
+            (p, index) =>
+              `${index === 0 ? "M" : "L"} ${round(p.x)} ${round(p.y)}`,
+          )
+          .join(" ");
         g.append(
           svgNode("path", { class: "stage-line-halo", d }),
           svgNode("path", { class: "stage-line", d }),

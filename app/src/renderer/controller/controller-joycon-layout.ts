@@ -1,32 +1,39 @@
-// Where the chips of a Joy-Con's controls go on the stage, and which way
-// their leader lines run so that none crosses another or passes through a
-// chip.
+// Where the chips of a Joy-Con's controls go on the stage, and how their
+// leader lines bend, so that none crosses another or passes through a chip.
 //
-// A Joy-Con is shown in five ways (a single one held sideways or upright, left
-// or right, and the pair), and a control sits somewhere else on each. The
-// chips go in six regions around the model: the two shoulder corners above the
-// columns, the row above, the two columns, and the row below. What belongs
-// where is a table of units (controls that stay together, e.g. the four face
-// buttons) with the regions each may go to, the best first:
+// A Joy-Con is shown in three ways: a single left or right one held upright
+// (the sideways view is gone), and the pair. Each has a plan: the chips of
+// each region of the stage in the order they take from the top (or left), with
+// the room between some of them, and how the leader of a chip is bent (Route,
+// controller-layout.ts). The regions are the two shoulder corners above the
+// columns, the row above the model (the pair's minus and plus) and the two
+// columns.
 //
-// - the shoulder buttons (L and ZL, or R and ZR, even when held sideways) are
-//   at the top, in the corner of their own hand;
-// - the face buttons go below the model when it is held sideways, and in the
-//   columns when it is upright;
-// - SL and SR are where the rail is: the row above when sideways, the column
-//   on the rail's side when upright; the pair shows neither (they cannot be
-//   pressed with the Joy-Cons joined, see diagramHidden).
+// - The pair has L and ZL, R and ZR in the corners, the left Joy-Con's stick,
+//   D-pad and Capture in the left column and the right one's four buttons,
+//   stick and C in the right column. Its SL and SR cannot be pressed with the
+//   two joined and are left off (diagramHidden).
+// - A single Joy-Con has two columns. The outer one has its shoulder button
+//   (L or R) and, for a left one, the D-pad and Capture, or, for a right one,
+//   the four buttons and C. The one on the rail's side has the trigger (ZL or
+//   ZR), minus or plus, SL, the stick and SR, so that the chips of the rail's
+//   two buttons are by the rail.
 //
-// Without the model the chips take the order of `nominal` (`staticLayout`).
-// With the model's anchors, which are in the Joy-Con's own frame, the chips of
-// each region start in the order of their anchors, and the solver then looks
-// for the order (and, if that is not enough, the place of a column or a row,
-// and the region of a unit that has another) in which no two leaders meet and
-// none passes through a chip. The chips keep their sizes while the model
-// scales with the stage, so it judges a layout on a few stage sizes, and on
-// more where that is not clean (supportedStages).
+// Without the model the chips take the places the plan gives with the room it
+// names (`staticLayout`). With the model's anchors the solver looks for the
+// room between the chips of a column and the place of the column (in slots) at
+// which no two leaders meet and none passes through a chip, for each density
+// of the chips (their sizes differ, the model scales with the stage): the
+// design's own places for the full one where they are clean, and for the
+// others the shortest leaders. It judges a layout on a few stage sizes of the
+// density, and on more where that is not clean (supportedStages). The chips of
+// the model's top buttons hang from the model's top (modelTop), so they keep
+// to them as the stage grows; the others are centred on the stage's middle,
+// where the D-pad and the four buttons are.
 import type { Callout } from "./controller-callouts";
 import {
+  cornerTopSlot,
+  type Density,
   defaultFrame,
   type Leader,
   layoutLeaders,
@@ -35,29 +42,23 @@ import {
   type Point,
   type Point3,
   projectedHull,
-  rectHitsPolygon,
+  type Route,
   type Stage,
+  stageDensity,
   supportedStages,
 } from "./controller-layout";
-import { isSidewaysJoyCon } from "./controller-model";
 
-export type JoyConKind =
-  | "pair"
-  | "left-sideways"
-  | "right-sideways"
-  | "left-upright"
-  | "right-upright";
+export type JoyConKind = "pair" | "left-upright" | "right-upright";
 
-/** How a pad is shown, if it is a Joy-Con. */
-export function joyConKind(info: {
-  type: string;
-  buttonMask?: number;
-}): JoyConKind | undefined {
+/**
+ * How a pad is shown, if it is a Joy-Con: a single one is always held upright,
+ * whatever grip SDL reports (the daemon asks for the vertical one).
+ */
+export function joyConKind(info: { type: string }): JoyConKind | undefined {
   if (info.type === "joyconpair") return "pair";
-  if (info.type !== "joyconleft" && info.type !== "joyconright")
-    return undefined;
-  const side = info.type === "joyconleft" ? "left" : "right";
-  return `${side}-${isSidewaysJoyCon(info.type, info.buttonMask) ? "sideways" : "upright"}`;
+  if (info.type === "joyconleft") return "left-upright";
+  if (info.type === "joyconright") return "right-upright";
+  return undefined;
 }
 
 /**
@@ -71,297 +72,356 @@ export function diagramHidden(type: string, control: string): boolean {
   return type === "joyconpair" && /^paddle[1-4]$/.test(control);
 }
 
-type Region = "cornerL" | "cornerR" | "top" | "leftCol" | "rightCol" | "bottom";
+type Region = "cornerL" | "cornerR" | "top" | "leftCol" | "rightCol";
+// In the order of the keyboard: the band above from left to right, then the
+// columns.
 const regions: readonly Region[] = [
   "cornerL",
   "top",
   "cornerR",
   "leftCol",
   "rightCol",
-  "bottom",
 ];
-
-/** How many slots or chips each region takes (a stick is two slots). */
-const capacity: Record<Region, number> = {
-  cornerL: 2,
-  cornerR: 2,
-  top: 5,
-  leftCol: 7,
-  rightCol: 7,
-  bottom: 6,
-};
-
-/** Controls that stay together, and the regions they may be in, best first. */
-interface Unit {
-  controls: string[];
-  homes: Region[];
-}
-const unit = (controls: string[], ...homes: Region[]): Unit => ({
-  controls,
-  homes,
-});
-
-// A sideways Joy-Con's four buttons, as the picture has them: left, up, down,
-// right.
-const sidewaysFace = ["west", "north", "south", "east"];
-
-// Per kind, which regions each unit may be in.
-const plans: Record<JoyConKind, Unit[]> = {
-  pair: [
-    unit(["lefttrigger", "leftshoulder"], "cornerL"),
-    unit(["righttrigger", "rightshoulder"], "cornerR"),
-    unit(["back", "start"], "top"),
-    unit(["leftstick", "dpad.up", "dpad.left", "dpad.down"], "leftCol"),
-    // The button nearest the middle is behind the others for a leader from
-    // the column; it may be reached from above or below.
-    unit(["dpad.right"], "leftCol", "top", "bottom"),
-    unit(["rightstick", "north", "east", "south"], "rightCol"),
-    unit(["west"], "rightCol", "top", "bottom"),
-    // Below the model, where it has room; else in the column of its hand.
-    unit(["misc1"], "bottom", "leftCol"),
-    unit(["misc2"], "bottom", "rightCol"),
-  ],
-  "left-upright": [
-    unit(["lefttrigger", "leftshoulder"], "cornerL"),
-    unit(["back"], "cornerR", "top"),
-    unit(
-      ["leftstick", "dpad.up", "dpad.left", "dpad.right", "dpad.down"],
-      "leftCol",
-    ),
-    unit(["paddle2", "paddle4"], "rightCol", "bottom"),
-    unit(["misc1"], "bottom", "rightCol"),
-  ],
-  "right-upright": [
-    unit(["righttrigger", "rightshoulder"], "cornerR"),
-    unit(["start"], "cornerL", "top"),
-    unit(["north", "west", "east", "south", "rightstick"], "rightCol"),
-    unit(["paddle1", "paddle3"], "leftCol", "bottom"),
-    unit(["misc2"], "bottom", "leftCol"),
-  ],
-  "left-sideways": [
-    unit(["paddle4", "paddle2"], "cornerL", "top"),
-    unit(["start"], "top", "cornerR"),
-    unit(["leftshoulder", "rightshoulder"], "top"),
-    unit(["leftstick"], "leftCol"),
-    unit(sidewaysFace, "bottom", "rightCol"),
-  ],
-  "right-sideways": [
-    unit(["paddle3", "paddle1"], "cornerR", "top"),
-    unit(["leftshoulder", "rightshoulder"], "top"),
-    unit(["start"], "top", "cornerL"),
-    unit(["misc2"], "leftCol", "top", "bottom"),
-    unit(["leftstick"], "leftCol"),
-    unit(sidewaysFace, "bottom", "leftCol"),
-  ],
-};
+type Column = "leftCol" | "rightCol";
+const columns: readonly Column[] = ["leftCol", "rightCol"];
 
 /**
- * The order the chips of a region take when nothing but the table is known:
- * the order of the controls here, from the first of a region to the last
- * (down a column, left to right along a row).
+ * Room between two chips of a column, in slots, that the solver may choose
+ * from (the first is where it starts and what a layout without the model has).
  */
-const nominal: Record<JoyConKind, string[]> = {
-  pair: [
-    "lefttrigger",
-    "leftshoulder",
-    "righttrigger",
-    "rightshoulder",
-    "back",
-    "start",
-    "leftstick",
-    "dpad.up",
-    "dpad.left",
-    "dpad.right",
-    "dpad.down",
-    "rightstick",
-    "north",
-    "west",
-    "east",
-    "south",
-    "misc1",
-    "misc2",
-  ],
-  "left-upright": [
-    "lefttrigger",
-    "leftshoulder",
-    "back",
-    "leftstick",
-    "dpad.up",
-    "dpad.left",
-    "dpad.right",
-    "dpad.down",
-    "paddle2",
-    "paddle4",
-    "misc1",
-  ],
-  "right-upright": [
-    "righttrigger",
-    "rightshoulder",
-    "start",
-    "north",
-    "west",
-    "east",
-    "south",
-    "rightstick",
-    "paddle1",
-    "paddle3",
-    "misc2",
-  ],
-  "left-sideways": [
-    "paddle4",
-    "paddle2",
-    "start",
-    "leftshoulder",
-    "rightshoulder",
-    "leftstick",
-    ...sidewaysFace,
-  ],
-  "right-sideways": [
-    "paddle3",
-    "paddle1",
-    "leftshoulder",
-    "rightshoulder",
-    "start",
-    "misc2",
-    "leftstick",
-    ...sidewaysFace,
-  ],
+interface Room {
+  room: readonly number[];
+}
+const room = (...slots: number[]): Room => ({ room: slots });
+type Entry = string | Room;
+
+interface Plan {
+  /** The chips of each region, in order, with the room between them. */
+  regions: Record<Region, readonly Entry[]>;
+  /**
+   * A column that hangs from the model's top (modelTop, controller-layout.ts)
+   * has the slot of its first chip here, counted from it; the others have
+   * `start`, counted from the stage's middle (slot 4). The chips of the
+   * model's top buttons (ZL and minus, and the corners) hang, so that the
+   * stage's size does not change which of their leaders reaches the model
+   * first; the D-pad and the four buttons are about the model's middle.
+   */
+  hang: Partial<Record<Column, number>>;
+  start: Partial<Record<Column, number>>;
+  /**
+   * How far (in slots) a column starts below where it is centred or hung,
+   * which is what a layout without the model has: the pair's left column
+   * clears the corners above it on the smallest stage, where the default
+   * model frame is taller than the model.
+   */
+  shift: Partial<Record<Column, number>>;
+  /** How a leader is bent where it is not `auto`. */
+  routes: Readonly<Record<string, Route>>;
+  /**
+   * Controls whose parts are side by side (a shoulder button and its
+   * trigger), by the one whose leader is the one that passes the other.
+   */
+  twins: Readonly<Record<string, string>>;
+}
+
+// The room a layout may leave between two chips of a column. A chip is a slot
+// (a stick two), and the picture's own buttons are not on the slots' grid, so
+// the room moves a chip towards its part.
+const fine = (first: number) =>
+  room(first, ...[0, 0.25, 0.5, 0.75, 1, 1.5].filter((r) => r !== first));
+
+const plans: Record<JoyConKind, Plan> = {
+  pair: {
+    regions: {
+      cornerL: ["leftshoulder", "lefttrigger"],
+      cornerR: ["rightshoulder", "righttrigger"],
+      top: ["back", "start"],
+      leftCol: [
+        "leftstick",
+        "dpad.up",
+        "dpad.left",
+        "dpad.right",
+        "dpad.down",
+        "misc1",
+      ],
+      rightCol: ["north", "east", "west", "south", "rightstick", "misc2"],
+    },
+    // L and ZL, R and ZR are 4 pixels apart on the model: the one of each
+    // bends near its part, so that the two lines do not run side by side.
+    // The button of each diamond nearest the middle is reached through the
+    // gap between two of its neighbours.
+    routes: {
+      leftshoulder: "steep",
+      rightshoulder: "steep",
+      "dpad.right": { gap: ["dpad.left", "dpad.down"] },
+      west: { gap: ["east", "south"] },
+    },
+    hang: { rightCol: 0.38 },
+    start: { leftCol: 1 },
+    shift: { leftCol: 0.75 },
+    twins: { lefttrigger: "leftshoulder", righttrigger: "rightshoulder" },
+  },
+  "left-upright": {
+    regions: {
+      cornerL: [],
+      cornerR: [],
+      top: [],
+      leftCol: [
+        "leftshoulder",
+        room(1, 0.5, 1.5, 0, 2),
+        "dpad.up",
+        "dpad.left",
+        "dpad.right",
+        "dpad.down",
+        "misc1",
+      ],
+      rightCol: [
+        "lefttrigger",
+        "back",
+        fine(0),
+        "paddle2",
+        fine(0),
+        "leftstick",
+        fine(0.5),
+        "paddle4",
+      ],
+    },
+    routes: { "dpad.right": { gap: ["dpad.left", "dpad.down"] } },
+    hang: { rightCol: -0.62 },
+    start: { leftCol: 0.5 },
+    shift: {},
+    twins: { lefttrigger: "leftshoulder" },
+  },
+  "right-upright": {
+    regions: {
+      cornerL: [],
+      cornerR: [],
+      top: [],
+      leftCol: [
+        "righttrigger",
+        "start",
+        fine(0),
+        "paddle1",
+        fine(0),
+        "rightstick",
+        fine(0.5),
+        "paddle3",
+      ],
+      rightCol: [
+        "rightshoulder",
+        fine(0),
+        "north",
+        "east",
+        "west",
+        "south",
+        "misc2",
+      ],
+    },
+    routes: { west: { gap: ["east", "south"] } },
+    hang: { leftCol: -0.62 },
+    start: { rightCol: 0.5 },
+    shift: {},
+    twins: { righttrigger: "rightshoulder" },
+  },
 };
 
-/** The chips of each region, in order. */
-type Order = Record<Region, string[]>;
-const emptyOrder = (): Order => ({
-  cornerL: [],
-  top: [],
-  cornerR: [],
-  leftCol: [],
-  rightCol: [],
-  bottom: [],
-});
-
-/** The regions whose chips may sit off the middle. */
-type Shifted = "leftCol" | "rightCol" | "top" | "bottom";
-const shifted: readonly Shifted[] = ["leftCol", "rightCol", "top", "bottom"];
+const isControl = (entry: Entry): entry is string => typeof entry === "string";
+const controlsOf = (plan: Plan) =>
+  regions.flatMap((r) => plan.regions[r].filter(isControl));
 
 /**
- * A layout: the chips of each region in order, and how far a column sits
- * below the middle of slots 2 to 7 (in slots) or a row sits right of the
- * middle (in chips): they are centred, but may have to move to keep their
- * leaders off other leaders.
+ * The room chosen for each of a column's gaps, and how far (in slots) the
+ * column sits below where it is (centred, or hung from the model's top).
  */
 interface State {
-  order: Order;
-  shift: Record<Shifted, number>;
+  room: Record<Column, number[]>;
+  shift: Record<Column, number>;
 }
-const stateOf = (order: Order): State => ({
-  order,
-  shift: { leftCol: 0, rightCol: 0, top: 0, bottom: 0 },
-});
 
 const isStick = (control: string) => control.endsWith("stick");
-const heightOf = (controls: readonly string[]) =>
-  controls.reduce((sum, c) => sum + (isStick(c) ? 2 : 1), 0);
-const fits = (order: Order) =>
-  regions.every((r) => heightOf(order[r]) <= capacity[r]);
+const heightOf = (control: string) => (isStick(control) ? 2 : 1);
 
-/**
- * The first slot of a column of this height, shifted. Slots are not whole
- * numbers once shifted: a chip may sit between two (the stylesheet puts it
- * where its number says); one that goes off the stage or onto another chip is
- * a problem the solver sees.
- */
-const firstSlot = (height: number, shift: number) =>
-  Math.max(2, 2 + Math.floor((6 - height) / 2)) + shift;
+/** The entries of a region that have a chip, and the room between them. */
+function entriesOf(
+  plan: Plan,
+  region: Region,
+  present: ReadonlySet<string>,
+): Entry[] {
+  const list = plan.regions[region].filter(
+    (entry) => !isControl(entry) || present.has(entry),
+  );
+  // Room needs a chip on each side.
+  return list.filter((entry, index) => {
+    if (isControl(entry)) return true;
+    return (
+      list.slice(0, index).some(isControl) &&
+      list.slice(index + 1).some(isControl)
+    );
+  });
+}
 
-/** The callouts with the places a layout gives them. */
-function place(callouts: readonly Callout[], state: State): Callout[] {
-  const { order } = state;
+/** The room (an index into the region's gaps, as the plan has them) of each. */
+function roomIndexes(plan: Plan, region: Region): Map<Room, number> {
+  const map = new Map<Room, number>();
+  for (const entry of plan.regions[region])
+    if (!isControl(entry)) map.set(entry, map.size);
+  return map;
+}
+
+const defaultState = (plan: Plan): State => {
+  const room: Record<Column, number[]> = { leftCol: [], rightCol: [] };
+  for (const column of columns)
+    for (const entry of plan.regions[column])
+      if (!isControl(entry)) room[column].push(entry.room[0]);
+  return {
+    room,
+    shift: {
+      leftCol: plan.shift.leftCol ?? 0,
+      rightCol: plan.shift.rightCol ?? 0,
+    },
+  };
+};
+
+/** Where each chip of a column is relative to the first, in slots, and the column's height. */
+function columnSlots(
+  plan: Plan,
+  column: Column,
+  present: ReadonlySet<string>,
+  chosen: readonly number[],
+) {
+  const indexes = roomIndexes(plan, column);
+  const slots: [control: string, slot: number][] = [];
+  let cursor = 0;
+  for (const entry of entriesOf(plan, column, present)) {
+    if (isControl(entry)) {
+      slots.push([entry, cursor]);
+      cursor += heightOf(entry);
+    } else {
+      cursor += chosen[indexes.get(entry) ?? 0] ?? entry.room[0];
+    }
+  }
+  return { slots, height: cursor };
+}
+
+/** The callouts with the places a state gives them in one density. */
+function placeIn(
+  callouts: readonly Callout[],
+  kind: JoyConKind,
+  state: State,
+): Callout[] {
+  const plan = plans[kind];
   const byControl = new Map(callouts.map((c) => [c.control, c]));
+  const present = new Set(byControl.keys());
   const out: Callout[] = [];
   const put = (control: string, position: Partial<Callout>) => {
     const callout = byControl.get(control);
     if (!callout) return;
     // The position is the layout's, whatever the callout had before.
-    const placed: Callout = { ...callout, ...position };
-    for (const key of ["span", "slot", "side", "offset", "raised"] as const)
+    const placed: Callout = {
+      ...callout,
+      ...position,
+      route: plan.routes[control] ?? "auto",
+      ...(plan.twins[control] ? { twin: plan.twins[control] } : {}),
+    };
+    for (const key of [
+      "span",
+      "slot",
+      "slotCompact",
+      "slotMini",
+      "side",
+      "offset",
+      "raised",
+      "hang",
+    ] as const)
       if (!(key in position)) delete placed[key];
     out.push(placed);
   };
   for (const region of regions) {
-    const controls = order[region];
-    if (region === "cornerL" || region === "cornerR") {
-      for (const [index, control] of controls.entries())
+    if (region === "leftCol" || region === "rightCol") {
+      const hung = plan.hang[region];
+      const base = (hung ?? plan.start[region] ?? 4) + state.shift[region];
+      const { slots } = columnSlots(plan, region, present, state.room[region]);
+      for (const [control, slot] of slots)
+        put(control, {
+          placement: region === "leftCol" ? "left" : "right",
+          slot: base + slot,
+          ...(hung === undefined ? {} : { hang: true }),
+          ...(isStick(control) ? { span: 2 } : {}),
+        });
+      continue;
+    }
+    const controls = entriesOf(plan, region, present).filter(isControl);
+    for (const [index, control] of controls.entries()) {
+      if (region === "top")
+        put(control, {
+          placement: "top",
+          offset: index - (controls.length - 1) / 2,
+        });
+      else
         put(control, {
           placement: "top",
           side: region === "cornerL" ? "left" : "right",
-          slot: index + 2 - controls.length,
-        });
-    } else if (region === "leftCol" || region === "rightCol") {
-      // A short column sits about the middle of slots 2 to 7.
-      let slot = firstSlot(heightOf(controls), state.shift[region]);
-      for (const control of controls) {
-        put(control, {
-          placement: region === "leftCol" ? "left" : "right",
-          slot,
-          ...(isStick(control) ? { span: 2 } : {}),
-        });
-        slot += isStick(control) ? 2 : 1;
-      }
-    } else {
-      for (const [index, control] of controls.entries())
-        put(control, {
-          placement: region,
-          offset: index - (controls.length - 1) / 2 + state.shift[region],
+          hang: true,
+          // The last of a corner is on the slot after the top one's.
+          slot: cornerTopSlot + index + (2 - controls.length),
         });
     }
   }
   return out;
 }
 
-/** The units of a plan that have a chip, with only the controls that have. */
-function unitsFor(kind: JoyConKind, present: ReadonlySet<string>): Unit[] {
-  return plans[kind]
-    .map((u) => ({ ...u, controls: u.controls.filter((c) => present.has(c)) }))
-    .filter((u) => u.controls.length > 0);
+/**
+ * A layout: the state of each density. The chips are the same size in all
+ * but the stage's size (density), and the model scales with the stage, so
+ * what clears the leaders on one density does not on another; the layout of
+ * the full density is the design's, the others are what the solver found for
+ * them (slotCompact, slotMini).
+ */
+type Layout = Record<Density, State>;
+
+/** The callouts with the places a layout gives them, for every density. */
+function place(
+  callouts: readonly Callout[],
+  kind: JoyConKind,
+  layout: Layout,
+): Callout[] {
+  const full = placeIn(callouts, kind, layout.full);
+  const compact = placeIn(callouts, kind, layout.compact);
+  const mini = placeIn(callouts, kind, layout.mini);
+  return full.map((callout, index) => ({
+    ...callout,
+    ...(compact[index].slot !== callout.slot
+      ? { slotCompact: compact[index].slot }
+      : {}),
+    ...(mini[index].slot !== callout.slot
+      ? { slotMini: mini[index].slot }
+      : {}),
+  }));
 }
 
-/** The chips of each region when every unit is in the home `homes` says. */
-function nominalOrder(
-  kind: JoyConKind,
-  units: readonly Unit[],
-  homes: readonly number[],
-): Order {
-  const order = emptyOrder();
-  for (const [index, u] of units.entries())
-    order[u.homes[homes[index]]].push(...u.controls);
-  const rank = (control: string) => nominal[kind].indexOf(control);
-  for (const region of regions) order[region].sort((a, b) => rank(a) - rank(b));
-  return order;
-}
+const defaultLayout = (plan: Plan): Layout => ({
+  full: defaultState(plan),
+  compact: defaultState(plan),
+  mini: defaultState(plan),
+});
 
 /**
- * Whether the table has a place for every callout. A Joy-Con whose controls
- * SDL has not reported yet has the standard ones, which the table does not
+ * Whether the plan has a place for every callout. A Joy-Con whose controls
+ * SDL has not reported yet has the standard ones, which the plan does not
  * know; its chips keep the places the standard layout gave them.
  */
 export function covers(callouts: readonly Callout[], kind: JoyConKind) {
-  const known = new Set(plans[kind].flatMap((u) => u.controls));
+  const known = new Set(controlsOf(plans[kind]));
   return callouts.every((c) => known.has(c.control));
 }
 
-/** Without the model: every unit in its first region, in nominal order. */
+/** Without the model: every chip where its plan puts it, with the room it starts with. */
 export function staticLayout(
   callouts: readonly Callout[],
   kind: JoyConKind,
 ): Callout[] {
   if (!covers(callouts, kind)) return [...callouts];
-  const units = unitsFor(kind, new Set(callouts.map((c) => c.control)));
-  const order = nominalOrder(
-    kind,
-    units,
-    units.map(() => 0),
-  );
-  return place(callouts, stateOf(order));
+  return place(callouts, kind, defaultLayout(plans[kind]));
 }
 
 /** What the solver needs to know of the model. */
@@ -402,111 +462,45 @@ const problemsOf = (
 ) => layoutProblems(leaders, stage, undefined, hullOn(anchors, stage));
 
 /**
- * The stage sizes the solver starts with. A layout that is clean on one size
- * may cross on another; the solver adds the sizes of supportedStages where
- * its layout is not clean to these, and solves again.
- */
-const startingStages: readonly Stage[] = [440, 600, 860, 1180].flatMap(
-  (width) => [440, 600, 800].map((height) => ({ width, height })),
-);
-
-/**
- * What a layout is worth: the problems on the stages first, then how far its
- * rows and columns are from the middle, then how many pairs of chips are in
- * the other order than their parts (a row or column that reads against the
- * model is a last resort), then the length of its leaders.
+ * What a layout is worth: the problems on the stages first, then, for the
+ * density the design is of, how far it is from the plan's own room and places
+ * (a clean layout is the design's own), and for the others the length of its
+ * leaders (the chips of a column go where their parts are); the other of the
+ * two decides a tie.
  */
 interface Score {
   problems: number;
-  moved: number;
-  inversions: number;
   length: number;
+  moved: number;
 }
-const better = (a: Score, b: Score) =>
+const better = (a: Score, b: Score, design: boolean) =>
   a.problems !== b.problems
     ? a.problems < b.problems
-    : a.moved !== b.moved
-      ? a.moved < b.moved
-      : a.inversions !== b.inversions
-        ? a.inversions < b.inversions
-        : a.length < b.length;
+    : design
+      ? a.moved !== b.moved
+        ? a.moved < b.moved
+        : a.length < b.length - 0.5
+      : Math.abs(a.length - b.length) > 0.5
+        ? a.length < b.length
+        : a.moved < b.moved;
 
-/** The pairs of chips in a region that are in the other order than their parts. */
-function inversionsOf(order: Order, anchors: Anchors): number {
-  let count = 0;
-  for (const region of regions) {
-    const list = order[region];
-    for (let i = 0; i < list.length; i++)
-      for (let j = i + 1; j < list.length; j++) {
-        const a = anchors.points[list[i]],
-          b = anchors.points[list[j]];
-        if (a && b && keyOf(region, a) - keyOf(region, b) > 0.05) count++;
-      }
-  }
-  return count;
-}
-
-/** The orders of a list (it is short: a region holds six at most). */
-function* permutations<T>(items: readonly T[]): Generator<T[]> {
-  if (items.length <= 1) {
-    yield [...items];
-    return;
-  }
-  for (let index = 0; index < items.length; index++) {
-    const rest = [...items.slice(0, index), ...items.slice(index + 1)];
-    for (const tail of permutations(rest)) yield [items[index], ...tail];
-  }
-}
-
-/**
- * The orders to try for the chips of a region: every order of a short list,
- * and for a long one (a column of six has 720) the lists with two chips
- * swapped, which is all a hill-climb needs.
- */
-function* reorderings<T>(items: readonly T[]): Generator<T[]> {
-  if (items.length <= 5) {
-    yield* permutations(items);
-    return;
-  }
-  for (let a = 0; a < items.length; a++)
-    for (let b = a + 1; b < items.length; b++) {
-      const swapped = [...items];
-      [swapped[a], swapped[b]] = [swapped[b], swapped[a]];
-      yield swapped;
-    }
-}
-
-/**
- * The leaders of a placed layout on a stage; with a row below there are two,
- * for the editor notice lifts that row when it shows.
- */
-function leadersOn(
+/** The leaders of a placed layout on a stage. */
+const leadersOn = (
   placed: readonly Callout[],
   anchors: Anchors,
   stage: Stage,
-): Leader[][] {
-  const notices = placed.some((c) => c.placement === "bottom")
-    ? [false, true]
-    : [false];
-  return notices.map((notice) =>
-    layoutLeaders(placed, stage, anchors.points, anchors.width, notice, {
-      halfHeight: anchors.halfHeight ?? defaultFrame.halfHeight,
-      topWide: !anchors.narrowTop,
-    }),
-  );
-}
+): Leader[] =>
+  layoutLeaders(placed, stage, anchors.points, anchors.width, false, {
+    halfHeight: anchors.halfHeight ?? defaultFrame.halfHeight,
+    topWide: !anchors.narrowTop,
+  });
 
 /** How many problems a placed layout has on a stage. */
-function problemsOn(
+const problemsOn = (
   placed: readonly Callout[],
   anchors: Anchors,
   stage: Stage,
-) {
-  return leadersOn(placed, anchors, stage).reduce(
-    (sum, leaders) => sum + problemsOf(leaders, anchors, stage).length,
-    0,
-  );
-}
+) => problemsOf(leadersOn(placed, anchors, stage), anchors, stage).length;
 
 /**
  * The score of a layout on the stages. It stops as soon as the problems pass
@@ -514,178 +508,112 @@ function problemsOn(
  */
 function judge(
   callouts: readonly Callout[],
+  kind: JoyConKind,
   state: State,
   anchors: Anchors,
   stages: readonly Stage[],
   limit?: Score,
 ): Score {
-  const placed = place(callouts, state);
-  const moved =
-    Math.abs(state.shift.leftCol) +
-    Math.abs(state.shift.rightCol) +
-    2 * (Math.abs(state.shift.top) + Math.abs(state.shift.bottom));
+  const placed = placeIn(callouts, kind, state);
+  const defaults = defaultState(plans[kind]);
+  let moved = 0;
+  for (const column of columns) {
+    moved += Math.abs(state.shift[column] - defaults.shift[column]);
+    state.room[column].forEach((value, index) => {
+      moved += Math.abs(value - defaults.room[column][index]);
+    });
+  }
   let problems = 0,
-    length = 0,
-    count = 0;
-  for (const stage of stages)
-    for (const leaders of leadersOn(placed, anchors, stage)) {
-      problems += problemsOf(leaders, anchors, stage).length;
-      if (limit && problems > limit.problems)
-        return {
-          problems,
-          moved,
-          inversions: 0,
-          length: Number.POSITIVE_INFINITY,
-        };
-      length += leaders.reduce((sum, l) => sum + leaderLength(l), 0);
-      count++;
-    }
-  return {
-    problems,
-    moved,
-    inversions: inversionsOf(state.order, anchors),
-    length: length / count,
-  };
+    length = 0;
+  for (const stage of stages) {
+    const leaders = leadersOn(placed, anchors, stage);
+    problems += problemsOf(leaders, anchors, stage).length;
+    if (limit && problems > limit.problems)
+      return { problems, length: Number.POSITIVE_INFINITY, moved };
+    length += leaders.reduce((sum, l) => sum + leaderLength(l), 0);
+  }
+  return { problems, length: length / stages.length, moved };
 }
 
-/** The places a column (in slots) or a row (in chips) may be moved to. */
-const moves = (region: Shifted) =>
-  region === "leftCol" || region === "rightCol"
-    ? [-0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -3, 3]
-    : [-0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5];
+/** The places a column (in slots) may be moved to. */
+const shifts = Array.from({ length: 29 }, (_, index) => -3.5 + index * 0.25);
+/** The places the two columns are tried at together. */
+const pairedShifts = Array.from(
+  { length: 15 },
+  (_, index) => -3.5 + index * 0.5,
+);
 
 /**
- * The best order of the chips of each region, one region at a time; where
- * that leaves a problem, the best place of the region too (a region is moved
- * off the middle only to clear a problem).
+ * The best state for some stage sizes, from a state to start from: for each
+ * column in turn, one choice at a time (its place, the room at each gap), then
+ * the two columns together, until nothing is better.
  */
-function improve(
+function solve(
   callouts: readonly Callout[],
-  start: State,
+  kind: JoyConKind,
   anchors: Anchors,
   stages: readonly Stage[],
+  design: boolean,
+  from: State,
 ): { state: State; score: Score } {
-  let state = start,
-    score = judge(callouts, start, anchors, stages);
+  const plan = plans[kind];
+  let state = from;
+  let score = judge(callouts, kind, state, anchors, stages);
   const consider = (candidate: State) => {
-    const next = judge(callouts, candidate, anchors, stages, score);
-    if (!better(next, score)) return false;
+    const next = judge(callouts, kind, candidate, anchors, stages, score);
+    if (!better(next, score, design)) return false;
     state = candidate;
     score = next;
     return true;
   };
-  for (let round = 0; round < 4; round++) {
-    let changed = false;
-    for (const region of regions) {
-      const base = state;
-      for (const order of reorderings(base.order[region]))
-        if (consider({ ...base, order: { ...base.order, [region]: order } }))
-          changed = true;
-      // A problem is left: the region may have to move, with another order.
-      if (score.problems > 0 && shifted.includes(region as Shifted))
-        for (const order of state.order[region].length <= 4
-          ? permutations(state.order[region])
-          : [state.order[region]])
-          for (const shift of moves(region as Shifted)) {
+  // One column at a time (its place, the room at each gap), then the two
+  // columns together (the best of one is not always the best of both), until
+  // nothing is better.
+  for (let pass = 0; pass < 3; pass++) {
+    let improved = false;
+    for (let round = 0; round < 4; round++) {
+      let changed = false;
+      for (const column of columns) {
+        for (const shift of shifts)
+          if (
+            consider({ ...state, shift: { ...state.shift, [column]: shift } })
+          )
+            changed = true;
+        const gaps = plan.regions[column].filter(
+          (entry): entry is Room => !isControl(entry),
+        );
+        for (const [index, gap] of gaps.entries())
+          for (const value of gap.room) {
             const current = state;
+            const chosen = [...current.room[column]];
+            chosen[index] = value;
             if (
               consider({
-                order: { ...current.order, [region]: order },
-                shift: { ...current.shift, [region]: shift },
+                ...current,
+                room: { ...current.room, [column]: chosen },
               })
             )
               changed = true;
           }
+      }
+      if (!changed) break;
+      improved = true;
     }
-    if (!changed) break;
+    for (const left of pairedShifts)
+      for (const right of pairedShifts)
+        if (consider({ ...state, shift: { leftCol: left, rightCol: right } }))
+          improved = true;
+    if (!improved) break;
   }
   return { state, score };
 }
 
-/** Every choice of a home for each unit, the closest to the first first. */
-function* choices(units: readonly Unit[]): Generator<number[]> {
-  const all: number[][] = [];
-  const walk = (index: number, chosen: number[]) => {
-    if (index === units.length) {
-      all.push(chosen);
-      return;
-    }
-    for (let home = 0; home < units[index].homes.length; home++)
-      walk(index + 1, [...chosen, home]);
-  };
-  walk(0, []);
-  const cost = (c: number[]) => c.reduce((sum, home) => sum + home, 0);
-  yield* all.sort((a, b) => cost(a) - cost(b));
-}
-
-/** The sort key of a chip in a region: where its anchor is on the stage. */
-function keyOf(region: Region, point: Point3): number {
-  // Columns and corners go down the page, rows go across.
-  return region === "top" || region === "bottom" ? point.x : -point.y;
-}
-
-/**
- * Whether a chip of the rows or corners covers the model on one of the stages
- * however the chips are ordered: their places depend on how many there are,
- * not on which is which, so the search is not worth making.
- */
-function coversModel(
-  callouts: readonly Callout[],
-  state: State,
-  anchors: Anchors,
-  stages: readonly Stage[],
-): boolean {
-  const placed = place(callouts, state);
-  const fixed = new Set(
-    placed
-      .filter((c) => c.placement === "top" || c.placement === "bottom")
-      .map((c) => c.control),
-  );
-  for (const stage of stages) {
-    const hull = hullOn(anchors, stage);
-    if (!hull) return false;
-    for (const leaders of leadersOn(placed, anchors, stage))
-      for (const leader of leaders)
-        if (fixed.has(leader.control) && rectHitsPolygon(leader.rect, hull, 1))
-          return true;
-  }
-  return false;
-}
-
-/** The best layout for some stage sizes, or none if the table has no room. */
-function solve(
-  callouts: readonly Callout[],
-  kind: JoyConKind,
-  units: readonly Unit[],
-  anchors: Anchors,
-  stages: readonly Stage[],
-) {
-  let best: { state: State; score: Score } | undefined;
-  let tried = 0;
-  for (const homes of choices(units)) {
-    if (tried++ >= 80) break;
-    const order = nominalOrder(kind, units, homes);
-    if (!fits(order)) continue;
-    if (coversModel(callouts, stateOf(order), anchors, stages)) continue;
-    // The first guess: the chips of a region in the order of their anchors.
-    for (const region of regions)
-      order[region].sort(
-        (a, b) =>
-          keyOf(region, anchors.points[a]) - keyOf(region, anchors.points[b]),
-      );
-    const result = improve(callouts, stateOf(order), anchors, stages);
-    if (!best || better(result.score, best.score)) best = result;
-    if (best.score.problems === 0) break;
-  }
-  return best;
-}
-
 /**
  * The layouts found, by what they were found for: the search is the work of a
- * few hundred milliseconds for the Joy-Con 2 pair, and the same model is built
- * again whenever its stage is (another pad, a lost context).
+ * few hundred milliseconds, and the same model is built again whenever its
+ * stage is (another pad, a lost context).
  */
-const found = new Map<string, State | undefined>();
+const found = new Map<string, Layout>();
 const keyOfAnchors = (kind: JoyConKind, anchors: Anchors) =>
   `${kind}|${anchors.width.toFixed(4)}|${Object.entries(anchors.points)
     .sort(([a], [b]) => (a < b ? -1 : 1))
@@ -695,10 +623,64 @@ const keyOfAnchors = (kind: JoyConKind, anchors: Anchors) =>
     .join(";")}`;
 
 /**
+ * Stages larger than the workspace's usual (supportedStages stops at 1800 by
+ * 900): a full-screen window on a large display. They are taken into account
+ * too, for they are the full density, which is the design's.
+ */
+const largeStages: readonly Stage[] = [
+  { width: 1920, height: 1040 },
+  { width: 2560, height: 1300 },
+];
+
+const sameStage = (a: Stage, b: Stage) =>
+  a.width === b.width && a.height === b.height;
+
+/**
+ * The state for the stages of one density: it starts with a few of them and
+ * adds those of the rest that its answer is not clean on, until there are
+ * none, or none it has not already been asked about (the plan has no better
+ * answer).
+ */
+function solveDensity(
+  callouts: readonly Callout[],
+  kind: JoyConKind,
+  anchors: Anchors,
+  density: Density,
+): State {
+  const own = [...supportedStages, ...largeStages].filter(
+    (s) => stageDensity(s) === density,
+  );
+  let stages = own.filter((_, index) => index % 6 === 0);
+  let best: ReturnType<typeof solve> | undefined;
+  const plan = plans[kind];
+  const start = defaultState(plan);
+  for (let round = 0; round < 8; round++) {
+    best = solve(
+      callouts,
+      kind,
+      anchors,
+      stages,
+      density === "full",
+      best?.state ?? start,
+    );
+    const placed = placeIn(callouts, kind, best.state);
+    const failing = own.filter(
+      (stage) =>
+        !stages.some((known) => sameStage(known, stage)) &&
+        problemsOn(placed, anchors, stage) > 0,
+    );
+    if (failing.length === 0) break;
+    // The newest first: the hardest sizes end a bad candidate soonest.
+    stages = [...failing.slice(0, 8), ...stages];
+  }
+  return (best as NonNullable<typeof best>).state;
+}
+
+/**
  * The Joy-Con's callouts placed for the model's anchors: no two leaders cross
- * or pass through a chip, as far as the regions of the table allow, on every
- * stage of supportedStages. When no choice is clean it is the one with the
- * fewest problems.
+ * or pass through a chip, as far as the plan allows, on every stage of
+ * supportedStages, a layout for each density of the chips. Where no choice is
+ * clean it is the one with the fewest problems.
  */
 export function arrangeJoyCon(
   callouts: readonly Callout[],
@@ -706,33 +688,16 @@ export function arrangeJoyCon(
   anchors: Anchors,
 ): Callout[] {
   if (!covers(callouts, kind)) return [...callouts];
-  const units = unitsFor(
-    kind,
-    new Set(
-      callouts.filter((c) => anchors.points[c.control]).map((c) => c.control),
-    ),
-  );
-  const key = `${keyOfAnchors(kind, anchors)}|${units.map((u) => u.controls.join()).join(";")}`;
-  if (found.has(key)) {
-    const state = found.get(key);
-    return state ? place(callouts, state) : staticLayout(callouts, kind);
+  const present = callouts.filter((c) => anchors.points[c.control]);
+  const key = `${keyOfAnchors(kind, anchors)}|${present.map((c) => c.control).join()}`;
+  let layout = found.get(key);
+  if (!layout) {
+    layout = {
+      full: solveDensity(present, kind, anchors, "full"),
+      compact: solveDensity(present, kind, anchors, "compact"),
+      mini: solveDensity(present, kind, anchors, "mini"),
+    };
+    found.set(key, layout);
   }
-  let stages = [...startingStages];
-  let best: ReturnType<typeof solve>;
-  // Each round either ends clean on every supported stage or learns of more
-  // stages to take into account; a size is added at most once.
-  for (let round = 0; round < 12; round++) {
-    best = solve(callouts, kind, units, anchors, stages);
-    if (!best || best.score.problems > 0) break;
-    const placed = place(callouts, best.state);
-    const failing = supportedStages.filter(
-      (stage) =>
-        !stages.includes(stage) && problemsOn(placed, anchors, stage) > 0,
-    );
-    if (failing.length === 0) break;
-    // The newest first: the hardest sizes end a bad candidate soonest.
-    stages = [...failing.slice(0, 6), ...stages];
-  }
-  found.set(key, best?.state);
-  return best ? place(callouts, best.state) : staticLayout(callouts, kind);
+  return place(callouts, kind, layout);
 }

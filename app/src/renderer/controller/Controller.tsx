@@ -325,10 +325,13 @@ function Chip({
     "data-placement": callout.placement,
     "data-side": callout.side,
     "data-raised": callout.raised || undefined,
+    "data-hang": callout.hang || undefined,
     "data-state": chip.state,
     "data-active": strength > 0,
     style: {
       "--slot": callout.slot ?? 0,
+      "--slot-compact": callout.slotCompact,
+      "--slot-mini": callout.slotMini,
       "--offset": callout.offset ?? 0,
     } as CSSProperties,
   };
@@ -453,9 +456,12 @@ function StickChip({
       className="stage-stick"
       data-callout-group={callout.control}
       data-placement={callout.placement}
+      data-hang={callout.hang || undefined}
       style={
         {
           "--slot": callout.slot ?? 0,
+          "--slot-compact": callout.slotCompact,
+          "--slot-mini": callout.slotMini,
           "--span": callout.span ?? 2,
         } as CSSProperties
       }
