@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import { handle, installerFromLatest, pickLanguage } from "../src/index.js";
 import * as worker from "../src/index.js";
 import { formatStars } from "../src/page.js";
+import { QR_CODES } from "../src/qr-codes.js";
 
 const name = "padmate-v1.1.0-windows-amd64-setup.exe";
 const latest = `version: 1.1.0\nfiles:\n  - url: ${name}\n    sha512: AAAA\npath: ${name}\nsha512: AAAA\nreleaseDate: '2026-10-31T01:02:03.456Z'\n`;
@@ -282,9 +283,16 @@ describe("the page on /", () => {
     assert.ok(en.includes('class="site-lang" href="?lang=zh"'));
   });
 
-  it("shows the design's placeholder in both QR boxes while there is no QR code", async () => {
+  it("shows each generated payment code in its box, or the design's placeholder", async () => {
     const zh = await (await page("/?lang=zh")).text();
-    assert.equal(zh.split('<div class="code">收款码</div>').length - 1, 2);
+    for (const code of [QR_CODES.wechat, QR_CODES.alipay])
+      assert.ok(
+        zh.includes(`<div class="code">${code ?? "收款码"}</div>`),
+        String(code).slice(0, 40),
+      );
+    // A generated code is an inline SVG or a data: image, which the CSP allows.
+    for (const code of [QR_CODES.wechat, QR_CODES.alipay].filter(Boolean))
+      assert.match(code, /^(<svg [^]*<\/svg>|<img src="data:image\/(png|jpeg);base64,[^"]+" alt="[^"]+">)$/);
   });
 
   it("sends the security headers", async () => {

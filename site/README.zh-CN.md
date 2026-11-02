@@ -35,7 +35,7 @@
 | `src/style.js` | 样式表。 |
 | `src/qr-codes.js` | 内联 SVG 二维码。由 `task site:qr` 生成，不要手改。 |
 | `qr/payloads.json` | 二维码编码的内容，由 `task site:qr` 写入。 |
-| `tools/` | `qr.mjs`（二维码生成器）和 `check-qr.mjs`（二维码还是占位时让 `site:deploy` 拒绝）。 |
+| `tools/` | `qr.mjs`（二维码生成器）、`crop-image.mjs`（把不是 QR 码的码从图片里裁出来）和 `check-qr.mjs`（二维码还是占位时让 `site:deploy` 拒绝）。 |
 | `test/` | 测试（`node:test`，无依赖）。 |
 | `wrangler.toml` | Worker 的名字、入口和路由。 |
 
@@ -55,9 +55,13 @@
 ## 更新二维码
 
 1. `task site:install`（一次）。
-2. `task site:qr -- --wechat <图片> --alipay <图片>`，图片是 owner 的微信赞赏码和支付宝收款码（PNG 或 JPEG）。它解码每张图片，按内容重画清晰的 SVG，改写 `src/qr-codes.js` 和 `qr/payloads.json`。
-3. 图片解码不了时，加 `--embed-on-fail`，改为嵌入图片本身。
-4. 用 `task site:dev` 看页面，提交这两个文件。
+2. 微信赞赏码是圆形的小程序码，不是 QR 码，没法重画。从 owner 的图片里裁出码本身，带中心头像和点赞图标，四周留白，不要标题和黄条：
+   ```
+   node tools/crop-image.mjs --in <微信赞赏码.jpg> --out <wechat-code.jpg> --box 275,141,600 --size 384 --jpeg 92
+   ```
+   `--box` 是原图上正方形的 X,Y,边长（像素），上面的数值对应现在这张 1152×1152 的图。先看一眼输出再继续。
+3. `task site:qr -- --wechat <wechat-code.jpg> --alipay <支付宝收款码.jpg> --embed-on-fail`（在 `site/` 下运行，所以给绝对路径）。支付宝码会被解码，重画成清晰的 SVG，不带头像和装饰；工具会把重画的码再解码一遍，不一致就停下。微信那张解码不了，`--embed-on-fail` 把它作为 `data:` JPEG 嵌入。工具改写 `src/qr-codes.js` 和 `qr/payloads.json`。
+4. 用 `task site:dev` 看页面，提交这两个文件。owner 的原图永远不提交。
 
 在运行过这一步之前，`src/qr-codes.js` 是占位，`task site:deploy` 会拒绝。
 
