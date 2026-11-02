@@ -2,9 +2,9 @@
 
 [中文](README.zh-CN.md)
 
-padmate maps common game controllers to keyboard shortcuts. It supports a customizable function key, stick knobs and advanced scripting, and works with Xbox, PlayStation and Joy-Con controllers. It suits work that relies on many shortcuts, such as painting, video editing and programming.
-
 **Turn an idle controller into a productivity tool.**
+
+padmate maps common game controllers to keyboard shortcuts. It supports a customizable function key, stick knobs and advanced scripting, and works with Xbox, PlayStation, Nintendo Switch Pro and both first- and second-generation Joy-Con controllers. It suits work that relies on many shortcuts, such as painting, video editing and programming.
 
 For Windows 10 and 11 (x64).
 
@@ -32,7 +32,7 @@ For Windows 10 and 11 (x64).
 - [x] Automatic profile switching
 - [x] Custom scripts
 - [x] AntiMicroX profile compatibility
-- [ ] Support for Switch 2 Joy-Con controllers
+- [x] Support for Switch 2 Joy-Con controllers
 - [ ] Support for macOS and Linux
 - [ ] Ready-made profiles for more apps
 
