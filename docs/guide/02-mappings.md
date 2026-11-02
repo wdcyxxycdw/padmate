@@ -55,4 +55,4 @@ With “Hold” together with “Tap” (or “Double tap”), you may press ano
 “Advanced” has two more items:
 
 - “Latch”: press once and the shortcut stays down; press again to release it.
-- “Haptic”: the controller buzzes each time the key fires. Choose “Tick”, “Confirm”, “Error”, or “1 pulse” to “4 pulses”.
+- “Haptic”: the controller buzzes each time the key fires. Choose “Tick”, “Confirm”, “Error”, or “1 pulse” to “4 pulses”. It does nothing on a controller that cannot rumble (a Joy-Con 2) or whose “Rumble” switch is off; see [The tray and emergency release](12-tray-and-emergency.md).

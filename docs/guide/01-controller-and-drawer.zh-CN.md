@@ -11,11 +11,27 @@
 - 标签写着这个键做什么。还没设置的键写着“未设置”，由脚本处理的键写着“由脚本接管”，见[脚本](08-scripts.zh-CN.md)。
 - 点标签，打开这个键的设置。
 - 摇杆的标签分成上下两格：上面的“旋转”管摇杆的推动，下面的“点按”管按下摇杆。
-- 标签跟着连着的手柄走，只给它有的键。PS5 手柄显示 DualSense 的外形，PS4 和 PS3 手柄显示 DualShock 4 的外形，Joy-Con 显示 Joy-Con 的外形（单只的竖着显示，左右两只连在一起时显示成一对），其余手柄显示 Xbox 的外形；键名和图标按手柄上印的给，比如 × ○ □ △、L1、Options，或 B A Y X、ZL、+。
-- 手柄下方一排是附加键：Xbox Series 的分享键、DualSense 的麦克风键、Switch 的截图键，以及 Elite、Edge 的背键和 Fn 键。手柄没有这些键，就没有这一排。
-- 单只 Joy-Con 竖着显示，就是单手握着的样子。左手那只有方向键、一根摇杆、L、ZL、−、截图键、SL 和 SR。右手那只有四个面键（印的是 B、A、Y、X）、一根摇杆、R、ZR、+、SL 和 SR，Joy-Con 2 另有 C 键。图上每一侧有一个肩键的标签（L 在外侧，ZL 在导轨那一侧；右手那只是镜像），摇杆的标签在导轨那一侧，位于 SL 和 SR 之间；标签到按键的连线互不交叉。Xbox、PS 和 Home 键不能映射。给单只 Joy-Con 没有的键设的内容留在配置里，但不会生效；请在图上显示的键上重新设置。
-- 左右两只 Joy-Con 同时连着时，会自己合成一个完整手柄，不需要设置，图上显示成一对。一对没有 SL、SR 的标签：两只合在一起时按不到它们。（只是图上不显示；配置里如果已经给它们设了内容，原样保留。）只剩一只时，它又是单只 Joy-Con。
+- 标签跟着连着的手柄走，只给它有的键。键名和图标按手柄上印的给，外形见下表。
+- 手柄下方一排是附加键：Xbox Series 的 Share 键、DualSense 的 Mute 键、Switch 手柄的 Capture 键，以及 Elite、DualSense Edge 的背键和 Fn 键。手柄没有这些键，就没有这一排。Joy-Con 的 Capture 键和 C 键不在这一排，标签放在手柄两侧。
+- DualShock 4 和 DualSense 顶部中间的 Touch 标签是触摸板的按下。padmate 只认按下，不读手指的位置。
+- 单只 Joy-Con 一律竖着显示，就是单手握着的样子，没有横握的模式。左手那只有方向键、一根摇杆、L、ZL、−、Capture、SL 和 SR。右手那只有四个面键（印的是 B、A、Y、X）、一根摇杆、R、ZR、+、SL 和 SR，Joy-Con 2 另有 C 键。图上每一侧有一个肩键的标签（L 在外侧，ZL 在导轨那一侧；右手那只是镜像），摇杆的标签在导轨那一侧，位于 SL 和 SR 之间。Xbox、PS 和 Home 键不能映射。给单只 Joy-Con 没有的键设的内容留在配置里，但不会生效；请在图上显示的键上重新设置。
+- 左右两只 Joy-Con 同时连着时，会自己合成一个完整手柄，不需要设置，图上显示成一对。一对没有 SL、SR 的标签：两只合在一起时按不到它们。（只是图上不显示；配置里如果已经给它们设了内容，原样保留。）只剩一只时，它又是单只 Joy-Con。一对和单只的功能键、反馈、紧急暂停是分开设置的。
 - Joy-Con 2（Switch 2 的 Joy-Con）按 [Joy-Con 2](15-joycon-2.zh-CN.md) 里的步骤连接。它的键和 Joy-Con 相同，右手那只另有一个 C 键；左右各一只 Joy-Con 2 同时连着时同样会自己合成一个完整手柄（不会和 Switch 1 的 Joy-Con 混在一起）。图上 Joy-Con 2 用它自己的模型，Switch 1 的 Joy-Con 仍用原来的。Joy-Con 2 的模型上没有 SL、SR、ZL、ZR 可指，它们的标签指向导轨和肩部上的固定位置。C 键的标签是 C 键。
+
+## 各种手柄
+
+padmate 支持 Xbox、PlayStation、Switch Pro 和 Joy-Con（包括 Joy-Con 2）。别的手柄通常也能用；没有被识别为手柄时，用[映射向导](11-mapping-wizard.zh-CN.md)建一份映射。
+
+| 手柄 | 手柄图的外形 | 键名举例 |
+|---|---|---|
+| Xbox 360、Xbox One、Xbox Series | Xbox | A B X Y、LB、RB、LT、RT、View、Menu（Xbox 360 是 Back、Start） |
+| PS5 手柄（DualSense、DualSense Edge） | DualSense | × ○ □ △、L1、R1、L2、R2、Create、Options |
+| PS4 手柄（DualShock 4）、PS3 手柄 | DualShock 4 | × ○ □ △、L1、R1、L2、R2、Share、Options（PS3 是 Select、Start） |
+| Switch Pro 手柄 | Xbox | B A Y X、L、R、ZL、ZR、−、+ |
+| 单只 Joy-Con | Joy-Con，竖握 | 左手那只 L、ZL、−，右手那只 B A Y X、R、ZR、+ |
+| 左右两只 Joy-Con 合成的手柄 | 一对 Joy-Con | B A Y X、L、R、ZL、ZR、−、+ |
+| Joy-Con 2 | Switch 2 Joy-Con 的模型，其余同 Joy-Con | 同 Joy-Con |
+| 其余手柄 | Xbox | S E W N、L、R、LT、RT、Back、Start |
 
 ## 按键抽屉
 

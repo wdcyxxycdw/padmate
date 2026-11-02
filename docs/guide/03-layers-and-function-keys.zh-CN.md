@@ -15,11 +15,11 @@
 | 单只 Joy-Con，右手那只 | ZR | R |
 | 左右两只 Joy-Con 合成的一个手柄 | − | + |
 
-PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 默认用 ZL 或 ZR，因为这两个键大，好按。单只 Joy-Con 不提供 − 和 +，因为握着时按不到它们。
+PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Switch Pro 手柄上是 − 和 +。单只 Joy-Con 默认用 ZL 或 ZR，因为这两个键大，好按。单只 Joy-Con 不提供 − 和 +，因为握着时按不到它们，SL 和 SR 也不能当功能键。Xbox、PS 和 Home 键不能当功能键。
 
 功能键像笔记本的 Fn 键：
 
-- 它不能设快捷键，自己也不发键。手柄图上它的标签写着“功能键”。
+- 它不能设快捷键，自己也不发键。手柄图上它的标签写着“功能键”。ZL 和 ZR 当功能键时，压过“扳机设置”里“按下”的位置就算按住。
 - 按住它，其他键就换成另一套设置。这一套里没设置的键，照常用“平时”的设置。
 - 用哪一套，在按下某个键的那一刻定。按下功能键之前就按着的键不受影响。
 
@@ -31,7 +31,7 @@ PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Sw
 
 “映射”页上“按住功能键”的那一套，用的是页面上那只手柄的功能键。换一只手柄，哪个键是功能键也跟着换。
 
-以前版本里在“设置”选的功能键，仍然是 Xbox、PlayStation 这类手柄的功能键。Joy-Con 用自己的默认。
+设置文件 `%APPDATA%\padmate\config.json` 里如果还有全局的功能键、反馈或紧急暂停，没有单独设置的手柄先沿用它们。全局的功能键只用于 Xbox、PlayStation、Switch Pro 这类手柄，Joy-Con 用自己的默认；全局的反馈用于所有手柄；全局的紧急暂停组合按手柄的种类取。第一次在“手柄设置”里改任何一项时，padmate 先把这些值写进它记得的每只手柄名下，再从设置文件里去掉它们，所以各手柄的表现不变。不在记录里的手柄用自己种类的默认。
 
 ### 为什么不能用 Xbox 键
 
@@ -43,7 +43,7 @@ PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Sw
 
 这些 padmate 都拦不住，所以 padmate 不用这个键：不能映射，脚本里不能用，也不能放进紧急暂停的组合。padmate 照样读到它，诊断页里能看到它被按下。
 
-以前把 Xbox 键选成功能键的，现在按 Menu 处理。下次在设置页改任何一项时，这个旧选择会从配置文件里去掉。
+设置文件里全局的功能键如果是 Xbox 键，按 Menu 处理，并在第一次于“手柄设置”里改任何一项时一并去掉。
 
 ### 设置功能键的一套
 
@@ -85,6 +85,6 @@ PlayStation 手柄上的 View 和 Menu 是 Create（或 Share）和 Options，Sw
 - 要让某层里的某个键什么也不做，写 `"block": true`。
 - `defaultLayer` 是启动时的 base 层，不写就是 `base`。
 
-View 和 Menu 对应 `back` 和 `start`。单只 Joy-Con 上，ZL、L、ZR、R 对应 `lt`、`leftshoulder`、`rt`、`rightshoulder`。写在当前功能键上的设置不生效，但留在文件里。Xbox 键是 `guide`，写在它上面的设置一律不生效，检查时会给出警告；在映射页改这个配置时，它们会从文件里去掉。功能键的一套写在 `functionSet` 里，写法和层一样。
+View 和 Menu 对应 `back` 和 `start`。单只 Joy-Con 上，ZL、L、ZR、R 对应 `lt`、`leftshoulder`、`rt`、`rightshoulder`。写在一只手柄功能键上的设置，在那只手柄上不生效，但留在文件里。Xbox 键是 `guide`，写在它上面的设置一律不生效，检查时会给出警告；在映射页改这个配置时，它们会从文件里去掉。功能键的一套写在 `functionSet` 里，写法和层一样。
 
-保存文件后 padmate 自动重新读取。写完可在 `resources\bin` 文件夹运行 `.\padmatectl.exe validate profile.json` 检查，它会指出错在哪里，不改文件。
+保存文件后 padmate 自动重新读取。写完可在 `resources\bin` 文件夹运行 `.\padmatectl.exe validate profile.json` 检查，它会指出错在哪里，不改文件。检查时默认按 Menu 当功能键；要按别的键检查，加 `--function-key`，可选 `start`、`back`、`leftshoulder`、`rightshoulder`、`lt`、`rt`。

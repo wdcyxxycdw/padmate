@@ -33,7 +33,7 @@
 
 ## 手柄没有出现，或者输入重复
 
-- 先确认手柄是 Xbox、PlayStation、Switch Pro 或 Joy-Con。Joy-Con 2 要按单独的步骤连接，见 [Joy-Con 2](15-joycon-2.zh-CN.md)。
+- 先确认手柄是 Xbox、PlayStation、Switch Pro 或 Joy-Con，见[手柄图和按键抽屉](01-controller-and-drawer.zh-CN.md)。Joy-Con 2 要按单独的步骤连接，见 [Joy-Con 2](15-joycon-2.zh-CN.md)。
 - 左右两只 Joy-Con 同时连着时是一个手柄，只连着一只时是竖握的小手柄。第二只连上、或两只里有一只断开时，手柄会被换掉：按着的键被松开，映射在新手柄上继续。合并后的手柄和单只 Joy-Con 的设置是分开的。左右各一只 Joy-Con 2 也是这样。
 - Steam、DS4Windows 和 HidHide 可能抢占手柄。诊断页的“冲突”指出正在运行的是哪一个并说明怎么办，见[诊断](09-diagnostics.zh-CN.md)。
 - 手柄在“设置”页的“手柄调校”里写着“未识别为手柄”时，用[映射向导](11-mapping-wizard.zh-CN.md)建一份映射。
@@ -48,7 +48,7 @@
 
 ## 有一个键卡住了
 
-先用手柄上的紧急暂停：同时按住中间的两个小键 2 秒。还不行，用窗口里的“松开所有按键”，或运行 `padmatectl.exe release-all`。见[托盘和紧急释放](12-tray-and-emergency.zh-CN.md)。
+先用手柄上的紧急暂停：同时按住它的组合键 2 秒，默认是中间的两个小键，单只 Joy-Con 是 SL 和 SR。还不行，用窗口里的“松开所有按键”，或运行 `padmatectl.exe release-all`。见[托盘和紧急释放](12-tray-and-emergency.zh-CN.md)。
 
 ## 启动时提示“设置已恢复”
 

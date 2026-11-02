@@ -23,8 +23,8 @@ The status at the top of the window shows “Running” or “Paused”. Nothing
 
 Hold the two small keys in the middle of the controller for 2 seconds, and all mapping pauses at once and every held key is released. Hold them for 2 seconds again to resume. Each controller has its own emergency pause combination.
 
-- On an Xbox controller they are View and Menu, on a PlayStation controller Create (or Share) and Options, and on a Switch Pro controller − and +. A single Joy-Con uses SL and SR; a left and a right Joy-Con connected together are one controller and use − and +.
-- The controller buzzes on pause and on resume. You can turn that off for a controller on the “Settings” page, in “Controllers”, with its “Pause alert”.
+- The default combinations: on an Xbox controller View and Menu, on a PlayStation controller Create (or Share) and Options, and on a Switch Pro controller − and +. A single Joy-Con uses SL and SR; a left and a right Joy-Con connected together are one controller and use − and +.
+- The controller buzzes on pause and on resume. You can turn that off for a controller on the “Settings” page, in “Controllers”, with its “Pause alert”. A Joy-Con 2 cannot rumble and has no such alert.
 
 ### Changing the combination
 
@@ -33,11 +33,18 @@ Hold the two small keys in the middle of the controller for 2 seconds, and all m
 3. Choose 1 to 5 seconds in “Hold for”.
 4. Click “Save”. Until you save, the old combination stays valid.
 
-Click “Restore default” and that controller goes back to the factory combination. If a combination you set before has the Xbox button, the factory one is used now, and the old one is removed from the configuration file the next time you change anything on the Settings page.
+Click “Restore default” and that controller goes back to the factory combination. A combination that has the Xbox button, or a key the controller does not have, is not used, and the controller uses the factory combination.
 
 ## Feedback for each controller
 
-On the “Settings” page, in “Controllers”, each controller also has “Feedback” under it: “Rumble”, “Lights”, “Pause alert” and “Low battery alert”, all on by default. Each controller has its own; turning off the rumble of one does not affect the others.
+On the “Settings” page, in “Controllers”, each controller also has “Feedback” under it, with four switches, all on by default. Each controller has its own; turning off the rumble of one does not affect the others.
+
+- “Rumble”: all rumble, including the “Haptic” of a key and the rumble a script sends.
+- “Lights”: the light colors that follow the layer on the controller, and the colors a script sets.
+- “Pause alert”: the rumble and the color on pause and resume; it only works together with “Rumble” or “Lights”.
+- “Low battery alert”: the warning when the battery is low, in the tray, in the overlay and on the controller itself.
+
+A Joy-Con 2 cannot rumble and its lights only show its number, so “Rumble” and “Lights” have no effect on it.
 
 ## Releasing all keys
 

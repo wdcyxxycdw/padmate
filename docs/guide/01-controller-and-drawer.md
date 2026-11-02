@@ -11,11 +11,27 @@ The middle of the page shows a front-facing 3D controller. Each key has a tag be
 - The tag says what the key does. A key that is not set yet says “Not set”, and a key handled by a script says “Handled by a script”. See [Scripts](08-scripts.md).
 - Click a tag to open the settings of that key.
 - The tag of a stick has two cells: “Move” above for pushing the stick, “Press” below for pressing it down.
-- The tags follow the connected controller and only cover the keys it has. A PS5 controller shows the shape of a DualSense, a PS4 or PS3 controller that of a DualShock 4, a Joy-Con that of a Joy-Con (a single one upright, two connected together as a pair), and all others the shape of an Xbox controller; key names and icons are what the controller prints, such as × ○ □ △, L1 and Options, or B A Y X, ZL and +.
-- The row below the controller holds the extra keys: the Share button of an Xbox Series controller, the mute button of a DualSense, the Capture button of a Switch controller, and the back and Fn buttons of an Elite or Edge. A controller without them has no such row.
-- A single Joy-Con is shown upright, as you hold it in one hand. The left one has the arrow keys, a stick, L, ZL, −, Capture, SL and SR. The right one has the four face keys (printed B, A, Y and X), a stick, R, ZR, +, SL and SR, and a Joy-Con 2 also has C. On the picture, each side has one tag for a shoulder key (L on the outer side, ZL on the side of the rail; the right one is the mirror image), and the tag of the stick is on the side of the rail, between SL and SR. The lines from the tags to the keys never cross. The Xbox, PS and Home buttons cannot be mapped. Settings on keys that a single Joy-Con does not have stay in the profile but never apply; set them again on the keys the picture shows.
-- When a left and a right Joy-Con are connected at the same time, they become one full controller by themselves, with no setting, and the picture shows the pair. The pair has no tags for SL and SR: you cannot press them while the two Joy-Cons are joined. (Only the picture leaves them out; if a profile already has settings on them, they stay as they were.) When only one of them is left, it is a single Joy-Con again.
+- The tags follow the connected controller and only cover the keys it has. Key names and icons are what the controller prints; the table below shows the shape of each.
+- The row below the controller holds the extra keys: the Share button of an Xbox Series controller, the Mute button of a DualSense, the Capture button of a Switch controller, and the back and Fn buttons of an Elite or DualSense Edge. A controller without them has no such row. The Capture and C keys of a Joy-Con are not in this row; their tags are at the sides of the controller.
+- The Touch tag at the top middle of a DualShock 4 or DualSense is the press of the touchpad. padmate only reads the press, not where your finger is.
+- A single Joy-Con is always shown upright, as you hold it in one hand; there is no sideways mode. The left one has the arrow keys, a stick, L, ZL, −, Capture, SL and SR. The right one has the four face keys (printed B, A, Y and X), a stick, R, ZR, +, SL and SR, and a Joy-Con 2 also has C. On the picture, each side has one tag for a shoulder key (L on the outer side, ZL on the side of the rail; the right one is the mirror image), and the tag of the stick is on the side of the rail, between SL and SR. The Xbox, PS and Home buttons cannot be mapped. Settings on keys that a single Joy-Con does not have stay in the profile but never apply; set them again on the keys the picture shows.
+- When a left and a right Joy-Con are connected at the same time, they become one full controller by themselves, with no setting, and the picture shows the pair. The pair has no tags for SL and SR: you cannot press them while the two Joy-Cons are joined. (Only the picture leaves them out; if a profile already has settings on them, they stay as they were.) When only one of them is left, it is a single Joy-Con again. A pair and a single Joy-Con have separate function keys, feedback and emergency pause settings.
 - A Joy-Con 2 (the Switch 2 Joy-Con) is connected as described in [Joy-Con 2](15-joycon-2.md). Its keys are the same as a Joy-Con's, the right one has an extra C key, and a left and a right Joy-Con 2 also become one full controller by themselves (they never mix with the Switch 1 Joy-Cons). The picture shows the Joy-Con 2 with its own model, and the Switch 1 Joy-Cons keep theirs. The Joy-Con 2 model has no SL, SR, ZL or ZR to point at, so their tags point at fixed places on the rail and the shoulder. The C key is tagged C.
+
+## Controllers
+
+padmate supports Xbox, PlayStation, Switch Pro and Joy-Con controllers (Joy-Con 2 included). Other controllers usually work too; when one is not recognised as a gamepad, build a mapping for it with the [mapping wizard](11-mapping-wizard.md).
+
+| Controller | Shape on the picture | Example key names |
+|---|---|---|
+| Xbox 360, Xbox One, Xbox Series | Xbox | A B X Y, LB, RB, LT, RT, View, Menu (Back and Start on an Xbox 360) |
+| PS5 controller (DualSense, DualSense Edge) | DualSense | × ○ □ △, L1, R1, L2, R2, Create, Options |
+| PS4 controller (DualShock 4), PS3 controller | DualShock 4 | × ○ □ △, L1, R1, L2, R2, Share, Options (Select and Start on a PS3) |
+| Switch Pro controller | Xbox | B A Y X, L, R, ZL, ZR, −, + |
+| A single Joy-Con | Joy-Con, upright | The left one L, ZL, −; the right one B A Y X, R, ZR, + |
+| A left and a right Joy-Con connected as one controller | A pair of Joy-Cons | B A Y X, L, R, ZL, ZR, −, + |
+| Joy-Con 2 | The model of the Switch 2 Joy-Con, otherwise as a Joy-Con | As a Joy-Con |
+| All other controllers | Xbox | S E W N, L, R, LT, RT, Back, Start |
 
 ## The key drawer
 

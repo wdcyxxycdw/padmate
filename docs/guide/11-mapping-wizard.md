@@ -37,7 +37,7 @@ Tips:
 
 The mapping applies by controller model; controllers of the same model share one. After saving, the window may warn you about:
 
-- View or Menu is not mapped. They are the emergency pause keys, and without them the controller cannot use it. See [The tray and emergency release](12-tray-and-emergency.md).
+- View or Menu is not mapped. They are the keys of the default emergency pause, and without them it cannot be used; in “Controllers” you can set another combination for this controller. See [The tray and emergency release](12-tray-and-emergency.md).
 - You set the environment variable `SDL_GAMECONTROLLERCONFIG`, and it has a mapping for this controller. It takes priority over padmate's, so the mapping you just saved does not apply. Remove that variable.
 
 ## Remapping and restoring the default mapping
