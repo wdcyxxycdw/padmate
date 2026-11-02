@@ -1000,24 +1000,25 @@ describe("the controls of the connected pad", () => {
     expect(ids(container)).toContain("dpad.up");
     rerender(
       <Controller
-        info={{ ...info, id: 2, ...sdlPads.joyConLeftSideways }}
+        info={{ ...info, id: 2, ...sdlPads.joyConLeftUpright }}
         t={translator("en")}
       />,
     );
-    // A single Joy-Con held sideways: no D-pad, right stick, triggers or −.
+    // A single left Joy-Con, upright: no face buttons, right stick, R, ZR or +.
     expect(ids(container)).toEqual(
       [
-        "east",
+        "back",
+        "dpad.down",
+        "dpad.left",
+        "dpad.right",
+        "dpad.up",
         "leftshoulder",
         "leftstick",
         "leftstick.press",
-        "north",
+        "lefttrigger",
+        "misc1",
         "paddle2",
         "paddle4",
-        "south",
-        "start",
-        "rightshoulder",
-        "west",
       ].sort(),
     );
     rerender(
@@ -1050,7 +1051,7 @@ describe("the controls of the connected pad", () => {
   it("lists the state of the pad's own controls only", () => {
     const { container } = render(
       <Controller
-        info={{ ...info, ...sdlPads.joyConLeftSideways }}
+        info={{ ...info, ...sdlPads.joyConLeftUpright }}
         t={translator("en")}
       />,
     );
@@ -1060,7 +1061,7 @@ describe("the controls of the connected pad", () => {
       ),
     ].map((node) => node.dataset.control);
     expect(listed).toContain("paddle2");
-    expect(listed).not.toContain("dpad.up");
+    expect(listed).not.toContain("south");
     expect(listed).not.toContain("misc2");
   });
 

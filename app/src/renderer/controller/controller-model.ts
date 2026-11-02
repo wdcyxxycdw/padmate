@@ -98,23 +98,6 @@ function miscLabel(
   return `附加键 ${index}`;
 }
 
-/**
- * Retired: a single Joy-Con is always held upright now. Kept only for the
- * files that still import it; it is deleted when the layout work is merged.
- *
- * Whether a pad is a single Joy-Con held sideways: it reports face buttons
- * (buttonMask bit 0) but no right stick (bit 8), which a right one held
- * upright has with its face buttons, and its SL and SR are the shoulders.
- */
-export function isSidewaysJoyCon(type: string, buttonMask?: number): boolean {
-  return (
-    (type === "joyconleft" || type === "joyconright") &&
-    buttonMask !== undefined &&
-    (buttonMask & 1) !== 0 &&
-    (buttonMask & (1 << 8)) === 0
-  );
-}
-
 // SDL's gamepad buttons and axes by their bit in DeviceInfo.buttonMask and
 // axisMask: the SDL_GamepadButton and SDL_GamepadAxis order
 // (internal/input/controls.go).

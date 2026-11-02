@@ -337,7 +337,7 @@ describe("the icon of each control", () => {
   });
 
   it("has none where neither set draws the control", () => {
-    for (const [control, type, mask] of [
+    for (const [control, type] of [
       // Diagonals and the stages of a push.
       ["dpad.upleft", "xboxone"],
       ["ls.upleft", "ps5"],
@@ -350,7 +350,7 @@ describe("the icon of each control", () => {
       ["touchpad", "unknown"],
       ["bogus", "xboxone"],
     ] as const)
-      expect(icon(control, type, mask), `${control} ${type}`).toBeUndefined();
+      expect(icon(control, type), `${control} ${type}`).toBeUndefined();
     // A name SDL reports that neither set prints stays a word.
     expect(padIcon("start", "generic", { start: "Plus Menu" })).toBeUndefined();
     expect(

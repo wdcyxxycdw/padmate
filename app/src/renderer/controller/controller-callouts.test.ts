@@ -17,17 +17,6 @@ describe("the function keys among the callouts (ADR-0012)", () => {
     }
   });
 
-  it("are Menu alone on a single Joy-Con held sideways", () => {
-    for (const info of [
-      sdlPads.joyConLeftSideways,
-      sdlPads.joyConRightSideways,
-    ]) {
-      const list = controls(info);
-      expect(list, info.type).not.toContain("back");
-      expect(list, info.type).toContain("start");
-    }
-  });
-
   it("are the one each single Joy-Con held upright has", () => {
     // − on the left one, + on the right one.
     expect(controls(sdlPads.joyConLeftUpright)).toContain("back");
@@ -200,35 +189,6 @@ describe("the callouts follow the controls SDL reports", () => {
       expect(controls(info)).not.toContain("guide");
   });
 
-  it("show only what a single Joy-Con held sideways has", () => {
-    expect(controls(sdlPads.joyConLeftSideways).sort()).toEqual(
-      [
-        "north",
-        "east",
-        "west",
-        "south",
-        "leftstick",
-        "leftshoulder",
-        "rightshoulder",
-        "start",
-        "paddle2",
-        "paddle4",
-      ].sort(),
-    );
-    expect(controls(sdlPads.joyConRightSideways)).toEqual(
-      expect.arrayContaining(["paddle1", "paddle3", "leftstick"]),
-    );
-    expect(controls(sdlPads.joyConRightSideways)).not.toContain("rightstick");
-    // Its SL and SR are the shoulders, its L and ZL (R and ZR) paddles.
-    expect(callout(sdlPads.joyConLeftSideways, "leftshoulder")?.label).toBe(
-      "SL",
-    );
-    expect(callout(sdlPads.joyConLeftSideways, "paddle2")?.label).toBe("L");
-    expect(callout(sdlPads.joyConLeftSideways, "paddle4")?.label).toBe("ZL");
-    expect(callout(sdlPads.joyConRightSideways, "paddle1")?.label).toBe("R");
-    expect(callout(sdlPads.joyConRightSideways, "paddle3")?.label).toBe("ZR");
-  });
-
   it("show only what a single Joy-Con held upright has", () => {
     expect(controls(sdlPads.joyConLeftUpright).sort()).toEqual(
       [
@@ -299,7 +259,6 @@ describe("the callouts follow the controls SDL reports", () => {
     // paddle: only the joined pair hides them.
     expect(controls(sdlPads.joyConLeftUpright)).toContain("paddle2");
     expect(controls(sdlPads.joyConRightUpright)).toContain("paddle1");
-    expect(controls(sdlPads.joyConLeftSideways)).toContain("leftshoulder");
     expect(controls(sdlPads.ps5Edge)).toContain("paddle1");
   });
 
