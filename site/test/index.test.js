@@ -34,6 +34,9 @@ let fetchCalls;
 let cacheStore;
 /** The promises passed to ctx.waitUntil. */
 let waited;
+/** What the Worker passed to console.warn: one string per call. */
+let warnings;
+const realWarn = console.warn;
 
 function requestUrl(input) {
   return input instanceof Request ? input.url : String(input);
@@ -65,6 +68,8 @@ beforeEach(() => {
   };
   fetchCalls = [];
   waited = [];
+  warnings = [];
+  console.warn = (...args) => warnings.push(args.join(" "));
   globalThis.fetch = async (input, init) => {
     const url = requestUrl(input);
     fetchCalls.push({ url, input, init });
@@ -76,6 +81,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  console.warn = realWarn;
   globalThis.fetch = realFetch;
   if (realCaches) Object.defineProperty(globalThis, "caches", realCaches);
   else delete globalThis.caches;
@@ -172,20 +178,6 @@ describe("the exports of src/index.js", () => {
 // ---- pickLanguage ---------------------------------------------------------
 
 describe("pickLanguage", () => {
-  const at = (query, header) =>
-    pickLanguage(new URL(`https://padmate.download/${query}`), header);
-
-  it("lets ?lang win over the header", () => {
-    assert.equal(at("?lang=zh", "en-US,en;q=0.9"), "zh");
-    assert.equal(at("?lang=en", "zh-CN,zh;q=0.9"), "en");
-  });
-
-  it("falls back to the header for an invalid ?lang", () => {
-    assert.equal(at("?lang=fr", "zh-CN"), "zh");
-    assert.equal(at("?lang=fr", "en-US"), "en");
-    assert.equal(at("?lang=", "zh"), "zh");
-  });
-
   for (const [header, want] of [
     ["zh-CN,zh;q=0.9", "zh"],
     ["zh-TW", "zh"],
@@ -201,7 +193,7 @@ describe("pickLanguage", () => {
     ["zhx", "en"],
   ])
     it(`reads Accept-Language ${JSON.stringify(header)} as ${want}`, () => {
-      assert.equal(at("", header), want);
+      assert.equal(pickLanguage(header), want);
     });
 });
 
@@ -248,16 +240,31 @@ describe("the page on /", () => {
     assert.match(html, /<span class="ver">v1\.1\.0<\/span>/);
   });
 
-  it("defaults to English without Accept-Language, and ?lang overrides", async () => {
+  it("defaults to English without Accept-Language", async () => {
     assert.match(await (await page("/")).text(), /<html lang="en">/);
-    assert.match(
-      await (await page("/?lang=zh", { "accept-language": "en" })).text(),
-      /<html lang="zh-CN">/,
-    );
+  });
+
+  it("ignores ?lang: the language of / comes from Accept-Language only", async () => {
+    const html = await (
+      await page("/?lang=zh", { "accept-language": "en" })
+    ).text();
+    assert.match(html, /<html lang="en">/);
+  });
+
+  it("varies on Accept and Accept-Language and follows the header", async () => {
+    for (const [header, lang, content] of [
+      ["zh-CN,zh;q=0.9", "zh-CN", "zh-CN"],
+      ["en-US", "en", "en"],
+    ]) {
+      const res = await page("/", { "accept-language": header });
+      assert.equal(res.headers.get("vary"), "Accept, Accept-Language");
+      assert.equal(res.headers.get("content-language"), content);
+      assert.match(await res.text(), new RegExp(`<html lang="${lang}">`));
+    }
   });
 
   it("shows the donate card and the GitHub text in Chinese only", async () => {
-    const zh = await (await page("/?lang=zh")).text();
+    const zh = await (await page("/zh")).text();
     assert.ok(zh.includes('<details class="site-card site-donate">'));
     assert.match(zh, /<summary>[\s\S]*<\/summary>/);
     assert.ok(zh.includes("微信 · 支付宝"));
@@ -267,7 +274,7 @@ describe("the page on /", () => {
     assert.ok(zh.includes('<footer class="site-foot">'));
 
     // The stylesheet mentions <details> in a comment, so look at the markup only.
-    const en = (await (await page("/?lang=en")).text()).replace(
+    const en = (await (await page("/en")).text()).replace(
       /<style>[\s\S]*?<\/style>/,
       "",
     );
@@ -276,15 +283,32 @@ describe("the page on /", () => {
     assert.ok(en.includes('<footer class="site-foot is-single">'));
   });
 
-  it("links to the other language", async () => {
-    const zh = await (await page("/?lang=zh")).text();
-    assert.ok(zh.includes('class="site-lang" href="?lang=en"'));
-    const en = await (await page("/?lang=en")).text();
-    assert.ok(en.includes('class="site-lang" href="?lang=zh"'));
+  it("links to the other language's path, and the brand to its own", async () => {
+    for (const [path, other] of [
+      ["/zh", "/en"],
+      ["/en", "/zh"],
+      ["/", "/zh"],
+    ]) {
+      const html = await (await page(path)).text();
+      assert.ok(html.includes(`class="site-lang" href="${other}"`), path);
+      assert.ok(!html.includes("?lang"), path);
+    }
+    // The brand link points to the page's own language path, whatever the URL was.
+    assert.ok(
+      (await (await page("/zh")).text()).includes('class="site-brand" href="/zh"'),
+    );
+    assert.ok(
+      (await (await page("/en")).text()).includes('class="site-brand" href="/en"'),
+    );
+    assert.ok(
+      (await (await page("/", { "accept-language": "zh-CN" })).text()).includes(
+        'class="site-brand" href="/zh"',
+      ),
+    );
   });
 
   it("shows each generated payment code in its box, or the design's placeholder", async () => {
-    const zh = await (await page("/?lang=zh")).text();
+    const zh = await (await page("/zh")).text();
     for (const code of [QR_CODES.wechat, QR_CODES.alipay])
       assert.ok(
         zh.includes(`<div class="code">${code ?? "收款码"}</div>`),
@@ -296,7 +320,7 @@ describe("the page on /", () => {
   });
 
   it("sends the security headers", async () => {
-    const res = await page("/?lang=zh");
+    const res = await page("/zh");
     const html = await res.text();
     const csp = res.headers.get("content-security-policy");
     assert.match(csp, /default-src 'none'/);
@@ -321,14 +345,13 @@ describe("the page on /", () => {
 
   it("asks the visitor's browser for nothing outside the site", async () => {
     for (const lang of ["zh", "en"]) {
-      const html = await (await page(`/?lang=${lang}`)).text();
+      const html = await (await page(`/${lang}`)).text();
       const body = html.replace(/<style>[\s\S]*?<\/style>/, "");
       const urls = [...body.matchAll(/\b(?:href|src)="([^"]*)"/g)].map((m) => m[1]);
       assert.ok(urls.length > 3);
       for (const u of urls)
         assert.ok(
           (u.startsWith("/") && !u.startsWith("//")) ||
-            u.startsWith("?") ||
             u.startsWith("data:") ||
             u.startsWith("https://github.com/wdcyxxycdw/padmate"),
           `${lang}: ${u}`,
@@ -336,6 +359,92 @@ describe("the page on /", () => {
       assert.ok(!/@import|url\(\s*["']?https?:/i.test(html));
     }
   });
+});
+
+describe("the pages on /zh and /en", () => {
+  const pages = [
+    ["/zh", "zh-CN", /<html lang="zh-CN">/, /<title>Padmate 下载<\/title>/],
+    ["/en", "en", /<html lang="en">/, /<title>Download Padmate<\/title>/],
+  ];
+
+  for (const [path, contentLanguage, htmlLang, title] of pages)
+    for (const [label, headers] of [
+      ["a browser Accept", { accept: BROWSER_ACCEPT }],
+      ["Accept: */*", { accept: "*/*" }],
+      ["no Accept", {}],
+      ["a conflicting Accept-Language", {
+        accept: BROWSER_ACCEPT,
+        "accept-language": path === "/zh" ? "en-US" : "zh-CN",
+      }],
+    ])
+      it(`serves ${path} in its own language for ${label}`, async () => {
+        const res = await run(`https://padmate.download${path}`, { headers });
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8");
+        assert.equal(res.headers.get("content-language"), contentLanguage);
+        assert.equal(res.headers.get("vary"), null);
+        assert.ok(res.headers.get("content-security-policy"));
+        const html = await res.text();
+        assert.match(html, htmlLang);
+        assert.match(html, title);
+        assert.ok(html.includes(`href="/${name}"`));
+        assert.match(html, /<span class="ver">v1\.1\.0<\/span>/);
+        // The newest installer is asked once, from the same host.
+        assert.equal(callsTo(LATEST_URL).length, 1);
+      });
+
+  for (const [url, lang] of [
+    ["https://padmate.download/zh?from=singlemessage", "zh-CN"],
+    ["https://padmate.download/en?x=1", "en"],
+    ["https://padmate.download/zh?lang=en", "zh-CN"],
+    ["http://padmate.download/en?a=b&c=d", "en"],
+  ])
+    it(`serves the page for ${url}, query string and all`, async () => {
+      const res = await run(url, { headers: { accept: BROWSER_ACCEPT } });
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get("content-language"), lang);
+      assert.equal(res.headers.get("vary"), null);
+      const html = await res.text();
+      assert.match(html, new RegExp(`<html lang="${lang}">`));
+      // The installer link and the asked latest.yml stay on the site over https.
+      assert.ok(html.includes(`href="/${name}"`));
+      assert.equal(fetchCalls[0].url, LATEST_URL);
+    });
+
+  it("answers HEAD like GET without a body", async () => {
+    for (const path of ["/zh", "/en"]) {
+      const url = `https://padmate.download${path}`;
+      const headers = { accept: "*/*" };
+      const get = await run(url, { headers });
+      const head = await run(url, { method: "HEAD", headers });
+      assert.equal(head.status, 200);
+      assert.deepEqual([...head.headers].sort(), [...get.headers].sort());
+      assert.equal(await head.text(), "");
+    }
+  });
+
+  for (const method of ["POST", "PUT", "DELETE"])
+    for (const path of ["/zh", "/en", "/zh?from=x"])
+      it(`answers 405 to ${method} ${path}`, async () => {
+        const res = await run(`https://padmate.download${path}`, { method });
+        assert.equal(res.status, 405);
+        assert.equal(res.headers.get("allow"), "GET, HEAD");
+        assert.equal(fetchCalls.length, 0);
+      });
+
+  for (const path of ["/zh", "/en"])
+    it(`answers 503 on ${path} when latest.yml is bad, for GET and HEAD`, async () => {
+      world.latest = () => new Response("path: ../evil.exe\n");
+      for (const method of ["GET", "HEAD"]) {
+        const res = await run(`https://padmate.download${path}`, { method });
+        assert.equal(res.status, 503, method);
+        assert.match(res.headers.get("content-type"), /^text\/plain/);
+        assert.equal(res.headers.get("cache-control"), "no-store");
+        assert.equal(res.headers.get("vary"), null);
+        assert.equal(res.headers.get("location"), null);
+        if (method === "GET") assert.equal(await res.text(), UNAVAILABLE);
+      }
+    });
 });
 
 // ---- The redirects --------------------------------------------------------
@@ -390,9 +499,9 @@ describe("the redirect", () => {
 
   it("ignores the query string of /latest and /", async () => {
     for (const url of [
-      "https://padmate.download/latest?x=1&lang=zh",
+      "https://padmate.download/latest?x=1&y=2",
       "http://padmate.download/latest?a=b",
-      "https://padmate.download/?lang=zh",
+      "https://padmate.download/?x=1",
     ]) {
       fetchCalls.length = 0;
       cacheStore.clear();
@@ -421,6 +530,8 @@ describe("when the newest installer cannot be found", () => {
   const requests = [
     ["the page on /", "https://padmate.download/", { accept: BROWSER_ACCEPT }],
     ["/ for a non-browser", "https://padmate.download/", { accept: "*/*" }],
+    ["the page on /zh", "https://padmate.download/zh", {}],
+    ["the page on /en", "https://padmate.download/en?x=1", { accept: "*/*" }],
     ["/latest", "https://padmate.download/latest", {}],
   ];
 
@@ -460,10 +571,10 @@ describe("when the newest installer cannot be found", () => {
 
 describe("the star count", () => {
   it("shows what GitHub answers", async () => {
-    const html = await (await page("/?lang=zh")).text();
+    const html = await (await page("/zh")).text();
     assert.ok(githubCard(html).includes('<span class="mono">91</span>'));
     assert.ok(html.includes('title="91 颗星"'));
-    const en = await (await page("/?lang=en")).text();
+    const en = await (await page("/en")).text();
     assert.ok(en.includes('title="91 stars"'));
   });
 
@@ -493,7 +604,7 @@ describe("the star count", () => {
   ])
     it(`hides the count and still serves the page when ${why}`, async () => {
       world.github = github;
-      const res = await page("/?lang=zh");
+      const res = await page("/zh");
       assert.equal(res.status, 200);
       const html = await res.text();
       const card = githubCard(html);
@@ -505,7 +616,7 @@ describe("the star count", () => {
 
   it("caches the count", async () => {
     await page("/");
-    await page("/?lang=zh");
+    await page("/zh");
     assert.equal(callsTo(GITHUB_REPO).length, 1);
   });
 
@@ -514,6 +625,113 @@ describe("the star count", () => {
     await page("/");
     await page("/");
     assert.equal(callsTo(GITHUB_REPO).length, 1);
+  });
+
+  const STARS_KEY = "https://padmate.download/_worker-cache/github-stars";
+  const STARS_LAST_KEY = `${STARS_KEY}-last`;
+  const maxAgeOf = (key) =>
+    new Headers(cacheStore.get(key)?.headers).get("cache-control");
+  const rateLimited = () =>
+    new Response("rate limited", {
+      status: 403,
+      headers: { "x-ratelimit-remaining": "0", "x-ratelimit-reset": "1793000000" },
+    });
+  const shows = (html, n) => githubCard(html).includes(`<span class="mono">${n}</span>`);
+  const hidden = (html) => !githubCard(html).includes('class="mono"');
+
+  it("hides the count when GitHub fails and there never was a good one", async () => {
+    world.github = rateLimited;
+    assert.ok(hidden(await (await page("/zh")).text()));
+    assert.equal(cacheStore.has(STARS_LAST_KEY), false);
+  });
+
+  it("stores a good count twice: an hour as fresh, a week as the last good one", async () => {
+    await page("/zh");
+    assert.equal(maxAgeOf(STARS_KEY), "max-age=3600");
+    assert.equal(maxAgeOf(STARS_LAST_KEY), "max-age=604800");
+    assert.equal(JSON.parse(cacheStore.get(STARS_LAST_KEY).body), 91);
+  });
+
+  it("shows the last good count while GitHub fails, once the fresh one is gone", async () => {
+    assert.ok(shows(await (await page("/zh")).text(), 91));
+    // The fresh entry expires; the last good one is still there.
+    cacheStore.delete(STARS_KEY);
+    world.github = rateLimited;
+    const html = await (await page("/zh")).text();
+    assert.ok(shows(html, 91));
+    assert.ok(html.includes('title="91 颗星"'));
+    assert.equal(callsTo(GITHUB_REPO).length, 2);
+    // It stands in as the fresh count for the short failure time, so GitHub
+    // is left alone; the last good one keeps its own week.
+    assert.equal(maxAgeOf(STARS_KEY), "max-age=600");
+    assert.equal(JSON.parse(cacheStore.get(STARS_KEY).body), 91);
+    assert.equal(maxAgeOf(STARS_LAST_KEY), "max-age=604800");
+    assert.ok(shows(await (await page("/en")).text(), 91));
+    assert.equal(callsTo(GITHUB_REPO).length, 2);
+  });
+
+  it("shows the last good count when the request throws or the answer is bad", async () => {
+    for (const github of [
+      () => {
+        throw new Error("network down");
+      },
+      () => new Response("oops", { status: 500 }),
+      () => Response.json({}),
+    ]) {
+      cacheStore.clear();
+      world.github = () => Response.json({ stargazers_count: 91 });
+      await page("/zh");
+      cacheStore.delete(STARS_KEY);
+      world.github = github;
+      assert.ok(shows(await (await page("/zh")).text(), 91));
+    }
+  });
+
+  it("takes a newer count over the last good one, and stores it", async () => {
+    await page("/zh");
+    cacheStore.delete(STARS_KEY);
+    world.github = () => Response.json({ stargazers_count: 120 });
+    assert.ok(shows(await (await page("/zh")).text(), 120));
+    assert.equal(JSON.parse(cacheStore.get(STARS_LAST_KEY).body), 120);
+    assert.equal(maxAgeOf(STARS_KEY), "max-age=3600");
+  });
+
+  for (const garbage of ["x", "-1", "1.5", '"91"', "null", "{}"])
+    it(`hides the count when the last good one is garbage: ${garbage}`, async () => {
+      cacheStore.set(STARS_LAST_KEY, { body: garbage, headers: [] });
+      world.github = rateLimited;
+      assert.ok(hidden(await (await page("/zh")).text()));
+    });
+
+  it("logs why GitHub gave no count: the status and the rate limit", async () => {
+    world.github = rateLimited;
+    await page("/zh");
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /403/);
+    assert.match(warnings[0], /x-ratelimit-remaining 0/);
+    assert.match(warnings[0], /x-ratelimit-reset 1793000000/);
+  });
+
+  it("logs a request that throws", async () => {
+    world.github = () => {
+      throw new Error("network down");
+    };
+    await page("/zh");
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /network down/);
+  });
+
+  it("logs an answer without a count", async () => {
+    world.github = () => Response.json({ stargazers_count: "91" });
+    await page("/zh");
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /stargazers_count/);
+  });
+
+  it("logs nothing when the count comes, or from the cache", async () => {
+    await page("/zh");
+    await page("/en");
+    assert.deepEqual(warnings, []);
   });
 });
 
@@ -584,6 +802,15 @@ describe("paths that are not the Worker's", () => {
     ["/latest/", "GET"],
     ["/LATEST", "GET"],
     ["/index.html", "GET"],
+    ["/zhx", "GET"],
+    ["/en/", "GET"],
+    ["/zh/", "GET"],
+    ["/ZH", "GET"],
+    ["/En", "GET"],
+    ["/english", "GET"],
+    ["/zh.html", "GET"],
+    ["/en/zh", "GET"],
+    ["/zhx", "POST"],
     ["/latest.yml", "POST"],
   ])
     it(`passes ${method} ${path} on to fetch untouched`, async () => {
@@ -613,7 +840,7 @@ describe("failures of the Cache API", () => {
         },
       },
     };
-    const res = await page("/?lang=zh");
+    const res = await page("/zh");
     assert.equal(res.status, 200);
     const html = await res.text();
     assert.ok(html.includes(`href="/${name}"`));
@@ -635,7 +862,7 @@ describe("failures of the Cache API", () => {
 
   it("are a miss: there is no Cache API at all", async () => {
     delete globalThis.caches;
-    const res = await page("/?lang=en");
+    const res = await page("/en");
     assert.equal(res.status, 200);
     assert.ok((await res.text()).includes(`href="/${name}"`));
     assert.equal((await run("https://padmate.download/latest")).status, 302);

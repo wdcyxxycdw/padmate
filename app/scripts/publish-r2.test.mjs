@@ -409,7 +409,8 @@ describe("verifyPublished", () => {
     expect(urls.filter((u) => u.includes("setup.exe?"))[0]).toMatch(
       /setup\.exe\?verify=/,
     );
-    // The address itself is asked as it is: the Worker is routed on / and /latest only.
+    // The address itself is asked as it is: the Worker is routed on /, /latest,
+    // /zh* and /en* only.
     expect(urls).toContain(SITE);
   });
 

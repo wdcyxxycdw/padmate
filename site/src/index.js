@@ -1,14 +1,20 @@
 // The Cloudflare Worker of https://padmate.download/ (ADR-0018).
 //
-// It is routed on exactly two paths (wrangler.toml):
-//   /        the download page for a browser; for anything that does not ask
-//            for HTML (curl, wget, PowerShell, old scripts) the 302 to the
-//            newest installer that the address has always answered
+// It answers four paths (wrangler.toml routes them here):
+//   /        the download page for a browser, in the visitor's language; for
+//            anything that does not ask for HTML (curl, wget, PowerShell, old
+//            scripts) the 302 to the newest installer that the address has
+//            always answered
+//   /zh /en  the download page in that language, for anyone; the page's
+//            language link goes to the other one
 //   /latest  always the 302 to the newest installer: the permanent direct link
-// /latest.yml, the installers and their .sha256 files are served by R2 itself,
-// never by this Worker; a route on /* would put it in front of the
-// application's updates. A request for any other path that reaches it anyway
-// goes on to R2 untouched.
+// A route matches the whole URL, query string included, and may not contain
+// one, so / and /latest are matched only without a query; /zh and /en are
+// routed with a trailing wildcard so that a link with a query (WeChat adds
+// ?from=…) still gets the page. /latest.yml, the installers and their .sha256
+// files are served by R2 itself, never by this Worker; a route on /* would put
+// it in front of the application's updates. A request for any other path that
+// reaches it anyway (/zhx, /en/…) goes on to R2 untouched.
 //
 // The newest installer is the one /latest.yml names, the file the installed
 // application's update reads too. The redirects are 302 and not cached: a 301
@@ -32,11 +38,20 @@ const GITHUB_REPO = "https://api.github.com/repos/wdcyxxycdw/padmate";
 // R2 does not have, and what they hold is public anyway.
 const LATEST_KEY = "https://padmate.download/_worker-cache/latest-installer";
 const STARS_KEY = "https://padmate.download/_worker-cache/github-stars";
+const STARS_LAST_KEY =
+  "https://padmate.download/_worker-cache/github-stars-last";
 const LATEST_TTL = 60;
 const STARS_TTL = 3600;
-// A failed star count is remembered for a while too, so that a rate-limited
-// GitHub is not asked again on every visit.
+// A failed ask is remembered for a while too, so that a rate-limited GitHub is
+// not asked again on every visit. Unauthenticated requests are limited per IP
+// address, and a Worker shares its addresses with every other Worker.
 const STARS_FAIL_TTL = 600;
+// The last count GitHub gave stands in while it gives none, for up to a week:
+// an older count is still a true one, unlike a guess.
+const STARS_LAST_TTL = 7 * 24 * 3600;
+
+/** The pages that have a path of their own. */
+const PAGES = { "/zh": "zh", "/en": "en" };
 
 const UNAVAILABLE =
   "padmate: the download is not available right now. Please try again later.";
@@ -54,16 +69,13 @@ export function installerFromLatest(text) {
 }
 
 /**
- * The language of the page: ?lang=zh|en, else the visitor's first language in
- * Accept-Language: zh* is Chinese, anything else English.
+ * The language of the page on /: the visitor's first language in
+ * Accept-Language, zh* is Chinese, anything else English.
  *
- * @param {URL} url
  * @param {string | null} acceptLanguage
  * @returns {"zh" | "en"}
  */
-export function pickLanguage(url, acceptLanguage) {
-  const asked = url.searchParams.get("lang");
-  if (asked === "zh" || asked === "en") return asked;
+export function pickLanguage(acceptLanguage) {
   let best = null;
   let bestQ = 0;
   for (const part of (acceptLanguage ?? "").split(",")) {
@@ -91,9 +103,53 @@ function wantsHtml(request) {
 }
 
 /**
- * A cached value of the Cache API, or the one `load` makes, stored for `ttl`
- * seconds without delaying the answer. Every failure of the cache itself is
- * the same as a miss.
+ * The value the Cache API holds under `key`, or undefined. Every failure of
+ * the cache itself is the same as a miss.
+ *
+ * @param {string} key
+ * @returns {Promise<unknown>}
+ */
+async function lookup(key) {
+  try {
+    const hit = await globalThis.caches?.default?.match(key);
+    if (hit) return JSON.parse(await hit.text());
+  } catch {
+    // A miss.
+  }
+  return undefined;
+}
+
+/**
+ * Stores `value` under `key` for `ttl` seconds, without delaying the answer
+ * when the runtime can finish it later. A failure of the cache is ignored.
+ *
+ * @param {string} key
+ * @param {unknown} value
+ * @param {number} ttl
+ * @param {ExecutionContext | undefined} ctx
+ */
+async function store(key, value, ttl, ctx) {
+  const cache = globalThis.caches?.default;
+  if (!cache || ttl <= 0) return;
+  const put = Promise.resolve()
+    .then(() =>
+      cache.put(
+        key,
+        new Response(JSON.stringify(value), {
+          headers: {
+            "content-type": "application/json",
+            "cache-control": `max-age=${ttl}`,
+          },
+        }),
+      ),
+    )
+    .catch(() => {});
+  if (ctx?.waitUntil) ctx.waitUntil(put);
+  else await put;
+}
+
+/**
+ * A cached value, or the one `load` makes, stored for the `ttl` it gives.
  *
  * @template T
  * @param {string} key
@@ -102,29 +158,10 @@ function wantsHtml(request) {
  * @returns {Promise<T>}
  */
 async function cached(key, ctx, load) {
-  const cache = globalThis.caches?.default;
-  try {
-    const hit = await cache?.match(key);
-    if (hit) return JSON.parse(await hit.text());
-  } catch {
-    // A miss.
-  }
+  const hit = await lookup(key);
+  if (hit !== undefined) return /** @type {T} */ (hit);
   const { value, ttl } = await load();
-  if (cache && ttl > 0) {
-    const put = cache
-      .put(
-        key,
-        new Response(JSON.stringify(value), {
-          headers: {
-            "content-type": "application/json",
-            "cache-control": `max-age=${ttl}`,
-          },
-        }),
-      )
-      .catch(() => {});
-    if (ctx?.waitUntil) ctx.waitUntil(put);
-    else await put;
-  }
+  await store(key, value, ttl, ctx);
   return value;
 }
 
@@ -152,30 +189,55 @@ async function newestInstaller(here, ctx) {
 }
 
 /**
- * The repository's star count, or null when GitHub does not give one.
+ * The star count GitHub gives now, or null. A failure is logged, so that
+ * `wrangler tail` shows why the count is old or hidden.
+ *
+ * @returns {Promise<number | null>}
+ */
+async function askGitHub() {
+  try {
+    const res = await fetch(GITHUB_REPO, {
+      headers: {
+        accept: "application/vnd.github+json",
+        "user-agent": "padmate.download",
+      },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) {
+      console.warn(
+        `GitHub star count: HTTP ${res.status}, x-ratelimit-remaining ${res.headers.get("x-ratelimit-remaining")}, x-ratelimit-reset ${res.headers.get("x-ratelimit-reset")}`,
+      );
+      return null;
+    }
+    const n = (await res.json())?.stargazers_count;
+    if (Number.isSafeInteger(n) && n >= 0) return n;
+    console.warn("GitHub star count: no stargazers_count in the answer");
+  } catch (error) {
+    console.warn(`GitHub star count: ${error}`);
+  }
+  return null;
+}
+
+/**
+ * The repository's star count: GitHub's, at most an hour old; while GitHub
+ * gives none, the last count it gave, at most a week old; else null, and the
+ * page hides the count.
  *
  * @param {ExecutionContext | undefined} ctx
  * @returns {Promise<number | null>}
  */
 async function starCount(ctx) {
   return cached(STARS_KEY, ctx, async () => {
-    let stars = null;
-    try {
-      const res = await fetch(GITHUB_REPO, {
-        headers: {
-          accept: "application/vnd.github+json",
-          "user-agent": "padmate.download",
-        },
-        signal: AbortSignal.timeout(3000),
-      });
-      if (res.ok) {
-        const n = (await res.json())?.stargazers_count;
-        if (Number.isSafeInteger(n) && n >= 0) stars = n;
-      }
-    } catch {
-      // Hidden, like a count GitHub does not give.
+    const stars = await askGitHub();
+    if (stars !== null) {
+      await store(STARS_LAST_KEY, stars, STARS_LAST_TTL, ctx);
+      return { value: stars, ttl: STARS_TTL };
     }
-    return { value: stars, ttl: stars === null ? STARS_FAIL_TTL : STARS_TTL };
+    const last = await lookup(STARS_LAST_KEY);
+    return {
+      value: Number.isSafeInteger(last) && last >= 0 ? last : null,
+      ttl: STARS_FAIL_TTL,
+    };
   });
 }
 
@@ -223,7 +285,9 @@ const headOnly = (res) =>
 export async function handle(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
-  if (path !== "/" && path !== "/latest") return fetch(request);
+  const pageLang = Object.hasOwn(PAGES, path) ? PAGES[path] : undefined;
+  if (path !== "/" && path !== "/latest" && pageLang === undefined)
+    return fetch(request);
   if (request.method !== "GET" && request.method !== "HEAD")
     return new Response("Method Not Allowed", {
       status: 405,
@@ -239,9 +303,11 @@ export async function handle(request, env, ctx) {
   here.protocol = "https:";
   here.search = "";
 
-  const page = path === "/" && wantsHtml(request);
-  // / answers by Accept and, as a page, by Accept-Language; /latest by neither.
-  const vary = path === "/" ? (page ? "Accept, Accept-Language" : "Accept") : null;
+  const page = pageLang !== undefined || (path === "/" && wantsHtml(request));
+  // / answers by Accept and, as a page, by Accept-Language; the other paths by
+  // neither.
+  const vary =
+    path === "/" ? (page ? "Accept, Accept-Language" : "Accept") : null;
 
   if (!page) {
     const name = await newestInstaller(here, ctx);
@@ -249,7 +315,7 @@ export async function handle(request, env, ctx) {
     return request.method === "HEAD" ? headOnly(res) : res;
   }
 
-  const lang = pickLanguage(url, request.headers.get("accept-language"));
+  const lang = pageLang ?? pickLanguage(request.headers.get("accept-language"));
   const [name, stars, style] = await Promise.all([
     newestInstaller(here, ctx),
     starCount(ctx),
@@ -267,7 +333,7 @@ export async function handle(request, env, ctx) {
       "content-type": "text/html; charset=utf-8",
       "content-language": lang === "zh" ? "zh-CN" : "en",
       "cache-control": "public, max-age=60",
-      vary,
+      ...(vary ? { vary } : {}),
       "content-security-policy": `default-src 'none'; style-src ${style}; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
       "x-content-type-options": "nosniff",
       "referrer-policy": "strict-origin-when-cross-origin",

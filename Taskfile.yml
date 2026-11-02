@@ -114,7 +114,7 @@ tasks:
       - node tools/qr.mjs {{.CLI_ARGS}}
 
   site:deploy:
-    desc: 'Deploy the download site''s Worker and its routes padmate.download/ and padmate.download/latest to production (ADR-0018). Refuses while the QR codes are placeholders, runs the tests first. Run only when the owner says "发布". Uses the wrangler login of this machine; no credential is read from the repository'
+    desc: 'Deploy the download site''s Worker and its routes padmate.download/, /latest, /zh* and /en* to production (ADR-0018). Refuses while the QR codes are placeholders, runs the tests first. Run only when the owner says "发布". Uses the wrangler login of this machine; no credential is read from the repository'
     dir: site
     cmds:
       - node tools/check-qr.mjs

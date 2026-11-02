@@ -125,8 +125,8 @@ export function renderPage({ lang, installer, version, stars }) {
 <body>
 <div class="site">
 <header class="site-head">
-<a class="site-brand" href="?lang=${lang}"><span class="site-mark">${MARK}</span><span>Padmate</span></a>
-<a class="site-lang" href="?lang=${t.other.lang}" hreflang="${t.other.hreflang}" lang="${t.other.hreflang}">${t.other.label}</a>
+<a class="site-brand" href="/${lang}"><span class="site-mark">${MARK}</span><span>Padmate</span></a>
+<a class="site-lang" href="/${t.other.lang}" hreflang="${t.other.hreflang}" lang="${t.other.hreflang}">${t.other.label}</a>
 </header>
 <main class="site-hero">
 <h1 class="site-slogan">${t.slogan}</h1>

@@ -1282,7 +1282,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 - **GitHub 草稿发布**（`.github/workflows/release.yml`）：推 `v*` 标签或手动运行，核对 `latest.yml` 与安装包一致，再 `gh release create --draft`。带 `-` 的版本是预发布。
 - **发布到下载站**（`task release:r2 VERSION=vX.Y.Z`，可加 `--dry-run`、`--force`）：由维护者运行，是唯一写 Cloudflare R2 桶 `padmate`（`https://padmate.download/`）的地方，仓库里没有凭据。上传前拒绝：预发布标签、`latest.yml` 与安装包不一致、站上已有这个安装包（发布过的安装包不变）、版本不比站上的新。顺序：安装包、`.sha256`，最后才是 `latest.yml`；上传后从 HTTPS 读回核对。
-- **下载页**（`site/`，详见 [site/README.zh-CN.md](../site/README.zh-CN.md)）：Cloudflare Worker `padmate-download-root`，路由恰好是 `padmate.download/` 和 `padmate.download/latest`，绝不是 `/*`，所以 `latest.yml`、安装包和 `.sha256` 由 R2 直接提供，更新不经过它。`/` 给浏览器（`Accept` 含 `text/html`）下载页，中文或英文，GitHub 仓库的星数由 Worker 去取；其他请求得到 302，指向 `latest.yml` 写的安装包，`/latest` 也永远是这个 302。`latest.yml` 经 Cache API 缓存 60 秒，所以新版本一分钟内出现在页面上。页面没有脚本，浏览器不会向其他主机请求任何东西。`task site:deploy` 只在 owner 说“发布”时运行，用发布机上的 wrangler 写线上的 Worker，仓库里没有凭据。
+- **下载页**（`site/`，详见 [site/README.zh-CN.md](../site/README.zh-CN.md)）：Cloudflare Worker `padmate-download-root`，路由恰好是 `padmate.download/`、`padmate.download/latest`、`padmate.download/zh*` 和 `padmate.download/en*`，绝不是 `/*`，所以 `latest.yml`、安装包和 `.sha256` 由 R2 直接提供，更新不经过它。`/` 给浏览器（`Accept` 含 `text/html`）下载页，语言按 `Accept-Language`；`/zh` 和 `/en` 给任何人对应语言的页面（路由匹配查询字符串又不能写查询，所以页面有自己的路径，带查询的 `/` 和 `/latest` 到不了 Worker）。GitHub 仓库的星数由 Worker 去取；GitHub 没给数时，页面显示最近一周内上一次的好数。其他请求得到 302，指向 `latest.yml` 写的安装包，`/latest` 也永远是这个 302。`latest.yml` 经 Cache API 缓存 60 秒，所以新版本一分钟内出现在页面上。页面没有脚本，浏览器不会向其他主机请求任何东西。`task site:deploy` 只在 owner 说“发布”时运行，用发布机上的 wrangler 写线上的 Worker，仓库里没有凭据。
 
 ### 15.6 Taskfile 任务
 

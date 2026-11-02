@@ -8,21 +8,24 @@ The Cloudflare Worker `padmate-download-root` of <https://padmate.download/>. Th
 
 | Request | Answer |
 |---|---|
-| `/` from a browser (`Accept` includes `text/html`) | The download page, Chinese or English. The button links straight to the versioned installer. |
+| `/` from a browser (`Accept` includes `text/html`) | The download page, in the language of `Accept-Language`. The button links straight to the versioned installer. |
 | `/` from anything else (curl, wget, PowerShell, scripts, the read-back of `task release:r2`) | `302` to the newest installer, `Cache-Control: no-cache`. |
+| `/zh`, `/en` | The download page in Chinese or English, for any `Accept`. The page's language link goes to the other one. |
 | `/latest` | Always the same `302`: the permanent direct link. |
-| Either, when `latest.yml` is unusable | `503` in plain text. |
+| Any of these, when `latest.yml` is unusable | `503` in plain text. |
 | `HEAD` | The same, without the body. Other methods get `405`. |
 
-Any other path is not the Worker's. `/latest.yml`, the installers and the `.sha256` files are served by R2 untouched, and the updater never passes through the Worker.
+Any other path is not the Worker's. `/latest.yml`, the installers and the `.sha256` files are served by R2 untouched, and the updater never passes through the Worker. That includes `/zhx`, `/en/` and every other path that merely starts like `/zh` or `/en`: the routes below let them reach the Worker, and the handler passes them on to R2 unchanged.
 
-**Why the `Accept` rule.** Before the page existed, `/` was the one address that opened the newest installer. Links in old posts, scripts and `irm padmate.download/ -OutFile` still depend on it. A browser always lists `text/html` in `Accept`; those tools send `*/*` or nothing. So only a browser gets the page. The answers to `/` carry `Vary: Accept`, and the page also `Accept-Language`.
+**Why the `Accept` rule.** Before the page existed, `/` was the one address that opened the newest installer. Links in old posts, scripts and `irm padmate.download/ -OutFile` still depend on it. A browser always lists `text/html` in `Accept`; those tools send `*/*` or nothing. So only a browser gets the page. The answers to `/` carry `Vary: Accept`, and the page also `Accept-Language`. `/zh`, `/en` and `/latest` do not look at `Accept` and send no `Vary`.
+
+**Query strings.** A Cloudflare route matches the whole URL, query string included, and a pattern may not contain a query. So `/` and `/latest` reach the Worker only without one; `padmate.download/?x=1` goes to R2, which answers 404. `/zh` and `/en` are routed as `zh*` and `en*`, so a shared link such as `/zh?from=singlemessage` (WeChat adds one) still gets the page. This is also why the page has its own paths and no `?lang=`. The remaining gap, `/` and `/latest` with a query, cannot be closed without a route on `/*`, which is forbidden (see the last section).
 
 **The newest installer** is the file named in the `path:` line of `/latest.yml`. The line must be `padmate-vX.Y.Z[-pre]-windows-amd64-setup.exe`; anything else counts as no answer. `latest.yml` is read through the Cache API for 60 seconds, so a release reaches the page within a minute. The redirects are `302`, never `301`, so that browsers do not pin an old installer. They always go to `https://padmate.download/...`, also for a visitor who came over http.
 
-**Language.** `?lang=zh` or `?lang=en` wins. Otherwise the first language of `Accept-Language` (by weight) decides: `zh*` is Chinese, anything else English.
+**Language.** `/zh` is Chinese and `/en` is English, whatever the browser sends. On `/` the first language of `Accept-Language` (by weight) decides: `zh*` is Chinese, anything else English. The page's brand link and its language link point to `/zh` and `/en`, so a visitor who switches stays on the language they chose. There is no `?lang=`.
 
-**The GitHub card** shows the star count of the repository. The Worker fetches it from the GitHub API and caches it for an hour (a failure for ten minutes); when GitHub gives none, the count is hidden. Only the Chinese page has the 打赏 card: a `<details>` that opens to the WeChat and Alipay QR codes.
+**The GitHub card** shows the star count of the repository. The Worker fetches it from the GitHub API and caches it for an hour. A count that came is also kept for a week as the last good one. When GitHub gives none (it limits unauthenticated requests per IP address, and Workers share addresses), the page shows the last good count and asks GitHub again after ten minutes; only when there has been no good count in the last week is the count hidden. Every failure is logged with `console.warn`: the HTTP status, `x-ratelimit-remaining` and `x-ratelimit-reset`, or the error. `npx wrangler@4.151.1 tail padmate-download-root` in `site/` shows why a count is old or missing. Only the Chinese page has the 打赏 card: a `<details>` that opens to the WeChat and Alipay QR codes.
 
 **The page is self-contained.** The markup, the stylesheet, the icon and the QR codes are inline, so the browser requests nothing from another host. The Content-Security-Policy allows no script, the one `<style>` only by its hash (computed from `src/style.js` at run time; nothing to update by hand) and images only as `data:`. The page also sends `nosniff`, `Referrer-Policy` and `Cache-Control: public, max-age=60`.
 
@@ -71,7 +74,7 @@ The texts of both languages are in `COPY` in `src/page.js`: the title, descripti
 
 The markup and the classes come from the page design (a Claude Design project, final version 30). To change the look, change `src/style.js` and the markup in `src/page.js` together, so that the classes still match.
 
-After a change: `task site:test`, then `task site:dev` to look at both languages (`/?lang=zh`, `/?lang=en`).
+After a change: `task site:test`, then `task site:dev` to look at both languages (`/zh`, `/en`).
 
 ## Deploying and rolling back
 
@@ -82,8 +85,15 @@ task site:dry-run      # look first
 task site:deploy
 ```
 
-To roll back, run `npx wrangler@4.151.1 rollback` in `site/`, which makes the previous version of the Worker live again. The Worker from before the page is also in git history: `git show 2dbf244c:app/scripts/download-worker/index.js`. The `/latest` route can stay either way: that old Worker answers every path it is routed on with the same 302.
+To roll back, run `npx wrangler@4.151.1 rollback` in `site/`, which makes the previous version of the Worker live again. The Worker from before the page is also in git history: `git show 2dbf244c:app/scripts/download-worker/index.js`. The `/latest` route can stay either way: that old Worker answers every path it is routed on with the same 302. The `zh*` and `en*` routes can stay too, but then `/zh` and `/en` also answer with that 302 until they are removed.
 
 ## The routes are never `/*`
 
-`wrangler.toml` routes exactly `padmate.download/` and `padmate.download/latest`. A route on `/*` would put the Worker in front of `latest.yml` and the installers, and a fault in it would stop every installed padmate from updating. Do not add one, and do not add a route for a file R2 serves.
+`wrangler.toml` has exactly four routes:
+
+- `padmate.download/`
+- `padmate.download/latest`
+- `padmate.download/zh*`
+- `padmate.download/en*`
+
+A route on `/*` would put the Worker in front of `latest.yml` and the installers, and a fault in it would stop every installed padmate from updating. Do not add one, and do not add a route for a file R2 serves. Because of `zh*` and `en*`, no R2 object name may start with `zh` or `en`: such a request would pass through the Worker, which hands it on to R2, but it would no longer be R2 alone.

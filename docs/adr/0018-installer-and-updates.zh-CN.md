@@ -47,7 +47,7 @@
 低级键盘钩子只在 padmatectl 的“录入快捷键”时开着，最长 30 秒，只看不吞。离线 PE 检查（`task pe:check`）要求导入表和 API 列表等于提交的清单，新增 Windows API 评审时就能看到；注入类 API 永远不许出现。不自动扫描、不上传，因为云端可能自动上传样本。
 
 ### 八、下载站与自动更新
-- `https://padmate.download/` 是 Cloudflare R2 桶的自定义域名，放安装包、`.sha256` 和 `latest.yml`，**只放正式版**。前面只有一个 Worker，路由恰好是 `/` 和 `/latest`。浏览器（`Accept` 含 `text/html`）打开 `/` 得到一个下载页，语言由 `?lang=` 或 `Accept-Language` 决定，按钮直接指向带版本号的安装包。不要求 HTML 的请求（curl、PowerShell、脚本、旧链接、`task release:r2` 的读回）仍得到这个地址一直以来的回答：302 到最新安装包。`/latest` 永远是这个 302，是长期有效的直链。两者都从 `latest.yml` 取最新安装包。页面自成一体：浏览器不向其他主机发请求，GitHub 卡片的星数由 Worker 去取。**路由绝不能是 `/*`：**`latest.yml`、安装包和 `.sha256` 由 R2 原样交给客户端，更新不经过 Worker。
+- `https://padmate.download/` 是 Cloudflare R2 桶的自定义域名，放安装包、`.sha256` 和 `latest.yml`，**只放正式版**。前面只有一个 Worker，路由恰好是 `/`、`/zh*`、`/en*` 和 `/latest`。浏览器（`Accept` 含 `text/html`）打开 `/` 得到一个下载页，语言由 `Accept-Language` 决定；`/zh` 和 `/en` 给任何人对应语言的页面。页面的按钮直接指向带版本号的安装包。不要求 HTML 的请求（curl、PowerShell、脚本、旧链接、`task release:r2` 的读回）仍得到这个地址一直以来的回答：302 到最新安装包。`/latest` 永远是这个 302，是长期有效的直链。两者都从 `latest.yml` 取最新安装包。页面自成一体：浏览器不向其他主机发请求，GitHub 卡片的星数由 Worker 去取。**路由绝不能是 `/*`：**`latest.yml`、安装包和 `.sha256` 由 R2 原样交给客户端，更新不经过 Worker。
 - 更新用 electron-updater，网址写在代码里，`channel` 必须写，否则 rc 构建会读 `rc.yml`。
 - **只在用户同意时下载和安装**：不自动下载，不在退出时自动安装（会在画画时悄悄停掉映射），不做差量更新。检查每 24 小时一次，设置存在界面自己的目录，不进 config.json。
 - 失败时给“手动下载”链接，因为浏览器能续传而 electron-updater 的下载不能（安装包约 135 MB）。

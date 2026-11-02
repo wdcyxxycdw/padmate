@@ -8,21 +8,24 @@
 
 | 请求 | 回答 |
 |---|---|
-| 浏览器（`Accept` 含 `text/html`）访问 `/` | 下载页，中文或英文。按钮直接指向带版本号的安装包。 |
+| 浏览器（`Accept` 含 `text/html`）访问 `/` | 下载页，语言按 `Accept-Language`。按钮直接指向带版本号的安装包。 |
 | 其他请求访问 `/`（curl、wget、PowerShell、脚本、`task release:r2` 的读回） | `302` 到最新安装包，`Cache-Control: no-cache`。 |
+| `/zh`、`/en` | 中文或英文的下载页，不管 `Accept` 是什么。页面上的语言链接指向另一个。 |
 | `/latest` | 永远是同一个 `302`：长期有效的直链。 |
-| 以上两者，当 `latest.yml` 不可用 | `503`，纯文本。 |
+| 以上任何一个，当 `latest.yml` 不可用 | `503`，纯文本。 |
 | `HEAD` | 同样的回答，没有正文。其他方法得到 `405`。 |
 
-其他路径都不归 Worker。`/latest.yml`、安装包和 `.sha256` 由 R2 原样提供，更新不经过 Worker。
+其他路径都不归 Worker。`/latest.yml`、安装包和 `.sha256` 由 R2 原样提供，更新不经过 Worker。`/zhx`、`/en/` 以及其他只是以 `/zh` 或 `/en` 开头的路径也一样：下面的路由会让它们到达 Worker，处理函数再原样交给 R2。
 
-**为什么看 `Accept`。** 页面出现之前，`/` 是唯一能打开最新安装包的地址。旧帖子里的链接、脚本和 `irm padmate.download/ -OutFile` 仍依赖它。浏览器的 `Accept` 一定列出 `text/html`，这些工具发的是 `*/*` 或什么都不发。所以只有浏览器得到页面。`/` 的回答带 `Vary: Accept`，页面还带 `Accept-Language`。
+**为什么看 `Accept`。** 页面出现之前，`/` 是唯一能打开最新安装包的地址。旧帖子里的链接、脚本和 `irm padmate.download/ -OutFile` 仍依赖它。浏览器的 `Accept` 一定列出 `text/html`，这些工具发的是 `*/*` 或什么都不发。所以只有浏览器得到页面。`/` 的回答带 `Vary: Accept`，页面还带 `Accept-Language`。`/zh`、`/en` 和 `/latest` 不看 `Accept`，也不发 `Vary`。
+
+**查询字符串。** Cloudflare 的路由匹配整个 URL，包括查询字符串，而且模式里不能写查询。所以 `/` 和 `/latest` 只有不带查询时才到达 Worker；`padmate.download/?x=1` 去了 R2，R2 回答 404。`/zh` 和 `/en` 的路由写成 `zh*` 和 `en*`，所以像 `/zh?from=singlemessage` 这样被分享出去的链接（微信会加一段）仍然得到页面。页面有自己的路径、不用 `?lang=`，也是这个原因。剩下的缺口，即带查询的 `/` 和 `/latest`，不加 `/*` 路由就补不上，而 `/*` 是禁止的（见最后一节）。
 
 **最新安装包**是 `/latest.yml` 里 `path:` 一行写的文件。这一行必须是 `padmate-vX.Y.Z[-pre]-windows-amd64-setup.exe`，否则按没有答案处理。`latest.yml` 经 Cache API 读取并缓存 60 秒，所以新版本一分钟内到达页面。跳转是 `302`，不是 `301`，免得浏览器记住旧安装包。跳转永远指向 `https://padmate.download/...`，用 http 来的访客也一样。
 
-**语言。** `?lang=zh` 或 `?lang=en` 优先。否则按 `Accept-Language` 里权重最高的语言：`zh*` 是中文，其余英文。
+**语言。** `/zh` 是中文，`/en` 是英文，浏览器发什么都一样。`/` 按 `Accept-Language` 里权重最高的语言：`zh*` 是中文，其余英文。页面的品牌链接和语言链接指向 `/zh` 和 `/en`，所以访客切换之后停留在自己选的语言上。没有 `?lang=`。
 
-**GitHub 卡片**显示仓库的星数。Worker 从 GitHub API 取，缓存一小时（失败缓存十分钟）；GitHub 没给数时隐藏。只有中文页有打赏卡片：一个 `<details>`，展开后是微信和支付宝的二维码。
+**GitHub 卡片**显示仓库的星数。Worker 从 GitHub API 取，缓存一小时。取到的数还会作为“上一次的好数”再存一周。GitHub 没给数时（它按 IP 地址限制未认证的请求，而 Worker 与别的 Worker 共用地址），页面显示上一次的好数，十分钟后再问 GitHub；只有最近一周一次好数都没有，才隐藏。每次失败都用 `console.warn` 记下：HTTP 状态、`x-ratelimit-remaining` 和 `x-ratelimit-reset`，或者错误本身。在 `site/` 下运行 `npx wrangler@4.151.1 tail padmate-download-root` 就能看到数为什么旧了或没有。只有中文页有打赏卡片：一个 `<details>`，展开后是微信和支付宝的二维码。
 
 **页面自成一体。** 标记、样式、图标和二维码都内联，浏览器不向其他主机请求任何东西。Content-Security-Policy 不允许脚本，唯一的 `<style>` 只按哈希放行（哈希由 `src/style.js` 在运行时算出，不用手动更新），图片只允许 `data:`。页面还发 `nosniff`、`Referrer-Policy` 和 `Cache-Control: public, max-age=60`。
 
@@ -71,7 +74,7 @@
 
 标记和类名来自页面设计（Claude Design 项目，最终版 30）。要改外观，同时改 `src/style.js` 和 `src/page.js` 里的标记，让类名仍然对得上。
 
-改完：`task site:test`，再用 `task site:dev` 看两种语言（`/?lang=zh`、`/?lang=en`）。
+改完：`task site:test`，再用 `task site:dev` 看两种语言（`/zh`、`/en`）。
 
 ## 部署与回滚
 
@@ -82,8 +85,15 @@ task site:dry-run      # 先看
 task site:deploy
 ```
 
-回滚：在 `site/` 下运行 `npx wrangler@4.151.1 rollback`，让 Worker 的上一个版本重新上线。有页面之前的 Worker 也在 git 历史里：`git show 2dbf244c:app/scripts/download-worker/index.js`。两种情况下 `/latest` 路由都可以留着：旧 Worker 对路由到它的每个路径都回答同一个 302。
+回滚：在 `site/` 下运行 `npx wrangler@4.151.1 rollback`，让 Worker 的上一个版本重新上线。有页面之前的 Worker 也在 git 历史里：`git show 2dbf244c:app/scripts/download-worker/index.js`。两种情况下 `/latest` 路由都可以留着：旧 Worker 对路由到它的每个路径都回答同一个 302。`zh*` 和 `en*` 路由也可以留着，但在它们被删掉之前，`/zh` 和 `/en` 也会得到这个 302。
 
 ## 路由绝不能是 `/*`
 
-`wrangler.toml` 的路由恰好是 `padmate.download/` 和 `padmate.download/latest`。`/*` 会把 Worker 放到 `latest.yml` 和安装包前面，它一出错，所有已安装的 padmate 都更新不了。不要加这样的路由，也不要为 R2 提供的文件加路由。
+`wrangler.toml` 恰好有四条路由：
+
+- `padmate.download/`
+- `padmate.download/latest`
+- `padmate.download/zh*`
+- `padmate.download/en*`
+
+`/*` 会把 Worker 放到 `latest.yml` 和安装包前面，它一出错，所有已安装的 padmate 都更新不了。不要加这样的路由，也不要为 R2 提供的文件加路由。因为有 `zh*` 和 `en*`，R2 里的对象名不能以 `zh` 或 `en` 开头：这样的请求会经过 Worker，Worker 再交给 R2，但已经不是只有 R2 在回答了。
