@@ -12,19 +12,18 @@ export type PadFamily =
   | "standard"
   | "joyconLeft"
   | "joyconRight"
-  | "joyconLeftVertical"
-  | "joyconRightVertical"
   | "joyconPair"
   | "unknown";
 
-/** A button that can be a controller's function key. */
+/** A button that can be a controller's function key. lt and rt are the
+ * virtual buttons of the triggers (ZL and ZR of a single Joy-Con). */
 export type PadFunctionKeyName =
   | "start"
   | "back"
-  | "paddle1"
-  | "paddle2"
-  | "paddle3"
-  | "paddle4";
+  | "leftshoulder"
+  | "rightshoulder"
+  | "lt"
+  | "rt";
 
 export type PadFunctionKeyOption = {
   control: PadFunctionKeyName;

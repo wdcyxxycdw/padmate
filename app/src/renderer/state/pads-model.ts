@@ -124,7 +124,7 @@ export function effectiveFunctionKey(
   if (!device) return defaultFunctionKey;
   return (
     padOf(pads, device)?.functionKey.effective ??
-    defaultPadFunctionKey(device.info.type, device.info.buttonMask)
+    defaultPadFunctionKey(device.info.type)
   );
 }
 
@@ -156,27 +156,10 @@ export function typeName(type: string, language: Language): string {
 }
 
 /**
- * The kind of a controller in words. A single Joy-Con also says how it is
- * held, which decides its function keys.
+ * The kind of a controller in words. A single Joy-Con is always held upright,
+ * so its kind names the side only.
  */
 export function padKind(pad: PadInfo, language: Language): string {
-  const grip =
-    pad.family === "joyconLeft" || pad.family === "joyconRight"
-      ? tx(language, "横握", "sideways")
-      : pad.family === "joyconLeftVertical" ||
-          pad.family === "joyconRightVertical"
-        ? tx(language, "竖握", "upright")
-        : "";
-  const left = pad.family.startsWith("joyconLeft");
-  const right = pad.family.startsWith("joyconRight");
-  if (grip && (left || right)) {
-    const side = left ? tx(language, "左", "L") : tx(language, "右", "R");
-    return tx(
-      language,
-      `Joy-Con（${side}，${grip}）`,
-      `Joy-Con (${side}, ${grip})`,
-    );
-  }
   if (pad.family === "joyconPair") return typeName("joyconpair", language);
   return typeName(pad.type, language);
 }

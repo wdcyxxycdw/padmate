@@ -245,11 +245,6 @@ export function padIcon(
   const label = own(labels, control) ?? "";
   const position = own(facePositions, control);
   if (position) {
-    // A single Joy-Con held sideways (its shoulders are SL and SR): SDL names
-    // its buttons B/A/Y/X, which are not the letters printed where they are
-    // now (a left Joy-Con has arrows), so it is drawn by position.
-    if (family === "nintendo" && labels.leftshoulder === "SL")
-      return kenney(`switch_buttons_${position}`);
     const xbox = own(xboxFaces, label);
     if (xbox && family === "nintendo")
       return kenney(`switch_button_${xbox[0]}`);

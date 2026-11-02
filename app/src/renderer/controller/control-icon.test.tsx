@@ -69,12 +69,12 @@ describe("control icons of the key preview", () => {
       side: "L",
       direction: "inner",
     });
-    // Capture: a Nintendo pad's, or a left Joy-Con's held sideways.
+    // Capture: a Nintendo pad's, or a left Joy-Con's.
     expect(icon("misc1", "switchpro")).toEqual({
       kind: "glyph",
       glyph: "capture",
     });
-    expect(icon("guide", "joyconleft", 0xf)).toEqual({
+    expect(icon("misc1", "joyconleft")).toEqual({
       kind: "glyph",
       glyph: "capture",
     });

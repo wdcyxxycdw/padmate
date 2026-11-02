@@ -14,9 +14,9 @@ import type {
 } from "../../shared/pads";
 import {
   controllerLabels,
-  isSidewaysJoyCon,
   padFunctionKeys,
 } from "../controller/controller-model";
+import { functionKeyControl } from "../editor/editor-model";
 import { sdlPads } from "./sdl-pads";
 
 const allOn: PadSwitches = {
@@ -65,23 +65,23 @@ const families: Record<
     family: "joyconRight",
     type: "joyconright",
     name: "Nintendo Switch Joy-Con (R)",
-    mask: sdlPads.joyConRightSideways.buttonMask,
+    mask: sdlPads.joyConRightUpright.buttonMask,
     options: [
-      { control: "paddle3", label: "ZR" },
-      { control: "paddle1", label: "R" },
+      { control: "rt", label: "ZR" },
+      { control: "rightshoulder", label: "R" },
     ],
-    panic: { buttons: ["leftshoulder", "rightshoulder"], holdMs: 2000 },
+    panic: { buttons: ["paddle3", "paddle1"], holdMs: 2000 },
   },
   joyConLeft: {
     family: "joyconLeft",
     type: "joyconleft",
     name: "Nintendo Switch Joy-Con (L)",
-    mask: sdlPads.joyConLeftSideways.buttonMask,
+    mask: sdlPads.joyConLeftUpright.buttonMask,
     options: [
-      { control: "paddle4", label: "ZL" },
-      { control: "paddle2", label: "L" },
+      { control: "lt", label: "ZL" },
+      { control: "leftshoulder", label: "L" },
     ],
-    panic: { buttons: ["leftshoulder", "rightshoulder"], holdMs: 2000 },
+    panic: { buttons: ["paddle2", "paddle4"], holdMs: 2000 },
   },
 };
 
@@ -162,30 +162,23 @@ export function padsOfDevices(
       .filter((entry) => entry.info.gamepad)
       .map((entry): PadInfo => {
         const { type, buttonMask = 0, buttonLabels } = entry.info;
-        const sideways = isSidewaysJoyCon(type, buttonMask);
         const family: PadFamily =
           type === "joyconpair"
             ? "joyconPair"
             : type === "joyconleft"
-              ? sideways
-                ? "joyconLeft"
-                : "joyconLeftVertical"
+              ? "joyconLeft"
               : type === "joyconright"
-                ? sideways
-                  ? "joyconRight"
-                  : "joyconRightVertical"
+                ? "joyconRight"
                 : "standard";
         const labels = controllerLabels(type, buttonLabels, buttonMask);
-        const keys = padFunctionKeys(type, buttonMask);
+        const keys = padFunctionKeys(type);
         const panic: PadCombo = {
           buttons:
-            family === "joyconLeft" || family === "joyconRight"
-              ? ["leftshoulder", "rightshoulder"]
-              : family === "joyconLeftVertical"
-                ? ["paddle2", "paddle4"]
-                : family === "joyconRightVertical"
-                  ? ["paddle3", "paddle1"]
-                  : ["back", "start"],
+            family === "joyconLeft"
+              ? ["paddle2", "paddle4"]
+              : family === "joyconRight"
+                ? ["paddle3", "paddle1"]
+                : ["back", "start"],
           holdMs: 2000,
         };
         return {
@@ -202,7 +195,7 @@ export function padsOfDevices(
             default: keys[0],
             options: keys.map((control) => ({
               control,
-              label: labels[control] ?? control,
+              label: labels[functionKeyControl(control)] ?? control,
             })),
             effective: keys[0],
             source: "default",

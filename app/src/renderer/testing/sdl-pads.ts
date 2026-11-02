@@ -82,42 +82,7 @@ export const sdlPads = {
     [...standard, "misc1", "paddle1", "paddle2", "paddle3", "paddle4"],
     allAxes,
   ),
-  // A single Joy-Con held sideways ("mini gamepad mode", the default).
-  joyConLeftSideways: pad(
-    "joyconleft",
-    [
-      "south",
-      "east",
-      "west",
-      "north",
-      "guide",
-      "start",
-      "leftstick",
-      "leftshoulder",
-      "rightshoulder",
-      "paddle2",
-      "paddle4",
-    ],
-    ["leftx", "lefty"],
-  ),
-  joyConRightSideways: pad(
-    "joyconright",
-    [
-      "south",
-      "east",
-      "west",
-      "north",
-      "guide",
-      "start",
-      "leftstick",
-      "leftshoulder",
-      "rightshoulder",
-      "paddle1",
-      "paddle3",
-    ],
-    ["leftx", "lefty"],
-  ),
-  // Held upright (SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1).
+  // A single Joy-Con is always held upright (SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS=1).
   joyConLeftUpright: pad(
     "joyconleft",
     [
@@ -178,8 +143,6 @@ const joyCon2 = (
 
 /** The Joy-Con 2s, by the same names as the Switch OLED Joy-Cons. */
 export const joyCon2Pads = {
-  joyConLeftSideways: joyCon2(sdlPads.joyConLeftSideways, false),
-  joyConRightSideways: joyCon2(sdlPads.joyConRightSideways, true),
   joyConLeftUpright: joyCon2(sdlPads.joyConLeftUpright, false),
   joyConRightUpright: joyCon2(sdlPads.joyConRightUpright, true),
   joyConPair: joyCon2(sdlPads.joyConPair, true),

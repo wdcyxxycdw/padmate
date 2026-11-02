@@ -30,19 +30,17 @@ const FAMILIES: readonly string[] = [
   "standard",
   "joyconLeft",
   "joyconRight",
-  "joyconLeftVertical",
-  "joyconRightVertical",
   "joyconPair",
   "unknown",
 ];
-/** The buttons that can be a function key (never guide). */
+/** The buttons that can be a function key (never guide); lt and rt are the triggers. */
 export const PAD_FUNCTION_KEYS: readonly PadFunctionKeyName[] = [
   "start",
   "back",
-  "paddle1",
-  "paddle2",
-  "paddle3",
-  "paddle4",
+  "leftshoulder",
+  "rightshoulder",
+  "lt",
+  "rt",
 ];
 const SWITCHES = ["rumble", "led", "pause", "lowBattery"] as const;
 
@@ -89,7 +87,6 @@ function functionKey(value: unknown): PadFunctionKey | null {
     !isPadFunctionKey(value.default) ||
     !isPadFunctionKey(value.effective) ||
     !isSource(value.source) ||
-    (value.stored !== undefined && !isPadFunctionKey(value.stored)) ||
     !Array.isArray(options) ||
     options.length === 0 ||
     options.length > MAX_OPTIONS
@@ -108,7 +105,9 @@ function functionKey(value: unknown): PadFunctionKey | null {
   return {
     default: value.default,
     options: list,
-    ...(value.stored === undefined ? {} : { stored: value.stored }),
+    // A stored value the app no longer knows (a retired paddle) is left out:
+    // the daemon falls back to the default for it, so the app does too.
+    ...(isPadFunctionKey(value.stored) ? { stored: value.stored } : {}),
     effective: value.effective,
     source: value.source,
   };

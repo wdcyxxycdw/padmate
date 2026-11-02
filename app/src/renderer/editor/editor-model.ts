@@ -110,16 +110,17 @@ export function withoutMinRate(binding: ProfileBinding): ProfileBinding {
  * function set (profile.functionSet), and a control the set leaves out does
  * what it does otherwise. Which buttons a controller can have for it depends
  * on its family: Menu or View on a pad with the standard layout, + or − on a
- * pair of Joy-Cons, ZR or R on a right Joy-Con held sideways (paddle3,
- * paddle1), ZL or L on a left one (paddle4, paddle2).
+ * pair of Joy-Cons, ZR or R on a single right Joy-Con (a single Joy-Con is
+ * always held upright), ZL or L on a left one. lt and rt are the virtual
+ * buttons of the triggers (the control names of ZL and ZR).
  */
 export const functionKeys = [
   "start",
   "back",
-  "paddle1",
-  "paddle2",
-  "paddle3",
-  "paddle4",
+  "leftshoulder",
+  "rightshoulder",
+  "lt",
+  "rt",
 ] as const;
 export type FunctionKey = (typeof functionKeys)[number];
 /** The function key of a controller with the standard layout: Menu. */
@@ -128,8 +129,9 @@ export const defaultFunctionKey: FunctionKey = "start";
 export type KeyView = "normal" | "function";
 
 /**
- * value when it names a function key, else the default: the Xbox button,
- * which an older config.json may choose, is Menu.
+ * value when it names a function key, else the default: the Xbox button or a
+ * paddle, which an older config.json may choose, is Menu (the controller's
+ * own default replaces it where the controller is known).
  */
 export function asFunctionKey(value: unknown): FunctionKey {
   return (functionKeys as readonly unknown[]).includes(value)
@@ -137,12 +139,25 @@ export function asFunctionKey(value: unknown): FunctionKey {
     : defaultFunctionKey;
 }
 
+/**
+ * The control a function key sits on: the key itself, except lt and rt,
+ * which are the virtual buttons of the triggers (lefttrigger, righttrigger).
+ */
+export function functionKeyControl(functionKey: FunctionKey): string {
+  return functionKey === "lt"
+    ? "lefttrigger"
+    : functionKey === "rt"
+      ? "righttrigger"
+      : functionKey;
+}
+
 /** Whether a control (or its alias) is the function key, which only switches sets. */
 export function isFunctionKey(
   control: string,
   functionKey: FunctionKey,
 ): boolean {
-  return canonicalControl(control) === functionKey;
+  const key = canonicalControl(control);
+  return key === functionKey || key === functionKeyControl(functionKey);
 }
 
 /**
@@ -161,7 +176,7 @@ export function isIgnoredControl(
   functionKey: FunctionKey,
 ): boolean {
   const key = canonicalControl(control);
-  return key === functionKey || key === unmappedControl;
+  return isFunctionKey(control, functionKey) || key === unmappedControl;
 }
 
 /**

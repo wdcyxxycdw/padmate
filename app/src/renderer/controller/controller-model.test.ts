@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { functionKeyControl } from "../editor/editor-model";
 import { sdlPads } from "../testing/sdl-pads";
 import {
   axisPosition,
@@ -8,7 +9,6 @@ import {
   faceLabels,
   familyName,
   functionKeyLabel,
-  isSidewaysJoyCon,
   padFunctionKeys,
   padHasControl,
   padHasFunctionKey,
@@ -87,12 +87,18 @@ describe("controller presentation", () => {
     });
   });
 
-  it("uses reported single Joy-Con face labels and keeps missing labels neutral", () => {
+  it("labels a single right Joy-Con like other Nintendo pads, a left one neutrally", () => {
     expect(faceLabels("joyconleft")).toEqual({
       south: "S",
       east: "E",
       west: "W",
       north: "N",
+    });
+    expect(faceLabels("joyconright")).toEqual({
+      south: "B",
+      east: "A",
+      west: "Y",
+      north: "X",
     });
     expect(
       faceLabels("joyconright", {
@@ -102,6 +108,39 @@ describe("controller presentation", () => {
         north: "Y",
       }),
     ).toEqual({ south: "A", east: "X", west: "B", north: "Y" });
+  });
+
+  it("names the controls of a single Joy-Con held upright", () => {
+    const left = controllerLabels("joyconleft");
+    expect(left).toMatchObject({
+      leftshoulder: "L",
+      lefttrigger: "ZL",
+      back: "−",
+      misc1: "Capture",
+      paddle2: "SL",
+      paddle4: "SR",
+    });
+    const right = controllerLabels("joyconright");
+    expect(right).toMatchObject({
+      south: "B",
+      east: "A",
+      west: "Y",
+      north: "X",
+      rightshoulder: "R",
+      righttrigger: "ZR",
+      start: "+",
+      guide: "Home",
+      paddle1: "SR",
+      paddle3: "SL",
+    });
+    // The buttons SDL maps no longer decide the names.
+    expect(
+      controllerLabels(
+        "joyconright",
+        {},
+        sdlPads.joyConRightUpright.buttonMask,
+      ),
+    ).toEqual(right);
   });
 
   it("normalizes the asymmetric stick range and clamps malformed positions", () => {
@@ -203,59 +242,41 @@ describe("the function key of a controller (ADR-0012)", () => {
   it("is Menu or View on a controller with the standard layout", () => {
     const { xboxSeries, ps5 } = sdlPads;
     expect(padFunctionKeys("xboxone")).toEqual(["start", "back"]);
-    expect(padFunctionKeys(ps5.type, ps5.buttonMask)).toEqual([
-      "start",
-      "back",
-    ]);
-    expect(defaultPadFunctionKey(xboxSeries.type, xboxSeries.buttonMask)).toBe(
-      "start",
-    );
+    expect(padFunctionKeys(ps5.type)).toEqual(["start", "back"]);
+    expect(defaultPadFunctionKey(xboxSeries.type)).toBe("start");
     expect(padHasFunctionKey("back", "xboxone")).toBe(true);
-    expect(padHasFunctionKey("paddle3", "xboxone")).toBe(false);
+    expect(padHasFunctionKey("lt", "xboxone")).toBe(false);
   });
 
   it("is − or + on a pair of Joy-Cons, − the default", () => {
-    const { type, buttonMask } = sdlPads.joyConPair;
-    expect(padFunctionKeys(type, buttonMask)).toEqual(["back", "start"]);
-    expect(defaultPadFunctionKey(type, buttonMask)).toBe("back");
-    expect(functionKeyLabel("back", type, {}, buttonMask)).toBe("−");
-    expect(functionKeyLabel("start", type, {}, buttonMask)).toBe("+");
+    const { type } = sdlPads.joyConPair;
+    expect(padFunctionKeys(type)).toEqual(["back", "start"]);
+    expect(defaultPadFunctionKey(type)).toBe("back");
+    expect(functionKeyLabel("back", type)).toBe("−");
+    expect(functionKeyLabel("start", type)).toBe("+");
   });
 
-  it("is the shoulder buttons of a single Joy-Con held sideways, ZR or ZL the default", () => {
-    const left = sdlPads.joyConLeftSideways;
-    const right = sdlPads.joyConRightSideways;
-    expect(padFunctionKeys(right.type, right.buttonMask)).toEqual([
-      "paddle3",
-      "paddle1",
-    ]);
-    expect(padFunctionKeys(left.type, left.buttonMask)).toEqual([
-      "paddle4",
-      "paddle2",
-    ]);
-    expect(defaultPadFunctionKey(right.type, right.buttonMask)).toBe("paddle3");
-    expect(padHasFunctionKey("start", left.type, left.buttonMask)).toBe(false);
-    expect(padHasFunctionKey("paddle2", left.type, left.buttonMask)).toBe(true);
-    // And named as a Joy-Con prints them.
-    const name = (
-      key: "paddle1" | "paddle2" | "paddle3" | "paddle4",
-      pad: typeof left,
-    ) => functionKeyLabel(key, pad.type, {}, pad.buttonMask);
-    expect(name("paddle3", right)).toBe("ZR");
-    expect(name("paddle1", right)).toBe("R");
-    expect(name("paddle4", left)).toBe("ZL");
-    expect(name("paddle2", left)).toBe("L");
+  it("is ZL or L on a single left Joy-Con, ZR or R on a right one, the trigger the default", () => {
+    expect(padFunctionKeys("joyconleft")).toEqual(["lt", "leftshoulder"]);
+    expect(padFunctionKeys("joyconright")).toEqual(["rt", "rightshoulder"]);
+    expect(defaultPadFunctionKey("joyconleft")).toBe("lt");
+    expect(defaultPadFunctionKey("joyconright")).toBe("rt");
+    expect(padHasFunctionKey("lt", "joyconleft")).toBe(true);
+    expect(padHasFunctionKey("rt", "joyconleft")).toBe(false);
+    // No − or + on a single Joy-Con, and no paddles.
+    expect(padHasFunctionKey("back", "joyconleft")).toBe(false);
+    expect(padHasFunctionKey("start", "joyconright")).toBe(false);
+    // And named as a Joy-Con prints them: lt and rt are the triggers.
+    expect(functionKeyLabel("lt", "joyconleft")).toBe("ZL");
+    expect(functionKeyLabel("leftshoulder", "joyconleft")).toBe("L");
+    expect(functionKeyLabel("rt", "joyconright")).toBe("ZR");
+    expect(functionKeyLabel("rightshoulder", "joyconright")).toBe("R");
   });
 
-  it("is the one of − and + a single Joy-Con held upright has", () => {
-    const left = sdlPads.joyConLeftUpright;
-    const right = sdlPads.joyConRightUpright;
-    expect(padFunctionKeys(left.type, left.buttonMask)).toEqual(["back"]);
-    expect(padFunctionKeys(right.type, right.buttonMask)).toEqual(["start"]);
-    expect(functionKeyLabel("back", left.type, {}, left.buttonMask)).toBe("−");
-    expect(functionKeyLabel("start", right.type, {}, right.buttonMask)).toBe(
-      "+",
-    );
+  it("makes lt and rt the triggers' controls", () => {
+    expect(functionKeyControl("lt")).toBe("lefttrigger");
+    expect(functionKeyControl("rt")).toBe("righttrigger");
+    expect(functionKeyControl("start")).toBe("start");
   });
 
   it("takes the names the controller reports", () => {
@@ -290,12 +311,12 @@ describe("the controls of a pad", () => {
     expect(has("touchpad", sdlPads.ps4)).toBe(true);
     expect(has("paddle3", sdlPads.ps5Edge)).toBe(true);
     expect(has("paddle3", sdlPads.ps5)).toBe(false);
-    expect(has("dpad.up", sdlPads.joyConLeftSideways)).toBe(false);
-    expect(has("lefttrigger", sdlPads.joyConLeftSideways)).toBe(false);
+    expect(has("dpad.up", sdlPads.joyConLeftUpright)).toBe(true);
     expect(has("lefttrigger", sdlPads.joyConLeftUpright)).toBe(true);
+    expect(has("lefttrigger", sdlPads.joyConRightUpright)).toBe(false);
     // A stick is there with its axes or its click.
-    expect(has("leftstick", sdlPads.joyConLeftSideways)).toBe(true);
-    expect(has("rightstick", sdlPads.joyConLeftSideways)).toBe(false);
+    expect(has("leftstick", sdlPads.joyConLeftUpright)).toBe(true);
+    expect(has("rightstick", sdlPads.joyConLeftUpright)).toBe(false);
     expect(has("leftstick", { type: "xboxone", buttonMask: 1 << 7 })).toBe(
       true,
     );
@@ -305,26 +326,5 @@ describe("the controls of a pad", () => {
   it("are not a name that is no control", () => {
     expect(has("nonsense", sdlPads.ps5)).toBe(false);
     expect(has("nonsense", { type: "ps5" })).toBe(false);
-  });
-});
-
-describe("a single Joy-Con held sideways", () => {
-  it("is told by the buttons SDL maps", () => {
-    expect(
-      isSidewaysJoyCon("joyconleft", sdlPads.joyConLeftSideways.buttonMask),
-    ).toBe(true);
-    expect(
-      isSidewaysJoyCon("joyconright", sdlPads.joyConRightSideways.buttonMask),
-    ).toBe(true);
-    expect(
-      isSidewaysJoyCon("joyconleft", sdlPads.joyConLeftUpright.buttonMask),
-    ).toBe(false);
-    // Upright, the right one has face buttons too, and its own stick.
-    expect(
-      isSidewaysJoyCon("joyconright", sdlPads.joyConRightUpright.buttonMask),
-    ).toBe(false);
-    expect(isSidewaysJoyCon("joyconpair", sdlPads.joyConPair.buttonMask)).toBe(
-      false,
-    );
   });
 });

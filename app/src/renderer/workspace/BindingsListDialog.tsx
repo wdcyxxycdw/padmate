@@ -190,7 +190,7 @@ export function BindingsListDialog({
             </li>
           );
         })}
-        {padHasFunctionKey(functionKey, pad.type, info?.buttonMask) && (
+        {padHasFunctionKey(functionKey, pad.type) && (
           <li>
             <div
               className="bindings-fixed"

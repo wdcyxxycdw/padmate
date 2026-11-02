@@ -44,19 +44,19 @@ describe("the function key of a change", () => {
   const pad = padFixture("joyConRight");
 
   it("is the key chosen, and null for the default of the family, which takes the member out", () => {
-    expect(padSetParams(pad, { functionKey: "paddle1" })).toEqual({
+    expect(padSetParams(pad, { functionKey: "rightshoulder" })).toEqual({
       key: pad.key,
-      functionKey: "paddle1",
+      functionKey: "rightshoulder",
     });
-    const chosen = padFixture("joyConRight", { effective: "paddle1" });
-    expect(padSetParams(chosen, { functionKey: "paddle3" })).toEqual({
+    const chosen = padFixture("joyConRight", { effective: "rightshoulder" });
+    expect(padSetParams(chosen, { functionKey: "rt" })).toEqual({
       key: pad.key,
       functionKey: null,
     });
   });
 
   it("is nothing when the controller already has the key", () => {
-    expect(padSetParams(pad, { functionKey: "paddle3" })).toBeNull();
+    expect(padSetParams(pad, { functionKey: "rt" })).toBeNull();
     expect(padSetParams(pad, {})).toBeNull();
   });
 });
@@ -163,11 +163,11 @@ describe("a change as shown while it is saved", () => {
   it("is the controller with the setting changed", () => {
     const pad = padFixture("joyConRight");
     const shown = padWithChange(pad, {
-      functionKey: "paddle1",
+      functionKey: "rightshoulder",
       feedback: { name: "led", on: false },
       panic: { buttons: ["a", "b"], holdMs: 1000 },
     });
-    expect(shown.functionKey.effective).toBe("paddle1");
+    expect(shown.functionKey.effective).toBe("rightshoulder");
     expect(shown.feedback.effective.led).toBe(false);
     expect(shown.feedback.effective.rumble).toBe(true);
     expect(shown.panic.effective).toEqual({
@@ -178,16 +178,16 @@ describe("a change as shown while it is saved", () => {
     expect(padWithChange(shown, { panic: null }).panic.effective).toEqual(
       pad.panic.default,
     );
-    expect(pad.functionKey.effective).toBe("paddle3");
+    expect(pad.functionKey.effective).toBe("rt");
   });
 });
 
 describe("the function key the mapping page edits", () => {
-  const sideways = sdlPads.joyConRightSideways;
+  const right = sdlPads.joyConRightUpright;
 
   it("is what the daemon says for the controller, by its connection and by its key", () => {
     const pad = padFixture("joyConRight", {
-      effective: "paddle1",
+      effective: "rightshoulder",
       device: 7,
       key: "joycon-key",
     });
@@ -195,15 +195,15 @@ describe("the function key the mapping page edits", () => {
     expect(
       effectiveFunctionKey(
         pads,
-        entry(7, "another", sideways.type, sideways.buttonMask),
+        entry(7, "another", right.type, right.buttonMask),
       ),
-    ).toBe("paddle1");
+    ).toBe("rightshoulder");
     expect(
       effectiveFunctionKey(
         pads,
-        entry(9, "joycon-key", sideways.type, sideways.buttonMask),
+        entry(9, "joycon-key", right.type, right.buttonMask),
       ),
-    ).toBe("paddle1");
+    ).toBe("rightshoulder");
     expect(padOf(pads, entry(1, "x", "xboxone"))).toBeUndefined();
   });
 
@@ -211,17 +211,11 @@ describe("the function key the mapping page edits", () => {
     const at = (type: string, mask?: number) =>
       effectiveFunctionKey(null, entry(1, "k", type, mask));
     expect(at("xboxone")).toBe("start");
-    expect(at(sideways.type, sideways.buttonMask)).toBe("paddle3");
-    expect(
-      at(
-        sdlPads.joyConLeftSideways.type,
-        sdlPads.joyConLeftSideways.buttonMask,
-      ),
-    ).toBe("paddle4");
-    expect(at("joyconpair", sdlPads.joyConPair.buttonMask)).toBe("back");
+    expect(at(right.type, right.buttonMask)).toBe("rt");
     expect(
       at(sdlPads.joyConLeftUpright.type, sdlPads.joyConLeftUpright.buttonMask),
-    ).toBe("back");
+    ).toBe("lt");
+    expect(at("joyconpair", sdlPads.joyConPair.buttonMask)).toBe("back");
   });
 
   it("is Menu with no controller", () => {
@@ -245,7 +239,7 @@ describe("naming a controller", () => {
     ).toBe("Generic controller");
   });
 
-  it("says the kind in words, the grip of a single Joy-Con too", () => {
+  it("says the kind in words, the side of a single Joy-Con too, and no grip", () => {
     for (const [type, zh, en] of [
       ["xbox360", "Xbox 360", "Xbox 360"],
       ["xboxone", "Xbox", "Xbox"],
@@ -257,15 +251,8 @@ describe("naming a controller", () => {
       expect(typeName(type, "zh-CN")).toBe(zh);
       expect(typeName(type, "en")).toBe(en);
     }
-    expect(padKind(padFixture("joyConRight"), "zh-CN")).toBe(
-      "Joy-Con（右，横握）",
-    );
-    expect(padKind(padFixture("joyConLeft"), "en")).toBe(
-      "Joy-Con (L, sideways)",
-    );
-    expect(
-      padKind(padFixture("joyConLeft", { family: "joyconLeftVertical" }), "en"),
-    ).toBe("Joy-Con (L, upright)");
+    expect(padKind(padFixture("joyConRight"), "zh-CN")).toBe("Joy-Con（右）");
+    expect(padKind(padFixture("joyConLeft"), "en")).toBe("Joy-Con (L)");
     expect(padKind(padFixture("joyConPair"), "en")).toBe("Joy-Con pair");
   });
 });

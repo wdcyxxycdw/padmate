@@ -68,7 +68,7 @@ const xbox = entry(1, "Test controller", sdlPads.xboxSeries, "xbox-key");
 const joyConRight = entry(
   2,
   "Joy-Con (R)",
-  sdlPads.joyConRightSideways,
+  sdlPads.joyConRightUpright,
   "joycon-key",
 );
 
@@ -384,7 +384,7 @@ describe("the controllers listed", () => {
     expect(xboxSection.getByText("Xbox")).toBeTruthy();
     expect(xboxSection.getByText("已连接")).toBeTruthy();
     const right = sectionOf("Joy-Con (R)");
-    expect(right.getByText("Joy-Con（右，横握）")).toBeTruthy();
+    expect(right.getByText("Joy-Con（右）")).toBeTruthy();
     // The others are one fold away, with their count, and closed.
     const fold = screen.getByTestId("pads-others") as HTMLDetailsElement;
     expect(fold.open).toBe(false);
@@ -392,7 +392,7 @@ describe("the controllers listed", () => {
     expect(fold.querySelector(".disclosure-summary")?.textContent).toBe("2");
     // A controller without a name of its own is called by its kind.
     expect(
-      within(fold).getByRole("heading", { name: "Joy-Con（左，横握）" }),
+      within(fold).getByRole("heading", { name: "Joy-Con（左）" }),
     ).toBeTruthy();
     expect(
       within(fold).getByRole("heading", { name: "通用手柄" }),
@@ -487,10 +487,10 @@ describe("the function key of a controller", () => {
         .getAllByRole("radio")
         .map((radio) => [radio.textContent, radio.getAttribute("data-value")]),
     ).toEqual([
-      ["ZR（默认）", "paddle3"],
-      ["R", "paddle1"],
+      ["ZR（默认）", "rt"],
+      ["R", "rightshoulder"],
     ]);
-    expect(chosen(j)).toBe("paddle3");
+    expect(chosen(j)).toBe("rt");
     expect(
       [...j.querySelectorAll("svg[data-pad-icon]")].map((icon) =>
         icon.getAttribute("data-pad-icon"),
@@ -510,10 +510,10 @@ describe("the function key of a controller", () => {
     await waitFor(() =>
       expect(app.api.setPad).toHaveBeenCalledExactlyOnceWith({
         key: "joycon-key",
-        functionKey: "paddle1",
+        functionKey: "rightshoulder",
       }),
     );
-    await waitFor(() => expect(chosen(j)).toBe("paddle1"));
+    await waitFor(() => expect(chosen(j)).toBe("rightshoulder"));
     // The other controller is as it was.
     expect(chosen(keyGroup(sectionOf("Test controller")))).toBe("start");
     await screen.findByText("已自动保存");
@@ -527,13 +527,13 @@ describe("the function key of a controller", () => {
           key: "joycon-key",
           name: "Joy-Con (R)",
           device: 2,
-          effective: "paddle1",
+          effective: "rightshoulder",
         }),
       ]),
     });
     await openPads();
     const j = keyGroup(sectionOf("Joy-Con (R)"));
-    expect(chosen(j)).toBe("paddle1");
+    expect(chosen(j)).toBe("rightshoulder");
     fireEvent.click(within(j).getByRole("radio", { name: "ZR（默认）" }));
     await waitFor(() =>
       expect(app.api.setPad).toHaveBeenCalledExactlyOnceWith({
@@ -541,7 +541,7 @@ describe("the function key of a controller", () => {
         functionKey: null,
       }),
     );
-    await waitFor(() => expect(chosen(j)).toBe("paddle3"));
+    await waitFor(() => expect(chosen(j)).toBe("rt"));
   });
 
   it("is moved by the arrow keys like radio buttons", async () => {
@@ -722,12 +722,12 @@ describe("the emergency pause of a controller", () => {
     const x = sectionOf("Test controller");
     expect(x.getByRole("img", { name: "View + Menu" })).toBeTruthy();
     expect(x.getByText("按住 2 秒：松开所有按键并暂停")).toBeTruthy();
-    // A Joy-Con held sideways has L and R, which are its SL and SR.
+    // A single Joy-Con is held upright: its SL and SR are the combo.
     const j = sectionOf("Joy-Con (R)");
     expect(j.getByRole("img", { name: "SL + SR" })).toBeTruthy();
   });
 
-  it("shows a vertical Joy-Con's combo and a hold time that is not one of the usual", async () => {
+  it("shows a left Joy-Con's combo and a hold time that is not one of the usual", async () => {
     const left = entry(3, "Joy-Con (L)", sdlPads.joyConLeftUpright, "left-key");
     const pad = padsOfDevices([left]).pads[0];
     setup({
@@ -1075,7 +1075,7 @@ describe("the function key the mapping page edits", () => {
   const chip = (control: string) =>
     document.querySelector<HTMLElement>(`[data-callout="${control}"]`);
 
-  it("is ZR on a right Joy-Con held sideways: its chip is the tag, and there is a view of its set", async () => {
+  it("is ZR on a right Joy-Con: its trigger's chip is the tag, and there is a view of its set", async () => {
     mapping([joyConRight], padsOfDevices([joyConRight]));
     const view = await screen.findByRole("radiogroup", {
       name: "编辑的按键",
@@ -1086,10 +1086,10 @@ describe("the function key the mapping page edits", () => {
         .map((radio) => radio.textContent),
     ).toEqual(["平时", "按住功能键"]);
     await waitFor(() =>
-      expect(chip("paddle3")?.dataset.state).toBe("function"),
+      expect(chip("righttrigger")?.dataset.state).toBe("function"),
     );
     // R is an ordinary key, with nothing set.
-    expect(chip("paddle1")?.dataset.state).toBe("unbound");
+    expect(chip("rightshoulder")?.dataset.state).toBe("unbound");
     expect(chip("back")).toBeNull();
   });
 
@@ -1099,14 +1099,14 @@ describe("the function key the mapping page edits", () => {
         key: "joycon-key",
         name: "Joy-Con (R)",
         device: 2,
-        effective: "paddle1",
+        effective: "rightshoulder",
       }),
     ]);
     mapping([joyConRight], pads);
     await waitFor(() =>
-      expect(chip("paddle1")?.dataset.state).toBe("function"),
+      expect(chip("rightshoulder")?.dataset.state).toBe("function"),
     );
-    expect(chip("paddle3")?.dataset.state).toBe("unbound");
+    expect(chip("righttrigger")?.dataset.state).toBe("unbound");
   });
 
   it("follows the controller that is selected, and changes when another is", async () => {
@@ -1122,11 +1122,11 @@ describe("the function key the mapping page edits", () => {
     await waitFor(() => expect(chip("start")?.dataset.state).toBe("function"));
     act(() => app.store.getState().selectDevice(2));
     await waitFor(() =>
-      expect(chip("paddle3")?.dataset.state).toBe("function"),
+      expect(chip("righttrigger")?.dataset.state).toBe("function"),
     );
     act(() => app.store.getState().selectDevice(1));
     await waitFor(() => expect(chip("start")?.dataset.state).toBe("function"));
-    expect(chip("paddle3")).toBeNull();
+    expect(chip("righttrigger")?.dataset.state).toBe("unbound");
   });
 
   it("is named in the list of all keys as the controller prints it", async () => {

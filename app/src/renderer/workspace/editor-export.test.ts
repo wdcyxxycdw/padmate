@@ -25,7 +25,7 @@ function options(language: Language = "zh-CN", type = "xboxone") {
 }
 
 // A painting profile as a user sets it up: a few keys with a shortcut, the
-// rest only named, on a standard pad and on a sideways Joy-Con.
+// rest only named, on a standard pad and on a single Joy-Con.
 const standardPaint: Profile = {
   schemaVersion: 1,
   name: "绘画",

@@ -7,7 +7,7 @@ import {
   parsePadsSet,
 } from "./pads-parse";
 
-const pad = padFixture("joyConRight", { effective: "paddle1" });
+const pad = padFixture("joyConRight", { effective: "rightshoulder" });
 const list = padsFixture([pad, padFixture("xbox", { connected: false })], {
   legacy: { feedback: true },
 });
@@ -135,9 +135,17 @@ describe("pads.set and pads.migrate", () => {
   });
 
   it("know the buttons that can be a function key", () => {
-    for (const key of ["start", "back", "paddle1", "paddle4"])
+    for (const key of [
+      "start",
+      "back",
+      "leftshoulder",
+      "rightshoulder",
+      "lt",
+      "rt",
+    ])
       expect(isPadFunctionKey(key)).toBe(true);
-    for (const key of ["guide", "north", "", null, 3])
+    // A retired paddle is no function key any more.
+    for (const key of ["guide", "north", "paddle1", "paddle4", "", null, 3])
       expect(isPadFunctionKey(key)).toBe(false);
   });
 });

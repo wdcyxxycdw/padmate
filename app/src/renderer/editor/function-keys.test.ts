@@ -50,13 +50,13 @@ const order = (value: object) => Object.keys(value);
 describe("the function key", () => {
   it("is Menu unless the settings choose another button, and Menu for the Xbox button of an older file", () => {
     expect(defaultFunctionKey).toBe("start");
-    // A Joy-Con held sideways has ZR, R, ZL and L for it: the four paddles.
+    // A single Joy-Con has ZL, L, ZR and R for it; the paddles are retired.
     expect([...functionKeys].sort()).toEqual([
       "back",
-      "paddle1",
-      "paddle2",
-      "paddle3",
-      "paddle4",
+      "leftshoulder",
+      "lt",
+      "rightshoulder",
+      "rt",
       "start",
     ]);
     for (const key of functionKeys) expect(asFunctionKey(key)).toBe(key);
@@ -67,6 +67,8 @@ describe("the function key", () => {
       "guide",
       "select",
       "south",
+      "paddle1",
+      "paddle4",
       3,
       {},
     ])
@@ -77,10 +79,10 @@ describe("the function key", () => {
     const names: Record<FunctionKey, string[]> = {
       start: ["start"],
       back: ["back", "select"],
-      paddle1: ["paddle1"],
-      paddle2: ["paddle2"],
-      paddle3: ["paddle3"],
-      paddle4: ["paddle4"],
+      leftshoulder: ["leftshoulder", "lb"],
+      rightshoulder: ["rightshoulder", "rb"],
+      lt: ["lt", "lefttrigger"],
+      rt: ["rt", "righttrigger"],
     };
     for (const key of functionKeys)
       for (const control of [
@@ -92,10 +94,13 @@ describe("the function key", () => {
         "leftstick",
         "lt",
         "dpad.up",
+        "lb",
+        "leftshoulder",
+        "rightshoulder",
+        "rt",
+        "lefttrigger",
+        "righttrigger",
         "paddle1",
-        "paddle2",
-        "paddle3",
-        "paddle4",
       ])
         expect(isFunctionKey(control, key), `${key} ${control}`).toBe(
           names[key].includes(control),

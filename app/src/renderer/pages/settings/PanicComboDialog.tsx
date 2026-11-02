@@ -24,39 +24,20 @@ export function seconds(ms: number, language: Language) {
   return tx(language, `${value} 秒`, `${value} s`);
 }
 
-// A vertical single Joy-Con reports SL and SR as paddles (ARCHITECTURE §7.1).
-const verticalLabels: Record<string, Record<string, string>> = {
-  joyconLeftVertical: { paddle2: "SL", paddle4: "SR" },
-  joyconRightVertical: { paddle3: "SL", paddle1: "SR" },
-};
-
 /**
  * The buttons of a combo with the labels printed on the pad (a connected
- * controller, or what is known of one that was); family is the combo's, which
- * tells a vertical Joy-Con.
+ * controller, or what is known of one that was). A single Joy-Con is always
+ * held upright, so its SL and SR are its paddles.
  */
-export function comboKeys(
-  pad: PadNames | undefined,
-  buttons: string[],
-  family = "",
-) {
+export function comboKeys(pad: PadNames | undefined, buttons: string[]) {
   const labels = controllerLabels(
     pad?.type ?? "xboxone",
     pad?.buttonLabels,
     pad?.buttonMask,
   );
-  const vertical = verticalLabels[family];
-  const single =
-    !vertical && (pad?.type === "joyconleft" || pad?.type === "joyconright");
   return buttons.map((button) => ({
     button,
-    label:
-      vertical?.[button] ??
-      (single && button === "leftshoulder"
-        ? "SL"
-        : single && button === "rightshoulder"
-          ? "SR"
-          : (labels[button] ?? button)),
+    label: labels[button] ?? button,
   }));
 }
 
@@ -64,13 +45,11 @@ export function comboKeys(
 export function ComboKeys({
   pad,
   buttons,
-  family,
 }: {
   pad: PadNames | undefined;
   buttons: string[];
-  family?: string;
 }) {
-  const keys = comboKeys(pad, buttons, family);
+  const keys = comboKeys(pad, buttons);
   return (
     <span
       className="page-combo"
@@ -274,7 +253,7 @@ export function PanicComboDialog({
       }
     >
       <div className="combo-record" data-testid="combo-record">
-        <ComboKeys pad={device.info} buttons={shown} family={combo.family} />
+        <ComboKeys pad={device.info} buttons={shown} />
         <p
           className="combo-record-note"
           role={problem || failure ? "alert" : undefined}

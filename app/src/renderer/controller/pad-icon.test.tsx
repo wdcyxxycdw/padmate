@@ -40,8 +40,8 @@ const types = [
   "gamecube",
   "unknown",
 ];
-// A single Joy-Con held upright (2) or sideways (0xf), and the others.
-const masks = [undefined, 2, 0xf];
+// The buttons SDL maps no longer decide a single Joy-Con's icons.
+const masks = [undefined, 2];
 const controls = [
   "south",
   "east",
@@ -211,23 +211,19 @@ describe("the icon of each control", () => {
     expect(
       padIcon("south", "generic", controllerLabels("unknown", { south: "A" })),
     ).toEqual({ name: "kenney/xbox_button_a" });
-    // A single Joy-Con, or a pad without letters: where it is among the four.
-    // SDL names a single Joy-Con's buttons B/A/Y/X, which are not what is
-    // printed where they are when it is held sideways (a left one has
-    // arrows): it is drawn by position all the same. A pair keeps the letters.
+    // A single right Joy-Con is labelled B/A/Y/X like the other Nintendo
+    // pads and has their letter icons, as a pair does; a left one has arrows
+    // and no letters, so it is drawn by position, as is a pad without letters.
     const joyCon = { south: "B", east: "A", west: "Y", north: "X" };
-    for (const type of ["joyconleft", "joyconright"])
-      expect(
-        padIcon("south", "nintendo", controllerLabels(type, joyCon, 0xf))?.name,
-        type,
-      ).toBe("kenney/switch_buttons_down");
     expect(
       padIcon("east", "nintendo", controllerLabels("joyconpair", joyCon))?.name,
     ).toBe("kenney/switch_button_a");
-    expect(name("west", "joyconleft", 0xf)).toBe("kenney/switch_buttons_left");
-    expect(name("south", "joyconright", 0xf)).toBe(
-      "kenney/switch_buttons_down",
-    );
+    expect(name("south", "joyconright")).toBe("kenney/switch_button_b");
+    expect(name("east", "joyconright")).toBe("kenney/switch_button_a");
+    expect(name("west", "joyconright")).toBe("kenney/switch_button_y");
+    expect(name("north", "joyconright")).toBe("kenney/switch_button_x");
+    expect(name("west", "joyconleft")).toBe("kenney/switch_buttons_left");
+    expect(name("south", "joyconleft")).toBe("kenney/switch_buttons_down");
     expect(name("north", "unknown")).toBe("kenney/switch_buttons_up");
     expect(name("east", "unknown")).toBe("kenney/switch_buttons_right");
   });
@@ -265,9 +261,10 @@ describe("the icon of each control", () => {
     expect(name("rightshoulder", "ps5")).toBe("kenney/playstation_trigger_r1");
     expect(name("leftshoulder", "switchpro")).toBe("kenney/switch_button_l");
     expect(name("leftshoulder", "unknown")).toBe("kenney/switch_button_l");
-    expect(name("rightshoulder", "joyconright", 0xf)).toBe(
-      "kenney/switch_button_sr",
-    );
+    expect(name("rightshoulder", "joyconright")).toBe("kenney/switch_button_r");
+    expect(name("leftshoulder", "joyconleft")).toBe("kenney/switch_button_l");
+    expect(name("lefttrigger", "joyconleft")).toBe("kenney/switch_button_zl");
+    expect(name("righttrigger", "joyconright")).toBe("kenney/switch_button_zr");
     expect(name("lefttrigger", "xboxone")).toBe("kenney/xbox_lt");
     expect(name("rt", "ps5")).toBe("kenney/playstation_trigger_r2");
     expect(name("lt", "switchpro")).toBe("kenney/switch_button_zl");
@@ -293,12 +290,11 @@ describe("the icon of each control", () => {
     expect(name("paddle2", "ps5")).toBe("kenney/playstation5_elite_lb");
     expect(name("paddle3", "ps5")).toBe("kenney/playstation5_elite_fn_r");
     expect(name("paddle4", "ps5")).toBe("kenney/playstation5_elite_fn_l");
-    // A single Joy-Con: SL and SR upright, its L and ZL (R and ZR) sideways.
-    expect(name("paddle2", "joyconleft", 2)).toBe("kenney/switch_button_sl");
-    expect(name("paddle1", "joyconright", 2)).toBe("kenney/switch_button_sr");
-    expect(name("paddle2", "joyconleft", 0xf)).toBe("kenney/switch_button_l");
-    expect(name("paddle4", "joyconleft", 0xf)).toBe("kenney/switch_button_zl");
-    expect(name("paddle3", "joyconright", 0xf)).toBe("kenney/switch_button_zr");
+    // A single Joy-Con, always upright: its SL and SR.
+    expect(name("paddle2", "joyconleft")).toBe("kenney/switch_button_sl");
+    expect(name("paddle4", "joyconleft")).toBe("kenney/switch_button_sr");
+    expect(name("paddle1", "joyconright")).toBe("kenney/switch_button_sr");
+    expect(name("paddle3", "joyconright")).toBe("kenney/switch_button_sl");
     // A pair of Joy-Cons: the SL and SR of each side (the chip's place and
     // name tell the side).
     expect(name("paddle1", "joyconpair")).toBe("kenney/switch_button_sr");
@@ -331,8 +327,9 @@ describe("the icon of each control", () => {
     expect(name("back", "switchpro")).toBe("kenney/switch_button_minus");
     expect(name("start", "switchpro")).toBe("kenney/switch_button_plus");
     expect(name("guide", "switchpro")).toBe("kenney/switch_button_home");
-    expect(name("start", "joyconleft", 0xf)).toBe("kenney/switch_button_minus");
-    expect(name("guide", "joyconright", 0xf)).toBe("kenney/switch_button_home");
+    expect(name("back", "joyconleft")).toBe("kenney/switch_button_minus");
+    expect(name("start", "joyconright")).toBe("kenney/switch_button_plus");
+    expect(name("guide", "joyconright")).toBe("kenney/switch_button_home");
     // Any other pad: Back, Start and Home.
     expect(name("back", "unknown")).toBe("kenney/xbox_button_back_icon");
     expect(name("start", "unknown")).toBe("kenney/xbox_button_start_icon");
@@ -347,7 +344,7 @@ describe("the icon of each control", () => {
       ["rs.inner", "xboxone"],
       // Capture, and the extra buttons that only have a number.
       ["misc1", "switchpro"],
-      ["guide", "joyconleft", 0xf],
+      ["misc1", "joyconleft"],
       ["misc2", "xboxone"],
       // A touchpad that is not a PlayStation's.
       ["touchpad", "unknown"],

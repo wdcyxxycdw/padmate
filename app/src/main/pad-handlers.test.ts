@@ -36,12 +36,12 @@ describe("controller settings handlers", () => {
     await expect(handlers.padsList.run()).resolves.toEqual(list);
     await handlers.padsMigrate.run();
     await expect(
-      handlers.padsSet.run({ key: pad.key, functionKey: "paddle1" }),
+      handlers.padsSet.run({ key: pad.key, functionKey: "rightshoulder" }),
     ).resolves.toEqual(saved);
     expect(call.mock.calls).toEqual([
       ["pads.list", {}],
       ["pads.migrate", {}],
-      ["pads.set", { key: pad.key, functionKey: "paddle1" }],
+      ["pads.set", { key: pad.key, functionKey: "rightshoulder" }],
     ]);
   });
 

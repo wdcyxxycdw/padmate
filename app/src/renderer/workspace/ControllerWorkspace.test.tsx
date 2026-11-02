@@ -736,7 +736,7 @@ describe("the function key", () => {
   const joyCon: DeviceInfo = {
     ...info,
     name: "Joy-Con (L)",
-    ...sdlPads.joyConLeftSideways,
+    ...sdlPads.joyConLeftUpright,
   };
   const chip = (container: HTMLElement, control: string) =>
     container.querySelector<HTMLElement>(`[data-callout="${control}"]`);
@@ -797,33 +797,34 @@ describe("the function key", () => {
     ).toEqual(["Normal", "Hold function key"]);
   });
 
-  it("is ZL or L on a single Joy-Con held sideways, with the tag on its chip and a switch to its set", async () => {
+  it("is ZL or L on a single left Joy-Con, with the tag on its chip and a switch to its set", async () => {
     const editor = await editorFor(withSet);
-    act(() => editor.getState().setFunctionKey("paddle4"));
+    act(() => editor.getState().setFunctionKey("lt"));
     const { container } = render(workspace(editor, joyCon));
     expect(switchOptions()).toEqual([
       ["平时", "true"],
       ["按住功能键", "false"],
     ]);
     // ZL is the function key: its chip is the tag, and L is an ordinary key.
-    expect(chip(container, "paddle4")?.dataset.state).toBe("function");
-    expect(chip(container, "paddle2")?.dataset.state).toBe("unbound");
-    expect(chip(container, "start")?.dataset.state).toBe("unbound");
+    // lt is the virtual button of the trigger: the trigger's chip shows it.
+    expect(chip(container, "lefttrigger")?.dataset.state).toBe("function");
+    expect(chip(container, "leftshoulder")?.dataset.state).toBe("unbound");
+    expect(chip(container, "back")?.dataset.state).toBe("unbound");
     // The other of its two keys, L, can be the function key instead.
-    act(() => editor.getState().setFunctionKey("paddle2"));
-    expect(chip(container, "paddle2")?.dataset.state).toBe("function");
-    expect(chip(container, "paddle4")?.dataset.state).toBe("unbound");
+    act(() => editor.getState().setFunctionKey("leftshoulder"));
+    expect(chip(container, "leftshoulder")?.dataset.state).toBe("function");
+    expect(chip(container, "lefttrigger")?.dataset.state).toBe("unbound");
     expect(switchOptions()[1][0]).toBe("按住功能键");
   });
 
   it("has no switch on a Joy-Con when the function key is a button it lacks", async () => {
     const editor = await editorFor(withSet);
     const { container } = render(workspace(editor, joyCon));
-    // No View or Menu on a Joy-Con held sideways: nothing to hold, no switch.
-    expect(chip(container, "back")).toBeNull();
+    // No Menu or View on a single Joy-Con: nothing to hold, no switch.
+    expect(chip(container, "start")).toBeNull();
     act(() => editor.getState().setFunctionKey("start"));
     expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
-    act(() => editor.getState().setFunctionKey("paddle2"));
+    act(() => editor.getState().setFunctionKey("leftshoulder"));
     expect(screen.getByRole("radiogroup", { name: "编辑的按键" })).toBeTruthy();
   });
 
@@ -974,10 +975,18 @@ describe("the function key", () => {
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
       "A · 重做",
     );
-    rerender(workspace(editor, joyCon, "zh-CN", store));
+    // A single Joy-Con has no Menu or View: the usual keys, whatever was chosen.
+    rerender(
+      workspace(
+        editor,
+        { ...info, name: "Joy-Con (R)", ...sdlPads.joyConRightUpright },
+        "zh-CN",
+        store,
+      ),
+    );
     expect(screen.queryByRole("radiogroup", { name: "编辑的按键" })).toBeNull();
     expect(chip(container, "south")?.getAttribute("aria-label")).toBe(
-      "S · 撤销",
+      "B · 撤销",
     );
   });
 

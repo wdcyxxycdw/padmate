@@ -533,7 +533,7 @@ it("draws the function key with the icon of the connected pad's generation (ADR-
   expect(icon("ps5")).toBe("kenney/playstation5_button_options");
 });
 
-it("lists the function key of a single Joy-Con held sideways by the name it prints, ZR or R, and nothing for a key it lacks", async () => {
+it("lists the function key of a single right Joy-Con by the name it prints, ZR or R, and nothing for a key it lacks", async () => {
   const editor = await editorFor(withSet);
   const show = (pad: DeviceInfo) => {
     cleanup();
@@ -550,15 +550,15 @@ it("lists the function key of a single Joy-Con held sideways by the name it prin
   };
   const right: DeviceInfo = {
     ...info,
-    ...sdlPads.joyConRightSideways,
+    ...sdlPads.joyConRightUpright,
   };
-  act(() => editor.getState().setFunctionKey("paddle3"));
+  act(() => editor.getState().setFunctionKey("rt"));
   show(right);
   expect(rowsOf().slice(-1)).toEqual([
     ["ZR", "功能键", "按住时其他键换成另一套", "fixed"],
   ]);
   expect(rowsOf().filter((row) => row[3] === "fixed")).toHaveLength(1);
-  act(() => editor.getState().setFunctionKey("paddle1"));
+  act(() => editor.getState().setFunctionKey("rightshoulder"));
   show(right);
   expect(rowsOf().slice(-1)[0][0]).toBe("R");
   // The key of a controller it is not: Menu is not a key of this Joy-Con.

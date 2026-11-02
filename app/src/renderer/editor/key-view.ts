@@ -22,7 +22,7 @@ export interface PadNames {
 
 /**
  * The view to show: the one asked for, unless this pad lacks the function key
- * (a single Joy-Con held sideways has no View), then the usual one.
+ * (a stale or other pad's choice), then the usual one.
  */
 export function effectiveView(
   view: KeyView,
@@ -30,9 +30,7 @@ export function effectiveView(
   functionKey: FunctionKey,
 ): KeyView {
   if (view === "normal") return view;
-  return padHasFunctionKey(functionKey, pad.type, pad.buttonMask)
-    ? view
-    : "normal";
+  return padHasFunctionKey(functionKey, pad.type) ? view : "normal";
 }
 
 /**
@@ -43,12 +41,7 @@ export function functionKeyName(
   functionKey: FunctionKey,
   pad: PadNames,
 ): string {
-  return functionKeyLabel(
-    functionKey,
-    pad.type,
-    pad.buttonLabels,
-    pad.buttonMask,
-  );
+  return functionKeyLabel(functionKey, pad.type, pad.buttonLabels);
 }
 
 /**
@@ -71,11 +64,7 @@ export function viewOptions(
   language: Language,
   functionKey: FunctionKey,
 ): { value: KeyView; label: string }[] {
-  const views: KeyView[] = padHasFunctionKey(
-    functionKey,
-    pad.type,
-    pad.buttonMask,
-  )
+  const views: KeyView[] = padHasFunctionKey(functionKey, pad.type)
     ? ["normal", "function"]
     : ["normal"];
   return views.map((value) => ({

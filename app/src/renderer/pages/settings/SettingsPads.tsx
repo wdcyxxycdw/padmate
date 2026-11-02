@@ -6,6 +6,7 @@ import {
   controlIcon,
 } from "../../controller/control-icon";
 import { familyName } from "../../controller/controller-model";
+import { functionKeyControl } from "../../editor/editor-model";
 import type { PadChange } from "../../state/pads-model";
 import { padKind, padTitle } from "../../state/pads-model";
 import {
@@ -44,7 +45,9 @@ export function functionKeyIcon(
   control: PadFunctionKeyName,
   label: string,
 ): ControlIconSpec | null {
-  const icon = controlIcon(control, familyName(pad.type), { [control]: label });
+  // ZL and ZR are the triggers: their icon goes by the trigger's control.
+  const on = functionKeyControl(control);
+  const icon = controlIcon(on, familyName(pad.type), { [on]: label });
   return icon.kind === "badge" ? null : icon;
 }
 
@@ -166,11 +169,7 @@ export function PadSection({
             </span>
           </div>
           <div className="page-row-control">
-            <ComboKeys
-              pad={pad}
-              buttons={panic.effective.buttons}
-              family={pad.family}
-            />
+            <ComboKeys pad={pad} buttons={panic.effective.buttons} />
             {pad.connected && (
               <button
                 type="button"

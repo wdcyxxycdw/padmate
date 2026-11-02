@@ -1,4 +1,4 @@
-import type { FunctionKey } from "../editor/editor-model";
+import { type FunctionKey, functionKeyControl } from "../editor/editor-model";
 import type { Language, PadInput } from "../state/store";
 
 export type ControllerFamily = "xbox" | "playstation" | "nintendo" | "generic";
@@ -29,9 +29,7 @@ export function faceLabels(
       ? ["A", "B", "X", "Y"]
       : family === "playstation"
         ? ["×", "○", "□", "△"]
-        : family === "nintendo" &&
-            type !== "joyconleft" &&
-            type !== "joyconright"
+        : family === "nintendo" && type !== "joyconleft"
           ? ["B", "A", "Y", "X"]
           : ["S", "E", "W", "N"];
   return Object.fromEntries(
@@ -46,22 +44,16 @@ export function faceLabels(
 
 /**
  * The names of the four paddles (ARCHITECTURE §7.1; SDL's RIGHT_PADDLE1,
- * LEFT_PADDLE1, RIGHT_PADDLE2, LEFT_PADDLE2): a single Joy-Con's are L and
- * ZL, or R and ZR, held sideways, and SL and SR upright; a pair of Joy-Cons
- * has the SL and SR of both sides; a DualSense Edge has its back buttons and
+ * LEFT_PADDLE1, RIGHT_PADDLE2, LEFT_PADDLE2): a single Joy-Con (always held
+ * upright) has its SL and SR; a pair of Joy-Cons has the SL and SR of both
+ * sides; a DualSense Edge has its back buttons and
  * Fn buttons. Other pads number them as the Xbox Elite does: 背键 1 and 2
  * under the right hand, 3 and 4 under the left. Go's padlabel package has
  * the same table (its test compares the two).
  */
-function paddleLabels(type: string, sideways: boolean): Record<string, string> {
-  if (type === "joyconleft")
-    return sideways
-      ? { paddle2: "L", paddle4: "ZL" }
-      : { paddle2: "SL", paddle4: "SR" };
-  if (type === "joyconright")
-    return sideways
-      ? { paddle1: "R", paddle3: "ZR" }
-      : { paddle1: "SR", paddle3: "SL" };
+function paddleLabels(type: string): Record<string, string> {
+  if (type === "joyconleft") return { paddle2: "SL", paddle4: "SR" };
+  if (type === "joyconright") return { paddle1: "SR", paddle3: "SL" };
   if (type === "joyconpair")
     return {
       paddle1: "右 SR",
@@ -107,6 +99,9 @@ function miscLabel(
 }
 
 /**
+ * Retired: a single Joy-Con is always held upright now. Kept only for the
+ * files that still import it; it is deleted when the layout work is merged.
+ *
  * Whether a pad is a single Joy-Con held sideways: it reports face buttons
  * (buttonMask bit 0) but no right stick (bit 8), which a right one held
  * upright has with its face buttons, and its SL and SR are the shoulders.
@@ -205,7 +200,9 @@ export function padHasControl(control: string, pad: PadControls): boolean {
 export function controllerLabels(
   type: string,
   reported: Record<string, string> = {},
-  buttonMask?: number,
+  // No longer decides anything (a single Joy-Con is always upright); the
+  // parameter stays so the language keeps its place for the callers.
+  _buttonMask?: number,
   language: Language = "zh-CN",
 ): Record<string, string> {
   const family = familyName(type);
@@ -260,21 +257,10 @@ export function controllerLabels(
               guide: "Home",
             }
           : {};
-  // A single Joy-Con's shoulder names depend on its actual mapped controls.
-  const sideways = isSidewaysJoyCon(type, buttonMask);
-  const joyConLabels = sideways
-    ? {
-        leftshoulder: "SL",
-        rightshoulder: "SR",
-        start: type === "joyconleft" ? "−" : "+",
-        guide: type === "joyconleft" ? "Capture" : "Home",
-      }
-    : {};
   return {
     ...common,
     ...familyLabels,
-    ...joyConLabels,
-    ...paddleLabels(type, sideways),
+    ...paddleLabels(type),
     ...Object.fromEntries(
       [1, 2, 3, 4, 5, 6].map((index) => [
         `misc${index}`,
@@ -293,61 +279,43 @@ export function controllerLabels(
  * Which buttons a controller can have for its function key, the default
  * first (ADR-0012, ADR-0017); the daemon's padfamily.Family.FunctionKeys has
  * the same table (pads.list sends the options it has for a controller, the
- * mapping page works from the controller alone).
+ * mapping page works from the controller alone). A single Joy-Con is always
+ * held upright.
  *
- * - A single Joy-Con held sideways: the big trigger on its side, ZR on the
- *   right one (paddle3) or ZL on the left one (paddle4), or the shoulder
- *   button above it, R (paddle1) or L (paddle2).
- * - A single Joy-Con held upright: the one of − and + it has, − on the left
- *   one (back), + on the right one (start).
+ * - A single left Joy-Con: ZL ("lt", the trigger's virtual button) or L.
+ * - A single right Joy-Con: ZR ("rt") or R.
  * - A pair of Joy-Cons: − (back) or + (start), − the default.
  * - Every other controller: Menu (start) or View (back), Menu the default.
  */
-export function padFunctionKeys(
-  type: string,
-  buttonMask?: number,
-): FunctionKey[] {
+export function padFunctionKeys(type: string): FunctionKey[] {
   if (type === "joyconpair") return ["back", "start"];
-  if (type === "joyconleft")
-    return isSidewaysJoyCon(type, buttonMask)
-      ? ["paddle4", "paddle2"]
-      : ["back"];
-  if (type === "joyconright")
-    return isSidewaysJoyCon(type, buttonMask)
-      ? ["paddle3", "paddle1"]
-      : ["start"];
+  if (type === "joyconleft") return ["lt", "leftshoulder"];
+  if (type === "joyconright") return ["rt", "rightshoulder"];
   return ["start", "back"];
 }
 
 /** The function key a controller has until a setting chooses another. */
-export function defaultPadFunctionKey(
-  type: string,
-  buttonMask?: number,
-): FunctionKey {
-  return padFunctionKeys(type, buttonMask)[0] ?? "start";
+export function defaultPadFunctionKey(type: string): FunctionKey {
+  return padFunctionKeys(type)[0] ?? "start";
 }
 
 /** Whether the button can be the function key of the pad. */
-export function padHasFunctionKey(
-  key: FunctionKey,
-  type: string,
-  buttonMask?: number,
-): boolean {
-  return padFunctionKeys(type, buttonMask).includes(key);
+export function padHasFunctionKey(key: FunctionKey, type: string): boolean {
+  return padFunctionKeys(type).includes(key);
 }
 
 /**
  * What the pad prints on the function key, e.g. Menu on an Xbox pad, Options
  * on a DualSense, + on a Switch pad, View, Create or − for the other of the
- * two, ZR or R on a right Joy-Con held sideways.
+ * two, ZL, L, ZR or R on a single Joy-Con. lt and rt are the virtual buttons
+ * of the triggers, so they are named by the trigger.
  */
 export function functionKeyLabel(
   key: FunctionKey,
   type: string,
   reported: Record<string, string> = {},
-  buttonMask?: number,
 ): string {
-  return controllerLabels(type, reported, buttonMask)[key] ?? key;
+  return controllerLabels(type, reported)[functionKeyControl(key)] ?? key;
 }
 
 export function axisPosition(value = 0): number {
