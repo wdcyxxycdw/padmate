@@ -1,4 +1,4 @@
-import { type FunctionKey, functionKeyControl } from "../editor/editor-model";
+import type { FunctionKey } from "../editor/editor-model";
 import type { Language, PadInput } from "../state/store";
 
 export type ControllerFamily = "xbox" | "playstation" | "nintendo" | "generic";
@@ -315,7 +315,12 @@ export function functionKeyLabel(
   type: string,
   reported: Record<string, string> = {},
 ): string {
-  return controllerLabels(type, reported)[functionKeyControl(key)] ?? key;
+  // lt and rt are the triggers' virtual buttons; their names are the
+  // triggers' (editor-model's functionKeyControl, not imported: the daemon's
+  // padlabel test loads this module in node without the rest of the app).
+  const control =
+    key === "lt" ? "lefttrigger" : key === "rt" ? "righttrigger" : key;
+  return controllerLabels(type, reported)[control] ?? key;
 }
 
 export function axisPosition(value = 0): number {
