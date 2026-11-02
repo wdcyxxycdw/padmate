@@ -6,8 +6,8 @@
 //
 // Options in the address: ?size=880x600 (the stage of each, 440 by 440 at
 // least), ?lang=en or zh-CN, ?gen=1 or 2 (Switch 1 or 2 only), ?only=a,b (some
-// of: left-horizontal, right-horizontal, left-vertical, right-vertical, pair),
-// ?notice=1 (the editor notice's lift of the row below), ?check=1 (once every
+// of: left-vertical, right-vertical, pair), ?notice=1 (the editor notice's
+// lift of the editor notice, for the rows that have one), ?check=1 (once every
 // controller has drawn, reads the chips and leaders back from the DOM, checks
 // them (layout-check.ts) and writes the result as JSON into <pre
 // id="layout-check">; tests/preview/check-layouts.mjs runs it headless).
@@ -30,10 +30,8 @@ import { type CellCheck, checkCell } from "./layout-check";
 type Language = "zh-CN" | "en";
 
 const placements = [
-  ["left-horizontal", "Left Joy-Con, horizontal", "joyConLeftSideways"],
-  ["right-horizontal", "Right Joy-Con, horizontal", "joyConRightSideways"],
-  ["left-vertical", "Left Joy-Con, vertical", "joyConLeftUpright"],
-  ["right-vertical", "Right Joy-Con, vertical", "joyConRightUpright"],
+  ["left-vertical", "Left Joy-Con", "joyConLeftUpright"],
+  ["right-vertical", "Right Joy-Con", "joyConRightUpright"],
   ["pair", "Pair", "joyConPair"],
 ] as const;
 const generations = [

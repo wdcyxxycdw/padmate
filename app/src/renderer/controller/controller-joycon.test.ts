@@ -11,15 +11,8 @@ import {
 import { joyCon2Pads, sdlPads } from "../testing/sdl-pads";
 import { joyConMaxHeight } from "./controller-joycon";
 
-type JoyConName =
-  | "joyConLeftSideways"
-  | "joyConRightSideways"
-  | "joyConLeftUpright"
-  | "joyConRightUpright"
-  | "joyConPair";
+type JoyConName = "joyConLeftUpright" | "joyConRightUpright" | "joyConPair";
 const layouts: JoyConName[] = [
-  "joyConLeftSideways",
-  "joyConRightSideways",
   "joyConLeftUpright",
   "joyConRightUpright",
   "joyConPair",
@@ -115,17 +108,12 @@ describe.each(generations)("$name shells", (generation) => {
     model.dispose();
   });
 
-  it("turns a Joy-Con held sideways and stands one upright otherwise", async () => {
+  it("stands a single Joy-Con upright, and the pair is two of them", async () => {
     const sizes = new Map<string, Vector3>();
     for (const name of layouts) {
       const model = await joyCon(name);
       sizes.set(name, outline(model).getSize(new Vector3()));
       model.dispose();
-    }
-    for (const name of ["joyConLeftSideways", "joyConRightSideways"]) {
-      const size = sizes.get(name) as Vector3;
-      expect(size.x, name).toBeCloseTo(5.6, 6);
-      expect(size.y, name).toBeLessThan(2.1);
     }
     for (const name of ["joyConLeftUpright", "joyConRightUpright"]) {
       const size = sizes.get(name) as Vector3;
@@ -163,52 +151,6 @@ describe.each(generations)("$name shells", (generation) => {
       model.dispose();
     },
   );
-
-  it("lays a left Joy-Con held sideways with the stick on the left and the rail on top", async () => {
-    const model = await joyCon("joyConLeftSideways");
-    const p = (control: string) => pointOf(model, control);
-    const faces = ["south", "east", "west", "north"].map(p);
-    for (const face of faces) expect(p("leftstick").x).toBeLessThan(face.x);
-    // The D-pad's four buttons, turned: down is east, left is south.
-    expect(p("west").x).toBeLessThan(p("south").x);
-    expect(p("south").x).toBeCloseTo(p("north").x, 1);
-    expect(p("south").x).toBeLessThan(p("east").x);
-    expect(p("south").y).toBeLessThan(p("west").y);
-    expect(p("west").y).toBeCloseTo(p("east").y, 1);
-    expect(p("west").y).toBeLessThan(p("north").y);
-    // SL and SR along the rail, on top, SL nearer the stick.
-    expect(p("leftshoulder").x).toBeLessThan(p("rightshoulder").x);
-    for (const rail of [p("leftshoulder"), p("rightshoulder")])
-      for (const face of faces) expect(rail.y).toBeGreaterThan(face.y);
-    // L and ZL at the stick end, Capture at the other.
-    expect(p("paddle2").x).toBeLessThan(p("leftstick").x);
-    expect(p("paddle4").x).toBeLessThan(p("leftstick").x);
-    expect(p("guide").x).toBeGreaterThan(p("leftstick").x);
-    model.dispose();
-  });
-
-  it("lays a right Joy-Con held sideways with the stick on the left and the rail on top", async () => {
-    const model = await joyCon("joyConRightSideways");
-    const p = (control: string) => pointOf(model, control);
-    const faces = ["south", "east", "west", "north"].map(p);
-    for (const face of faces) expect(p("leftstick").x).toBeLessThan(face.x);
-    // A is south, X east, B west, Y north.
-    expect(p("west").x).toBeLessThan(p("south").x);
-    expect(p("south").x).toBeCloseTo(p("north").x, 1);
-    expect(p("south").x).toBeLessThan(p("east").x);
-    expect(p("south").y).toBeLessThan(p("west").y);
-    expect(p("west").y).toBeCloseTo(p("east").y, 1);
-    expect(p("west").y).toBeLessThan(p("north").y);
-    expect(p("leftshoulder").x).toBeLessThan(p("rightshoulder").x);
-    for (const rail of [p("leftshoulder"), p("rightshoulder")])
-      for (const face of faces) expect(rail.y).toBeGreaterThan(face.y);
-    // R and ZR at the face end, on the right; Home at the stick end.
-    expect(p("paddle1").x).toBeGreaterThan(p("north").x);
-    expect(p("paddle3").x).toBeGreaterThan(p("north").x);
-    expect(p("start").x).toBeGreaterThan(p("north").x);
-    expect(p("guide").x).toBeLessThan(p("south").x);
-    model.dispose();
-  });
 
   it("lays an upright left Joy-Con with the D-pad below the stick and L above it", async () => {
     const model = await joyCon("joyConLeftUpright");
@@ -289,8 +231,6 @@ describe.each(generations)("$name shells", (generation) => {
   it.each([
     ["joyConLeftUpright", ["left"]],
     ["joyConRightUpright", ["right"]],
-    ["joyConLeftSideways", ["left"]],
-    ["joyConRightSideways", ["left"]],
     ["joyConPair", ["left", "right"]],
   ] as const)(
     "tilts the sticks of %s on input and resets them",

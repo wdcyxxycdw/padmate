@@ -53,7 +53,7 @@ describe("licensed controller assets", () => {
     "ps5Edge",
     "switchPro",
     "joyConPair",
-    "joyConLeftSideways",
+    "joyConLeftUpright",
     "joyConRightUpright",
     "xboxElite",
   ] as const)("anchors every chip of %s on the model", async (name) => {

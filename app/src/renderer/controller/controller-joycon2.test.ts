@@ -173,7 +173,7 @@ const joyCon2 = (name: keyof typeof joyCon2Pads) => {
 };
 
 describe("the C button of a Joy-Con 2", () => {
-  it.each(["joyConRightSideways", "joyConRightUpright", "joyConPair"] as const)(
+  it.each(["joyConRightUpright", "joyConPair"] as const)(
     "is on the C part of %s, with its own label",
     async (name) => {
       const model = await joyCon2(name);
@@ -205,7 +205,6 @@ describe("the C button of a Joy-Con 2", () => {
     // The left one has none, nor has a Switch OLED Joy-Con.
     for (const info of [
       joyCon2Pads.joyConLeftUpright,
-      joyCon2Pads.joyConLeftSideways,
       sdlPads.joyConRightUpright,
       sdlPads.joyConPair,
     ]) {
@@ -245,15 +244,19 @@ describe("the C button of a Joy-Con 2", () => {
 });
 
 describe("a Joy-Con 2 pair", () => {
-  it("has the Capture and the C button in the row below, and no SL or SR", () => {
-    const row = controllerCallouts(joyCon2Pads.joyConPair)
-      .filter((entry) => entry.placement === "bottom")
-      .sort((a, b) => (a.offset ?? 0) - (b.offset ?? 0))
-      .map((entry) => [entry.control, entry.offset]);
-    expect(row).toEqual([
-      ["misc1", -0.5],
-      ["misc2", 0.5],
-    ]);
+  it("has the Capture last in the left column and the C button last in the right, and no SL or SR", () => {
+    const callouts = controllerCallouts(joyCon2Pads.joyConPair);
+    const last = (placement: "left" | "right") =>
+      callouts
+        .filter((entry) => entry.placement === placement)
+        .sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0))
+        .map((entry) => entry.control)
+        .at(-1);
+    expect(last("left")).toBe("misc1");
+    expect(last("right")).toBe("misc2");
+    expect(callouts.some((entry) => entry.placement === "bottom")).toBe(false);
+    for (const control of ["paddle1", "paddle2", "paddle3", "paddle4"])
+      expect(callouts.map((entry) => entry.control)).not.toContain(control);
   });
 
   it("is drawn with the Joy-Con 2 of each side and the Capture of the left one", async () => {

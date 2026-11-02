@@ -7,10 +7,10 @@ import {
   joyConKind,
   staticLayout,
 } from "./controller-joycon-layout";
+import type { Route } from "./controller-layout";
 import {
   controllerLabels,
   familyName,
-  isSidewaysJoyCon,
   padHasControl,
 } from "./controller-model";
 
@@ -28,10 +28,12 @@ export type ModelInfo = Pick<
 /**
  * Where one controller chip sits on the stage.
  *
- * - `left`/`right`: the side columns. `slot` 2–7 counts from the top. A
- *   stick is two cells in one chip and takes two slots (`span`); `slot` is
- *   the first of them.
- * - `top` with a `side`: the shoulder corner above that column, `slot` 0–1.
+ * - `left`/`right`: the side columns. `slot` 2–7 counts from the top (a
+ *   Joy-Con's has seven slots from 1, and may be fractional or count from the
+ *   model's top, `hang`). A stick is two cells in one chip and takes two
+ *   slots (`span`); `slot` is the first of them.
+ * - `top` with a `side`: the shoulder corner above that column, `slot` 0–1
+ *   (a Joy-Con pair's counts from the model's top and is above 0).
  * - `top` without a side: the row above the controller, `offset` chip widths
  *   from the center. A `raised` chip sits a little higher than the rest.
  * - `bottom`: the row below the controller, `offset` chip widths from the
@@ -45,10 +47,34 @@ export interface Callout {
   placement: "left" | "right" | "top" | "bottom";
   side?: "left" | "right";
   slot?: number;
+  /**
+   * Where the chip is in the compact and mini densities (chip sizes differ
+   * with them, so a Joy-Con's layout is made for each): `slot` when absent.
+   */
+  slotCompact?: number;
+  slotMini?: number;
   /** How many slots a chip of a side column is tall; 1 when absent. */
   span?: number;
   offset?: number;
   raised?: boolean;
+  /**
+   * A Joy-Con's chip of a column or corner whose `slot` counts from the top of
+   * the model on the stage (modelTop, controller-layout.ts), not from the
+   * middle of the stage: it keeps to the model's top buttons as the model
+   * grows.
+   */
+  hang?: boolean;
+  /**
+   * How the leader of a Joy-Con's chip is bent (controller-layout.ts,
+   * leaderPath). Without it the leader is straight, as for every other pad.
+   */
+  route?: Route;
+  /**
+   * The control whose part is right beside this one's (a Joy-Con's L beside
+   * ZL), which this leader (or that one's) cannot help passing; a layout does
+   * not count that as touching.
+   */
+  twin?: string;
 }
 
 // The extra buttons in the row below the controller, left to right: the left
@@ -66,8 +92,8 @@ const bottomRow = [
 
 // Each endpoint identifies one physical control; the same IDs feed selection
 // and input feedback. A pad gets a chip for each control it has
-// (padHasControl), so a single Joy-Con held sideways shows no D-pad and a
-// DualSense Edge its four back and Fn buttons. A pair of Joy-Cons has no SL
+// (padHasControl), so a single right Joy-Con shows no D-pad and a DualSense
+// Edge its four back and Fn buttons. A pair of Joy-Cons has no SL
 // or SR chip: they cannot be pressed with the two joined (diagramHidden).
 // A Joy-Con's chips are placed by controller-joycon-layout.ts; the others by
 // the columns and rows below.
@@ -102,9 +128,7 @@ export function controllerCallouts(
   // columns, then the row below.
   add("lefttrigger", "top", { side: "left", slot: 0 });
   add("leftshoulder", "top", { side: "left", slot: 1 });
-  // A single Joy-Con held sideways has no back, only start.
-  if (!isSidewaysJoyCon(info.type, info.buttonMask))
-    add("back", "top", { offset: -1 });
+  add("back", "top", { offset: -1 });
   // The touchpad takes the top center. The Xbox, PS or Home button has no
   // chip: padmate never maps it (ADR-0012).
   add("touchpad", "top", { offset: 0, raised: true });

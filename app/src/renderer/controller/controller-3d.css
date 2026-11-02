@@ -172,7 +172,9 @@
  * Chip layout. All sizes are per density; positions follow the model, whose
  * half width is min(41cqh, 29.4cqw) (5.6 units under the scene's camera fit).
  *
- * - Side columns: slots 2–6 stack around the stage's middle, hugging the model.
+ * - Side columns: slots 2–6 stack around the stage's middle, hugging the model
+ *   (a Joy-Con's seven slots from 1; with a --slot-compact and --slot-mini
+ *   where its layout moves a chip in those densities).
  * - Shoulder corners: slots 0–1 above a column, a little closer to the model.
  * - Top row: centered above the model, raised chip a little higher.
  * - Bottom: a row below the model, centered like the top row, above the
@@ -189,6 +191,7 @@
   --corner-gap: 14px;
   --corner-shift: 24px;
   --top-w: clamp(120px, 13cqw, 140px);
+  --pair-top-w: 120px;
   --top-gap: 10px;
   --top-raise: 22px;
   --top-y: clamp(12px, calc(22.6cqh - 64px), calc(50cqh - 300px));
@@ -198,6 +201,13 @@
     var(--edge),
     calc(50cqw - min(41cqh, 29.4cqw) - var(--chip-w) - var(--model-gap))
   );
+}
+/* The slot a chip is at in this density: --slot, or where the layout moved it
+   for the compact and mini densities (--slot-compact, --slot-mini, from
+   Controller.tsx). */
+.stage-chip,
+.stage-stick {
+  --s: var(--slot);
 }
 .stage-chip {
   position: absolute;
@@ -227,7 +237,7 @@
 .stage-chip[data-placement="left"],
 .stage-chip[data-placement="right"],
 .stage-chip[data-side] {
-  top: calc(50% + (var(--slot) - 4) * var(--pitch));
+  top: calc(50% + (var(--s) - 4) * var(--pitch));
   transform: translateY(-50%);
 }
 .stage-chip[data-placement="left"] {
@@ -237,7 +247,7 @@
   right: var(--side-x);
 }
 .stage-chip[data-side] {
-  top: calc(50% + (var(--slot) - 4) * var(--pitch) - var(--corner-gap));
+  top: calc(50% + (var(--s) - 4) * var(--pitch) - var(--corner-gap));
 }
 .stage-chip[data-side="left"] {
   left: calc(var(--side-x) + var(--corner-shift));
@@ -302,6 +312,33 @@
   --model-w: 5.6;
   --model-h: 2.1;
   --unit: min(14.653cqh, calc(58.824cqw / var(--model-w)));
+  /* Where the top of the model is. A Joy-Con's columns and shoulder corners
+     hang from it (their --slot counts from it): the model grows with the
+     stage and the chips do not, so the chips by its top buttons keep to them. */
+  --model-top: calc(50cqh - var(--model-h) * var(--unit));
+  /* The pair's shoulder corners start at slot -1.59 (cornerTopSlot): where the
+     model is too near the stage's top for the top one to keep 4px from it,
+     both sit lower by the difference. */
+  --corner-lift: max(
+    0px,
+    calc(4px + var(--chip-h) / 2 - var(--model-top) + 1.59 * var(--pitch))
+  );
+}
+.controller-labels[data-wide-rows]
+  .stage-chip[data-hang][data-placement="left"],
+.controller-labels[data-wide-rows]
+  .stage-chip[data-hang][data-placement="right"] {
+  top: calc(var(--model-top) + var(--s) * var(--pitch));
+}
+.controller-labels[data-wide-rows] .stage-stick[data-hang] {
+  top: calc(
+    var(--model-top) +
+    (var(--s) + (var(--span) - 1) / 2) *
+    var(--pitch)
+  );
+}
+.controller-labels[data-wide-rows] .stage-chip[data-side][data-hang] {
+  top: calc(var(--model-top) + var(--s) * var(--pitch) + var(--corner-lift));
 }
 .controller-labels[data-wide-rows][data-corners] {
   --top-inset: calc(var(--side-x) + var(--chip-w) + var(--top-gap));
@@ -331,6 +368,13 @@
     8px,
     calc(50cqh - var(--model-h) * var(--unit) - var(--chip-h) - 10px)
   );
+}
+.controller-labels[data-wide-rows]:not([data-wide-top])
+  .stage-chip[data-placement="top"]:not([data-side]) {
+  /* The row above a pair is narrower: its shoulders' leaders pass its ends. */
+  --chip-top-w: min(var(--top-w), var(--pair-top-w));
+  width: var(--chip-top-w);
+  left: calc(50% + var(--offset) * (var(--chip-top-w) + var(--top-gap)));
 }
 .controller-labels[data-wide-rows] .stage-chip[data-placement="bottom"] {
   --row-pitch: min(
@@ -364,7 +408,7 @@
   gap: var(--cell-gap);
   width: var(--chip-w);
   height: calc(var(--chip-h) + (var(--span) - 1) * var(--pitch));
-  top: calc(50% + (var(--slot) + (var(--span) - 1) / 2 - 4) * var(--pitch));
+  top: calc(50% + (var(--s) + (var(--span) - 1) / 2 - 4) * var(--pitch));
   transform: translateY(-50%);
 }
 .stage-stick[data-placement="left"] {
@@ -635,6 +679,10 @@
 
 /* Compact: one line. */
 @container stage (width < 860px) or (height < 600px) {
+  .stage-chip,
+  .stage-stick {
+    --s: var(--slot-compact, var(--slot));
+  }
   .controller-labels {
     --chip-h: 32px;
     --chip-w: clamp(96px, 16cqw, 124px);
@@ -643,6 +691,7 @@
     --corner-gap: 8px;
     --corner-shift: 16px;
     --top-w: clamp(88px, 14cqw, 112px);
+    --pair-top-w: 96px;
     --top-gap: 8px;
     --top-raise: 16px;
     --top-y: clamp(8px, calc(22.6cqh - 44px), calc(50cqh - 196px));
@@ -704,6 +753,10 @@
 
 /* Mini: the control's badge only; the name stays in aria-label and title. */
 @container stage (width < 600px) or (height < 440px) {
+  .stage-chip,
+  .stage-stick {
+    --s: var(--slot-mini, var(--slot));
+  }
   .controller-labels {
     --chip-h: 30px;
     --chip-w: 30px;
@@ -712,6 +765,7 @@
     --corner-gap: 4px;
     --corner-shift: 10px;
     --top-w: 30px;
+    --pair-top-w: 30px;
     --top-gap: 8px;
     --top-raise: 12px;
     --top-y: clamp(6px, calc(22.6cqh - 36px), calc(50cqh - 170px));

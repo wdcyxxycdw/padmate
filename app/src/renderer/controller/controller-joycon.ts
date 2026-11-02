@@ -56,8 +56,8 @@ const capture = "capture";
  * 7.9 sin(tilt) on the low side, stays above the shell: at 0.3 it is 8.5 mm
  * over a shell of 7.2 to 7.9 (checked against the shell for all eight pushes
  * in the tests), at 0.4 it would meet it. A full push moves the cap top by
- * 8 sin(0.3) = 2.4 mm, 0.09 of the normalized model upright and 0.12 sideways,
- * as much as the DualSense's; the 2D gauge carries the exact reading.
+ * 8 sin(0.3) = 2.4 mm, 0.09 of the normalized model, as much as the
+ * DualSense's; the 2D gauge carries the exact reading.
  */
 export const joyConStick = { depth: 0.008, maxTilt: 0.3 };
 
@@ -89,36 +89,10 @@ export function joyCon2StickDepth(mesh: Mesh): number {
 
 type Table = Readonly<Record<string, string>>;
 
-// The part that serves each control, by the Joy-Con's side and how it is
-// held. A sideways Joy-Con is SDL's "mini gamepad": its face buttons are the
-// four buttons of the side facing the player, the stick is always the left
-// stick, and SL and SR are the shoulders.
-const sidewaysLeft: Table = {
-  south: "dpad-left",
-  east: "dpad-down",
-  west: "dpad-up",
-  north: "dpad-right",
-  leftstick: "stick",
-  leftshoulder: "sl",
-  rightshoulder: "sr",
-  paddle2: "l",
-  paddle4: "zl",
-  start: "minus",
-  guide: capture,
-};
-const sidewaysRight: Table = {
-  south: "a",
-  east: "x",
-  west: "b",
-  north: "y",
-  leftstick: "stick",
-  leftshoulder: "sl",
-  rightshoulder: "sr",
-  paddle1: "r",
-  paddle3: "zr",
-  start: "plus",
-  guide: "home",
-};
+// The part that serves each control, by the Joy-Con's side. A single Joy-Con
+// is always shown upright (SDL's vertical grip): the D-pad and the Capture
+// button of the left one, the four buttons and Home of the right one, and SL
+// and SR as the paddles.
 const uprightLeft: Table = {
   "dpad.up": "dpad-up",
   "dpad.down": "dpad-down",
@@ -169,16 +143,13 @@ function rootOf(asset: Object3D, name: string): Object3D {
  * Turns or lays out the Joy-Cons in `asset` (before it is normalized) and
  * says which part serves each control:
  *
- * - held sideways: the left one turned 90° counter-clockwise, the right one
- *   90° clockwise, so the stick is on the left and the rail on top;
- * - upright: as the file has it;
+ * - a single one: upright, as the file has it;
  * - a pair: the left one at -x and the right one at +x, upright, a
  *   `pairGap` of a width apart.
  */
 export function layoutJoyCons(
   asset: Object3D,
   shell: JoyConShell,
-  sideways: boolean,
 ): JoyConLayout {
   const assign = (table: Table, root: Object3D): Assignment[] =>
     Object.entries(table).map(([control, part]) => ({ control, root, part }));
@@ -201,14 +172,7 @@ export function layoutJoyCons(
     };
   }
   const left = shell.endsWith("-left");
-  if (sideways) asset.rotation.z = left ? Math.PI / 2 : -Math.PI / 2;
-  const table = sideways
-    ? left
-      ? sidewaysLeft
-      : sidewaysRight
-    : left
-      ? uprightLeft
-      : uprightRight;
+  const table = left ? uprightLeft : uprightRight;
   return { assignments: assign(withC(table, left), asset) };
 }
 
