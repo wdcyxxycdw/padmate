@@ -22,6 +22,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 | IPC | JSON-RPC 2.0 over a named pipe, token authentication, an ACL limited to the current user | [IPC](adr/0009-ipc.md) |
 | Scripts | goja + esbuild; gesture recognition and output shared with declarative mappings | [Scripting runtime](adr/0010-scripting-runtime.md), [Scripts as macros](adr/0011-script-macros.md) |
 | UI and diagnostics | Electron + React; the overlay is a second window | [Editor UI](adr/0013-editor-ui.md), [Overlay](adr/0014-overlay.md), [Diagnostics](adr/0016-diagnostics.md) |
+| CLIP STUDIO PAINT | `csp.json` beside the profile records the CSP function of each key; pick functions from CSP, find conflicts, write back (CSP closed, backed up first, can be rolled back), check for differences when the profile becomes active | [CLIP STUDIO PAINT](adr/0019-clip-studio-paint.md) |
 | Packaging | A per-user NSIS installer; a portable zip besides; updates read `padmate.download`, which has a download page | [Installer and updates](adr/0018-installer-and-updates.md) |
 
 ## 1. Principles
@@ -31,7 +32,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 3. **Output has a single writer.** Inside the daemon only T-output calls SendInput; `padmatectl send` and the injection tests call it directly, outside the process.
 4. **Latency is spent only where it is needed**: how long a gesture waits depends only on the bindings that can be reached.
 5. **A change of state reaches the user through at least two channels**: the controller, the tray, the overlay.
-6. **Output is keyboard shortcuts and the mouse only**; nothing is specific to an app.
+6. **Output is keyboard shortcuts and the mouse only.** The one app-specific part is CLIP STUDIO PAINT: padmate reads and writes its shortcut settings to pick functions, find conflicts and keep them in sync; the engine and the output are the same for every app (§16).
 
 ## 2. Process model
 
@@ -1288,6 +1289,14 @@ Other rules:
 
 `Taskfile.yml` is the reference, `task --list` lists everything, and the common tasks are in [CLAUDE.md](../CLAUDE.md). `ci` includes no real injection, forced SDL, latency benchmark or Playwright. `test:inject` runs `sdl` first and sets `PADMATE_REQUIRE_SDL=1` and `PADMATE_REQUIRE_SESSION=1`. `bench` takes about 4.5 minutes; a test that times out runs no cleanup, so the tests check their deadlines themselves (§14). `test:installer` temporarily writes real uninstall entries and shortcuts, and refuses to run on a machine with padmate installed. The tests of the download site (`site:test`, Node's own runner, no dependencies) are part of `ci`; `site:dev` and `site:dry-run` change nothing online, and `site:qr` regenerates the donation QR codes of the page (§15.5).
 
-## 16. ADR
+## 16. CLIP STUDIO PAINT
+
+The decisions are in [ADR: CLIP STUDIO PAINT](adr/0019-clip-studio-paint.md), the format facts in [PITFALLS](PITFALLS.md#clip-studio-paint). v1.2 is being implemented; this section grows with the code.
+
+- **CSP's files**: `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*\Shortcut\default.khc` (commands) and `Tool\EditImageTool.todb` (tools). They are opened read-only; changes are made only on a copy in the same folder, which then replaces the file atomically.
+- **padmate's file**: `profiles/<id>/csp.json`, the CSP function of each key this profile uses. The backups taken before a write are in `<data dir>\csp-backups\<UTC time>\`, at most 30.
+- **Packages**: `internal/csp` is pure logic (models of both files, conversion between CSP key names and KeySpecs, conflicts and cycle keys, the sync comparison, edits on a copy) and is tested on Linux; `internal/cspfile` handles locations, finding `CLIPStudioPaint.exe` by image name, backups, safe replacement and restore. The engine packages import neither.
+
+## 17. ADR
 
 The architecture decision records are in [adr/](adr/README.md), by topic, each saying only what is decided now; when a decision changes, that record is edited.

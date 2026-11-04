@@ -30,6 +30,7 @@ How the documents divide the work:
 | [Explainable mapping and diagnostics](0016-diagnostics.md) | The event record and "why did nothing happen" |
 | [Settings and start at sign-in](0017-settings-and-startup.md) | Settings take effect on save; the settings of each controller (function key, feedback, emergency pause) and the Controllers view; the start-at-sign-in switch and long argument references |
 | [Installation, updates and releases](0018-installer-and-updates.md) | A per-user NSIS wizard installer, the portable package, signing, automatic updates and the download site |
+| [CLIP STUDIO PAINT](0019-clip-studio-paint.md) | Reading and writing CSP's shortcut settings, two files per profile, conflicts and cycle keys, write-back and rollback, the check on activation, overwriting on import |
 
 ## When to change an ADR
 Change one when you:

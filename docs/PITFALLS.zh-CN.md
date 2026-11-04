@@ -269,3 +269,30 @@
 
 ### E2E
 - **前台限制**：录快捷键的辅助进程看系统前台，不是 Electron 焦点。Windows 的前台锁有时不让刚启动的测试窗口拿到前台，`recordShortcut` 10 s 后失败，这是桌面状态：单独重跑，不要靠发按键抢前台（不变量 6）。有人在用电脑时设 `PADMATE_E2E_DISPLAY=secondary`，把窗口挪到第一个非主显示屏。
+
+## CLIP STUDIO PAINT
+
+在 CSP 5.1.5（Windows，InstallShield 安装版）的用户数据副本上核对；标“推断”的还没在 CSP 里验证。决策见 [ADR-0019](adr/0019-clip-studio-paint.zh-CN.md)。
+
+### 文件与位置
+- **数据文件夹**：1.10.13 起在 `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer1_5_0`，5.x 仍用这个名字；1.10.12 及以前在 `文档\CELSYS`。注册表 `HKLM\SOFTWARE\WOW6432Node\CELSYS\CLIP STUDIO PAINT\5.1.x` 是空键，安装目录要从卸载项读。
+- **只有一套快捷键**：没有命名的多套。工作区文件（`.spws`）可以带一份快捷键，载入工作区时才导入 `default.khc`。
+- **写盘时机**（推断，按文件时间）：`EditImageTool.todb` 每次退出 CSP 整批重写；`default.khc` 只在快捷键设置对话框点确定时写。所以 CSP 运行时改 todb 一定丢，改文件只能在 CSP 关着时做。
+
+### `Shortcut\default.khc`
+- SQLite，UTF-8，`journal_mode=delete`，没有索引、触发器和校验和。命令在 `shortcutmenu(_PW_ID, menucommandtype, menucommand, shortcut, modifier)`。
+- 命令的身份是 `menucommandtype`（`basiccommand` 或 `advancedcommand`）加 `menucommand`。ID 有英文单词、GUID、十六进制三种写法，随版本和版级（PRO/EX）增减，所以命令列表以用户自己的文件为准。
+- 没有快捷键时 `shortcut` 是字符串 `'NULL'`（不是 SQL NULL），这样的命令恰好一行。一个命令可以有几个快捷键，每个一行，连续存放。没有两行的（shortcut, modifier）相同。
+- `modifier` 位掩码：1 = Alt，2 = Shift，4 = Ctrl。
+- 符号键用日文键盘的键帽命名（`^`、`@`、`;`、`:`）。在美式和中文键盘上对应哪个实体键还没验证。
+- 快捷键与界面语言无关；名称不在这个文件里，在安装目录 `resource\<语言>\` 的私有资源里。
+
+### `Tool\EditImageTool.todb`
+- SQLite，文本 UTF-16le。`Node` 表用 `NodeFirstChildUuid`、`NodeNextUuid` 串成三层：工具 › 辅助工具组 › 辅助工具。
+- `NodeShortCutKey`：0 = 无，1–26 = A–Z；别的键怎么编码还不知道。工具键没有修饰键。
+- 节点 UUID 跨语言、跨机器稳定（默认工具）；`NodeName` 是用户数据，是初始化 CSP 时那种语言的名字，之后不跟界面语言变。
+- 几个节点可以用同一个键，是 CSP 的循环快捷键：重复按会依次切换（顺序大体是工具面板的顺序，起点和回绕没有官方说明）。
+- 单个字母也可以是命令的快捷键（如 `X`），所以工具键要和命令的单键比较。
+
+### 首选项
+- `Preference\Config.sqlite` 的 `Tool` 表：`UseToolShift`（按住快捷键临时切换工具）和 `ToolShiftTime`（按住多久算临时切换，毫秒，本机 500）。单键按住超过这个时长，CSP 临时切到那个工具，松开切回。

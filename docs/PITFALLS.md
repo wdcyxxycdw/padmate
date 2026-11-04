@@ -269,3 +269,30 @@ The design is in ARCHITECTURE §12, the decisions in [ADR: Editor UI](adr/0013-e
 
 ### E2E
 - **The foreground limit**: the helper that records shortcuts looks at the system foreground, not Electron's focus. Windows' foreground lock sometimes keeps a test window that just started from getting the foreground, and `recordShortcut` fails after 10 s; this is the desktop's state: rerun it on its own, and never send keys to grab the foreground (invariant 6). While someone uses the computer, set `PADMATE_E2E_DISPLAY=secondary` to move the window to the first non-primary display.
+
+## CLIP STUDIO PAINT
+
+Checked on copies of the user data of CSP 5.1.5 (Windows, InstallShield build); items marked "inferred" are not yet verified in CSP. The decisions are in [ADR-0019](adr/0019-clip-studio-paint.md).
+
+### Files and locations
+- **Data folder**: since 1.10.13 it is `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer1_5_0`, and 5.x still uses that name; 1.10.12 and earlier used `Documents\CELSYS`. The registry keys `HKLM\SOFTWARE\WOW6432Node\CELSYS\CLIP STUDIO PAINT\5.1.x` are empty; the install folder comes from the uninstall entry.
+- **One set of shortcuts**: there are no named sets. A workspace file (`.spws`) can carry shortcuts, which go into `default.khc` only when the workspace is loaded.
+- **When files are written** (inferred from file times): `EditImageTool.todb` is rewritten whole every time CSP exits; `default.khc` only when OK is pressed in the shortcut settings dialog. So an edit to todb while CSP runs is always lost, and files may only be changed while CSP is closed.
+
+### `Shortcut\default.khc`
+- SQLite, UTF-8, `journal_mode=delete`, no indexes, triggers or checksums. Commands are in `shortcutmenu(_PW_ID, menucommandtype, menucommand, shortcut, modifier)`.
+- A command is identified by `menucommandtype` (`basiccommand` or `advancedcommand`) plus `menucommand`. IDs are English words, GUIDs or hex strings, and they come and go with the version and edition (PRO/EX), so the list of commands comes from the user's own file.
+- Without a shortcut, `shortcut` is the string `'NULL'` (not SQL NULL), and such a command has exactly one row. A command can have several shortcuts, one row each, stored consecutively. No two rows share (shortcut, modifier).
+- `modifier` is a bitmask: 1 = Alt, 2 = Shift, 4 = Ctrl.
+- Symbol keys are named after the keycaps of a Japanese keyboard (`^`, `@`, `;`, `:`). Which physical key they are on US and Chinese keyboards is not verified.
+- Shortcuts do not depend on the UI language; names are not in this file but in private resources under `resource\<language>\` in the install folder.
+
+### `Tool\EditImageTool.todb`
+- SQLite, text in UTF-16le. The `Node` table links three levels through `NodeFirstChildUuid` and `NodeNextUuid`: tool › sub-tool group › sub-tool.
+- `NodeShortCutKey`: 0 = none, 1–26 = A–Z; how other keys are encoded is unknown. Tool keys have no modifiers.
+- Node UUIDs are stable across languages and machines (for the default tools); `NodeName` is user data, in the language CSP was first set up in, and does not follow the UI language later.
+- Several nodes can share one key: that is CSP's cycle shortcut, where repeated presses switch from one to the next (roughly in the order of the tool palette; where it starts and whether it wraps is not documented).
+- A single letter can also be a command's shortcut (such as `X`), so tool keys are compared with the single-key commands too.
+
+### Preferences
+- The `Tool` table of `Preference\Config.sqlite`: `UseToolShift` (hold a shortcut to switch tools temporarily) and `ToolShiftTime` (how long a hold must be, in ms; 500 here). A single key held longer than that switches to that tool temporarily and back on release.

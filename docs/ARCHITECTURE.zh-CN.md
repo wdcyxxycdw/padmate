@@ -22,6 +22,7 @@
 | IPC | 命名管道 JSON-RPC 2.0，token 认证，ACL 限当前用户 | [IPC](adr/0009-ipc.zh-CN.md) |
 | 脚本 | goja + esbuild；与声明式映射共用手势识别和输出 | [脚本运行时](adr/0010-scripting-runtime.zh-CN.md)、[脚本即宏](adr/0011-script-macros.zh-CN.md) |
 | 界面与诊断 | Electron + React；overlay 是第二个窗口 | [编辑界面](adr/0013-editor-ui.zh-CN.md)、[Overlay](adr/0014-overlay.zh-CN.md)、[诊断](adr/0016-diagnostics.zh-CN.md) |
+| CLIP STUDIO PAINT | 配置旁的 `csp.json` 记下键在 CSP 里对应的功能；从 CSP 选功能、查冲突、写回（关着 CSP、先备份、可回滚）、配置激活时同步检查 | [CLIP STUDIO PAINT 适配](adr/0019-clip-studio-paint.zh-CN.md) |
 | 打包 | NSIS 按用户安装；另有便携 zip；更新读 `padmate.download`，它也有下载页 | [安装包与更新](adr/0018-installer-and-updates.zh-CN.md) |
 
 ## 1. 原则
@@ -31,7 +32,7 @@
 3. **输出只有一个写者。** 守护进程内只有 T-output 调 SendInput；`padmatectl send` 和注入测试在进程外直接调用。
 4. **延迟只花在需要的地方**：手势等待只由可达的绑定决定。
 5. **状态变化至少走两个渠道告知用户**：手柄、托盘、overlay。
-6. **只输出键盘快捷键和鼠标**，不做应用专属兼容。
+6. **只输出键盘快捷键和鼠标。** 唯一的应用专属部分是 CLIP STUDIO PAINT：padmate 读写它的快捷键设置，用来选功能、查冲突和同步；引擎和输出不因软件不同而不同（§16）。
 
 ## 2. 进程模型
 
@@ -1288,6 +1289,14 @@ JSON-RPC 标准码（如 -32602）之外：
 
 以 `Taskfile.yml` 为准，`task --list` 列出全部，常用任务见 [CLAUDE.md](../CLAUDE.md)。`ci` 不含真实注入、强制 SDL、延迟基准和 Playwright。`test:inject` 先 `sdl`，设 `PADMATE_REQUIRE_SDL=1`、`PADMATE_REQUIRE_SESSION=1`。`bench` 约 4.5 分钟，超时的测试不运行 cleanup，所以测试自己检查截止时间（§14）。`test:installer` 会暂写真实的卸载项和快捷方式，机器上装了 padmate 时拒绝运行。下载站的测试（`site:test`，Node 自带的测试运行器，无依赖）属于 `ci`；`site:dev` 和 `site:dry-run` 不改线上任何东西，`site:qr` 重新生成页面上的打赏二维码（§15.5）。
 
-## 16. ADR
+## 16. CLIP STUDIO PAINT
+
+决策见 [ADR：CLIP STUDIO PAINT 适配](adr/0019-clip-studio-paint.zh-CN.md)，格式事实见 [PITFALLS](PITFALLS.zh-CN.md#clip-studio-paint)。v1.2 正在实现，本节随代码补全。
+
+- **CSP 的文件**：`%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*\Shortcut\default.khc`（命令）和 `Tool\EditImageTool.todb`（工具）。只读打开；改动只在同一文件夹的副本上做，再原子替换。
+- **padmate 的文件**：`profiles/<id>/csp.json`，这份配置用到的键在 CSP 里对应的功能。写入前的备份在 `<数据目录>\csp-backups\<UTC 时间>\`，最多 30 份。
+- **包**：`internal/csp` 是纯逻辑（两种文件的模型、CSP 键名与 KeySpec 的换算、冲突与循环键、同步比较、在副本上的改动），可在 Linux 上测试；`internal/cspfile` 管位置、按映像名检测 `CLIPStudioPaint.exe`、备份、安全替换和恢复。引擎包不导入它们。
+
+## 17. ADR
 
 架构决策记录按主题放在 [adr/](adr/README.zh-CN.md)，每篇只写现在有效的决定；决定变了直接改那一篇。
