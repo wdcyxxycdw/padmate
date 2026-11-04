@@ -22,6 +22,7 @@ import {
   movedItems,
   plainChanges,
   retargetKeys,
+  skipText,
 } from "../state/integrations-model";
 import type { Language, PadmateStore } from "../state/store";
 import { Dialog } from "../ui/controls";
@@ -167,6 +168,35 @@ export function IntegrationDifferences({
     }
   };
 
+  /**
+   * After the user has chosen, what still differs cannot be resolved (a
+   * function with no key in the app now, one that is gone, one the plan
+   * skipped): those items keep their old key and the dialog must not come back
+   * for them. The set is dismissed (the daemon keeps that across runs) and the
+   * items are read again, so the drawer's line marks them. A different set of
+   * differences later has another ID and opens the dialog.
+   */
+  const settleRemaining = async (): Promise<DifferenceRow[]> => {
+    const state = store.getState();
+    const fresh = await state.loadIntegrationItems(profileId, info.id);
+    if (fresh.consistent) return [];
+    const id = fresh.differenceId ?? "";
+    if (id && !fresh.dismissed) {
+      try {
+        await state.api.dismissIntegrationDifferences({
+          profile: profileId,
+          integration: info.id,
+          differenceId: id,
+        });
+      } catch {
+        // Not kept across runs, but this run still remembers it.
+      }
+      state.putOffIntegrationDifferences(profileId, info.id, id);
+      await state.loadIntegrationItems(profileId, info.id).catch(() => {});
+    }
+    return differenceRows(fresh.items, fresh.statuses, info.name, language);
+  };
+
   const writePlan = async (plan: IntegrationPlan) => {
     setBusy(true);
     setProblem("");
@@ -176,19 +206,29 @@ export function IntegrationDifferences({
         if (!outcome.cancelled) setProblem(outcome.message);
         return;
       }
-      await store.getState().loadIntegrationItems(profileId, info.id);
+      const left = await settleRemaining();
       setStage({
         kind: "done",
-        text: t(
-          `已把 padmate 里的设置写进 ${info.name}。`,
-          `Wrote the settings of padmate into ${info.name}.`,
-        ),
+        text:
+          t(
+            `已把 padmate 里的设置写进 ${info.name}。`,
+            `Wrote the settings of padmate into ${info.name}.`,
+          ) + leftText(left),
         undo: outcome.written.backup ?? undefined,
       });
     } finally {
       setBusy(false);
     }
   };
+
+  /** The sentence for the items that could not be resolved and keep their key. */
+  const leftText = (left: readonly DifferenceRow[]) =>
+    left.length === 0
+      ? ""
+      : t(
+          ` ${left.map((row) => row.name).join("、")} 没有改，保留了原来的键，会在它的键旁标出。`,
+          ` ${left.map((row) => row.name).join(", ")} could not be changed and keeps its key; it is marked beside the key.`,
+        );
 
   const appWins = async () => {
     const moves = keyMoves(rows);
@@ -226,7 +266,7 @@ export function IntegrationDifferences({
           items: movedItems(fresh.items, moves),
         });
       }
-      await store.getState().loadIntegrationItems(profileId, info.id);
+      await settleRemaining();
       const kept = rows.filter(
         (row) => !moves.some((move) => move.from === row.keys),
       );
@@ -369,7 +409,7 @@ export function IntegrationDifferences({
                     {entry.item.name}
                   </span>
                   <span className="integration-difference-text">
-                    {entry.skipped}
+                    {skipText(entry.skipped ?? "", info.name, language)}
                   </span>
                 </li>
               ))}

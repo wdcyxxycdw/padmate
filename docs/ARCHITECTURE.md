@@ -946,7 +946,7 @@ Besides the standard JSON-RPC codes (such as -32602):
 | `startup.get/set` | Start at sign-in (accepts only `enabled`; the command is always this process's executable and `startupArgs`) |
 | `script.status/reload/describe/registrations/logs/init/import/path/detach` | Scripts |
 | `macros.list/create/import/rename/delete/path` | The macros of the script library, without a profile ID |
-| `integrations.list/functions/check/items/putItems/plan/write/backups/restore/dismiss` | App integrations (ADR-0019); parameters and results are in §16.4. All are on the bridge allow-list |
+| `integrations.list/functions/check/items/putItems/plan/write/backups/restore/dismiss/setDataDir` | App integrations (ADR-0019); parameters and results are in §16.4. All are on the bridge allow-list |
 | `fake.press/release/axis/effects/battery/joycon2` | Only with `--fake-input` |
 | `ui.register` / `ui.setOutput` / `ui.exitReady` | Register a verified UI process; set the switch for output to our own windows; the UI confirms it has saved its edits on tray exit or `daemon.exit` (callable only by registered connections) |
 | `daemon.exit` | The installer asks padmated to exit like the tray's "Exit" (§5); the parameters must be exactly `{reason:"installer"}`, and anything else is -32602 and does nothing |
@@ -1333,7 +1333,7 @@ An app integration lets padmate read and write the shortcut settings of an app. 
 
 **Implementation**
 
-- **One place decides binding**: `integration.Bound(rules, profile ID, exe list)`; `BoundProfiles` is built on it. The `profiles` of `integrations.list`, the activation check and the watcher call only these two, so a later change of the rule touches one place.
+- **One place decides binding**: `integration.Bound(config, profile ID, exe list)`; `BoundProfiles` is built on it. It goes through `Config.Select`: for the app's executable (the bare file name, and the paths of enabled full-path rules with the same file name), the profile the first matching rule selects is bound; with automatic switching off, no profile is bound. The `profiles` of `integrations.list`, the activation check and the watcher call only these two, so a later change of the rule touches one place.
 - **Reads** never open CSP's SQLite files in place. A read copies `default.khc`, `EditImageTool.todb` and `Preference\Config.sqlite` to a temporary folder and reads the copies. The snapshot is cached by the stat (size, modification time) of each file and not read again while that is unchanged; `Revision` is a fingerprint of those stats, so polling is cheap.
 - **`toolShift`** comes from `Preference\Config.sqlite`, table `Tool`, column `UseToolShift`. When it is true, a check of a single key without modifiers carries the `toolShift` note. `modifierKey` is not produced yet (that file is not decoded).
 - **Write**: all changes are validated as a whole first (the function exists, the key can be written, no duplicate or clash); one bad change refuses the whole set (-32602, `data {function, keys, reason}`). Removes are done before adds. Changes that change nothing write no file and make no backup; `backup` of `integrations.write` is then `null`. Before writing it backs up through `internal/cspfile`, then re-checks that the app is not running, that the fingerprints are unchanged and that there is no journal file; after writing it reads back and verifies.

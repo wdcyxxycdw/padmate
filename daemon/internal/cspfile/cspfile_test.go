@@ -628,3 +628,37 @@ func TestFingerprint(t *testing.T) {
 		t.Error("folder fingerprinted")
 	}
 }
+
+func TestRestoreOldestOfFullBackupSet(t *testing.T) {
+	src := t.TempDir()
+	a := filepath.Join(src, "a")
+	writeFile(t, a, "a-oldest")
+	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	var times []time.Time
+	for i := range 40 {
+		times = append(times, start.Add(time.Duration(i)*time.Second))
+	}
+	bk := &Backups{Root: t.TempDir(), Now: fixedClock(times...)}
+	oldest, err := bk.Create([]string{a}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, a, "a-newer")
+	for range DefaultKeep - 1 {
+		if _, err := bk.Create([]string{a}, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if l, _ := bk.List(); len(l) != DefaultKeep {
+		t.Fatalf("setup: %d backups", len(l))
+	}
+	if _, err := bk.Restore(oldest, RestoreOptions{Recheck: func() error { return nil }}); err != nil {
+		t.Fatalf("restoring the oldest of a full set: %v", err)
+	}
+	if got := readFile(t, a); got != "a-oldest" {
+		t.Errorf("restored %q", got)
+	}
+	if _, err := bk.Get(oldest.ID); err != nil {
+		t.Errorf("the restored backup was pruned: %v", err)
+	}
+}

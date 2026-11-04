@@ -108,19 +108,27 @@ func (r *Registry) All() []Integration {
 // or BoundProfiles, so a later change of the rule (an explicit switch in
 // addition to or instead of the program rule) touches this function alone.
 //
-// Today a profile is bound when config.json has an enabled rule whose
-// program is one of exes, compared by file name and ignoring case (the rule
-// may hold a bare name or an absolute path), and whose profile is profileID.
-func Bound(rules []profile.Rule, profileID string, exes []string) bool {
-	for _, r := range rules {
-		if !r.Enabled || r.Profile == nil || *r.Profile != profileID {
-			continue
-		}
-		base := ruleBase(r.Exe)
-		for _, exe := range exes {
-			if strings.EqualFold(base, exe) {
-				return true
-			}
+// A profile is bound when profile.Config.Select, the function that picks the
+// profile of the foreground program, would pick it for one of the
+// integration's programs. So the rule order counts (the first enabled rule
+// that matches decides), a disabled rule or one without a profile binds
+// nothing, and when automatic selection is off (cfg.Enabled false) no rule
+// selects anything, so nothing is bound.
+//
+// Where the program lives is not known, so two kinds of location are tried
+// for each exe: its bare file name (the program is somewhere no full-path
+// rule names; only a rule with a bare name can select it) and each full
+// path that an enabled rule names for a program with that file name. The
+// profile is bound if Select picks it for any of them. A full-path rule that
+// comes after a bare-name rule for the same program therefore binds nothing,
+// because the bare-name rule always wins first.
+func Bound(cfg *profile.Config, profileID string, exes []string) bool {
+	if cfg == nil || !cfg.Enabled {
+		return false
+	}
+	for _, loc := range locations(cfg.Rules, exes) {
+		if sel := cfg.Select(loc, ""); sel.Reason == "rule" && sel.Profile == profileID {
+			return true
 		}
 	}
 	return false
@@ -128,13 +136,16 @@ func Bound(rules []profile.Rule, profileID string, exes []string) bool {
 
 // BoundProfiles lists the IDs of the profiles bound to an integration whose
 // executables are exes, sorted and without duplicates. It is built on Bound.
-func BoundProfiles(rules []profile.Rule, exes []string) []string {
+func BoundProfiles(cfg *profile.Config, exes []string) []string {
+	if cfg == nil {
+		return nil
+	}
 	var out []string
-	for _, r := range rules {
+	for _, r := range cfg.Rules {
 		if r.Profile == nil || slices.Contains(out, *r.Profile) {
 			continue
 		}
-		if Bound(rules, *r.Profile, exes) {
+		if Bound(cfg, *r.Profile, exes) {
 			out = append(out, *r.Profile)
 		}
 	}
@@ -142,10 +153,21 @@ func BoundProfiles(rules []profile.Rule, exes []string) []string {
 	return out
 }
 
-// ruleBase is the file name of a rule's program, which is a bare name or an
-// absolute Windows path.
-func ruleBase(exe string) string {
-	return path.Base(strings.ReplaceAll(exe, `\`, "/"))
+// locations are the program paths Bound asks Select about: each exe by its
+// bare name, and each absolute path an enabled rule names whose file name is
+// an exe (compared ignoring case).
+func locations(rules []profile.Rule, exes []string) []string {
+	out := slices.Clone(exes)
+	for _, r := range rules {
+		if !r.Enabled || r.Profile == nil || !strings.ContainsAny(r.Exe, `\/`) {
+			continue
+		}
+		base := path.Base(strings.ReplaceAll(r.Exe, `\`, "/"))
+		if slices.ContainsFunc(exes, func(e string) bool { return strings.EqualFold(e, base) }) {
+			out = append(out, r.Exe)
+		}
+	}
+	return out
 }
 
 // Namer supplies the names of the software's functions that do not come from

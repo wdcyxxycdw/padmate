@@ -63,6 +63,10 @@ type integrationRun struct {
 	// the check of the active profile even if nothing changed.
 	kick    chan struct{}
 	recheck atomic.Bool
+	// quiet marks the next look as caused by the person's own action over
+	// IPC (items saved, settings written or restored): the UI is told as
+	// usual, but there is no overlay toast or tray notice about it.
+	quiet atomic.Bool
 	// notify shows a notice in the tray; nil means the tray's queue when
 	// there is a tray.
 	notify func(tray.Notification)
@@ -140,6 +144,15 @@ func normalizeLanguage(tag string) string {
 	return "en"
 }
 
+// integActionKick is integKick for the person's own action over IPC: the
+// check runs even if nothing changed, and its result is published without a
+// toast or tray notice.
+func (r *liveRun) integActionKick() {
+	r.integ.recheck.Store(true)
+	r.integ.quiet.Store(true)
+	r.integKick()
+}
+
 // integKick asks the watcher to look now. It never blocks.
 func (r *liveRun) integKick() {
 	select {
@@ -205,13 +218,14 @@ func (r *liveRun) activeProfileID() string {
 // integrationTick is one look at every integration.
 func (r *liveRun) integrationTick() {
 	i := &r.integ
-	rules := r.selectionConfig().Rules
+	cfg := r.selectionConfig()
 	active := r.activeProfileID()
 	listening := r.events.Listening(integrationTopic)
 	force := i.recheck.Swap(false)
+	quiet := i.quiet.Swap(false)
 	for _, in := range r.integrations().All() {
 		id := in.ID()
-		bound := active != "" && integration.Bound(rules, active, in.Exes())
+		bound := active != "" && integration.Bound(cfg, active, in.Exes())
 		i.mu.Lock()
 		w := i.watch[id]
 		if w == nil {
@@ -247,7 +261,7 @@ func (r *liveRun) integrationTick() {
 
 		if bound {
 			if w.profile != active || filesChanged || force {
-				r.integrationCheck(in, active)
+				r.integrationCheck(in, active, quiet)
 			}
 			w.profile = active
 		} else {
@@ -287,8 +301,10 @@ func (r *liveRun) integrationLogClear(id string) {
 
 // integrationCheck compares the items of the active profile, which is bound
 // to the integration, with the software, and announces differences that are
-// new in this run and that the person has not dismissed.
-func (r *liveRun) integrationCheck(in integration.Integration, profileID string) {
+// new in this run and that the person has not dismissed. With quiet, the
+// difference is still published to the topic and remembered as announced,
+// but the overlay and the tray say nothing (the person just caused it).
+func (r *liveRun) integrationCheck(in integration.Integration, profileID string, quiet bool) {
 	lib := r.cfg.opts.library
 	if lib == nil {
 		return
@@ -314,6 +330,11 @@ func (r *liveRun) integrationCheck(in integration.Integration, profileID string)
 		i.mu.Lock()
 		delete(i.announced, key)
 		i.mu.Unlock()
+		// Consistent again: a later, identical difference is new and must
+		// not stay suppressed by an old "leave it alone".
+		if m := r.cfg.opts.memory; m != nil {
+			m.SetDismissed(profileID, id, "")
+		}
 		return
 	}
 	if m := r.cfg.opts.memory; m != nil && m.Dismissed(profileID, id) == diff {
@@ -337,7 +358,9 @@ func (r *liveRun) integrationCheck(in integration.Integration, profileID string)
 		}
 	}
 	r.publishIntegration(rpcIntegrationChanged{Integration: id, Kind: "differences", Profile: profileID, DifferenceID: diff, Count: count})
-	r.integrationAnnounce(in, profileID, diff, count)
+	if !quiet {
+		r.integrationAnnounce(in, profileID, diff, count)
+	}
 }
 
 // integrationAnnounce tells the person about differences without taking the

@@ -1,8 +1,10 @@
 package cspnames
 
 import (
+	"encoding/binary"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestReadPEStrings(t *testing.T) {
@@ -66,9 +68,42 @@ func TestReadPEStringsBadInput(t *testing.T) {
 	}
 }
 
+// TestReadPEStringsSelfReference: a directory whose entries all point back to
+// itself, with the most entries allowed, ends quickly instead of walking
+// every combination of its entries.
+func TestReadPEStringsSelfReference(t *testing.T) {
+	data := selfReferencingPE()
+	start := time.Now()
+	got, err := ReadPEStrings(data)
+	if err != nil || len(got) != 0 {
+		t.Fatalf("got %v, %v", got, err)
+	}
+	if d := time.Since(start); d > 2*time.Second {
+		t.Errorf("took %v", d)
+	}
+}
+
+// selfReferencingPE is a PE whose RT_STRING directory has maxPEEntries
+// entries that all point back to the directory itself.
+func selfReferencingPE() []byte {
+	le := binary.LittleEndian
+	const n = maxPEEntries
+	rsrc := make([]byte, 24+16+8*n)
+	le.PutUint16(rsrc[14:], 1)
+	le.PutUint32(rsrc[16:], rtString)
+	le.PutUint32(rsrc[20:], 0x80000000|24)
+	le.PutUint16(rsrc[24+14:], n)
+	for i := range n {
+		le.PutUint32(rsrc[24+16+8*i:], uint32(i))
+		le.PutUint32(rsrc[24+16+8*i+4:], 0x80000000|24)
+	}
+	return peWithRsrc(rsrc)
+}
+
 func FuzzReadPEStrings(f *testing.F) {
 	f.Add(synthPE(map[uint16]map[uint32]string{0x804: {96: "效果", 97: "马赛克"}, 0x9: {96: "Effect", 97: "Mosaic"}}))
 	f.Add([]byte("MZ"))
+	f.Add(selfReferencingPE())
 	f.Fuzz(func(t *testing.T, data []byte) {
 		s, err := ReadPEStrings(data)
 		if err == nil {

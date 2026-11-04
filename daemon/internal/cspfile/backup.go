@@ -95,6 +95,11 @@ func (bk *Backups) now() time.Time {
 // newest Keep complete ones; a failure there does not fail Create (call
 // Prune to see it).
 func (bk *Backups) Create(files []string, note json.RawMessage) (Backup, error) {
+	return bk.create(files, note, "")
+}
+
+// create is Create that never prunes the backup protect (when not empty).
+func (bk *Backups) create(files []string, note json.RawMessage, protect string) (Backup, error) {
 	if len(files) == 0 {
 		return Backup{}, errors.New("cspfile: backup of no files")
 	}
@@ -151,7 +156,7 @@ func (bk *Backups) Create(files []string, note json.RawMessage) (Backup, error) 
 	if err := writeManifest(dir, b.Manifest); err != nil {
 		return fail(err)
 	}
-	_ = bk.Prune()
+	_ = bk.prune(protect)
 	return b, nil
 }
 
@@ -295,7 +300,11 @@ func (bk *Backups) Get(id string) (Backup, error) {
 
 // Prune deletes the complete backups beyond the newest Keep, and unfinished
 // folders older than the newest complete backup.
-func (bk *Backups) Prune() error {
+func (bk *Backups) Prune() error { return bk.prune("") }
+
+// prune is Prune that keeps the backup protect (when not empty) even when it
+// is beyond the newest Keep; Restore protects the backup it is restoring.
+func (bk *Backups) prune(protect string) error {
 	complete, incomplete, err := bk.scan()
 	if err != nil {
 		return err
@@ -303,6 +312,9 @@ func (bk *Backups) Prune() error {
 	var errs []error
 	if len(complete) > bk.keep() {
 		for _, b := range complete[bk.keep():] {
+			if b.ID == protect {
+				continue
+			}
 			errs = append(errs, bk.removeBackupDir(b.ID))
 		}
 	}

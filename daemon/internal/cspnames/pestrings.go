@@ -14,6 +14,10 @@ const (
 	rtString        = 6
 	maxPEEntries    = 4096
 	maxStringBlocks = 4096
+	// maxPEDirs caps the resource directories read in one file. The offsets
+	// of a damaged file can point back to earlier directories, so without a
+	// total the three nested levels could multiply to maxPEEntries cubed.
+	maxPEDirs = 2048
 )
 
 // PEStrings holds the RT_STRING resources of a PE file: language id to
@@ -67,7 +71,11 @@ func ReadPEStrings(data []byte) (out PEStrings, err error) {
 	}
 	// readDir returns the entries of the resource directory at the offset
 	// from the start of the resource section.
+	dirs := 0
 	readEntries := func(off uint32) []entry {
+		if dirs++; dirs > maxPEDirs {
+			return nil
+		}
 		h := rva(root+off, 16)
 		if h == nil {
 			return nil

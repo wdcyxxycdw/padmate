@@ -7,7 +7,7 @@
 // imported setting, keep the local one, or give one side another key. Only when
 // every item is decided are the changes assembled, checked (the app must be
 // closed) and written, with an undo to follow.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PadmateAPI } from "../../shared/api";
 import type {
   IntegrationBackup,
@@ -27,6 +27,7 @@ import {
   keyMoves,
   movedItems,
   retargetKeys,
+  skipText,
   writable,
 } from "../state/integrations-model";
 import type { Language, PadmateStore } from "../state/store";
@@ -89,13 +90,20 @@ interface Draft {
   choice?: "import" | "keep" | "rekeyImported" | "rekeyLocal";
   keys: string;
   check?: IntegrationCheck;
+  /** The choice the check was made for: a check of the other function does not count. */
+  checkedFor?: "rekeyImported" | "rekeyLocal";
   checking?: boolean;
 }
 
 function decided(draft: Draft | undefined): boolean {
   if (!draft?.choice) return false;
   if (draft.choice === "rekeyImported" || draft.choice === "rekeyLocal")
-    return !!draft.keys && !!draft.check && writable(draft.check);
+    return (
+      !!draft.keys &&
+      !!draft.check &&
+      draft.checkedFor === draft.choice &&
+      writable(draft.check)
+    );
   return true;
 }
 
@@ -146,6 +154,8 @@ export function ImportIntegrations({
   const [stage, setStage] = useState<Stage>({ kind: "offer" });
   const [problem, setProblem] = useState("");
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  // The newest key check of each entry: an answer to an older one is dropped.
+  const latestCheck = useRef<number[]>([]);
 
   // Compare with each integration the computer has: the first with a
   // difference is offered.
@@ -202,11 +212,38 @@ export function ImportIntegrations({
     }
   };
 
+  /**
+   * What still differs after the flow cannot be resolved (a kept local
+   * setting, a skipped item, a function with no key): those items keep their
+   * key, and the differences dialog must not come up for them when the profile
+   * is looked at. The set is dismissed (kept by the daemon, and by this run),
+   * and the items are read again so the drawer marks them.
+   */
+  const settleRemaining = async () => {
+    const state = store.getState();
+    const fresh = await state.loadIntegrationItems(profile, info.id);
+    if (fresh.consistent) return;
+    const id = fresh.differenceId ?? "";
+    if (!id || fresh.dismissed) return;
+    try {
+      await state.api.dismissIntegrationDifferences({
+        profile,
+        integration: info.id,
+        differenceId: id,
+      });
+    } catch {
+      // Not kept across runs, but this run still remembers it.
+    }
+    state.putOffIntegrationDifferences(profile, info.id, id);
+    await state.loadIntegrationItems(profile, info.id).catch(() => {});
+  };
+
   const followApp = () =>
     guard(async () => {
       const moves = keyMoves(rows);
       await retargetProfileFile(api, profile, moves);
       await moveItems(api, profile, info.id, moves);
+      await settleRemaining();
       setStage({
         kind: "done",
         text: t(
@@ -242,12 +279,26 @@ export function ImportIntegrations({
     }
     await retargetProfileFile(api, profile, moves);
     await moveItems(api, profile, info.id, moves);
+    await settleRemaining();
+    const skipped = made.entries
+      .filter((entry) => entry.skipped)
+      .map(
+        (entry) =>
+          `${entry.item.name}：${skipText(entry.skipped ?? "", info.name, language)}`,
+      );
     setStage({
       kind: "done",
-      text: t(
-        `已把导入的设置写进 ${info.name}。`,
-        `Wrote the imported settings into ${info.name}.`,
-      ),
+      text:
+        t(
+          `已把导入的设置写进 ${info.name}。`,
+          `Wrote the imported settings into ${info.name}.`,
+        ) +
+        (skipped.length > 0
+          ? t(
+              ` 这些项没有写入：${skipped.join(" ")}`,
+              ` These items were not written: ${skipped.join(" ")}`,
+            )
+          : ""),
       undo: outcome.written.backup ?? undefined,
     });
   };
@@ -259,10 +310,19 @@ export function ImportIntegrations({
     local: boolean,
   ) => {
     const fn = local ? entry.displaced[0]?.function : entry.item.function;
+    const target = local ? "rekeyLocal" : "rekeyImported";
+    const request = (latestCheck.current[index] ?? 0) + 1;
+    latestCheck.current[index] = request;
     setDrafts((list) =>
       list.map((draft, at) =>
         at === index
-          ? { ...draft, keys, check: undefined, checking: !!keys }
+          ? {
+              ...draft,
+              keys,
+              check: undefined,
+              checkedFor: undefined,
+              checking: !!keys,
+            }
           : draft,
       ),
     );
@@ -276,13 +336,17 @@ export function ImportIntegrations({
       .then((check) =>
         setDrafts((list) =>
           list.map((draft, at) =>
-            at === index && draft.keys === keys
-              ? { ...draft, check, checking: false }
+            at === index &&
+            latestCheck.current[index] === request &&
+            draft.keys === keys &&
+            draft.choice === target
+              ? { ...draft, check, checkedFor: target, checking: false }
               : draft,
           ),
         ),
       )
       .catch((error) => {
+        if (latestCheck.current[index] !== request) return;
         setProblem(integrationFailure(error, info.name, language));
         setDrafts((list) =>
           list.map((draft, at) =>
@@ -396,16 +460,17 @@ export function ImportIntegrations({
         {open.map(({ entry, index }) => {
           const draft = drafts[index] ?? { keys: "" };
           const local = entry.displaced[0];
-          const setChoice = (choice: NonNullable<Draft["choice"]>) =>
+          // A new choice starts clean: the recorded key and its check were for
+          // the other function (or none), so they must be made again.
+          const setChoice = (choice: NonNullable<Draft["choice"]>) => {
+            if (draft.choice === choice) return;
+            latestCheck.current[index] = (latestCheck.current[index] ?? 0) + 1;
             setDrafts((list) =>
               list.map((item, at) =>
-                at === index
-                  ? choice === "import" || choice === "keep"
-                    ? { keys: "", choice }
-                    : { ...item, choice }
-                  : item,
+                at === index ? { keys: "", choice } : item,
               ),
             );
+          };
           const rekey =
             draft.choice === "rekeyImported" || draft.choice === "rekeyLocal";
           const text = draft.check

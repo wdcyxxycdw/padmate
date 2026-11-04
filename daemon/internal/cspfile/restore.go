@@ -60,7 +60,7 @@ func (bk *Backups) Restore(b Backup, opts RestoreOptions) (Backup, error) {
 	}
 	var pre Backup
 	if len(current) > 0 {
-		if pre, err = bk.Create(current, note); err != nil {
+		if pre, err = bk.create(current, note, b.ID); err != nil {
 			return Backup{}, fmt.Errorf("cspfile: backing up before restore: %w", err)
 		}
 	}

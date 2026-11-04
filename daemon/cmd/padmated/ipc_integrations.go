@@ -185,12 +185,12 @@ func (r *liveRun) rpcIntegrationList(_ context.Context, req *jrpc2.Request) (any
 		return nil, err
 	}
 	cfg := r.selectionConfig()
-	rules, custom := cfg.Rules, cfg.Integrations
+	custom := cfg.Integrations
 	out := []rpcIntegration{}
 	for _, in := range r.integrations().All() {
 		loc := in.Locate()
 		running, _ := in.Running()
-		profiles := integration.BoundProfiles(rules, in.Exes())
+		profiles := integration.BoundProfiles(cfg, in.Exes())
 		if profiles == nil {
 			profiles = []string{}
 		}
@@ -380,8 +380,7 @@ func (r *liveRun) rpcIntegrationPutItems(_ context.Context, req *jrpc2.Request) 
 		r.log.Warn("integration items: earlier version not kept", "profile", p.Profile, "integration", in.ID(), "err", saved.HistoryErr)
 	}
 	// The active profile's differences may have changed.
-	r.integ.recheck.Store(true)
-	r.integKick()
+	r.integActionKick()
 	return map[string]string{"revision": saved.Revision}, nil
 }
 
@@ -461,7 +460,7 @@ func (r *liveRun) rpcIntegrationWrite(_ context.Context, req *jrpc2.Request) (an
 		backup = &b
 	}
 	r.log.Info("integration settings written", "integration", in.ID(), "changes", len(changes), "backup", res.Backup.ID)
-	r.integKick()
+	r.integActionKick()
 	return struct {
 		Backup   *rpcIntegrationBackup `json:"backup"`
 		Revision string                `json:"revision"`
@@ -510,7 +509,7 @@ func (r *liveRun) rpcIntegrationRestore(_ context.Context, req *jrpc2.Request) (
 		return nil, integrationError(in.ID(), err)
 	}
 	r.log.Info("integration settings restored", "integration", in.ID(), "backup", p.Backup, "before", res.Backup.ID)
-	r.integKick()
+	r.integActionKick()
 	return newRPCBackup(res.Backup), nil
 }
 

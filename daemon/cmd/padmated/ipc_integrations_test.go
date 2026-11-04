@@ -232,7 +232,7 @@ type rawEvent struct {
 	data  json.RawMessage
 }
 
-const integrationConfig = `{"schemaVersion":0,"rules":[{"exe":"FakeApp.exe","profile":"paint"},{"exe":"C:\\Apps\\fakeapp.exe","profile":"other"},{"exe":"FakeApp.exe","profile":"off","enabled":false},{"exe":"notepad.exe","profile":"plain"}]}`
+const integrationConfig = `{"schemaVersion":0,"rules":[{"exe":"C:\\Apps\\fakeapp.exe","profile":"other"},{"exe":"FakeApp.exe","profile":"paint"},{"exe":"FakeApp.exe","profile":"off","enabled":false},{"exe":"notepad.exe","profile":"plain"}]}`
 
 func startIntegrationLive(t *testing.T, start string) *integrationLive {
 	t.Helper()
@@ -839,4 +839,67 @@ func TestIntegrationSetDataDirRefuses(t *testing.T) {
 			t.Errorf("%s: err = %v, want code %d", tt.name, err, tt.code)
 		}
 	}
+}
+
+// TestIntegrationDismissForgottenWhenConsistent: once the differences are
+// gone, the "leave it alone" of that set is forgotten, so the same set
+// coming back later is announced again.
+func TestIntegrationDismissForgottenWhenConsistent(t *testing.T) {
+	il := startIntegrationLive(t, "plain")
+	il.putItems(t, "paint", "", integration.Item{Keys: "F5", Function: "command:a/undo"})
+	il.subscribe(t, "integration.changed")
+	il.activate(t, "paint")
+	e, ok := il.nextChanged(t, "differences", 5*time.Second)
+	if !ok {
+		t.Fatal("no first announcement")
+	}
+	if err := il.call("integrations.dismiss", map[string]any{"profile": "paint", "integration": "fake", "differenceId": e.DifferenceID}, new(any)); err != nil {
+		t.Fatal(err)
+	}
+	// The software now has the key: consistent.
+	il.fake.setKeys("command:a/undo", "F5")
+	il.waitUntil(t, "the dismissal to be forgotten", func() bool { return il.cfg.opts.memory.Dismissed("paint", "fake") == "" })
+	// The same difference again.
+	il.fake.setKeys("command:a/undo", "Ctrl+Z")
+	e2, ok := il.nextChanged(t, "differences", 5*time.Second)
+	if !ok || e2.DifferenceID != e.DifferenceID {
+		t.Fatalf("second = %+v ok=%v", e2, ok)
+	}
+}
+
+// TestIntegrationActionIsQuiet: differences that the person's own action
+// over IPC causes are published to the topic, but neither the overlay nor
+// the tray is told.
+func TestIntegrationActionIsQuiet(t *testing.T) {
+	il := startIntegrationLive(t, "plain")
+	il.fake.setKeys("command:a/undo", "Ctrl+Z")
+	il.subscribe(t, "integration.changed", "hud")
+	il.activate(t, "paint")
+	time.Sleep(200 * time.Millisecond)
+	// Saving an item the software does not have yet: a difference.
+	il.putItems(t, "paint", "", integration.Item{Keys: "F5", Function: "command:a/undo"})
+	e, ok := il.nextChanged(t, "differences", 5*time.Second)
+	if !ok || e.Count != 1 {
+		t.Fatalf("event = %+v ok=%v", e, ok)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if n := len(il.noticeList()); n != 0 {
+		t.Fatalf("%d tray notices after the person's own action", n)
+	}
+	for {
+		data, ok := il.nextEvent(t, "hud", 200*time.Millisecond)
+		if !ok {
+			break
+		}
+		var toast struct{ Kind string }
+		if _ = json.Unmarshal(data, &toast); toast.Kind == "toast" {
+			t.Fatal("overlay toast after the person's own action")
+		}
+	}
+	// An outside change afterwards is announced as usual.
+	il.fake.setKeys("command:a/undo", "F9")
+	if _, ok := il.nextChanged(t, "differences", 5*time.Second); !ok {
+		t.Fatal("outside change not published")
+	}
+	il.waitUntil(t, "the tray notice", func() bool { return len(il.noticeList()) == 1 })
 }

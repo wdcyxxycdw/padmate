@@ -167,6 +167,88 @@ describe("不改，按我的 <软件> 调整按键", () => {
   });
 });
 
+describe("what cannot be resolved when the flow ends", () => {
+  // The items after the flow: one is still not consistent, under a new ID.
+  const left: IntegrationItems = {
+    ...items,
+    statuses: [
+      { keys: "Ctrl+Z", function: "cmd:undo", state: "consistent" },
+      { keys: "P", function: "tool:a", state: "removed" },
+    ],
+    differenceId: "d9",
+  };
+  const dismissed = {
+    profile: "imported",
+    integration: "demoapp",
+    differenceId: "d9",
+  };
+
+  it("are dismissed after 不改，按我的 <软件> 调整按键, and the drawer's items are read again", async () => {
+    const { api, store } = await setup();
+    api.putIntegrationItems.mockImplementation(async () => {
+      api.getIntegrationItems.mockImplementation(async () => left);
+      return { revision: "i2" } as never;
+    });
+    fireEvent.click(
+      within(await offer()).getByRole("button", {
+        name: "不改，按我的 Demo Paint 调整按键",
+      }),
+    );
+    await screen.findByTestId("import-done");
+    expect(api.dismissIntegrationDifferences).toHaveBeenCalledWith(dismissed);
+    expect(store.getState().putOffDifferences).toContain("imported|demoapp|d9");
+    expect(store.getState().integrationItems["imported|demoapp"]).toEqual(left);
+  });
+
+  it("are dismissed after a write that skips or keeps items, and not when all agree", async () => {
+    const plan: IntegrationPlan = {
+      entries: [
+        {
+          item: items.items[0],
+          changes: [{ function: "cmd:undo", add: "Ctrl+Z", remove: "Ctrl+U" }],
+          displaced: [],
+        },
+        {
+          item: items.items[1],
+          changes: [],
+          displaced: [],
+          skipped: "missing",
+        },
+      ],
+    };
+    const { api } = await setup({ plan });
+    api.writeIntegration.mockImplementation(async () => {
+      api.getIntegrationItems.mockImplementation(async () => left);
+      return { backup: { id: "b1" } } as never;
+    });
+    fireEvent.click(
+      within(await offer()).getByRole("button", {
+        name: "用导入的设置改我的 Demo Paint",
+      }),
+    );
+    const done = await screen.findByTestId("import-done");
+    expect(done.textContent).toContain("G笔：Demo Paint 里已找不到这个功能。");
+    expect(api.dismissIntegrationDifferences).toHaveBeenCalledWith(dismissed);
+    cleanup();
+
+    const again = await setup({ plan: { entries: [plan.entries[0]] } });
+    again.api.writeIntegration.mockImplementation(async () => {
+      again.api.getIntegrationItems.mockImplementation(async () => ({
+        ...items,
+        consistent: true,
+      }));
+      return { backup: { id: "b1" } } as never;
+    });
+    fireEvent.click(
+      within(await offer()).getByRole("button", {
+        name: "用导入的设置改我的 Demo Paint",
+      }),
+    );
+    await screen.findByTestId("import-done");
+    expect(again.api.dismissIntegrationDifferences).not.toHaveBeenCalled();
+  });
+});
+
 describe("用导入的设置改我的 <软件>", () => {
   const free: IntegrationPlan = {
     entries: [
@@ -204,7 +286,10 @@ describe("用导入的设置改我的 <软件>", () => {
       free.entries[0],
       {
         item: items.items[1],
-        changes: [{ function: "tool:a", add: "P" }],
+        changes: [
+          { function: "tool:a", add: "P" },
+          { function: "cmd:zoom", remove: "P" },
+        ],
         displaced: [{ function: "cmd:zoom", name: "放大", keys: "P" }],
       },
     ],
@@ -334,6 +419,67 @@ describe("用导入的设置改我的 <软件>", () => {
       { function: "tool:a", add: "P" },
       { function: "cmd:zoom", remove: "P", add: "Ctrl+Shift+Z" },
     ]);
+  });
+
+  it("does not carry a key or its check from one rekey choice to the other", async () => {
+    const { api } = await setup({ plan: clash });
+    fireEvent.click(
+      within(await offer()).getByRole("button", {
+        name: "用导入的设置改我的 Demo Paint",
+      }),
+    );
+    await screen.findByTestId("import-displaced");
+    fireEvent.click(screen.getByRole("button", { name: "逐项决定" }));
+    const entry = await screen.findByTestId("import-entry");
+    const write = () =>
+      screen.getByRole("button", {
+        name: "写入 Demo Paint",
+      }) as HTMLButtonElement;
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "给导入的功能换一个键" }),
+    );
+    fireEvent.change(within(entry).getByRole("textbox", { name: "新的键" }), {
+      target: { value: "K" },
+    });
+    await waitFor(() => expect(write().disabled).toBe(false));
+    // The other function: the key and the check are gone, so is the way to write.
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "给本机的功能换一个键" }),
+    );
+    expect(
+      (
+        within(entry).getByRole("textbox", {
+          name: "新的键",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("");
+    expect(write().disabled).toBe(true);
+    expect(within(entry).queryByRole("status")).toBeNull();
+    // A check that was still on its way for the other function is dropped.
+    let late: (check: unknown) => void = () => {};
+    api.checkIntegrationKey.mockImplementationOnce(
+      () => new Promise((resolve) => (late = resolve as never)),
+    );
+    fireEvent.change(within(entry).getByRole("textbox", { name: "新的键" }), {
+      target: { value: "K" },
+    });
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "给导入的功能换一个键" }),
+    );
+    fireEvent.change(within(entry).getByRole("textbox", { name: "新的键" }), {
+      target: { value: "K" },
+    });
+    await waitFor(() => expect(write().disabled).toBe(false));
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "给本机的功能换一个键" }),
+    );
+    await act(async () => late({ status: "free", owners: [], notes: [] }));
+    expect(write().disabled).toBe(true);
+    // Back to a choice without a key.
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "保留本机的设置" }),
+    );
+    expect(write().disabled).toBe(false);
   });
 
   it("waits for the app to be closed before writing", async () => {

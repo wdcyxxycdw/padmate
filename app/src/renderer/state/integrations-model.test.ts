@@ -22,6 +22,7 @@ import {
   pathText,
   putItem,
   retargetKeys,
+  skipText,
   usesKeys,
   writable,
 } from "./integrations-model";
@@ -254,20 +255,26 @@ describe("retargetKeys", () => {
 });
 
 describe("assembleChanges", () => {
+  // Shaped like the daemon's plan: the add of the imported function, then one
+  // remove of the key from each function that has it now.
   const entry = (
     keys: string,
     fn: string,
     displaced: string[] = [],
   ): IntegrationPlanEntry => ({
     item: { keys, function: fn, name: fn, path: [] },
-    changes: [{ function: fn, add: keys }],
+    changes: [
+      { function: fn, add: keys },
+      ...displaced.map((id) => ({ function: id, remove: keys })),
+    ],
     displaced: displaced.map((id) => ({ function: id, name: id, keys })),
   });
   const plain = entry("F2", "cmd:a");
-  const clash = entry("P", "tool:a", ["cmd:x"]);
+  const clash = entry("Ctrl+K", "cmd:b", ["cmd:x"]);
+  const toolClash = entry("P", "tool:a", ["cmd:x", "tool:old"]);
   const skipped: IntegrationPlanEntry = {
-    ...entry("F3", "cmd:b"),
-    skipped: "gone",
+    ...entry("F3", "cmd:c"),
+    skipped: "missing",
   };
 
   it("writes the entries as they are when nothing displaces anything", () => {
@@ -277,55 +284,110 @@ describe("assembleChanges", () => {
     expect(conflictEntries([plain, clash, skipped])).toEqual([clash]);
   });
 
-  const decide = (decision: ConflictDecision) =>
-    assembleChanges([plain, clash], new Map([[clash, decision]]));
+  const decide = (
+    decision: ConflictDecision,
+    target: IntegrationPlanEntry = clash,
+  ) => assembleChanges([plain, target], new Map([[target, decision]]));
 
-  it("takes the key from the local function when the imported setting wins", () => {
+  it("useImported: the plan's changes as they are", () => {
     expect(decide({ kind: "import" }).changes).toEqual([
+      { function: "cmd:a", add: "F2" },
+      { function: "cmd:b", add: "Ctrl+K" },
+      { function: "cmd:x", remove: "Ctrl+K" },
+    ]);
+    expect(decide({ kind: "import" }, toolClash).changes).toEqual([
       { function: "cmd:a", add: "F2" },
       { function: "tool:a", add: "P" },
       { function: "cmd:x", remove: "P" },
+      { function: "tool:old", remove: "P" },
     ]);
   });
 
-  it("writes nothing for an item whose local setting is kept", () => {
+  it("keepLocal: the whole entry goes, the displaced remove too", () => {
     expect(decide({ kind: "keep" })).toEqual({
       changes: [{ function: "cmd:a", add: "F2" }],
       moves: [],
     });
   });
 
-  it("gives the imported function another key, and moves the profile's keys", () => {
-    expect(decide({ kind: "rekeyImported", keys: "O" })).toEqual({
+  it("rekeyImported: the local function keeps the key, the imported one gets the new", () => {
+    expect(decide({ kind: "rekeyImported", keys: "Ctrl+J" })).toEqual({
       changes: [
         { function: "cmd:a", add: "F2" },
-        { function: "tool:a", add: "O" },
+        { function: "cmd:b", add: "Ctrl+J" },
       ],
-      moves: [{ from: "P", to: "O" }],
+      moves: [{ from: "Ctrl+K", to: "Ctrl+J" }],
+    });
+    // Every displaced function keeps the key, a tool included.
+    expect(
+      decide({ kind: "rekeyImported", keys: "O" }, toolClash).changes,
+    ).toEqual([
+      { function: "cmd:a", add: "F2" },
+      { function: "tool:a", add: "O" },
+    ]);
+  });
+
+  it("rekeyLocal: the imported function takes the key, the local one loses it once and gets the new", () => {
+    expect(
+      decide({ kind: "rekeyLocal", keys: "Ctrl+J", function: "cmd:x" }),
+    ).toEqual({
+      changes: [
+        { function: "cmd:a", add: "F2" },
+        { function: "cmd:b", add: "Ctrl+K" },
+        { function: "cmd:x", remove: "Ctrl+K", add: "Ctrl+J" },
+      ],
+      moves: [],
     });
   });
 
-  it("gives the local function another key while the imported one takes the old", () => {
+  it("rekeyLocal with several displaced functions: only the chosen one moves", () => {
     expect(
-      decide({ kind: "rekeyLocal", keys: "O", function: "cmd:x" }).changes,
+      decide({ kind: "rekeyLocal", keys: "O", function: "cmd:x" }, toolClash)
+        .changes,
     ).toEqual([
       { function: "cmd:a", add: "F2" },
       { function: "tool:a", add: "P" },
       { function: "cmd:x", remove: "P", add: "O" },
+      { function: "tool:old", remove: "P" },
     ]);
   });
 
-  it("does not repeat a change the plan already made", () => {
-    const planned: IntegrationPlanEntry = {
+  it("two entries that touch the same function stay apart", () => {
+    const second = entry("Ctrl+L", "cmd:d", ["cmd:x"]);
+    const out = assembleChanges(
+      [clash, second],
+      new Map<IntegrationPlanEntry, ConflictDecision>([
+        [clash, { kind: "rekeyLocal", keys: "Ctrl+J", function: "cmd:x" }],
+        [second, { kind: "import" }],
+      ]),
+    );
+    expect(out.changes).toEqual([
+      { function: "cmd:b", add: "Ctrl+K" },
+      { function: "cmd:x", remove: "Ctrl+K", add: "Ctrl+J" },
+      { function: "cmd:d", add: "Ctrl+L" },
+      { function: "cmd:x", remove: "Ctrl+L" },
+    ]);
+    const kept = assembleChanges(
+      [clash, second],
+      new Map<IntegrationPlanEntry, ConflictDecision>([
+        [clash, { kind: "rekeyImported", keys: "Ctrl+J" }],
+        [second, { kind: "keep" }],
+      ]),
+    );
+    expect(kept.changes).toEqual([{ function: "cmd:b", add: "Ctrl+J" }]);
+    expect(kept.moves).toEqual([{ from: "Ctrl+K", to: "Ctrl+J" }]);
+  });
+
+  it("does not repeat a change", () => {
+    const twice: IntegrationPlanEntry = {
       ...clash,
-      changes: [...clash.changes, { function: "cmd:x", remove: "P" }],
+      changes: [...clash.changes, { function: "cmd:x", remove: "Ctrl+K" }],
     };
     expect(
-      assembleChanges([planned], new Map([[planned, { kind: "import" }]]))
-        .changes,
+      assembleChanges([twice], new Map([[twice, { kind: "import" }]])).changes,
     ).toEqual([
-      { function: "tool:a", add: "P" },
-      { function: "cmd:x", remove: "P" },
+      { function: "cmd:b", add: "Ctrl+K" },
+      { function: "cmd:x", remove: "Ctrl+K" },
     ]);
   });
 });
@@ -334,5 +396,29 @@ describe("backupTime", () => {
   it("shows a time, and keeps text it cannot read", () => {
     expect(backupTime("2026-11-04T10:00:00Z", "en")).toMatch(/2026/);
     expect(backupTime("not a time", "zh-CN")).toBe("not a time");
+  });
+});
+
+describe("skipText", () => {
+  it("says each code the daemon sends in one sentence, and any other generically", () => {
+    for (const code of [
+      "missing",
+      "unsupportedKey",
+      "unconfirmedKey",
+      "badFunction",
+      "other",
+    ])
+      for (const language of ["zh-CN", "en"] as const) {
+        const text = skipText(code, "Demo Paint", language);
+        expect(text).not.toContain(code === "other" ? "other" : code);
+        expect(text).not.toContain("!");
+        expect(text).not.toContain("！");
+      }
+    expect(skipText("missing", "Demo Paint", "zh-CN")).toBe(
+      "Demo Paint 里已找不到这个功能。",
+    );
+    expect(skipText("zzz", "Demo Paint", "en")).toBe(
+      "This item cannot be written.",
+    );
   });
 });

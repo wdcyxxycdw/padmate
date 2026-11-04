@@ -238,7 +238,7 @@ describe("以 padmate 为准", () => {
         item: items.items[2],
         changes: [],
         displaced: [],
-        skipped: "功能已不存在",
+        skipped: "missing",
       },
     ],
   };
@@ -252,7 +252,8 @@ describe("以 padmate 为准", () => {
     expect(api.planIntegration).toHaveBeenCalledWith("paint", "demoapp");
     expect(confirm.textContent).toContain("会把 1 项写回 Demo Paint");
     expect(confirm.textContent).toContain("放大");
-    expect(confirm.textContent).toContain("功能已不存在");
+    expect(confirm.textContent).toContain("Demo Paint 里已找不到这个功能。");
+    expect(confirm.textContent).not.toContain("missing");
     expect(api.writeIntegration).not.toHaveBeenCalled();
   });
 
@@ -300,5 +301,125 @@ describe("以 padmate 为准", () => {
       "什么都没有写入",
     );
     expect(screen.getByTestId("difference-confirm")).toBeTruthy();
+  });
+});
+
+describe("differences that cannot be resolved", () => {
+  // What the app has after the user followed it: the one function with no key
+  // left is still not consistent, and the set has another ID.
+  const left: IntegrationItems = {
+    ...items,
+    items: [
+      { keys: "Ctrl+U", function: "cmd:undo", name: "撤销", path: ["编辑"] },
+      items.items[1],
+      items.items[2],
+    ],
+    statuses: [
+      { keys: "Ctrl+U", function: "cmd:undo", state: "consistent" },
+      { keys: "P", function: "tool:a", state: "consistent" },
+      { keys: "Q", function: "cmd:old", state: "removed" },
+    ],
+    differenceId: "d2",
+  };
+
+  const changed = (seq: number) =>
+    ({
+      integrationEvent: {
+        seq,
+        change: {
+          integration: "demoapp",
+          kind: "differences",
+          profile: "paint",
+        },
+      },
+    }) as const;
+
+  it("are dismissed after 以 <软件> 为准, and the dialog does not come back for them", async () => {
+    const { api, store } = await setup();
+    let moved = false;
+    api.putIntegrationItems.mockImplementation(async () => {
+      moved = true;
+      return { revision: "i2" } as never;
+    });
+    api.getIntegrationItems.mockImplementation(async () =>
+      moved ? left : items,
+    );
+    fireEvent.click(
+      within(await dialog()).getByRole("button", {
+        name: "以 Demo Paint 为准",
+      }),
+    );
+    await screen.findByTestId("difference-done");
+    expect(api.dismissIntegrationDifferences).toHaveBeenCalledWith({
+      profile: "paint",
+      integration: "demoapp",
+      differenceId: "d2",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "完成" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    // The daemon now says the set is dismissed; an event does not reopen it.
+    api.getIntegrationItems.mockImplementation(async () => ({
+      ...left,
+      dismissed: true,
+    }));
+    act(() => store.setState(changed(5)));
+    await act(async () => {});
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Even when the daemon has not kept it, this run remembers it.
+    api.getIntegrationItems.mockImplementation(async () => left);
+    act(() => store.setState(changed(6)));
+    await act(async () => {});
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // A different difference later is new, and opens the dialog.
+    api.getIntegrationItems.mockImplementation(async () => ({
+      ...left,
+      statuses: [
+        ...left.statuses.slice(0, 1),
+        { keys: "P", function: "tool:a", state: "removed" as const },
+        left.statuses[2],
+      ],
+      differenceId: "d3",
+    }));
+    act(() => store.setState(changed(7)));
+    expect(await dialog()).toBeTruthy();
+  });
+
+  it("are dismissed after 以 padmate 为准 as well", async () => {
+    const plan: IntegrationPlan = {
+      entries: [
+        {
+          item: items.items[0],
+          changes: [{ function: "cmd:undo", add: "Ctrl+Z", remove: "Ctrl+U" }],
+          displaced: [],
+        },
+        {
+          item: items.items[2],
+          changes: [],
+          displaced: [],
+          skipped: "missing",
+        },
+      ],
+    };
+    const { api } = await setup({ plan });
+    let written = false;
+    api.writeIntegration.mockImplementation(async () => {
+      written = true;
+      return { backup: { id: "b1" } } as never;
+    });
+    api.getIntegrationItems.mockImplementation(async () =>
+      written ? left : items,
+    );
+    fireEvent.click(
+      within(await dialog()).getByRole("button", { name: "以 padmate 为准" }),
+    );
+    await screen.findByTestId("difference-confirm");
+    fireEvent.click(screen.getByRole("button", { name: "写入 Demo Paint" }));
+    const done = await screen.findByTestId("difference-done");
+    expect(done.textContent).toContain("旧功能");
+    expect(api.dismissIntegrationDifferences).toHaveBeenCalledWith({
+      profile: "paint",
+      integration: "demoapp",
+      differenceId: "d2",
+    });
   });
 });

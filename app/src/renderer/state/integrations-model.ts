@@ -400,6 +400,10 @@ function same(a: IntegrationChange, b: IntegrationChange): boolean {
  * What to write for the plan, given what the user decided for the entries
  * that displace functions (the others are written as they are, skipped ones
  * not at all), and the key moves the imported profile needs.
+ *
+ * The plan's own changes are the start: for an entry that displaces functions
+ * they are the imported function's add and one remove of the key from each
+ * displaced function. Each decision changes those and nothing else.
  */
 export function assembleChanges(
   entries: readonly IntegrationPlanEntry[],
@@ -420,41 +424,87 @@ export function assembleChanges(
       for (const change of entry.changes) push(change);
       continue;
     }
+    const isLoss = (change: IntegrationChange) =>
+      change.remove !== undefined &&
+      entry.displaced.some(
+        (lost) =>
+          lost.function === change.function && lost.keys === change.remove,
+      );
+    // The removes the plan may lack, so a bare entry still takes the keys.
+    const withLosses = [...entry.changes];
+    for (const lost of entry.displaced) {
+      const loss = { function: lost.function, remove: lost.keys };
+      if (!withLosses.some((change) => same(change, loss)))
+        withLosses.push(loss);
+    }
     switch (decision.kind) {
       case "keep":
         break;
       case "import":
-        for (const change of entry.changes) push(change);
-        // The local functions lose the key (the plan may already say so).
-        for (const lost of entry.displaced)
-          push({ function: lost.function, remove: lost.keys });
+        for (const change of withLosses) push(change);
         break;
       case "rekeyImported":
-        for (const change of entry.changes)
+        // The local functions keep the key: no removes. The imported one is
+        // added under the new key.
+        for (const change of entry.changes) {
+          if (isLoss(change)) continue;
           push(
-            change.function === entry.item.function &&
-              change.add === entry.item.keys
+            change.function === entry.item.function && change.add !== undefined
               ? { ...change, add: decision.keys }
               : change,
           );
+        }
         moves.push({ from: entry.item.keys, to: decision.keys });
         break;
       case "rekeyLocal":
-        for (const change of entry.changes) push(change);
-        for (const lost of entry.displaced)
+        // The imported function takes the key; the chosen local function
+        // loses it once and gets the new key, the others only lose it.
+        for (const change of withLosses)
           push(
-            lost.function === decision.function
-              ? {
-                  function: lost.function,
-                  remove: lost.keys,
-                  add: decision.keys,
-                }
-              : { function: lost.function, remove: lost.keys },
+            isLoss(change) && change.function === decision.function
+              ? { ...change, add: decision.keys }
+              : change,
           );
         break;
     }
   }
   return { changes, moves };
+}
+
+/** Why a plan entry is not written, in one sentence (the daemon sends a code). */
+export function skipText(
+  reason: string,
+  appName: string,
+  language: Language,
+): string {
+  switch (reason) {
+    case "missing":
+      return tx(
+        language,
+        `${appName} 里已找不到这个功能。`,
+        `${appName} no longer has this function.`,
+      );
+    case "unsupportedKey":
+      return tx(
+        language,
+        `${appName} 不能把这个键设给这个功能。`,
+        `${appName} cannot give this key to this function.`,
+      );
+    case "unconfirmedKey":
+      return tx(
+        language,
+        `这个符号键对应的实体键还没有确认，先不能写入。`,
+        "The physical key of this symbol is not confirmed yet, so it cannot be written.",
+      );
+    case "badFunction":
+      return tx(
+        language,
+        "这个功能的记录不能识别。",
+        "The record of this function cannot be recognised.",
+      );
+    default:
+      return tx(language, "这一项不能写入。", "This item cannot be written.");
+  }
 }
 
 /** The changes of the entries as they are, for "以 padmate 为准". */

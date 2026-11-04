@@ -11,26 +11,82 @@ func rule(exe, prof string, enabled bool) profile.Rule {
 	return profile.Rule{Exe: exe, Profile: &prof, Enabled: enabled}
 }
 
+func cfgOf(rules ...profile.Rule) *profile.Config {
+	c := profile.DefaultConfig()
+	c.Rules = rules
+	return c
+}
+
 func TestBound(t *testing.T) {
 	exes := []string{"CLIPStudioPaint.exe"}
-	rules := []profile.Rule{
+	cfg := cfgOf(
 		rule("clipstudiopaint.EXE", "csp", true),
-		rule(`D:\CELSYS\CLIP STUDIO 1.5\CLIP STUDIO PAINT\CLIPStudioPaint.exe`, "csp2", true),
+		rule(`D:\CELSYS\CLIP STUDIO 1.5\CLIP STUDIO PAINT\CLIPStudioPaint.exe`, "csp2", true), // shadowed by the rule above
 		rule("CLIPStudioPaint.exe", "off", false),
 		rule("game.exe", "game", true),
-		{Exe: "CLIPStudioPaint.exe", Enabled: true}, // no profile
-		rule("CLIPStudioPaint.exe", "csp", true),    // again
-	}
-	for id, want := range map[string]bool{"csp": true, "csp2": true, "off": false, "game": false, "none": false} {
-		if got := Bound(rules, id, exes); got != want {
-			t.Errorf("Bound(%s) = %v", id, got)
+		profile.Rule{Exe: "CLIPStudioPaint.exe", Enabled: true}, // no profile
+		rule("CLIPStudioPaint.exe", "csp", true),                // again
+	)
+	for id, want := range map[string]bool{"csp": true, "csp2": false, "off": false, "game": false, "none": false} {
+		if got := Bound(cfg, id, exes); got != want {
+			t.Errorf("Bound(%s) = %v, want %v", id, got, want)
 		}
 	}
-	if got := BoundProfiles(rules, exes); !reflect.DeepEqual(got, []string{"csp", "csp2"}) {
+	if got := BoundProfiles(cfg, exes); !reflect.DeepEqual(got, []string{"csp"}) {
 		t.Errorf("BoundProfiles = %v", got)
 	}
-	if got := BoundProfiles(nil, exes); len(got) != 0 {
-		t.Errorf("BoundProfiles(nil) = %v", got)
+	if got := BoundProfiles(cfgOf(), exes); len(got) != 0 {
+		t.Errorf("BoundProfiles(no rules) = %v", got)
+	}
+	if Bound(nil, "csp", exes) || BoundProfiles(nil, exes) != nil {
+		t.Error("nil config binds something")
+	}
+}
+
+func TestBoundRuleOrder(t *testing.T) {
+	exes := []string{"CLIPStudioPaint.exe"}
+	cfg := cfgOf(rule("CLIPStudioPaint.exe", "first", true), rule("CLIPStudioPaint.exe", "second", true))
+	if !Bound(cfg, "first", exes) || Bound(cfg, "second", exes) {
+		t.Error("only the first matching rule selects a profile")
+	}
+	// A disabled rule in front does not shadow the next one.
+	cfg = cfgOf(rule("CLIPStudioPaint.exe", "first", false), rule("CLIPStudioPaint.exe", "second", true))
+	if Bound(cfg, "first", exes) || !Bound(cfg, "second", exes) {
+		t.Error("a disabled rule must be skipped")
+	}
+}
+
+func TestBoundFullPath(t *testing.T) {
+	exes := []string{"CLIPStudioPaint.exe"}
+	full := `D:\Apps\CSP\clipstudiopaint.exe`
+	// A full-path rule in front of the bare-name one wins for that location,
+	// and the bare-name one for every other location: both are bound.
+	cfg := cfgOf(rule(full, "here", true), rule("CLIPStudioPaint.exe", "anywhere", true))
+	if !Bound(cfg, "here", exes) || !Bound(cfg, "anywhere", exes) {
+		t.Error("both profiles can be selected for CSP")
+	}
+	// Behind the bare-name rule it never wins.
+	cfg = cfgOf(rule("CLIPStudioPaint.exe", "anywhere", true), rule(full, "here", true))
+	if Bound(cfg, "here", exes) || !Bound(cfg, "anywhere", exes) {
+		t.Error("a full-path rule behind a bare-name rule is shadowed")
+	}
+	// A full-path rule alone binds, ignoring case; another program's does not.
+	cfg = cfgOf(rule(full, "here", true), rule(`D:\Apps\other.exe`, "other", true))
+	if !Bound(cfg, "here", exes) || Bound(cfg, "other", exes) {
+		t.Error("full-path rule alone")
+	}
+	// Disabled full-path rule.
+	if Bound(cfgOf(rule(full, "here", false)), "here", exes) {
+		t.Error("disabled full-path rule binds")
+	}
+}
+
+func TestBoundAutoSwitchOff(t *testing.T) {
+	exes := []string{"CLIPStudioPaint.exe"}
+	cfg := cfgOf(rule("CLIPStudioPaint.exe", "csp", true))
+	cfg.Enabled = false
+	if Bound(cfg, "csp", exes) || len(BoundProfiles(cfg, exes)) != 0 {
+		t.Error("with automatic selection off no rule selects anything, so nothing is bound")
 	}
 }
 

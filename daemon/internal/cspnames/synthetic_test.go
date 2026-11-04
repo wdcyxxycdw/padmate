@@ -327,7 +327,15 @@ func synthPE(strings map[uint16]map[uint32]string) []byte {
 	}
 	rsrc = append(rsrc, data...)
 
+	return peWithRsrc(rsrc)
+}
+
+// peWithRsrc wraps the bytes of a resource section in a minimal 64-bit PE
+// file whose resource directory is the whole section.
+func peWithRsrc(rsrc []byte) []byte {
+	le := binary.LittleEndian
 	const (
+		secVA    = 0x1000
 		peOff    = 0x40
 		optSize  = 240
 		secTable = peOff + 4 + 20 + optSize

@@ -946,7 +946,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `startup.get/set` | 登录时启动（只接受 `enabled`，命令总是本进程的可执行文件和 `startupArgs`） |
 | `script.status/reload/describe/registrations/logs/init/import/path/detach` | 脚本 |
 | `macros.list/create/import/rename/delete/path` | 脚本库的宏，不带配置 ID |
-| `integrations.list/functions/check/items/putItems/plan/write/backups/restore/dismiss` | 软件适配（ADR-0019），参数与返回值见 §16.4。都在 bridge 白名单里 |
+| `integrations.list/functions/check/items/putItems/plan/write/backups/restore/dismiss/setDataDir` | 软件适配（ADR-0019），参数与返回值见 §16.4。都在 bridge 白名单里 |
 | `fake.press/release/axis/effects/battery/joycon2` | 只在 `--fake-input` 下 |
 | `ui.register` / `ui.setOutput` / `ui.exitReady` | 注册经验证的 UI 进程；设自身窗口输出开关；托盘退出或 `daemon.exit` 时界面存完修改后确认（只有注册过的连接能调） |
 | `daemon.exit` | 安装程序请 padmated 像托盘“退出”一样退出（§5）；参数必须恰为 `{reason:"installer"}`，别的内容 -32602 且不动 |
@@ -1333,7 +1333,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 **实现细节**
 
-- **绑定只有一个判断点**：`integration.Bound(rules, 配置 ID, exe 列表)`，`BoundProfiles` 由它构建。`integrations.list` 的 `profiles`、激活检查、监视都只调它们；以后绑定规则变了只改这一处。
+- **绑定只有一个判断点**：`integration.Bound(config, 配置 ID, exe 列表)`，`BoundProfiles` 由它构建。它经 `Config.Select` 判断：对这个软件的可执行文件（裸文件名，以及启用的、文件名相同的完整路径规则里的路径），规则按顺序第一个选中的就是绑定的配置；关掉自动切换时没有配置是绑定的。`integrations.list` 的 `profiles`、激活检查、监视都只调它们；以后绑定规则变了只改这一处。
 - **读**：不就地打开 CSP 的 SQLite 文件。读取把 `default.khc`、`EditImageTool.todb` 和 `Preference\Config.sqlite` 复制到临时文件夹，读副本。读到的快照按各文件的 stat（大小、修改时间）缓存，没变就不重读；`Revision` 是这些 stat 的指纹，所以轮询很便宜。
 - **`toolShift`**：来自 `Preference\Config.sqlite` 的表 `Tool`，列 `UseToolShift`。为真时，无修饰键的单键检查会带 `toolShift` 提示。`modifierKey` 还没有（那个文件没解码）。
 - **写**：所有改动作为一个整体先校验（功能存在、键写得出、没有重复或冲突），任何一项不行就整体拒绝（-32602，`data {function, keys, reason}`）。先做移除再做添加。改动不改变任何东西时不写文件、不备份，`integrations.write` 的 `backup` 为 `null`。写入前用 `internal/cspfile` 备份；复查软件没在运行、文件指纹没变、没有日志文件；写完读回校验。
