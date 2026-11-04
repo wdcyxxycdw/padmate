@@ -1,8 +1,8 @@
-# ADR-0019：CLIP STUDIO PAINT 适配
+# ADR-0019：软件适配与 CLIP STUDIO PAINT
 
 [English](0019-clip-studio-paint.md)
 
-相关：[ARCHITECTURE §16](../ARCHITECTURE.zh-CN.md#16-clip-studio-paint)；[ADR：配置库](0008-profile-library.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)；[PITFALLS：CLIP STUDIO PAINT](../PITFALLS.zh-CN.md#clip-studio-paint)
+相关：[ARCHITECTURE §16](../ARCHITECTURE.zh-CN.md#16-软件适配)；[ADR：配置库](0008-profile-library.zh-CN.md)；[ADR：编辑界面](0013-editor-ui.zh-CN.md)；[PITFALLS：CLIP STUDIO PAINT](../PITFALLS.zh-CN.md#clip-studio-paint)
 
 ## 背景
 
@@ -25,22 +25,23 @@ CSP 的快捷键存在用户数据的两个文件里，都是普通 SQLite：
 
 ## 决定
 
-### 一、范围
+### 一、范围与通用结构
 
 - 只适配 CSP，按进程映像名 `CLIPStudioPaint.exe` 识别。
 - 只读写 CSP 的快捷键设置：命令快捷键（khc）和工具快捷键（todb 的 `NodeShortCutKey`）。不改 CSP 的其他设置，不改辅助工具名，不写工作区、快捷菜单和修饰键设置。
 - 原则 6 改为：只输出键盘快捷键和鼠标；对 CSP，padmate 读写它的快捷键设置，用来选功能、查冲突和同步；引擎和输出不因软件不同而不同。
-- 别的软件不跟进。要适配另一个软件，另写一篇 ADR。
+- **软件适配是通用结构，CSP 是第一种。** 配置、IPC 和界面的通用部分只认适配的 ID（CSP 是 `csp`），不写死任何软件。加一个软件就是多注册一种适配，它自己提供文件位置、功能列表、冲突规则和写法；要适配哪个软件，另写一篇 ADR 说明。
+- **只有关联了的配置才用适配。** 配置文件夹里有 `integrations/<适配 ID>.json` 就是关联了。没关联时界面不出现这种适配的任何东西，守护进程也不做同步检查。用户在配置页打开关联；随附的 CSP 配置默认关联。
 
 ### 二、一份配置两份文件
 
 - `profile.json` 照旧存“手柄 → 快捷键”，格式不变，引擎不变。
-- 同一文件夹里可选的 `csp.json` 存“快捷键 → CSP 功能”：这份配置的按键用到的每个键，在 CSP 里对应哪个命令或工具。
+- 配置文件夹里可选的 `integrations/csp.json` 存“快捷键 → CSP 功能”：这份配置的按键用到的每个键，在 CSP 里对应哪个命令或工具。
 - 每一项是一对（键，功能）：命令项是（组合键，命令 ID），工具项是（单键，节点 UUID）。另存显示用的名称和路径。
 - 只存本配置用到的键，不存 CSP 的整套设置。
-- 选 CSP 功能、处理差异、导入覆盖时由守护进程写 `csp.json`，写法同 profile.json（临时文件、Sync、rename，替换前存快照）。
+- 选 CSP 功能、处理差异、导入覆盖时由守护进程写 `integrations/csp.json`，写法同 profile.json（临时文件、Sync、rename，替换前存快照）。
 - 单独一个文件的理由：旧版 padmate 的严格 schema 不认识的成员会让整个 profile.json 打不开，而它会忽略多出来的文件；导出文件本来就带配置文件夹的全部内容。
-- 继承：子配置的有效 CSP 设置是父配置的 `csp.json` 加上自己的，同一个键以子配置为准。
+- 继承：子配置的有效 CSP 设置是父配置的 `integrations/csp.json` 加上自己的，同一个键以子配置为准。
 
 ### 三、名称
 
@@ -64,13 +65,13 @@ CSP 的快捷键存在用户数据的两个文件里，都是普通 SQLite：
 
 - **改 CSP 设置之前 CSP 必须关着。** 用进程快照按映像名找 `CLIPStudioPaint.exe`。用户开始一项会写 CSP 的操作时先查一次，在运行就弹阻塞对话框“请先关闭 CLIP STUDIO PAINT”，有“重试”；真正写之前再查一次。
 - 可做的改动：给命令加一个组合键、去掉命令的一个组合键、设或清工具的键。命令没有快捷键时 khc 里保留它那一行 `'NULL'`，和 CSP 自己的写法一致。
-- **每次写之前备份**：两个文件都复制到 `%APPDATA%\padmate\csp-backups\<UTC 时间>\`，旁边写一份说明（改了什么、改前改后、文件指纹）。保留最近 30 份。
+- **每次写之前备份**：两个文件都复制到 `%APPDATA%\padmate\integration-backups\csp\<UTC 时间>\`，旁边写一份说明（改了什么、改前改后、文件指纹）。保留最近 30 份。
 - **回滚**：写完的结果里有“撤销这次写入”；设置页列出全部备份，可以恢复任意一份。恢复同样要求 CSP 关着，恢复前先把当前文件备份。
 - 写法：记下原文件的大小、修改时间、SHA-256；有 `-journal` 或 `-wal` 文件就拒绝；在同一文件夹的副本上用一个事务改完，`integrity_check`，Sync；再查一次 CSP 没运行、指纹没变；`ReplaceFileW` 原子替换；重新打开读回校验。两个文件要一起改时，第二个失败就把第一个换回备份。
 
 ### 六、配置激活时的同步检查
 
-- 规则对应 `CLIPStudioPaint.exe` 的配置每次激活时，以及它激活期间 CSP 的两个文件变化时，守护进程把 `csp.json` 的每一项和 CSP 当前的设置比较。
+- 关联了 CSP 的配置每次激活时，以及它激活期间 CSP 的两个文件变化时，守护进程把 `integrations/csp.json` 的每一项和 CSP 当前的设置比较。
 - 每项的状态：**一致**（这个键在 CSP 里还是这个功能）；**已改**（功能换了键，或这个键换了功能）；**已删**（功能在 CSP 里没有快捷键了）；**不存在**（命令或辅助工具不见了）。
 - **全部一致就什么都不做**，CSP 里多出来的键（增量修改）不提示。
 - 有不一致时提醒用户，一次列出全部差异，三个选择：**以 padmate 为准**（把这些项写回 CSP，要求 CSP 关着）、**以 CSP 为准**（按 CSP 现在的设置更新 padmate）、**暂不处理**（同样的差异不再提醒，差异变了再提醒）。
@@ -78,8 +79,8 @@ CSP 的快捷键存在用户数据的两个文件里，都是普通 SQLite：
 
 ### 七、导出、导入与配置市场
 
-- 导出的 `.padmate` 文件带着 `csp.json`（导出本来就包含配置文件夹的内容）。
-- 导入带 `csp.json` 的配置后，和本机 CSP 比较。有差异就列出，用户选：**覆盖我的 CSP 里对应的设置**、**不覆盖，按我的 CSP 调整按键**、或以后再处理。
+- 导出的 `.padmate` 文件带着 `integrations/csp.json`（导出本来就包含配置文件夹的内容）。
+- 导入带 `integrations/csp.json` 的配置后，和本机 CSP 比较。有差异就列出，用户选：**覆盖我的 CSP 里对应的设置**、**不覆盖，按我的 CSP 调整按键**、或以后再处理。
 - **只覆盖对应的项，不覆盖整套。** 整套会冲掉用户自己与这份配置无关的快捷键；需要整套搬家时用 CSP 自己的工作区功能。
 - 覆盖会让本机 CSP 里原来占着这个键的功能失去它，这些项单独列出来让用户看到。
 - 本机 CSP 里没有的命令（版本、版级不同）和辅助工具（别人自己做的）跳过并列出，对应的按键照旧发原来的键。
@@ -87,9 +88,9 @@ CSP 的快捷键存在用户数据的两个文件里，都是普通 SQLite：
 
 ### 八、代码位置
 
-- 读写 CSP 文件放在守护进程的 `internal/csp`。格式模型、键名换算、冲突、比较是纯函数，可在 Linux 上测试；进程检测、注册表、`ReplaceFileW` 在 `_windows.go`。
+- 读写软件的文件放在守护进程。通用部分在 `internal/integration`；CSP 的在 `internal/integration/cspint`，它用 `internal/csp` 和 `internal/cspfile`。格式模型、键名换算、冲突、比较是纯函数，可在 Linux 上测试；进程检测、注册表、`ReplaceFileW` 在 `_windows.go`。
 - SQLite 用纯 Go 的 `modernc.org/sqlite`，不用 cgo。用户的文件只读打开；改动只在副本上做。
-- IPC 加 `csp.*` 方法和 `csp.changed` 话题。引擎包不导入 `internal/csp`。
+- IPC 是通用的 `integrations.*` 方法和 `integration.changed` 话题，参数里带适配 ID。引擎包不导入这些包。
 - CSP 的位置：自动找 `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*`；找不到时设置页让用户选文件夹。安装目录从卸载注册表项读。Microsoft Store 版和 Steam 版不保证。
 - 测试只用测试自己生成的合成数据库，不放任何用户的 CSP 文件。
 
