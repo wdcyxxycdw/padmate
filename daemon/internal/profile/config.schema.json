@@ -137,9 +137,34 @@
       "x-go-type": "SafetySettings",
       "x-go-field": "Safety",
       "x-ts-never": true
+    },
+    "integrations": {
+      "description": "Settings of the software integrations (ADR-0019), indexed by integration ID such as csp. An integration that is left out is found automatically.",
+      "type": "object",
+      "maxProperties": 32,
+      "additionalProperties": {
+        "$ref": "#/$defs/integration"
+      },
+      "x-go-type": "map[string]IntegrationSettings",
+      "x-go-field": "Integrations"
     }
   },
   "$defs": {
+    "integration": {
+      "title": "Integration settings",
+      "description": "Settings of one software integration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dataDir": {
+          "description": "The folder with the software's own settings files, used instead of looking for it (for CLIP STUDIO PAINT: the CLIPStudioPaintVer* folder that holds Shortcut and Tool). Left out or empty: found automatically.",
+          "type": "string",
+          "maxLength": 1024,
+          "x-go-type": "string"
+        }
+      },
+      "x-go-name": "IntegrationSettings"
+    },
     "rule": {
       "title": "Automatic profile rule",
       "description": "Case-insensitive exe name or absolute path match.",

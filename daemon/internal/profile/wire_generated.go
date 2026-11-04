@@ -28,6 +28,14 @@ type FeedbackOverrides struct {
 	Rumble     *bool `json:"rumble"`
 }
 
+type IntegrationSettings struct {
+	DataDir string `json:"dataDir"`
+}
+
+type IntegrationState struct {
+	Dismissed string `json:"dismissed"`
+}
+
 type JoyCon2Controller struct {
 	Addr   string `json:"addr"`
 	Serial string `json:"serial"`
@@ -62,12 +70,13 @@ type SafetySettings struct {
 }
 
 type State struct {
-	Controllers    map[string]KnownController `json:"controllers,omitempty"`
-	Devices        map[string]DeviceMemory    `json:"devices,omitempty"`
-	JoyCon2        []JoyCon2Controller        `json:"joycon2,omitempty"`
-	LastProfile    string                     `json:"lastProfile,omitempty"`
-	LastProfileSet bool                       `json:"lastProfileSet,omitempty"`
-	SchemaVersion  int                        `json:"schemaVersion"`
+	Controllers    map[string]KnownController             `json:"controllers,omitempty"`
+	Devices        map[string]DeviceMemory                `json:"devices,omitempty"`
+	Integrations   map[string]map[string]IntegrationState `json:"integrations,omitempty"`
+	JoyCon2        []JoyCon2Controller                    `json:"joycon2,omitempty"`
+	LastProfile    string                                 `json:"lastProfile,omitempty"`
+	LastProfileSet bool                                   `json:"lastProfileSet,omitempty"`
+	SchemaVersion  int                                    `json:"schemaVersion"`
 }
 
 type StickCalibration struct {
@@ -120,19 +129,20 @@ type wireBinding struct {
 }
 
 type wireConfig struct {
-	Schema            *string                   `json:"$schema"`
-	Devices           map[string]DeviceSettings `json:"devices"`
-	Enabled           *bool                     `json:"enabled"`
-	Feedback          *FeedbackOverrides        `json:"feedback"`
-	FunctionKey       string                    `json:"functionKey"`
-	JoyCon2           *wireConfigJoycon2        `json:"joycon2"`
-	Output            OutputSettings            `json:"output"`
-	ReleaseOnSwitch   string                    `json:"releaseOnSwitch"`
-	RestoreLayerState *bool                     `json:"restoreLayerState"`
-	Rules             []wireConfigRule          `json:"rules"`
-	Safety            SafetySettings            `json:"safety"`
-	SchemaVersion     json.Number               `json:"schemaVersion"`
-	Timing            *wireTiming               `json:"timing"`
+	Schema            *string                        `json:"$schema"`
+	Devices           map[string]DeviceSettings      `json:"devices"`
+	Enabled           *bool                          `json:"enabled"`
+	Feedback          *FeedbackOverrides             `json:"feedback"`
+	FunctionKey       string                         `json:"functionKey"`
+	Integrations      map[string]IntegrationSettings `json:"integrations"`
+	JoyCon2           *wireConfigJoycon2             `json:"joycon2"`
+	Output            OutputSettings                 `json:"output"`
+	ReleaseOnSwitch   string                         `json:"releaseOnSwitch"`
+	RestoreLayerState *bool                          `json:"restoreLayerState"`
+	Rules             []wireConfigRule               `json:"rules"`
+	Safety            SafetySettings                 `json:"safety"`
+	SchemaVersion     json.Number                    `json:"schemaVersion"`
+	Timing            *wireTiming                    `json:"timing"`
 }
 
 type wireConfigJoycon2 struct {

@@ -70,6 +70,18 @@ func ParseState(data []byte) (State, Diagnostics) {
 			}
 		}
 	}
+	for profileID, byIntegration := range state.Integrations {
+		ptr := childPointer("/integrations", profileID)
+		if !ValidLibraryID(profileID) {
+			fail(ptr)
+		}
+		for id := range byIntegration {
+			if !ValidIntegrationID(id) {
+				n := root.lookupPointer(childPointer(ptr, id))
+				ds = append(ds, Diagnostic{Severity: SeverityError, Pointer: childPointer(ptr, id), Offset: n.start, Message: "invalid integration id"})
+			}
+		}
+	}
 	if ds.HasErrors() {
 		return State{}, place(data, ds)
 	}

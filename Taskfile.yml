@@ -269,6 +269,7 @@ tasks:
       - go test -run '^$' -fuzz '^FuzzConfig$' -fuzztime {{.FUZZTIME}} ./internal/profile
       - go test -run '^$' -fuzz '^FuzzState$' -fuzztime {{.FUZZTIME}} ./internal/profile
       - go test -run '^$' -fuzz '^FuzzCheckMacroFile$' -fuzztime {{.FUZZTIME}} ./internal/profile
+      - go test -run '^$' -fuzz '^FuzzParseItems$' -fuzztime {{.FUZZTIME}} ./internal/integration
       - go test -run '^$' -fuzz '^FuzzHUD$' -fuzztime {{.FUZZTIME}} ./internal/script
       - go test -run '^$' -fuzz '^FuzzEffects$' -fuzztime {{.FUZZTIME}} ./internal/script
       - go test -run '^$' -fuzz '^FuzzMixer$' -fuzztime {{.FUZZTIME}} ./internal/haptic
@@ -284,6 +285,8 @@ tasks:
       - go test -run '^$' -fuzz '^FuzzSetPadSettings$' -fuzztime {{.FUZZTIME}} ./internal/profile
       - go test -run '^$' -fuzz '^FuzzFromGUID$' -fuzztime {{.FUZZTIME}} ./internal/padfamily
       - go test -run '^$' -fuzz '^FuzzParseCSPKey$' -fuzztime {{.FUZZTIME}} ./internal/csp
+      - go test -run '^$' -fuzz '^FuzzParseResource$' -fuzztime {{.FUZZTIME}} ./internal/cspnames
+      - go test -run '^$' -fuzz '^FuzzReadPEStrings$' -fuzztime {{.FUZZTIME}} ./internal/cspnames
       - go test -run '^$' -fuzz '^FuzzDiscovery$' -fuzztime {{.FUZZTIME}} ./internal/ipc
       - go test -run '^$' -fuzz '^FuzzHello$' -fuzztime {{.FUZZTIME}} ./internal/ipc
       - go test -run '^$' -fuzz '^FuzzFromMessage$' -fuzztime {{.FUZZTIME}} ./internal/winsession

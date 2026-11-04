@@ -38,8 +38,10 @@ type Config struct {
 	RestoreLayerState bool
 	Rules             []Rule
 	Devices           map[string]DeviceSettings
-	Timing            Timing
-	Output            OutputSettings
+	// Integrations are the settings of the software integrations by ID (ADR-0019).
+	Integrations map[string]IntegrationSettings
+	Timing       Timing
+	Output       OutputSettings
 	// Safety holds the retired safety.panic: the emergency combo of a family
 	// of controllers. Since ADR-0017 the combo is a setting of each controller
 	// (DeviceSettings.Panic); this applies to a controller that has none of its
@@ -184,6 +186,7 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		c.FunctionKey = fk // the schema allows start, back and the retired guide, which reads as start
 	}
 	c.Devices = w.Devices
+	c.Integrations = w.Integrations
 	c.Legacy = LegacyPad{FunctionKey: w.FunctionKey != "", Feedback: w.Feedback != nil, Panic: len(w.Safety.Panic) > 0}
 	c.Timing, c.Output, c.Safety = resolveTiming(w.Timing), w.Output, w.Safety
 	if f := w.Feedback; f != nil {
@@ -223,6 +226,11 @@ func ParseConfig(data []byte) (*Config, Diagnostics) {
 		}
 		on := rule.Enabled == nil || *rule.Enabled
 		c.Rules = append(c.Rules, Rule{Exe: rule.Exe, Profile: rule.Profile, Enabled: on})
+	}
+	for _, id := range sortedKeys(c.Integrations) {
+		if !ValidIntegrationID(id) {
+			fail(childPointer("/integrations", id), "invalid integration id")
+		}
 	}
 	checkCalibration(c.Devices, fail)
 	checkMappings(c.Devices, fail)
