@@ -1,8 +1,8 @@
-# ADR-0019: CLIP STUDIO PAINT
+# ADR-0019: App integrations and CLIP STUDIO PAINT
 
 [中文](0019-clip-studio-paint.zh-CN.md)
 
-Related: [ARCHITECTURE §16](../ARCHITECTURE.md#16-clip-studio-paint); [ADR: Profile library](0008-profile-library.md); [ADR: Editor UI](0013-editor-ui.md); [PITFALLS: CLIP STUDIO PAINT](../PITFALLS.md#clip-studio-paint)
+Related: [ARCHITECTURE §16](../ARCHITECTURE.md#16-app-integrations); [ADR: Profile library](0008-profile-library.md); [ADR: Editor UI](0013-editor-ui.md); [PITFALLS: CLIP STUDIO PAINT](../PITFALLS.md#clip-studio-paint)
 
 ## Context
 
@@ -21,26 +21,27 @@ Constraints:
 - The daemon is the only writer of padmate's files and never changes the user's files on its own.
 - Window titles are never read.
 
-Principle 6 said "nothing is specific to an app", and ADR-0013 says "the UI does not pick keys for the user". CSP is padmate's main target app, which is worth this one exception.
+The old principle 6 said "nothing is specific to an app", and ADR-0013 says "the UI does not pick keys for the user". CSP is padmate's main target app, which is worth this one exception.
 
 ## Decision
 
-### 1. Scope
+### 1. Scope and the generic structure
 
-- Only CSP, recognised by the image name `CLIPStudioPaint.exe`.
+- Only CSP is supported, recognised by the image name `CLIPStudioPaint.exe`.
 - padmate reads and writes only CSP's shortcut settings: command shortcuts (khc) and tool shortcuts (`NodeShortCutKey` in todb). It changes no other CSP setting, does not rename sub-tools, and does not write workspaces, quick menus or modifier key settings.
 - Principle 6 becomes: output is keyboard shortcuts and the mouse only; for CSP, padmate reads and writes its shortcut settings to pick functions, find conflicts and keep them in sync; the engine and the output are the same for every app.
-- Other apps do not follow. Supporting another app takes its own ADR.
+- **App integrations are a generic structure, and CSP is the first one.** The generic parts of the profile, the IPC and the UI know only the integration's ID (`csp` for CSP) and hard-code no app. Supporting another app means registering another integration, which brings its own file locations, function list, conflict rules and way of writing; which app to support gets its own ADR.
+- **An integration is used only by profiles associated with it.** A profile is associated when its folder has `integrations/<integration ID>.json`. Without that, the UI shows nothing of the integration and the daemon makes no sync check. The user turns the association on in the Profiles page; the bundled CSP profile is associated by default.
 
 ### 2. One profile, two files
 
 - `profile.json` still holds "controller → shortcut", unchanged, and the engine is unchanged.
-- An optional `csp.json` in the same folder holds "shortcut → CSP function": for each key the profile's buttons use, which command or tool it is in CSP.
+- An optional `integrations/csp.json` in the profile folder holds "shortcut → CSP function": for each key the profile's buttons use, which command or tool it is in CSP.
 - Each item is one (key, function) pair: a command item is (chord, command ID), a tool item is (single key, node UUID). A name and path are stored for display.
 - Only the keys this profile uses are stored, never CSP's whole set.
-- The daemon writes `csp.json` when a CSP function is picked, a difference is resolved or an import overwrites, the same way as profile.json (temporary file, Sync, rename, a snapshot before replacing).
+- The daemon writes `integrations/csp.json` when a CSP function is picked, a difference is resolved or an import overwrites, the same way as profile.json (temporary file, Sync, rename, a snapshot before replacing).
 - Why a separate file: an older padmate rejects the whole profile.json over a member its strict schema does not know, but it ignores an extra file; and an export already carries the whole profile folder.
-- Inheritance: a child profile's effective CSP settings are its parent's `csp.json` plus its own; for the same key the child wins.
+- Inheritance: a child profile's effective CSP settings are its parent's `integrations/csp.json` plus its own; for the same key the child wins.
 
 ### 3. Names
 
@@ -64,13 +65,13 @@ Principle 6 said "nothing is specific to an app", and ADR-0013 says "the UI does
 
 - **CSP must be closed before its settings change.** A process snapshot looks for the image name `CLIPStudioPaint.exe`. When the user starts something that will write to CSP, padmate checks once; if CSP runs, a blocking dialog says "Please close CLIP STUDIO PAINT first", with Retry. It checks again just before writing.
 - Possible changes: add a chord to a command, remove a chord from a command, set or clear a tool's key. A command without shortcuts keeps its one `'NULL'` row in khc, as CSP itself writes it.
-- **A backup before every write**: both files are copied to `%APPDATA%\padmate\csp-backups\<UTC time>\`, with a note beside them (what changed, before and after, file fingerprints). The newest 30 are kept.
+- **A backup before every write**: both files are copied to `%APPDATA%\padmate\integration-backups\csp\<UTC time>\`, with a note beside them (what changed, before and after, file fingerprints). The newest 30 are kept.
 - **Rollback**: the result of a write offers "Undo this write"; the Settings page lists every backup and can restore any of them. Restoring also needs CSP closed, and backs up the current files first.
 - How: record the size, modification time and SHA-256 of the file; refuse when a `-journal` or `-wal` file exists; make every change in one transaction on a copy in the same folder, run `integrity_check`, Sync; check again that CSP is not running and the fingerprint has not changed; replace atomically with `ReplaceFileW`; reopen and verify. When both files change and the second fails, the first goes back to its backup.
 
 ### 6. The check when a profile becomes active
 
-- Each time a profile whose rule names `CLIPStudioPaint.exe` becomes active, and whenever one of CSP's two files changes while it is active, the daemon compares each item of `csp.json` with CSP's current settings.
+- Each time a profile associated with CSP becomes active, and whenever one of CSP's two files changes while it is active, the daemon compares each item of `integrations/csp.json` with CSP's current settings.
 - Each item is **consistent** (the key is still this function in CSP), **changed** (the function moved to another key, or the key now does something else), **removed** (the function has no shortcut in CSP any more) or **missing** (the command or sub-tool is gone).
 - **When every item is consistent nothing happens**; extra keys in CSP (additions) are not reported.
 - Otherwise the user is told, with every difference in one list and three choices: **padmate wins** (write these items back to CSP, which needs CSP closed), **CSP wins** (update padmate from CSP's current settings), or **not now** (the same differences are not reported again; changed differences are).
@@ -78,8 +79,8 @@ Principle 6 said "nothing is specific to an app", and ADR-0013 says "the UI does
 
 ### 7. Export, import and the profile market
 
-- An exported `.padmate` file carries `csp.json` (an export already holds the profile folder's contents).
-- After importing a profile with a `csp.json`, padmate compares it with the local CSP. Differences are listed, and the user picks: **overwrite the matching settings in my CSP**, **don't overwrite, adjust the buttons to my CSP**, or deal with it later.
+- An exported `.padmate` file carries `integrations/csp.json` (an export already holds the profile folder's contents).
+- After importing a profile with an `integrations/csp.json`, padmate compares it with the local CSP. Differences are listed, and the user picks: **overwrite the matching settings in my CSP**, **don't overwrite, adjust the buttons to my CSP**, or deal with it later.
 - **Only the matching items are overwritten, never the whole set.** The whole set would wipe the user's own shortcuts that have nothing to do with this profile; to move a whole set, CSP's own workspaces do that.
 - Overwriting takes the key away from whatever function holds it in the local CSP; those are listed separately so the user sees them.
 - Commands the local CSP does not have (another version or edition) and sub-tools it does not have (made by someone else) are skipped and listed; their buttons still send their old keys.
@@ -87,9 +88,9 @@ Principle 6 said "nothing is specific to an app", and ADR-0013 says "the UI does
 
 ### 8. Where the code lives
 
-- Reading and writing CSP's files is in the daemon, in `internal/csp`. The format models, the key name conversion, conflicts and the comparison are pure and tested on Linux; process detection, the registry and `ReplaceFileW` are in `_windows.go` files.
+- Reading and writing an app's files is in the daemon. The generic part is in `internal/integration`; CSP's is in `internal/integration/cspint`, which uses `internal/csp` and `internal/cspfile`. The format models, the key name conversion, conflicts and the comparison are pure and tested on Linux; process detection, the registry and `ReplaceFileW` are in `_windows.go` files.
 - SQLite is the pure Go `modernc.org/sqlite`, without cgo. The user's files are opened read-only; changes are made only on copies.
-- IPC gets `csp.*` methods and a `csp.changed` topic. The engine packages do not import `internal/csp`.
+- IPC gets the generic `integrations.*` methods and an `integration.changed` topic, with the integration ID in the parameters. The engine packages import none of these packages.
 - Where CSP is: `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*` is found automatically; when it is not found, the Settings page lets the user pick the folder. The install folder comes from the uninstall registry entries. The Microsoft Store and Steam versions are not promised.
 - Tests only use synthetic databases they create; no user's CSP files are in the repository.
 
