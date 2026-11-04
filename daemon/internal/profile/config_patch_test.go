@@ -157,3 +157,27 @@ func FuzzSetPadSettings(f *testing.F) {
 		}
 	})
 }
+
+func TestSetIntegrationDataDir(t *testing.T) {
+	for _, tc := range []struct {
+		name, in, id, dir, want string
+	}{
+		{"new member", `{"schemaVersion":0}`, "csp", `C:/a b`, `{"schemaVersion":0,"integrations":{"csp":{"dataDir":"C:/a b"}}}`},
+		{"replaces in place", `{"schemaVersion":0,"integrations":{"csp":{"dataDir":"C:/old"},"x":{"dataDir":"D:/x"}}}`, "csp", `D:/new`,
+			`{"schemaVersion":0,"integrations":{"csp":{"dataDir":"D:/new"},"x":{"dataDir":"D:/x"}}}`},
+		{"takes out, and what is left empty", `{"schemaVersion":0,"integrations":{"csp":{"dataDir":"C:/old"}}}`, "csp", "", `{"schemaVersion":0}`},
+		{"takes out, the other stays", `{"schemaVersion":0,"integrations":{"csp":{"dataDir":"C:/old"},"x":{"dataDir":"D:/x"}}}`, "csp", "",
+			`{"schemaVersion":0,"integrations":{"x":{"dataDir":"D:/x"}}}`},
+		{"nothing to take out", `{"schemaVersion":0}`, "csp", "", `{"schemaVersion":0}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := SetIntegrationDataDir([]byte(tc.in), tc.id, tc.dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := strings.Join(strings.Fields(string(out)), ""); got != strings.Join(strings.Fields(tc.want), "") {
+				t.Fatalf("got %s/nwant %s", out, tc.want)
+			}
+		})
+	}
+}

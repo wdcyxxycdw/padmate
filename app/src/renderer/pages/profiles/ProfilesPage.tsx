@@ -20,6 +20,9 @@ import type {
   ProfileImported,
   RecentApp,
 } from "../../../shared/api";
+import { RecordKey } from "../../drawer/BindingEditor";
+import { ImportIntegrations } from "../../integrations/ImportIntegrations";
+import { useIntegrationHost } from "../../integrations/IntegrationContext";
 import {
   type AppRef,
   type AppRule,
@@ -288,6 +291,9 @@ export function ProfilesPage({
   const [renaming, setRenaming] = useState<ProfileEntry | null>(null);
   const [deleting, setDeleting] = useState<ProfileEntry | null>(null);
   const [importing, setImporting] = useState(false);
+  // The profile just imported, to compare with the apps it has settings for.
+  const [compare, setCompare] = useState<string | null>(null);
+  const integrations = useIntegrationHost();
   // The report of an AntiMicroX import, shown before its profile opens.
   const [amgp, setAmgp] = useState<AmgpImported | null>(null);
   const [clash, setClash] = useState<ImportClash | null>(null);
@@ -520,6 +526,9 @@ export function ProfilesPage({
 
   const imported = (result: ProfileImported) => {
     setHighlight({ id: result.id, focus: false });
+    // A profile that carries an app's shortcut settings is compared with the
+    // app on this computer (ARCHITECTURE §16.5).
+    setCompare(result.id);
     const name = profileName(result, language);
     setToast({
       text: t(`已导入「${name}」`, `Imported “${name}”`),
@@ -957,6 +966,16 @@ export function ProfilesPage({
         onExists={setClash}
         onImported={imported}
       />
+      {integrations && compare && (
+        <ImportIntegrations
+          key={compare}
+          store={integrations.store}
+          profile={compare}
+          language={language}
+          Capture={RecordKey}
+          onDone={() => setCompare(null)}
+        />
+      )}
       <DeleteProfileDialog
         entry={deleting}
         state={state}

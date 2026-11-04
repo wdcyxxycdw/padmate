@@ -662,6 +662,7 @@ export function KeyDrawer({
                   language={language}
                   disabled={locked}
                   registrations={keyScripts.visible}
+                  integration={{ profile: state.id }}
                   suggestPress={
                     keyScripts.owners.length === 0 &&
                     !state.readOnly &&

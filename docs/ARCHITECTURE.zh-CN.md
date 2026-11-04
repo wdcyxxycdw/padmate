@@ -22,6 +22,7 @@
 | IPC | 命名管道 JSON-RPC 2.0，token 认证，ACL 限当前用户 | [IPC](adr/0009-ipc.zh-CN.md) |
 | 脚本 | goja + esbuild；与声明式映射共用手势识别和输出 | [脚本运行时](adr/0010-scripting-runtime.zh-CN.md)、[脚本即宏](adr/0011-script-macros.zh-CN.md) |
 | 界面与诊断 | Electron + React；overlay 是第二个窗口 | [编辑界面](adr/0013-editor-ui.zh-CN.md)、[Overlay](adr/0014-overlay.zh-CN.md)、[诊断](adr/0016-diagnostics.zh-CN.md) |
+| 软件适配 | 配置绑定某个软件（现在只有 CLIP STUDIO PAINT）后，`integrations/<id>.json` 记下键在软件里对应的功能；从软件选功能、查冲突、写回（关着软件、先备份、可回滚）、激活时同步检查 | [软件适配与 CLIP STUDIO PAINT](adr/0019-clip-studio-paint.zh-CN.md) |
 | 打包 | NSIS 按用户安装；另有便携 zip；更新读 `padmate.download`，它也有下载页 | [安装包与更新](adr/0018-installer-and-updates.zh-CN.md) |
 
 ## 1. 原则
@@ -31,7 +32,7 @@
 3. **输出只有一个写者。** 守护进程内只有 T-output 调 SendInput；`padmatectl send` 和注入测试在进程外直接调用。
 4. **延迟只花在需要的地方**：手势等待只由可达的绑定决定。
 5. **状态变化至少走两个渠道告知用户**：手柄、托盘、overlay。
-6. **只输出键盘快捷键和鼠标**，不做应用专属兼容。
+6. **只输出键盘快捷键和鼠标。** 应用专属的部分只有软件适配：配置绑定了某个软件（现在只有 CLIP STUDIO PAINT）时，padmate 读写它的快捷键设置，用来选功能、查冲突和同步；引擎和输出不因软件不同而不同（§16）。
 
 ## 2. 进程模型
 
@@ -921,6 +922,9 @@ JSON-RPC 标准码（如 -32602）之外：
 | -32025 | 映射不能保存，`data.reason`：`syntax`、`mapping`、`guid`、`config` |
 | -32026 | 这个输入做不了（假输入没有映射或原始事件，或已映射的手柄没有处于捕获） |
 | -32027 | 蓝牙 LE 的 Joy-Con 2 不可用（不是 Windows、传输没有启动，或没有它的假输入） |
+| -32028 | 软件适配：软件正在运行，要先关掉，`data {integration}` |
+| -32029 | 软件适配不可用，`data {problem}`：`notFound`、`unknownFormat`、`unsupported` |
+| -32030 | 软件的文件正被使用或在读写之间变了（日志文件、指纹不同），什么都没写 |
 
 ### 方法
 
@@ -942,6 +946,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `startup.get/set` | 登录时启动（只接受 `enabled`，命令总是本进程的可执行文件和 `startupArgs`） |
 | `script.status/reload/describe/registrations/logs/init/import/path/detach` | 脚本 |
 | `macros.list/create/import/rename/delete/path` | 脚本库的宏，不带配置 ID |
+| `integrations.list/functions/check/items/putItems/plan/write/backups/restore/dismiss/setDataDir` | 软件适配（ADR-0019），参数与返回值见 §16.4。都在 bridge 白名单里 |
 | `fake.press/release/axis/effects/battery/joycon2` | 只在 `--fake-input` 下 |
 | `ui.register` / `ui.setOutput` / `ui.exitReady` | 注册经验证的 UI 进程；设自身窗口输出开关；托盘退出或 `daemon.exit` 时界面存完修改后确认（只有注册过的连接能调） |
 | `daemon.exit` | 安装程序请 padmated 像托盘“退出”一样退出（§5）；参数必须恰为 `{reason:"installer"}`，别的内容 -32602 且不动 |
@@ -974,6 +979,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `output.preview` | Arbiter 解析快捷键后的预览；未订阅时不构造 |
 | `app.foreground` | `{exe,path,elevated,own,system?}`，只含可执行文件身份，不读窗口标题；`own` 标记已注册的 padmate 界面，`system` 标记 Windows 目录下的程序 |
 | `daemon.exiting` | 退出前发布 `{reason:"tray"}` 或 `{reason:"installer"}` |
+| `integration.changed` | 软件适配：`{integration, kind, profile?, differenceId?, count?}`，`kind` 为 `files`、`running`、`differences`（§16.4） |
 | `hud` | 脚本的 `hud.toast`：`{kind:"toast",slot,text,ms}`。有订阅时脚本的 `host.has("hud")` 为 true |
 | `input.raw` | `devices.rawInfo` 要求过的手柄的原始事件 `{timeNs,device,kind,index,value}`；订阅它本身不开任何设备 |
 | `joycon2.changed` | Joy-Con 2 的状态，形状同 `joycon2.status` 的结果，变化时发（窗口开关、手柄连上、被记住、被忘记或断开，或连接参数变化） |
@@ -1288,6 +1294,87 @@ JSON-RPC 标准码（如 -32602）之外：
 
 以 `Taskfile.yml` 为准，`task --list` 列出全部，常用任务见 [CLAUDE.md](../CLAUDE.md)。`ci` 不含真实注入、强制 SDL、延迟基准和 Playwright。`test:inject` 先 `sdl`，设 `PADMATE_REQUIRE_SDL=1`、`PADMATE_REQUIRE_SESSION=1`。`bench` 约 4.5 分钟，超时的测试不运行 cleanup，所以测试自己检查截止时间（§14）。`test:installer` 会暂写真实的卸载项和快捷方式，机器上装了 padmate 时拒绝运行。下载站的测试（`site:test`，Node 自带的测试运行器，无依赖）属于 `ci`；`site:dev` 和 `site:dry-run` 不改线上任何东西，`site:qr` 重新生成页面上的打赏二维码（§15.5）。
 
-## 16. ADR
+## 16. 软件适配
+
+决策见 [ADR：软件适配与 CLIP STUDIO PAINT](adr/0019-clip-studio-paint.zh-CN.md)，CSP 的格式事实见 [PITFALLS](PITFALLS.zh-CN.md#clip-studio-paint)。v1.2 正在实现，本节随代码补全。
+
+软件适配（integration）让 padmate 读写某个软件自己的快捷键设置。通用部分（配置旁的文件、IPC、界面）不认识任何具体软件，只按适配的 ID 工作；现在只有一种适配 `csp`（CLIP STUDIO PAINT）。
+
+### 16.1 绑定
+
+- 配置绑定了某个软件，是指 config.json 的 `rules` 里有一条规则，它的程序是这种适配的可执行文件（按文件名比较，不分大小写），选中的是这份配置。没绑定时界面不出现这种适配的任何东西，守护进程也不做同步检查。随附配置 `csp` 自带这条规则（§10.1）。
+- `integrations/<id>.json` 只存条目，不决定绑定；没有这个文件就是没有条目。复制配置时文件一起复制；继承时子配置的条目叠在父配置的条目上，同一个键以子配置为准。
+
+### 16.2 `integrations/<id>.json`
+
+```json
+{
+  "format": 1,
+  "items": [
+    {"keys": "Ctrl+Z", "function": "command:basiccommand/editundo", "name": "撤销", "path": ["编辑"]},
+    {"keys": "P", "function": "tool:3f2a…（32 位小写十六进制）", "name": "G笔", "path": ["沾水笔", "沾水笔"]}
+  ]
+}
+```
+
+- 每一项是“这个键在软件里是这个功能”。`keys` 是一个 KeySpec 和弦（§8.1），在文件里不重复；`function` 是适配自己定义的不透明 ID（CSP：`command:<menucommandtype>/<menucommand>` 或 `tool:<节点 UUID>`）；`name` 和 `path` 只用来显示，比较时不看。
+- 严格 JSON，用与 profile.json 相同的扫描器；最多 512 项；不认识的成员是错误。
+- 配置里没有任何按键发的键，其条目在比较、`plan` 和激活检查时忽略。条目仍留在文件里，`integrations.items` 的 `items` 仍返回它；只有 `statuses`、`consistent`、`differenceId` 仅按用到的条目计算。“发的键”由 `integration.UsedKeys` 在合并父配置后的配置上收集（规范写法）：通用层、所有层和功能键集合里，所有手势的 keys 动作的和弦（含其 `Sequence`）和 sequence 动作里的快捷键步骤；等待、文字、宏、脚本和其他动作不算。
+- 只有守护进程写：临时文件、Sync、rename，替换前把旧字节存进 `.history`。
+
+### 16.3 守护进程
+
+- `internal/integration`：通用类型（功能、条目、检查结果、比较状态、改动计划）、`integrations/<id>.json` 的解析与格式化、适配注册表。
+- `internal/integration/cspint`：CSP 适配，把 `internal/csp`（纯逻辑：两种文件的模型、键名换算、冲突与循环键、比较、在副本上改）和 `internal/cspfile`（位置、按映像名检测 `CLIPStudioPaint.exe`、备份、安全替换、恢复）接起来。名称见 ADR-0019 第三节。
+- **CSP 的文件**：`%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*\Shortcut\default.khc`（命令）和 `Tool\EditImageTool.todb`（工具）。只读打开；改动只在同一文件夹的副本上做，再原子替换。config.json 的 `integrations.csp.dataDir` 可以指定文件夹，代替自动查找。
+- **备份**：`<数据目录>\integration-backups\<适配 ID>\<UTC 时间>\`，每种适配最多 30 份。
+- **同步检查**：绑定了适配的配置成为活动配置时，以及它活动期间软件的文件变化时，比较这份配置的条目和软件当前的设置。有不一致、而且这组差异（`differenceId`，差异内容的 SHA-256）不是用户“暂不处理”过的，就发 `integration.changed {kind:"differences"}`，并经 overlay 和托盘各提示一次。“暂不处理”记在 state.json 的 `integrations[<配置 ID>][<适配 ID>].dismissed`。细节见下面“实现细节”。
+- 引擎包不导入这些包。
+
+**实现细节**
+
+- **绑定只有一个判断点**：`integration.Bound(config, 配置 ID, exe 列表)`，`BoundProfiles` 由它构建。它经 `Config.Select` 判断：对这个软件的可执行文件（裸文件名，以及启用的、文件名相同的完整路径规则里的路径），规则按顺序第一个选中的就是绑定的配置；关掉自动切换时没有配置是绑定的。`integrations.list` 的 `profiles`、激活检查、监视都只调它们；以后绑定规则变了只改这一处。
+- **读**：不就地打开 CSP 的 SQLite 文件。读取把 `default.khc`、`EditImageTool.todb` 和 `Preference\Config.sqlite` 复制到临时文件夹，读副本。读到的快照按各文件的 stat（大小、修改时间）缓存，没变就不重读；`Revision` 是这些 stat 的指纹，所以轮询很便宜。
+- **`toolShift`**：来自 `Preference\Config.sqlite` 的表 `Tool`，列 `UseToolShift`。为真时，无修饰键的单键检查会带 `toolShift` 提示。`modifierKey` 还没有（那个文件没解码）。
+- **写**：所有改动作为一个整体先校验（功能存在、键写得出、没有重复或冲突），任何一项不行就整体拒绝（-32602，`data {function, keys, reason}`）。先做移除再做添加。改动不改变任何东西时不写文件、不备份，`integrations.write` 的 `backup` 为 `null`。写入前用 `internal/cspfile` 备份；复查软件没在运行、文件指纹没变、没有日志文件；写完读回校验。
+- **条目文件**：条目的键以规范写法存（`integration.CanonicalKeys`，`putItems` 会规范化）。替换前把旧字节存到配置文件夹的 `.history/integrations-<适配 ID>-<时间>.json`，每种适配最多 30 份；它们不是 profile.json 的版本，`profiles.history` 看不到。
+- **名称**：`cspint.NamesNamer` 把 `internal/cspnames` 接到 `integration.Namer`。次序：软件的菜单资源 → 自带对照表 → 插件 DLL → 命令 ID 本身。安装目录来自 `cspfile.FindInstallDir`，每种语言只找一次，找不到就只用自带对照表或 ID。分类只列至少有一个功能用到的（所以没有空的“版本”“许可证”菜单），“工具”和“其他”按语言命名。`padmate-probe csp-names` 重新生成自带对照表。
+- **语言**：`language` 可省略，省略时用最近一次请求给过的语言，从没给过就是 `zh-CN`；守护进程自己写的提示也用它。
+- **监视**（`integration_watch.go`）：一个 goroutine，每约 2 s 一轮。活动配置绑定了某个适配、或者有客户端订阅了 `integration.changed` 时，才对这个适配做 stat（`Revision`）和进程快照（`Running`）：运行状态变了发 `kind:"running"`，文件指纹变了发 `kind:"files"` 并重新检查。没有绑定的活动配置、也没人订阅时，一轮只看内存里的规则，不碰文件和进程。配置成为活动配置（`publishProfile`）、`putItems`、`write`、`restore` 之后会立即踢它一下。
+- **激活检查**：绑定的配置成为活动配置，或它活动期间文件变了，就比较条目。全部一致就忘掉已提示的记录；不一致时，只要这组差异的 `differenceId` 不等于 `Memory.Dismissed` 的值、也不等于本次运行里已经提示过的值，就发 `kind:"differences"`（带 `profile`、`differenceId`、`count`）并提示。读不了软件（没找到、格式不认识）只在日志里记一次，不提示。
+- **提示不抢焦点**：overlay 一条短提示（话题 `hud` 的 toast，只有 overlay 订阅它），托盘一条通知。文字：“<配置名>：<n> 个快捷键和 <软件名> 里的不同，打开 padmate 处理”（英文：“<配置名>: <n> shortcuts differ from <软件名>; open padmate to review”）。守护进程从不打开或聚焦界面。
+
+### 16.4 IPC
+
+都在 UI 桥白名单里。`integration` 是适配 ID。
+
+| 方法 | 说明 |
+|---|---|
+| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, custom?, running, profiles[]}]`：每种适配（config.json 的 `integrations.<id>.dataDir` 指定了数据文件夹时 `custom` 为 true）、本机找到没有（`problem`：`notFound`、`unknownFormat`、`unsupported`）、软件是否在运行、哪些配置绑定了它（§16.1） |
+| `integrations.functions {integration, language?}` | 软件里能设快捷键的全部功能：`{revision, categories:[{id,name}], functions:[{id, kind, name, path[], category, keys[], unconfirmed?, unsupported?, cycle?[]}]}`。`keys` 是 KeySpec；`cycle` 是共用同一个单键的其他功能；`revision` 是软件文件的指纹 |
+| `integrations.check {integration, function?, keys, language?}` | 这个键在软件里属于谁：`{status, owners:[{id,name,path?}], notes[]}`。`status`：`free`、`same`（就是这个功能）、`cycle`（循环键，不是冲突）、`conflict`、`unconfirmed`（符号键，对应的实体键还没确认）、`unsupported`。`notes`：`toolShift`（按住会临时切换工具）、`modifierKey`（被修饰键设置占用） |
+| `integrations.items {profile, integration, language?}` | 条目（合并父配置后）和每项的状态：`{revision, items[], statuses:[{keys, function, state, current?[], owners?[]}], consistent, differenceId?, dismissed}`。`revision` 是这份配置自己的 `integrations/<id>.json` 的版本（没有文件为空串）；`dismissed` 为真表示 `differenceId` 就是“暂不处理”过的那组。`state`：`consistent`、`changed`、`removed`、`missing` |
+| `integrations.putItems {profile, integration, revision, items}` | 写条目，返回 `{revision}`。键规范化；不合格（键写错、重复、超限、多余成员）-32602；`revision` 不匹配 -32009，`data.revision` 是当前值 |
+| `integrations.plan {profile, integration, language?}` | 以 padmate 为准时要对软件做的改动，每个不一致的条目一项：`{entries:[{item, changes:[{function, add?, remove?}], displaced:[{function,name,keys}], skipped?}]}`。`add`、`remove` 是单个 KeySpec 字符串，`skipped` 是原因字符串；`changes` 已包含被挤掉的功能的移除。`displaced` 是会因此失去这个键的功能。导入时也用它，界面按用户逐项的决定拼出最后的 `changes` |
+| `integrations.write {integration, changes}` | 改软件的设置：`changes` 可以涉及任何功能（换键时也改被挤掉的那个），全部检查过才写；先备份，再按 ADR-0019 第五节写。返回 `{backup:{id,created,reason,changes}|null, revision}`（改动什么都没改变时 `backup` 为 `null`） |
+| `integrations.backups {integration}` / `integrations.restore {integration, backup}` | 备份列表（新的在前），裸数组 `[{id,created,reason,changes}]` / 恢复一份，恢复前先备份当前文件，返回那份新备份（同样的对象）。`created` 是 RFC 3339 的 UTC 时间；`reason` 为 `write` 或 `beforeRestore`；`changes` 是那次写入的改动数（`beforeRestore` 为 0） |
+| `integrations.dismiss {profile, integration, differenceId}` | 暂不处理这组差异，记在 state.json，返回 `{dismissed:true}`。`differenceId` 必须是 64 位小写十六进制 |
+| `integrations.setDataDir {integration, dataDir, revision?}` | 设置 config.json 的 `integrations.<id>.dataDir`；`dataDir` 为 `null` 则去掉它（重新自动查找）。`dataDir` 必填（null 或字符串），必须是已存在文件夹的绝对路径、不超过 1024 个字符；是不是软件自己的文件夹这里不检查，问题由 `integrations.list` 显示。按字节位置编辑，和 `pads.set` 一样（其余成员原样不动），立即生效、不用重启，返回和 `config.put` 一样（`{revision, applied, …}`）；`revision` 不匹配 -32009 |
+
+未知的适配 ID -32004；ID、键、`language`、多余的成员不合格 -32602（沿用严格的参数解码）。错误码：-32028 软件正在运行（`data {integration}`），要先关掉；-32029 适配不可用（`data {problem}`）；-32030 软件的文件正被使用或在读写之间变了（日志文件、指纹不同），什么都没写。
+
+话题 `integration.changed {integration, kind, profile?, differenceId?, count?}`：`kind` 为 `files`（软件文件变了）、`running`（软件开了或关了）、`differences`（活动配置有新的差异）。
+
+### 16.5 界面
+
+- “设置”里该软件的一栏：“数据位置”一行有“更换…”，`custom` 为 true 时还有“恢复自动查找”。“更换…”只在主进程里处理：弹出文件夹对话框（挂在窗口上），检查文件夹里有 `Shortcut\default.khc` 或 `Tool\EditImageTool.todb`，通过才调用 `integrations.setDataDir`；不是该软件的文件夹就用一句话说明，什么都不改。界面从不发路径。
+- 绑定了适配的配置，按键抽屉的快捷键动作里，“重新录入”旁多一个“从 <软件名> 选择…”，打开选择对话框：搜索、左边分类、右边功能列表（名称、路径、快捷键或“未设置”）。选中有快捷键的功能就把键填进绑定，名称填进 label，并写条目；选中没有快捷键的功能就录一个键、`integrations.check` 说明它在软件里属于谁，再 `integrations.write`。
+- 会写软件的操作开始前先看 `integrations.list` 的 `running`，在运行就弹阻塞对话框“请先关闭 <软件名>”，有“重试”。写完给“撤销这次写入”（恢复刚才的备份）。
+- 差异的提醒不抢焦点：守护进程只经 overlay 和托盘提示，界面从不因此把窗口拉到前台。用户打开界面、看到有差异的绑定配置时，界面里弹一个对话框列出全部差异：以 padmate 为准（`plan` → 确认被挤掉的功能 → `write`）、以软件为准（按钮保持功能，键改成软件里的新键，经普通的编辑和自动保存，可撤销；然后 `putItems`）、暂不处理（`dismiss`）。
+- 导入带条目的配置、用户选了改软件时，`plan` 里有 `displaced` 的项先列出，再弹冲突处理对话框逐项决定：用导入的设置、保留本机的设置（这一项不导入，用到这个键的按键标出来）、给其中一方换一个键（当场录键，`check` 查冲突和循环键）。全部决定完才 `write`。
+- 设置页在至少一个配置绑定了适配时才出现这种适配的一节：数据位置（可更换）、备份列表和“恢复…”。
+- 界面不写死任何软件：名称、分类、提示都来自守护进程。
+
+## 17. ADR
 
 架构决策记录按主题放在 [adr/](adr/README.zh-CN.md)，每篇只写现在有效的决定；决定变了直接改那一篇。

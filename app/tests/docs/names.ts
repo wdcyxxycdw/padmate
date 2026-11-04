@@ -259,6 +259,22 @@ export const names: Name[] = [
   ["无法下载更新", "Could not download the update"],
   ["无法安装更新", "Could not install the update"],
   // Known limitations
+  // CLIP STUDIO PAINT.
+  ["使用这个功能", "Use this function"],
+  ["重试", "Retry"],
+  ["撤销这次写入", "Undo this write"],
+  ["以 padmate 为准", "Keep padmate's keys"],
+  ["暂不处理", "Not now"],
+  ["逐项决定", "Decide one by one"],
+  ["用导入的设置", "Use the imported setting"],
+  ["保留本机的设置", "Keep my setting"],
+  ["给导入的功能换一个键", "Give the imported function another key"],
+  ["给本机的功能换一个键", "Give my function another key"],
+  ["数据位置", "Data folder"],
+  ["备份", "Backups"],
+  ["恢复…", "Restore…"],
+  ["更换…", "Change…"],
+  ["恢复自动查找", "Find automatically"],
   // FAQ.
   // The question of the uninstaller (app/build/installer.nsh).
   ["是否保留配置和脚本？", "Keep your profiles and scripts?", "installer"],
@@ -388,6 +404,46 @@ export const external: External[] = [
     zh: "Steam 正在运行",
     en: "Steam is running",
     reason: "built by the app with the name of the software that runs",
+  },
+  {
+    zh: "从 CLIP STUDIO PAINT 选择…",
+    en: "Pick from CLIP STUDIO PAINT…",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "写入 CLIP STUDIO PAINT",
+    en: "Write to CLIP STUDIO PAINT",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "请先关闭 CLIP STUDIO PAINT",
+    en: "Close CLIP STUDIO PAINT first",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "CLIP STUDIO PAINT 的设置变了",
+    en: "CLIP STUDIO PAINT settings changed",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "以 CLIP STUDIO PAINT 为准",
+    en: "Follow CLIP STUDIO PAINT",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "导入的 CLIP STUDIO PAINT 设置",
+    en: "Imported CLIP STUDIO PAINT settings",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "用导入的设置改我的 CLIP STUDIO PAINT",
+    en: "Change my CLIP STUDIO PAINT to the imported settings",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "不改，按我的 CLIP STUDIO PAINT 调整按键",
+    en: "Keep my CLIP STUDIO PAINT and adjust the keys",
+    reason: "built by the app with the name of the software it works with",
   },
 ];
 

@@ -77,6 +77,9 @@ const (
 	// ArchiveEncodingReason: a text file (script or JSON) that is not
 	// UTF-8; Path names it.
 	ArchiveEncodingReason = "encoding"
+	// ArchiveIntegrationReason: an integrations/<id>.json that does not
+	// validate (integration.ParseItems); Path names it.
+	ArchiveIntegrationReason = "integration"
 	// ArchiveProfileReason: profile.json does not validate; Diagnostics
 	// says why.
 	ArchiveProfileReason = "profile"
@@ -180,6 +183,11 @@ func (l *Library) Export(id, padmate string) (Exported, error) {
 		}
 		if !item.dir && isTextFile(item.path) && !utf8.Valid(item.data) {
 			return Exported{}, &UnsupportedError{Path: where, Reason: "is not UTF-8; save it as UTF-8 to export the profile"}
+		}
+		if !item.dir {
+			if err := checkIntegrationFile(item.path, item.data); err != nil {
+				return Exported{}, &UnsupportedError{Path: where, Reason: "is not a valid integration file: " + err.Error() + "; fix it to export the profile"}
+			}
 		}
 		if item.path == "profile.json" {
 			data = item.data
@@ -631,6 +639,8 @@ func (r *archiveReader) add(f *zip.File) error {
 		return archiveError(ArchiveLimitReason, f.Name, fmt.Sprintf("exceeds %d MiB", MaxDocumentBytes>>20))
 	case isTextFile(rel) && !utf8.Valid(data):
 		return archiveError(ArchiveEncodingReason, f.Name, "is not UTF-8")
+	case checkIntegrationFile(rel, data) != nil:
+		return archiveError(ArchiveIntegrationReason, f.Name, checkIntegrationFile(rel, data).Error())
 	case rel == "profile.json":
 		r.profile = data
 	}

@@ -437,6 +437,7 @@ export type Config = {
   "feedback"?: never;
   "functionKey"?: never;
   "ignore"?: never;
+  "integrations"?: Record<string, ConfigIntegration>;
   "joycon2"?: ConfigJoycon2;
   "onUnmatched"?: never;
   "output"?: ConfigOutput;
@@ -472,6 +473,10 @@ export type ConfigFeedback = {
   "lowBattery"?: boolean;
   "pause"?: boolean;
   "rumble"?: boolean;
+};
+
+export type ConfigIntegration = {
+  "dataDir"?: string;
 };
 
 export type ConfigJoycon2 = {
@@ -515,6 +520,7 @@ export type ConfigTiming = {
 export type State = {
   "controllers"?: Record<string, StateController>;
   "devices"?: Record<string, StateDevice>;
+  "integrations"?: Record<string, Record<string, StateIntegrationState>>;
   "joycon2"?: Array<StateJoycon2Controller>;
   "lastProfile"?: string;
   "lastProfileSet"?: boolean;
@@ -530,6 +536,10 @@ export type StateController = {
 
 export type StateDevice = {
   "profiles": Record<string, StateLayers>;
+};
+
+export type StateIntegrationState = {
+  "dismissed"?: string;
 };
 
 export type StateJoycon2Controller = {

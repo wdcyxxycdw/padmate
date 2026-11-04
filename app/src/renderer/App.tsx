@@ -5,6 +5,7 @@
 import "./controller/controller-3d.css";
 import "./analog/analog-editor.css";
 import "./drawer/drawer.css";
+import "./integrations/integrations.css";
 import "./workspace/workspace.css";
 import "./pages/profiles/profiles.css";
 import "./pages/pages.css";
@@ -18,6 +19,8 @@ import type { Config } from "../shared/generated/schema";
 import { ConfigRepairDialog } from "./ConfigRepairDialog";
 import { createEditorStore, type EditorStore } from "./editor/editor-store";
 import { type Translate, translator } from "./i18n";
+import { IntegrationProvider } from "./integrations/IntegrationContext";
+import { IntegrationDifferences } from "./integrations/IntegrationDifferences";
 import { Onboarding } from "./onboarding/Onboarding";
 import { shouldOffer } from "./onboarding/onboarding-model";
 import { DiagnosticsPage } from "./pages/DiagnosticsPage";
@@ -737,232 +740,246 @@ export function App({ store }: { store: PadmateStore }) {
       />
     );
   return (
-    <div className="app-shell">
-      <Rail state={state} t={t} onNavigate={navigate} />
-      <main className="main-content">
-        <header className="topbar">
-          <div className="topbar-start">
-            {overview ? (
-              <>
-                {/* The page's name for a screen reader; the profile menu is
+    <IntegrationProvider store={store} language={language}>
+      <div className="app-shell">
+        <Rail state={state} t={t} onNavigate={navigate} />
+        <main className="main-content">
+          <header className="topbar">
+            <div className="topbar-start">
+              {overview ? (
+                <>
+                  {/* The page's name for a screen reader; the profile menu is
                     what a sighted user sees in its place. */}
-                <h1 className="visually-hidden">{t("overview")}</h1>
-                <ProfileMenu
+                  <h1 className="visually-hidden">{t("overview")}</h1>
+                  <ProfileMenu
+                    state={state}
+                    editor={editor}
+                    language={language}
+                    openRequest={menuRequest}
+                    onSettings={() => setProfileSettings(true)}
+                    onActivate={(id) => void activate(id)}
+                    onCreate={() => setNewProfile(true)}
+                    onManage={() => navigate("profiles")}
+                  />
+                </>
+              ) : subView ? (
+                <>
+                  <button
+                    ref={backButton}
+                    type="button"
+                    className="page-back"
+                    aria-label={tx(language, "返回设置", "Back to Settings")}
+                    title={tx(
+                      language,
+                      "返回设置（Esc）",
+                      "Back to Settings (Esc)",
+                    )}
+                    onClick={backToSettings}
+                  >
+                    <Icon
+                      name="chevronRight"
+                      size={15}
+                      stroke={2}
+                      className="page-back-icon"
+                    />
+                    {t("settings")}
+                  </button>
+                  <h1 className="page-title page-subtitle">
+                    {t(
+                      subView === "logs"
+                        ? "logsTitle"
+                        : subView === "diagnostics"
+                          ? "diagnosticsTitle"
+                          : "pads",
+                    )}
+                  </h1>
+                </>
+              ) : (
+                <h1 className="page-title">{t(pageTitle)}</h1>
+              )}
+            </div>
+            <div className="topbar-end">
+              <StatusPill state={state} t={t} />
+              <PauseButton state={state} t={t} />
+              {overview && (
+                <MoreMenu
                   state={state}
                   editor={editor}
                   language={language}
-                  openRequest={menuRequest}
-                  onSettings={() => setProfileSettings(true)}
-                  onActivate={(id) => void activate(id)}
-                  onCreate={() => setNewProfile(true)}
-                  onManage={() => navigate("profiles")}
+                  onList={() => setBindingsList(true)}
+                  onMessage={setToast}
                 />
-              </>
-            ) : subView ? (
-              <>
+              )}
+            </div>
+          </header>
+          <div className={`page-content page-${state.page}`}>
+            {state.error && (
+              <div className="shell-notice" role="alert">
+                <span>{state.error}</span>
                 <button
-                  ref={backButton}
                   type="button"
-                  className="page-back"
-                  aria-label={tx(language, "返回设置", "Back to Settings")}
-                  title={tx(
-                    language,
-                    "返回设置（Esc）",
-                    "Back to Settings (Esc)",
-                  )}
-                  onClick={backToSettings}
+                  className="icon-btn bare"
+                  aria-label={t("dismiss")}
+                  onClick={state.dismissError}
                 >
-                  <Icon
-                    name="chevronRight"
-                    size={15}
-                    stroke={2}
-                    className="page-back-icon"
-                  />
-                  {t("settings")}
+                  <Icon name="close" size={14} stroke={2} />
                 </button>
-                <h1 className="page-title page-subtitle">
-                  {t(
-                    subView === "logs"
-                      ? "logsTitle"
-                      : subView === "diagnostics"
-                        ? "diagnosticsTitle"
-                        : "pads",
-                  )}
-                </h1>
-              </>
-            ) : (
-              <h1 className="page-title">{t(pageTitle)}</h1>
+              </div>
             )}
-          </div>
-          <div className="topbar-end">
-            <StatusPill state={state} t={t} />
-            <PauseButton state={state} t={t} />
-            {overview && (
-              <MoreMenu
+            {state.dropped > 0 && (
+              <div className="shell-notice" role="status">
+                {t("dropped")}
+              </div>
+            )}
+            {!connected ? (
+              // The frame never scrolls; a short window scrolls the panel itself.
+              <div className="connection-scroll">
+                <ConnectionPanel state={state} t={t} />
+              </div>
+            ) : overview ? (
+              <section
+                className="controller-stage"
+                aria-label={t("controller")}
+              >
+                {!device ? (
+                  // A short window scrolls the message instead of clipping it.
+                  <div className="page-scroll page-scroll-center">
+                    <NoController
+                      language={language}
+                      conflicts={state.status?.conflicts}
+                      onShowLogs={() => navigate("logs")}
+                    />
+                  </div>
+                ) : !activeId && !state.profilesError ? (
+                  // Nothing to edit: the library is empty or mapping is off.
+                  // The title waits for the list, so it does not flip. A
+                  // session started with a file (no library) has no ID either
+                  // and keeps the controller view.
+                  state.profilesLoaded && (
+                    <div className="page-scroll page-scroll-center">
+                      <NoProfile
+                        language={language}
+                        hasProfiles={state.profiles.length > 0}
+                        onCreate={() => setNewProfile(true)}
+                        onChoose={usable ? openProfileMenu : undefined}
+                      />
+                    </div>
+                  )
+                ) : (
+                  <ControllerWorkspace
+                    key={device.info.id}
+                    store={store}
+                    info={device.info}
+                    t={t}
+                    editor={editor}
+                    language={language}
+                    labelDisplay={state.labelDisplay}
+                    selected={selected}
+                    onSelect={setSelected}
+                    onShowScripts={() => navigate("scripts")}
+                  />
+                )}
+              </section>
+            ) : state.page === "profiles" ? (
+              <ProfilesPage
                 state={state}
-                editor={editor}
-                language={language}
-                onList={() => setBindingsList(true)}
-                onMessage={setToast}
+                onOpenMapping={() => navigate("overview")}
+                onEditKeys={async (id) => {
+                  await activate(id, true);
+                }}
+                onProfileSettings={setCardSettings}
+                saveEdits={(id) => editor.getState().flush(id)}
+              />
+            ) : state.page === "scripts" ? (
+              <ScriptsPage state={state} editor={editor} />
+            ) : state.page === "logs" ? (
+              <LogsPage state={state} store={store} />
+            ) : state.page === "diagnostics" ? (
+              <DiagnosticsPage state={state} store={store} />
+            ) : state.page === "pads" ? (
+              <PadsPage state={state} store={store} />
+            ) : (
+              <SettingsPage
+                state={state}
+                store={store}
+                onShowLogs={() => navigate("logs")}
+                onShowDiagnostics={() => navigate("diagnostics")}
+                onShowPads={() => navigate("pads")}
+                focusEntry={focusEntry}
+                onEntryFocused={entryFocused}
               />
             )}
           </div>
-        </header>
-        <div className={`page-content page-${state.page}`}>
-          {state.error && (
-            <div className="shell-notice" role="alert">
-              <span>{state.error}</span>
-              <button
-                type="button"
-                className="icon-btn bare"
-                aria-label={t("dismiss")}
-                onClick={state.dismissError}
-              >
-                <Icon name="close" size={14} stroke={2} />
-              </button>
+          {toast && (
+            <div className="shell-toast" role="status">
+              {toast}
             </div>
           )}
-          {state.dropped > 0 && (
-            <div className="shell-notice" role="status">
-              {t("dropped")}
-            </div>
-          )}
-          {!connected ? (
-            // The frame never scrolls; a short window scrolls the panel itself.
-            <div className="connection-scroll">
-              <ConnectionPanel state={state} t={t} />
-            </div>
-          ) : overview ? (
-            <section className="controller-stage" aria-label={t("controller")}>
-              {!device ? (
-                // A short window scrolls the message instead of clipping it.
-                <div className="page-scroll page-scroll-center">
-                  <NoController
-                    language={language}
-                    conflicts={state.status?.conflicts}
-                    onShowLogs={() => navigate("logs")}
-                  />
-                </div>
-              ) : !activeId && !state.profilesError ? (
-                // Nothing to edit: the library is empty or mapping is off.
-                // The title waits for the list, so it does not flip. A
-                // session started with a file (no library) has no ID either
-                // and keeps the controller view.
-                state.profilesLoaded && (
-                  <div className="page-scroll page-scroll-center">
-                    <NoProfile
-                      language={language}
-                      hasProfiles={state.profiles.length > 0}
-                      onCreate={() => setNewProfile(true)}
-                      onChoose={usable ? openProfileMenu : undefined}
-                    />
-                  </div>
-                )
-              ) : (
-                <ControllerWorkspace
-                  key={device.info.id}
-                  store={store}
-                  info={device.info}
-                  t={t}
-                  editor={editor}
-                  language={language}
-                  labelDisplay={state.labelDisplay}
-                  selected={selected}
-                  onSelect={setSelected}
-                  onShowScripts={() => navigate("scripts")}
-                />
-              )}
-            </section>
-          ) : state.page === "profiles" ? (
-            <ProfilesPage
-              state={state}
-              onOpenMapping={() => navigate("overview")}
-              onEditKeys={async (id) => {
-                await activate(id, true);
-              }}
-              onProfileSettings={setCardSettings}
-              saveEdits={(id) => editor.getState().flush(id)}
-            />
-          ) : state.page === "scripts" ? (
-            <ScriptsPage state={state} editor={editor} />
-          ) : state.page === "logs" ? (
-            <LogsPage state={state} store={store} />
-          ) : state.page === "diagnostics" ? (
-            <DiagnosticsPage state={state} store={store} />
-          ) : state.page === "pads" ? (
-            <PadsPage state={state} store={store} />
-          ) : (
-            <SettingsPage
-              state={state}
-              store={store}
-              onShowLogs={() => navigate("logs")}
-              onShowDiagnostics={() => navigate("diagnostics")}
-              onShowPads={() => navigate("pads")}
-              focusEntry={focusEntry}
-              onEntryFocused={entryFocused}
-            />
-          )}
-        </div>
-        {toast && (
-          <div className="shell-toast" role="status">
-            {toast}
-          </div>
-        )}
-      </main>
-      <ProfileSettingsDialog
-        open={profileSettings}
-        editor={editor}
-        language={language}
-        onClose={() => setProfileSettings(false)}
-      />
-      <CardProfileSettings
-        id={cardSettings}
-        mappingEditor={editor}
-        activeId={editorID}
-        api={state.api}
-        globalTiming={globalTiming}
-        profileChanges={state.profileChanges}
-        language={language}
-        onEditor={onCardEditor}
-        onClose={() => void closeCardSettings()}
-      />
-      <BindingsListDialog
-        open={bindingsList}
-        editor={editor}
-        info={device?.info}
-        language={language}
-        onClose={() => setBindingsList(false)}
-        onSelect={(control) => {
-          setBindingsList(false);
-          setSelected(control);
-        }}
-      />
-      <Onboarding
-        open={firstRun}
-        connected={connected}
-        state={state}
-        onClose={(entered) => {
-          state.finishOnboarding();
-          setFirstRun(false);
-          // The main page shows the fixed default; its keys are the user's.
-          if (entered) state.setPage("overview");
-        }}
-      />
-      <NewProfileDialog
-        open={newProfile}
-        state={state}
-        onClose={() => setNewProfile(false)}
-        // Made from the mapping page: its keys are edited next, right here.
-        onCreated={(id) => void activate(id)}
-      />
-      <ConfigRepairDialog
-        repair={connected ? state.configRepair : null}
-        language={language}
-        api={state.api}
-        onConfirm={() => void state.acknowledgeConfigRepair()}
-      />
-      {/* A version on offer, the download, the install. */}
-      <UpdateDialogs api={state.api} language={language} />
-    </div>
+        </main>
+        <ProfileSettingsDialog
+          open={profileSettings}
+          editor={editor}
+          language={language}
+          onClose={() => setProfileSettings(false)}
+        />
+        <CardProfileSettings
+          id={cardSettings}
+          mappingEditor={editor}
+          activeId={editorID}
+          api={state.api}
+          globalTiming={globalTiming}
+          profileChanges={state.profileChanges}
+          language={language}
+          onEditor={onCardEditor}
+          onClose={() => void closeCardSettings()}
+        />
+        <BindingsListDialog
+          open={bindingsList}
+          editor={editor}
+          info={device?.info}
+          language={language}
+          onClose={() => setBindingsList(false)}
+          onSelect={(control) => {
+            setBindingsList(false);
+            setSelected(control);
+          }}
+        />
+        <Onboarding
+          open={firstRun}
+          connected={connected}
+          state={state}
+          onClose={(entered) => {
+            state.finishOnboarding();
+            setFirstRun(false);
+            // The main page shows the fixed default; its keys are the user's.
+            if (entered) state.setPage("overview");
+          }}
+        />
+        <NewProfileDialog
+          open={newProfile}
+          state={state}
+          onClose={() => setNewProfile(false)}
+          // Made from the mapping page: its keys are edited next, right here.
+          onCreated={(id) => void activate(id)}
+        />
+        <ConfigRepairDialog
+          repair={connected ? state.configRepair : null}
+          language={language}
+          api={state.api}
+          onConfirm={() => void state.acknowledgeConfigRepair()}
+        />
+        {/* The differences between the open profile's keys and an app it is
+          bound to; it never brings the window forward by itself. */}
+        <IntegrationDifferences
+          store={store}
+          editor={editor}
+          language={language}
+          profileId={activeId}
+          looking={connected && overview}
+        />
+        {/* A version on offer, the download, the install. */}
+        <UpdateDialogs api={state.api} language={language} />
+      </div>
+    </IntegrationProvider>
   );
 }

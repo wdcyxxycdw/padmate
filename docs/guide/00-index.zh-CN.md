@@ -24,3 +24,4 @@ padmate 支持 Xbox、PlayStation、Switch Pro 和 Joy-Con 手柄，包括 Switc
 12. [更新和隐私](13-updates-and-privacy.zh-CN.md)：检查更新、联网内容和卸载。
 13. [常见问题](14-faq.zh-CN.md)：SmartScreen、杀毒软件、手柄没反应。
 14. [Joy-Con 2](15-joycon-2.zh-CN.md)：经蓝牙连接 Switch 2 的 Joy-Con。
+15. [CLIP STUDIO PAINT](16-clip-studio-paint.zh-CN.md)：从 CSP 自己的命令和工具里给键选功能。

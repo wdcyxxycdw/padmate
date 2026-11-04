@@ -49,9 +49,36 @@
       },
       "x-go-type": "[]JoyCon2Controller",
       "x-go-field": "JoyCon2"
+    },
+    "integrations": {
+      "description": "Software integration sync state (ADR-0019) by library profile ID, then integration ID. Machine state, written by the daemon.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/$defs/integrationState"
+        },
+        "x-go-type": "map[string]IntegrationState"
+      },
+      "x-go-type": "map[string]map[string]IntegrationState"
     }
   },
   "$defs": {
+    "integrationState": {
+      "title": "Integration sync state",
+      "description": "What the user decided about the differences between one profile and one software integration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dismissed": {
+          "description": "The difference ID (a hex SHA-256) of the set of differences the user chose to leave alone; the same differences are not offered again.",
+          "type": "string",
+          "maxLength": 128,
+          "x-go-type": "string"
+        }
+      },
+      "x-go-name": "IntegrationState"
+    },
     "device": {
       "title": "Device memory",
       "description": "Profile-specific layer choices for one device.",

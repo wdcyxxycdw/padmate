@@ -24,6 +24,13 @@ import type {
 } from "../../shared/api";
 import { LibraryErrorCode } from "../../shared/api";
 import type { Config } from "../../shared/generated/schema";
+import type {
+  IntegrationChanged,
+  IntegrationFunctions,
+  IntegrationInfo,
+  IntegrationItems,
+} from "../../shared/integrations";
+import { parseIntegrationChanged } from "../../shared/integrations-parse";
 import type { PadsListResult } from "../../shared/pads";
 import {
   type ActivityRow,
@@ -265,6 +272,45 @@ export interface PadmateState {
    * changes. null until it answers, and when the daemon cannot say.
    */
   pads: PadsListResult | null;
+  /**
+   * The app integrations (ARCHITECTURE §16): integrations.list, which also
+   * says which profiles are bound to each (read it through isBound). null
+   * until it answers, and with a daemon that has none.
+   */
+  integrations: IntegrationInfo[] | null;
+  /**
+   * The functions of each integration in the window's language, by
+   * "<integration>|<language>"; each carries the revision of the app's files
+   * it was read at and is dropped when integration.changed says they changed.
+   */
+  integrationFunctions: Record<string, IntegrationFunctions>;
+  /** A profile's items and their states, by "<profile>|<integration>". */
+  integrationItems: Record<string, IntegrationItems>;
+  /**
+   * The last integration.changed event, with a counter: pages that look at a
+   * profile read it again when the counter moves. The window never comes to
+   * the front because of it.
+   */
+  integrationEvent: { seq: number; change: IntegrationChanged } | null;
+  /** Differences the user put off in this session: "<profile>|<integration>|<id>". */
+  putOffDifferences: string[];
+  /** Reads integrations.list again. */
+  refreshIntegrations(): Promise<void>;
+  /** Reads it again once the burst of changes that asked for it is over. */
+  scheduleRefreshIntegrations(): void;
+  /** The functions of an integration; read once and kept until its files change. */
+  loadIntegrationFunctions(integration: string): Promise<IntegrationFunctions>;
+  /** Reads a profile's items and their states, and keeps them. */
+  loadIntegrationItems(
+    profile: string,
+    integration: string,
+  ): Promise<IntegrationItems>;
+  /** Remembers that the user put these differences off, for this session. */
+  putOffIntegrationDifferences(
+    profile: string,
+    integration: string,
+    differenceId: string,
+  ): void;
   start(): () => void;
   /** Reads status, scripts, config.json and the profile list again. */
   refresh(): Promise<void>;
@@ -513,6 +559,9 @@ export function createPadmateStore(
   let startupSequence = 0;
   let padsSequence = 0;
   let padsScheduled = false;
+  let integrationsSequence = 0;
+  let integrationsScheduled = false;
+  let integrationEventSequence = 0;
   let saveSequence = 0;
   // Counts presses for the key preview; it never goes back, so a press
   // after keyPreview was cleared is still news.
@@ -646,6 +695,45 @@ export function createPadmateStore(
       });
     }
 
+    async function loadIntegrations() {
+      if (get().connection.phase !== "connected") return;
+      const epoch = connectionEpoch;
+      const sequence = ++integrationsSequence;
+      try {
+        const integrations = await api.listIntegrations();
+        if (epoch === connectionEpoch && sequence === integrationsSequence)
+          set({ integrations });
+      } catch {
+        // A daemon without integrations, or one that cannot say: nothing about
+        // them shows, and the list stays as it was.
+      }
+    }
+
+    // Like the controller list: read once for a burst of changes.
+    function scheduleIntegrations() {
+      if (integrationsScheduled) return;
+      integrationsScheduled = true;
+      queueMicrotask(() => {
+        integrationsScheduled = false;
+        void loadIntegrations();
+      });
+    }
+
+    function integrationChanged(change: IntegrationChanged) {
+      if (change.kind === "files") {
+        const functions = { ...get().integrationFunctions };
+        for (const key of Object.keys(functions))
+          if (key.startsWith(`${change.integration}|`)) delete functions[key];
+        set({ integrationFunctions: functions });
+      }
+      // The items a profile shows were compared with the app's old state.
+      set({
+        integrationItems: {},
+        integrationEvent: { seq: ++integrationEventSequence, change },
+      });
+      void loadIntegrations();
+    }
+
     async function loadStartup() {
       if (get().connection.phase !== "connected") return;
       const epoch = connectionEpoch;
@@ -772,6 +860,10 @@ export function createPadmateStore(
           configRepair: null,
           startup: null,
           pads: null,
+          integrations: null,
+          integrationFunctions: {},
+          integrationItems: {},
+          integrationEvent: null,
         });
       } else {
         if (previous !== "connected")
@@ -959,6 +1051,11 @@ export function createPadmateStore(
               },
             });
           }
+          break;
+        }
+        case "integration.changed": {
+          const change = parseIntegrationChanged(event.data);
+          if (change) integrationChanged(change);
           break;
         }
         case "script.status":
@@ -1429,6 +1526,52 @@ export function createPadmateStore(
       configRepair: null,
       startup: null,
       pads: null,
+      integrations: null,
+      integrationFunctions: {},
+      integrationItems: {},
+      integrationEvent: null,
+      putOffDifferences: [],
+      refreshIntegrations: loadIntegrations,
+      scheduleRefreshIntegrations: scheduleIntegrations,
+      async loadIntegrationFunctions(integration) {
+        const language = get().language;
+        const key = `${integration}|${language}`;
+        const kept = get().integrationFunctions[key];
+        if (kept) return kept;
+        const epoch = connectionEpoch;
+        const functions = await api.getIntegrationFunctions(
+          integration,
+          language,
+        );
+        if (epoch === connectionEpoch)
+          set({
+            integrationFunctions: {
+              ...get().integrationFunctions,
+              [key]: functions,
+            },
+          });
+        return functions;
+      },
+      async loadIntegrationItems(profile, integration) {
+        const epoch = connectionEpoch;
+        const items = await api.getIntegrationItems(profile, integration);
+        if (epoch === connectionEpoch)
+          set({
+            integrationItems: {
+              ...get().integrationItems,
+              [`${profile}|${integration}`]: items,
+            },
+          });
+        return items;
+      },
+      putOffIntegrationDifferences(profile, integration, differenceId) {
+        set({
+          putOffDifferences: [
+            ...get().putOffDifferences,
+            `${profile}|${integration}|${differenceId}`,
+          ],
+        });
+      },
       start() {
         const currentLifetime = ++lifetime;
         const initialEpoch = connectionEpoch;
@@ -1811,7 +1954,11 @@ export function createPadmateStore(
       state.config?.revision !== previous.config?.revision ||
       (state.status?.devices !== previous.status?.devices &&
         deviceKeys(state) !== deviceKeys(previous));
-    if (changed) state.scheduleRefreshPads();
+    if (changed) {
+      state.scheduleRefreshPads();
+      // A new rule in config.json can bind or free a profile.
+      state.scheduleRefreshIntegrations();
+    }
   });
   return store;
 }
