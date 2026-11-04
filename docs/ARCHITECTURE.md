@@ -22,7 +22,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 | IPC | JSON-RPC 2.0 over a named pipe, token authentication, an ACL limited to the current user | [IPC](adr/0009-ipc.md) |
 | Scripts | goja + esbuild; gesture recognition and output shared with declarative mappings | [Scripting runtime](adr/0010-scripting-runtime.md), [Scripts as macros](adr/0011-script-macros.md) |
 | UI and diagnostics | Electron + React; the overlay is a second window | [Editor UI](adr/0013-editor-ui.md), [Overlay](adr/0014-overlay.md), [Diagnostics](adr/0016-diagnostics.md) |
-| App integrations | A profile associated with an app (for now only CLIP STUDIO PAINT) records in `integrations/<id>.json` the function of each key in that app; pick functions from the app, find conflicts, write back (app closed, backed up first, can be rolled back), check for differences when the profile becomes active | [App integrations and CLIP STUDIO PAINT](adr/0019-clip-studio-paint.md) |
+| App integrations | A profile bound to an app (for now only CLIP STUDIO PAINT) records in `integrations/<id>.json` the function of each key in that app; pick functions from the app, find conflicts, write back (app closed, backed up first, can be rolled back), check for differences when the profile becomes active | [App integrations and CLIP STUDIO PAINT](adr/0019-clip-studio-paint.md) |
 | Packaging | A per-user NSIS installer; a portable zip besides; updates read `padmate.download`, which has a download page | [Installer and updates](adr/0018-installer-and-updates.md) |
 
 ## 1. Principles
@@ -32,7 +32,7 @@ The reasons, and the alternatives given up, are in the [ADR index](adr/README.md
 3. **Output has a single writer.** Inside the daemon only T-output calls SendInput; `padmatectl send` and the injection tests call it directly, outside the process.
 4. **Latency is spent only where it is needed**: how long a gesture waits depends only on the bindings that can be reached.
 5. **A change of state reaches the user through at least two channels**: the controller, the tray, the overlay.
-6. **Output is keyboard shortcuts and the mouse only.** The one app-specific part is app integrations: when a profile is associated with an app (for now only CLIP STUDIO PAINT), padmate reads and writes that app's shortcut settings to pick functions, find conflicts and keep them in sync; the engine and the output are the same for every app (§16).
+6. **Output is keyboard shortcuts and the mouse only.** The one app-specific part is app integrations: when a profile is bound to an app (for now only CLIP STUDIO PAINT), padmate reads and writes that app's shortcut settings to pick functions, find conflicts and keep them in sync; the engine and the output are the same for every app (§16).
 
 ## 2. Process model
 
@@ -1295,11 +1295,10 @@ The decisions are in [ADR: App integrations and CLIP STUDIO PAINT](adr/0019-clip
 
 An app integration lets padmate read and write the shortcut settings of an app. The generic parts (the file beside the profile, the IPC, the UI) know no particular app and work only by the integration's ID. For now there is one integration, `csp` (CLIP STUDIO PAINT).
 
-### 16.1 Association
+### 16.1 Binding
 
-- A profile is associated with an integration when its folder has `integrations/<integration ID>.json`, and not associated when it does not. Without the association, the UI shows nothing of the integration and the daemon makes no sync check.
-- Associating and dissociating go only through `integrations.associate`. When dissociating, the file is first saved into the profile's `.history`, then deleted.
-- The bundled profile `csp` ships with an empty `integrations/csp.json`. An imported profile that carries this file is associated. Copying a profile copies the file; with inheritance, the child's items lie over the parent's, and for the same key the child wins.
+- A profile is bound to an integration when `rules` in config.json has a rule whose program is the integration's executable (compared by file name, case-insensitive) and which selects this profile. Without a binding, the UI shows nothing of the integration and the daemon makes no sync check. The bundled profile `csp` ships with this rule (§10.1).
+- `integrations/<id>.json` only keeps the items; it does not decide the binding. Without the file there are no items. Copying a profile copies the file; with inheritance, the child's items lie over the parent's, and for the same key the child wins.
 
 ### 16.2 `integrations/<id>.json`
 
@@ -1324,7 +1323,7 @@ An app integration lets padmate read and write the shortcut settings of an app. 
 - `internal/integration/cspint`: the CSP integration. It joins `internal/csp` (pure logic: models of both files, conversion between key names and KeySpecs, conflicts and cycle keys, the comparison, edits on a copy) and `internal/cspfile` (locations, finding `CLIPStudioPaint.exe` by image name, backups, safe replacement, restore). For names see ADR-0019 section 3.
 - **CSP's files**: `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer*\Shortcut\default.khc` (commands) and `Tool\EditImageTool.todb` (tools). They are opened read-only; changes are made only on a copy in the same folder, which then replaces the file atomically. `integrations.csp.dataDir` in config.json can name the folder instead of the automatic search.
 - **Backups**: `<data dir>\integration-backups\<integration ID>\<UTC time>\`, at most 30 per integration.
-- **Sync check**: when a profile associated with an integration becomes the active profile, and whenever the app's files change while it is active (polled by `internal/watch`), the daemon compares the profile's items with the app's current settings. If they differ, and this set of differences (`differenceId`, the SHA-256 of the differences) is not one the user chose "Not now" for, it sends `integration.changed {kind:"differences"}` and notifies once through the overlay and once through the tray. "Not now" is kept in state.json as `integrations[<profile ID>][<integration ID>].dismissed`.
+- **Sync check**: when a profile bound to an integration becomes the active profile, and whenever the app's files change while it is active (polled by `internal/watch`), the daemon compares the profile's items with the app's current settings. If they differ, and this set of differences (`differenceId`, the SHA-256 of the differences) is not one the user chose "Not now" for, it sends `integration.changed {kind:"differences"}` and notifies once through the overlay and once through the tray. "Not now" is kept in state.json as `integrations[<profile ID>][<integration ID>].dismissed`.
 - The engine packages import none of these packages.
 
 ### 16.4 IPC
@@ -1333,14 +1332,13 @@ All are on the UI bridge allowlist. `integration` is the integration ID.
 
 | Method | Description |
 |---|---|
-| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, running, profiles[]}]`: each integration, whether it is found on this machine (`problem`: `notFound`, `unknownFormat`, `unsupported`), whether the app is running, and which profiles are associated with it |
-| `integrations.associate {profile, integration, on}` | Associate or dissociate; returns `{associated}` |
+| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, running, profiles[]}]`: each integration, whether it is found on this machine (`problem`: `notFound`, `unknownFormat`, `unsupported`), whether the app is running, and which profiles are bound to it (§16.1) |
 | `integrations.functions {integration, language}` | All functions in the app that can have a shortcut: `{revision, categories:[{id,name}], functions:[{id, kind, name, path[], category, keys[], unconfirmed?, unsupported?, cycle?[]}]}`. `keys` are KeySpecs; `cycle` lists the other functions that share the same single key; `revision` is the fingerprint of the app's files |
 | `integrations.check {integration, function?, keys}` | Who owns this key in the app: `{status, owners:[{id,name,path}], notes[]}`. `status`: `free`, `same` (it is this function), `cycle` (a cycle key, not a conflict), `conflict`, `unconfirmed` (a symbol key whose physical key is not confirmed yet), `unsupported`. `notes`: `toolShift` (holding it switches the tool temporarily), `modifierKey` (taken by the modifier key settings) |
 | `integrations.items {profile, integration}` | The items (with the parent's merged in) and the state of each: `{revision, items[], statuses:[{keys, function, state, current?[], owners?[]}], consistent, differenceId?}`. `state`: `consistent`, `changed`, `removed`, `missing` |
 | `integrations.putItems {profile, integration, revision, items}` | Write the items; a `revision` that does not match gives -32009 |
-| `integrations.plan {profile, integration}` | The changes to make to the app when padmate wins: `{changes:[{function, add?, remove?}], displaced:[{function,name,keys}], skipped:[{function,reason}]}`. Overwriting on import uses it too |
-| `integrations.write {integration, changes}` | Change the app's settings: back up first, then write as in ADR-0019 section 5. Returns `{backup:{id,created}, revision}` |
+| `integrations.plan {profile, integration}` | The changes to make to the app when padmate wins, one entry for each item that differs: `{entries:[{item, changes:[{function, add?, remove?}], displaced:[{function,name,keys}], skipped?}]}`. `displaced` lists the functions that would lose this key. Import uses it too; the UI builds the final `changes` from the user's decision on each item |
+| `integrations.write {integration, changes}` | Change the app's settings: `changes` may touch any function (when a key is swapped, the displaced function is changed too), and everything is checked before anything is written; back up first, then write as in ADR-0019 section 5. Returns `{backup:{id,created}, revision}` |
 | `integrations.backups {integration}` / `integrations.restore {integration, backup}` | List the backups (newest first) / restore one; restoring backs up the current files first and returns that new backup |
 | `integrations.dismiss {profile, integration, differenceId}` | "Not now" for this set of differences |
 
@@ -1350,10 +1348,11 @@ Topic `integration.changed {integration, kind, profile?, differenceId?, count?}`
 
 ### 16.5 UI
 
-- For a profile associated with an integration, the shortcut action in the button drawer gets "Pick from <app name>…" beside "Record again". It opens a picker: search, categories on the left, the function list on the right (name, path, shortcut or "Not set"). Picking a function that has a shortcut fills the key into the binding and the name into its label, and writes the item. Picking one without a shortcut records a key, `integrations.check` says who owns that key in the app, and then `integrations.write` runs.
+- For a profile bound to an integration, the shortcut action in the button drawer gets "Pick from <app name>…" beside "Record again". It opens a picker: search, categories on the left, the function list on the right (name, path, shortcut or "Not set"). Picking a function that has a shortcut fills the key into the binding and the name into its label, and writes the item. Picking one without a shortcut records a key, `integrations.check` says who owns that key in the app, and then `integrations.write` runs.
 - Before an action that writes to the app, the UI looks at `running` from `integrations.list`; if the app runs, a blocking dialog says "Please close <app name> first", with "Retry". After a write it offers "Undo this write" (restores the backup just taken).
-- When `integration.changed {kind:"differences"}` arrives, or when a profile with differences is opened, a blocking dialog lists every difference: "padmate wins" (`plan`, confirm the functions that would be displaced, then `write`), "<app> wins" (the buttons keep their functions and the keys change to the app's new keys, through ordinary editing and autosave, so it can be undone; then `putItems`), or "Not now" (`dismiss`).
-- The Profiles page gives each profile an "App integrations" column that lists the integrations found on this machine with an association switch. The Settings page shows a section for an integration only when at least one profile is associated with it: the data location (changeable), the backup list and "Restore…".
+- The reminder about differences never steals focus: the daemon only notifies through the overlay and the tray, and the UI never brings its window to the front because of it. When the user opens the UI and sees a bound profile with differences, a dialog in the UI lists every difference: "padmate wins" (`plan`, confirm the functions that would be displaced, then `write`), "<app> wins" (the buttons keep their functions and the keys change to the app's new keys, through ordinary editing and autosave, so it can be undone; then `putItems`), or "Not now" (`dismiss`).
+- When a profile with items is imported and the user chooses to change the app, the items whose `plan` has `displaced` are listed first, then a conflict dialog lets the user decide item by item: "Use the imported setting", "Keep my setting" (this item is not imported, and the buttons that use the key are marked), or "Give one of them another key" (record a key on the spot; `check` looks for conflicts and cycle keys). `write` runs only after every decision is made. The choices on the import screen are "Change my <app> with the imported settings" and "Don't change it, adjust the buttons to my <app>".
+- The Settings page shows a section for an integration only when at least one profile is bound to it: the data location (changeable), the backup list and "Restore…".
 - The UI hard-codes no app: names, categories and notes all come from the daemon.
 
 ## 17. ADR

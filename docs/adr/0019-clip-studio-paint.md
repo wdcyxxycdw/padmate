@@ -31,7 +31,7 @@ The old principle 6 said "nothing is specific to an app", and ADR-0013 says "the
 - padmate reads and writes only CSP's shortcut settings: command shortcuts (khc) and tool shortcuts (`NodeShortCutKey` in todb). It changes no other CSP setting, does not rename sub-tools, and does not write workspaces, quick menus or modifier key settings.
 - Principle 6 becomes: output is keyboard shortcuts and the mouse only; for CSP, padmate reads and writes its shortcut settings to pick functions, find conflicts and keep them in sync; the engine and the output are the same for every app.
 - **App integrations are a generic structure, and CSP is the first one.** The generic parts of the profile, the IPC and the UI know only the integration's ID (`csp` for CSP) and hard-code no app. Supporting another app means registering another integration, which brings its own file locations, function list, conflict rules and way of writing; which app to support gets its own ADR.
-- **An integration is used only by profiles associated with it.** A profile is associated when its folder has `integrations/<integration ID>.json`. Without that, the UI shows nothing of the integration and the daemon makes no sync check. The user turns the association on in the Profiles page; the bundled CSP profile is associated by default.
+- **An integration is used only by profiles bound to the app.** A profile is bound when the settings have an app rule that selects it for the app's executable (for CSP, `CLIPStudioPaint.exe`). A profile that is not bound shows nothing of the integration in the UI, and the daemon makes no sync check for it. The bundled CSP profile already has this rule. `integrations/<integration ID>.json` is only where the items are kept; whether it exists does not decide whether the profile is bound.
 
 ### 2. One profile, two files
 
@@ -71,18 +71,18 @@ The old principle 6 said "nothing is specific to an app", and ADR-0013 says "the
 
 ### 6. The check when a profile becomes active
 
-- Each time a profile associated with CSP becomes active, and whenever one of CSP's two files changes while it is active, the daemon compares each item of `integrations/csp.json` with CSP's current settings.
+- Each time a profile bound to CSP becomes active, and whenever one of CSP's two files changes while it is active, the daemon compares each item of `integrations/csp.json` with CSP's current settings.
 - Each item is **consistent** (the key is still this function in CSP), **changed** (the function moved to another key, or the key now does something else), **removed** (the function has no shortcut in CSP any more) or **missing** (the command or sub-tool is gone).
 - **When every item is consistent nothing happens**; extra keys in CSP (additions) are not reported.
-- Otherwise the user is told, with every difference in one list and three choices: **padmate wins** (write these items back to CSP, which needs CSP closed), **CSP wins** (update padmate from CSP's current settings), or **not now** (the same differences are not reported again; changed differences are).
+- Otherwise the user is told, but focus is never stolen: only the overlay and the tray are used, with no pop-up and no bringing padmate to the front. When the user opens the UI themselves, the UI shows a dialog with every difference in one list and three choices: **padmate wins** (write these items back to CSP, which needs CSP closed), **CSP wins** (the buttons keep their functions, and padmate changes the keys in the mapping to the keys those functions have in CSP now; a function that has no shortcut in CSP any more keeps its old key and is marked), or **not now** (the same differences are not reported again; changed differences are).
 - While CSP runs, todb is as it was when CSP last exited, and khc as it was when OK was last pressed in the shortcut settings. So tool differences seen while CSP runs may be stale; the comparison runs again once CSP exits and the files change.
 
 ### 7. Export, import and the profile market
 
 - An exported `.padmate` file carries `integrations/csp.json` (an export already holds the profile folder's contents).
-- After importing a profile with an `integrations/csp.json`, padmate compares it with the local CSP. Differences are listed, and the user picks: **overwrite the matching settings in my CSP**, **don't overwrite, adjust the buttons to my CSP**, or deal with it later.
+- After importing a profile with an `integrations/csp.json`, padmate compares it with the local CSP. Differences are listed, and the user picks: **change my CSP with the imported settings**, **don't change it, adjust the buttons to my CSP** (the same as "CSP wins"), or deal with it later.
+- If the user chose to change CSP, and a write would take a key away from another function in the local CSP (displace it), the functions that would be displaced are listed first. Then a conflict dialog lets the user decide item by item: **use the imported setting** (the local function loses the key), **keep my setting** (this item is not imported, and the buttons that use the key are marked), or **give one of them another key** (record a key on the spot; conflicts are checked and cycle keys are recognized as usual). Nothing is written until every item is decided, and the write follows section 5.
 - **Only the matching items are overwritten, never the whole set.** The whole set would wipe the user's own shortcuts that have nothing to do with this profile; to move a whole set, CSP's own workspaces do that.
-- Overwriting takes the key away from whatever function holds it in the local CSP; those are listed separately so the user sees them.
 - Commands the local CSP does not have (another version or edition) and sub-tools it does not have (made by someone else) are skipped and listed; their buttons still send their old keys.
 - The profile market of v1.3 uses the same file and the same flow.
 
