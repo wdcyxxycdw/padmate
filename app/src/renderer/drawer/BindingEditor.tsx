@@ -50,6 +50,13 @@ import {
   stepsAction,
 } from "../editor/sequence-model";
 import type { MouseKey } from "../editor/shortcut-keys";
+import type { CaptureField } from "../integrations/FunctionPicker";
+import {
+  IntegrationLine,
+  type IntegrationLink,
+  IntegrationPickButtons,
+} from "../integrations/IntegrationPick";
+import { nameAfterPick } from "../state/integrations-model";
 import { sortMacrosByName } from "../state/library-model";
 import { MacroContext, missingMacros } from "../state/macro-context";
 import type { Language } from "../state/store";
@@ -367,12 +374,15 @@ function ShortcutField({
   moves,
   stepIndex,
   kindLabel,
+  extra,
 }: {
   value: string;
   onChange: (value: string) => void;
   language?: Language;
   label: string;
   variant: "full" | "step";
+  /** More buttons beside the capture button (the full variant). */
+  extra?: ReactNode;
   /** Capture records physical key positions (set under 高级). */
   physical: boolean;
   onRemove?: () => void;
@@ -663,6 +673,7 @@ function ShortcutField({
               <span className="drawer-rec-dot" aria-hidden="true" />
               {captureLabel}
             </button>
+            {extra}
           </span>
         </div>
       ) : (
@@ -761,11 +772,14 @@ function KeysFields({
   onChange,
   language,
   physical,
+  integration,
 }: {
   value: ProfileKeysAction | ProfileSequenceAction;
   onChange: (value: ProfileKeysAction | ProfileSequenceAction) => void;
   language?: Language;
   physical: boolean;
+  /** The app integrations the profile is bound to (the full variant only). */
+  integration?: IntegrationLink;
 }) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const root = useRef<HTMLDivElement>(null);
@@ -889,14 +903,32 @@ function KeysFields({
         </div>
       ) : (
         keys && (
-          <ShortcutField
-            variant="full"
-            label={t("快捷键", "Shortcut")}
-            language={language}
-            value={keys.keys as string}
-            physical={physical}
-            onChange={(next) => onChange({ ...keys, keys: next })}
-          />
+          <>
+            <ShortcutField
+              variant="full"
+              label={t("快捷键", "Shortcut")}
+              language={language}
+              value={keys.keys as string}
+              physical={physical}
+              onChange={(next) => onChange({ ...keys, keys: next })}
+              extra={
+                integration && (
+                  <IntegrationPickButtons
+                    link={integration}
+                    keys={keys.keys as string}
+                    language={language ?? "zh-CN"}
+                  />
+                )
+              }
+            />
+            {integration && (
+              <IntegrationLine
+                profile={integration.profile}
+                keys={keys.keys as string}
+                language={language ?? "zh-CN"}
+              />
+            )}
+          </>
         )
       )}
       <MenuButton
@@ -1203,9 +1235,12 @@ export function ActionFields({
   language,
   gesture = "tap",
   physical = false,
+  integration,
 }: {
   value: ProfileAction;
   onChange: (value: ProfileAction) => void;
+  /** The app integrations the profile is bound to; see IntegrationLink. */
+  integration?: IntegrationLink;
   /** Library profiles, to name the target of a profile switch from the file. */
   profiles?: Profiles;
   language?: Language;
@@ -1273,6 +1308,7 @@ export function ActionFields({
           onChange={change}
           language={language}
           physical={physical}
+          integration={integration}
         />
       ) : shown === "macro" ? (
         <MacroFields
@@ -1320,6 +1356,27 @@ const hapticPresets = [
   string,
 ])[];
 
+/**
+ * The shortcut capture the integration picker records a key with: the
+ * drawer's own field, handed to the picker so the two files do not import
+ * each other.
+ */
+export const RecordKey: CaptureField = ({
+  value,
+  onChange,
+  label,
+  language,
+}) => (
+  <ShortcutField
+    variant="full"
+    label={label}
+    language={language}
+    value={value}
+    physical={false}
+    onChange={onChange}
+  />
+);
+
 export interface BindingFieldsProps {
   value: ProfileBinding;
   onChange: (value: ProfileBinding) => void;
@@ -1337,6 +1394,11 @@ export interface BindingFieldsProps {
   children?: ReactNode;
   /** Extra content at the end of the advanced section. */
   advanced?: ReactNode;
+  /**
+   * The profile being edited: when it is bound to app integrations, the
+   * shortcut field offers to pick from the app (ARCHITECTURE §16.5).
+   */
+  integration?: { profile: string };
 }
 
 /**
@@ -1360,6 +1422,7 @@ export function BindingFields({
   suggestPress = true,
   children,
   advanced,
+  integration,
 }: BindingFieldsProps) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const id = useId();
@@ -1493,6 +1556,19 @@ export function BindingFields({
             keys: "",
           };
           const isDraft = !value[gesture];
+          const commit = (next: ProfileAction, label?: string) => {
+            const written: ProfileBinding = {
+              ...value,
+              [gesture]: next,
+              ...(label === undefined ? {} : { label }),
+            };
+            // A new 长按 or 双击 turns a press into a tap.
+            onChange(
+              isDraft && mapping !== "tap" ? settleTap(written) : written,
+            );
+            if (isDraft) setPending(null);
+            setOpen(mapping);
+          };
           const delay = isDraft
             ? {}
             : delayNote(gesture, value, timing, language, registrations);
@@ -1520,17 +1596,28 @@ export function BindingFields({
                   profiles={profiles}
                   language={language}
                   physical={physical}
-                  onChange={(next) => {
-                    const written = { ...value, [gesture]: next };
-                    // A new 长按 or 双击 turns a press into a tap.
-                    onChange(
-                      isDraft && mapping !== "tap"
-                        ? settleTap(written)
-                        : written,
-                    );
-                    if (isDraft) setPending(null);
-                    setOpen(mapping);
-                  }}
+                  integration={
+                    integration && {
+                      profile: integration.profile,
+                      Capture: RecordKey,
+                      disabled,
+                      // The keys and the name go in as one edit: one undo.
+                      onPick: (picked) =>
+                        commit(
+                          holdShortcut({
+                            ...(action.type === "keys" ? action : {}),
+                            type: "keys",
+                            keys: picked.keys,
+                          }),
+                          nameAfterPick(
+                            value.label,
+                            picked.previousName,
+                            picked.fn.name,
+                          ),
+                        ),
+                    }
+                  }
+                  onChange={(next) => commit(next)}
                 />
                 {delay.text && (
                   <p className="drawer-hint" data-testid="gesture-delay">

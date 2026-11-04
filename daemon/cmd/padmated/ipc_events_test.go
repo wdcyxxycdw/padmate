@@ -61,6 +61,9 @@ func TestIPCProductionTopicsIncludeLabelLatchAndProfile(t *testing.T) {
 		if topic == joyCon2Topic {
 			continue // only a change of the Joy-Con 2 status sends it (ipc_joycon2_test.go)
 		}
+		if topic == integrationTopic {
+			continue // only a change of the software of a bound profile sends it (ipc_integrations_test.go)
+		}
 		for !found[topic] {
 			select {
 			case e := <-events:

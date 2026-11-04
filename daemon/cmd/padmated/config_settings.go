@@ -71,6 +71,7 @@ func liveSettings(startup, next *profile.Config) *profile.Config {
 	c.Enabled, c.ReleaseOnSwitch, c.Rules = next.Enabled, next.ReleaseOnSwitch, next.Rules
 	c.Output, c.Feedback, c.JoyCon2 = next.Output, next.Feedback, next.JoyCon2
 	c.Legacy = next.Legacy
+	c.Integrations = next.Integrations
 	c.Devices = liveDevices(startup.Devices, next.Devices)
 	return &c
 }
@@ -117,6 +118,7 @@ func startupFields(c *profile.Config) profile.Config {
 	s.Output = profile.OutputSettings{}
 	s.Feedback = profile.FeedbackSwitches{}
 	s.JoyCon2 = profile.JoyCon2Settings{}
+	s.Integrations = nil
 	s.Devices = nil
 	for key, d := range c.Devices {
 		if d.Ignored {

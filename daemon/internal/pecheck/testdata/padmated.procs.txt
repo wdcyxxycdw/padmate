@@ -12,6 +12,7 @@ go-winio.RtlNtStatusToDosErrorNoTeb
 go-winio.SetFileCompletionNotificationModes
 go-winio.WSAGetOverlappedResult
 go-winio/internal/fs.CreateFileW
+internal/cspfile.ReplaceFileW
 internal/input/jc2win.RoUninitialize
 internal/kblayout.MapVirtualKeyExW
 internal/kblayout.VkKeyScanExW
@@ -69,6 +70,7 @@ internal/winsession.WTSQuerySessionInformationW
 internal/winsession.WTSRegisterSessionNotification
 internal/winsession.WTSUnRegisterSessionNotification
 windows.CloseHandle
+windows.CoTaskMemFree
 windows.ConvertSidToStringSidW
 windows.ConvertStringSecurityDescriptorToSecurityDescriptorW
 windows.CopySid
@@ -76,11 +78,14 @@ windows.CreateEventW
 windows.CreateFileW
 windows.CreateMutexW
 windows.CreateToolhelp32Snapshot
+windows.DeleteFileW
 windows.EqualSid
 windows.FlushFileBuffers
+windows.FlushViewOfFile
 windows.FormatMessageW
 windows.GetCurrentProcessId
 windows.GetCurrentThreadId
+windows.GetFileAttributesW
 windows.GetFinalPathNameByHandleW
 windows.GetForegroundWindow
 windows.GetKeyboardLayout
@@ -96,6 +101,7 @@ windows.GetSidSubAuthority
 windows.GetSidSubAuthorityCount
 windows.GetStdHandle
 windows.GetSystemDirectoryW
+windows.GetTempPathW
 windows.GetTokenInformation
 windows.GetWindowThreadProcessId
 windows.IsValidSid
@@ -105,6 +111,7 @@ windows.LoadLibraryW
 windows.LocalAlloc
 windows.LocalFree
 windows.LookupAccountSidW
+windows.MoveFileExW
 windows.OpenEventW
 windows.OpenProcess
 windows.OpenProcessToken
@@ -115,7 +122,10 @@ windows.ProcessIdToSessionId
 windows.QueryFullProcessImageNameW
 windows.ReadFile
 windows.RtlNtStatusToDosErrorNoTeb
+windows.SHGetKnownFolderPath
+windows.SetEndOfFile
 windows.SetFileTime
+windows.UnmapViewOfFile
 windows.WTSFreeMemory
 windows.WaitForSingleObject
 windows.WriteFile

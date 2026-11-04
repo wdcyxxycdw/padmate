@@ -384,10 +384,12 @@ func mapFileError(err error) error {
 func backupInfo(b cspfile.Backup) integration.BackupInfo {
 	info := integration.BackupInfo{ID: b.ID, Created: b.Manifest.Created}
 	var note struct {
-		Reason string `json:"reason"`
+		Reason  string            `json:"reason"`
+		Changes []json.RawMessage `json:"changes"`
 	}
 	if len(b.Manifest.Note) > 0 && json.Unmarshal(b.Manifest.Note, &note) == nil {
 		info.Reason = note.Reason
+		info.Changes = len(note.Changes)
 	}
 	return info
 }

@@ -7,6 +7,7 @@ import { daemonTopics, joyCon2Topic, rawInputTopic } from "./bridge";
 import { configRepairHandlers } from "./config-repair-handlers";
 import { deviceHandlers } from "./device-handlers";
 import { installedAppHandlers } from "./installed-apps";
+import { integrationHandlers } from "./integration-handlers";
 import { joyCon2Handlers } from "./joycon2-handlers";
 import { libraryHandlers } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
@@ -295,6 +296,37 @@ describe("Electron IPC wiring", () => {
     expect(source("../renderer/state/store.ts")).toContain("refreshPads");
   });
 
+  it("reaches the app integrations through ten fixed methods, from the window to integrations.* and the integration.changed topic", () => {
+    const methods = [
+      "integrations.list",
+      "integrations.functions",
+      "integrations.check",
+      "integrations.items",
+      "integrations.putItems",
+      "integrations.plan",
+      "integrations.write",
+      "integrations.backups",
+      "integrations.restore",
+      "integrations.dismiss",
+    ];
+    const handlers = source("./integration-handlers.ts");
+    for (const method of methods) expect(handlers).toContain(`"${method}"`);
+    const preload = source("../preload/index.ts");
+    const channels = [
+      ...preload.matchAll(/"padmate:(integrations[A-Za-z]+)"/g),
+    ];
+    expect(channels).toHaveLength(methods.length);
+    // The daemon topic is on the default subscription, and the window gets it
+    // like any other event; nothing in Main raises the window because of it.
+    expect(source("./bridge.ts")).toContain('"integration.changed"');
+    expect(source("./index.ts")).not.toMatch(
+      /integration[^\n]*(show|focus)\(/i,
+    );
+    // The bridge lets the methods through.
+    const bridge = source("../../../daemon/cmd/padmatectl/ui_bridge.go");
+    for (const method of methods) expect(bridge).toContain(`"${method}"`);
+  });
+
   it("imports an AntiMicroX profile as data through one fixed method", () => {
     // Main reads the chosen file; the daemon is given its bytes, never a path.
     const handlers = source("./archive-handlers.ts");
@@ -414,6 +446,7 @@ describe("Electron IPC wiring", () => {
           writeFile: async () => {},
         }),
       ),
+      ...Object.keys(integrationHandlers(() => undefined)),
       ...Object.keys(appPathHandlers(async () => "")),
       ...Object.keys(languageHandlers(new LanguageFile(""))),
       ...Object.keys(
@@ -437,6 +470,7 @@ describe("Electron IPC wiring", () => {
     expect(main).toContain("...deviceHandlers(");
     expect(main).toContain("...joyCon2Handlers(");
     expect(main).toContain("...padHandlers(");
+    expect(main).toContain("...integrationHandlers(");
     expect(main).toContain("...startupHandlers(");
     expect(main).toContain("...updateHandlers(");
     expect(main).toContain("...startFailureHandlers(");

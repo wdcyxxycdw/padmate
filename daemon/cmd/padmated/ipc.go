@@ -120,6 +120,7 @@ func (r *liveRun) rpcMethods(session *ipc.Session) jrpc2.Assigner {
 	r.mappingMethods(methods, session)
 	r.joyCon2Methods(methods)
 	r.padMethods(methods)
+	r.integrationMethods(methods)
 	r.exitMethods(methods, session)
 	capturing := false // owned by this connection's serialized handlers and cleanup
 	session.OnClose(func() {

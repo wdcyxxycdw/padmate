@@ -330,3 +330,19 @@ func checkIntegrationFile(rel string, data []byte) error {
 	}
 	return nil
 }
+
+// UsedIntegrationItems returns the items that profile id's bindings send
+// (integration.UsedKeys of the merged profile); the others are ignored when
+// the items are compared with the software. When the profile cannot be read
+// or resolved there is nothing to judge by, and every item is returned.
+func (l *Library) UsedIntegrationItems(id string, items []integration.Item) []integration.Item {
+	data, err := l.Read(id)
+	if err != nil {
+		return items
+	}
+	r, _ := l.Resolve(id, data)
+	if r == nil || r.Profile == nil {
+		return items
+	}
+	return integration.UsedItems(items, integration.UsedKeys(r.Profile))
+}

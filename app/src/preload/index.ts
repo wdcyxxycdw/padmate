@@ -56,6 +56,24 @@ const api: PadmateAPI = {
   listPads: () => invoke("padmate:padsList"),
   setPad: (params) => invoke("padmate:padsSet", params),
   migratePads: () => invoke("padmate:padsMigrate"),
+  listIntegrations: () => invoke("padmate:integrationsList"),
+  getIntegrationFunctions: (integration, language) =>
+    invoke("padmate:integrationsFunctions", integration, language),
+  checkIntegrationKey: (params) => invoke("padmate:integrationsCheck", params),
+  getIntegrationItems: (profile, integration) =>
+    invoke("padmate:integrationsItems", profile, integration),
+  putIntegrationItems: (params) =>
+    invoke("padmate:integrationsPutItems", params),
+  planIntegration: (profile, integration) =>
+    invoke("padmate:integrationsPlan", profile, integration),
+  writeIntegration: (integration, changes) =>
+    invoke("padmate:integrationsWrite", integration, changes),
+  listIntegrationBackups: (integration) =>
+    invoke("padmate:integrationsBackups", integration),
+  restoreIntegrationBackup: (integration, backup) =>
+    invoke("padmate:integrationsRestore", integration, backup),
+  dismissIntegrationDifferences: (params) =>
+    invoke("padmate:integrationsDismiss", params),
   pause: () => ipcRenderer.invoke("padmate:pause"),
   resume: () => ipcRenderer.invoke("padmate:resume"),
   releaseAll: () => ipcRenderer.invoke("padmate:releaseAll"),

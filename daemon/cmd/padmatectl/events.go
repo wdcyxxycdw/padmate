@@ -18,7 +18,7 @@ const eventsUsage = `usage: padmatectl subscribe [FLAGS] [TOPIC...]
 
 Prints JSON lines {topic,data} until Ctrl+C. Topics: input, engine.activity,
 log, script.status, profile.changed, output.preview, app.foreground,
-daemon.exiting, hud, input.raw, joycon2.changed (subscribe defaults to all
+daemon.exiting, integration.changed, hud, input.raw, joycon2.changed (subscribe defaults to all
 topics; joycon2.changed carries the Joy-Con 2 status when it changes).
 Subscribing to hud makes scripts see an overlay (host.has("hud")) while the
 command runs.

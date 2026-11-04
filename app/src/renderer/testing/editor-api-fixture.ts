@@ -20,6 +20,20 @@ import type {
   StartupState,
   UILanguage,
 } from "../../shared/api";
+import type {
+  IntegrationBackup,
+  IntegrationChange,
+  IntegrationCheck,
+  IntegrationCheckParams,
+  IntegrationDismissParams,
+  IntegrationFunctions,
+  IntegrationInfo,
+  IntegrationItems,
+  IntegrationLanguage,
+  IntegrationPlan,
+  IntegrationPutItemsParams,
+  IntegrationWritten,
+} from "../../shared/integrations";
 import type { JoyCon2Status } from "../../shared/joycon2";
 import type { OverlayPrefs } from "../../shared/overlay";
 import type {
@@ -199,6 +213,80 @@ export function editorAPIFixture() {
     migratePads: vi.fn(async (): Promise<PadsMigrateResult> => {
       throw new Error("migratePads is not set up");
     }),
+    // App integrations: none found, so nothing about them shows. A test of
+    // them gives the answers itself (testing/integrations-fixture.ts).
+    listIntegrations: vi.fn(async (): Promise<IntegrationInfo[]> => []),
+    getIntegrationFunctions: vi.fn(
+      async (
+        _integration: string,
+        _language: IntegrationLanguage,
+      ): Promise<IntegrationFunctions> => ({
+        revision: "f1",
+        categories: [],
+        functions: [],
+      }),
+    ),
+    checkIntegrationKey: vi.fn(
+      async (_params: IntegrationCheckParams): Promise<IntegrationCheck> => ({
+        status: "free",
+        owners: [],
+        notes: [],
+      }),
+    ),
+    getIntegrationItems: vi.fn(
+      async (
+        _profile: string,
+        _integration: string,
+      ): Promise<IntegrationItems> => ({
+        revision: "i1",
+        items: [],
+        statuses: [],
+        consistent: true,
+        dismissed: false,
+      }),
+    ),
+    putIntegrationItems: vi.fn(
+      async (_params: IntegrationPutItemsParams): Promise<void> => {},
+    ),
+    planIntegration: vi.fn(
+      async (
+        _profile: string,
+        _integration: string,
+      ): Promise<IntegrationPlan> => ({
+        entries: [],
+      }),
+    ),
+    writeIntegration: vi.fn(
+      async (
+        _integration: string,
+        _changes: IntegrationChange[],
+      ): Promise<IntegrationWritten> => ({
+        backup: {
+          id: "b1",
+          created: "2026-11-04T10:00:00Z",
+          reason: "write",
+          changes: 1,
+        },
+        revision: "f2",
+      }),
+    ),
+    listIntegrationBackups: vi.fn(
+      async (_integration: string): Promise<IntegrationBackup[]> => [],
+    ),
+    restoreIntegrationBackup: vi.fn(
+      async (
+        _integration: string,
+        _backup: string,
+      ): Promise<IntegrationBackup> => ({
+        id: "b2",
+        created: "2026-11-04T10:05:00Z",
+        reason: "beforeRestore",
+        changes: 0,
+      }),
+    ),
+    dismissIntegrationDifferences: vi.fn(
+      async (_params: IntegrationDismissParams): Promise<void> => {},
+    ),
     listMacros: vi.fn(
       async (): Promise<MacroList> => ({ macros: [], missing: [], legacy: [] }),
     ),

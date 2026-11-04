@@ -26,8 +26,10 @@ const maxBatchRequests = 64
 // the raw joystick events of the controllers that devices.rawInfo asked for
 // (ADR-0012); the mapping wizard subscribes to it while it is open.
 // joycon2.changed carries the status of the Joy-Con 2 backend (the result of
-// joycon2.status) whenever it changes.
-var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "hud", "input.raw", "joycon2.changed"}
+// joycon2.status) whenever it changes. integration.changed says that a
+// software integration's files or running state changed, or that the active
+// profile differs from the software (ARCHITECTURE section 16.4).
+var Topics = []string{"input", "engine.activity", "log", "script.status", "profile.changed", "output.preview", "app.foreground", "daemon.exiting", "integration.changed", "hud", "input.raw", "joycon2.changed"}
 
 type event struct {
 	topic string

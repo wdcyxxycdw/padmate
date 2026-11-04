@@ -16,7 +16,11 @@ func TestUIBridgeMethodAllowlist(t *testing.T) {
 		"config.repairSeen", "ui.exitReady",
 		"joycon2.status", "joycon2.pair", "joycon2.cancelPair", "joycon2.forget", "joycon2.disconnect",
 		// The settings of each controller.
-		"pads.list", "pads.set", "pads.migrate"} {
+		"pads.list", "pads.set", "pads.migrate",
+		// Software integrations.
+		"integrations.list", "integrations.functions", "integrations.check", "integrations.items",
+		"integrations.putItems", "integrations.plan", "integrations.write", "integrations.backups",
+		"integrations.restore", "integrations.dismiss"} {
 		if !bridgeMethod(method) {
 			t.Fatal("UI method missing", method)
 		}

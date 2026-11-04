@@ -171,7 +171,9 @@ func (in *Integration) categories(lang string, used map[string]bool) []integrati
 	var out []integration.Category
 	have := map[string]bool{}
 	for _, c := range in.opts.Namer.Categories(lang) {
-		if !have[c.ID] {
+		// Only categories some function sits in: an empty app menu is not
+		// offered.
+		if !have[c.ID] && used[c.ID] {
 			have[c.ID] = true
 			out = append(out, c)
 		}

@@ -77,7 +77,7 @@ type Item struct {
 type Owner struct {
 	ID   string   `json:"id"`
 	Name string   `json:"name"`
-	Path []string `json:"path"`
+	Path []string `json:"path,omitempty"`
 }
 
 // Check statuses.
@@ -209,6 +209,8 @@ type BackupInfo struct {
 	Created time.Time `json:"created"`
 	// Reason is why it was made: "write", "before-restore" or "".
 	Reason string `json:"reason,omitempty"`
+	// Changes is how many changes the write that made the backup carried.
+	Changes int `json:"changes,omitempty"`
 }
 
 // WriteResult is the result of Integration.Write.

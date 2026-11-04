@@ -26,6 +26,7 @@ export const daemonTopics = [
   "output.preview",
   "app.foreground",
   "daemon.exiting",
+  "integration.changed",
   "hud",
 ] as const satisfies readonly DaemonEvent["topic"][];
 /**

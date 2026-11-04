@@ -47,6 +47,7 @@ import {
   programScan,
   windowsDirectory,
 } from "./installed-apps";
+import { integrationHandlers } from "./integration-handlers";
 import { joyCon2Handlers } from "./joycon2-handlers";
 import { libraryHandlers, uiResult } from "./library-handlers";
 import { macroHandlers } from "./macro-handlers";
@@ -475,6 +476,10 @@ function registerHandlers(update: UpdateController): void {
     // The controllers of Settings → Controllers: each one's function key,
     // feedback switches and emergency combo (ADR-0017).
     ...padHandlers((method, params) => manager?.call(method, params)),
+    // App integrations (ARCHITECTURE §16): the app's shortcut settings.
+    // integration.changed is on the default subscription; it only reaches
+    // the page, which never raises the window because of it.
+    ...integrationHandlers((method, params) => manager?.call(method, params)),
     // The Joy-Con 2 section of Settings; joycon2.changed is on the one
     // subscription while that section is up.
     ...joyCon2Handlers(

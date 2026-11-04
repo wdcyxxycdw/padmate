@@ -79,6 +79,10 @@ func bridgeMethod(method string) bool {
 		// Start at sign-in (ADR-0001): the daemon writes its own
 		// command; neither method takes an executable or arguments.
 		"startup.get", "startup.set",
+		// Software integrations (ADR-0019, ARCHITECTURE section 16.4).
+		"integrations.list", "integrations.functions", "integrations.check", "integrations.items",
+		"integrations.putItems", "integrations.plan", "integrations.write", "integrations.backups",
+		"integrations.restore", "integrations.dismiss",
 	}, method)
 }
 
