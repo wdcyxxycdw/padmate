@@ -1,8 +1,10 @@
 // Command padmate-probe is a development tool: it records the
 // keyboard events a low-level hook sees, injected or physical, dumps
 // keyboard layouts into test fixtures, and reads window state (the
-// foreground window, the extended style of a window). All three
-// subcommands need Windows.
+// foreground window, the extended style of a window). Those three
+// subcommands need Windows. A fourth, csp-names, regenerates the bundled
+// table of CLIP STUDIO PAINT command names from an install folder and runs
+// anywhere.
 package main
 
 import (
@@ -27,6 +29,7 @@ var commands = map[string]command{
 	"record":      {summary: "print the keyboard events a low-level hook sees", run: runRecord},
 	"dump-layout": {summary: "write keyboard layout fixtures", run: runDumpLayout},
 	"window":      {summary: "print the foreground window and the extended style of a window", run: runWindow},
+	"csp-names":   {summary: "regenerate the table of CLIP STUDIO PAINT command names", run: runCSPNames},
 }
 
 func main() {
