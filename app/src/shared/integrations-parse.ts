@@ -108,7 +108,8 @@ function info(value: unknown): IntegrationInfo | null {
         typeof value.problem === "string" && PROBLEMS.includes(value.problem)
       )) ||
     (value.dataDir !== undefined && !text(value.dataDir, 1024)) ||
-    (value.installDir !== undefined && !text(value.installDir, 1024))
+    (value.installDir !== undefined && !text(value.installDir, 1024)) ||
+    (value.custom !== undefined && typeof value.custom !== "boolean")
   )
     return null;
   return {
@@ -125,6 +126,7 @@ function info(value: unknown): IntegrationInfo | null {
     ...(value.installDir === undefined
       ? {}
       : { installDir: value.installDir as string }),
+    ...(value.custom === true ? { custom: true } : {}),
     running: value.running,
     profiles,
   };

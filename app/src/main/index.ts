@@ -479,7 +479,18 @@ function registerHandlers(update: UpdateController): void {
     // App integrations (ARCHITECTURE §16): the app's shortcut settings.
     // integration.changed is on the default subscription; it only reaches
     // the page, which never raises the window because of it.
-    ...integrationHandlers((method, params) => manager?.call(method, params)),
+    ...integrationHandlers((method, params) => manager?.call(method, params), {
+      chooseFolder: async () => {
+        if (!window) throw new Error("UI is closed");
+        const result = await dialog.showOpenDialog(window, {
+          title: "选择设置文件夹 / Choose the settings folder",
+          properties: ["openDirectory"],
+        });
+        return result.canceled ? undefined : result.filePaths[0];
+      },
+      fileExists: async (path) =>
+        (await stat(path).catch(() => null))?.isFile() === true,
+    }),
     // The Joy-Con 2 section of Settings; joycon2.changed is on the one
     // subscription while that section is up.
     ...joyCon2Handlers(

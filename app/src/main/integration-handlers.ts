@@ -1,6 +1,8 @@
+import { win32 } from "node:path";
 import type {
   IntegrationChange,
   IntegrationCheckParams,
+  IntegrationDataDirChoice,
   IntegrationDismissParams,
   IntegrationItem,
   IntegrationLanguage,
@@ -151,6 +153,50 @@ function profileAndIntegration(value: unknown): {
   };
 }
 
+/**
+ * What a folder holds to be the data folder of an integration (§16.3): any one
+ * of these files. Main checks it before the daemon is told about the folder;
+ * the daemon looks at the folder again when it uses it.
+ */
+const DATA_FOLDER_MARKERS: Record<string, string[][]> = {
+  csp: [
+    ["Shortcut", "default.khc"],
+    ["Tool", "EditImageTool.todb"],
+  ],
+};
+
+/** A folder on a local drive, in the spelling the daemon takes. */
+function localFolder(value: unknown): string {
+  if (typeof value !== "string" || value.length > 1024)
+    throw new Error("Invalid folder");
+  const path = value.replaceAll("/", "\\").replace(/\\+$/, "");
+  const parts = path.split("\\");
+  if (
+    !/^[A-Za-z]:\\[^\\]/.test(path) ||
+    /["*?<>|]/.test(path) ||
+    [...path].some((character) => character.charCodeAt(0) < 32) ||
+    path.indexOf(":", 2) !== -1 ||
+    parts.some((part) => part === "" || part === "." || part === "..")
+  )
+    throw new Error("Invalid folder");
+  return path;
+}
+
+/** The pieces of the data folder choice that touch the computer. */
+export type IntegrationFolderOptions = {
+  /** The folder dialog; undefined when the user cancels. */
+  chooseFolder: () => Promise<string | undefined>;
+  /** Whether the file exists (and is a file). */
+  fileExists: (path: string) => Promise<boolean>;
+};
+
+const noFolderPicker: IntegrationFolderOptions = {
+  chooseFolder: async () => {
+    throw new Error("No folder dialog");
+  },
+  fileExists: async () => false,
+};
+
 // App integrations (ARCHITECTURE §16.4). The renderer passes no method name:
 // each handler is one fixed integrations.* method with its parameters cut down
 // to the shapes the daemon takes. The failure keeps the daemon's code only
@@ -158,6 +204,7 @@ function profileAndIntegration(value: unknown): {
 // its files were busy or changed, -32009 a revision that moved).
 export function integrationHandlers(
   call: DaemonCall,
+  folder: IntegrationFolderOptions = noFolderPicker,
 ): Record<string, EditorHandler> {
   return {
     integrationsList: {
@@ -270,6 +317,50 @@ export function integrationHandlers(
           (value) => checked(parseIntegrationRestored(value)),
           "Backup not restored",
         ),
+    },
+    // The data folder (§16.3, §16.5). The folder dialog and the check of the
+    // chosen folder are here; the window supplies no path. A folder that is not
+    // the app's is answered, not sent to the daemon.
+    integrationsChooseDataDir: {
+      count: 1,
+      run: async (integration): Promise<IntegrationDataDirChoice> => {
+        const id = validateIntegrationID(integration);
+        const markers = DATA_FOLDER_MARKERS[id];
+        if (!markers) throw new Error("Invalid integration ID");
+        const chosen = await folder.chooseFolder();
+        if (chosen === undefined) return "cancelled";
+        let dir: string;
+        try {
+          dir = localFolder(chosen);
+        } catch {
+          return "notAppFolder";
+        }
+        const found = await Promise.all(
+          markers.map((marker) =>
+            folder.fileExists(win32.join(dir, ...marker)),
+          ),
+        );
+        if (!found.some(Boolean)) return "notAppFolder";
+        await ask(
+          call,
+          "integrations.setDataDir",
+          { integration: id, dataDir: dir },
+          () => ({}),
+          "Folder not saved",
+        );
+        return "changed";
+      },
+    },
+    integrationsResetDataDir: {
+      count: 1,
+      run: (integration) =>
+        ask(
+          call,
+          "integrations.setDataDir",
+          { integration: validateIntegrationID(integration), dataDir: null },
+          () => ({}),
+          "Folder not saved",
+        ).then(() => undefined),
     },
     integrationsDismiss: {
       count: 1,

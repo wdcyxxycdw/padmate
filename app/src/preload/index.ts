@@ -74,6 +74,10 @@ const api: PadmateAPI = {
     invoke("padmate:integrationsRestore", integration, backup),
   dismissIntegrationDifferences: (params) =>
     invoke("padmate:integrationsDismiss", params),
+  chooseIntegrationDataDir: (integration) =>
+    invoke("padmate:integrationsChooseDataDir", integration),
+  resetIntegrationDataDir: (integration) =>
+    invoke("padmate:integrationsResetDataDir", integration),
   pause: () => ipcRenderer.invoke("padmate:pause"),
   resume: () => ipcRenderer.invoke("padmate:resume"),
   releaseAll: () => ipcRenderer.invoke("padmate:releaseAll"),

@@ -20,7 +20,7 @@ func TestUIBridgeMethodAllowlist(t *testing.T) {
 		// Software integrations.
 		"integrations.list", "integrations.functions", "integrations.check", "integrations.items",
 		"integrations.putItems", "integrations.plan", "integrations.write", "integrations.backups",
-		"integrations.restore", "integrations.dismiss"} {
+		"integrations.restore", "integrations.dismiss", "integrations.setDataDir"} {
 		if !bridgeMethod(method) {
 			t.Fatal("UI method missing", method)
 		}

@@ -296,7 +296,7 @@ describe("Electron IPC wiring", () => {
     expect(source("../renderer/state/store.ts")).toContain("refreshPads");
   });
 
-  it("reaches the app integrations through ten fixed methods, from the window to integrations.* and the integration.changed topic", () => {
+  it("reaches the app integrations through eleven fixed methods, from the window to integrations.* and the integration.changed topic", () => {
     const methods = [
       "integrations.list",
       "integrations.functions",
@@ -308,6 +308,7 @@ describe("Electron IPC wiring", () => {
       "integrations.backups",
       "integrations.restore",
       "integrations.dismiss",
+      "integrations.setDataDir",
     ];
     const handlers = source("./integration-handlers.ts");
     for (const method of methods) expect(handlers).toContain(`"${method}"`);
@@ -315,7 +316,8 @@ describe("Electron IPC wiring", () => {
     const channels = [
       ...preload.matchAll(/"padmate:(integrations[A-Za-z]+)"/g),
     ];
-    expect(channels).toHaveLength(methods.length);
+    // The folder dialog and the reset both end in integrations.setDataDir.
+    expect(channels).toHaveLength(methods.length + 1);
     // The daemon topic is on the default subscription, and the window gets it
     // like any other event; nothing in Main raises the window because of it.
     expect(source("./bridge.ts")).toContain('"integration.changed"');

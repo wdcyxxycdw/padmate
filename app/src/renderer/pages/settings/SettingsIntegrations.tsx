@@ -91,6 +91,7 @@ function IntegrationSection({
   const [restoring, setRestoring] = useState<IntegrationBackup | null>(null);
   const [problem, setProblem] = useState("");
   const [done, setDone] = useState("");
+  const [folderProblem, setFolderProblem] = useState("");
   const [busy, setBusy] = useState(false);
   const api = host?.store.getState().api;
   const load = useCallback(async () => {
@@ -106,6 +107,45 @@ function IntegrationSection({
     void load();
   }, [load]);
   const trouble = problemText(info, language);
+  const refreshList = () => host?.store.getState().refreshIntegrations();
+  // The folder dialog is Main's; it answers whether the folder was taken.
+  const chooseFolder = async () => {
+    if (!api || busy) return;
+    setBusy(true);
+    setProblem("");
+    setDone("");
+    setFolderProblem("");
+    try {
+      const choice = await api.chooseIntegrationDataDir(info.id);
+      if (choice === "notAppFolder")
+        setFolderProblem(
+          t(
+            `这个文件夹里没有 ${info.name} 的设置文件。`,
+            `This folder has no settings files of ${info.name}.`,
+          ),
+        );
+      else if (choice === "changed") await refreshList();
+    } catch (error) {
+      setFolderProblem(integrationFailure(error, info.name, language));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const findAutomatically = async () => {
+    if (!api || busy) return;
+    setBusy(true);
+    setProblem("");
+    setDone("");
+    setFolderProblem("");
+    try {
+      await api.resetIntegrationDataDir(info.id);
+      await refreshList();
+    } catch (error) {
+      setFolderProblem(integrationFailure(error, info.name, language));
+    } finally {
+      setBusy(false);
+    }
+  };
   const restore = async () => {
     if (!host || !restoring || busy) return;
     setBusy(true);
@@ -147,7 +187,30 @@ function IntegrationSection({
                 {trouble}
               </span>
             )}
+            {folderProblem && (
+              <span className="row-hint" role="alert">
+                {folderProblem}
+              </span>
+            )}
           </div>
+          {info.custom && (
+            <button
+              type="button"
+              className="btn"
+              disabled={busy}
+              onClick={() => void findAutomatically()}
+            >
+              {t("恢复自动查找", "Find automatically")}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn"
+            disabled={busy}
+            onClick={() => void chooseFolder()}
+          >
+            {t("更换…", "Change…")}
+          </button>
         </div>
         <div className="row pad-subhead">
           <span className="row-title">{t("备份", "Backups")}</span>

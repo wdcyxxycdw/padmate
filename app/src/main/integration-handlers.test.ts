@@ -65,6 +65,8 @@ describe("integration handlers", () => {
       integrationsWrite: 2,
       integrationsBackups: 1,
       integrationsRestore: 2,
+      integrationsChooseDataDir: 1,
+      integrationsResetDataDir: 1,
       integrationsDismiss: 1,
     });
   });
@@ -248,6 +250,88 @@ describe("integration handlers", () => {
     expect(call).toHaveBeenCalledWith("integrations.write", {
       integration: "demoapp",
       changes: [{ function: "a", add: "Q", remove: "P" }],
+    });
+  });
+
+  describe("the data folder", () => {
+    const folderFixture = (
+      chosen: string | undefined,
+      files: string[] = [],
+    ) => {
+      const call = vi.fn<DaemonCall>(async () => ({}));
+      const chooseFolder = vi.fn(async () => chosen);
+      const fileExists = vi.fn(async (path: string) => files.includes(path));
+      return {
+        call,
+        chooseFolder,
+        fileExists,
+        handlers: integrationHandlers(call, { chooseFolder, fileExists }),
+      };
+    };
+
+    it("stores a folder that holds one of the app's files", async () => {
+      const dir = "D:\\Data\\CLIPStudioPaintVer1_5_0";
+      const { call, handlers, fileExists } = folderFixture(`${dir}\\`, [
+        `${dir}\\Tool\\EditImageTool.todb`,
+      ]);
+      await expect(handlers.integrationsChooseDataDir.run("csp")).resolves.toBe(
+        "changed",
+      );
+      expect(fileExists).toHaveBeenCalledWith(`${dir}\\Shortcut\\default.khc`);
+      expect(call.mock.calls).toEqual([
+        ["integrations.setDataDir", { integration: "csp", dataDir: dir }],
+      ]);
+    });
+
+    it("answers a folder that is not the app's without telling the daemon", async () => {
+      const { call, handlers } = folderFixture("D:\\Documents");
+      await expect(handlers.integrationsChooseDataDir.run("csp")).resolves.toBe(
+        "notAppFolder",
+      );
+      expect(call).not.toHaveBeenCalled();
+    });
+
+    it("answers a closed dialog", async () => {
+      const { call, handlers } = folderFixture(undefined);
+      await expect(handlers.integrationsChooseDataDir.run("csp")).resolves.toBe(
+        "cancelled",
+      );
+      expect(call).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      "\\\\server\\share\\CSP",
+      "D:\\Data\\..\\x",
+      "relative\\CSP",
+      "D:\\",
+      "D:\\a|b",
+    ])("never checks or sends %s", async (chosen) => {
+      const { call, handlers, fileExists } = folderFixture(chosen);
+      await expect(handlers.integrationsChooseDataDir.run("csp")).resolves.toBe(
+        "notAppFolder",
+      );
+      expect(fileExists).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+    });
+
+    it("refuses an integration whose folder it does not know, before the dialog", async () => {
+      const { chooseFolder, handlers } = folderFixture("D:\\Data");
+      await expect(
+        handlers.integrationsChooseDataDir.run("demoapp"),
+      ).rejects.toThrow("Invalid integration ID");
+      await expect(
+        handlers.integrationsChooseDataDir.run("../x"),
+      ).rejects.toThrow("Invalid integration ID");
+      expect(chooseFolder).not.toHaveBeenCalled();
+    });
+
+    it("takes the folder setting out with null", async () => {
+      const { call, handlers } = folderFixture(undefined);
+      await handlers.integrationsResetDataDir.run("csp");
+      expect(call.mock.calls).toEqual([
+        ["integrations.setDataDir", { integration: "csp", dataDir: null }],
+      ]);
+      expect(() => handlers.integrationsResetDataDir.run("Bad Id")).toThrow();
     });
   });
 });

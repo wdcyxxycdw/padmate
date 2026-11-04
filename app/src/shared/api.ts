@@ -3,6 +3,7 @@ import type {
   IntegrationChange,
   IntegrationCheck,
   IntegrationCheckParams,
+  IntegrationDataDirChoice,
   IntegrationDismissParams,
   IntegrationFunctions,
   IntegrationInfo,
@@ -992,6 +993,16 @@ export interface PadmateAPI {
   dismissIntegrationDifferences(
     params: IntegrationDismissParams,
   ): Promise<void>;
+  // The data folder (integrations.setDataDir, §16.3). chooseIntegrationDataDir
+  // shows the folder dialog in the main process, checks that the folder is the
+  // app's, and stores it as integrations.<id>.dataDir; the window sends no
+  // path. It answers "changed", "cancelled" or "notAppFolder" (nothing
+  // changed). resetIntegrationDataDir takes the setting out, so the folder is
+  // found automatically again.
+  chooseIntegrationDataDir(
+    integration: string,
+  ): Promise<IntegrationDataDirChoice>;
+  resetIntegrationDataDir(integration: string): Promise<void>;
   pause(): Promise<EngineControlResult>;
   resume(): Promise<EngineControlResult>;
   releaseAll(): Promise<EngineControlResult>;

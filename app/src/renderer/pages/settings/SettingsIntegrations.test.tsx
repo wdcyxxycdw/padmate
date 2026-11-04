@@ -118,4 +118,64 @@ describe("the settings section of an integration", () => {
       "什么都没有写入",
     );
   });
+
+  it("changes the data folder through the main process and reads the list again", async () => {
+    const { api } = setup([{ ...demoApp, found: false, problem: "notFound" }]);
+    const section = screen.getByTestId("integration-section-demoapp");
+    expect(
+      within(section).queryByRole("button", { name: "恢复自动查找" }),
+    ).toBeNull();
+    api.chooseIntegrationDataDir.mockResolvedValueOnce("changed");
+    const before = api.listIntegrations.mock.calls.length;
+    fireEvent.click(within(section).getByRole("button", { name: "更换…" }));
+    await waitFor(() =>
+      expect(api.chooseIntegrationDataDir).toHaveBeenCalledWith("demoapp"),
+    );
+    await waitFor(() =>
+      expect(api.listIntegrations.mock.calls.length).toBeGreaterThan(before),
+    );
+  });
+
+  it("does nothing when the dialog is closed, and says a folder that is not the app's", async () => {
+    const { api } = setup();
+    const section = screen.getByTestId("integration-section-demoapp");
+    fireEvent.click(within(section).getByRole("button", { name: "更换…" }));
+    await waitFor(() =>
+      expect(api.chooseIntegrationDataDir).toHaveBeenCalled(),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const before = api.listIntegrations.mock.calls.length;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(api.listIntegrations.mock.calls.length).toBe(before);
+    expect(within(section).queryByRole("alert")).toBeNull();
+    api.chooseIntegrationDataDir.mockResolvedValueOnce("notAppFolder");
+    fireEvent.click(within(section).getByRole("button", { name: "更换…" }));
+    expect((await within(section).findByRole("alert")).textContent).toBe(
+      "这个文件夹里没有 Demo Paint 的设置文件。",
+    );
+    api.chooseIntegrationDataDir.mockRejectedValueOnce(
+      Object.assign(new Error("x"), { code: -32030 }),
+    );
+    fireEvent.click(within(section).getByRole("button", { name: "更换…" }));
+    await waitFor(() =>
+      expect(within(section).getByRole("alert").textContent).toContain(
+        "什么都没有写入",
+      ),
+    );
+  });
+
+  it("offers to find the folder automatically again only while one is chosen", async () => {
+    const { api } = setup([{ ...demoApp, custom: true }]);
+    const section = screen.getByTestId("integration-section-demoapp");
+    const before = api.listIntegrations.mock.calls.length;
+    fireEvent.click(
+      within(section).getByRole("button", { name: "恢复自动查找" }),
+    );
+    await waitFor(() =>
+      expect(api.resetIntegrationDataDir).toHaveBeenCalledWith("demoapp"),
+    );
+    await waitFor(() =>
+      expect(api.listIntegrations.mock.calls.length).toBeGreaterThan(before),
+    );
+  });
 });

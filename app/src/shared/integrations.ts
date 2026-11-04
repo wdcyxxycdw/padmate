@@ -21,6 +21,8 @@ export type IntegrationInfo = {
   problem?: IntegrationProblem;
   dataDir?: string;
   installDir?: string;
+  /** The data folder was chosen (config.json names it), not found automatically. */
+  custom?: boolean;
   /** The app is running now (its settings cannot be written). */
   running: boolean;
   /** The library IDs of the profiles bound to the app (§16.1). */
@@ -199,6 +201,12 @@ export type IntegrationDismissParams = {
   integration: string;
   differenceId: string;
 };
+
+/**
+ * What choosing the data folder came to: the folder was set, the user closed the
+ * dialog, or the folder is not the app's (nothing was changed).
+ */
+export type IntegrationDataDirChoice = "changed" | "cancelled" | "notAppFolder";
 
 export type IntegrationLanguage = "zh-CN" | "en";
 

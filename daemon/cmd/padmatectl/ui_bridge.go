@@ -82,7 +82,7 @@ func bridgeMethod(method string) bool {
 		// Software integrations (ADR-0019, ARCHITECTURE section 16.4).
 		"integrations.list", "integrations.functions", "integrations.check", "integrations.items",
 		"integrations.putItems", "integrations.plan", "integrations.write", "integrations.backups",
-		"integrations.restore", "integrations.dismiss",
+		"integrations.restore", "integrations.dismiss", "integrations.setDataDir",
 	}, method)
 }
 

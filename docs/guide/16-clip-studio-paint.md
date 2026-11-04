@@ -67,7 +67,7 @@ Nothing is written until every item is decided. A command that your CSP does not
 
 On the “Settings” page, when a profile bound to CSP exists, there is one more section, CLIP STUDIO PAINT.
 
-- “Data folder”: the settings folder of CSP that padmate found. If it was not found, the format is unknown or the version is not supported, the reason is written here.
+- “Data folder”: the settings folder of CSP that padmate found. If it was not found, the format is unknown or the version is not supported, the reason is written here. Click “Change…” to choose the folder yourself; it must be the folder that holds `Shortcut` or `Tool` (named like `CLIPStudioPaintVer1_5_0`), and padmate says so if it is not. Once you have chosen one, “Find automatically” appears and takes your choice away.
 - “Backups”: the backups made before each write, listed by time, with the latest 30 kept. Click “Restore…” beside a backup and, after you confirm, the shortcut settings of CSP go back to that one. Restoring also needs CSP closed, and the current settings are backed up first.
 
 ## Limits

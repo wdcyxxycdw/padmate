@@ -1350,7 +1350,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 | 方法 | 说明 |
 |---|---|
-| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, running, profiles[]}]`：每种适配、本机找到没有（`problem`：`notFound`、`unknownFormat`、`unsupported`）、软件是否在运行、哪些配置绑定了它（§16.1） |
+| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, custom?, running, profiles[]}]`：每种适配（config.json 的 `integrations.<id>.dataDir` 指定了数据文件夹时 `custom` 为 true）、本机找到没有（`problem`：`notFound`、`unknownFormat`、`unsupported`）、软件是否在运行、哪些配置绑定了它（§16.1） |
 | `integrations.functions {integration, language?}` | 软件里能设快捷键的全部功能：`{revision, categories:[{id,name}], functions:[{id, kind, name, path[], category, keys[], unconfirmed?, unsupported?, cycle?[]}]}`。`keys` 是 KeySpec；`cycle` 是共用同一个单键的其他功能；`revision` 是软件文件的指纹 |
 | `integrations.check {integration, function?, keys, language?}` | 这个键在软件里属于谁：`{status, owners:[{id,name,path?}], notes[]}`。`status`：`free`、`same`（就是这个功能）、`cycle`（循环键，不是冲突）、`conflict`、`unconfirmed`（符号键，对应的实体键还没确认）、`unsupported`。`notes`：`toolShift`（按住会临时切换工具）、`modifierKey`（被修饰键设置占用） |
 | `integrations.items {profile, integration, language?}` | 条目（合并父配置后）和每项的状态：`{revision, items[], statuses:[{keys, function, state, current?[], owners?[]}], consistent, differenceId?, dismissed}`。`revision` 是这份配置自己的 `integrations/<id>.json` 的版本（没有文件为空串）；`dismissed` 为真表示 `differenceId` 就是“暂不处理”过的那组。`state`：`consistent`、`changed`、`removed`、`missing` |
@@ -1359,6 +1359,7 @@ JSON-RPC 标准码（如 -32602）之外：
 | `integrations.write {integration, changes}` | 改软件的设置：`changes` 可以涉及任何功能（换键时也改被挤掉的那个），全部检查过才写；先备份，再按 ADR-0019 第五节写。返回 `{backup:{id,created,reason,changes}|null, revision}`（改动什么都没改变时 `backup` 为 `null`） |
 | `integrations.backups {integration}` / `integrations.restore {integration, backup}` | 备份列表（新的在前），裸数组 `[{id,created,reason,changes}]` / 恢复一份，恢复前先备份当前文件，返回那份新备份（同样的对象）。`created` 是 RFC 3339 的 UTC 时间；`reason` 为 `write` 或 `beforeRestore`；`changes` 是那次写入的改动数（`beforeRestore` 为 0） |
 | `integrations.dismiss {profile, integration, differenceId}` | 暂不处理这组差异，记在 state.json，返回 `{dismissed:true}`。`differenceId` 必须是 64 位小写十六进制 |
+| `integrations.setDataDir {integration, dataDir, revision?}` | 设置 config.json 的 `integrations.<id>.dataDir`；`dataDir` 为 `null` 则去掉它（重新自动查找）。`dataDir` 必填（null 或字符串），必须是已存在文件夹的绝对路径、不超过 1024 个字符；是不是软件自己的文件夹这里不检查，问题由 `integrations.list` 显示。按字节位置编辑，和 `pads.set` 一样（其余成员原样不动），立即生效、不用重启，返回和 `config.put` 一样（`{revision, applied, …}`）；`revision` 不匹配 -32009 |
 
 未知的适配 ID -32004；ID、键、`language`、多余的成员不合格 -32602（沿用严格的参数解码）。错误码：-32028 软件正在运行（`data {integration}`），要先关掉；-32029 适配不可用（`data {problem}`）；-32030 软件的文件正被使用或在读写之间变了（日志文件、指纹不同），什么都没写。
 
@@ -1366,6 +1367,7 @@ JSON-RPC 标准码（如 -32602）之外：
 
 ### 16.5 界面
 
+- “设置”里该软件的一栏：“数据位置”一行有“更换…”，`custom` 为 true 时还有“恢复自动查找”。“更换…”只在主进程里处理：弹出文件夹对话框（挂在窗口上），检查文件夹里有 `Shortcut\default.khc` 或 `Tool\EditImageTool.todb`，通过才调用 `integrations.setDataDir`；不是该软件的文件夹就用一句话说明，什么都不改。界面从不发路径。
 - 绑定了适配的配置，按键抽屉的快捷键动作里，“重新录入”旁多一个“从 <软件名> 选择…”，打开选择对话框：搜索、左边分类、右边功能列表（名称、路径、快捷键或“未设置”）。选中有快捷键的功能就把键填进绑定，名称填进 label，并写条目；选中没有快捷键的功能就录一个键、`integrations.check` 说明它在软件里属于谁，再 `integrations.write`。
 - 会写软件的操作开始前先看 `integrations.list` 的 `running`，在运行就弹阻塞对话框“请先关闭 <软件名>”，有“重试”。写完给“撤销这次写入”（恢复刚才的备份）。
 - 差异的提醒不抢焦点：守护进程只经 overlay 和托盘提示，界面从不因此把窗口拉到前台。用户打开界面、看到有差异的绑定配置时，界面里弹一个对话框列出全部差异：以 padmate 为准（`plan` → 确认被挤掉的功能 → `write`）、以软件为准（按钮保持功能，键改成软件里的新键，经普通的编辑和自动保存，可撤销；然后 `putItems`）、暂不处理（`dismiss`）。

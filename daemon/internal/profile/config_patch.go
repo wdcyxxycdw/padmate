@@ -243,6 +243,19 @@ func SetPadSettings(data []byte, key string, change PadChange) ([]byte, error) {
 	return patchConfigText(data, change.patches(key))
 }
 
+// SetIntegrationDataDir returns data, a config.json, with
+// integrations.<id>.dataDir set to dir, or taken out when dir is "" (the
+// integration is then found automatically again). Everything else stays as in
+// patchConfigText; an integrations entry or object the change leaves empty
+// goes with it.
+func SetIntegrationDataDir(data []byte, id, dir string) ([]byte, error) {
+	p := jsonPatch{path: []string{"integrations", id, "dataDir"}}
+	if dir != "" {
+		p.value = jsonString(dir)
+	}
+	return patchConfigText(data, []jsonPatch{p})
+}
+
 // PadRef names a controller for MigratePadSettings.
 type PadRef struct {
 	// Key is the controller's canonical DeviceKey.

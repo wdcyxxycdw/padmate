@@ -273,6 +273,8 @@ export const names: Name[] = [
   ["数据位置", "Data folder"],
   ["备份", "Backups"],
   ["恢复…", "Restore…"],
+  ["更换…", "Change…"],
+  ["恢复自动查找", "Find automatically"],
   // FAQ.
   // The question of the uninstaller (app/build/installer.nsh).
   ["是否保留配置和脚本？", "Keep your profiles and scripts?", "installer"],

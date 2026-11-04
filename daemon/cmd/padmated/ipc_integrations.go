@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"time"
@@ -18,7 +21,7 @@ import (
 
 // The software integration methods (ADR-0019, ARCHITECTURE section 16.4):
 //
-//	integrations.list                                   → [{id,name,exe[],found,problem?,dataDir?,installDir?,running,profiles[]}]
+//	integrations.list                                   → [{id,name,exe[],found,problem?,dataDir?,installDir?,custom?,running,profiles[]}]
 //	integrations.functions {integration,language?}      → {revision,categories[],functions[]}
 //	integrations.check {integration,function?,keys,language?} → {status,owners[],notes[]}
 //	integrations.items {profile,integration,language?}  → {revision,items[],statuses[],consistent,differenceId?,dismissed}
@@ -28,9 +31,10 @@ import (
 //	integrations.backups {integration}                  → [{id,created,reason,changes}]
 //	integrations.restore {integration,backup}           → {id,created,reason,changes} (the backup made before restoring)
 //	integrations.dismiss {profile,integration,differenceId} → {dismissed:true}
+//	integrations.setDataDir {integration,dataDir|null,revision?} → {revision,applied,…} (config.put's answer)
 //
 // Nothing here knows a particular piece of software. Which profiles are bound
-// to which software is decided by integration.Bound alone. All ten methods are
+// to which software is decided by integration.Bound alone. All eleven methods are
 // in the UI bridge's allowlist.
 
 // Error codes of the integration methods.
@@ -128,8 +132,11 @@ type rpcIntegration struct {
 	Problem    string   `json:"problem,omitempty"`
 	DataDir    string   `json:"dataDir,omitempty"`
 	InstallDir string   `json:"installDir,omitempty"`
-	Running    bool     `json:"running"`
-	Profiles   []string `json:"profiles"`
+	// Custom is true while config.json names the data folder
+	// (integrations.<id>.dataDir) instead of it being found automatically.
+	Custom   bool     `json:"custom,omitempty"`
+	Running  bool     `json:"running"`
+	Profiles []string `json:"profiles"`
 }
 
 // rpcIntegrationBackup is a backup in integrations.backups, integrations.restore
@@ -170,13 +177,15 @@ func (r *liveRun) integrationMethods(methods handler.Map) {
 	methods["integrations.backups"] = r.rpcIntegrationBackups
 	methods["integrations.restore"] = r.rpcIntegrationRestore
 	methods["integrations.dismiss"] = r.rpcIntegrationDismiss
+	methods["integrations.setDataDir"] = r.rpcIntegrationSetDataDir
 }
 
 func (r *liveRun) rpcIntegrationList(_ context.Context, req *jrpc2.Request) (any, error) {
 	if err := req.UnmarshalParams(jrpc2.StrictFields(new(struct{}))); err != nil {
 		return nil, err
 	}
-	rules := r.selectionConfig().Rules
+	cfg := r.selectionConfig()
+	rules, custom := cfg.Rules, cfg.Integrations
 	out := []rpcIntegration{}
 	for _, in := range r.integrations().All() {
 		loc := in.Locate()
@@ -186,7 +195,7 @@ func (r *liveRun) rpcIntegrationList(_ context.Context, req *jrpc2.Request) (any
 			profiles = []string{}
 		}
 		out = append(out, rpcIntegration{ID: in.ID(), Name: in.Name(), Exe: slices.Clone(in.Exes()), Found: loc.Found,
-			Problem: loc.Problem, DataDir: loc.DataDir, InstallDir: loc.InstallDir, Running: running, Profiles: profiles})
+			Problem: loc.Problem, DataDir: loc.DataDir, InstallDir: loc.InstallDir, Custom: custom[in.ID()].DataDir != "", Running: running, Profiles: profiles})
 	}
 	return out, nil
 }
@@ -530,4 +539,77 @@ func (r *liveRun) rpcIntegrationDismiss(_ context.Context, req *jrpc2.Request) (
 	}
 	m.SetDismissed(p.Profile, in.ID(), p.DifferenceID)
 	return map[string]bool{"dismissed": true}, nil
+}
+
+// maxDataDirLen is the longest integrations.<id>.dataDir (the schema's limit).
+const maxDataDirLen = 1024
+
+// rpcIntegrationSetDataDir is integrations.setDataDir: it sets, or with a null
+// dataDir takes out, integrations.<id>.dataDir in config.json by byte position
+// like pads.set, so every other member stays as it is. The setting applies at
+// once (liveSettings) and the watcher looks again. The folder must be an
+// absolute path of an existing folder; whether it is the software's own is for
+// the integration to say (integrations.list shows the problem).
+func (r *liveRun) rpcIntegrationSetDataDir(ctx context.Context, req *jrpc2.Request) (any, error) {
+	var p struct {
+		Integration string         `json:"integration"`
+		DataDir     optionalMember `json:"dataDir"`
+		Revision    *string        `json:"revision"`
+	}
+	if err := req.UnmarshalParams(jrpc2.StrictFields(&p)); err != nil {
+		return nil, err
+	}
+	in, err := r.integrationParam(p.Integration)
+	if err != nil {
+		return nil, err
+	}
+	if p.DataDir == nil {
+		return nil, badIntegrationParams("dataDir is required: a folder or null")
+	}
+	dir := ""
+	if !isNull(p.DataDir) {
+		if err := strictJSON(p.DataDir, &dir); err != nil || dir == "" {
+			return nil, badIntegrationParams("dataDir must be a folder path or null")
+		}
+		if len(dir) > maxDataDirLen || !filepath.IsAbs(dir) {
+			return nil, badIntegrationParams("dataDir must be an absolute path of at most 1024 characters")
+		}
+		if fi, err := os.Stat(dir); err != nil || !fi.IsDir() {
+			return nil, badIntegrationParams("dataDir is not an existing folder")
+		}
+	}
+	l, err := r.library()
+	if err != nil {
+		return nil, err
+	}
+	r.configApplyMu.Lock()
+	defer r.configApplyMu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	data, revision, _, err := r.padsConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	if p.Revision != nil && *p.Revision != revision {
+		return nil, libraryRPCError(&profilelib.ConflictError{Current: revision})
+	}
+	out, err := profile.SetIntegrationDataDir(data, in.ID(), dir)
+	if err != nil {
+		return nil, badIntegrationParams(err.Error())
+	}
+	next, err := profilelib.ValidateConfig(out)
+	if err != nil {
+		return nil, badIntegrationParams(err.Error())
+	}
+	saved := rpcSaved{Revision: revision, Applied: true}
+	if !bytes.Equal(out, data) {
+		if saved, err = r.commitConfigLocked(l, revision, out, next); err != nil {
+			return nil, libraryRPCError(err)
+		}
+	}
+	r.log.Info("integration data folder set", "integration", in.ID(), "custom", dir != "")
+	r.integ.recheck.Store(true)
+	r.integKick()
+	return saved, nil
 }

@@ -25,6 +25,7 @@ import type {
   IntegrationChange,
   IntegrationCheck,
   IntegrationCheckParams,
+  IntegrationDataDirChoice,
   IntegrationDismissParams,
   IntegrationFunctions,
   IntegrationInfo,
@@ -283,6 +284,13 @@ export function editorAPIFixture() {
         reason: "beforeRestore",
         changes: 0,
       }),
+    ),
+    chooseIntegrationDataDir: vi.fn(
+      async (_integration: string): Promise<IntegrationDataDirChoice> =>
+        "cancelled",
+    ),
+    resetIntegrationDataDir: vi.fn(
+      async (_integration: string): Promise<void> => {},
     ),
     dismissIntegrationDifferences: vi.fn(
       async (_params: IntegrationDismissParams): Promise<void> => {},

@@ -15,6 +15,7 @@ import (
 	"github.com/creachadair/jrpc2"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/integration"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/profile"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/tray"
 )
 
@@ -762,5 +763,80 @@ func TestIntegrationUnusedItemsIgnored(t *testing.T) {
 	il.activate(t, "paint")
 	if e, ok := il.nextChanged(t, "differences", 500*time.Millisecond); ok {
 		t.Fatalf("announced an unused item: %+v", e)
+	}
+}
+
+// integrations.setDataDir writes integrations.<id>.dataDir by byte position,
+// applies it at once, and takes it out again with null.
+func TestIntegrationSetDataDir(t *testing.T) {
+	il := startIntegrationLive(t, "plain")
+	folder := t.TempDir()
+	var saved rpcSaved
+	if err := il.call("integrations.setDataDir", map[string]any{"integration": "fake", "dataDir": folder}, &saved); err != nil || !saved.Applied || saved.RestartRequired || saved.Revision == "" {
+		t.Fatalf("set = %+v %v", saved, err)
+	}
+	var doc rpcDocument
+	if err := il.call("config.get", nil, &doc); err != nil {
+		t.Fatal(err)
+	}
+	cfg, _ := profile.ParseConfig([]byte(doc.Text))
+	if cfg == nil || cfg.Integrations["fake"].DataDir != folder || len(cfg.Rules) != 4 {
+		t.Fatalf("config after set: %s", doc.Text)
+	}
+	if got := il.selectionConfig().Integrations["fake"].DataDir; got != folder {
+		t.Fatalf("live data folder = %q, want %q", got, folder)
+	}
+	var listed []rpcIntegration
+	if err := il.call("integrations.list", nil, &listed); err != nil || len(listed) != 1 || !listed[0].Custom {
+		t.Fatalf("list after set = %+v %v", listed, err)
+	}
+	// The same folder again changes nothing; a stale revision is refused.
+	var again rpcSaved
+	if err := il.call("integrations.setDataDir", map[string]any{"integration": "fake", "dataDir": folder}, &again); err != nil || again.Revision != saved.Revision {
+		t.Fatalf("again = %+v %v", again, err)
+	}
+	if err := il.call("integrations.setDataDir", map[string]any{"integration": "fake", "dataDir": nil, "revision": "stale"}, new(any)); err == nil {
+		t.Fatal("stale revision accepted")
+	}
+	if err := il.call("integrations.setDataDir", map[string]any{"integration": "fake", "dataDir": nil}, &saved); err != nil || !saved.Applied {
+		t.Fatalf("clear = %+v %v", saved, err)
+	}
+	if got := il.selectionConfig().Integrations["fake"].DataDir; got != "" {
+		t.Fatalf("live data folder after clear = %q", got)
+	}
+	listed = nil
+	if err := il.call("integrations.list", nil, &listed); err != nil || listed[0].Custom {
+		t.Fatalf("list after clear = %+v %v", listed, err)
+	}
+	if err := il.call("config.get", nil, &doc); err != nil || strings.Contains(doc.Text, "integrations") {
+		t.Fatalf("config after clear: %s %v", doc.Text, err)
+	}
+}
+
+func TestIntegrationSetDataDirRefuses(t *testing.T) {
+	il := startIntegrationLive(t, "plain")
+	file := filepath.Join(t.TempDir(), "file.txt")
+	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, tt := range []struct {
+		name   string
+		params map[string]any
+		code   int
+	}{
+		{"unknown integration", map[string]any{"integration": "nope", "dataDir": nil}, -32004},
+		{"bad id", map[string]any{"integration": "Bad Id", "dataDir": nil}, -32602},
+		{"dataDir absent", map[string]any{"integration": "fake"}, -32602},
+		{"empty", map[string]any{"integration": "fake", "dataDir": ""}, -32602},
+		{"not a string", map[string]any{"integration": "fake", "dataDir": 5}, -32602},
+		{"relative", map[string]any{"integration": "fake", "dataDir": "some/dir"}, -32602},
+		{"missing folder", map[string]any{"integration": "fake", "dataDir": filepath.Join(t.TempDir(), "gone")}, -32602},
+		{"a file", map[string]any{"integration": "fake", "dataDir": file}, -32602},
+		{"too long", map[string]any{"integration": "fake", "dataDir": filepath.Join(t.TempDir(), strings.Repeat("a", 1100))}, -32602},
+		{"extra member", map[string]any{"integration": "fake", "dataDir": nil, "x": 1}, -32602},
+	} {
+		if err := il.call("integrations.setDataDir", tt.params, new(any)); rpcCode(err) != tt.code {
+			t.Errorf("%s: err = %v, want code %d", tt.name, err, tt.code)
+		}
 	}
 }
