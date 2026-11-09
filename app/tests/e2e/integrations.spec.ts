@@ -386,10 +386,11 @@ test("cancel leaves the mapping as it was, and a click in the dialog is never re
     await dialog.getByRole("button", { name: "取消", exact: true }).click();
     await expect(dialog).toHaveCount(0);
     // The click that closed the dialog started no recording either, and a
-    // later click anywhere in the drawer is no mouse key.
+    // later click in the drawer (on its title, which does nothing) is no mouse
+    // key.
     await expect(field.getByRole("button", { name: "录入中…" })).toHaveCount(0);
     await page.waitForTimeout(500);
-    await field.click({ position: { x: 2, y: 2 } });
+    await field.locator(".drawer-title").click();
     await expect(shortcut).toHaveAttribute("data-keys", "F13");
     await expect(drawerLabel(page)).toHaveValue("");
     expect((await onDisk(live)).layers.base.north).toEqual(before);

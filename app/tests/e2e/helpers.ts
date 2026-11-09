@@ -229,23 +229,34 @@ export async function recordShortcut(
   await field.getByRole("button", { name: /^录入/ }).click();
   const busy = field.getByRole("button", { name: "录入中…", exact: true });
   await expect(busy).toBeVisible();
-  await expect
-    .poll(async () => {
-      await app.evaluate(({ BrowserWindow }, keys) => {
-        const contents = BrowserWindow.getAllWindows().find(
-          (w) => w.getTitle() !== "padmate overlay",
-        )?.webContents;
-        if (!contents) return;
-        for (let session = 1; session <= 64; session++)
-          contents.send("padmate:keyboardCapture", {
-            active: true,
-            chord: keys,
-            session,
-          });
-      }, chord);
-      return field.getAttribute("data-keys");
-    })
-    .toBe(chord);
+  try {
+    await expect
+      .poll(async () => {
+        await app.evaluate(({ BrowserWindow }, keys) => {
+          const contents = BrowserWindow.getAllWindows().find(
+            (w) => w.getTitle() !== "padmate overlay",
+          )?.webContents;
+          if (!contents) return;
+          for (let session = 1; session <= 64; session++)
+            contents.send("padmate:keyboardCapture", {
+              active: true,
+              chord: keys,
+              session,
+            });
+        }, chord);
+        return field.getAttribute("data-keys");
+      })
+      .toBe(chord);
+  } catch (error) {
+    // Says which failure this was: a capture that ended by itself (no longer
+    // busy, its note in the field: the foreground limit in PITFALLS) or one
+    // that never heard the chord (still busy).
+    const stillBusy = (await busy.count()) > 0;
+    const text = await field.innerText().catch(() => "(no field)");
+    throw new Error(
+      `recordShortcut ${chord}: capture still running: ${stillBusy}; field says: ${text}\n${String(error)}`,
+    );
+  }
   await expect(busy).toHaveCount(0);
 }
 
