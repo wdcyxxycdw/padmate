@@ -2,7 +2,6 @@ package cspfile
 
 import (
 	"errors"
-	"os"
 
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
@@ -41,7 +40,8 @@ var uninstallKeys = []struct {
 
 // FindInstallDir finds CSP's installation from the uninstall entries in the
 // registry (read only): an entry whose DisplayName starts with
-// "CLIP STUDIO PAINT" and whose InstallLocation holds CLIPStudioPaint.exe.
+// "CLIP STUDIO PAINT" and whose DisplayIcon or InstallLocation leads to CLIPStudioPaint.exe
+// (InstallFromEntry).
 func FindInstallDir() (InstallDir, error) {
 	for _, k := range uninstallKeys {
 		parent, err := registry.OpenKey(k.root, k.path, registry.ENUMERATE_SUB_KEYS)
@@ -56,15 +56,13 @@ func FindInstallDir() (InstallDir, error) {
 				continue
 			}
 			display, _, derr := sub.GetStringValue("DisplayName")
-			loc, _, lerr := sub.GetStringValue("InstallLocation")
+			loc, _, _ := sub.GetStringValue("InstallLocation")
+			icon, _, _ := sub.GetStringValue("DisplayIcon")
 			sub.Close()
-			if derr != nil || lerr != nil || loc == "" || !isInstallEntry(display) {
+			if derr != nil {
 				continue
 			}
-			if fi, err := os.Stat(loc); err != nil || !fi.IsDir() {
-				continue
-			}
-			if in, ok := LocateInstall(loc); ok {
+			if in, ok := InstallFromEntry(display, loc, icon); ok {
 				return in, nil
 			}
 		}

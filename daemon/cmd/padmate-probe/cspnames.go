@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/wdcyxxycdw/padmate/daemon/internal/cspnames"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/cspnames/tablegen"
@@ -16,8 +17,9 @@ const cspNamesUsage = `usage: padmate-probe csp-names --install DIR --out FILE [
 Regenerates the bundled table of CLIP STUDIO PAINT command names
 (internal/cspnames/table.json) from CLIPStudioPaint.exe and the main
 resources under resource\chinese_sc and resource\english. The table holds the
-commands outside the menus, whose text CSP keeps in its code. Everything in
-the install folder is only read.
+tree of the shortcut dialog (groups and the order of every command) and the
+names of the commands outside the menus, whose text CSP keeps in its code.
+Everything in the install folder is only read.
 
 The scan looks at two ranges of virtual addresses in the executable, which
 belong to one CSP version; the defaults are those of CSP 5.1.5. The command
@@ -77,8 +79,10 @@ func runCSPNames(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "padmate-probe csp-names:", err)
 		return 1
 	}
-	fmt.Fprintf(stdout, "%s: %d commands (%d more are named by the menu resource), %d categories, %d with several candidate names, %d without a reliable group\n",
-		*out, rep.Commands, rep.MenuCovered, rep.Categories, rep.Ambiguous, rep.GroupsWithoutNames)
+	fmt.Fprintf(stdout, "%s: %d commands (%d more are named by the menu resource), %d with several candidate names\n",
+		*out, rep.Commands, rep.MenuCovered, rep.Ambiguous)
+	fmt.Fprintf(stdout, "tree: %d groups, %d commands; %d entries of unknown depth; %d groups without a plain name dissolved: %s\n",
+		rep.Groups, rep.Leaves, rep.UnknownDepth, len(rep.DissolvedGroups), strings.Join(rep.DissolvedGroups, " "))
 	return 0
 }
 

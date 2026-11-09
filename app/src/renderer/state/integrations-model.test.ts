@@ -6,6 +6,7 @@ import type {
 } from "../../shared/integrations";
 import { demoFunctions } from "../testing/integrations-fixture";
 import {
+  areasOf,
   assembleChanges,
   backupTime,
   type ConflictDecision,
@@ -15,15 +16,18 @@ import {
   differenceRows,
   filterFunctions,
   functionsById,
+  groupIds,
   itemFor,
   keyMoves,
   movedItems,
   nameAfterPick,
   pathText,
+  pruneTree,
   putItem,
   retargetKeys,
   skipText,
   usesKeys,
+  visibleRows,
   writable,
 } from "./integrations-model";
 
@@ -32,33 +36,138 @@ const names = (list: IntegrationFunction[]) => list.map((fn) => fn.name);
 
 describe("filterFunctions", () => {
   it("matches the name, the path and the keys, without regard to case", () => {
-    expect(names(filterFunctions(functions, "撤", ""))).toEqual(["撤销"]);
-    expect(names(filterFunctions(functions, "笔", ""))).toEqual([
-      "G笔",
-      "铅笔",
-    ]);
-    expect(names(filterFunctions(functions, "ctrl+z", ""))).toEqual(["撤销"]);
-    expect(names(filterFunctions(functions, "p", ""))).toEqual(["G笔", "铅笔"]);
+    expect(names(filterFunctions(functions, "撤"))).toEqual(["撤销"]);
+    expect(names(filterFunctions(functions, "笔"))).toEqual(["G笔", "铅笔"]);
+    expect(names(filterFunctions(functions, "ctrl+z"))).toEqual(["撤销"]);
+    expect(names(filterFunctions(functions, "p"))).toEqual(["G笔", "铅笔"]);
   });
 
-  it("needs every word, and a category narrows the list", () => {
-    expect(names(filterFunctions(functions, "工具 铅", ""))).toEqual(["铅笔"]);
-    expect(names(filterFunctions(functions, "", "edit"))).toEqual([
-      "撤销",
-      "重做",
+  it("needs every word, and no words is every function", () => {
+    expect(names(filterFunctions(functions, "工具 铅"))).toEqual(["铅笔"]);
+    expect(names(filterFunctions(functions, "编辑 笔"))).toEqual([]);
+    expect(filterFunctions(functions, "  ")).toHaveLength(5);
+  });
+});
+
+describe("areasOf, pruneTree and groupIds", () => {
+  it("lists the top-level groups as the areas", () => {
+    expect(areasOf(demoFunctions.tree).map((node) => node.name)).toEqual([
+      "主菜单",
+      "工具",
     ]);
-    expect(names(filterFunctions(functions, "笔", "edit"))).toEqual([]);
-    expect(filterFunctions(functions, "  ", "")).toHaveLength(4);
+    expect(areasOf([{ id: "x", name: "x", function: "f" }])).toEqual([]);
+  });
+
+  it("keeps the found functions with every group above them, in order", () => {
+    const kept = pruneTree(
+      demoFunctions.tree,
+      (node) => node.function === "tool:b" || node.function === "cmd:redo",
+    );
+    expect(kept).toEqual([
+      {
+        id: "a:main",
+        name: "主菜单",
+        children: [
+          {
+            id: "g:edit",
+            name: "编辑",
+            children: [{ id: "n:redo", name: "重做", function: "cmd:redo" }],
+          },
+        ],
+      },
+      {
+        id: "a:tool",
+        name: "工具",
+        children: [
+          {
+            id: "g:pen",
+            name: "笔",
+            children: [
+              {
+                id: "n:a",
+                name: "G笔",
+                // A tool that is selectable keeps its function when only a
+                // sub-tool was found.
+                function: "tool:a",
+                children: [{ id: "n:b", name: "铅笔", function: "tool:b" }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(pruneTree(demoFunctions.tree, () => false)).toEqual([]);
+  });
+
+  it("names the groups that can be open", () => {
+    expect([...groupIds(demoFunctions.tree)].sort()).toEqual(
+      ["a:main", "a:tool", "g:edit", "g:file", "g:pen", "n:a"].sort(),
+    );
+  });
+});
+
+describe("visibleRows", () => {
+  const main = areasOf(demoFunctions.tree)[0].children ?? [];
+  const keys = (open: string[]) =>
+    visibleRows(main, new Set(open)).map(
+      (row) => `${row.depth}:${row.node.name}`,
+    );
+
+  it("shows only the top level of the area while nothing is open", () => {
+    expect(keys([])).toEqual(["1:编辑", "1:文件"]);
+  });
+
+  it("puts the children of an open node right after it, in the daemon's order", () => {
+    expect(keys(["g:edit"])).toEqual(["1:编辑", "2:撤销", "2:重做", "1:文件"]);
+    expect(keys(["g:edit", "g:file"])).toEqual([
+      "1:编辑",
+      "2:撤销",
+      "2:重做",
+      "1:文件",
+      "2:另存为",
+    ]);
+  });
+
+  it("goes down any depth, for a node that is also a function too", () => {
+    const tools = areasOf(demoFunctions.tree)[1].children ?? [];
+    expect(
+      visibleRows(tools, new Set(["g:pen", "n:a"])).map(
+        (row) => `${row.depth}:${row.node.name}`,
+      ),
+    ).toEqual(["1:笔", "2:G笔", "3:铅笔"]);
+  });
+
+  it("does not show what is under a closed node, even one marked open", () => {
+    const tools = areasOf(demoFunctions.tree)[1].children ?? [];
+    expect(
+      visibleRows(tools, new Set(["n:a"])).map((row) => row.node.name),
+    ).toEqual(["笔"]);
+  });
+
+  it("says which rows can be opened, the parent, and the place among the siblings", () => {
+    const rows = visibleRows(main, new Set(["g:edit"]));
+    expect(rows.map((row) => [row.expandable, row.expanded])).toEqual([
+      [true, true],
+      [false, false],
+      [false, false],
+      [true, false],
+    ]);
+    expect(rows[1]).toMatchObject({
+      parent: "g:edit",
+      position: 1,
+      siblings: 2,
+    });
+    expect(rows[0].parent).toBeUndefined();
   });
 });
 
 describe("cycleNote", () => {
   const byId = functionsById(functions);
   it("names the other tools that share the key", () => {
-    expect(cycleNote(functions[2], byId, "Demo Paint", "zh-CN")).toBe(
+    expect(cycleNote(functions[3], byId, "Demo Paint", "zh-CN")).toBe(
       "循环键：P 在 Demo Paint 里由 铅笔 共用，按一次不一定切到这个。",
     );
-    expect(cycleNote(functions[2], byId, "Demo Paint", "en")).toContain(
+    expect(cycleNote(functions[3], byId, "Demo Paint", "en")).toContain(
       "shared with 铅笔",
     );
     expect(cycleNote(functions[0], byId, "Demo Paint", "zh-CN")).toBeNull();

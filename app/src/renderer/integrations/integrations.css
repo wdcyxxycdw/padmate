@@ -31,63 +31,66 @@
   gap: 10px;
   min-height: 0;
 }
+.picker-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-2, var(--text));
+}
+.picker-area select {
+  min-width: 200px;
+}
 .picker-search {
   width: 100%;
 }
-.picker-body {
-  display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
-  gap: 12px;
-  height: min(420px, calc(100vh - 260px));
-  min-height: 200px;
+.isolated {
+  display: contents;
 }
-.picker-categories,
-.picker-list {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-  overflow-y: auto;
-}
-.picker-categories {
+.picker-tree {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  border-right: 1px solid var(--border);
-  padding-right: 8px;
+  gap: 1px;
+  margin: 0;
+  height: min(420px, calc(100vh - 260px));
+  min-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
 }
-.picker-category,
 .picker-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
+  gap: 6px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
+  flex: none;
+  min-height: 34px;
 }
-.picker-category:hover,
 .picker-row:hover {
   background: var(--surface-2);
 }
-.picker-category[data-on="true"],
 .picker-row[data-on="true"] {
   background: var(--accent-bg);
 }
-.picker-category input,
-.picker-row input {
-  position: absolute;
-  opacity: 0;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  cursor: pointer;
-}
-.picker-category:has(input:focus-visible),
-.picker-row:has(input:focus-visible) {
+.picker-row:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
+}
+.picker-row-chevron {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+}
+.picker-row-chevron[data-open="true"] > .ui-icon {
+  transform: rotate(90deg);
 }
 .picker-row-text {
   flex: 1;
@@ -110,10 +113,10 @@
 }
 .picker-row-keys {
   flex: none;
-}
-.picker-row-unset {
-  color: var(--text-4);
-  font-size: 12px;
+  width: 190px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
 }
 .picker-empty,
 .picker-message {

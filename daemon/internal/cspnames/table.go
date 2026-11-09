@@ -4,29 +4,78 @@ import (
 	"bytes"
 	_ "embed" // table.json
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"sync"
 )
 
-// Table is the bundled table of command names, generated from the CSP
-// executable by `padmate-probe csp-names` (ADR-0019). It holds only the
-// commands that no menu of the main resource covers.
+// Table is the bundled table of command names and of the shortcut dialog's
+// tree, generated from the CSP executable by `padmate-probe csp-names`
+// (ADR-0019). Its commands are only those that no menu of the main resource
+// covers; its tree places every command of the dialog, menu commands too.
 type Table struct {
 	// CSP is the version of CSP the table was generated from.
 	CSP string `json:"csp"`
-	// Categories are the groups the commands belong to, in display order.
-	Categories []TableCategory `json:"categories"`
+	// Tree is the shortcut dialog, in dialog order: top-level groups, each
+	// with its children. Every command id is placed at most once.
+	Tree []TableNode `json:"tree"`
 	// Commands maps a lower-case command id to its names.
 	Commands map[string]TableCommand `json:"commands"`
 }
 
-// TableCategory is a group of commands outside the menus.
-type TableCategory struct {
-	ID string `json:"id"`
-	ZH string `json:"zh"`
-	EN string `json:"en"`
+// maxTreeDepth and maxTreeNodes bound a parsed tree.
+const (
+	maxTreeDepth = 8
+	maxTreeNodes = 20000
+)
+
+// TableNode is a node of the dialog tree: a group (Children, names) or a
+// command (only ID). A group may also be a command: its ID is then a command
+// id too; the table cannot tell, the user's shortcut file does.
+type TableNode struct {
+	// ID is the group's id ("fileparent", "canvasviewparent", or a command id
+	// such as "editquickshape" for a group that is also a command) or the
+	// id of the command, lower-case.
+	ID string
+	// ZH and EN name a group; they are empty for a command.
+	ZH, EN string
+	// Children of a group, in dialog order.
+	Children []TableNode
+}
+
+// IsGroup reports whether the node is a group.
+func (n TableNode) IsGroup() bool { return n.ZH != "" }
+
+type tableNodeJSON struct {
+	ID       string      `json:"id"`
+	ZH       string      `json:"zh"`
+	EN       string      `json:"en"`
+	Children []TableNode `json:"c"`
+}
+
+// MarshalJSON writes a command as its id string and a group as an object.
+func (n TableNode) MarshalJSON() ([]byte, error) {
+	if !n.IsGroup() {
+		return marshalLine(n.ID)
+	}
+	return marshalLine(tableNodeJSON(n))
+}
+
+// UnmarshalJSON reads what MarshalJSON writes.
+func (n *TableNode) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	if len(data) > 0 && data[0] == '"' {
+		*n = TableNode{}
+		return json.Unmarshal(data, &n.ID)
+	}
+	var g tableNodeJSON
+	if err := json.Unmarshal(data, &g); err != nil {
+		return err
+	}
+	*n = TableNode(g)
+	return nil
 }
 
 // TableCommand is the name of one command in Simplified Chinese and in
@@ -34,10 +83,6 @@ type TableCategory struct {
 type TableCommand struct {
 	ZH string `json:"zh"`
 	EN string `json:"en"`
-	// Category is the ID of a TableCategory.
-	Category string   `json:"cat,omitempty"`
-	PathZH   []string `json:"path_zh,omitempty"`
-	PathEN   []string `json:"path_en,omitempty"`
 	// AltZH and AltEN are other labels the CSP code gives the same id (it
 	// picks one at run time); ZH and EN are the likeliest.
 	AltZH []string `json:"alt_zh,omitempty"`
@@ -66,48 +111,64 @@ func ParseTable(data []byte) (*Table, error) {
 	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, fmt.Errorf("cspnames: table: %w", err)
 	}
-	cats := map[string]bool{}
-	for _, c := range t.Categories {
-		if c.ID == "" || c.ZH == "" || c.EN == "" || cats[c.ID] {
-			return nil, fmt.Errorf("cspnames: table: bad category %+v", c)
-		}
-		cats[c.ID] = true
-	}
 	for id, c := range t.Commands {
 		if id == "" || id != strings.ToLower(id) || c.ZH == "" || c.EN == "" {
 			return nil, fmt.Errorf("cspnames: table: bad command %q", id)
 		}
-		if c.Category != "" && !cats[c.Category] {
-			return nil, fmt.Errorf("cspnames: table: command %q has unknown category %q", id, c.Category)
+	}
+	count := 0
+	var check func(nodes []TableNode, depth int) error
+	check = func(nodes []TableNode, depth int) error {
+		if depth > maxTreeDepth {
+			return fmt.Errorf("cspnames: table: tree deeper than %d", maxTreeDepth)
+		}
+		for _, n := range nodes {
+			if count++; count > maxTreeNodes {
+				return errors.New("cspnames: table: tree too large")
+			}
+			if n.ID == "" || n.ID != strings.ToLower(n.ID) {
+				return fmt.Errorf("cspnames: table: bad tree node %q", n.ID)
+			}
+			if !n.IsGroup() {
+				continue
+			}
+			if n.EN == "" || len(n.Children) == 0 {
+				return fmt.Errorf("cspnames: table: bad group %q", n.ID)
+			}
+			if err := check(n.Children, depth+1); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := check(t.Tree, 1); err != nil {
+		return nil, err
+	}
+	for _, n := range t.Tree {
+		if !n.IsGroup() {
+			return nil, fmt.Errorf("cspnames: table: command %q outside a group", n.ID)
 		}
 	}
 	return &t, nil
 }
 
-// pick returns the names for a language: zh for "zh", English otherwise.
-func (c TableCommand) pick(zh bool) (name string, path []string) {
+// pick returns the name for a language: zh for "zh", English otherwise.
+func (c TableCommand) pick(zh bool) string {
 	if zh {
-		return c.ZH, c.PathZH
+		return c.ZH
 	}
-	return c.EN, c.PathEN
+	return c.EN
 }
 
-// MarshalTable renders a table as JSON with one category and one command per
-// line, in a fixed order, so that regenerating it gives a readable diff.
+// MarshalTable renders a table as JSON with one group header, runs of
+// commands and one command entry per line, in a fixed order, so that
+// regenerating it gives a readable diff.
 func MarshalTable(t *Table) ([]byte, error) {
 	var b bytes.Buffer
 	csp, _ := marshalLine(t.CSP)
-	fmt.Fprintf(&b, "{\n\"csp\": %s,\n\"categories\": [\n", csp)
-	for i, c := range t.Categories {
-		line, err := marshalLine(c)
-		if err != nil {
-			return nil, err
-		}
-		b.Write(line)
-		if i < len(t.Categories)-1 {
-			b.WriteByte(',')
-		}
-		b.WriteByte('\n')
+	fmt.Fprintf(&b, "{\n\"csp\": %s,\n\"tree\": [\n", csp)
+	if err := marshalNodes(&b, t.Tree, 0); err != nil {
+		return nil, err
 	}
 	b.WriteString("],\n\"commands\": {\n")
 	ids := make([]string, 0, len(t.Commands))
@@ -131,6 +192,59 @@ func MarshalTable(t *Table) ([]byte, error) {
 	}
 	b.WriteString("}\n}\n")
 	return b.Bytes(), nil
+}
+
+// marshalNodes writes siblings: a group as a header line, its children
+// indented, and a closing line; runs of commands are wrapped at about 100
+// characters.
+func marshalNodes(b *bytes.Buffer, nodes []TableNode, depth int) error {
+	indent := strings.Repeat(" ", depth)
+	line := 0
+	flush := func() {
+		if line > 0 {
+			b.WriteByte('\n')
+			line = 0
+		}
+	}
+	for i, n := range nodes {
+		sep := ","
+		if i == len(nodes)-1 {
+			sep = ""
+		}
+		if !n.IsGroup() {
+			id, err := marshalLine(n.ID)
+			if err != nil {
+				return err
+			}
+			if line > 0 && line+len(id) > 100 {
+				flush()
+			}
+			if line == 0 {
+				b.WriteString(indent)
+			}
+			b.Write(id)
+			b.WriteString(sep)
+			line += len(id) + len(sep)
+			continue
+		}
+		flush()
+		head, err := marshalLine(struct {
+			ID string `json:"id"`
+			ZH string `json:"zh"`
+			EN string `json:"en"`
+		}{n.ID, n.ZH, n.EN})
+		if err != nil {
+			return err
+		}
+		// {"id":..,"zh":..,"en":..} becomes {"id":..,"zh":..,"en":..,"c":[
+		fmt.Fprintf(b, "%s%s,\"c\":[\n", indent, head[:len(head)-1])
+		if err := marshalNodes(b, n.Children, depth+1); err != nil {
+			return err
+		}
+		fmt.Fprintf(b, "%s]}%s\n", indent, sep)
+	}
+	flush()
+	return nil
 }
 
 // marshalLine encodes v on one line without escaping <, > and &.

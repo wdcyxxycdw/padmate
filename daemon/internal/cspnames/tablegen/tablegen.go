@@ -14,7 +14,8 @@
 // string id into the string blocks of the main resource, the same in every
 // language. One of the functions (region A) builds the tree of the shortcut
 // dialog and also passes (is-leaf, depth, flag); the other (region B) is the
-// command table. The code regions are virtual-address ranges of one CSP
+// command table. The table's tree is region A: groups with names, commands
+// by id, in dialog order. The code regions are virtual-address ranges of one CSP
 // version, so they are flags; the defaults are those of CSP 5.1.5.
 package tablegen
 
@@ -56,16 +57,26 @@ type Options struct {
 
 // Report counts what Generate found, for the tool to print.
 type Report struct {
-	Stubs, MainStubs   int // static initialisers, and those of the main resource
-	Entries            int // registrations in regions A and B
-	WithText           int // of those, with a string reference that resolves
-	IDs                int // distinct command ids with a name
-	MenuCovered        int // of those, named by the menu resource
-	Commands           int // commands in the table
-	Categories         int
-	Ambiguous          int // commands with more than one candidate name
-	RegionAEntries     int
-	GroupsWithoutNames int
+	Stubs, MainStubs int // static initialisers, and those of the main resource
+	Entries          int // registrations in regions A and B
+	WithText         int // of those, with a string reference that resolves
+	IDs              int // distinct command ids with a name
+	MenuCovered      int // of those, named by the menu resource
+	Commands         int // commands in the table
+	Ambiguous        int // commands with more than one candidate name
+	RegionAEntries   int
+	// UnknownDepth counts tree entries whose depth the register tracking
+	// could not find; they are put under the group that is open.
+	UnknownDepth int
+	// PhoneGroups counts the top-level groups left out because they are the
+	// phone layout's.
+	PhoneGroups int
+	// Groups and Leaves count the nodes of the tree in the table.
+	Groups, Leaves int
+	// DissolvedGroups are the ids of the groups of the tree that have no
+	// plain name (CSP names them by another kind of reference): their
+	// commands are in the tree, the level is not.
+	DissolvedGroups []string
 }
 
 // Plausibility bounds: the numbers of CSP 5.1.5 are 2425, 2019, 1722, 1324,
@@ -91,19 +102,24 @@ func readResource(dir, lang string) (*cspnames.Resource, error) {
 	return r, nil
 }
 
-// group is a node of the dialog tree on the stack while walking region A.
-type group struct {
-	id     string
-	strref uint32
-	ok     bool
+// treeNode is a node of the dialog tree as the walk of region A finds it.
+type treeNode struct {
+	id       string // lower-case
+	group    bool
+	strref   uint32
+	hasRef   bool
+	children []*treeNode
 }
 
 // info is what the walk learns about one command id.
 type info struct {
-	cands  []uint32
-	groups []group // ancestors in the dialog tree at its first appearance
-	inA    bool
+	cands []uint32
 }
+
+// menuBarEnd is the id of the first top-level group after the menu bar: the
+// groups before it are the menus, the ones from it on are the palettes and
+// the other places a shortcut can sit.
+const menuBarEnd = "canvasparent"
 
 // Generate builds the table from the installation in opts.InstallDir.
 func Generate(opts Options) (*cspnames.Table, *Report, error) {
@@ -160,8 +176,8 @@ func Generate(opts Options) (*cspnames.Table, *Report, error) {
 
 	infos := map[string]*info{} // by lower-case id
 	order := []string{}
-	var tops []group // top-level groups of the dialog, in tree order
-	var stack []group
+	var roots []*treeNode // the dialog's top-level nodes, in tree order
+	var stack []*treeNode // the open groups
 	for _, e := range entries {
 		var cands []uint32
 		for _, v := range e.c7 {
@@ -178,9 +194,9 @@ func Generate(opts Options) (*cspnames.Table, *Report, error) {
 			}
 		}
 		key := strings.ToLower(e.id)
-		in := infos[key]
 		if len(cands) > 0 {
 			rep.WithText++
+			in := infos[key]
 			if in == nil {
 				in = &info{}
 				infos[key] = in
@@ -193,24 +209,25 @@ func Generate(opts Options) (*cspnames.Table, *Report, error) {
 		}
 		rep.RegionAEntries++
 		edx, r8 := e.args[0], e.args[1]
-		if r8 == nil || *r8 > 8 {
-			continue
+		depth := len(stack)
+		if r8 != nil && *r8 <= maxDepth {
+			depth = int(*r8)
+		} else {
+			rep.UnknownDepth++
 		}
-		stack = stack[:min(len(stack), int(*r8))]
-		isGroup := edx != nil && *edx == 0
-		if in != nil && !in.inA {
-			in.inA = true
-			in.groups = append([]group(nil), stack...)
+		stack = stack[:min(len(stack), depth)]
+		n := &treeNode{id: key, group: edx != nil && *edx == 0}
+		if len(cands) > 0 {
+			n.strref, n.hasRef = cands[0], true
 		}
-		if isGroup {
-			g := group{id: strings.ToLower(e.id)}
-			if len(cands) > 0 {
-				g.strref, g.ok = cands[0], true
-			}
-			stack = append(stack, g)
-			if *r8 == 0 {
-				tops = append(tops, g)
-			}
+		if len(stack) == 0 {
+			roots = append(roots, n)
+		} else {
+			p := stack[len(stack)-1]
+			p.children = append(p.children, n)
+		}
+		if n.group {
+			stack = append(stack, n)
 		}
 	}
 	rep.IDs = len(infos)
@@ -219,38 +236,21 @@ func Generate(opts Options) (*cspnames.Table, *Report, error) {
 		return nil, rep, fmt.Errorf("%w: %+v", ErrImplausible, *rep)
 	}
 
-	menu := map[string]bool{}
+	// A command is covered by the menu resource only when the menu resource
+	// of both languages has it; one that is in the menu of a single language
+	// goes in the table, so that the other language has a name too.
+	inZH := map[string]bool{}
 	for _, c := range zh.Menu {
-		menu[strings.ToLower(c.ID)] = true
+		inZH[strings.ToLower(c.ID)] = true
 	}
+	menu := map[string]bool{}
 	for _, c := range en.Menu {
-		menu[strings.ToLower(c.ID)] = true
+		if key := strings.ToLower(c.ID); inZH[key] {
+			menu[key] = true
+		}
 	}
 
 	t := &cspnames.Table{CSP: opts.Version, Commands: map[string]cspnames.TableCommand{}}
-	catIndex := map[string]int{}
-	addCategory := func(g group) (string, bool) {
-		if !g.ok {
-			return "", false
-		}
-		zn, ok1 := plausible(zh, g.strref)
-		en2, ok2 := plausible(en, g.strref)
-		if !ok1 || !ok2 {
-			return "", false
-		}
-		id := slug(g.id)
-		if _, dup := catIndex[id]; !dup {
-			catIndex[id] = len(t.Categories)
-			t.Categories = append(t.Categories, cspnames.TableCategory{ID: id, ZH: zn, EN: en2})
-		}
-		return id, true
-	}
-	// The groups of the dialog first, in the order of the tree: their ids
-	// are the stable category ids the menu categories borrow.
-	for _, g := range tops {
-		addCategory(g)
-	}
-	other := false
 	for _, key := range order {
 		if menu[key] {
 			rep.MenuCovered++
@@ -266,29 +266,172 @@ func Generate(opts Options) (*cspnames.Table, *Report, error) {
 		if len(cmd.AltZH) > 0 || len(cmd.AltEN) > 0 {
 			rep.Ambiguous++
 		}
-		cmd.Category = "other"
-		if in.inA && len(in.groups) > 0 {
-			if id, ok := addCategory(in.groups[0]); ok {
-				cmd.Category = id
-				cmd.PathZH, cmd.PathEN = path(zh, en, in.groups)
-			} else {
-				rep.GroupsWithoutNames++
-			}
-		}
-		if cmd.Category == "other" {
-			other = true
-		}
 		t.Commands[key] = cmd
 	}
-	if other {
-		t.Categories = append(t.Categories, cspnames.TableCategory{ID: "other", ZH: "其他", EN: "Other"})
-	}
 	rep.Commands = len(t.Commands)
-	rep.Categories = len(t.Categories)
 	if rep.Commands < minCommands {
 		return nil, rep, fmt.Errorf("%w: %d commands in the table", ErrImplausible, rep.Commands)
 	}
+
+	b := &treeBuilder{zh: zh, en: en, chosen: chooseLeaves(roots), rep: rep}
+	for _, a := range splitAreas(roots, rep) {
+		if children := b.build(a.roots); len(children) > 0 {
+			t.Tree = append(t.Tree, cspnames.TableNode{ID: a.id, ZH: a.zh, EN: a.en, Children: children})
+		}
+	}
+	if len(t.Tree) == 0 {
+		return nil, rep, fmt.Errorf("%w: the dialog tree is empty", ErrImplausible)
+	}
+	if err := applyOverrides(t); err != nil {
+		return nil, rep, err
+	}
+	rep.Commands = len(t.Commands)
+	rep.Groups, rep.Leaves = countTree(t.Tree)
 	return t, rep, nil
+}
+
+// maxDepth is the deepest level of the dialog tree the walk accepts.
+const maxDepth = 8
+
+// chooseLeaves decides, for a command the tree places more than once, which
+// placement stays: CSP builds the tree for several platforms and modes, so
+// the same command sits in the phone's "App Settings" and in the File menu.
+// The last placement inside the menu bar (the groups before menuBarEnd) wins;
+// a command that sits in no menu keeps its first placement. The result maps a
+// command id to the node (by pointer) that stays.
+func chooseLeaves(roots []*treeNode) map[string]*treeNode {
+	end := len(roots)
+	for i, r := range roots {
+		if r.id == menuBarEnd {
+			end = i
+			break
+		}
+	}
+	chosen := map[string]*treeNode{}
+	inBar := map[string]bool{}
+	var walk func(nodes []*treeNode, bar bool)
+	walk = func(nodes []*treeNode, bar bool) {
+		for _, n := range nodes {
+			if n.group {
+				walk(n.children, bar)
+				continue
+			}
+			switch {
+			case bar:
+				chosen[n.id], inBar[n.id] = n, true
+			case !inBar[n.id]:
+				if _, seen := chosen[n.id]; !seen {
+					chosen[n.id] = n
+				}
+			}
+		}
+	}
+	for i, r := range roots {
+		if r.group {
+			walk(r.children, i < end)
+		}
+	}
+	return chosen
+}
+
+// treeBuilder turns the walked nodes into table nodes.
+type treeBuilder struct {
+	zh, en *cspnames.Resource
+	chosen map[string]*treeNode
+	rep    *Report
+}
+
+// build converts siblings. A group without a plausible name in both
+// languages is dissolved: its children take its place (the report counts it).
+// Groups left without children are dropped.
+func (b *treeBuilder) build(nodes []*treeNode) []cspnames.TableNode {
+	var out []cspnames.TableNode
+	for _, n := range nodes {
+		if !n.group {
+			if b.chosen[n.id] == n {
+				out = append(out, cspnames.TableNode{ID: n.id})
+			}
+			continue
+		}
+		children := b.build(n.children)
+		zn, ok1 := b.name(b.zh, n)
+		en, ok2 := b.name(b.en, n)
+		if !ok1 || !ok2 {
+			b.rep.DissolvedGroups = append(b.rep.DissolvedGroups, n.id)
+			out = append(out, children...)
+			continue
+		}
+		if len(children) == 0 {
+			continue
+		}
+		out = append(out, cspnames.TableNode{ID: n.id, ZH: zn, EN: en, Children: children})
+	}
+	return out
+}
+
+func (b *treeBuilder) name(r *cspnames.Resource, n *treeNode) (string, bool) {
+	if !n.hasRef {
+		return "", false
+	}
+	return plausible(r, n.strref)
+}
+
+// area is one entry of the dialog's "setting area" drop-down, with the
+// top-level groups of the executable's tree that belong to it.
+type area struct {
+	id, zh, en string
+	roots      []*treeNode
+}
+
+// splitAreas sorts the top-level groups of the tree into the areas of the
+// dialog's drop-down (CSP's own names: Main menu, Pop-up palettes, Options,
+// Pen and Touch; Tools and Auto actions have no group in the tree, the first
+// is the user's tool tree and the second the user's own commands). The menu
+// bar is the main menu; the groups for the phone's layout are left out; the
+// groups of the Windows pop-up palettes are the pop-up palettes; the touch
+// groups are Pen and Touch; every other group is an option.
+func splitAreas(roots []*treeNode, rep *Report) []area {
+	main := area{id: "mainmenu", zh: "主菜单", en: "Main menu"}
+	popup := area{id: "popuppalettes", zh: "弹出式面板", en: "Pop-up palettes"}
+	options := area{id: "options", zh: "选项", en: "Options"}
+	touch := area{id: "pentouch", zh: "笔和触摸", en: "Pen and Touch"}
+	end := len(roots)
+	for i, r := range roots {
+		if r.id == menuBarEnd {
+			end = i
+			break
+		}
+	}
+	for i, r := range roots {
+		switch {
+		case !r.group:
+		case i < end:
+			main.roots = append(main.roots, r)
+		case strings.HasPrefix(r.id, "phone"):
+			rep.PhoneGroups++
+		case strings.HasPrefix(r.id, "windowbubble"):
+			popup.roots = append(popup.roots, r)
+		case strings.HasPrefix(r.id, "gesture") || r.id == "editparent":
+			touch.roots = append(touch.roots, r)
+		default:
+			options.roots = append(options.roots, r)
+		}
+	}
+	return []area{main, popup, options, touch}
+}
+
+// countTree counts the groups and the commands of a tree.
+func countTree(nodes []cspnames.TableNode) (groups, leaves int) {
+	for _, n := range nodes {
+		if !n.IsGroup() {
+			leaves++
+			continue
+		}
+		groups++
+		g, l := countTree(n.Children)
+		groups, leaves = groups+g, leaves+l
+	}
+	return groups, leaves
 }
 
 // names resolves the candidates in one language: the first is the likeliest
@@ -319,37 +462,6 @@ func plausible(r *cspnames.Resource, ref uint32) (string, bool) {
 		return "", false
 	}
 	return s, true
-}
-
-// path is the group path of a command in both languages: the top-level
-// group and, when it has a plain name, the group below it. Deeper groups are
-// not reliable.
-func path(zh, en *cspnames.Resource, groups []group) (pz, pe []string) {
-	for i, g := range groups {
-		if i >= 2 || !g.ok {
-			break
-		}
-		a, ok1 := plausible(zh, g.strref)
-		b, ok2 := plausible(en, g.strref)
-		if !ok1 || !ok2 {
-			break
-		}
-		pz, pe = append(pz, a), append(pe, b)
-	}
-	return pz, pe
-}
-
-// slug turns the id of a group node ("menueditparent", "canvasparent") into
-// a category id ("edit", "canvas").
-func slug(id string) string {
-	s := strings.TrimSuffix(id, "parent")
-	if t := strings.TrimPrefix(s, "menu"); t != "" {
-		s = t
-	}
-	if s == "" {
-		return id
-	}
-	return s
 }
 
 // Sorted returns the ids of the table in order, for reports.

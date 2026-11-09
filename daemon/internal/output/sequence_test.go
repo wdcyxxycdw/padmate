@@ -691,3 +691,32 @@ func TestSequenceWaitHoldsNothing(t *testing.T) {
 	}
 	s.Settle()
 }
+
+// A double click of the left button is a sequence of two MouseLeft taps (the
+// drawer's "增加动作序列"): both clicks go out, each pressed and released
+// well inside the system's double-click time.
+func TestSequenceDoubleClick(t *testing.T) {
+	s := newSim(t, simtest.WithArbiterOptions(output.ArbiterOptions{MinPress: 20 * ms, MinGap: 20 * ms}))
+	var done completions
+	s.sequenceDone(ownerA, 20*ms, 20*ms, &done, kstep("MouseLeft"), kstep("MouseLeft"))
+	s.Settle()
+	if got := s.Output(); got != "+MouseLeft@0 -MouseLeft@20 +MouseLeft@40 -MouseLeft@60" {
+		t.Fatalf("output=%s", got)
+	}
+	done.want(t, output.TapCompletion{})
+}
+
+// A release in the middle of a double click lifts the button that is down and
+// sends no second click.
+func TestSequenceDoubleClickReleased(t *testing.T) {
+	s := newSim(t)
+	s.sequence(ownerA, 20*ms, 20*ms, kstep("MouseLeft"), kstep("MouseLeft"))
+	s.Advance(10 * ms)
+	if err := s.Arb.ReleaseOwners(func(output.Owner) bool { return true }); err != nil {
+		t.Fatal(err)
+	}
+	s.Settle()
+	if got := s.Output(); strings.Count(got, "+MouseLeft") != 1 || strings.Count(got, "-MouseLeft") != 1 {
+		t.Fatalf("output=%s, want one click's press and release", got)
+	}
+}

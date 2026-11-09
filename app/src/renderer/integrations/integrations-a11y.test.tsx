@@ -123,10 +123,29 @@ describe("the dialogs of the app integrations", () => {
       );
       await screen.findAllByTestId("picker-row");
       await clean("picker list");
-      fireEvent.click(
-        screen.getAllByRole("radio", { name: /重做|redo/i })[0] ??
-          screen.getAllByRole("radio")[2],
-      );
+      const tree = screen.getByRole("tree");
+      expect(tree.getAttribute("aria-label")).toBeTruthy();
+      const item = (name: RegExp) =>
+        screen
+          .getAllByRole("treeitem")
+          .find((entry) => name.test(entry.textContent ?? "")) as HTMLElement;
+      // The groups open and a function with several keys is selected.
+      fireEvent.click(item(/^编辑/));
+      fireEvent.click(item(/^文件/));
+      fireEvent.click(item(/^另存为/));
+      await clean("picker tree open and selected");
+      // The other area, with a tool that is also a group.
+      fireEvent.change(screen.getByRole("combobox"), {
+        target: { value: "a:tool" },
+      });
+      fireEvent.click(item(/^笔/));
+      fireEvent.click(item(/^G笔/));
+      await clean("picker second area");
+      fireEvent.change(screen.getByRole("searchbox"), {
+        target: { value: "重做" },
+      });
+      await clean("picker search results");
+      fireEvent.click(item(/^重做/));
       fireEvent.click(
         screen
           .getAllByRole("button")

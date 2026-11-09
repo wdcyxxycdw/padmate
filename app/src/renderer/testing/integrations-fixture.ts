@@ -26,7 +26,6 @@ const fn = (
   id: string,
   name: string,
   path: string[],
-  category: string,
   keys: string[],
   more: Partial<IntegrationFunction> = {},
 ): IntegrationFunction => ({
@@ -34,25 +33,73 @@ const fn = (
   kind: "command",
   name,
   path,
-  category,
   keys,
   ...more,
 });
 
+/**
+ * Two setting areas, as the app's own dialog has them. 主菜单: the groups 编辑
+ * (撤销 with Ctrl+Z, 重做 without a key) and 文件 (另存为 with three keys).
+ * 工具: the group 笔 that holds G笔 (P; a tool that has the sub-tool 铅笔,
+ * also P).
+ */
 export const demoFunctions: IntegrationFunctions = {
   revision: "f1",
-  categories: [
-    { id: "edit", name: "编辑" },
-    { id: "tool", name: "工具" },
+  tree: [
+    {
+      id: "a:main",
+      name: "主菜单",
+      children: [
+        {
+          id: "g:edit",
+          name: "编辑",
+          children: [
+            { id: "n:undo", name: "撤销", function: "cmd:undo" },
+            { id: "n:redo", name: "重做", function: "cmd:redo" },
+          ],
+        },
+        {
+          id: "g:file",
+          name: "文件",
+          children: [
+            { id: "n:saveas", name: "另存为", function: "cmd:saveas" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "a:tool",
+      name: "工具",
+      children: [
+        {
+          id: "g:pen",
+          name: "笔",
+          children: [
+            {
+              id: "n:a",
+              name: "G笔",
+              function: "tool:a",
+              children: [{ id: "n:b", name: "铅笔", function: "tool:b" }],
+            },
+          ],
+        },
+      ],
+    },
   ],
   functions: [
-    fn("cmd:undo", "撤销", ["编辑"], "edit", ["Ctrl+Z"]),
-    fn("cmd:redo", "重做", ["编辑"], "edit", []),
-    fn("tool:a", "G笔", ["工具", "笔"], "tool", ["P"], {
+    fn("cmd:undo", "撤销", ["编辑"], ["Ctrl+Z"]),
+    fn("cmd:redo", "重做", ["编辑"], []),
+    fn(
+      "cmd:saveas",
+      "另存为",
+      ["文件"],
+      ["Shift+Alt+S", "Ctrl+Shift+S", "Ctrl+Alt+S"],
+    ),
+    fn("tool:a", "G笔", ["工具", "笔"], ["P"], {
       kind: "tool",
       cycle: ["tool:b"],
     }),
-    fn("tool:b", "铅笔", ["工具", "笔"], "tool", ["P"], {
+    fn("tool:b", "铅笔", ["工具", "笔", "G笔"], ["P"], {
       kind: "tool",
       cycle: ["tool:a"],
     }),

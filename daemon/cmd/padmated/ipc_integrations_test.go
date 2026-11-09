@@ -32,6 +32,13 @@ type fakeIntegration struct {
 	written  [][]integration.Change
 	backups  []integration.BackupInfo
 	calls    int // Compare calls
+	names    string
+}
+
+func (f *fakeIntegration) NamesProblem(string) string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.names
 }
 
 func newFakeIntegration() *fakeIntegration {
@@ -83,11 +90,16 @@ func (f *fakeIntegration) Functions(lang string) (integration.Listing, error) {
 	if err := f.unavailable(); err != nil {
 		return integration.Listing{}, err
 	}
-	l := integration.Listing{Revision: "rev" + string(rune('0'+f.revision)), Categories: []integration.Category{{ID: "edit", Name: lang}}}
+	l := integration.Listing{Revision: "rev" + string(rune('0'+f.revision))}
 	for id, k := range f.keys {
-		l.Functions = append(l.Functions, integration.Function{ID: id, Kind: "command", Name: id, Path: []string{}, Category: "edit", Keys: k})
+		l.Functions = append(l.Functions, integration.Function{ID: id, Kind: "command", Name: id, Path: []string{}, Keys: k})
 	}
 	slices.SortFunc(l.Functions, func(a, b integration.Function) int { return strings.Compare(a.ID, b.ID) })
+	group := integration.TreeNode{ID: "edit", Name: lang}
+	for _, fn := range l.Functions {
+		group.Children = append(group.Children, integration.TreeNode{ID: fn.ID, Name: fn.Name, Function: fn.ID})
+	}
+	l.Tree = []integration.TreeNode{group}
 	return l, nil
 }
 
@@ -346,6 +358,16 @@ func TestIntegrationList(t *testing.T) {
 	if err := il.call("integrations.list", map[string]any{"x": 1}, &got); rpcCode(err) != int(jrpc2.InvalidParams) {
 		t.Fatalf("unknown member: %v", err)
 	}
+	// namesProblem is absent when the names were read, and shown otherwise.
+	if err := il.call("integrations.list", nil, &got); err != nil || got[0].NamesProblem != "" {
+		t.Fatalf("namesProblem without a problem: %+v %v", got, err)
+	}
+	il.fake.mu.Lock()
+	il.fake.names = integration.NamesInstallNotFound
+	il.fake.mu.Unlock()
+	if err := il.call("integrations.list", nil, &got); err != nil || got[0].NamesProblem != "installNotFound" {
+		t.Fatalf("namesProblem: %+v %v", got, err)
+	}
 }
 
 func TestIntegrationParamErrors(t *testing.T) {
@@ -387,21 +409,21 @@ func TestIntegrationParamErrors(t *testing.T) {
 func TestIntegrationFunctionsAndCheck(t *testing.T) {
 	il := startIntegrationLive(t, "plain")
 	var l struct {
-		Revision   string
-		Categories []struct{ ID, Name string }
-		Functions  []struct {
+		Revision  string
+		Tree      []struct{ ID, Name string }
+		Functions []struct {
 			ID   string
 			Keys []string
 		}
 	}
 	// The language is optional; the last one named is remembered.
-	if err := il.call("integrations.functions", map[string]any{"integration": "fake"}, &l); err != nil || l.Categories[0].Name != "zh-CN" || len(l.Functions) != 3 || l.Revision == "" {
+	if err := il.call("integrations.functions", map[string]any{"integration": "fake"}, &l); err != nil || l.Tree[0].Name != "zh-CN" || len(l.Functions) != 3 || l.Revision == "" {
 		t.Fatalf("functions = %+v %v", l, err)
 	}
-	if err := il.call("integrations.functions", map[string]any{"integration": "fake", "language": "en-US"}, &l); err != nil || l.Categories[0].Name != "en" {
+	if err := il.call("integrations.functions", map[string]any{"integration": "fake", "language": "en-US"}, &l); err != nil || l.Tree[0].Name != "en" {
 		t.Fatalf("en = %+v %v", l, err)
 	}
-	if err := il.call("integrations.functions", map[string]any{"integration": "fake"}, &l); err != nil || l.Categories[0].Name != "en" {
+	if err := il.call("integrations.functions", map[string]any{"integration": "fake"}, &l); err != nil || l.Tree[0].Name != "en" {
 		t.Fatalf("remembered language = %+v %v", l, err)
 	}
 	var c integration.CheckResult

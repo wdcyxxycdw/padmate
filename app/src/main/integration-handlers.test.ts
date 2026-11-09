@@ -24,7 +24,7 @@ function fixture(
       "integrations.list": [info],
       "integrations.functions": {
         revision: "r",
-        categories: [],
+        tree: [],
         functions: [],
       },
       "integrations.check": { status: "free", owners: [], notes: [] },
@@ -135,6 +135,32 @@ describe("integration handlers", () => {
         { profile: "paint", integration: "demoapp", differenceId: "abc" },
       ],
     ]);
+  });
+
+  it("takes the empty revision of a profile that has no integrations file yet", async () => {
+    const { call, handlers } = fixture();
+    await handlers.integrationsPutItems.run({
+      profile: "paint",
+      integration: "demoapp",
+      revision: "",
+      items: [item],
+    });
+    expect(call).toHaveBeenCalledWith("integrations.putItems", {
+      profile: "paint",
+      integration: "demoapp",
+      revision: "",
+      items: [item],
+    });
+    // A missing or too long revision is still a mistake of the caller.
+    for (const revision of [undefined, 3, "r".repeat(257)])
+      expect(() =>
+        handlers.integrationsPutItems.run({
+          profile: "paint",
+          integration: "demoapp",
+          revision,
+          items: [],
+        }),
+      ).toThrow();
   });
 
   it("refuses parameters of the wrong shape before the daemon is asked", async () => {

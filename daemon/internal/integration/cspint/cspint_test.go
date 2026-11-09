@@ -15,21 +15,25 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/integration"
 )
 
-// namer knows two commands.
+// namer knows two commands and lays out a main menu with their groups.
 type namer struct{}
 
-func (namer) CommandName(id, lang string) (string, []string, string, bool) {
+func (namer) CommandName(id, lang string) (integration.CommandInfo, bool) {
 	switch id {
 	case "basiccommand/undo":
-		return "Undo", []string{"Edit"}, "edit", true
+		return integration.CommandInfo{Name: "Undo", Path: []string{"Edit"}}, true
 	case "basiccommand/filenew":
-		return "New", []string{"File"}, "file", true
+		return integration.CommandInfo{Name: "New", Path: []string{"File"}}, true
 	}
-	return "", nil, "", false
+	return integration.CommandInfo{}, false
 }
 
-func (namer) Categories(lang string) []integration.Category {
-	return []integration.Category{{ID: "file", Name: "File"}, {ID: "edit", Name: "Edit"}}
+func (namer) Layout(lang string) []integration.LayoutNode {
+	return []integration.LayoutNode{{ID: "mainmenu", Name: "Main menu", Children: []integration.LayoutNode{
+		{ID: "fileparent", Name: "File", Children: []integration.LayoutNode{{ID: "filenew"}, {ID: "filenotinfile"}}},
+		{ID: "menueditparent", Name: "Edit", Children: []integration.LayoutNode{{ID: "undo"}}},
+		{ID: "emptyparent", Name: "Empty", Children: []integration.LayoutNode{{ID: "nothere"}}},
+	}}}
 }
 
 type fixture struct {
@@ -138,12 +142,12 @@ func TestFunctions(t *testing.T) {
 	}
 	m := f.listing(t)
 	undo := m["command:basiccommand/undo"]
-	if undo.Name != "Undo" || undo.Category != "edit" || !reflect.DeepEqual(undo.Path, []string{"Edit"}) ||
+	if undo.Name != "Undo" || !reflect.DeepEqual(undo.Path, []string{"Edit"}) ||
 		!reflect.DeepEqual(undo.Keys, []string{"Ctrl+Z", "Ctrl+Alt+Z"}) || undo.Kind != "command" {
 		t.Errorf("undo = %+v", undo)
 	}
 	swap := m["command:basiccommand/swapcolor"]
-	if swap.Name != "basiccommand/swapcolor" || swap.Category != "other" || !reflect.DeepEqual(swap.Keys, []string{"X"}) {
+	if swap.Name != "basiccommand/swapcolor" || !reflect.DeepEqual(swap.Keys, []string{"X"}) {
 		t.Errorf("swap = %+v", swap)
 	}
 	if merge := m["command:advancedcommand/layermergevisiblelayer"]; len(merge.Keys) != 0 || merge.Unsupported || merge.Unconfirmed {
@@ -153,7 +157,7 @@ func TestFunctions(t *testing.T) {
 		t.Error("flags of weird/symbols")
 	}
 	pen := m[tool(2)]
-	if pen.Kind != "tool" || pen.Category != "tools" || pen.Name != "Pen" || !reflect.DeepEqual(pen.Keys, []string{"P"}) ||
+	if pen.Kind != "tool" || pen.Name != "Pen" || !reflect.DeepEqual(pen.Keys, []string{"P"}) ||
 		!reflect.DeepEqual(pen.Cycle, []string{tool(4), tool(5)}) {
 		t.Errorf("pen = %+v", pen)
 	}
@@ -170,13 +174,36 @@ func TestFunctions(t *testing.T) {
 	if g := m[tool(7)]; len(g.Keys) != 0 || g.Cycle != nil {
 		t.Errorf("g-pen = %+v", g)
 	}
-	var cats []string
-	for _, c := range l.Categories {
-		cats = append(cats, c.ID)
+	// The tree: the layout's area with its groups (the empty one dropped), the
+	// tools second, every tool level a function, the rest under "Other" by name.
+	want := []integration.TreeNode{
+		{ID: "g:mainmenu", Name: "Main menu", Children: []integration.TreeNode{
+			{ID: "g:fileparent", Name: "File", Children: []integration.TreeNode{{ID: "command:basiccommand/filenew", Name: "New", Function: "command:basiccommand/filenew"}}},
+			{ID: "g:menueditparent", Name: "Edit", Children: []integration.TreeNode{{ID: "command:basiccommand/undo", Name: "Undo", Function: "command:basiccommand/undo"}}},
+		}},
+		{ID: "tools", Name: "Tools", Children: []integration.TreeNode{
+			{ID: tool(2), Name: "Pen", Function: tool(2), Children: []integration.TreeNode{
+				{ID: tool(3), Name: "Pencils", Function: tool(3), Children: []integration.TreeNode{
+					{ID: tool(4), Name: "Pencil", Function: tool(4)},
+					{ID: tool(5), Name: "Mechanical", Function: tool(5)},
+				}},
+				{ID: tool(6), Name: "Inks", Function: tool(6), Children: []integration.TreeNode{{ID: tool(7), Name: "G-pen", Function: tool(7)}}},
+			}},
+			{ID: tool(8), Name: "Eraser", Function: tool(8), Children: []integration.TreeNode{
+				{ID: tool(9), Name: "Soft", Function: tool(9), Children: []integration.TreeNode{{ID: tool(10), Name: "Eraser soft", Function: tool(10)}}},
+			}},
+		}},
+		{ID: "other", Name: "Other", Children: []integration.TreeNode{
+			{ID: "command:advancedcommand/layermergevisiblelayer", Name: "advancedcommand/layermergevisiblelayer", Function: "command:advancedcommand/layermergevisiblelayer"},
+			{ID: "command:basiccommand/swapcolor", Name: "basiccommand/swapcolor", Function: "command:basiccommand/swapcolor"},
+			{ID: "command:basiccommand/symbols", Name: "basiccommand/symbols", Function: "command:basiccommand/symbols"},
+			{ID: "command:basiccommand/weird", Name: "basiccommand/weird", Function: "command:basiccommand/weird"},
+		}},
 	}
-	if !reflect.DeepEqual(cats, []string{"file", "edit", "tools", "other"}) {
-		t.Errorf("categories = %v", cats)
+	if !reflect.DeepEqual(l.Tree, want) {
+		t.Errorf("tree = %+v", l.Tree)
 	}
+	assertEachFunctionOnce(t, l)
 	// The listing is stable while the files do not change.
 	if r, err := f.in.Revision(); err != nil || r != l.Revision {
 		t.Errorf("revision %q %v", r, err)
@@ -655,5 +682,36 @@ func TestCacheFollowsFiles(t *testing.T) {
 	}
 	if !slices.Contains(f.listing(t)["command:basiccommand/filenew"].Keys, "F9") {
 		t.Error("new key not listed")
+	}
+}
+
+// assertEachFunctionOnce: every function of a listing is placed exactly once
+// in the tree, node IDs are unique, and every placed function exists.
+func assertEachFunctionOnce(t *testing.T, l integration.Listing) {
+	t.Helper()
+	seen := map[string]int{}
+	ids := map[string]bool{}
+	var walk func(nodes []integration.TreeNode)
+	walk = func(nodes []integration.TreeNode) {
+		for _, n := range nodes {
+			if n.ID == "" || n.Name == "" || ids[n.ID] {
+				t.Errorf("bad or repeated node %+v", n)
+			}
+			ids[n.ID] = true
+			if n.Function != "" {
+				seen[n.Function]++
+			}
+			walk(n.Children)
+		}
+	}
+	walk(l.Tree)
+	for _, fn := range l.Functions {
+		if seen[fn.ID] != 1 {
+			t.Errorf("%s placed %d times", fn.ID, seen[fn.ID])
+		}
+		delete(seen, fn.ID)
+	}
+	if len(seen) != 0 {
+		t.Errorf("placed but not listed: %v", seen)
 	}
 }

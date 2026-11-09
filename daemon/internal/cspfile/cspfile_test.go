@@ -662,3 +662,87 @@ func TestRestoreOldestOfFullBackupSet(t *testing.T) {
 		t.Errorf("the restored backup was pruned: %v", err)
 	}
 }
+
+// TestInstallFromEntry covers the layouts of uninstall entries, including the
+// real CSP 5 one: InstallLocation is the folder above "CLIP STUDIO 1.5" and
+// DisplayIcon names the executable.
+func TestInstallFromEntry(t *testing.T) {
+	const name = "CLIP STUDIO PAINT 5.1.5"
+	mk := func(t *testing.T) (celsys, exeDir string) {
+		celsys = t.TempDir()
+		exeDir = filepath.Join(celsys, "CLIP STUDIO 1.5", "CLIP STUDIO PAINT")
+		writeFile(t, filepath.Join(exeDir, ExeName), "x")
+		if err := os.Mkdir(filepath.Join(exeDir, "resource"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return celsys, exeDir
+	}
+	t.Run("real layout, icon and location", func(t *testing.T) {
+		celsys, exeDir := mk(t)
+		icon := filepath.Join(exeDir, ExeName) + ",0"
+		in, ok := InstallFromEntry(name, celsys, icon)
+		if !ok || in.Root != exeDir || in.Resource != filepath.Join(exeDir, "resource") {
+			t.Fatalf("%+v %v", in, ok)
+		}
+	})
+	t.Run("quoted icon without a location", func(t *testing.T) {
+		_, exeDir := mk(t)
+		in, ok := InstallFromEntry(name, "", `"`+filepath.Join(exeDir, ExeName)+`",0`)
+		if !ok || in.Root != exeDir {
+			t.Fatalf("%+v %v", in, ok)
+		}
+	})
+	t.Run("location only, bounded probe", func(t *testing.T) {
+		celsys, exeDir := mk(t)
+		in, ok := InstallFromEntry(name, celsys, "")
+		if !ok || in.Root != exeDir {
+			t.Fatalf("%+v %v", in, ok)
+		}
+	})
+	t.Run("icon of another program is ignored", func(t *testing.T) {
+		celsys, exeDir := mk(t)
+		in, ok := InstallFromEntry(name, celsys, filepath.Join(celsys, "other.exe")+",0")
+		if !ok || in.Root != exeDir {
+			t.Fatalf("%+v %v", in, ok)
+		}
+	})
+	t.Run("old layouts", func(t *testing.T) {
+		flat := t.TempDir()
+		writeFile(t, filepath.Join(flat, ExeName), "x")
+		if in, ok := InstallFromEntry(name, flat, ""); !ok || in.Root != flat {
+			t.Errorf("flat: %+v %v", in, ok)
+		}
+		nested := t.TempDir()
+		writeFile(t, filepath.Join(nested, "CLIP STUDIO PAINT", ExeName), "x")
+		if in, ok := InstallFromEntry(name, nested, ""); !ok || in.Root != filepath.Join(nested, "CLIP STUDIO PAINT") {
+			t.Errorf("nested: %+v %v", in, ok)
+		}
+	})
+	t.Run("not found", func(t *testing.T) {
+		celsys, exeDir := mk(t)
+		if _, ok := InstallFromEntry("Other App", celsys, filepath.Join(exeDir, ExeName)); ok {
+			t.Error("another program's entry matched")
+		}
+		if _, ok := InstallFromEntry(name, t.TempDir(), ""); ok {
+			t.Error("empty folder matched")
+		}
+		if _, ok := InstallFromEntry(name, filepath.Join(celsys, "missing"), ""); ok {
+			t.Error("missing folder matched")
+		}
+	})
+}
+
+func TestIconExe(t *testing.T) {
+	for in, want := range map[string]string{
+		`D:\x\CLIPStudioPaint.exe,0`:     `D:\x\CLIPStudioPaint.exe`,
+		`"D:\x b\CLIPStudioPaint.exe",1`: `D:\x b\CLIPStudioPaint.exe`,
+		`D:\x\CLIPStudioPaint.exe`:       `D:\x\CLIPStudioPaint.exe`,
+		`d:/a/clipstudiopaint.EXE, -3`:   `d:/a/clipstudiopaint.EXE`,
+		`D:\x\Other.exe,0`:               ``,
+		``:                               ``,
+	} {
+		if got := iconExe(in); got != want {
+			t.Errorf("iconExe(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

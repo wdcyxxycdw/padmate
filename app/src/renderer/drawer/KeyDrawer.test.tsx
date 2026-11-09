@@ -973,7 +973,8 @@ it("names d-pad directions and sticks in the header", async () => {
   // A stick is two drawers: its movement, and its press (a key like any other).
   rerender("leftstick");
   expect(screen.getByRole("heading", { name: "左摇杆 旋转" })).toBeDefined();
-  expect(screen.queryByRole("button", { name: "按键操作" })).toBeNull();
+  // Its menu has the clear action only, no copy or paste.
+  expect(screen.getByRole("button", { name: "按键操作" })).toBeDefined();
   rerender("leftstick.press");
   expect(screen.getByRole("heading", { name: "左摇杆 点按" })).toBeDefined();
   expect(screen.getByRole("button", { name: "按键操作" })).toBeDefined();

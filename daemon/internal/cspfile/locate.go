@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -168,4 +169,70 @@ const installDisplayPrefix = "CLIP STUDIO PAINT"
 func isInstallEntry(displayName string) bool {
 	return len(displayName) >= len(installDisplayPrefix) &&
 		strings.EqualFold(displayName[:len(installDisplayPrefix)], installDisplayPrefix)
+}
+
+// maxInstallProbe bounds the folders listed under an InstallLocation.
+const maxInstallProbe = 64
+
+// InstallFromEntry finds CSP from the three values of an uninstall entry.
+// displayName must be CSP's. The executable named by displayIcon (the icon
+// resource, possibly quoted and with a ",N" suffix) wins when its file name is
+// CLIPStudioPaint.exe; otherwise installLocation is probed: itself, its
+// "CLIP STUDIO PAINT" subfolder, and "<installLocation>\CLIP STUDIO*\CLIP
+// STUDIO PAINT" (the layout of CSP 5, whose InstallLocation is the folder
+// above "CLIP STUDIO 1.5"). Only the file system is read.
+func InstallFromEntry(displayName, installLocation, displayIcon string) (InstallDir, bool) {
+	if !isInstallEntry(displayName) {
+		return InstallDir{}, false
+	}
+	if exe := iconExe(displayIcon); exe != "" {
+		if in, ok := LocateInstall(filepath.Dir(exe)); ok && strings.EqualFold(filepath.Base(in.Exe), ExeName) &&
+			strings.EqualFold(filepath.Clean(in.Exe), filepath.Clean(exe)) {
+			return in, true
+		}
+	}
+	if installLocation == "" {
+		return InstallDir{}, false
+	}
+	if fi, err := os.Stat(installLocation); err != nil || !fi.IsDir() {
+		return InstallDir{}, false
+	}
+	if in, ok := LocateInstall(installLocation); ok {
+		return in, true
+	}
+	for _, name := range readDirNames(installLocation, maxInstallProbe) {
+		if !strings.HasPrefix(strings.ToUpper(name), "CLIP STUDIO") {
+			continue
+		}
+		if in, ok := LocateInstall(filepath.Join(installLocation, name, "CLIP STUDIO PAINT")); ok {
+			return in, true
+		}
+	}
+	return InstallDir{}, false
+}
+
+// iconExe extracts the executable path from a DisplayIcon value: quotes and
+// a trailing ",index" are removed. It returns "" unless the file name is
+// CLIPStudioPaint.exe.
+func iconExe(icon string) string {
+	icon = strings.TrimSpace(icon)
+	if strings.HasPrefix(icon, `"`) {
+		if end := strings.Index(icon[1:], `"`); end >= 0 {
+			icon = icon[1 : 1+end]
+		}
+	} else if i := strings.LastIndex(icon, ","); i >= 0 {
+		if _, err := strconv.Atoi(strings.TrimSpace(icon[i+1:])); err == nil {
+			icon = icon[:i]
+		}
+	}
+	icon = strings.TrimSpace(icon)
+	// The path may be written with either separator.
+	base := icon
+	if i := strings.LastIndexAny(base, `\/`); i >= 0 {
+		base = base[i+1:]
+	}
+	if !strings.EqualFold(base, ExeName) {
+		return ""
+	}
+	return icon
 }

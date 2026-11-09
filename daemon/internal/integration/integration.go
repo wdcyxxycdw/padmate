@@ -170,40 +170,82 @@ func locations(rules []profile.Rule, exes []string) []string {
 	return out
 }
 
-// Namer supplies the names of the software's functions that do not come from
-// its settings files (CSP: command names, menu paths, categories), so that
-// they can be plugged in separately from the integration.
+// Namer supplies the names and the layout of the software's functions that
+// do not come from its settings files (CSP: command names, the tree of its
+// shortcut dialog), so that they can be plugged in separately from the
+// integration.
 type Namer interface {
-	// CommandName returns the name, the menu path and the category ID of a
-	// command in lang. ok is false when the namer does not know it.
-	CommandName(id, lang string) (name string, path []string, category string, ok bool)
-	// Categories lists the categories in lang, in display order.
-	Categories(lang string) []Category
+	// CommandName names the command id in lang. ok is false when the namer
+	// does not know it.
+	CommandName(id, lang string) (CommandInfo, bool)
+	// Layout is the software's own tree of its commands in lang: groups with
+	// children, in the software's order. A node is looked up as a command by
+	// its ID, whether or not it has children; a node that no command has is a
+	// plain group. Nil when the namer has no layout.
+	Layout(lang string) []LayoutNode
 }
 
-// OtherCategory is the category of a function the namer does not know.
-const OtherCategory = "other"
+// CommandInfo is what a Namer knows about a command.
+type CommandInfo struct {
+	Name string
+	// Path is where the software shows the command, for display and search.
+	Path []string
+	// Group is the ID of the layout group a command that the layout does not
+	// list belongs under, and Sub the name of the subgroup of that group to
+	// put it in ("" for none). Group is empty for no group.
+	Group string
+	Sub   string
+}
 
-// FallbackNamer names a command by its ID and puts it in OtherCategory.
+// LayoutNode is a node of a Namer's layout.
+type LayoutNode struct {
+	// ID is the group's ID, or the command's ID (a group may also be a
+	// command).
+	ID string
+	// Name names a group; a command is named by CommandName.
+	Name     string
+	Children []LayoutNode
+}
+
+// NamesReporter is implemented by an integration whose names can fall back to
+// bare IDs. NamesProblem says why, in lang: one of the NamesProblem constants,
+// or "" when the names are complete.
+type NamesReporter interface {
+	NamesProblem(lang string) string
+}
+
+// Reasons of a NamesReporter.
+const (
+	// NamesInstallNotFound: the software's installation was not found, so
+	// the names that come from it are missing.
+	NamesInstallNotFound = "installNotFound"
+	// NamesResourceUnreadable: the installation was found but its resource
+	// could not be read.
+	NamesResourceUnreadable = "resourceUnreadable"
+)
+
+// OtherNode is the ID of the trailing group of the functions that have no
+// place in the layout.
+const OtherNode = "other"
+
+// OtherName is the name of that group in lang.
+func OtherName(lang string) string {
+	if strings.HasPrefix(strings.ToLower(lang), "zh") {
+		return "其他"
+	}
+	return "Other"
+}
+
+// FallbackNamer names a command by its ID and has no layout.
 type FallbackNamer struct{}
 
 // CommandName returns id as the name.
-func (FallbackNamer) CommandName(id, _ string) (string, []string, string, bool) {
-	return id, nil, OtherCategory, true
+func (FallbackNamer) CommandName(id, _ string) (CommandInfo, bool) {
+	return CommandInfo{Name: id}, true
 }
 
-// Categories returns OtherCategory only.
-func (FallbackNamer) Categories(lang string) []Category {
-	return []Category{OtherCategoryIn(lang)}
-}
-
-// OtherCategoryIn is the "other" category named in lang.
-func OtherCategoryIn(lang string) Category {
-	if strings.HasPrefix(strings.ToLower(lang), "zh") {
-		return Category{ID: OtherCategory, Name: "其他"}
-	}
-	return Category{ID: OtherCategory, Name: "Other"}
-}
+// Layout is nil.
+func (FallbackNamer) Layout(string) []LayoutNode { return nil }
 
 // NamerOrFallback returns n, or FallbackNamer when n is nil.
 func NamerOrFallback(n Namer) Namer {

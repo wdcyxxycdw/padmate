@@ -30,6 +30,22 @@ export function backupSummary(
     : tx(language, "写入", "Wrote");
 }
 
+/**
+ * That the command names cannot be read from the app itself, in one sentence;
+ * the commands then show their internal names. null when they could be read.
+ */
+export function namesProblemText(
+  info: IntegrationInfo,
+  language: Language,
+): string | null {
+  if (!info.namesProblem) return null;
+  return tx(
+    language,
+    `读不到 ${info.name} 里的命令名称，部分命令会显示内部名称。`,
+    `The command names cannot be read from ${info.name}, so some commands show their internal names.`,
+  );
+}
+
 /** Why an integration cannot be used, as the data folder row says it. */
 export function problemText(
   info: IntegrationInfo,
@@ -107,6 +123,7 @@ function IntegrationSection({
     void load();
   }, [load]);
   const trouble = problemText(info, language);
+  const namesTrouble = namesProblemText(info, language);
   const refreshList = () => host?.store.getState().refreshIntegrations();
   // The folder dialog is Main's; it answers whether the folder was taken.
   const chooseFolder = async () => {
@@ -185,6 +202,14 @@ function IntegrationSection({
             {trouble && (
               <span className="row-hint" role="status">
                 {trouble}
+              </span>
+            )}
+            {namesTrouble && (
+              <span
+                className="row-hint"
+                data-testid="integration-names-problem"
+              >
+                {namesTrouble}
               </span>
             )}
             {folderProblem && (

@@ -37,36 +37,36 @@ func TestNamesLookupOrder(t *testing.T) {
 		t.Errorf("MenuCommands = %d, want 6", n.MenuCommands())
 	}
 	tests := []struct {
-		typ, id  string
-		name     string
-		path     []string
-		category string
-		ok       bool
+		typ, id string
+		name    string
+		path    []string
+		group   string
+		ok      bool
 	}{
 		// 1. The menu resource, case-insensitive; the first menu wins. The
 		// Chinese test resource has English menu titles, which match no
 		// group of the table.
-		{"advancedcommand", "FileNew", "New", []string{"File"}, "menu10", true},
-		{"advancedcommand", "exportpng", "PNG", []string{"File", "Export"}, "menu10", true},
-		{"basiccommand", "undo", "Undo", []string{"Edit"}, "menu20", true},
+		{"advancedcommand", "FileNew", "New", []string{"File"}, "", true},
+		{"advancedcommand", "exportpng", "PNG", []string{"File", "Export"}, "", true},
+		{"basiccommand", "undo", "Undo", []string{"Edit"}, "", true},
 		// A menu without a name: no path and no category.
 		{"advancedcommand", "noname", "Orphan", nil, "", true},
 		// 2. The bundled table.
-		{"advancedcommand", "canvasscrolldown", "向下滚动", []string{"画布", "视图"}, "canvas", true},
-		{"advancedcommand", "CANVASSCROLLDOWN", "向下滚动", []string{"画布", "视图"}, "canvas", true},
+		{"advancedcommand", "canvasscrolldown", "向下滚动", nil, "", true},
+		{"advancedcommand", "CANVASSCROLLDOWN", "向下滚动", nil, "", true},
 		// 3. A plug-in DLL, by the GUID with or without a suffix.
-		{"advancedcommand", testGUID, "马赛克", []string{"滤镜", "效果"}, "filter", true},
-		{"advancedcommand", strings.ToLower(testGUID) + "-2FB51A87-53F9-44D0-92A0-B0E0B2AE3AD7", "马赛克", []string{"滤镜", "效果"}, "filter", true},
+		{"advancedcommand", testGUID, "马赛克", []string{"滤镜", "效果"}, FilterGroup, true},
+		{"advancedcommand", strings.ToLower(testGUID) + "-2FB51A87-53F9-44D0-92A0-B0E0B2AE3AD7", "马赛克", []string{"滤镜", "效果"}, FilterGroup, true},
 		// Not found: the caller shows the id.
 		{"advancedcommand", "nosuchcommand", "", nil, "", false},
-		{"advancedcommand", "3D617F46-7D99-44b2-80C1-2BEF6F9EBE33", "", nil, "", false}, // an export format, not a name
+		{"advancedcommand", "3D617F46-7D99-44b2-80C1-2BEF6F9EBE33", ".psd(Photoshop 文档)", nil, "", true}, // the table overrides the plug-in's "psd|psd"
 		{"advancedcommand", "00000000-0000-0000-0000-000000000000", "", nil, "", false},
 		{"advancedcommand", "", "", nil, "", false},
 	}
 	for _, tt := range tests {
 		name, path, cat, ok := n.Command(tt.typ, tt.id)
-		if name != tt.name || !reflect.DeepEqual(path, tt.path) || cat != tt.category || ok != tt.ok {
-			t.Errorf("Command(%q) = %q, %v, %q, %v; want %q, %v, %q, %v", tt.id, name, path, cat, ok, tt.name, tt.path, tt.category, tt.ok)
+		if name != tt.name || !reflect.DeepEqual(path, tt.path) || cat != tt.group || ok != tt.ok {
+			t.Errorf("Command(%q) = %q, %v, %q, %v; want %q, %v, %q, %v", tt.id, name, path, cat, ok, tt.name, tt.path, tt.group, tt.ok)
 		}
 	}
 }
@@ -80,7 +80,7 @@ func TestNamesEnglishAndFallback(t *testing.T) {
 	if name, _, _, ok := n.Command("advancedcommand", "filenew"); !ok || name != "en New" {
 		t.Errorf("filenew = %q, %v", name, ok)
 	}
-	if name, path, _, ok := n.Command("advancedcommand", "canvasscrolldown"); !ok || name != "Scroll to down" || !reflect.DeepEqual(path, []string{"Canvas", "View"}) {
+	if name, path, _, ok := n.Command("advancedcommand", "canvasscrolldown"); !ok || name != "Scroll to down" || path != nil {
 		t.Errorf("canvasscrolldown = %q, %v, %v", name, path, ok)
 	}
 	if name, _, _, ok := n.Command("advancedcommand", testGUID); !ok || name != "Mosaic" {
@@ -130,61 +130,80 @@ func TestNamesBrokenResource(t *testing.T) {
 			if n.MenuCommands() != 0 {
 				t.Errorf("MenuCommands = %d", n.MenuCommands())
 			}
-			if len(n.Categories()) == 0 {
-				t.Error("table categories are missing")
+			if len(n.Layout()) == 0 {
+				t.Error("the bundled tree is missing")
 			}
 		})
 	}
 }
 
-func TestNamesCategories(t *testing.T) {
-	n, err := loadFS(synthInstall(map[string][]byte{"english": synthResource()}, nil), "en")
+func TestLayout(t *testing.T) {
+	n, err := LoadBundled("en")
 	if err != nil {
 		t.Fatal(err)
 	}
-	cats := n.Categories()
-	// Menus come first in resource order. File and Edit borrow the ids of
-	// the table's groups of the same name; the menu with id 30 has no name.
-	if len(cats) < 3 || cats[0] != (Category{"file", "File"}) || cats[1] != (Category{"edit", "Edit"}) {
-		t.Fatalf("categories = %v", cats)
+	areas := n.Layout()
+	if len(areas) < 3 || areas[0].ID != "mainmenu" || areas[0].Name != "Main menu" {
+		t.Fatalf("areas = %+v", areas)
 	}
-	seen := map[string]bool{}
-	for _, c := range cats {
-		if c.ID == "" || c.Name == "" || seen[c.ID] {
-			t.Errorf("bad or repeated category %+v", c)
-		}
-		seen[c.ID] = true
-		for _, r := range c.ID {
-			if r > 127 {
-				t.Errorf("category id %q is not ASCII", c.ID)
-			}
+	var file *Node
+	for i, g := range areas[0].Children {
+		if g.ID == "fileparent" {
+			file = &areas[0].Children[i]
 		}
 	}
-	for _, id := range []string{"canvas", "tooloptionpalette", "other"} {
-		if !seen[id] {
-			t.Errorf("category %q missing from %v", id, cats)
-		}
+	if file == nil || file.Name != "File" || len(file.Children) < 10 || file.Children[0].ID != "filenew" || file.Children[0].Name != "" {
+		t.Fatalf("file group = %+v", file)
 	}
-	// The result is a copy.
-	cats[0].Name = "changed"
-	if n.Categories()[0].Name == "changed" {
-		t.Error("Categories returns the internal slice")
+	if g, ok := n.Group("mainmenu"); !ok || g != "Main menu" {
+		t.Errorf("Group = %q, %v", g, ok)
+	}
+	zh, _ := LoadBundled("zh-CN")
+	if g, _ := zh.Group("fileparent"); zh.Layout()[0].Name != "主菜单" || g != "文件" {
+		t.Errorf("zh areas = %q / %q", zh.Layout()[0].Name, g)
 	}
 }
 
-func TestMenuCategoryWithoutTableMatch(t *testing.T) {
-	// A top-level menu that matches no group of the table gets a category
-	// id made of the id of the menu.
-	n, err := loadFS(synthInstall(map[string][]byte{"english": synthResource(func(s *synth) { s.prefix = "Zz " })}, nil), "en")
-	if err != nil {
-		t.Fatal(err)
+// TestLayoutPlacesEachCommandOnce: the bundled tree lists a command once.
+func TestLayoutPlacesEachCommandOnce(t *testing.T) {
+	n, _ := LoadBundled("en")
+	seen := map[string]bool{}
+	var walk func(nodes []Node)
+	walk = func(nodes []Node) {
+		for _, x := range nodes {
+			if len(x.Children) == 0 {
+				if seen[x.ID] {
+					t.Errorf("%s placed twice", x.ID)
+				}
+				seen[x.ID] = true
+				continue
+			}
+			if x.Name == "" {
+				t.Errorf("group %s has no name", x.ID)
+			}
+			walk(x.Children)
+		}
 	}
-	cats := n.Categories()
-	if len(cats) < 2 || cats[0] != (Category{"menu10", "Zz File"}) || cats[1] != (Category{"menu20", "Zz Edit"}) {
-		t.Errorf("categories = %v", cats)
+	walk(n.Layout())
+	if len(seen) < 700 {
+		t.Errorf("only %d commands in the tree", len(seen))
 	}
-	if _, _, cat, _ := n.Command("advancedcommand", "undo"); cat != "menu20" {
-		t.Errorf("category = %q", cat)
+}
+
+func TestLoadBundledNamesTableCommands(t *testing.T) {
+	for _, lang := range []string{"zh-CN", "en"} {
+		n, err := Load("", lang)
+		if err != nil || n == nil {
+			t.Fatalf("Load(\"\"): %v, %v", n, err)
+		}
+		name, _, _, ok := n.Command("advancedcommand", "canvasscrolldown")
+		want := map[string]string{"zh-CN": "向下滚动", "en": "Scroll to down"}[lang]
+		if !ok || name != want {
+			t.Errorf("%s: canvasscrolldown = %q, %v", lang, name, ok)
+		}
+		if _, _, _, ok := n.Command("advancedcommand", "filenew"); ok || n.MenuCommands() != 0 {
+			t.Errorf("%s: a menu command was named without an installation", lang)
+		}
 	}
 }
 
@@ -200,10 +219,7 @@ func TestBundledTable(t *testing.T) {
 		t.Errorf("%d commands", len(bt.Commands))
 	}
 	for id, c := range bt.Commands {
-		if len(c.PathZH) != len(c.PathEN) {
-			t.Errorf("%s: paths differ in length", id)
-		}
-		for _, s := range append(append([]string{c.ZH, c.EN}, c.PathZH...), c.PathEN...) {
+		for _, s := range []string{c.ZH, c.EN} {
 			if strings.ContainsAny(s, "\x00�") || strings.Contains(s, "^0%") {
 				t.Errorf("%s: suspicious text %q", id, s)
 			}
@@ -216,8 +232,11 @@ func TestParseTableErrors(t *testing.T) {
 		``,
 		`{"commands":{"A":{"zh":"a","en":"a"}}}`,
 		`{"commands":{"a":{"zh":"a"}}}`,
-		`{"categories":[{"id":"x","zh":"a","en":"a"},{"id":"x","zh":"a","en":"a"}]}`,
-		`{"commands":{"a":{"zh":"a","en":"a","cat":"nope"}}}`,
+		`{"tree":["a"]}`, // a command outside a group
+		`{"tree":[{"id":"g","zh":"a","en":"a","c":[]}]}`,    // an empty group
+		`{"tree":[{"id":"G","zh":"a","en":"a","c":["a"]}]}`, // upper case id
+		`{"tree":[{"id":"g","zh":"a","c":["a"]}]}`,          // no English name
+		`{"tree":[{"id":"g","zh":"a","en":"a","c":[""]}]}`,  // empty id
 	}
 	for _, s := range bad {
 		if _, err := ParseTable([]byte(s)); err == nil {
@@ -264,5 +283,83 @@ func TestFindGUIDs(t *testing.T) {
 	}
 	if len(findGUIDs(nil)) != 0 || len(findGUIDs([]byte("-"))) != 0 {
 		t.Error("findGUIDs found something in nothing")
+	}
+}
+
+// TestPhotoshopExportNames: the four export-format commands that the plug-ins
+// (ExportPSB.dll, ExportPSD.dll) leave unnamed are named by the table and
+// sit at the end of the two export groups; the rest of the File menu is as
+// the executable's tree has it.
+func TestPhotoshopExportNames(t *testing.T) {
+	const suffix = "-2FB51A87-53F9-44D0-92A0-B0E0B2AE3AD7"
+	psb, psd := "28691CF0-C95B-4afc-A4C2-75E46D4F689D", "3D617F46-7D99-44b2-80C1-2BEF6F9EBE33"
+	names := map[string][2]string{
+		psb: {".psb(Photoshop 大型文档)", ".psb (Photoshop Big Document)"},
+		psd: {".psd(Photoshop 文档)", ".psd (Photoshop Document)"},
+	}
+	for i, lang := range []string{"zh-CN", "en"} {
+		n, err := loadFS(synthInstall(twoLanguages(), testPlugin()), lang)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, base := range []string{psb, psd} {
+			for _, id := range []string{base, strings.ToLower(base), base + suffix, strings.ToLower(base + suffix)} {
+				if name, path, _, ok := n.Command("advancedcommand", id); !ok || name != names[base][i] || path != nil {
+					t.Errorf("%s: Command(%q) = %q, %v, %v", lang, id, name, path, ok)
+				}
+			}
+		}
+
+		var find func(nodes []Node) *Node
+		find = func(nodes []Node) *Node {
+			for i := range nodes {
+				if nodes[i].ID == "fileparent" {
+					return &nodes[i]
+				}
+				if f := find(nodes[i].Children); f != nil {
+					return f
+				}
+			}
+			return nil
+		}
+		file := find(n.Layout())
+		if file == nil {
+			t.Fatal("no fileparent group")
+		}
+		ids := func(g string) []string {
+			for _, c := range file.Children {
+				if c.ID == g {
+					var out []string
+					for _, k := range c.Children {
+						out = append(out, k.ID)
+					}
+					return out
+				}
+			}
+			t.Fatalf("no group %s", g)
+			return nil
+		}
+		want := map[string][]string{
+			"filesaveasdirectparent": {"filesaveasproj", "filesaveasbmp", "filesaveasjpg", "filesaveaspng", "filesaveastif", "filesaveastga", "filesaveaswebp",
+				strings.ToLower(psb), strings.ToLower(psd)},
+			"filesavemergeimageparent": {"filesavemergeimagebmp", "filesavemergeimagejpg", "filesavemergeimagepng", "filesavemergeimagetif", "filesavemergeimagetga", "filesavemergeimagewebp",
+				strings.ToLower(psb + suffix), strings.ToLower(psd + suffix)},
+		}
+		for g, w := range want {
+			if got := ids(g); !reflect.DeepEqual(got, w) {
+				t.Errorf("%s: %s = %v, want %v", lang, g, got, w)
+			}
+		}
+		// The order of the other children of the File menu is unchanged.
+		var top []string
+		for _, c := range file.Children {
+			top = append(top, c.ID)
+		}
+		wantTop := []string{"filenew", "filenewfromclipboard", "filenewfromphotolibrary", "filenewfrommovie", "fileopen", "fileclose",
+			"filesave", "filesaveas", "filesaveasdirectparent", "filerevert", "filesavetophotolibrary", "filesavemergeimageparent",
+			"fileexporttophotolibraryparent", "filebookbindingexportparent"}
+		if len(top) < len(wantTop) || !reflect.DeepEqual(top[:len(wantTop)], wantTop) {
+			t.Errorf("%s: File menu starts %v, want %v", lang, top, wantTop)
+		}
 	}
 }

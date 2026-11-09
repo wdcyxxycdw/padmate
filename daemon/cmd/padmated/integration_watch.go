@@ -83,27 +83,23 @@ type integrationRun struct {
 	// logged is the error last logged for an integration, so that it is
 	// logged once.
 	logged map[string]string
-	watch  map[string]*integrationWatch
+	// namesLogged is the names problem last logged for an integration.
+	namesLogged map[string]string
+	watch       map[string]*integrationWatch
 }
 
 // newDefaultIntegrations returns the registry of production: CSP, with its
 // data folder from the live config and its names from the installation.
 func (r *liveRun) newDefaultIntegrations(padmateDir string) *integration.Registry {
 	reg := integration.NewRegistry()
-	var once sync.Once
-	var install string
+	// The namer looks again at most every 30 seconds while it has found
+	// nothing, so a CSP installed later is picked up.
 	installDir := func() (string, error) {
-		var err error
-		once.Do(func() {
-			var d cspfile.InstallDir
-			if d, err = cspfile.FindInstallDir(); err == nil {
-				install = d.Root
-			}
-		})
-		if install == "" {
-			return "", fmt.Errorf("CLIP STUDIO PAINT's installation not found")
+		d, err := cspfile.FindInstallDir()
+		if err != nil {
+			return "", err
 		}
-		return install, nil
+		return d.Root, nil
 	}
 	reg.Register(cspint.New(cspint.Options{
 		PadmateDir: padmateDir,

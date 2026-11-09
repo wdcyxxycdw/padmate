@@ -34,8 +34,6 @@ type Function struct {
 	Name string `json:"name"`
 	// Path is where the function sits in the software's menus or tool tree.
 	Path []string `json:"path"`
-	// Category is the ID of one of the Categories of the same listing.
-	Category string `json:"category"`
 	// Keys are the function's shortcuts as KeySpec chords.
 	Keys []string `json:"keys"`
 	// Unconfirmed: a shortcut of the function is a key that has no confirmed
@@ -48,19 +46,27 @@ type Function struct {
 	Cycle []string `json:"cycle,omitempty"`
 }
 
-// Category groups functions in the picker.
-type Category struct {
+// TreeNode is a node of the picker's tree, in the order of the software's own
+// shortcut settings. A group has Children; a function is placed by Function
+// (a Function ID of the same listing). A node may have both: a function that
+// has children of its own (CSP's tool, sub-tool group and sub-tool, each of
+// which can have a key). Every function of a listing is placed exactly once.
+type TreeNode struct {
+	// ID identifies the node in the tree; it is unique within a listing.
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	// Function is the ID of the function the node is.
+	Function string     `json:"function,omitempty"`
+	Children []TreeNode `json:"children,omitempty"`
 }
 
 // Listing is the answer of Integration.Functions.
 type Listing struct {
 	// Revision identifies the state of the software's files the listing was
 	// read from.
-	Revision   string     `json:"revision"`
-	Categories []Category `json:"categories"`
-	Functions  []Function `json:"functions"`
+	Revision  string     `json:"revision"`
+	Tree      []TreeNode `json:"tree"`
+	Functions []Function `json:"functions"`
 }
 
 // Item is one entry of integrations/<id>.json: the key is this function in

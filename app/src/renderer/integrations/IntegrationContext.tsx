@@ -78,11 +78,56 @@ export const noStore = {
   subscribe: () => () => {},
 } as unknown as PadmateStore;
 
+/** What a failed call was doing, so the sentence can say what did not work. */
+export type FailureStep = "read" | "check" | "items" | "write" | "restore";
+
+function stepFailure(
+  step: FailureStep | undefined,
+  appName: string,
+  language: Language,
+): string {
+  switch (step) {
+    case "read":
+      return tx(
+        language,
+        `没能读到 ${appName} 的功能列表。`,
+        `Could not read the function list of ${appName}.`,
+      );
+    case "check":
+      return tx(
+        language,
+        `没能在 ${appName} 里检查这个键。`,
+        `Could not check this key in ${appName}.`,
+      );
+    case "items":
+      return tx(
+        language,
+        "没能把这个功能记进这份配置，快捷键没有改。请再试一次。",
+        "Could not save this function into the profile. The shortcut was not changed. Try again.",
+      );
+    case "write":
+      return tx(
+        language,
+        `没能写入 ${appName} 的快捷键设置，快捷键没有改。`,
+        `Could not write the shortcut settings of ${appName}. The shortcut was not changed.`,
+      );
+    case "restore":
+      return tx(
+        language,
+        `没能撤销这次写入，${appName} 的设置还是写入之后的样子。`,
+        `Could not undo the write. The settings of ${appName} are still as written.`,
+      );
+    default:
+      return tx(language, "没有完成。", "It did not finish.");
+  }
+}
+
 /** The plain sentence for a failed integrations.* call. */
 export function integrationFailure(
   error: unknown,
   appName: string,
   language: Language,
+  step?: FailureStep,
 ): string {
   const code = (error as { code?: unknown } | null)?.code;
   switch (code) {
@@ -111,7 +156,7 @@ export function integrationFailure(
         "The integration of this profile just changed. Try again.",
       );
     default:
-      return tx(language, "没有完成。", "It did not finish.");
+      return stepFailure(step, appName, language);
   }
 }
 
@@ -177,7 +222,12 @@ export function IntegrationProvider({
           return {
             ok: false,
             cancelled: false,
-            message: integrationFailure(error, info.name, languageRef.current),
+            message: integrationFailure(
+              error,
+              info.name,
+              languageRef.current,
+              "write",
+            ),
           };
         }
       }

@@ -375,6 +375,7 @@ function ShortcutField({
   stepIndex,
   kindLabel,
   extra,
+  onDoubleClick,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -392,6 +393,12 @@ function ShortcutField({
   stepIndex?: number;
   /** What the row's left cell says; the step's name when absent. */
   kindLabel?: string;
+  /**
+   * The left button was clicked twice in a row to record it: the first click
+   * is the recorded shortcut, and this is told of the second, which the
+   * editor turns into a second click in the sequence.
+   */
+  onDoubleClick?: () => void;
 }) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const [active, setActive] = useState(false);
@@ -410,8 +417,11 @@ function ShortcutField({
     clearTimeout(hold.current);
     hold.current = undefined;
   }, []);
-  const latest = useRef({ value, onChange, physical, language });
-  latest.current = { value, onChange, physical, language };
+  const latest = useRef({ value, onChange, physical, language, onDoubleClick });
+  latest.current = { value, onChange, physical, language, onDoubleClick };
+  // When the left button recorded the shortcut: the second press of the same
+  // double click, with a count of 2, comes after the capture has ended.
+  const clickedAt = useRef<number | null>(null);
   // What the recorder says to do: show the chord so far, or end the capture
   // with what it recorded (null: nothing, as after a hold of Esc).
   const apply = useCallback(
@@ -512,12 +522,25 @@ function ShortcutField({
     const press = (event: MouseEvent) => {
       // The second press of the double click that started the capture.
       if (ended.current || event.detail > 1) return;
+      // A dialog that is not this field's, and the button that opens one, are
+      // never a mouse key (a click in the integration picker must not become
+      // the mapping).
+      const target = event.target instanceof Element ? event.target : null;
+      const dialog = target?.closest("dialog") ?? null;
+      if (
+        target?.closest("[data-no-capture]") ||
+        (dialog && dialog !== field.current?.closest("dialog"))
+      )
+        return;
       const key = mouseButtonKeys[event.button];
       if (!key) return;
       event.preventDefault();
       event.stopPropagation();
       swallowRelease();
-      apply(recorder.current.mouse(key, heldModifiers(event)));
+      const step = recorder.current.mouse(key, heldModifiers(event));
+      apply(step);
+      if (key === "MouseLeft" && step.done && step.chord !== null)
+        clickedAt.current = event.timeStamp;
     };
     const turn = (event: WheelEvent) => {
       event.preventDefault();
@@ -538,6 +561,23 @@ function ShortcutField({
       window.removeEventListener("contextmenu", menu, true);
     };
   }, [active, apply]);
+  // The second press of a double click of the left button, after it recorded
+  // the shortcut: the capture is over, so it is heard here. It is the click
+  // twice in the sequence, not a click on the page.
+  useEffect(() => {
+    const again = (event: MouseEvent) => {
+      const at = clickedAt.current;
+      if (at === null || event.detail !== 2 || event.button !== 0) return;
+      clickedAt.current = null;
+      if (event.timeStamp - at > 1000 || !latest.current.onDoubleClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+      swallowRelease();
+      latest.current.onDoubleClick();
+    };
+    window.addEventListener("mousedown", again, true);
+    return () => window.removeEventListener("mousedown", again, true);
+  }, []);
   // A hold ends with the capture, however that ends, and with the field.
   useEffect(() => {
     if (!active) clearHold();
@@ -831,6 +871,17 @@ function KeysFields({
       kind === "keys" ? undefined : { index: before.length },
     );
   };
+  // A double click recorded in a field: the click again, as the next step.
+  const clickAgain = (index: number) => {
+    const before: Step[] = steps ?? [{ keys: (keys?.keys as string) ?? "" }];
+    const click = before[index]?.keys;
+    if (!click || before.length >= maxSteps) return;
+    setSteps([
+      ...before.slice(0, index + 1),
+      { keys: click },
+      ...before.slice(index + 1),
+    ]);
+  };
   const kinds: NewStepKind[] = ["keys", "wait"];
   const preview = steps?.every((step) => stepKind(step) === "keys") ? (
     <Keycaps keys={steps.map((step) => step.keys ?? "")} language={language} />
@@ -895,6 +946,7 @@ function KeysFields({
                 value={step.keys ?? ""}
                 physical={physical}
                 onChange={(next) => replace({ keys: next })}
+                onDoubleClick={() => clickAgain(index)}
                 moves={moves}
                 onRemove={remove}
               />
@@ -911,6 +963,7 @@ function KeysFields({
               value={keys.keys as string}
               physical={physical}
               onChange={(next) => onChange({ ...keys, keys: next })}
+              onDoubleClick={() => clickAgain(0)}
               extra={
                 integration && (
                   <IntegrationPickButtons
@@ -954,7 +1007,8 @@ function KeysFields({
  * which sends its key once per step, so it has no tap, hold or double tap,
  * no sequence and no script. It writes `{press: {type: "keys", keys}}`,
  * keeping the binding's label and haptic. A binding the file set otherwise
- * is named, and capturing a shortcut replaces it.
+ * is named, and capturing a shortcut replaces it, or "清除这一格" clears it.
+ * Clearing the shortcut clears the whole step.
  */
 export function SingleShortcutField({
   value,
@@ -981,14 +1035,10 @@ export function SingleShortcutField({
     ...(value.label === undefined ? {} : { label: value.label }),
     ...(value.haptic === undefined ? {} : { haptic: value.haptic }),
   };
+  // Clearing the shortcut clears the step: the label and the haptic belong to
+  // it, and the editor has no other way to take them away.
   const commit = (keys: string) =>
-    onChange(
-      keys
-        ? { ...kept, press: { type: "keys", keys } }
-        : Object.keys(kept).length
-          ? kept
-          : undefined,
-    );
+    onChange(keys ? { ...kept, press: { type: "keys", keys } } : undefined);
   return (
     <fieldset className="drawer-fieldset" disabled={disabled}>
       {other && (
@@ -996,7 +1046,15 @@ export function SingleShortcutField({
           {t(
             "配置文件里这一格是别的设置，录入快捷键会替换它。",
             "The profile file sets something else here. Capturing a shortcut replaces it.",
-          )}
+          )}{" "}
+          <button
+            type="button"
+            className="btn-ghost drawer-link"
+            data-testid="single-shortcut-clear"
+            onClick={() => onChange(undefined)}
+          >
+            {t("清除这一格", "Clear this step")}
+          </button>
         </p>
       )}
       <ShortcutField

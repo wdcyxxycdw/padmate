@@ -570,6 +570,9 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	switch {
 	case cfg.integrations != nil:
 		r.integ.reg = cfg.integrations
+	case opts.fakeInput == "ipc" && opts.dryRun && !opts.inject:
+		// The private fake-input daemon of the E2E: Demo Paint, in memory.
+		r.integ.reg = newDemoRegistry()
 	case cfg.open == nil && opts.fakeInput != "ipc" && opts.library != nil:
 		r.integ.reg = r.newDefaultIntegrations(opts.library.Dir())
 	}

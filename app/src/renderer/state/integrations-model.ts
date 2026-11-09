@@ -1,7 +1,8 @@
 // The logic of the app integrations UI (ARCHITECTURE §16.5) apart from React:
-// filtering the function list, saying what a key check found, keeping a
-// profile's items, listing differences and moving a profile's keys. Nothing
-// here names an app: names, categories and notes come from the daemon.
+// filtering the function list, the rows of its menu tree, saying what a key
+// check found, keeping a profile's items, listing differences and moving a
+// profile's keys. Nothing
+// here names an app: names, menus and notes come from the daemon.
 
 import type {
   IntegrationChange,
@@ -10,6 +11,7 @@ import type {
   IntegrationItem,
   IntegrationItemStatus,
   IntegrationPlanEntry,
+  TreeNode,
 } from "../../shared/integrations";
 import type { Language } from "./store";
 
@@ -28,22 +30,109 @@ export function pathText(path: readonly string[]): string {
 
 /**
  * The functions that match the search (name, path or keys; case does not
- * matter, a space separates words that must all be there) in the category
- * ("" is all of them).
+ * matter, a space separates words that must all be there), in the order the
+ * app lists them. No words: all of them.
  */
 export function filterFunctions(
   functions: readonly IntegrationFunction[],
   query: string,
-  category: string,
 ): IntegrationFunction[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [...functions];
   return functions.filter((fn) => {
-    if (category && fn.category !== category) return false;
-    if (words.length === 0) return true;
     const haystack =
       `${fn.name}\n${fn.path.join(" ")}\n${fn.keys.join(" ")}`.toLowerCase();
     return words.every((word) => haystack.includes(word));
   });
+}
+
+/**
+ * The setting areas of the app (a top-level node with children each, such as
+ * the main menu): the picker's dropdown lists them. Empty when the tree has no
+ * top-level group; the tree itself is then the one area.
+ */
+export function areasOf(tree: readonly TreeNode[]): TreeNode[] {
+  return tree.filter((node) => (node.children?.length ?? 0) > 0);
+}
+
+/**
+ * The tree cut down to what matches: a node stays when it has a function that
+ * `keep` says yes to, or a descendant that stays (its children are cut the
+ * same way), so a found function comes with every group above it.
+ */
+export function pruneTree(
+  tree: readonly TreeNode[],
+  keep: (node: TreeNode) => boolean,
+): TreeNode[] {
+  const out: TreeNode[] = [];
+  for (const node of tree) {
+    const children = pruneTree(node.children ?? [], keep);
+    if (!keep(node) && children.length === 0) continue;
+    const { children: _dropped, ...rest } = node;
+    out.push(children.length > 0 ? { ...rest, children } : rest);
+  }
+  return out;
+}
+
+/** The IDs of the nodes that have children (the ones that can be open). */
+export function groupIds(tree: readonly TreeNode[]): Set<string> {
+  const ids = new Set<string>();
+  const walk = (nodes: readonly TreeNode[]) => {
+    for (const node of nodes)
+      if (node.children?.length) {
+        ids.add(node.id);
+        walk(node.children);
+      }
+  };
+  walk(tree);
+  return ids;
+}
+
+/** One line of the picker's tree as drawn: a node at its depth. */
+export interface TreeRow {
+  /** The node's ID; unique in the tree. */
+  key: string;
+  node: TreeNode;
+  /** 1 for the top level (aria-level). */
+  depth: number;
+  /** The key of the row's parent, none at the top. */
+  parent?: string;
+  /** The node has children: it can be opened. */
+  expandable: boolean;
+  expanded: boolean;
+  /** Place among its siblings (aria-posinset) and their count (aria-setsize). */
+  position: number;
+  siblings: number;
+}
+
+/**
+ * The rows the tree shows now: every node whose ancestors are all open, in the
+ * order of the tree (a node's children follow it).
+ */
+export function visibleRows(
+  tree: readonly TreeNode[],
+  expanded: ReadonlySet<string>,
+): TreeRow[] {
+  const rows: TreeRow[] = [];
+  const walk = (nodes: readonly TreeNode[], depth: number, parent?: string) => {
+    nodes.forEach((node, index) => {
+      const expandable = (node.children?.length ?? 0) > 0;
+      const open = expandable && expanded.has(node.id);
+      rows.push({
+        key: node.id,
+        node,
+        depth,
+        ...(parent === undefined ? {} : { parent }),
+        expandable,
+        expanded: open,
+        position: index + 1,
+        siblings: nodes.length,
+      });
+      if (open && node.children) walk(node.children, depth + 1, node.id);
+    });
+  };
+  walk(tree, 1);
+  return rows;
 }
 
 /** The functions by ID, to name the other functions of a cycle. */

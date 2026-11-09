@@ -9,14 +9,14 @@ This chapter only matters for a profile that is bound to CSP. Bound means the pr
 ## Picking a function of CSP for a key
 
 1. On the “Mapping” page, click a key to open the key drawer. Next to the shortcut of a binding, beside the “Capture shortcut” button, there is one more button, “Pick from CLIP STUDIO PAINT…”.
-2. In the window that opens, search by name, menu path or shortcut, or browse by the categories on the left. Select an item and click “Use this function”.
+2. The window that opens follows the shortcut settings dialog of CSP. At the top, “Setting area” chooses the part of CSP to look at (for example the main menu or the tools); below it the menus of that area are a tree, in the order CSP has them, all closed at first. Click the arrow of a group to open or close it; the arrow keys, Enter and Space work too. A tool that has sub-tools can be selected and opened. Or search by name, menu path or shortcut: the search looks in all areas and shows the matching functions with the groups above them, open. Clearing the search brings back the area and the open groups you had. Select a function and click “Set”.
 3. The shortcut that the function has in CSP is filled into the binding. The drawer says which function of CSP it is, and the step can be undone like any other edit.
 
-Each function in the window shows on its right the shortcut it has in CSP now. One without a shortcut says “Not set”.
+The window keeps the groups you opened until it is closed. Each function in the window shows on its right the shortcut it has in CSP now; one without a shortcut has an empty place there. A function that has several shortcuts takes several rows, the name on the first; they are one function, and the row you select decides which shortcut goes into the binding (the name row gives the first).
 
 ## Picking a function that has no shortcut
 
-When you select a function that is “Not set”, the window asks you to record a key and then writes it into the settings of CSP.
+When you select a function that has no shortcut, the window asks you to record a key and then writes it into the settings of CSP.
 
 1. Record a key. padmate says at once who uses that key in CSP: nobody, or which command or tool. padmate does not choose a key for you and does not suggest a free one.
 2. When the key can be written, click “Write to CLIP STUDIO PAINT”.
@@ -67,7 +67,7 @@ Nothing is written until every item is decided. A command that your CSP does not
 
 On the “Settings” page, when a profile bound to CSP exists, there is one more section, CLIP STUDIO PAINT.
 
-- “Data folder”: the settings folder of CSP that padmate found. If it was not found, the format is unknown or the version is not supported, the reason is written here. Click “Change…” to choose the folder yourself; it must be the folder that holds `Shortcut` or `Tool` (named like `CLIPStudioPaintVer1_5_0`), and padmate says so if it is not. Once you have chosen one, “Find automatically” appears and takes your choice away.
+- “Data folder”: the settings folder of CSP that padmate found. If it was not found, the format is unknown or the version is not supported, the reason is written here. Click “Change…” to choose the folder yourself; it must be the folder that holds `Shortcut` or `Tool` (named like `CLIPStudioPaintVer1_5_0`), and padmate says so if it is not. Once you have chosen one, “Find automatically” appears and takes your choice away. When the command names cannot be read from CSP (its install folder was not found, or its resource files could not be read), one more sentence says so here, and some commands show their internal names.
 - “Backups”: the backups made before each write, listed by time, with the latest 30 kept. Click “Restore…” beside a backup and, after you confirm, the shortcut settings of CSP go back to that one. Restoring also needs CSP closed, and the current settings are backed up first.
 
 ## Limits

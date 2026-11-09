@@ -73,23 +73,22 @@ func rawKeyText(key string, mod int) string {
 	return b.String()
 }
 
-func (in *Integration) commandInfo(id, lang string) (name string, path []string, category string) {
-	name, path, category, ok := in.opts.Namer.CommandName(id, lang)
-	if !ok || name == "" {
-		return id, nil, integration.OtherCategory
+// commandInfo names a command; one the namer does not know is named by its
+// ID.
+func (in *Integration) commandInfo(id, lang string) integration.CommandInfo {
+	info, ok := in.opts.Namer.CommandName(id, lang)
+	if !ok || info.Name == "" {
+		return integration.CommandInfo{Name: id}
 	}
-	if category == "" {
-		category = integration.OtherCategory
-	}
-	return name, path, category
+	return info
 }
 
 func (in *Integration) toIntegrationOwner(o csp.Owner, lang string) integration.Owner {
 	if o.Kind == csp.KindTool {
 		return integration.Owner{ID: toolFunctionID(o.Function), Name: o.Name, Path: slices.Clone(o.Path)}
 	}
-	name, path, _ := in.commandInfo(o.Function, lang)
-	return integration.Owner{ID: commandFunctionID(o.Function), Name: name, Path: path}
+	info := in.commandInfo(o.Function, lang)
+	return integration.Owner{ID: commandFunctionID(o.Function), Name: info.Name, Path: info.Path}
 }
 
 func (in *Integration) owners(list []csp.Owner, lang string) []integration.Owner {
@@ -100,20 +99,21 @@ func (in *Integration) owners(list []csp.Owner, lang string) []integration.Owner
 	return out
 }
 
-// Functions lists every command and tool node.
+// Functions lists every command and tool node, and the tree they are
+// placed in (tree.go).
 func (in *Integration) Functions(lang string) (integration.Listing, error) {
 	s, err := in.snapshot()
 	if err != nil {
 		return integration.Listing{}, err
 	}
 	l := integration.Listing{Revision: s.revision, Functions: []integration.Function{}}
-	used := map[string]bool{}
+	var cmds []cmdEntry
 	if s.cmds != nil {
 		for _, c := range s.cmds.Commands {
-			name, path, cat := in.commandInfo(c.ID, lang)
+			info := in.commandInfo(c.ID, lang)
 			f := integration.Function{
-				ID: commandFunctionID(c.ID), Kind: integration.KindCommand, Name: name,
-				Path: path, Category: cat, Keys: []string{},
+				ID: commandFunctionID(c.ID), Kind: integration.KindCommand, Name: info.Name,
+				Path: info.Path, Keys: []string{},
 			}
 			if f.Path == nil {
 				f.Path = []string{}
@@ -128,22 +128,23 @@ func (in *Integration) Functions(lang string) (integration.Listing, error) {
 					f.Unsupported = true
 				}
 			}
-			used[cat] = true
 			l.Functions = append(l.Functions, f)
+			cmds = append(cmds, cmdEntry{native: c.ID, id: f.ID, info: info, name: f.Name})
 		}
 	}
+	var tools []*csp.ToolNode
 	if s.tools != nil {
+		tools = s.tools.Nodes
 		byCode := map[int][]string{}
-		for _, n := range s.tools.Nodes {
+		for _, n := range tools {
 			if n.KeyCode != 0 {
 				byCode[n.KeyCode] = append(byCode[n.KeyCode], toolFunctionID(n.UUID))
 			}
 		}
-		for _, n := range s.tools.Nodes {
+		for _, n := range tools {
 			id := toolFunctionID(n.UUID)
 			f := integration.Function{
-				ID: id, Kind: integration.KindTool, Name: n.Name, Path: slices.Clone(n.Path),
-				Category: ToolsCategory, Keys: []string{},
+				ID: id, Kind: integration.KindTool, Name: n.Name, Path: slices.Clone(n.Path), Keys: []string{},
 			}
 			if n.KeyCode != 0 {
 				if c, ok := csp.ToolKeyChord(n.KeyCode); ok {
@@ -159,38 +160,9 @@ func (in *Integration) Functions(lang string) (integration.Listing, error) {
 			}
 			l.Functions = append(l.Functions, f)
 		}
-		if len(s.tools.Nodes) > 0 {
-			used[ToolsCategory] = true
-		}
 	}
-	l.Categories = in.categories(lang, used)
+	l.Tree = buildTree(in.opts.Namer.Layout(lang), cmds, tools, lang)
 	return l, nil
-}
-
-func (in *Integration) categories(lang string, used map[string]bool) []integration.Category {
-	var out []integration.Category
-	have := map[string]bool{}
-	for _, c := range in.opts.Namer.Categories(lang) {
-		// Only categories some function sits in: an empty app menu is not
-		// offered.
-		if !have[c.ID] && used[c.ID] {
-			have[c.ID] = true
-			out = append(out, c)
-		}
-	}
-	if used[ToolsCategory] && !have[ToolsCategory] {
-		name := "Tools"
-		if strings.HasPrefix(strings.ToLower(lang), "zh") {
-			name = "工具"
-		}
-		out = append(out, integration.Category{ID: ToolsCategory, Name: name})
-		have[ToolsCategory] = true
-	}
-	if used[integration.OtherCategory] && !have[integration.OtherCategory] {
-		out = append(out, integration.OtherCategoryIn(lang))
-		have[integration.OtherCategory] = true
-	}
-	return out
 }
 
 // Check says who owns keys in CSP.

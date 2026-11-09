@@ -77,6 +77,21 @@ describe("the settings section of an integration", () => {
     );
   });
 
+  it("says in one sentence that the command names cannot be read from the app", () => {
+    for (const namesProblem of [
+      "installNotFound",
+      "resourceUnreadable",
+    ] as const) {
+      setup([{ ...demoApp, namesProblem }]);
+      expect(screen.getByTestId("integration-names-problem").textContent).toBe(
+        "读不到 Demo Paint 里的命令名称，部分命令会显示内部名称。",
+      );
+      cleanup();
+    }
+    setup();
+    expect(screen.queryByTestId("integration-names-problem")).toBeNull();
+  });
+
   it("restores a backup after the user confirms, and the app is closed", async () => {
     const { api } = setup();
     const rows = await screen.findAllByTestId("integration-backup");

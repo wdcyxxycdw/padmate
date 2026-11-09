@@ -52,6 +52,13 @@ describe("integrations.list", () => {
     ]);
   });
 
+  it("accepts a namesProblem", () => {
+    for (const namesProblem of ["installNotFound", "resourceUnreadable"])
+      expect(parseIntegrationList([{ ...info, namesProblem }])).toEqual([
+        { ...info, namesProblem },
+      ]);
+  });
+
   it.each([
     ["not a list", {}],
     ["a bad integration ID", [{ ...info, id: "Bad Id" }]],
@@ -60,6 +67,7 @@ describe("integrations.list", () => {
     ["found not a boolean", [{ ...info, found: "yes" }]],
     ["running missing", [{ ...info, running: undefined }]],
     ["an unknown problem", [{ ...info, problem: "broken" }]],
+    ["an unknown namesProblem", [{ ...info, namesProblem: "broken" }]],
     ["custom not a boolean", [{ ...info, custom: "yes" }]],
     ["exe not strings", [{ ...info, exe: [1] }]],
     ["profiles not strings", [{ ...info, profiles: [3] }]],
@@ -75,12 +83,25 @@ describe("integrations.functions", () => {
     kind: "command",
     name: "Undo",
     path: ["Edit"],
-    category: "edit",
     keys: ["Ctrl+Z"],
   };
   const good = {
     revision: "r1",
-    categories: [{ id: "edit", name: "Edit" }],
+    tree: [
+      {
+        id: "g1",
+        name: "Edit",
+        children: [
+          { id: "n1", name: "Undo", function: "cmd:undo" },
+          {
+            id: "n2",
+            name: "Pen",
+            function: "tool:a",
+            children: [{ id: "n3", name: "Pencil", function: "tool:b" }],
+          },
+        ],
+      },
+    ],
     functions: [
       fn,
       { ...fn, id: "tool:a", unconfirmed: true, cycle: ["tool:b"] },
@@ -94,6 +115,24 @@ describe("integrations.functions", () => {
     });
   });
 
+  it("keeps the tree in order, with a node that is both selectable and a group", () => {
+    const tree = parseIntegrationFunctions(good)?.tree;
+    expect(tree).toEqual(good.tree);
+    expect(tree?.[0].children?.[1]).toMatchObject({
+      function: "tool:a",
+      children: [{ id: "n3" }],
+    });
+  });
+
+  it("drops an empty children list of a leaf", () => {
+    expect(
+      parseIntegrationFunctions({
+        ...good,
+        tree: [{ id: "n1", name: "Undo", function: "cmd:undo", children: [] }],
+      })?.tree,
+    ).toEqual([{ id: "n1", name: "Undo", function: "cmd:undo" }]);
+  });
+
   it("drops an empty cycle and a false flag", () => {
     const parsed = parseIntegrationFunctions({
       ...good,
@@ -104,7 +143,40 @@ describe("integrations.functions", () => {
 
   it.each([
     ["no revision", { ...good, revision: undefined }],
-    ["categories not a list", { ...good, categories: {} }],
+    ["a tree that is not a list", { ...good, tree: {} }],
+    ["no tree", { ...good, tree: undefined }],
+    [
+      "a node without an ID",
+      { ...good, tree: [{ id: "", name: "x", function: "f" }] },
+    ],
+    [
+      "a node with neither function nor children",
+      { ...good, tree: [{ id: "a", name: "x" }] },
+    ],
+    [
+      "a group with no children",
+      { ...good, tree: [{ id: "a", name: "x", children: [] }] },
+    ],
+    [
+      "a node function that is not a string",
+      { ...good, tree: [{ id: "a", name: "x", function: 3 }] },
+    ],
+    [
+      "children that are not a list",
+      { ...good, tree: [{ id: "a", name: "x", children: {} }] },
+    ],
+    [
+      "a tree nested too deep",
+      {
+        ...good,
+        tree: [
+          Array.from({ length: 20 }).reduce<Record<string, unknown>>(
+            (inner) => ({ id: "a", name: "x", children: [inner] }),
+            { id: "leaf", name: "x", function: "f" },
+          ),
+        ],
+      },
+    ],
     ["a function without an ID", { ...good, functions: [{ ...fn, id: "" }] }],
     ["keys not strings", { ...good, functions: [{ ...fn, keys: [1] }] }],
     [

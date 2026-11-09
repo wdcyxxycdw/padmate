@@ -8,6 +8,13 @@
 /** Why an integration cannot be used on this computer. */
 export type IntegrationProblem = "notFound" | "unknownFormat" | "unsupported";
 
+/**
+ * Why the names of the app's commands cannot be read from the app itself
+ * (they show their internal names): its install folder was not found, or its
+ * resource files could not be read.
+ */
+export type IntegrationNamesProblem = "installNotFound" | "resourceUnreadable";
+
 /** One integration, as integrations.list reports it. */
 export type IntegrationInfo = {
   /** `^[a-z][a-z0-9]{0,31}$`. */
@@ -19,6 +26,7 @@ export type IntegrationInfo = {
   /** The app's settings were found and understood. */
   found: boolean;
   problem?: IntegrationProblem;
+  namesProblem?: IntegrationNamesProblem;
   dataDir?: string;
   installDir?: string;
   /** The data folder was chosen (config.json names it), not found automatically. */
@@ -60,7 +68,17 @@ export function boundIntegrations(
   );
 }
 
-export type IntegrationCategory = { id: string; name: string };
+/**
+ * One node of the app's own menu levels, in the order the app has them. A
+ * group has `children`; a leaf has `function` (a function ID); a node may have
+ * both (a tool with sub-tools: selectable and expandable).
+ */
+export type TreeNode = {
+  id: string;
+  name: string;
+  function?: string;
+  children?: TreeNode[];
+};
 
 export type IntegrationFunction = {
   /** Opaque to the window; the integration defines it. */
@@ -68,7 +86,6 @@ export type IntegrationFunction = {
   kind: string;
   name: string;
   path: string[];
-  category: string;
   /** KeySpec chords the app has the function on; empty: not set. */
   keys: string[];
   /** The key it is on is a symbol whose physical key is not confirmed. */
@@ -81,7 +98,8 @@ export type IntegrationFunction = {
 export type IntegrationFunctions = {
   /** The fingerprint of the app's files. */
   revision: string;
-  categories: IntegrationCategory[];
+  /** The menu levels of the app; every function the app lists is in it. */
+  tree: TreeNode[];
   functions: IntegrationFunction[];
 };
 

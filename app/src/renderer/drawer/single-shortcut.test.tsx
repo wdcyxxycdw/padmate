@@ -30,7 +30,7 @@ it("records one shortcut as a press, and offers no mappings, sequence or script"
   });
 });
 
-it("shows the shortcut of a press, keeps the label and haptic, and clears to nothing", async () => {
+it("shows the shortcut of a press, keeps the label and haptic while it changes, and clears the whole step", async () => {
   const { record, onChange } = setup({
     label: "放大",
     haptic: "tick",
@@ -45,7 +45,8 @@ it("shows the shortcut of a press, keeps the label and haptic, and clears to not
     press: { type: "keys", keys: "F21" },
   });
   fireEvent.click(screen.getByRole("button", { name: "清除快捷键" }));
-  expect(onChange).toHaveBeenLastCalledWith({ label: "放大", haptic: "tick" });
+  // Nothing of the step stays: a haptic left behind could not be taken away.
+  expect(onChange).toHaveBeenLastCalledWith(undefined);
   cleanup();
   const bare = setup({ press: { type: "keys", keys: "F20" } });
   fireEvent.click(screen.getByRole("button", { name: "清除快捷键" }));
@@ -69,4 +70,20 @@ it("names a binding the file set otherwise, and replaces it with the shortcut", 
     });
     cleanup();
   }
+});
+
+it("clears a binding the file set otherwise with one click, whole", () => {
+  for (const value of [
+    { tap: { type: "keys", keys: "A" }, hold: { type: "keys", keys: "B" } },
+    { press: { type: "macro", file: "放大.ts" }, haptic: "tick" },
+    { block: true },
+  ] as ProfileBinding[]) {
+    const { onChange } = setup(value);
+    fireEvent.click(screen.getByRole("button", { name: "清除这一格" }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(undefined);
+    cleanup();
+  }
+  // A plain shortcut has no such button: its field clears it.
+  setup({ press: { type: "keys", keys: "F20" } });
+  expect(screen.queryByTestId("single-shortcut-clear")).toBeNull();
 });

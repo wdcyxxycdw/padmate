@@ -1338,7 +1338,9 @@ JSON-RPC 标准码（如 -32602）之外：
 - **`toolShift`**：来自 `Preference\Config.sqlite` 的表 `Tool`，列 `UseToolShift`。为真时，无修饰键的单键检查会带 `toolShift` 提示。`modifierKey` 还没有（那个文件没解码）。
 - **写**：所有改动作为一个整体先校验（功能存在、键写得出、没有重复或冲突），任何一项不行就整体拒绝（-32602，`data {function, keys, reason}`）。先做移除再做添加。改动不改变任何东西时不写文件、不备份，`integrations.write` 的 `backup` 为 `null`。写入前用 `internal/cspfile` 备份；复查软件没在运行、文件指纹没变、没有日志文件；写完读回校验。
 - **条目文件**：条目的键以规范写法存（`integration.CanonicalKeys`，`putItems` 会规范化）。替换前把旧字节存到配置文件夹的 `.history/integrations-<适配 ID>-<时间>.json`，每种适配最多 30 份；它们不是 profile.json 的版本，`profiles.history` 看不到。
-- **名称**：`cspint.NamesNamer` 把 `internal/cspnames` 接到 `integration.Namer`。次序：软件的菜单资源 → 自带对照表 → 插件 DLL → 命令 ID 本身。安装目录来自 `cspfile.FindInstallDir`，每种语言只找一次，找不到就只用自带对照表或 ID。分类只列至少有一个功能用到的（所以没有空的“版本”“许可证”菜单），“工具”和“其他”按语言命名。`padmate-probe csp-names` 重新生成自带对照表。
+- **名称**：`cspint.NamesNamer` 把 `internal/cspnames` 接到 `integration.Namer`。次序：软件的菜单资源 → 自带对照表 → 插件 DLL → 命令 ID 本身。安装目录来自 `cspfile.FindInstallDir`：卸载项的 `DisplayIcon`（指向 `CLIPStudioPaint.exe` 时优先）、`InstallLocation` 本身、它的 `CLIP STUDIO PAINT` 子文件夹、`InstallLocation\CLIP STUDIO*\CLIP STUDIO PAINT`（CSP 5 的真实布局：`D:\CELSYS` 之上再有 `CLIP STUDIO 1.5`），纯函数 `cspfile.InstallFromEntry` 有表驱动测试。每种语言读一次；**没找到安装目录时仍用自带对照表**（它含对话框的树和菜单外命令的名称），只是菜单命令没有名称；没找到或读不了时每 30 s 再找一次，所以之后才装的 CSP 会被用上。名称不全时 `integrations.list` 给 `namesProblem`，守护进程在日志里警告一次。`padmate-probe csp-names` 重新生成自带对照表。
+- **树**：`integrations.functions` 的 `tree` 由适配搭，通用的 `integration` 包不认识 CSP。`Namer.Layout` 给出软件自己对话框的树（自带对照表里的 `tree`，由 `padmate-probe csp-names` 从 exe 里建对话框树的函数还原：分组、层级、顺序），适配把用户 khc 里有的命令按它放，没有命令的分组去掉；树里没有的命令，插件放进“滤镜”分组下它的插件类别，菜单路径对得上某个分组的放进那个分组，其余放进末尾的“其他”。工具区域放在第二位。设计细节见下面“对话框的树”。
+- **对话框的树**：顶层节点是 CSP 的“设置区域”下拉框的项：主菜单、工具、弹出式面板、选项、笔和触摸（名称取自 CSP 的资源）；自动动作没有，因为那里是用户自己的命令。“主菜单”的子节点是菜单栏：文件、编辑、动画、图层、选区、视图、滤镜、窗口、帮助，再往下是子菜单。exe 里的树是几个平台和模式的并集：同一个命令放过几处时，留在菜单栏里的最后一处（所以 Windows 的“环境设置”等在“文件”下）；手机布局的分组不要。工具区域的三级（工具、工具组、工具）各自可以有键，所以每个节点都是功能，有子节点的节点同时有 `function` 和 `children`；改键走同一个 `NodeShortCutKey` 的编辑，`cycle` 跨层级列出共用同一个键的节点。工具属性面板下的第三级分组（笔刷尺寸、墨水等）在 exe 里用另一种引用，读不出名称，这一级被去掉，它们的命令直接放在“工具属性面板”下。
 - **语言**：`language` 可省略，省略时用最近一次请求给过的语言，从没给过就是 `zh-CN`；守护进程自己写的提示也用它。
 - **监视**（`integration_watch.go`）：一个 goroutine，每约 2 s 一轮。活动配置绑定了某个适配、或者有客户端订阅了 `integration.changed` 时，才对这个适配做 stat（`Revision`）和进程快照（`Running`）：运行状态变了发 `kind:"running"`，文件指纹变了发 `kind:"files"` 并重新检查。没有绑定的活动配置、也没人订阅时，一轮只看内存里的规则，不碰文件和进程。配置成为活动配置（`publishProfile`）、`putItems`、`write`、`restore` 之后会立即踢它一下。
 - **激活检查**：绑定的配置成为活动配置，或它活动期间文件变了，就比较条目。全部一致就忘掉已提示的记录；不一致时，只要这组差异的 `differenceId` 不等于 `Memory.Dismissed` 的值、也不等于本次运行里已经提示过的值，就发 `kind:"differences"`（带 `profile`、`differenceId`、`count`）并提示。读不了软件（没找到、格式不认识）只在日志里记一次，不提示。
@@ -1350,8 +1352,8 @@ JSON-RPC 标准码（如 -32602）之外：
 
 | 方法 | 说明 |
 |---|---|
-| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, custom?, running, profiles[]}]`：每种适配（config.json 的 `integrations.<id>.dataDir` 指定了数据文件夹时 `custom` 为 true）、本机找到没有（`problem`：`notFound`、`unknownFormat`、`unsupported`）、软件是否在运行、哪些配置绑定了它（§16.1） |
-| `integrations.functions {integration, language?}` | 软件里能设快捷键的全部功能：`{revision, categories:[{id,name}], functions:[{id, kind, name, path[], category, keys[], unconfirmed?, unsupported?, cycle?[]}]}`。`keys` 是 KeySpec；`cycle` 是共用同一个单键的其他功能；`revision` 是软件文件的指纹 |
+| `integrations.list` | `[{id, name, exe[], found, problem?, dataDir?, installDir?, custom?, namesProblem?, running, profiles[]}]`：每种适配（config.json 的 `integrations.<id>.dataDir` 指定了数据文件夹时 `custom` 为 true）、本机找到没有（`problem`：`notFound`、`unknownFormat`、`unsupported`）、软件是否在运行、哪些配置绑定了它（§16.1）。`namesProblem`：`installNotFound`（没找到安装目录）或 `resourceUnreadable`（找到了但读不了菜单资源），表示有的功能会显示成 ID；读到了菜单名称时没有这个成员 |
+| `integrations.functions {integration, language?}` | 软件里能设快捷键的全部功能：`{revision, tree:[TreeNode], functions:[{id, kind, name, path[], keys[], unconfirmed?, unsupported?, cycle?[]}]}`。`TreeNode = {id, name, function?, children?}`：按软件自己的快捷键设置对话框的顺序；顶层节点是“设置区域”，分组有 `children`，功能有 `function`（`functions` 里的 `id`），一个节点两者都有时它既是功能又是分组（CSP 的工具和工具组）。每个功能在树里恰好出现一次；节点 `id` 在一次返回里唯一。`keys` 是 KeySpec；`cycle` 是共用同一个单键的其他功能（跨层级）；`path` 供搜索和显示；`revision` 是软件文件的指纹 |
 | `integrations.check {integration, function?, keys, language?}` | 这个键在软件里属于谁：`{status, owners:[{id,name,path?}], notes[]}`。`status`：`free`、`same`（就是这个功能）、`cycle`（循环键，不是冲突）、`conflict`、`unconfirmed`（符号键，对应的实体键还没确认）、`unsupported`。`notes`：`toolShift`（按住会临时切换工具）、`modifierKey`（被修饰键设置占用） |
 | `integrations.items {profile, integration, language?}` | 条目（合并父配置后）和每项的状态：`{revision, items[], statuses:[{keys, function, state, current?[], owners?[]}], consistent, differenceId?, dismissed}`。`revision` 是这份配置自己的 `integrations/<id>.json` 的版本（没有文件为空串）；`dismissed` 为真表示 `differenceId` 就是“暂不处理”过的那组。`state`：`consistent`、`changed`、`removed`、`missing` |
 | `integrations.putItems {profile, integration, revision, items}` | 写条目，返回 `{revision}`。键规范化；不合格（键写错、重复、超限、多余成员）-32602；`revision` 不匹配 -32009，`data.revision` 是当前值 |
@@ -1368,12 +1370,13 @@ JSON-RPC 标准码（如 -32602）之外：
 ### 16.5 界面
 
 - “设置”里该软件的一栏：“数据位置”一行有“更换…”，`custom` 为 true 时还有“恢复自动查找”。“更换…”只在主进程里处理：弹出文件夹对话框（挂在窗口上），检查文件夹里有 `Shortcut\default.khc` 或 `Tool\EditImageTool.todb`，通过才调用 `integrations.setDataDir`；不是该软件的文件夹就用一句话说明，什么都不改。界面从不发路径。
-- 绑定了适配的配置，按键抽屉的快捷键动作里，“重新录入”旁多一个“从 <软件名> 选择…”，打开选择对话框：搜索、左边分类、右边功能列表（名称、路径、快捷键或“未设置”）。选中有快捷键的功能就把键填进绑定，名称填进 label，并写条目；选中没有快捷键的功能就录一个键、`integrations.check` 说明它在软件里属于谁，再 `integrations.write`。
+- 绑定了适配的配置，按键抽屉的快捷键动作里，“重新录入”旁多一个“从 <软件名> 选择…”，打开选择对话框：照软件自己的快捷键设置对话框：最上面“设置区域”下拉框（选项是 `tree` 的顶层节点，只有一个时不显示，开始是第一个），下面是这个区域的子树，层级和顺序就是软件菜单的，分组默认收起，展开状态在对话框存在期间保留；一行是名称，右边一列是快捷键，没有就留空；有 `function` 又有 `children` 的节点（带子工具的工具）可选也可展开，点箭头展开、点行选中。一个功能有几个键就占几行，名称只在第一行，它们是同一项，选中哪一行就用哪个键（名称行用第一个）。搜索跨所有区域，仍用树的形式，只显示符合的功能和它上面的分组（全部展开）；清空搜索回到原来的区域和展开状态。键盘：方向键移动，右、左展开、收起，回车选中；语义是 `role="tree"`。确认按钮是“设置”：选中有快捷键的功能就写条目，成功后才把键填进绑定、名称填进 label（一次编辑）；选中没有快捷键的功能就录一个键、`integrations.check` 说明它在软件里属于谁，再 `integrations.write` 和写条目，全部成功后才改绑定。失败或取消不动绑定。对话框画在按键的快捷键字段之外（portal），它的点击和按键不传给字段，所以不会启动录入；打开对话框时录入已结束。`integrations.putItems` 的 `revision` 在配置还没有 `integrations/<id>.json` 时是空串，是合法值。
 - 会写软件的操作开始前先看 `integrations.list` 的 `running`，在运行就弹阻塞对话框“请先关闭 <软件名>”，有“重试”。写完给“撤销这次写入”（恢复刚才的备份）。
 - 差异的提醒不抢焦点：守护进程只经 overlay 和托盘提示，界面从不因此把窗口拉到前台。用户打开界面、看到有差异的绑定配置时，界面里弹一个对话框列出全部差异：以 padmate 为准（`plan` → 确认被挤掉的功能 → `write`）、以软件为准（按钮保持功能，键改成软件里的新键，经普通的编辑和自动保存，可撤销；然后 `putItems`）、暂不处理（`dismiss`）。
 - 导入带条目的配置、用户选了改软件时，`plan` 里有 `displaced` 的项先列出，再弹冲突处理对话框逐项决定：用导入的设置、保留本机的设置（这一项不导入，用到这个键的按键标出来）、给其中一方换一个键（当场录键，`check` 查冲突和循环键）。全部决定完才 `write`。
 - 设置页在至少一个配置绑定了适配时才出现这种适配的一节：数据位置（可更换）、备份列表和“恢复…”。
-- 界面不写死任何软件：名称、分类、提示都来自守护进程。
+- 界面不写死任何软件：名称、树、提示都来自守护进程。
+- **假适配**：`--fake-input --dry-run` 的守护进程（E2E 用）只注册一个内存里的适配 `fakeapp`（名称 Demo Paint，`DemoPaint.exe`），不碰任何真实文件：菜单区域带嵌套分组、工具区域（工具带子工具）、有键和没键的功能、一处冲突（Ctrl+C）、一处循环键（P）；`write` 改内存并返回备份，`restore`、`check`、`items`、`plan` 都能用。`fake.integration {running?: bool}` 设置它是否在运行（返回 `{running}`），和别的 `fake.*` 一样不在 UI 桥白名单里，E2E 直接调。
 
 ## 17. ADR
 

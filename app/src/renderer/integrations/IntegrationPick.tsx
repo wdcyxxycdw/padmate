@@ -1,7 +1,8 @@
 // What the key drawer shows of an integration (ARCHITECTURE §16.5), only for a
 // profile that is bound to it: the button beside the shortcut field that opens
 // the picker, and the line under the keys that names the function they are.
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useStore } from "zustand";
 import type { IntegrationInfo } from "../../shared/integrations";
 import {
@@ -38,6 +39,38 @@ export interface IntegrationLink {
   disabled?: boolean;
 }
 
+const stop = (event: { stopPropagation: () => void }) =>
+  event.stopPropagation();
+
+/**
+ * A dialog of the integrations, drawn outside the field that opens it and cut
+ * off from it. React sends the events of a portal on to the component that
+ * rendered it, and a click inside the dialog would then start the field's
+ * shortcut capture (the field around the button starts one on a click), which
+ * records the next click as a mouse button: the mapping would become 左键
+ * under the person's hands. Nothing of the dialog reaches the field.
+ */
+export function Isolated({ children }: { children: ReactNode }) {
+  return createPortal(
+    // biome-ignore lint/a11y/noStaticElementInteractions: it only stops the events of the dialog inside
+    <div
+      className="isolated"
+      onClick={stop}
+      onDoubleClick={stop}
+      onMouseDown={stop}
+      onMouseUp={stop}
+      onContextMenu={stop}
+      onKeyDown={stop}
+      onKeyUp={stop}
+      onFocus={stop}
+      onBlur={stop}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
+
 /** 从 <软件名> 选择… beside the shortcut field's own button. */
 export function IntegrationPickButtons({
   link,
@@ -59,6 +92,9 @@ export function IntegrationPickButtons({
             className="btn drawer-capture-btn"
             disabled={link.disabled}
             data-testid={`pick-from-${info.id}`}
+            // Not a mouse key of a capture that is running: opening the
+            // dialog ends it (the focus leaves the field).
+            data-no-capture=""
             onClick={(event) => {
               // The field around the button starts a capture on a click.
               event.stopPropagation();
@@ -67,16 +103,18 @@ export function IntegrationPickButtons({
           >
             {tx(language, `从 ${info.name} 选择…`, `Pick from ${info.name}…`)}
           </button>
-          <FunctionPicker
-            open={open === info.id}
-            info={info}
-            profile={link.profile}
-            currentKeys={keys}
-            language={language}
-            Capture={link.Capture}
-            onClose={() => setOpen(null)}
-            onPicked={(picked) => link.onPick(picked, info)}
-          />
+          <Isolated>
+            <FunctionPicker
+              open={open === info.id}
+              info={info}
+              profile={link.profile}
+              currentKeys={keys}
+              language={language}
+              Capture={link.Capture}
+              onClose={() => setOpen(null)}
+              onPicked={(picked) => link.onPick(picked, info)}
+            />
+          </Isolated>
         </span>
       ))}
     </>

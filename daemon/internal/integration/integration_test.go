@@ -145,11 +145,14 @@ func TestRegistry(t *testing.T) {
 
 func TestFallbackNamer(t *testing.T) {
 	n := NamerOrFallback(nil)
-	name, path, cat, ok := n.CommandName("basiccommand/x", "en")
-	if name != "basiccommand/x" || path != nil || cat != OtherCategory || !ok {
-		t.Errorf("fallback = %q %v %q %v", name, path, cat, ok)
+	info, ok := n.CommandName("basiccommand/x", "en")
+	if info.Name != "basiccommand/x" || info.Path != nil || info.Group != "" || !ok {
+		t.Errorf("fallback = %+v %v", info, ok)
 	}
-	if c := n.Categories("zh-CN"); len(c) != 1 || c[0].ID != "other" || c[0].Name != "其他" {
-		t.Errorf("categories = %+v", c)
+	if n.Layout("zh-CN") != nil {
+		t.Error("fallback has a layout")
+	}
+	if OtherName("zh-CN") != "其他" || OtherName("en") != "Other" {
+		t.Error("OtherName")
 	}
 }

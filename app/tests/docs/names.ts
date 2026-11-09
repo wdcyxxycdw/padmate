@@ -163,6 +163,10 @@ export const names: Name[] = [
   ["每格角度", "Step"],
   ["顺时针一格", "Clockwise step"],
   ["逆时针一格", "Counter-clockwise step"],
+  ["清除这一格", "Clear this step"],
+  ["清除快捷键", "Clear shortcut"],
+  ["刻度震动", "Tick haptic"],
+  ["恢复默认参数…", "Reset parameters…"],
   ["速度", "Speed"],
   ["平滑", "Smoothing"],
   ["实时力度", "Live pressure"],
@@ -260,7 +264,8 @@ export const names: Name[] = [
   ["无法安装更新", "Could not install the update"],
   // Known limitations
   // CLIP STUDIO PAINT.
-  ["使用这个功能", "Use this function"],
+  ["设置", "Set"],
+  ["设置区域", "Setting area"],
   ["重试", "Retry"],
   ["撤销这次写入", "Undo this write"],
   ["以 padmate 为准", "Keep padmate's keys"],

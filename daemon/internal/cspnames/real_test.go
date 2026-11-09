@@ -27,7 +27,7 @@ func TestRealInstall(t *testing.T) {
 			if n.MenuCommands() < 500 {
 				t.Errorf("menu names = %d, want at least 500", n.MenuCommands())
 			}
-			t.Logf("menu names: %d, table names: %d, categories: %d", n.MenuCommands(), len(n.table), len(n.Categories()))
+			t.Logf("menu names: %d, table names: %d, areas: %d", n.MenuCommands(), len(n.table), len(n.Layout()))
 
 			want := map[string][2]string{ // id: zh, en
 				"filenew":          {"新建", "New"},
@@ -50,8 +50,8 @@ func TestRealInstall(t *testing.T) {
 			if _, path, cat, _ := n.Command("advancedcommand", "filesaveasproj"); len(path) != 2 || cat == "" {
 				t.Errorf("filesaveasproj path %v category %q, want a two level menu path", path, cat)
 			}
-			for _, c := range n.Categories() {
-				t.Logf("category %s = %s", c.ID, c.Name)
+			for _, a := range n.Layout() {
+				t.Logf("area %s = %s", a.ID, a.Name)
 			}
 
 			khc := os.Getenv("PADMATE_CSP_KHC")

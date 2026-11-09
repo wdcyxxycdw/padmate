@@ -118,6 +118,14 @@ func TestArgsOf(t *testing.T) {
 		{"leaf at depth 2", []byte{0xba, 1, 0, 0, 0, 0x41, 0xb8, 2, 0, 0, 0, 0x45, 0x33, 0xc9, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{1, 2, 0}},
 		{"lea from r9", []byte{0x41, 0xb9, 3, 0, 0, 0, 0x41, 0x8d, 0x51, 0x02, 0x45, 0x8d, 0x41, 0xff, 0x48, 0x8b, 0xce, 0xe8}, [3]int{5, 2, 3}},
 		{"mov r8d,r9d", []byte{0x45, 0x33, 0xc9, 0x45, 0x8b, 0xc1, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{-1, 0, 0}},
+		// The real bytes of three registrations of CSP 5.1.5 that the first scanner
+		// could not read: mov edx,r13d; mov r8d,edx (a leaf at depth 1), xor edx,edx;
+		// lea r8d,[r14+1] (a group at depth 1) and lea edx,[r14+1]; lea r8d,[r14+2]
+		// (a leaf at depth 2).
+		{"r13d", []byte{0x45, 0x33, 0xc9, 0x41, 0x8b, 0xd5, 0x44, 0x8b, 0xc2, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{1, 1, 0}},
+		{"group with r14d", []byte{0x45, 0x33, 0xc9, 0x33, 0xd2, 0x45, 0x8d, 0x46, 0x01, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{0, 1, 0}},
+		{"leaf with r14d", []byte{0x45, 0x33, 0xc9, 0x41, 0x8d, 0x56, 0x01, 0x45, 0x8d, 0x46, 0x02, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{1, 2, 0}},
+		{"unknown source", []byte{0x41, 0x8b, 0xd4, 0x48, 0x8b, 0xcb, 0xe8}, [3]int{-1, -1, -1}},
 		{"nothing", nil, [3]int{-1, -1, -1}},
 		{"truncated mov", []byte{0x41, 0xb9, 1}, [3]int{-1, -1, -1}},
 		{"stops at the call", []byte{0x33, 0xd2, 0x48, 0x8b, 0xce, 0xe8, 0xba, 7, 0, 0, 0}, [3]int{0, -1, -1}},
@@ -127,23 +135,6 @@ func TestArgsOf(t *testing.T) {
 		g := [3]int{val(got[0]), val(got[1]), val(got[2])}
 		if g != tt.want {
 			t.Errorf("%s: args = %v, want %v", tt.name, g, tt.want)
-		}
-	}
-}
-
-func TestSlug(t *testing.T) {
-	for in, want := range map[string]string{
-		"menueditparent":         "edit",
-		"editparent":             "edit",
-		"fileparent":             "file",
-		"tooloptionpalette":      "tooloptionpalette",
-		"canvasparent":           "canvas",
-		"menuparent":             "menu",
-		"parent":                 "parent",
-		"applicationcolorparent": "applicationcolor",
-	} {
-		if got := slug(in); got != want {
-			t.Errorf("slug(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

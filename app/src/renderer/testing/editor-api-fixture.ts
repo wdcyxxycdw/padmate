@@ -223,7 +223,7 @@ export function editorAPIFixture() {
         _language: IntegrationLanguage,
       ): Promise<IntegrationFunctions> => ({
         revision: "f1",
-        categories: [],
+        tree: [],
         functions: [],
       }),
     ),

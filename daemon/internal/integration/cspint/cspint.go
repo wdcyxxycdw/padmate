@@ -25,8 +25,6 @@ import (
 const (
 	ID   = "csp"
 	Name = "CLIP STUDIO PAINT"
-	// ToolsCategory is the category of every tool node.
-	ToolsCategory = "tools"
 )
 
 // Function ID prefixes: "command:<menucommandtype>/<menucommand>" and
@@ -46,8 +44,8 @@ type Options struct {
 	// called for every operation, so a changed setting applies at once. Nil
 	// means always look.
 	DataDir func() string
-	// Namer supplies command names and categories; nil names a command by
-	// its ID.
+	// Namer supplies command names and the dialog's layout; nil names a
+	// command by its ID.
 	Namer integration.Namer
 
 	// The rest are for tests; the zero values use the real system.

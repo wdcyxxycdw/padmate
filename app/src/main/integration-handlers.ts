@@ -90,7 +90,12 @@ export function validateIntegrationCheck(
   };
 }
 
-/** integrations.putItems: at most the 512 items a file can have (§16.2). */
+/**
+ * integrations.putItems: at most the 512 items a file can have (§16.2). The
+ * revision is the one integrations.items gave, and is "" for a profile that
+ * has no integrations/<id>.json yet (the first save creates it, like
+ * profiles.put): an empty revision is valid.
+ */
 export function validateIntegrationPutItems(
   value: unknown,
 ): IntegrationPutItemsParams {
@@ -100,7 +105,7 @@ export function validateIntegrationPutItems(
   return {
     profile: validateProfileID(given.profile),
     integration: validateIntegrationID(given.integration),
-    revision: nonEmpty(given.revision, "revision", 256),
+    revision: bounded(given.revision, "revision", 256),
     items: given.items.map(validateItem),
   };
 }

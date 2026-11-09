@@ -261,8 +261,11 @@ it("copies the settings the key has, whoever wrote them", async () => {
 it("shows a stick whose directions come from the parent and the profile alike as plain bindings", async () => {
   await setup("leftstick");
   expect(inheritanceTraces().filter(Boolean)).toEqual([]);
-  // A stick has no key menu to give its directions back with.
-  expect(screen.queryByTestId("key-actions")).toBeNull();
+  // A stick's menu has only the clear action: nothing to give its directions back with.
+  openMenu();
+  expect(menuItem("恢复为继承")).toBeNull();
+  expect(menuItem("复制此按键的设置")).toBeNull();
+  expect(menuItem("清空此按键…")).not.toBeNull();
 });
 
 it("shows a stick all of whose bindings the parent wrote as plain bindings", async () => {

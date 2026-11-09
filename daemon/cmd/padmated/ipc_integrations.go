@@ -21,8 +21,8 @@ import (
 
 // The software integration methods (ADR-0019, ARCHITECTURE section 16.4):
 //
-//	integrations.list                                   → [{id,name,exe[],found,problem?,dataDir?,installDir?,custom?,running,profiles[]}]
-//	integrations.functions {integration,language?}      → {revision,categories[],functions[]}
+//	integrations.list                                   → [{id,name,exe[],found,problem?,dataDir?,installDir?,custom?,namesProblem?,running,profiles[]}]
+//	integrations.functions {integration,language?}      → {revision,tree[],functions[]}
 //	integrations.check {integration,function?,keys,language?} → {status,owners[],notes[]}
 //	integrations.items {profile,integration,language?}  → {revision,items[],statuses[],consistent,differenceId?,dismissed}
 //	integrations.putItems {profile,integration,revision,items} → {revision}
@@ -134,9 +134,13 @@ type rpcIntegration struct {
 	InstallDir string   `json:"installDir,omitempty"`
 	// Custom is true while config.json names the data folder
 	// (integrations.<id>.dataDir) instead of it being found automatically.
-	Custom   bool     `json:"custom,omitempty"`
-	Running  bool     `json:"running"`
-	Profiles []string `json:"profiles"`
+	Custom bool `json:"custom,omitempty"`
+	// NamesProblem says why the names of the software's functions are
+	// incomplete (some show as IDs): installNotFound or resourceUnreadable.
+	// Absent when the names were read.
+	NamesProblem string   `json:"namesProblem,omitempty"`
+	Running      bool     `json:"running"`
+	Profiles     []string `json:"profiles"`
 }
 
 // rpcIntegrationBackup is a backup in integrations.backups, integrations.restore
@@ -194,10 +198,33 @@ func (r *liveRun) rpcIntegrationList(_ context.Context, req *jrpc2.Request) (any
 		if profiles == nil {
 			profiles = []string{}
 		}
-		out = append(out, rpcIntegration{ID: in.ID(), Name: in.Name(), Exe: slices.Clone(in.Exes()), Found: loc.Found,
-			Problem: loc.Problem, DataDir: loc.DataDir, InstallDir: loc.InstallDir, Custom: custom[in.ID()].DataDir != "", Running: running, Profiles: profiles})
+		item := rpcIntegration{ID: in.ID(), Name: in.Name(), Exe: slices.Clone(in.Exes()), Found: loc.Found,
+			Problem: loc.Problem, DataDir: loc.DataDir, InstallDir: loc.InstallDir, Custom: custom[in.ID()].DataDir != "", Running: running, Profiles: profiles}
+		if nr, ok := in.(integration.NamesReporter); ok {
+			item.NamesProblem = nr.NamesProblem(r.integLang(""))
+			r.logNamesProblem(in.ID(), item.NamesProblem)
+		}
+		out = append(out, item)
 	}
 	return out, nil
+}
+
+// logNamesProblem warns, once per change, that the names of an integration are
+// incomplete: its functions then show as IDs.
+func (r *liveRun) logNamesProblem(id, problem string) {
+	i := &r.integ
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	if i.namesLogged == nil {
+		i.namesLogged = map[string]string{}
+	}
+	if i.namesLogged[id] == problem {
+		return
+	}
+	i.namesLogged[id] = problem
+	if problem != "" {
+		r.log.Warn("integration names incomplete; some functions show as IDs", "integration", id, "problem", problem)
+	}
 }
 
 func (r *liveRun) rpcIntegrationFunctions(_ context.Context, req *jrpc2.Request) (any, error) {
@@ -220,8 +247,8 @@ func (r *liveRun) rpcIntegrationFunctions(_ context.Context, req *jrpc2.Request)
 	if err != nil {
 		return nil, integrationError(in.ID(), err)
 	}
-	if l.Categories == nil {
-		l.Categories = []integration.Category{}
+	if l.Tree == nil {
+		l.Tree = []integration.TreeNode{}
 	}
 	if l.Functions == nil {
 		l.Functions = []integration.Function{}

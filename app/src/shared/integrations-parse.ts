@@ -5,7 +5,6 @@
 
 import type {
   IntegrationBackup,
-  IntegrationCategory,
   IntegrationChange,
   IntegrationChanged,
   IntegrationCheck,
@@ -18,12 +17,14 @@ import type {
   IntegrationItemState,
   IntegrationItemStatus,
   IntegrationItems,
+  IntegrationNamesProblem,
   IntegrationNote,
   IntegrationOwner,
   IntegrationPlan,
   IntegrationPlanEntry,
   IntegrationProblem,
   IntegrationWritten,
+  TreeNode,
 } from "./integrations";
 
 const MAX_INTEGRATIONS = 16;
@@ -31,7 +32,9 @@ const MAX_PROFILES = 1024;
 /** The daemon's limit of a profile's items is 512 (§16.2). */
 const MAX_ITEMS = 512;
 const MAX_FUNCTIONS = 20000;
-const MAX_CATEGORIES = 256;
+/** The deepest menu level and the most nodes a tree may have. */
+const MAX_TREE_DEPTH = 16;
+const MAX_TREE_NODES = 40000;
 const MAX_PATH = 16;
 const MAX_KEYS = 16;
 const MAX_BACKUPS = 64;
@@ -43,6 +46,10 @@ const PROBLEMS: readonly string[] = [
   "notFound",
   "unknownFormat",
   "unsupported",
+];
+const NAMES_PROBLEMS: readonly string[] = [
+  "installNotFound",
+  "resourceUnreadable",
 ];
 const CHECK_STATUSES: readonly string[] = [
   "free",
@@ -107,6 +114,11 @@ function info(value: unknown): IntegrationInfo | null {
       !(
         typeof value.problem === "string" && PROBLEMS.includes(value.problem)
       )) ||
+    (value.namesProblem !== undefined &&
+      !(
+        typeof value.namesProblem === "string" &&
+        NAMES_PROBLEMS.includes(value.namesProblem)
+      )) ||
     (value.dataDir !== undefined && !text(value.dataDir, 1024)) ||
     (value.installDir !== undefined && !text(value.installDir, 1024)) ||
     (value.custom !== undefined && typeof value.custom !== "boolean")
@@ -120,6 +132,9 @@ function info(value: unknown): IntegrationInfo | null {
     ...(value.problem === undefined
       ? {}
       : { problem: value.problem as IntegrationProblem }),
+    ...(value.namesProblem === undefined
+      ? {}
+      : { namesProblem: value.namesProblem as IntegrationNamesProblem }),
     ...(value.dataDir === undefined
       ? {}
       : { dataDir: value.dataDir as string }),
@@ -137,10 +152,44 @@ export function parseIntegrationList(value: unknown): IntegrationInfo[] | null {
   return list(value, MAX_INTEGRATIONS, info);
 }
 
-function category(value: unknown): IntegrationCategory | null {
-  if (!isRecord(value) || !text(value.id, 128) || !text(value.name, 256))
-    return null;
-  return { id: value.id, name: value.name };
+/**
+ * The menu tree: ordered nodes with an ID and a name, a function ID on a leaf
+ * (or on a group that is also a tool) and children on a group. A node with
+ * neither is not one. `budget` counts the nodes left.
+ */
+function treeNodes(
+  value: unknown,
+  depth: number,
+  budget: { left: number },
+): TreeNode[] | null {
+  if (!Array.isArray(value) || depth > MAX_TREE_DEPTH) return null;
+  const out: TreeNode[] = [];
+  for (const entry of value) {
+    if (--budget.left < 0 || !isRecord(entry)) return null;
+    if (!text(entry.id, 256) || !entry.id || !text(entry.name, 512))
+      return null;
+    if (
+      entry.function !== undefined &&
+      (!text(entry.function, 256) || !entry.function)
+    )
+      return null;
+    let children: TreeNode[] | undefined;
+    if (entry.children !== undefined) {
+      const inner = treeNodes(entry.children, depth + 1, budget);
+      if (!inner) return null;
+      if (inner.length > 0) children = inner;
+    }
+    if (entry.function === undefined && !children) return null;
+    out.push({
+      id: entry.id,
+      name: entry.name,
+      ...(entry.function === undefined
+        ? {}
+        : { function: entry.function as string }),
+      ...(children ? { children } : {}),
+    });
+  }
+  return out;
 }
 
 function fn(value: unknown): IntegrationFunction | null {
@@ -156,7 +205,6 @@ function fn(value: unknown): IntegrationFunction | null {
     !text(value.name, 512) ||
     !path ||
     !keys ||
-    !text(value.category, 128) ||
     cycle === null ||
     (value.unconfirmed !== undefined &&
       typeof value.unconfirmed !== "boolean") ||
@@ -168,7 +216,6 @@ function fn(value: unknown): IntegrationFunction | null {
     kind: value.kind,
     name: value.name,
     path,
-    category: value.category,
     keys,
     ...(value.unconfirmed === true ? { unconfirmed: true } : {}),
     ...(value.unsupported === true ? { unsupported: true } : {}),
@@ -181,10 +228,10 @@ export function parseIntegrationFunctions(
   value: unknown,
 ): IntegrationFunctions | null {
   if (!isRecord(value) || !text(value.revision, 256)) return null;
-  const categories = list(value.categories, MAX_CATEGORIES, category);
+  const tree = treeNodes(value.tree, 1, { left: MAX_TREE_NODES });
   const functions = list(value.functions, MAX_FUNCTIONS, fn);
-  if (!categories || !functions) return null;
-  return { revision: value.revision, categories, functions };
+  if (!tree || !functions) return null;
+  return { revision: value.revision, tree, functions };
 }
 
 function owner(value: unknown): IntegrationOwner | null {

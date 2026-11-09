@@ -149,63 +149,111 @@ func isStackSlot(b byte) bool {
 	return false
 }
 
+// Registers the dialog-tree function keeps across its entries: the code that
+// runs a registration has r13d = 1 and r14d = 0 (they are the guards of the
+// conditional blocks, and entries load edx and r8d from them: mov edx,r13d;
+// lea r8d,[r14+1]).
+const (
+	regEDX  = 2
+	regR8   = 8
+	regR9   = 9
+	regR13  = 13
+	regR14  = 14
+	valR13  = 1
+	valR14  = 0
+	numRegs = 16
+)
+
 // argsOf walks the bytes of one registration up to its final call and tracks
-// the constants loaded into edx, r8d and r9d: (is leaf, depth, flag).
+// the constants loaded into edx, r8d and r9d: (is leaf, depth, flag). Besides
+// immediates and xor, it follows moves and lea with an 8-bit displacement
+// between 32-bit registers, with r13d and r14d as the constants above.
 func argsOf(seg []byte) [3]*uint32 {
-	var reg [3]*uint32 // edx, r8d, r9d
+	var reg [numRegs]*uint32
+	one, zero := uint32(valR13), uint32(valR14)
+	reg[regR13], reg[regR14] = &one, &zero
 	set := func(i int, v uint32) { reg[i] = &v }
-	const (
-		edx = 0
-		r8  = 1
-		r9  = 2
-	)
 	n := len(seg)
 	for i := 0; i < n; {
 		at := func(b ...byte) bool { return bytes.HasPrefix(seg[i:], b) }
 		switch {
 		case at(0x33, 0xd2): // xor edx,edx
-			set(edx, 0)
+			set(regEDX, 0)
 			i += 2
 		case at(0x45, 0x33, 0xc0): // xor r8d,r8d
-			set(r8, 0)
+			set(regR8, 0)
 			i += 3
 		case at(0x45, 0x33, 0xc9): // xor r9d,r9d
-			set(r9, 0)
+			set(regR9, 0)
 			i += 3
 		case at(0x41, 0xb9) && i+6 <= n: // mov r9d,imm32
-			set(r9, binary.LittleEndian.Uint32(seg[i+2:]))
+			set(regR9, binary.LittleEndian.Uint32(seg[i+2:]))
 			i += 6
 		case at(0x41, 0xb8) && i+6 <= n: // mov r8d,imm32
-			set(r8, binary.LittleEndian.Uint32(seg[i+2:]))
+			set(regR8, binary.LittleEndian.Uint32(seg[i+2:]))
 			i += 6
 		case seg[i] == 0xba && i+5 <= n: // mov edx,imm32
-			set(edx, binary.LittleEndian.Uint32(seg[i+1:]))
+			set(regEDX, binary.LittleEndian.Uint32(seg[i+1:]))
 			i += 5
-		case at(0x41, 0x8d, 0x51) && reg[r9] != nil && i+4 <= n: // lea edx,[r9+d8]
-			set(edx, *reg[r9]+uint32(int32(int8(seg[i+3]))))
-			i += 4
-		case at(0x45, 0x8d, 0x41) && reg[r9] != nil && i+4 <= n: // lea r8d,[r9+d8]
-			set(r8, *reg[r9]+uint32(int32(int8(seg[i+3]))))
-			i += 4
-		case at(0x41, 0x8d, 0x50) && reg[r8] != nil && i+4 <= n: // lea edx,[r8+d8]
-			set(edx, *reg[r8]+uint32(int32(int8(seg[i+3]))))
-			i += 4
-		case at(0x45, 0x8d, 0x40) && reg[r8] != nil && i+4 <= n: // lea r8d,[r8+d8]
-			set(r8, *reg[r8]+uint32(int32(int8(seg[i+3]))))
-			i += 4
-		case at(0x45, 0x8b, 0xc1): // mov r8d,r9d
-			reg[r8] = reg[r9]
-			i += 3
-		case at(0x44, 0x8b, 0xc2): // mov r8d,edx
-			reg[r8] = reg[edx]
-			i += 3
 		case (at(0x48, 0x8b, 0xce) || at(0x48, 0x8b, 0xcb)) && i+3 < n && seg[i+3] == 0xe8:
-			return reg // mov rcx,rsi|rbx ; call
+			return [3]*uint32{reg[regEDX], reg[regR8], reg[regR9]} // mov rcx,rsi|rbx ; call
 		default:
-			i++
+			if used, ok := regMove(seg[i:], &reg); ok {
+				i += used
+			} else {
+				i++
+			}
 		}
 	}
-	return reg
+	return [3]*uint32{reg[regEDX], reg[regR8], reg[regR9]}
+}
+
+// regMove decodes, at the start of b, a 32-bit register move or a lea with an
+// 8-bit displacement whose destination is edx, r8d or r9d, and applies it. It
+// returns the instruction's length. A source of unknown value makes the
+// destination unknown.
+func regMove(b []byte, reg *[numRegs]*uint32) (int, bool) {
+	j, rex := 0, byte(0)
+	if len(b) > 0 && b[0]&0xf0 == 0x40 {
+		rex, j = b[0], 1
+	}
+	if len(b) < j+2 {
+		return 0, false
+	}
+	op, modrm := b[j], b[j+1]
+	mod, rg, rm := modrm>>6, int(modrm>>3&7), int(modrm&7)
+	if rex&4 != 0 {
+		rg += 8
+	}
+	if rex&1 != 0 {
+		rm += 8
+	}
+	var dst int
+	var val *uint32
+	var length int
+	switch {
+	case op == 0x8b && mod == 3: // mov r32,r/m32
+		dst, val, length = rg, reg[rm], j+2
+	case op == 0x89 && mod == 3: // mov r/m32,r32
+		dst, val, length = rm, reg[rg], j+2
+	case op == 0x8d && mod == 1 && rm&7 != 4 && len(b) >= j+3: // lea r32,[r+disp8]
+		dst, length = rg, j+3
+		if base := reg[rm]; base != nil {
+			v := *base + uint32(int32(int8(b[j+2])))
+			val = &v
+		}
+	default:
+		return 0, false
+	}
+	if dst != regEDX && dst != regR8 && dst != regR9 {
+		return 0, false
+	}
+	if val != nil {
+		v := *val
+		val = &v
+	}
+	reg[dst] = val
+	return length, true
 }
 
 var errNoText = errors.New("tablegen: the executable has no .text section")
