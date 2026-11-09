@@ -2,6 +2,7 @@ package cspfile
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"testing"
 )
@@ -74,6 +75,10 @@ func TestFolderVersion(t *testing.T) {
 		{"CLIP STUDIO 1.10.2", []int{1, 10, 2}},
 		{"CLIP STUDIO 2", []int{2}},
 		{"CLIP STUDIO 1.x", []int{1}},
+		// A number too large for an int is the highest, not dropped.
+		{"CLIP STUDIO 99999999999999999999", []int{math.MaxInt}},
+		{"CLIP STUDIO 1.99999999999999999999.2", []int{1, math.MaxInt, 2}},
+		{"CLIP STUDIO 1.99999999999999999999x", []int{1, math.MaxInt}},
 	}
 	for _, tc := range tests {
 		got := folderVersion(tc.in)
@@ -84,6 +89,9 @@ func TestFolderVersion(t *testing.T) {
 	if compareVersion([]int{1, 10}, []int{1, 5}) <= 0 || compareVersion(nil, []int{0}) >= 0 ||
 		compareVersion([]int{1}, []int{1, 0}) != 0 {
 		t.Error("compareVersion")
+	}
+	if compareVersion(folderVersion("CLIP STUDIO 99999999999999999999"), folderVersion("CLIP STUDIO 12")) <= 0 {
+		t.Error("an overflowing version must compare above a normal one")
 	}
 }
 

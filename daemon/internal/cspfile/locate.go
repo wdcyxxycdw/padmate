@@ -1,6 +1,7 @@
 package cspfile
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -286,7 +287,9 @@ func folderVersion(name string) []int {
 		}
 		n, err := strconv.Atoi(part[:end])
 		if err != nil {
-			break
+			// Only digits, so the number is out of range: a huge number is
+			// still the highest, not a missing part.
+			n = math.MaxInt
 		}
 		ver = append(ver, n)
 		if end < len(part) {

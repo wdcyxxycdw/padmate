@@ -30,32 +30,82 @@ const APP = "Demo Paint";
 const PICK = `从 ${APP} 选择…`;
 const INTEGRATION = "fakeapp";
 
-/** A profile bound to Demo Paint: a rule on its exe, with switching on. */
+/**
+ * A profile bound to Demo Paint: a rule on its exe, with switching on (§16.1:
+ * with switching off no profile is bound to anything). The rule is all the
+ * fixture says about programs. The daemon never selects a profile for
+ * padmate's own window, so no rule can keep paint in use: `holdPaint` does.
+ */
 async function integrationFixture(): Promise<Fixture> {
   const f = await editorFixture();
-  // The test window itself (electron.exe) is also sent to paint, so the
-  // profile in use stays the one under test while switching is on (§16.1: with
-  // switching off no profile is bound to anything).
   await writeFile(
     join(f.path, "data", "config.json"),
     JSON.stringify({
       schemaVersion: 0,
       enabled: true,
-      rules: [
-        { exe: "DemoPaint.exe", profile: "paint" },
-        { exe: "electron.exe", profile: "paint" },
-      ],
+      rules: [{ exe: "DemoPaint.exe", profile: "paint" }],
     }),
   );
   return f;
 }
 
+const holders = new WeakMap<FixtureClient, () => void>();
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
+/**
+ * Makes paint the profile in use and keeps it so. With switching on, the
+ * daemon's first look at the foreground (some other program, a moment after
+ * it starts) selects the fixed default profile, and the editor shows the
+ * profile in use. The daemon leaves padmate's own window alone, so once paint
+ * is activated it stays until another program comes to the front. A watcher
+ * puts it back if that happens during a test (no production change needed).
+ * It is stopped by `finish`.
+ */
+async function holdPaint(client: FixtureClient): Promise<void> {
+  const active = async () =>
+    (await client.call<{ profileId: string }>("status.get")).profileId;
+  const settle = async () => {
+    if ((await active()) !== "paint")
+      await client.call("profiles.activate", { id: "paint" });
+    return active();
+  };
+  // Until it holds across the daemon's first evaluation.
+  await expect.poll(settle, { timeout: 15000 }).toBe("paint");
+  await wait(500);
+  await expect.poll(settle, { timeout: 15000 }).toBe("paint");
+  let stopped = false;
+  holders.set(client, () => {
+    stopped = true;
+  });
+  void (async () => {
+    while (!stopped) {
+      await wait(250);
+      if (stopped) break;
+      await settle().catch(() => {});
+    }
+  })();
+}
+
+/**
+ * Opens a key's drawer. The editor shows the profile in use, so the drawer
+ * has the pick button only once paint is the one it shows: tried again while
+ * it catches up.
+ */
 async function openControl(page: Page, control: string): Promise<void> {
-  await page.locator(`button[data-callout="${control}"]`).click();
-  await expect(page.getByTestId("mapping-editor")).toBeVisible();
-  await expect(
-    page.getByRole("complementary", { name: "按键编辑" }),
-  ).toBeVisible();
+  const drawer = page.getByRole("complementary", { name: "按键编辑" });
+  let first = true;
+  await expect(async () => {
+    if (first || !(await drawer.isVisible()))
+      await page.locator(`button[data-callout="${control}"]`).click();
+    first = false;
+    await expect(page.getByTestId("mapping-editor")).toBeVisible({
+      timeout: 2000,
+    });
+    await expect(drawer).toBeVisible({ timeout: 2000 });
+    await expect(
+      drawer.getByRole("button", { name: PICK, exact: true }),
+    ).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 30000, intervals: [250, 500, 1000] });
 }
 
 /** profile.json of the paint profile, as the daemon has it on disk. */
@@ -158,6 +208,7 @@ async function finish(
   app: ElectronApplication | undefined,
   client: FixtureClient | undefined,
 ) {
+  if (client) holders.get(client)?.();
   client?.close();
   await cleanup(f, app);
 }
@@ -173,6 +224,7 @@ test("pick a function that has a key: 设置 changes the mapping, and it is stil
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
+    await holdPaint(live);
     const { withKey } = await pickable(live);
     const key = withKey.fn.keys[0];
     const name = withKey.fn.name;
@@ -235,6 +287,7 @@ test("pick a function that has no key: record one, write it, and the mapping fol
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
+    await holdPaint(live);
     const { withoutKey } = await pickable(live);
     const chord = "Ctrl+Shift+F11";
 
@@ -310,6 +363,7 @@ test("cancel leaves the mapping as it was, and a click in the dialog is never re
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
+    await holdPaint(live);
     const { withKey } = await pickable(live);
     const before = (await onDisk(live)).layers.base.north;
 
@@ -399,6 +453,7 @@ test("撤销这次写入 puts the app, the item file and the mapping back, and l
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
+    await holdPaint(live);
     const { withoutKey } = await pickable(live);
     const chord = "Ctrl+Shift+F10";
     const before = (await onDisk(live)).layers.base.north;
@@ -454,6 +509,7 @@ test("Ctrl+Z after a pick takes the mapping and its item back together, and the 
     const page = opened.page;
     client = await FixtureClient.connect(f);
     const live = client;
+    await holdPaint(live);
     const { withoutKey } = await pickable(live);
     const chord = "Ctrl+Shift+F9";
 

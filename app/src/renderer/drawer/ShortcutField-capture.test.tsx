@@ -486,6 +486,25 @@ describe("the mouse is a key inside the window", () => {
         cleanup();
       }
     });
+
+    it("a held modifier does not end it: not its auto-repeat, nor a modifier pressed alone", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, ctrlKey: true });
+      fireEvent.keyDown(window, { key: "Control", ctrlKey: true });
+      fireEvent.keyDown(window, {
+        key: "Control",
+        ctrlKey: true,
+        repeat: true,
+      });
+      fireEvent.keyDown(window, { key: "Shift", shiftKey: true });
+      fireEvent.keyDown(window, { key: "a", repeat: true });
+      fireEvent.mouseDown(elsewhere(), { detail: 2, ctrlKey: true });
+      expect(press()).toEqual({
+        type: "keys",
+        keys: ["Ctrl+MouseLeft", "Ctrl+MouseLeft"],
+        mode: "tap",
+      });
+    });
   });
 
   it("a double click recorded in a step adds the click as the next step", async () => {

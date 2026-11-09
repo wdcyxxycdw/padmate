@@ -231,6 +231,14 @@ function swallowRelease(): void {
 export const ESC_HOLD_MS = 1000;
 /** How far (px) the second press of a double click may be from the first. */
 const DOUBLE_CLICK_SLOP = 5;
+/** Keys that only hold a modifier down. */
+const MODIFIER_KEYS: ReadonlySet<string> = new Set([
+  "Control",
+  "Shift",
+  "Alt",
+  "AltGraph",
+  "Meta",
+]);
 
 /** How long one capture lasts: the helper stops itself then (keyboard_capture). */
 const CAPTURE_LIMIT_MS = 30_000;
@@ -600,12 +608,18 @@ function ShortcutField({
     const forget = () => {
       clickedAt.current = null;
     };
+    // A held modifier is part of a Ctrl+double-click: its auto-repeat, or a
+    // modifier pressed on its own, is not another key.
+    const forgetKey = (event: globalThis.KeyboardEvent) => {
+      if (event.repeat || MODIFIER_KEYS.has(event.key)) return;
+      forget();
+    };
     window.addEventListener("mousedown", again, true);
-    window.addEventListener("keydown", forget, true);
+    window.addEventListener("keydown", forgetKey, true);
     window.addEventListener("wheel", forget, true);
     return () => {
       window.removeEventListener("mousedown", again, true);
-      window.removeEventListener("keydown", forget, true);
+      window.removeEventListener("keydown", forgetKey, true);
       window.removeEventListener("wheel", forget, true);
     };
   }, []);

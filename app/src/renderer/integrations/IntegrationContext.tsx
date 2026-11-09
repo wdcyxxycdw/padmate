@@ -89,7 +89,9 @@ export type FailureStep =
   | "late"
   | "bindingBack"
   | "itemsBack"
-  | "itemsFollow";
+  | "itemsFollow"
+  | "profileChanged"
+  | "profileChangedUndo";
 
 function stepFailure(
   step: FailureStep | undefined,
@@ -156,6 +158,18 @@ function stepFailure(
         language,
         `快捷键已经改了，但没能让这份配置里 ${appName} 的记录一起改。`,
         `The shortcut was changed, but the ${appName} record in the profile could not follow.`,
+      );
+    case "profileChanged":
+      return tx(
+        language,
+        "正在编辑的配置已经换了，这次选择没有记进任何配置，快捷键没有改。请回到原来的配置再试。",
+        "The profile being edited has changed. This pick was not saved into any profile and no shortcut was changed. Go back to the original profile and try again.",
+      );
+    case "profileChangedUndo":
+      return tx(
+        language,
+        "正在编辑的配置已经换了，不能撤销这次写入，什么都没有动。请回到原来的配置再撤销。",
+        "The profile being edited has changed, so this write cannot be undone. Nothing was changed. Go back to the original profile and undo it there.",
       );
     default:
       return tx(language, "没有完成。", "It did not finish.");

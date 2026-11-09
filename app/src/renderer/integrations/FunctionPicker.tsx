@@ -248,11 +248,23 @@ export function FunctionPicker({
   // The language when the effects of an undo of the pick report a failure.
   const languageNow = useRef(language);
   languageNow.current = language;
+  // The profile (and its keys) the drawer has now, and the ones the pick
+  // started with. A profile that is switched while the dialog is open (by the
+  // tray or a controller) must not receive this pick: everything below writes
+  // to, and undoes on, the pinned profile only.
+  const profileNow = useRef(profile);
+  profileNow.current = profile;
+  const keysNow = useRef(currentKeys);
+  keysNow.current = currentKeys;
+  const pinned = useRef({ profile, keys: currentKeys });
+  /** Whether the drawer has moved to another profile since the pick began. */
+  const moved = () => profileNow.current !== pinned.current.profile;
 
   // A dialog that is opened again starts at the list.
   useEffect(() => {
     lifetime.current++;
     if (!open) return;
+    pinned.current = { profile: profileNow.current, keys: keysNow.current };
     setQuery("");
     setExpanded(new Set());
     setFocusKey("");
@@ -442,20 +454,21 @@ export function FunctionPicker({
   const putPicked = async (fn: IntegrationFunction, picked: string) => {
     if (!host) return undefined;
     const state = host.store.getState();
-    const items = await state.loadIntegrationItems(profile, info.id);
-    const previousName = itemFor(items.items, currentKeys)?.name;
+    const { profile: target, keys: before } = pinned.current;
+    const items = await state.loadIntegrationItems(target, info.id);
+    const previousName = itemFor(items.items, before)?.name;
     const change = itemChange(
       items.items,
       itemOf(fn, picked),
-      currentKeys && currentKeys !== picked ? currentKeys : undefined,
+      before && before !== picked ? before : undefined,
     );
     await state.api.putIntegrationItems({
-      profile,
+      profile: target,
       integration: info.id,
       revision: items.revision,
       items: applyItemChange(items.items, change),
     });
-    void state.loadIntegrationItems(profile, info.id).catch(() => {});
+    void state.loadIntegrationItems(target, info.id).catch(() => {});
     return { previousName, change };
   };
   type Saved = NonNullable<Awaited<ReturnType<typeof putPicked>>>;
@@ -472,10 +485,11 @@ export function FunctionPicker({
     saved: Saved,
   ): PickRecord => {
     const store = host?.store;
+    const target = pinned.current.profile;
     const follow =
       (transform: (items: IntegrationItem[]) => IntegrationItem[]) => () => {
         if (!store) return;
-        changeItems(store, profile, info.id, transform).catch(() => {
+        changeItems(store, target, info.id, transform).catch(() => {
           store.setState({
             error: integrationFailure(
               null,
@@ -511,6 +525,12 @@ export function FunctionPicker({
       setStep({ kind: "record", fn: chosen });
       return;
     }
+    if (moved()) {
+      setProblem(
+        integrationFailure(null, info.name, language, "profileChanged"),
+      );
+      return;
+    }
     const mine = lifetime.current;
     setBusy(true);
     setProblem("");
@@ -518,6 +538,15 @@ export function FunctionPicker({
       const picked = chosenKey;
       const saved = await putPicked(chosen, picked);
       if (mine !== lifetime.current || !saved) return;
+      if (moved()) {
+        // The profile changed while the item was saved: put it back.
+        await takeBack(saved);
+        if (mine === lifetime.current)
+          setProblem(
+            integrationFailure(null, info.name, language, "profileChanged"),
+          );
+        return;
+      }
       // Everything worked: now the binding changes, in one edit.
       bind(chosen, picked, saved);
       onClose();
@@ -527,6 +556,14 @@ export function FunctionPicker({
     } finally {
       if (mine === lifetime.current) setBusy(false);
     }
+  };
+
+  /** Takes a saved item back out of the pinned profile's file (best effort). */
+  const takeBack = async (saved: Saved) => {
+    if (!host) return;
+    await changeItems(host.store, pinned.current.profile, info.id, (items) =>
+      revertItemChange(items, saved.change),
+    ).catch(() => {});
   };
 
   /**
@@ -541,19 +578,43 @@ export function FunctionPicker({
     written: IntegrationWritten,
     mine: number,
   ) => {
+    // The app is changed when the write made a backup: then the dialog stays
+    // on the two ways out; when it changed nothing, the record step stays.
+    const stay = (message: string) => {
+      setProblem(message);
+      if (written.backup) setStep({ kind: "unsaved", fn, keys, written });
+    };
+    const elsewhere = integrationFailure(
+      null,
+      info.name,
+      language,
+      "profileChanged",
+    );
+    if (moved()) {
+      stay(elsewhere);
+      return;
+    }
     let saved: Saved | undefined;
     try {
       saved = await putPicked(fn, keys);
     } catch (error) {
       if (mine !== lifetime.current) return;
-      if (written.backup) {
-        setProblem(integrationFailure(error, info.name, language, "saved"));
-        setStep({ kind: "unsaved", fn, keys, written });
-      } else
-        setProblem(integrationFailure(error, info.name, language, "items"));
+      stay(
+        integrationFailure(
+          error,
+          info.name,
+          language,
+          written.backup ? "saved" : "items",
+        ),
+      );
       return;
     }
     if (mine !== lifetime.current || !saved) return;
+    if (moved()) {
+      await takeBack(saved);
+      if (mine === lifetime.current) stay(elsewhere);
+      return;
+    }
     const pick = bind(fn, keys, saved);
     unwound.current = { app: false, binding: false };
     setProblem("");
@@ -562,6 +623,12 @@ export function FunctionPicker({
 
   const writeIn = async (fn: IntegrationFunction) => {
     if (!host || !keys || busy) return;
+    if (moved()) {
+      setProblem(
+        integrationFailure(null, info.name, language, "profileChanged"),
+      );
+      return;
+    }
     const mine = lifetime.current;
     setBusy(true);
     setProblem("");
@@ -613,6 +680,12 @@ export function FunctionPicker({
         setProblem(integrationFailure(error, info.name, language, failed));
     };
     try {
+      // The pick belongs to the profile it began in: from another profile
+      // neither its binding nor its item file can be taken back.
+      if (pick && moved()) {
+        fail("profileChangedUndo");
+        return;
+      }
       if (!progress.binding && pick?.step && !pick.step.canRevert()) {
         fail("late");
         return;
@@ -638,8 +711,11 @@ export function FunctionPicker({
       }
       if (pick) {
         try {
-          await changeItems(host.store, profile, info.id, (items) =>
-            revertItemChange(items, pick.change),
+          await changeItems(
+            host.store,
+            pinned.current.profile,
+            info.id,
+            (items) => revertItemChange(items, pick.change),
           );
         } catch (error) {
           fail("itemsBack", error);
@@ -951,6 +1027,12 @@ export function FunctionPicker({
           {t(
             "快捷键还没有改。可以重试保存，或撤销这次写入，撤销后哪里都没有改动。",
             "The binding is not changed. Retry saving, or undo the write; after undoing, nothing is changed anywhere.",
+          )}
+        </p>
+        <p className="dialog-text">
+          {t(
+            `如果这个窗口被关掉了，这次写入还可以在“设置”里 ${info.name} 的备份中恢复。`,
+            `If this window is closed, the write can still be restored from the ${info.name} backups in Settings.`,
           )}
         </p>
         {problem && (

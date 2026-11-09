@@ -12,11 +12,12 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeviceInfo, PadmateAPI } from "../../shared/api";
 import type { Profile } from "../../shared/generated/schema";
 import type { IntegrationItem } from "../../shared/integrations";
 import { KeyDrawer } from "../drawer/KeyDrawer";
+import type { StepEffects } from "../editor/editor-history";
 import { createEditorStore } from "../editor/editor-store";
 import { fakeCapture } from "../testing/capture-fixture";
 import { editorAPIFixture } from "../testing/editor-api-fixture";
@@ -26,6 +27,11 @@ import {
   integrationStore,
   undoItem,
 } from "../testing/integrations-fixture";
+import {
+  type CaptureField,
+  FunctionPicker,
+  type Picked,
+} from "./FunctionPicker";
 import { IntegrationProvider } from "./IntegrationContext";
 
 afterEach(cleanup);
@@ -466,5 +472,238 @@ describe("the app is written but the profile could not save it", () => {
     expect(within(dialog).queryByTestId("integration-unsaved")).toBeNull();
     expect(within(dialog).getByRole("button", { name: "取消" })).toBeTruthy();
     expect(s.keys()).toBe("Ctrl+Z");
+  });
+});
+
+// The profile the drawer edits can change while the dialog is open (the tray
+// or a controller switches it). The picker is rendered on its own here so the
+// profile can change under it: the pick stays with the profile it began in.
+describe("the profile changes while the dialog is open", () => {
+  const capture: CaptureField = ({ value, onChange, label }) => (
+    <fieldset aria-label={label}>
+      <button type="button" onClick={() => onChange("Ctrl+Y")}>
+        录入
+      </button>
+      <span data-testid="captured">{value}</span>
+    </fieldset>
+  );
+
+  async function pickerSetup(
+    options: { items?: IntegrationItem[]; edits?: boolean } = {},
+  ) {
+    const api = editorAPIFixture();
+    const store = integrationStore(api, [
+      { ...demoApp, profiles: ["paint", "other"] },
+    ]);
+    const files: Record<
+      string,
+      { items: IntegrationItem[]; revision: number }
+    > = {
+      paint: { items: options.items ?? [], revision: 1 },
+      other: { items: [], revision: 1 },
+    };
+    api.getIntegrationItems.mockImplementation(async (name: string) => ({
+      ...consistentItems(files[name].items),
+      revision: `i${files[name].revision}`,
+    }));
+    api.putIntegrationItems.mockImplementation(async (params) => {
+      const file = files[params.profile];
+      if (params.revision !== `i${file.revision}`)
+        throw new Error("revision conflict");
+      file.items = params.items;
+      file.revision++;
+    });
+    const edit = { canRevert: () => true, revert: () => true };
+    const effects: StepEffects[] = [];
+    const onPicked = vi.fn((_picked: Picked, made: StepEffects) => {
+      effects.push(made);
+      return options.edits === false ? null : edit;
+    });
+    const ui = (profile: string) => (
+      <IntegrationProvider store={store} language="zh-CN">
+        <FunctionPicker
+          open
+          info={{ ...demoApp, profiles: ["paint", "other"] }}
+          profile={profile}
+          currentKeys="Ctrl+Z"
+          language="zh-CN"
+          Capture={capture}
+          onClose={() => {}}
+          onPicked={onPicked}
+        />
+      </IntegrationProvider>
+    );
+    const view = render(ui("paint"));
+    const puts = () =>
+      api.putIntegrationItems.mock.calls.map((call) => call[0].profile);
+    return { api, files, onPicked, effects, ui, view, puts };
+  }
+  type Picker = Awaited<ReturnType<typeof pickerSetup>>;
+
+  /** Picks 重做 (no key) and records Ctrl+Y; the write is left to the test. */
+  async function ready(_p: Picker) {
+    await screen.findAllByTestId("picker-row");
+    fireEvent.change(screen.getByRole("searchbox", { name: "搜索功能" }), {
+      target: { value: "重做" },
+    });
+    fireEvent.click(screen.getByRole("treeitem", { name: /^重做/ }));
+    fireEvent.click(screen.getByRole("button", { name: "设置" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "录入" }));
+    await within(dialog).findByTestId("integration-check");
+    await waitFor(() =>
+      expect(
+        (
+          within(dialog).getByRole("button", {
+            name: "写入 Demo Paint",
+          }) as HTMLButtonElement
+        ).disabled,
+      ).toBe(false),
+    );
+    return dialog;
+  }
+  const writeButton = (dialog: HTMLElement) =>
+    within(dialog).getByRole("button", { name: "写入 Demo Paint" });
+  const moved = "正在编辑的配置已经换了";
+
+  it("重试保存 writes nothing to the new profile, says so, and works again on the original", async () => {
+    const p = await pickerSetup({ items: [undoItem] });
+    p.api.putIntegrationItems.mockRejectedValueOnce(new Error("disk"));
+    const dialog = await ready(p);
+    fireEvent.click(writeButton(dialog));
+    await within(dialog).findByTestId("integration-unsaved");
+    // The unsaved step says where the write can be restored if the window goes.
+    expect(
+      within(dialog).getByTestId("integration-unsaved").textContent,
+    ).toContain("备份中恢复");
+    expect(p.puts()).toEqual(["paint"]);
+
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(within(dialog).getByRole("button", { name: "重试保存" }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(moved),
+    );
+    // Nothing went to the other profile, and its binding was not touched.
+    expect(p.puts()).toEqual(["paint"]);
+    expect(p.api.writeIntegration).toHaveBeenCalledTimes(1);
+    expect(p.onPicked).not.toHaveBeenCalled();
+    expect(within(dialog).getByTestId("integration-unsaved")).toBeTruthy();
+
+    // Back on the original profile the same retry finishes the pick there.
+    p.view.rerender(p.ui("paint"));
+    fireEvent.click(within(dialog).getByRole("button", { name: "重试保存" }));
+    await within(dialog).findByTestId("integration-written");
+    expect(p.puts()).toEqual(["paint", "paint"]);
+    expect(keysOf(p.files.paint.items)).toEqual(["Ctrl+Y"]);
+    expect(p.files.other.items).toEqual([]);
+  });
+
+  it("撤销这次写入 of an unsaved write still restores the app: it touches no profile", async () => {
+    const p = await pickerSetup({ items: [undoItem] });
+    p.api.putIntegrationItems.mockRejectedValueOnce(new Error("disk"));
+    const dialog = await ready(p);
+    fireEvent.click(writeButton(dialog));
+    await within(dialog).findByTestId("integration-unsaved");
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(undoButton(dialog));
+    await waitFor(() =>
+      expect(p.api.restoreIntegrationBackup).toHaveBeenCalledWith(
+        "demoapp",
+        "b1",
+      ),
+    );
+    expect(p.puts()).toEqual(["paint"]);
+  });
+
+  it("a finished pick is not undone from another profile, and is on the original", async () => {
+    const p = await pickerSetup({ items: [undoItem] });
+    const dialog = await ready(p);
+    fireEvent.click(writeButton(dialog));
+    await within(dialog).findByTestId("integration-written");
+    const puts = p.puts().length;
+
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(undoButton(dialog));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(
+        "不能撤销这次写入",
+      ),
+    );
+    expect(p.api.restoreIntegrationBackup).not.toHaveBeenCalled();
+    expect(p.puts()).toHaveLength(puts);
+    expect(keysOf(p.files.paint.items)).toEqual(["Ctrl+Y"]);
+
+    p.view.rerender(p.ui("paint"));
+    fireEvent.click(undoButton(dialog));
+    await waitFor(() => expect(p.files.paint.items).toEqual([undoItem]));
+    expect(p.api.restoreIntegrationBackup).toHaveBeenCalledTimes(1);
+    expect(p.puts().every((name) => name === "paint")).toBe(true);
+  });
+
+  it("a pick that left the binding as it was (no edit step) is undone on its own profile only", async () => {
+    const p = await pickerSetup({ edits: false });
+    const dialog = await ready(p);
+    fireEvent.click(writeButton(dialog));
+    await within(dialog).findByTestId("integration-written");
+    expect(keysOf(p.files.paint.items)).toEqual(["Ctrl+Y"]);
+
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(undoButton(dialog));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(
+        "不能撤销这次写入",
+      ),
+    );
+    expect(p.api.restoreIntegrationBackup).not.toHaveBeenCalled();
+    expect(p.puts()).not.toContain("other");
+    expect(keysOf(p.files.paint.items)).toEqual(["Ctrl+Y"]);
+
+    p.view.rerender(p.ui("paint"));
+    fireEvent.click(undoButton(dialog));
+    await waitFor(() => expect(p.files.paint.items).toEqual([]));
+    expect(p.puts()).not.toContain("other");
+  });
+
+  it("the undo and redo of the binding step move the item file of the profile it began in", async () => {
+    const p = await pickerSetup({ items: [undoItem] });
+    const dialog = await ready(p);
+    fireEvent.click(writeButton(dialog));
+    await within(dialog).findByTestId("integration-written");
+    p.view.rerender(p.ui("other"));
+    p.effects[0].undo();
+    await waitFor(() => expect(p.files.paint.items).toEqual([undoItem]));
+    p.effects[0].redo();
+    await waitFor(() =>
+      expect(keysOf(p.files.paint.items)).toEqual(["Ctrl+Y"]),
+    );
+    expect(p.puts()).not.toContain("other");
+  });
+
+  it("the write is refused before it starts when the profile has changed", async () => {
+    const p = await pickerSetup();
+    const dialog = await ready(p);
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(writeButton(dialog));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(moved),
+    );
+    expect(p.api.writeIntegration).not.toHaveBeenCalled();
+    expect(p.puts()).toEqual([]);
+  });
+
+  it("a pick of a function with a key is refused too, and saves nothing", async () => {
+    const p = await pickerSetup();
+    await screen.findAllByTestId("picker-row");
+    fireEvent.change(screen.getByRole("searchbox", { name: "搜索功能" }), {
+      target: { value: "撤销" },
+    });
+    fireEvent.click(screen.getByRole("treeitem", { name: /^撤销/ }));
+    p.view.rerender(p.ui("other"));
+    fireEvent.click(screen.getByRole("button", { name: "设置" }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toContain(moved),
+    );
+    expect(p.puts()).toEqual([]);
+    expect(p.onPicked).not.toHaveBeenCalled();
   });
 });
