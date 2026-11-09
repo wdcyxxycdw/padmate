@@ -299,3 +299,47 @@ func TestMousePointerDistanceThroughTheSlot(t *testing.T) {
 		})
 	}
 }
+
+// A knob cleared in the editor (no analog settings, no tick keys) reaches a
+// slot as a reload while the stick is turned and ticks are queued: the queued
+// ticks are dropped, the stick sends nothing afterwards, no deadline is left
+// and nothing is held (invariant 1).
+func TestKnobClearedByReloadSendsNothing(t *testing.T) {
+	knob := `{"ls": {"mode": "knob", "knobStepDeg": 30, "knobTick": true, "deadzone": 0, "saturation": 1}}`
+	h := &harness{Sim: simtest.New(t)}
+	h.s = h.newSlot(t, 0, 1, compileMouse(t, knob,
+		`"ls.cw": {"press": {"type": "keys", "keys": "]", "mode": "hold"}}`,
+		`"ls.ccw": {"press": {"type": "keys", "keys": "[", "mode": "hold"}}`))
+	at := func(msec int, deg float64) {
+		rad := deg * math.Pi / 180
+		h.stick(t, msec, int16(math.Round(0.8*math.Sin(rad)*32767)), int16(-math.Round(0.8*math.Cos(rad)*32767)))
+	}
+	at(0, 0)
+	h.drive(t, 20)
+	// 100 degrees at once: one tick now, two queued behind the minimum period.
+	at(30, 100)
+	h.drive(t, 36)
+	if _, ok := h.s.NextDeadline(); !ok {
+		t.Fatal("no tick is queued")
+	}
+	sent := len(h.Out.Edges())
+	if err := h.s.Reload(compileMouse(t, `{}`), 2); err != nil {
+		t.Fatal(err)
+	}
+	h.drive(t, 300)
+	at(310, 200)
+	at(400, 300)
+	h.drive(t, 600)
+	if got := len(h.Out.Edges()); got < sent {
+		t.Fatalf("edges went from %d to %d", sent, got)
+	} else if got > sent {
+		t.Errorf("the cleared knob sent %d more edges", got-sent)
+	}
+	if d, ok := h.s.NextDeadline(); ok {
+		t.Errorf("NextDeadline = %v after the reload, want none", d)
+	}
+	simtest.AssertNoneHeld(t, h.Arb, h.Out)
+	if errs := h.s.Errors(); len(errs) > 0 {
+		t.Errorf("slot errors: %v", errs)
+	}
+}

@@ -343,3 +343,49 @@ func (m *Memory) Flush(l *Library) error {
 	m.mu.Unlock()
 	return nil
 }
+
+// Dismissed returns the difference ID the person chose to leave alone for
+// profile and integration (ADR-0019), or "".
+func (m *Memory) Dismissed(profileID, integrationID string) string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.state.Integrations[profileID][integrationID].Dismissed
+}
+
+// SetDismissed remembers differenceID as the differences of profile and
+// integration that are left alone; "" forgets it. It takes the lock for a
+// moment and does no I/O; the persistence worker writes it. Invalid IDs are
+// ignored.
+func (m *Memory) SetDismissed(profileID, integrationID, differenceID string) {
+	if !ValidID(profileID) || !profile.ValidIntegrationID(integrationID) {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.state.Integrations[profileID][integrationID].Dismissed == differenceID {
+		return
+	}
+	next := maps.Clone(m.state.Integrations)
+	if next == nil {
+		next = make(map[string]map[string]profile.IntegrationState)
+	}
+	byIntegration := maps.Clone(next[profileID])
+	if byIntegration == nil {
+		byIntegration = make(map[string]profile.IntegrationState)
+	}
+	if differenceID == "" {
+		delete(byIntegration, integrationID)
+	} else {
+		byIntegration[integrationID] = profile.IntegrationState{Dismissed: differenceID}
+	}
+	if len(byIntegration) == 0 {
+		delete(next, profileID)
+	} else {
+		next[profileID] = byIntegration
+	}
+	if len(next) == 0 {
+		next = nil
+	}
+	m.state.Integrations = next
+	m.version++
+}

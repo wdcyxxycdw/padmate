@@ -1,3 +1,18 @@
+import type {
+  IntegrationBackup,
+  IntegrationChange,
+  IntegrationCheck,
+  IntegrationCheckParams,
+  IntegrationDataDirChoice,
+  IntegrationDismissParams,
+  IntegrationFunctions,
+  IntegrationInfo,
+  IntegrationItems,
+  IntegrationLanguage,
+  IntegrationPlan,
+  IntegrationPutItemsParams,
+  IntegrationWritten,
+} from "./integrations";
 import type { JoyCon2Status } from "./joycon2";
 import type { KeyHint, OverlayPrefs } from "./overlay";
 import type {
@@ -700,6 +715,9 @@ export interface DaemonEvent {
     | "input.raw"
     // The Joy-Con 2 state, as joycon2.status returns it, when it changes.
     | "joycon2.changed"
+    // An app integration's files, running state or differences changed
+    // (ARCHITECTURE §16.4); data is IntegrationChanged.
+    | "integration.changed"
     | "dropped";
   data: unknown;
 }
@@ -934,6 +952,57 @@ export interface PadmateAPI {
   listPads(): Promise<PadsListResult>;
   setPad(params: PadsSetParams): Promise<PadsSetResult>;
   migratePads(): Promise<PadsMigrateResult>;
+  // App integrations (ARCHITECTURE §16.4). Each is the daemon method of the
+  // same name; the window never sends a method name. Failures keep the
+  // daemon's code: -32028 the app is running, -32029 the integration is
+  // unavailable, -32030 its files were busy or changed, -32009 a revision
+  // that moved. listIntegrations is integrations.list, including which
+  // profiles are bound (read it only through isBound in integrations.ts).
+  // getIntegrationFunctions is integrations.functions in the given language;
+  // checkIntegrationKey is integrations.check; getIntegrationItems and
+  // putIntegrationItems read and write a profile's integrations/<id>.json;
+  // planIntegration is integrations.plan; writeIntegration changes the app's
+  // settings (after a backup); the last three are integrations.backups,
+  // integrations.restore and integrations.dismiss.
+  listIntegrations(): Promise<IntegrationInfo[]>;
+  getIntegrationFunctions(
+    integration: string,
+    language: IntegrationLanguage,
+  ): Promise<IntegrationFunctions>;
+  checkIntegrationKey(
+    params: IntegrationCheckParams,
+  ): Promise<IntegrationCheck>;
+  getIntegrationItems(
+    profile: string,
+    integration: string,
+  ): Promise<IntegrationItems>;
+  putIntegrationItems(params: IntegrationPutItemsParams): Promise<void>;
+  planIntegration(
+    profile: string,
+    integration: string,
+  ): Promise<IntegrationPlan>;
+  writeIntegration(
+    integration: string,
+    changes: IntegrationChange[],
+  ): Promise<IntegrationWritten>;
+  listIntegrationBackups(integration: string): Promise<IntegrationBackup[]>;
+  restoreIntegrationBackup(
+    integration: string,
+    backup: string,
+  ): Promise<IntegrationBackup>;
+  dismissIntegrationDifferences(
+    params: IntegrationDismissParams,
+  ): Promise<void>;
+  // The data folder (integrations.setDataDir, §16.3). chooseIntegrationDataDir
+  // shows the folder dialog in the main process, checks that the folder is the
+  // app's, and stores it as integrations.<id>.dataDir; the window sends no
+  // path. It answers "changed", "cancelled" or "notAppFolder" (nothing
+  // changed). resetIntegrationDataDir takes the setting out, so the folder is
+  // found automatically again.
+  chooseIntegrationDataDir(
+    integration: string,
+  ): Promise<IntegrationDataDirChoice>;
+  resetIntegrationDataDir(integration: string): Promise<void>;
   pause(): Promise<EngineControlResult>;
   resume(): Promise<EngineControlResult>;
   releaseAll(): Promise<EngineControlResult>;

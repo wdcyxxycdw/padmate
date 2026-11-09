@@ -55,6 +55,7 @@ func TestRunUsage(t *testing.T) {
 func TestUsageListsCommands(t *testing.T) {
 	_, stdout, _ := runProbe(t, "help")
 	want := "commands:\n" +
+		"  csp-names    regenerate the table of CLIP STUDIO PAINT command names\n" +
 		"  dump-layout  write keyboard layout fixtures\n" +
 		"  record       print the keyboard events a low-level hook sees\n" +
 		"  window       print the foreground window and the extended style of a window\n" +

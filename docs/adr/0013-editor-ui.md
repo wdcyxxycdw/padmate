@@ -44,7 +44,7 @@ The editor is an Electron app (`app/`). Early on it showed too much, with intern
 - Recording ends after one key (with the modifiers held). A single press of Esc records Esc; holding it for 1 second cancels.
 
 ### 6. The shortcut sheet
-padmate only sends shortcuts; users have to assign the functions to those keys in their painting app. The "More" menu exports a Markdown sheet to help. The UI does not pick keys for the user, since every candidate key has known conflicts; and there are no starter templates: a new profile is blank.
+padmate only sends shortcuts; users have to assign the functions to those keys in their painting app. CLIP STUDIO PAINT is the exception: padmate reads and writes its shortcuts ([ADR-0019](0019-clip-studio-paint.md)). The "More" menu exports a Markdown sheet to help. The UI does not pick keys for the user, since every candidate key has known conflicts; and there are no starter templates: a new profile is blank.
 
 ### 7. Press preview and labels
 While the window is in the foreground, a press that runs an action shows one line at the bottom of the Mapping page. Labels have two display modes only: "Action name" and "Shortcut".

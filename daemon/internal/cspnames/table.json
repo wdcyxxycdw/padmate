@@ -1,0 +1,1009 @@
+{
+"csp": "5.1.5",
+"tree": [
+{"id":"mainmenu","zh":"主菜单","en":"Main menu","c":[
+ {"id":"externalkeyparent","zh":"确定及取消","en":"Confirm and Cancel","c":[
+  "externalkeyok","externalkeycancel"
+ ]},
+ {"id":"applicationparent","zh":"应用程序设置","en":"App Settings","c":[
+  "applicationpalettebarsetting","applicationeditbarsetting","applicationphoneuisetting"
+ ]},
+ {"id":"applicationparent","zh":"CLIP STUDIO PAINT","en":"CLIP STUDIO PAINT","c":[
+  "applicationairactionsetting","applicationchangetosimpleui"
+ ]},
+ {"id":"fileparent","zh":"文件","en":"File","c":[
+  "filenew","filenewfromclipboard","filenewfromphotolibrary","filenewfrommovie","fileopen","fileclose",
+  "filesave","filesaveas",
+  {"id":"filesaveasdirectparent","zh":"保存副本","en":"Save Duplicate","c":[
+   "filesaveasproj","filesaveasbmp","filesaveasjpg","filesaveaspng","filesaveastif","filesaveastga",
+   "filesaveaswebp","28691cf0-c95b-4afc-a4c2-75e46d4f689d","3d617f46-7d99-44b2-80c1-2bef6f9ebe33"
+  ]},
+  "filerevert","filesavetophotolibrary",
+  {"id":"filesavemergeimageparent","zh":"拼合图像后导出","en":"Export (Single Layer)","c":[
+   "filesavemergeimagebmp","filesavemergeimagejpg","filesavemergeimagepng","filesavemergeimagetif",
+   "filesavemergeimagetga","filesavemergeimagewebp",
+   "28691cf0-c95b-4afc-a4c2-75e46d4f689d-2fb51a87-53f9-44d0-92a0-b0e0b2ae3ad7",
+   "3d617f46-7d99-44b2-80c1-2bef6f9ebe33-2fb51a87-53f9-44d0-92a0-b0e0b2ae3ad7"
+  ]},
+  {"id":"fileexporttophotolibraryparent","zh":"拼合图像后保存在存储器","en":"Flatten and save to device storage","c":[
+   "fileexporttophotolibrarybmp","fileexporttophotolibraryjpg","fileexporttophotolibrarypng",
+   "fileexporttophotolibrarytif","fileexporttophotolibrarywebp"
+  ]},
+  {"id":"filebookbindingexportparent","zh":"导出多页","en":"Export multiple pages","c":[
+   "pageexport","pagebookbinding3dpreview","pagebookbindingexport","pagebookbindingopenexportdata",
+   "pagebookbindingepubexport","pagebookbindingopenepubexportdata","pagebookbindingepubsettings"
+  ]},
+  {"id":"animationexportparent","zh":"输出动画","en":"Export animation","c":[
+   "exportimageseries","exportanimationgif","exportapng","exportanimationwebp","exportmovie",
+   "exportanimationcels","exporttimesheet","exportforopentoonz","exportaudio"
+  ]},
+  {"id":"exportothers","zh":"其他导出","en":"Special Export","c":[
+   "exportwebtoon","exportvector","exportlayercomp"
+  ]},
+  {"id":"filetimelapseparent","zh":"缩时摄影","en":"Timelapse","c":[
+   "filetimelapserecordingenabled","filetimelapseexport"
+  ]},
+  {"id":"fileimportparent","zh":"导入","en":"Import","c":[
+   "fileimportimage","fileimportpattern","linkobjectimportexternal","animationimportmovie",
+   "fileimportmodel","fileimportvector","fileimportaudio","pagemultiimport",
+   "fileestimatebodyposefromfile","fileestimatebodyposefromcamera",
+   "fileestimatebodyposefromphotolibrary","fileimport3dposefromposemaniacs","filescanimage",
+   "pageautoscanimage","fileselectscanner","fileimportfromcamera","fileimportfromphotolibrary",
+   "importtimesheet"
+  ]},
+  "pagebatch","filefilemanagement","filequickshare","fileprintsetting","fileprint",
+  "pagebookbindingclipprintexport","applicationpreference","applicationprivacysetting",
+  "applicationshortcutsetting","applicationmodifykeysetting","applicationtoolbarsetting",
+  "applicationfontmanagement","applicationremotecontrollerconnection",
+  {"id":"applicationjoypadparent","zh":"Tab-Mate Controller","en":"Tab-Mate Controller","c":[
+   "applicationjoypadsetting","applicationradialmenusetting"
+  ]},
+  {"id":"applicationwirelesstabmateparent","zh":"CLIP STUDIO TABMATE","en":"CLIP STUDIO TABMATE","c":[
+   "applicationwirelesstabmatesetting","applicationtoolrotationsetting",
+   "applicationtabmatebleconnection"
+  ]},
+  "applicationbrushtracking","filebootclipstudio","applicationquit"
+ ]},
+ {"id":"menueditparent","zh":"编辑","en":"Edit","c":[
+  "editcopyvectorassvg","editpasteatshownposition","editclearoutofselectarea","editsuperresolution",
+  "edittoneremovalremove","edittoneremovalgrayscale","editpaint","editdetailpaint",
+  "editautopaintwithouthint","editautopaintwithhint","editautopaintdetail","editfakeshading",
+  "editchangelinecolor","editbordering","editbrightnesstoalpha",
+  {"id":"editregistmaterialparent","zh":"添加素材","en":"Register Material","c":[
+   "editregistlayermaterial","editregistlayertemplate","editregistanimationmaterial"
+  ]},
+  {"id":"fileadjustmentparent","zh":"色调调整","en":"Tonal Correction","c":[
+   "filterbrightnessandcontrast","filterhsv","filterposterize","filterinvert","filterlevel",
+   "filtertonecurve","filtercolorbalance","filterbinarization","filtergradientmap",
+   "filtercolortransfer"
+  ]},
+  {"id":"edittransformparent","zh":"变换","en":"Transform","c":[
+   "transformstretch","transformstretchonly","transformrotateonly","transformfree","transformtrapezoid",
+   "transformparallelogram","transformisopodtrapezoid","transformreversehorz","transformreversevert",
+   "transformmesh","transformpuppet","transformfix","transformcancel"
+  ]},
+  {"id":"editaligndistributeparent","zh":"对齐·分布","en":"Align/Distribute","c":[
+   "editaligntop","editalignverticalcenter","editalignbottom","editalignleft",
+   "editalignhorizontalcenter","editalignright","editdistributetop","editdistributeverticalcenter",
+   "editdistributebottom","editdistributeleft","editdistributehorizontalcenter","editdistributeright",
+   "editspacingdistributevertical","editspacingdistributehorizontal","editalignbasearealayer",
+   "editalignbaseareacanvas","editalignbaseareaselectarea","editalignbaseareaguide",
+   "editalignbaseareaauto","editalignusedrawrect","editalignusevectorcoreline"
+  ]},
+  {"id":"editquickshape","zh":"智能图形","en":"Smart Shape","c":[
+   "editquickshapeenabled","editquickshapeexecute","editquickshapeedit",
+   "editquickshapeexecutestraightline","editquickshapeexecutecurve",
+   "editquickshapeexecutecontinuouscurve","editquickshapeexecutepolyline","editquickshapeexecuteoval",
+   "editquickshapeexecutecircle","editquickshapeexecutetriangle",
+   "editquickshapeexecuteequilateraltriangle","editquickshapeexecutequadrilateral",
+   "editquickshapeexecuterectangle","editquickshapeexecutesquare","editquickshapeexecutepolygon",
+   "editquickshapeexecuteregularpolygon"
+  ]},
+  "pagechangeresolution","pagechangecanvassize",
+  {"id":"editshiftdrawingparent","zh":"更改画布的高度","en":"Change canvas height","c":[
+   "editshiftdrawingasinsertion","editshiftdrawingasdeletion"
+  ]},
+  "pagechangecanvassizetoselectarea",
+  {"id":"pagerotatecanvasparent","zh":"旋转/翻转画布","en":"Rotate/Flip canvas","c":[
+   "pagerotatecanvasclockwise90","pagerotatecanvas180","pagerotatecanvascounterclockwise90",
+   "pagereversecanvashorizontal","pagereversecanvasvertical"
+  ]},
+  "editcanvassetting",
+  {"id":"editclearmemoryparent","zh":"清除工作历史记录","en":"Clear work history","c":[
+   "editclearhistory","editclearworktime"
+  ]},
+  "applicationscreeneyecolorpicker","applicationscreeneyecolorpickerwithminimize"
+ ]},
+ {"id":"pageparent","zh":"页面管理","en":"Story","c":[
+  "pageopenselected","pageopennewtab","pagefirst","pageprevious","pagenext","pagelast","pagejump",
+  "pagenew","pagenewdetail","pageimport","pagereplace","pagecopy","pagedelete","pagecombine",
+  "pagesplit","pagechangepagesetting","pagechangeprojectsetting","pagerearrange",
+  "pageopengallerywindow",
+  {"id":"pagegallerywindowlayout","zh":"页面管理窗口布局","en":"Page Manager Layout","c":[
+   "pagegallerywindowlayouttab","pagegallerywindowlayoutleft","pagegallerywindowlayoutright",
+   "pagegallerywindowlayoutupper","pagegallerywindowlayoutlower","pagegallerywindowautoscroll"
+  ]},
+  {"id":"pagegallerywindowpagereordertype","zh":"页面排列方法","en":"Page Reordering","c":[
+   "pagegallerywindowpagereordertypedrag","pagegallerywindowpagereordertypectrldrag"
+  ]},
+  {"id":"pagegallerywindowshowstyle","zh":"页面显示方法","en":"View","c":[
+   "pagegallerywindowshowstylebook","pagegallerywindowshowstylewebtoon"
+  ]},
+  {"id":"pagegallerywindowwebtoonwrapdirection","zh":"条漫作品的折回方向","en":"Webtoon reading direction","c":[
+   "pagegallerywindowwebtoonwrapdirectionleft","pagegallerywindowwebtoonwrapdirectionright"
+  ]},
+  "pageapplylayercomp",
+  {"id":"pagebookbindingparent","zh":"装订处理","en":"Binding process","c":[
+   "pagebookbindingmode","pagebookbindingprefix","pagebookbindingcoverswap"
+  ]},
+  {"id":"pagestoryeditorparent","zh":"编辑文本","en":"Edit text","c":[
+   "pagestoryeditoropen","pagestoryeditorinserttext","pagestoryeditorremovetext",
+   "pagestoryeditorapplyproperty","pagestoryeditorsearch"
+  ]},
+  {"id":"pagecollaborationparent","zh":"协作","en":"Group work","c":[
+   "pagecollaborationrefresh","pagecollaborationcommit","pagecollaborationshowlog",
+   "pagecollaborationbeginedit","pagecollaborationendedit","pagecollaborationshowedit",
+   "pagecollaborationcancel","pagecollaborationopenconflicted","pagecollaborationremoveconflicted",
+   "pagecollaborationstart","pagecollaborationobtain","pagecollaborationshowsetting"
+  ]}
+ ]},
+ {"id":"animationparent","zh":"动画","en":"Animation","c":[
+  {"id":"animationnewlayerparent","zh":"动画所用新建图层","en":"New animation layer","c":[
+   "animationnewanimationfolder","animationnew2dcamerafolder","animationnewaudiolayer"
+  ]},
+  "animationcelnew",
+  {"id":"animationcelindexparent","zh":"轨道编辑","en":"Edit track","c":[
+   "animationdeletecelindex","animationcutcelindex","animationcopycelindex","animationpastecelindex",
+   "animationenablelayerkeyframe","animationaddkeyframe","animationconstantinterpolation",
+   "animationlinearinterpolation","animationsmoothinterpolation","animationedittransformedlayer",
+   "animationdeleteallkeyframe","animationcelassignment","animationcelbatchassignment",
+   "animationcelassignmentnew","animationcelnormalizebytimelineorder",
+   "animationcelnormalizebylayerorder","animationselectpreviousanimationcel",
+   "animationselectnextanimationcel","animationcombinclip","animationdivideclip",
+   "animationvisiblethereafter","animationnotvisiblethereafter"
+  ]},
+  {"id":"animationfunctioncurveparent","zh":"函数曲线","en":"Animation curve","c":[
+   "animationfceditmode","animationfcgridlockx","animationfcgridlocky","animationfcbreakkeyswitch"
+  ]},
+  "animationplaystop",
+  {"id":"animationplaytypeparent","zh":"播放设置","en":"Playback settings","c":[
+   "animationplaytypenormal","animationplaytypeallframe","animationplaytypeloop",
+   "animationplayenable2dcamera","animationplayenableprecache","animationplayqualityspeed",
+   "animationplayqualityimage"
+  ]},
+  {"id":"animationchangecurrentframe","zh":"跳转帧","en":"Move frame","c":[
+   "animationmovetostartframe","animationmovetoendframe","animationmovetopreviousframe",
+   "animationmovetonextframe","animationmovetopreviouskeyframe","animationmovetonextkeyframe",
+   "animationmovetospecifiedframe","animationmovetotimelinelabel"
+  ]},
+  {"id":"animationlabelparent","zh":"标签","en":"Label","c":[
+   "animationaddtimelinelabel","animationremovetimelinelabel","animationaddtracklabel",
+   "animationremovetracklabel","animationaddinbetweentracklabel",
+   "animationaddinvertinbetweentracklabel"
+  ]},
+  {"id":"animationcutparent","zh":"时间轴","en":"Timeline","c":[
+   "animationenabletimeline","animationnewcut","animationprevioustimeline","animationnexttimeline",
+   "animationchangesetting","animationchangeframerate","animationeditcutorder","animationinsertframe",
+   "animationremoveframe","animationexporttimesheet","animationimporttimesheet",
+   "animationexporttimesheetsettings","animationexporttimesheetpathsettings"
+  ]},
+  {"id":"animationonionskinparent","zh":"显示动画胶片","en":"Show animation cels","c":[
+   "animationenableexclusion","animationenableonionskin","animationonionskinsettings",
+   "animationswitchshowanimationcel","animationswitchshowaroundcel"
+  ]},
+  {"id":"layerlighttableparent","zh":"透写台","en":"Light table","c":[
+   "layerlighttableenable","layerlighttabletargetfix","layerregistreferfromselectlayer",
+   "layerregistreferfromexternalfile","layerregistreferfromclipboard","layerregistreferfromonionskin",
+   "layerremoveselectlighttablerefer","layerremovealllighttablerefer","layermovetargettorefercenter"
+  ]},
+  "animationshow2dcamera","animationshowlocus","animationshowalllayerframe","animationscrubbingaudio"
+ ]},
+ {"id":"layerparent","zh":"图层","en":"Layer","c":[
+  "layernew",
+  {"id":"layernewdetailparent","zh":"新建图层","en":"New Layer","c":[
+   "layerrasternew","layervectornew","layergradationfillnew","layermonochromefillnew",
+   "layersimpletonenew","layercomicframenew","layer3dnew","layer3dnewwithdessindoll","layerpapernew",
+   {"id":"layersharenewparent","zh":"CLIP STUDIO SHARE","en":"Clip Studio SHARE","c":[
+    "layerfoilstampingnew"
+   ]}
+  ]},
+  {"id":"layeradjustmentnewparent","zh":"新建色调调整图层","en":"New Correction Layer","c":[
+   "layeradjustmentbrightnessandcontrastnew","layeradjustmenthsvnew","layeradjustmentposterizenew",
+   "layeradjustmentinvertnew","layeradjustmentlevelnew","layeradjustmenttonecurvenew",
+   "layeradjustmentcolorbalancenew","layeradjustmentbinarizationnew","layeradjustmentgradientmapnew"
+  ]},
+  "layerfoldernew","layerfoldernewandinsert","layercancelfolder","layercopy","layerdelete",
+  {"id":"layerdeleteallparent","zh":"批量删除图层","en":"Delete layers","c":[
+   "layerdeleteallempty","layerdeleteallhidden"
+  ]},
+  "layerchangevisiblealldraft",
+  {"id":"layermaskparent","zh":"图层蒙版","en":"Layer Mask","c":[
+   "layeroutmask","layerinmask","layerdeletemask","layerapplymask","layervisiblemask",
+   "layershowmaskarea","layerlinkmask"
+  ]},
+  {"id":"layerrulerparent","zh":"尺子/格子框","en":"Ruler/Frame","c":[
+   "layerselectfromruler","layerdrawonruler","layermakerulerfromvector","layerdeleteruler",
+   "layervisibleruler","layerlinkruler","layeraddperspectiveruler","layercutcomicframe",
+   "layerunitecomicframe","layerrulerrangecanvas","layerrulerrangefolder","layerrulerrangelayer",
+   "layerchangeguidemove"
+  ]},
+  {"id":"linkobjectparent","zh":"文件对象","en":"File object","c":[
+   "linkobjectnewexternal","linkobjectimportexternalfromclipboard","linkobjectchangeexternalfilepath",
+   "linkobjectopenexternal","linkobjectopenexternalfolder","linkobjectupdateexternal",
+   "linkobjectupdateexternalall"
+  ]},
+  {"id":"layersettingsparent","zh":"图层设置","en":"Layer Settings","c":[
+   "layerchangereferlayer","layerchangedraftlayer","layerchangebelowclip","layerlocklayer",
+   "layerlockalpha","layervisiblelayer","layerchangename","layernoticeableparent",
+   "layernoticeablecanvas","layerdetailsettings"
+  ]},
+  {"id":"layerselectfromlayerparent","zh":"从图层载入选区","en":"Selection from Layer","c":[
+   "layerselectfromlayernew","layerselectfromlayeradd","layerselectfromlayersubtract",
+   "layerselectfromlayermultiply"
+  ]},
+  "layerrasterize","layerconvert","layerltconvert","layercarboncopylayer","layermergelowerlayer",
+  "layermergeselectedlayer","layermergevisiblelayer","layermergevisiblelayercopy","layermergealllayer",
+  {"id":"layerchangeorderparent","zh":"排序","en":"Layer Order","c":[
+   "layerordertop","layerorderup","layerorderdown","layerorderbottom"
+  ]},
+  {"id":"layerselectlayerparent","zh":"设为编辑对象","en":"Change Selected Layer","c":[
+   "layerselectupperlayer","layerselectlowerlayer"
+  ]}
+ ]},
+ {"id":"selectparent","zh":"选区","en":"Select","c":[
+  "selectdeselect","selectreselect","selectinvert","selectexpand","selectreduce","selectblur",
+  "selectcolor","selectvectorinselectarea","selectvectorinselectareawhole","selectquickmask",
+  "selecttostock","selectfromstock"
+ ]},
+ {"id":"viewparent","zh":"视图","en":"View","c":[
+  {"id":"viewrotateparent","zh":"旋转/翻转","en":"Rotate/Flip","c":[
+   "viewangleandreversereset","viewrotate0","viewrotate90","viewrotate180","viewrotate270",
+   "viewreversehorz","viewreversevert","viewrotateleft","viewrotateright"
+  ]},
+  "viewzoomin","viewzoomout","viewpixelsize","view200percentsize","viewwholesize","viewreset",
+  "viewfitting","viewprintsize","viewshownavigationscreen","viewscrollbar","selectshow",
+  "viewselectlauncher","viewselectlaunchersetting","viewtransformlauncher","viewtextobjectlauncher",
+  "view3dobjectlauncher","viewgrid","viewrulerbar","viewgridsetting","viewcropframe",
+  "viewcropframesetting","viewsafeframe","viewwebtoonframe","viewwebtoonframesetting","viewstoryinfo",
+  "viewpaper",
+  {"id":"viewtoneareaparent","zh":"显示网点区域","en":"Show Tone Area","c":[
+   "viewtoneareaselect","viewtoneareaall","viewtoneareaimage"
+  ]},
+  {"id":"viewvectorcoreparent","zh":"显示矢量中心线","en":"Show vector paths","c":[
+   "viewvectorcoreselectedlayer","viewvectorcorealllayer","viewvectorcoreshowedge",
+   "viewvectorcoreshowvertex"
+  ]},
+  "animationplaydisplayfps",
+  {"id":"viewsnapparent","zh":"吸附","en":"Snap","c":[
+   "viewshowsnapguideline","viewsnapruler","viewsnapspecialruler","viewsnapgrid",
+   "viewtogglespecialrulersnap","viewsnapcanvas","viewonlycomicframesnaptocanvas","viewsnapobject",
+   "viewsnapcontrolpoint"
+  ]},
+  {"id":"viewcolorpreviewparent","zh":"颜色配置文件","en":"Color profile","c":[
+   "viewcolorpreviewsetting","viewcolorpreview"
+  ]}
+ ]},
+ {"id":"filterparent","zh":"滤镜","en":"Filter","c":[
+  {"id":"filtercolorfilterparent","zh":"彩色滤镜","en":"Quick Filters","c":[
+   "colorfilterapplycurrentlayer","colorfilterapplynewmergedlayer"
+  ]},
+  {"id":"filterfiltergalleryparent","zh":"滤镜库","en":"Quick Effects","c":[
+   "filtergalleryapplycurrentlayer","filtergalleryapplynewmergedlayer"
+  ]},
+  "filterbootpluginstore"
+ ]},
+ {"id":"windowparent","zh":"窗口","en":"Window","c":[
+  {"id":"windowcanvasparent","zh":"画布","en":"Canvas","c":[
+   "windownewwindow","windowarrangecascade","windowarrangetiled","windownextcanvas","windowprevcanvas"
+  ]},
+  {"id":"windowworkspaceparent","zh":"工作区","en":"Workspace","c":[
+   "windowworkspaceinit","windowworkspacev4minor2init","windowregisterworkspace",
+   "windowregisterworkspacematerial","windowfindworkspacematerial","windowmanageworkspace",
+   "windowworkspacereadsetting","windowresetworkspace"
+  ]},
+  "windowshowtoolbar","windowshowquickaccesspalette","windowshowtoolpalette",
+  "windowshowsubtoolpalette","windowshowtooloptionpalette","windowshowtoolsliderpalette",
+  "windowshowbrushsizepalette","windowshowtooldetailpalette","windowshoweditbarpalette",
+  "windowshowcolorcirclepalette","windowshowcolorsliderpalette","windowshowcolorsetpalette",
+  "windowshowcolorblendpalette","windowshowcolorguidepalette","windowshowcolorhistorypalette",
+  "windowshowmixpalette","windowshowlayerorderpalette","windowshowlayerfindpalette",
+  "windowshowlayerpropertypalette","windowshowlayercomppalette","windowshowlighttablepalette",
+  "windowshowtimelinepalette","windowshowmultiviewpalette","windowshownavigatorpalette",
+  "windowshowsubviewpalette","windowshowhistorypalette","windowshowactionpalette",
+  "windowshowmemoryinfopalette","windowshowitembankpalette","windowshowaligndistributepalette",
+  {"id":"windowshowmaterialpaletteparent","zh":"素材","en":"Material","c":[
+   "windowshowmaterialpalette1","windowshowmaterialpalette2","windowshowmaterialpalette3",
+   "windowshowmaterialpalette4","windowshowmaterialpalette5","windowshowmaterialpalette6",
+   "windowshowmaterialpalette7","windowshowmaterialpalette8","windowshowmaterialpalette9",
+   "windowshowmaterialpalette10","windowshowmaterialpalette11","windowshowmaterialpalette12",
+   "windowshowmaterialpalette13","windowshowmaterialpalette14","windowshowmaterialpalette15"
+  ]},
+  "windowshowallpalette","windowswitchscreenmode","windowautovisibleworktab",
+  {"id":"windowpalettedockparent","zh":"面板停靠栏","en":"Palette dock","c":[
+   "windowlockdockwidth","windowlockdockheight","windowlockpalettedragdrop"
+  ]}
+ ]},
+ {"id":"helpparent","zh":"帮助","en":"Help","c":[
+  "applicationtilingmenu","helponlinehowto","helptutorial","helpreleasenotes","helponlinemanual",
+  "helponlineregister","helponlineupdate","helpchatbot","helpfaq","helponlinesupport",
+  "applicationabout","applicationversion"
+ ]},
+ {"id":"boostupparent","zh":"BOOST UP","en":"Boost up","c":[
+  "prointroductionbymenu"
+ ]}
+]},
+{"id":"popuppalettes","zh":"弹出式面板","en":"Pop-up palettes","c":[
+ {"id":"windowbubblepaletteparent","zh":"显示/隐藏弹出式菜单","en":"Display/hide pop-up","c":[
+  "windowbubblequickaccesspalette","windowbubbletoolpalette","windowbubblesubtoolpalette",
+  "windowbubbletooloptionpalette","windowbubbletoolsliderpalette","windowbubblebrushsizepalette",
+  "windowbubbletooldetailpalette","windowbubblecolorcirclepalette","windowbubblecolorsliderpalette",
+  "windowbubblecolorsetpalette","windowbubblecolorblendpalette","windowbubblecolorguidepalette",
+  "windowbubblecolorhistorypalette","windowbubblemixpalette","windowbubblelayerorderpalette",
+  "windowbubblelayerfindpalette","windowbubblelayerpropertypalette","windowbubblelayercomppalette",
+  "windowbubblelighttablepalette","windowbubbletimelinepalette","windowbubblemultiviewpalette",
+  "windowbubblenavigatorpalette","windowbubblesubviewpalette","windowbubblehistorypalette",
+  "windowbubbleactionpalette","windowbubblememoryinfopalette","windowbubbleitembankpalette",
+  "windowbubblealigndistributepalette",
+  {"id":"windowbubblematerialpaletteparent","zh":"素材","en":"Material","c":[
+   "windowbubblematerialpalette1","windowbubblematerialpalette2","windowbubblematerialpalette3",
+   "windowbubblematerialpalette4","windowbubblematerialpalette5","windowbubblematerialpalette6",
+   "windowbubblematerialpalette7","windowbubblematerialpalette8","windowbubblematerialpalette9",
+   "windowbubblematerialpalette10","windowbubblematerialpalette11","windowbubblematerialpalette12",
+   "windowbubblematerialpalette13","windowbubblematerialpalette14","windowbubblematerialpalette15"
+  ]}
+ ]},
+ {"id":"windowbubbleshowpaletteparent","zh":"长按按钮显示弹出式菜单","en":"Display pop-up while pressing button","c":[
+  "windowbubbleshowquickaccesspalette","windowbubbleshowtoolpalette","windowbubbleshowsubtoolpalette",
+  "windowbubbleshowtooloptionpalette","windowbubbleshowtoolsliderpalette",
+  "windowbubbleshowbrushsizepalette","windowbubbleshowtooldetailpalette",
+  "windowbubbleshowcolorcirclepalette","windowbubbleshowcolorsliderpalette",
+  "windowbubbleshowcolorsetpalette","windowbubbleshowcolorblendpalette",
+  "windowbubbleshowcolorguidepalette","windowbubbleshowcolorhistorypalette",
+  "windowbubbleshowmixpalette","windowbubbleshowlayerorderpalette","windowbubbleshowlayerfindpalette",
+  "windowbubbleshowlayerpropertypalette","windowbubbleshowlayercomppalette",
+  "windowbubbleshowlighttablepalette","windowbubbleshowtimelinepalette",
+  "windowbubbleshowmultiviewpalette","windowbubbleshownavigatorpalette",
+  "windowbubbleshowsubviewpalette","windowbubbleshowhistorypalette","windowbubbleshowactionpalette",
+  "windowbubbleshowmemoryinfopalette","windowbubbleshowitembankpalette",
+  "windowbubbleshowaligndistributepalette",
+  {"id":"windowbubbleshowmaterialpaletteparent","zh":"素材","en":"Material","c":[
+   "windowbubbleshowmaterialpalette1","windowbubbleshowmaterialpalette2",
+   "windowbubbleshowmaterialpalette3","windowbubbleshowmaterialpalette4",
+   "windowbubbleshowmaterialpalette5","windowbubbleshowmaterialpalette6",
+   "windowbubbleshowmaterialpalette7","windowbubbleshowmaterialpalette8",
+   "windowbubbleshowmaterialpalette9","windowbubbleshowmaterialpalette10",
+   "windowbubbleshowmaterialpalette11","windowbubbleshowmaterialpalette12",
+   "windowbubbleshowmaterialpalette13","windowbubbleshowmaterialpalette14",
+   "windowbubbleshowmaterialpalette15","pagecollaborationbegineditformessage",
+   "layerltconvertwithlayerproperty","animationdeleteclip","animationcutclip","animationcopyclip",
+   "animationpasteclip","animationdeletemotionalllayer","animationdeletemotionselectedlayer",
+   "applicationuxcanvasnew"
+  ]}
+ ]}
+]},
+{"id":"options","zh":"选项","en":"Options","c":[
+ {"id":"canvasparent","zh":"画布","en":"Canvas","c":[
+  {"id":"canvasviewparent","zh":"视图","en":"View","c":[
+   "canvasscrollleft","canvasscrollright","canvasscrollup","canvasscrolldown"
+  ]},
+  {"id":"canvasrulerparent","zh":"尺子","en":"Ruler","c":[
+   "canvasrulermoveleft","canvasrulermoveright","canvasrulermoveup","canvasrulermovedown",
+   "canvasrulerrotateclockwise","canvasrulerrotatecounterclockwise","canvasrulerexpand",
+   "canvasrulershrink","canvasrulersetrotatecenter"
+  ]},
+  {"id":"canvasperspectiverulerparent","zh":"透视尺","en":"Perspective ruler","c":[
+   "canvasvanishtogglesnap1","canvasvanishtogglesnap2","canvasvanishtogglesnap3",
+   "canvasvanishtogglesnapall","canvasvanishexclusivesnap1","canvasvanishexclusivesnap2",
+   "canvasvanishexclusivesnap3","canvaschangefixeyelevel","canvasseteyelevelhorizontal"
+  ]}
+ ]},
+ {"id":"tooloptionpaletteparent","zh":"工具属性面板","en":"Tool Settings palette","c":[
+  "toolsizeminus","toolsizeplus","toolpressuretosize","tooltilttosize","toolsizesyncviewscale",
+  {"id":"toolopacityparent","zh":"不透明度","en":"Opacity","c":[
+   "toolopacityminus","toolopacityplus","toolopacity10","toolopacity20","toolopacity30","toolopacity40",
+   "toolopacity50","toolopacity60","toolopacity70","toolopacity80","toolopacity90","toolopacity100",
+   "toolpressuretoopacity"
+  ]},
+  {"id":"toolcompositemodeparent","zh":"混合模式","en":"Blending mode","c":[
+   "toolcompositeblend","toolcompositedarken","toolcompositemultiply","toolcompositeburncolor",
+   "toolcompositeburnlinear","toolcompositeburnblack","toolcompositesubtract","toolcompositelighten",
+   "toolcompositescreen","toolcompositedodgecolor","toolcompositedodgecolorglow",
+   "toolcompositedodgewhite","toolcompositeadd","toolcompositeaddglow","toolcompositeoverlay",
+   "toolcompositesoftlight","toolcompositehardlight","toolcompositedifference","toolcompositeerase",
+   "toolcompositebackground","toolcompositereplacealpha","toolcompositecomparealpha",
+   "toolcompositeerasecompare","toolcompositevividlight","toolcompositelinearlight",
+   "toolcompositepinlight","toolcompositehardmix","toolcompositeexclusion","toolcompositedarkencolor",
+   "toolcompositelightencolor","toolcompositedivide","toolcompositehue","toolcompositesaturation",
+   "toolcompositecolor","toolcompositebrightness"
+  ]},
+  "toolbrushusewatercolor","toolbrushmixcolorminus","toolbrushmixcolorplus","toolbrushmixalphaminus",
+  "toolbrushmixalphaplus","toolbrushmixcolorextensionminus","toolbrushmixcolorextensionplus",
+  "toolchangepatterncolor","toolchangestrokecolor","toolantialiasno","toolantialiasweak",
+  "toolantialiasmiddle","toolantialiasstrong","toolfillantialias","toolbrushhardnessminus",
+  "toolbrushhardnessplus","toolbrushflowminus","toolbrushflowplus","toolbrushflow10","toolbrushflow20",
+  "toolbrushflow30","toolbrushflow40","toolbrushflow50","toolbrushflow60","toolbrushflow70",
+  "toolbrushflow80","toolbrushflow90","toolbrushflow100","toolpressuretoflow",
+  "toolbrushthicknessminus","toolbrushthicknessplus","toolbrushrotationcounterclockwise",
+  "toolbrushrotationclockwise","toolbrushreversehorizontal","toolbrushreversevertical",
+  "toolbrushspray","toolbrushspraysizeminus","toolbrushspraysizeplus","toolbrushspraydensityminus",
+  "toolbrushspraydebsityplus","toolbrushintervalminus","toolbrushintervalplus",
+  "toolbrushcontinuousplot","tooldualsizeminus","tooldualsizeplus","toolpressuretodualsize",
+  "tooldualhardnessminus","tooldualhardnessplus","tooldualflowminus","tooldualflowplus",
+  "toolpressuretodualflow","tooldualspraysizeminus","tooldualspraysizeplus",
+  "tooldualspraydensityminus","tooldualspraydensityplus","toolbrushusewateredge",
+  "toolbrushusevectoreraser","toolbrushvectoreraserpart","toolbrushvectorerasertrim",
+  "toolbrushvectoreraserwhole","toolbrushvectoreraserreferalllayer","toolbrusherasealllayer",
+  "toolbrushsharpencorner","toolflickerreductionminus","toolflickerreductionplus",
+  "toolflickerreductionbyspeed","toolbrushuserevision","toolbrushrevisionminus",
+  "toolbrushrevisionplus","toolbrushenablesnap","toolbrushusevectormagnet",
+  "toolbrushvectormagnetminus","toolbrushvectormagnetplus","toolinouttosize","toolinouttoflow",
+  "toolusein","tooluseout","toolbrushusereferlayer","toolselectcreatenew","toolselectcreateadd",
+  "toolselectcreatesubtract","toolselectcreatemultiply","toolfillcontinuouspixel",
+  "toolfilluseclosegap","toolfillclosegapminus","toolfillclosegapplus","toolfillcolormarginminus",
+  "toolfillcolormarginplus","toolfilluseexpand","toolfixedshapeuseaspect","toolshapestartcenter",
+  "toolrotateshape","toolrefermultilayer","toolreferlayertypealllayer","toolreferlayertypereferlayer",
+  "toolreferlayertypeselectedlayer","toolreferlayertypelayerinfolder","toolfillnotreferdraft",
+  "toolfillnotrefertext","toolfillnotreferballoon","toolfillnotrefercurrent","toolfillnotreferpaper",
+  "toolfillnotreferlocked","toolfillrefervectorcenter",
+  {"id":"toolspuitparent","zh":"吸管","en":"Eyedropper","c":[
+   "toolfillspuitrefertypecurrent","toolfillspuitrefertypetop","toolfillspuitrefertyperendered",
+   "toolfillspuitnotreferdraft","toolfillspuitnotrefertext","toolfillspuitnotreferballoon",
+   "toolfillspuitnotreferpaper","toolfillspuitnotreferlocked"
+  ]},
+  {"id":"toollayermoveparent","zh":"选择图层","en":"Select layer","c":[
+   "toolselectlayernotselectdraft","toolselectlayernotselecttext","toolselectlayernotselectballoon",
+   "toolselectlayernotselectlocked","toolselectlayernotselectmonochromefill"
+  ]},
+  {"id":"toolobjectparent","zh":"操作（对象）","en":"Operation (Object)","c":[
+   "toolobjectoperationatblankselectlayer","toolobjectoperationatblankselectbydrag",
+   "toolobjectselectfolder"
+  ]},
+  {"id":"toolobjectparent","zh":"操作（3D）","en":"Operation (3D)","c":[
+   "toolobject3dmanipulatorvisiblemoveonly","toolobject3dmanipulatorvisiblerotateonly",
+   "toolobject3dmanipulatorvisiblescaleonly","toolobject3dmanipulatorvisibleall"
+  ]},
+  {"id":"toolvectorpointparent","zh":"锚点","en":"Control point","c":[
+   "toolvectorpointmoveoperation","toolvectorpointaddoperation","toolvectorpointdeleteoperation",
+   "toolvectorpointchangecorneroperation","toolvectorpointwidthoperation",
+   "toolvectorpointdensityoperation","toolvectorpointdivideoperation"
+  ]},
+  "toolvectorpinchlevelminus","toolvectorpinchlevelplus","toolvectorpinchareaminus",
+  "toolvectorpinchareaplus"
+ ]},
+ {"id":"toolbrushsizepaletteparent","zh":"笔刷尺寸面板","en":"Brush size palette","c":[
+  "toolsizeprevious","toolsizenext"
+ ]},
+ {"id":"subtoolpaletteparent","zh":"工具组面板","en":"Tool Group palette","c":[
+  "subtoolprevioussubtool","subtoolnextsubtool","subtoolpreviousgroup","subtoolnextgroup",
+  "subtoolpreviouscurrent","subtoollock","subtoolreset","subtoolsettoinitial"
+ ]},
+ {"id":"layerpaletteparent","zh":"图层面板","en":"Layer palette","c":[
+  "layerfolderopencloseselected","layerfolderopencloseselectedwithdescendant",
+  "layerfolderopencloseselectedwithsibling","layerfolderopencloseselectedwithsiblingdescendant",
+  "layerfolderopencloseall"
+ ]},
+ {"id":"layerpropertypaletteparent","zh":"图层属性面板","en":"Layer Properties Palette","c":[
+  "layerpropuseedge","layerpropuseline","layerpropusetone","layerpropusereducecolor",
+  "layerpropusetexturemap","layerpropuselayercolor","layerpropertyregistdefault"
+ ]},
+ {"id":"layercomppaletteparent","zh":"图层复合面板","en":"Layer Comps Palette","c":[
+  "layercompapplyprevious","layercompapplynext","layercompoverwrite","layercompaddbyshortcut",
+  "layercompdelete","layercompshowaddedlayer"
+ ]},
+ {"id":"quickaccesspaletteparent","zh":"快速访问面板","en":"Quick Access Palette","c":[
+  "quickaccesssetting","addsubtooltoquickaccess"
+ ]},
+ {"id":"animationcelpaletteparent","zh":"动画胶片面板","en":"Animation cel palette","c":[
+  "togglelighttabletoolwithchangelayer"
+ ]},
+ {"id":"subviewpaletteparent","zh":"辅助视图面板","en":"Sub View palette","c":[
+  "subcanvasregistimagefromclipboard"
+ ]},
+ {"id":"applicationcolorparent","zh":"描画色","en":"Drawing color","c":[
+  "applicationchangecurrentcolor","applicationchangecolortransparent","applicationchangenextcolor",
+  "applicationchangemaincolor","applicationchangesubcolor","applicationchangetransparent",
+  "applicationchangemaincolorandtransparent","applicationchangesubcolorandtransparent",
+  "applicationswapmainandsubcolor","applicationresetmainandsubcolor","applicationopencolorsetting"
+ ]}
+]},
+{"id":"pentouch","zh":"笔和触摸","en":"Pen and Touch","c":[
+ "applicationtabletandgesture","applicationtabletonly","applicationgestureonly",
+ "applicationgestureonoff","applicationpengesturemodifykeysetting",
+ {"id":"gestureonoffparent","zh":"触控手势","en":"Touch gestures","c":[
+  "applicationpreferencegesture"
+ ]},
+ {"id":"editparent","zh":"编辑","en":"Edit","c":[
+  "editcutandpaste","editcopyandpaste"
+ ]}
+]}
+],
+"commands": {
+"28691cf0-c95b-4afc-a4c2-75e46d4f689d": {"zh":".psb(Photoshop 大型文档)","en":".psb (Photoshop Big Document)"},
+"28691cf0-c95b-4afc-a4c2-75e46d4f689d-2fb51a87-53f9-44d0-92a0-b0e0b2ae3ad7": {"zh":".psb(Photoshop 大型文档)","en":".psb (Photoshop Big Document)"},
+"3d617f46-7d99-44b2-80c1-2bef6f9ebe33": {"zh":".psd(Photoshop 文档)","en":".psd (Photoshop Document)"},
+"3d617f46-7d99-44b2-80c1-2bef6f9ebe33-2fb51a87-53f9-44d0-92a0-b0e0b2ae3ad7": {"zh":".psd(Photoshop 文档)","en":".psd (Photoshop Document)"},
+"addsubtooltoquickaccess": {"zh":"添加当前工具","en":"Add selected tool","alt_zh":["组 2","组 3"],"alt_en":["Set 2","Set 3"]},
+"animationcelindexparent": {"zh":"轨道编辑","en":"Edit track"},
+"animationcelpaletteparent": {"zh":"动画胶片面板","en":"Animation cel palette"},
+"animationchangecurrentframe": {"zh":"跳转帧","en":"Move frame"},
+"animationcutparent": {"zh":"时间轴","en":"Timeline"},
+"animationexportparent": {"zh":"输出动画","en":"Export animation"},
+"animationfunctioncurveparent": {"zh":"函数曲线","en":"Animation curve"},
+"animationlabelparent": {"zh":"标签","en":"Label"},
+"animationnewlayerparent": {"zh":"动画所用新建图层","en":"New animation layer"},
+"animationonionskinparent": {"zh":"显示动画胶片","en":"Show animation cels"},
+"animationparent": {"zh":"动画","en":"Animation"},
+"animationplaytypeparent": {"zh":"播放设置","en":"Playback settings"},
+"applicationchangecolortransparent": {"zh":"切换描画色和透明色","en":"Switch drawing color and transparent color"},
+"applicationchangecurrentcolor": {"zh":"切换前景色和背景色","en":"Switch main color and sub color"},
+"applicationchangemaincolor": {"zh":"切换到前景色","en":"Switch to main color"},
+"applicationchangemaincolorandtransparent": {"zh":"切换前景色和透明色","en":"Switch between main color and transparent color"},
+"applicationchangenextcolor": {"zh":"切换前景色、背景色和透明色","en":"Switch between main color, sub color, and transparent color"},
+"applicationchangesubcolor": {"zh":"切换到背景色","en":"Switch to sub color"},
+"applicationchangesubcolorandtransparent": {"zh":"切换背景色和透明色","en":"Switch between sub color and transparent color"},
+"applicationchangetransparent": {"zh":"切换到透明色","en":"Switch to transparent color"},
+"applicationcolorparent": {"zh":"描画色","en":"Drawing color"},
+"applicationgestureonly": {"zh":"触摸操作","en":"Touch Operation"},
+"applicationgestureonoff": {"zh":"手指和笔各自使用不同的工具","en":"Use different tools with fingers and pen"},
+"applicationhowto": {"zh":"返回主页","en":"Return to Home"},
+"applicationjoypadparent": {"zh":"Tab-Mate Controller","en":"Tab-Mate Controller"},
+"applicationopencolorsetting": {"zh":"打开颜色设置","en":"Open color settings"},
+"applicationparent": {"zh":"应用程序设置","en":"App Settings","alt_zh":["CLIP STUDIO PAINT"],"alt_en":["CLIP STUDIO PAINT"]},
+"applicationpengesturemodifykeysetting": {"zh":"设置以手指使用的工具","en":"Set tool to use with finger"},
+"applicationpreferencegesture": {"zh":"触控手势设置","en":"Touch gesture settings"},
+"applicationresetmainandsubcolor": {"zh":"将前景色变更为黑色，背景色变更为白色","en":"Switch main color to black and sub color to white"},
+"applicationswapmainandsubcolor": {"zh":"切换前景色和背景色","en":"Switch between main color and sub color"},
+"applicationtabletandgesture": {"zh":"自动识别笔和触摸操作","en":"Auto recognition for pen and touch operation"},
+"applicationtabletonly": {"zh":"笔操作","en":"Pen Operation"},
+"applicationtilingmenu": {"zh":"显示菜单","en":"Show menu"},
+"applicationwirelesstabmateparent": {"zh":"CLIP STUDIO TABMATE","en":"CLIP STUDIO TABMATE"},
+"boostupparent": {"zh":"BOOST UP","en":"Boost up"},
+"canvaschangefixeyelevel": {"zh":"固定视平线","en":"Fix eye level"},
+"canvasparent": {"zh":"画布","en":"Canvas"},
+"canvasperspectiverulerparent": {"zh":"透视尺","en":"Perspective ruler"},
+"canvasrulerexpand": {"zh":"放大尺子","en":"Scale up ruler"},
+"canvasrulermovedown": {"zh":"向下移动尺子","en":"Move ruler to down"},
+"canvasrulermoveleft": {"zh":"向左移动尺子","en":"Move ruler to left"},
+"canvasrulermoveright": {"zh":"向右移动尺子","en":"Move ruler to right"},
+"canvasrulermoveup": {"zh":"向上移动尺子","en":"Move ruler to up"},
+"canvasrulerparent": {"zh":"尺子","en":"Ruler"},
+"canvasrulerrotateclockwise": {"zh":"顺时针旋转尺子","en":"Rotate ruler clockwise"},
+"canvasrulerrotatecounterclockwise": {"zh":"逆时针旋转尺子","en":"Rotate ruler counter-clockwise"},
+"canvasrulersetrotatecenter": {"zh":"将尺子的旋转中心移动到窗口的中心","en":"Move rotation center of ruler to center of window"},
+"canvasrulershrink": {"zh":"缩小尺子","en":"Scale down ruler"},
+"canvasscrolldown": {"zh":"向下滚动","en":"Scroll to down"},
+"canvasscrollleft": {"zh":"向左滚动","en":"Scroll to left"},
+"canvasscrollright": {"zh":"向右滚动","en":"Scroll to right"},
+"canvasscrollup": {"zh":"向上滚动","en":"Scroll to up"},
+"canvasseteyelevelhorizontal": {"zh":"将视平线置于水平","en":"Horizontalize eye level"},
+"canvasvanishexclusivesnap1": {"zh":"仅吸附第 1 个消失点","en":"Snap only the first vanishing point"},
+"canvasvanishexclusivesnap2": {"zh":"仅吸附第 2 个消失点","en":"Snap only the second vanishing point"},
+"canvasvanishexclusivesnap3": {"zh":"仅吸附第 3 个消失点","en":"Snap only the third vanishing point"},
+"canvasvanishtogglesnap1": {"zh":"开/关 吸附于第 1 个消失点","en":"ON/OFF of snap of the first vanishing point"},
+"canvasvanishtogglesnap2": {"zh":"开/关 吸附于第 2 个消失点","en":"ON/OFF of snap of the second vanishing point"},
+"canvasvanishtogglesnap3": {"zh":"开/关 吸附于第 3 个消失点","en":"ON/OFF of snap of the third vanishing point"},
+"canvasvanishtogglesnapall": {"zh":"开/关 吸附于全部消失点","en":"ON/OFF of snap of all vanishing point"},
+"canvasviewparent": {"zh":"视图","en":"View"},
+"editaligndistributeparent": {"zh":"对齐·分布","en":"Align/Distribute"},
+"editclearmemoryparent": {"zh":"清除工作历史记录","en":"Clear work history"},
+"editcopyandpaste": {"zh":"拷贝＋粘贴","en":"Copy and paste"},
+"editcutandpaste": {"zh":"剪切＋粘贴","en":"Cut and paste"},
+"editparent": {"zh":"编辑","en":"Edit"},
+"editquickshape": {"zh":"智能图形","en":"Smart Shape"},
+"editregistmaterialparent": {"zh":"添加素材","en":"Register Material"},
+"editshiftdrawingparent": {"zh":"更改画布的高度","en":"Change canvas height"},
+"edittransformparent": {"zh":"变换","en":"Transform"},
+"exportothers": {"zh":"其他导出","en":"Special Export"},
+"externalkeycancel": {"zh":"取消","en":"Cancel"},
+"externalkeyok": {"zh":"确定","en":"OK"},
+"externalkeyparent": {"zh":"确定及取消","en":"Confirm and Cancel"},
+"fileadjustmentparent": {"zh":"色调调整","en":"Tonal Correction"},
+"filebookbindingexportparent": {"zh":"导出多页","en":"Export multiple pages"},
+"fileexporttophotolibraryparent": {"zh":"拼合图像后保存在存储器","en":"Flatten and save to device storage"},
+"fileimportparent": {"zh":"导入","en":"Import"},
+"fileparent": {"zh":"文件","en":"File"},
+"filesaveasdirectparent": {"zh":"保存副本","en":"Save Duplicate"},
+"filesavemergeimageparent": {"zh":"拼合图像后导出","en":"Export (Single Layer)"},
+"filetimelapseparent": {"zh":"缩时摄影","en":"Timelapse"},
+"filterbootpluginstore": {"zh":"获取滤镜","en":"Get filters"},
+"filtercolorfilterparent": {"zh":"彩色滤镜","en":"Quick Filters"},
+"filtercrystalize": {"zh":"水晶","en":"Crystallize"},
+"filterdropshadow": {"zh":"投影阴影","en":"Drop shadow"},
+"filterfiltergalleryparent": {"zh":"滤镜库","en":"Quick Effects"},
+"filtergloweffect": {"zh":"发光效果","en":"Glow"},
+"filterinflate": {"zh":"浮雕","en":"Inflate"},
+"filterlensblur": {"zh":"镜头模糊","en":"Lens Blur"},
+"filterparent": {"zh":"滤镜","en":"Filter"},
+"gestureonoffparent": {"zh":"触控手势","en":"Touch gestures"},
+"helponlineregister": {"zh":" ","en":" "},
+"helponlineupdate": {"zh":" ","en":" "},
+"helpparent": {"zh":"帮助","en":"Help"},
+"layeradjustmentnewparent": {"zh":"新建色调调整图层","en":"New Correction Layer"},
+"layerchangeorderparent": {"zh":"排序","en":"Layer Order"},
+"layercompaddbyshortcut": {"zh":"添加图层复合","en":"Add layer comp"},
+"layercompapplynext": {"zh":"应用下一个图层复合","en":"Apply next layer comp"},
+"layercompapplyprevious": {"zh":"应用上一个图层复合","en":"Apply previous layer comp"},
+"layercompdelete": {"zh":"删除图层复合","en":"Delete layer comp"},
+"layercompoverwrite": {"zh":"覆盖图层复合","en":"Save layer comp"},
+"layercomppaletteparent": {"zh":"图层复合面板","en":"Layer Comps Palette"},
+"layercompshowaddedlayer": {"zh":"使添加的图层在所有复合中可见","en":"Added layers are visible on all layer comps"},
+"layerdeleteallparent": {"zh":"批量删除图层","en":"Delete layers"},
+"layerfolderopencloseall": {"zh":"打开和关闭所有文件夹","en":"Open/close all folders"},
+"layerfolderopencloseselected": {"zh":"打开和关闭文件夹","en":"Open/close folder"},
+"layerfolderopencloseselectedwithdescendant": {"zh":"打开和关闭文件夹及其下属的所有文件夹","en":"Open/close folder and all content"},
+"layerfolderopencloseselectedwithsibling": {"zh":"打开和关闭同一层次中的所有文件夹","en":"Open/close all folders at the same hierarchy"},
+"layerfolderopencloseselectedwithsiblingdescendant": {"zh":"打开和关闭同一层次及其下属的所有文件夹","en":"Open/close all folders at the same hierarchy and below"},
+"layerlighttableparent": {"zh":"透写台","en":"Light table"},
+"layermaskparent": {"zh":"图层蒙版","en":"Layer Mask"},
+"layernewdetailparent": {"zh":"新建图层","en":"New Layer"},
+"layerpaletteparent": {"zh":"图层面板","en":"Layer palette"},
+"layerparent": {"zh":"图层","en":"Layer"},
+"layerpropertypaletteparent": {"zh":"图层属性面板","en":"Layer Properties Palette"},
+"layerpropertyregistdefault": {"zh":"保存为初始值","en":"Save as default"},
+"layerpropuseedge": {"zh":"确定是否使用边界效果","en":"Switch use of border effect"},
+"layerpropuselayercolor": {"zh":"确定是否使用图层颜色","en":"Switch using layer color"},
+"layerpropuseline": {"zh":"确定是否使用提取线稿效果","en":"Switch use of line extraction effect"},
+"layerpropusereducecolor": {"zh":"确定是否使用减色显示","en":"Switch using display of reduce color"},
+"layerpropusetexturemap": {"zh":"启用/停用混合质感","en":"Switch using texture map combining"},
+"layerpropusetone": {"zh":"确定是否使用基于网点的二值化","en":"Switch using binarization with tone"},
+"layerrulerparent": {"zh":"尺子/格子框","en":"Ruler/Frame"},
+"layerselectfromlayerparent": {"zh":"从图层载入选区","en":"Selection from Layer"},
+"layerselectlayerparent": {"zh":"设为编辑对象","en":"Change Selected Layer"},
+"layersettingsparent": {"zh":"图层设置","en":"Layer Settings"},
+"layersharenewparent": {"zh":"CLIP STUDIO SHARE","en":"Clip Studio SHARE"},
+"linkobjectparent": {"zh":"文件对象","en":"File object"},
+"menueditparent": {"zh":"编辑","en":"Edit"},
+"pagebookbindingparent": {"zh":"装订处理","en":"Binding process"},
+"pagecollaborationparent": {"zh":"协作","en":"Group work"},
+"pagegallerywindowlayout": {"zh":"页面管理窗口布局","en":"Page Manager Layout"},
+"pagegallerywindowpagereordertype": {"zh":"页面排列方法","en":"Page Reordering"},
+"pagegallerywindowshowstyle": {"zh":"页面显示方法","en":"View"},
+"pagegallerywindowwebtoonwrapdirection": {"zh":"条漫作品的折回方向","en":"Webtoon reading direction"},
+"pageparent": {"zh":"页面管理","en":"Story"},
+"pagerotatecanvasparent": {"zh":"旋转/翻转画布","en":"Rotate/Flip canvas"},
+"pagestoryeditorparent": {"zh":"编辑文本","en":"Edit text"},
+"phonebubbleactionpalette": {"zh":"自动动作","en":"Auto Action"},
+"phonebubblealigndistributepalette": {"zh":"对齐·分布","en":"Align/Distribute"},
+"phonebubblebrushsizepalette": {"zh":"笔刷尺寸","en":"Brush Size"},
+"phonebubblecolorblendpalette": {"zh":"中间色","en":"Intermediate Color"},
+"phonebubblecolorcirclepalette": {"zh":"色轮","en":"Color Wheel"},
+"phonebubblecolorguidepalette": {"zh":"近似色","en":"Approximate Color"},
+"phonebubblecolorhistorypalette": {"zh":"颜色历史记录","en":"Color History"},
+"phonebubblecolorsetpalette": {"zh":"色板","en":"Color Set"},
+"phonebubblecolorsliderpalette": {"zh":"颜色滑块","en":"Color Slider"},
+"phonebubblehistorypalette": {"zh":"历史记录","en":"History"},
+"phonebubbleitembankpalette": {"zh":"道具库","en":"Item bank"},
+"phonebubblelayercomppalette": {"zh":"图层复合","en":"Layer Comps"},
+"phonebubblelayerfindpalette": {"zh":"图层搜索","en":"Search Layer"},
+"phonebubblelayerorderpalette": {"zh":"图层","en":"Layer"},
+"phonebubblelayerpropertypalette": {"zh":"图层属性","en":"Layer Properties"},
+"phonebubblelighttablepalette": {"zh":"动画胶片","en":"Animation cels"},
+"phonebubblematerialpaletteparent": {"zh":"素材","en":"Material"},
+"phonebubblememoryinfopalette": {"zh":"信息","en":"Information"},
+"phonebubblemixpalette": {"zh":"混色","en":"Color Mixing"},
+"phonebubblemultiviewpalette": {"zh":"四面图","en":"All sides view"},
+"phonebubblenavigatorpalette": {"zh":"导航器","en":"Navigator"},
+"phonebubblepaletteparent": {"zh":"显示/隐藏弹出式菜单","en":"Display/hide pop-up"},
+"phonebubblequickaccesspalette": {"zh":"快速访问","en":"Quick Access"},
+"phonebubbleshowactionpalette": {"zh":"自动动作","en":"Auto Action"},
+"phonebubbleshowaligndistributepalette": {"zh":"对齐·分布","en":"Align/Distribute"},
+"phonebubbleshowbrushsizepalette": {"zh":"笔刷尺寸","en":"Brush Size"},
+"phonebubbleshowcolorblendpalette": {"zh":"中间色","en":"Intermediate Color"},
+"phonebubbleshowcolorcirclepalette": {"zh":"色轮","en":"Color Wheel"},
+"phonebubbleshowcolorguidepalette": {"zh":"近似色","en":"Approximate Color"},
+"phonebubbleshowcolorhistorypalette": {"zh":"颜色历史记录","en":"Color History"},
+"phonebubbleshowcolorsetpalette": {"zh":"色板","en":"Color Set"},
+"phonebubbleshowcolorsliderpalette": {"zh":"颜色滑块","en":"Color Slider"},
+"phonebubbleshowhistorypalette": {"zh":"历史记录","en":"History"},
+"phonebubbleshowitembankpalette": {"zh":"道具库","en":"Item bank"},
+"phonebubbleshowlayercomppalette": {"zh":"图层复合","en":"Layer Comps"},
+"phonebubbleshowlayerfindpalette": {"zh":"图层搜索","en":"Search Layer"},
+"phonebubbleshowlayerorderpalette": {"zh":"图层","en":"Layer"},
+"phonebubbleshowlayerpropertypalette": {"zh":"图层属性","en":"Layer Properties"},
+"phonebubbleshowlighttablepalette": {"zh":"动画胶片","en":"Animation cels"},
+"phonebubbleshowmaterialpaletteparent": {"zh":"素材","en":"Material"},
+"phonebubbleshowmemoryinfopalette": {"zh":"信息","en":"Information"},
+"phonebubbleshowmixpalette": {"zh":"混色","en":"Color Mixing"},
+"phonebubbleshowmultiviewpalette": {"zh":"四面图","en":"All sides view"},
+"phonebubbleshownavigatorpalette": {"zh":"导航器","en":"Navigator"},
+"phonebubbleshowpaletteparent": {"zh":"长按按钮显示弹出式菜单","en":"Display pop-up while pressing button"},
+"phonebubbleshowquickaccesspalette": {"zh":"快速访问","en":"Quick Access"},
+"phonebubbleshowsubtoolpalette": {"zh":"工具组","en":"Tool Group"},
+"phonebubbleshowsubviewpalette": {"zh":"辅助视图","en":"Sub View"},
+"phonebubbleshowtimelinepalette": {"zh":"时间轴","en":"Timeline"},
+"phonebubbleshowtooldetailpalette": {"zh":"工具高级选项","en":"Advanced Tool Settings"},
+"phonebubbleshowtooloptionpalette": {"zh":"工具属性","en":"Tool Settings"},
+"phonebubbleshowtoolpalette": {"zh":"工具","en":"Tool"},
+"phonebubblesubtoolpalette": {"zh":"工具组","en":"Tool Group"},
+"phonebubblesubviewpalette": {"zh":"辅助视图","en":"Sub View"},
+"phonebubbletimelinepalette": {"zh":"时间轴","en":"Timeline"},
+"phonebubbletooldetailpalette": {"zh":"工具高级选项","en":"Advanced Tool Settings"},
+"phonebubbletooloptionpalette": {"zh":"工具属性","en":"Tool Settings"},
+"phonebubbletoolpalette": {"zh":"工具","en":"Tool"},
+"prointroductionbybutton2": {"zh":"想加速您的创意引擎吗？","en":"How to accelerate creative?"},
+"prointroductionbybutton3": {"zh":"想加速您的创意引擎吗？","en":"How to accelerate creative?"},
+"quickaccesspaletteparent": {"zh":"快速访问面板","en":"Quick Access Palette"},
+"quickaccesssetting": {"zh":"快速访问设置","en":"Quick Access Settings","alt_zh":["组 2"],"alt_en":["Set 2"]},
+"selectparent": {"zh":"选区","en":"Select"},
+"subtoollock": {"zh":"锁定","en":"Lock"},
+"subtoolnextgroup": {"zh":"切换到下一个工具组","en":"Switch to next tool group"},
+"subtoolnextsubtool": {"zh":"切换到下一个工具","en":"Switch to next tool"},
+"subtoolpaletteparent": {"zh":"工具组面板","en":"Tool Group palette"},
+"subtoolpreviouscurrent": {"zh":"切换当前工具与上一个工具","en":"Switch between current and previous tools"},
+"subtoolpreviousgroup": {"zh":"切换到上一个工具组","en":"Switch to previous tool group"},
+"subtoolprevioussubtool": {"zh":"切换到上一个工具","en":"Switch to previous tool"},
+"subtoolreset": {"zh":"还原为初始值","en":"Reset to default"},
+"subtoolsettoinitial": {"zh":"保存为初始值","en":"Save as default"},
+"subviewpaletteparent": {"zh":"辅助视图面板","en":"Sub View palette"},
+"togglelighttabletoolwithchangelayer": {"zh":"启用/停用透写台工具","en":"Enable/disable light table tool"},
+"toolantialiasmiddle": {"zh":"消除锯齿方式为“中”","en":"Set anti-aliasing middle"},
+"toolantialiasno": {"zh":"消除锯齿方式为“无”","en":"Set anti-aliasing none"},
+"toolantialiasstrong": {"zh":"消除锯齿方式为“强”","en":"Set anti-aliasing strong"},
+"toolantialiasweak": {"zh":"消除锯齿方式为“弱”","en":"Set anti-aliasing weak"},
+"toolbrushcontinuousplot": {"zh":"连续喷绘的开/关","en":"Toggle continuous spraying"},
+"toolbrushenablesnap": {"zh":"按照视图菜单进行吸附的开/关","en":"Toggle snapping"},
+"toolbrusherasealllayer": {"zh":"清除所有图层的开/关","en":"Toggle erase on all layers"},
+"toolbrushflow10": {"zh":"10% 笔刷浓度","en":"Set Brush Density to 10%"},
+"toolbrushflow100": {"zh":"100% 笔刷浓度","en":"Set Brush Density to 100%"},
+"toolbrushflow20": {"zh":"20% 笔刷浓度","en":"Set Brush Density to 20%"},
+"toolbrushflow30": {"zh":"30% 笔刷浓度","en":"Set Brush Density to 30%"},
+"toolbrushflow40": {"zh":"40% 笔刷浓度","en":"Set Brush Density to 40%"},
+"toolbrushflow50": {"zh":"50% 笔刷浓度","en":"Set Brush Density to 50%"},
+"toolbrushflow60": {"zh":"60% 笔刷浓度","en":"Set Brush Density to 60%"},
+"toolbrushflow70": {"zh":"70% 笔刷浓度","en":"Set Brush Density to 70%"},
+"toolbrushflow80": {"zh":"80% 笔刷浓度","en":"Set Brush Density to 80%"},
+"toolbrushflow90": {"zh":"90% 笔刷浓度","en":"Set Brush Density to 90%"},
+"toolbrushflowminus": {"zh":"降低笔刷浓度","en":"Reduce brush density"},
+"toolbrushflowplus": {"zh":"提高笔刷浓度","en":"Increase brush density"},
+"toolbrushhardnessminus": {"zh":"降低硬度","en":"Reduce hardness"},
+"toolbrushhardnessplus": {"zh":"增加硬度","en":"Increase hardness"},
+"toolbrushintervalminus": {"zh":"减小间距","en":"Reduce gap"},
+"toolbrushintervalplus": {"zh":"增加间距","en":"Increase gap"},
+"toolbrushmixalphaminus": {"zh":"降低颜料浓度","en":"Decrease Density of Paint"},
+"toolbrushmixalphaplus": {"zh":"提高颜料浓度","en":"Increase Density of Paint"},
+"toolbrushmixcolorextensionminus": {"zh":"减弱色延伸","en":"Decrease Color Stretch"},
+"toolbrushmixcolorextensionplus": {"zh":"增强色延伸","en":"Increase Color Stretch"},
+"toolbrushmixcolorminus": {"zh":"减少颜料量","en":"Decrease Amount of Paint"},
+"toolbrushmixcolorplus": {"zh":"增加颜料量","en":"Increase Amount of Paint"},
+"toolbrushreversehorizontal": {"zh":"切换水平翻转的“无”和“翻转”","en":"Toggle flip horizontal"},
+"toolbrushreversevertical": {"zh":"切换垂直翻转的“无”和“翻转”","en":"Toggle flip vertical"},
+"toolbrushrevisionminus": {"zh":"减弱异步修正","en":"Reduce post correction"},
+"toolbrushrevisionplus": {"zh":"增强异步修正","en":"Increase post correction"},
+"toolbrushrotationclockwise": {"zh":"顺时针旋转","en":"Rotate Clockwise"},
+"toolbrushrotationcounterclockwise": {"zh":"逆时针旋转","en":"Rotate Counterclockwise"},
+"toolbrushsharpencorner": {"zh":"锐化拐角的开/关","en":"Toggle sharp angles"},
+"toolbrushsizepaletteparent": {"zh":"笔刷尺寸面板","en":"Brush size palette"},
+"toolbrushspray": {"zh":"散布效果的开/关","en":"Toggle spraying effect"},
+"toolbrushspraydebsityplus": {"zh":"增加粒子密度","en":"Increase particle density"},
+"toolbrushspraydensityminus": {"zh":"降低粒子密度","en":"Reduce particle density"},
+"toolbrushspraysizeminus": {"zh":"减小粒子大小","en":"Reduce particle size"},
+"toolbrushspraysizeplus": {"zh":"增加粒子大小","en":"Increase particle size"},
+"toolbrushthicknessminus": {"zh":"减小厚度","en":"Decrease Thickness"},
+"toolbrushthicknessplus": {"zh":"增加厚度","en":"Increase Thickness"},
+"toolbrushusereferlayer": {"zh":"开/关 防止超出参照图层的线条","en":"Toggle whether crossing lines of reference layer"},
+"toolbrushuserevision": {"zh":"开/关 异步修正","en":"On/Off of post correction"},
+"toolbrushusevectoreraser": {"zh":"开/关 矢量擦除","en":"On/Off of erase vector"},
+"toolbrushusevectormagnet": {"zh":"开/关 矢量吸附","en":"ON/OFF of Vector Magnet"},
+"toolbrushusewatercolor": {"zh":"开/关 基色混合","en":"Toggle color mixing"},
+"toolbrushusewateredge": {"zh":"开/关 水彩边界","en":"Toggle watercolor edge"},
+"toolbrushvectoreraserpart": {"zh":"矢量擦除方式为“接触的部分”","en":"Set erase vector at touched part"},
+"toolbrushvectoreraserreferalllayer": {"zh":"参照所有图层的开/关","en":"Toggle refer all layers"},
+"toolbrushvectorerasertrim": {"zh":"矢量擦除方式为“到交点”","en":"Set erase vector up to intersection"},
+"toolbrushvectoreraserwhole": {"zh":"矢量擦除方式为“整条线”","en":"Set erase vector for whole line"},
+"toolbrushvectormagnetminus": {"zh":"降低矢量吸附","en":"Decrease Vector Magnet"},
+"toolbrushvectormagnetplus": {"zh":"增加矢量吸附","en":"Increase Vector Magnet"},
+"toolchangepatterncolor": {"zh":"笔刷笔尖颜色的变化的开/关","en":"Toggle changing brush tip color"},
+"toolchangestrokecolor": {"zh":"每个笔画的随机变化的开/关","en":"Toggle randomization per stroke"},
+"toolcompositeadd": {"zh":"将混合模式设置为“线性减淡（添加）”","en":"Change blending mode to Add"},
+"toolcompositeaddglow": {"zh":"将混合模式设置为“线性减淡（发光）”","en":"Change blending mode to Add (Glow)"},
+"toolcompositebackground": {"zh":"将混合模式设置为“背景”","en":"Change blending mode to Background"},
+"toolcompositeblend": {"zh":"将混合模式设置为“正常”","en":"Change blending mode to Normal"},
+"toolcompositebrightness": {"zh":"将混合模式设置为“亮度”","en":"Change blending mode to Luminance"},
+"toolcompositeburnblack": {"zh":"将混合模式设置为“加深（黑色）”","en":"Change blending mode to Black burn"},
+"toolcompositeburncolor": {"zh":"将混合模式设置为“颜色加深”","en":"Change blending mode to Color burn"},
+"toolcompositeburnlinear": {"zh":"将混合模式设置为“线性加深”","en":"Change blending mode to Linear burn"},
+"toolcompositecolor": {"zh":"将混合模式设置为“彩色”","en":"Change blending mode to Color"},
+"toolcompositecomparealpha": {"zh":"将混合模式设置为“比较（浓度）”","en":"Change blending mode to Compare density"},
+"toolcompositedarken": {"zh":"将混合模式设置为“变暗”","en":"Change blending mode to Darken"},
+"toolcompositedarkencolor": {"zh":"将混合模式设置为“颜色变暗”","en":"Change blending mode to Darker color"},
+"toolcompositedifference": {"zh":"将混合模式设置为“差值”","en":"Change blending mode to Difference"},
+"toolcompositedivide": {"zh":"将混合模式设置为“划分”","en":"Change blending mode to Divide"},
+"toolcompositedodgecolor": {"zh":"将混合模式设置为“颜色减淡”","en":"Change blending mode to Color dodge"},
+"toolcompositedodgecolorglow": {"zh":"将混合模式设置为“颜色减淡（发光）”","en":"Change blending mode to Glow dodge"},
+"toolcompositedodgewhite": {"zh":"将混合模式设置为“减淡（白色）”","en":"Change blending mode to White burn"},
+"toolcompositeerase": {"zh":"将混合模式设置为“消除”","en":"Change blending mode to Erase"},
+"toolcompositeerasecompare": {"zh":"将混合模式设置为“消除（比较）”","en":"Change blending mode to Erase (compare)"},
+"toolcompositeexclusion": {"zh":"将混合模式设置为“排除”","en":"Change blending mode to Exclusion"},
+"toolcompositehardlight": {"zh":"将混合模式设置为“强光”","en":"Change blending mode to Hard light"},
+"toolcompositehardmix": {"zh":"将混合模式设置为“实色混合”","en":"Change blending mode to Hard mix"},
+"toolcompositehue": {"zh":"将混合模式设置为“色相”","en":"Change blending mode to Hue"},
+"toolcompositelighten": {"zh":"将混合模式设置为“变亮”","en":"Change blending mode to Lighten"},
+"toolcompositelightencolor": {"zh":"将混合模式设置为“颜色变亮”","en":"Change blending mode to Lighter color"},
+"toolcompositelinearlight": {"zh":"将混合模式设置为“线性光”","en":"Change blending mode to Linear light"},
+"toolcompositemodeparent": {"zh":"混合模式","en":"Blending mode"},
+"toolcompositemultiply": {"zh":"将混合模式设置为“正片叠底”","en":"Change blending mode to Multiply"},
+"toolcompositeoverlay": {"zh":"将混合模式设置为“叠加”","en":"Change blending mode to Overlay"},
+"toolcompositepinlight": {"zh":"将混合模式设置为“点光”","en":"Change blending mode to Pin light"},
+"toolcompositereplacealpha": {"zh":"将混合模式设置为“替换透明度”","en":"Change blending mode to Replace alpha"},
+"toolcompositesaturation": {"zh":"将混合模式设置为“饱和度”","en":"Change blending mode to Saturation"},
+"toolcompositescreen": {"zh":"将混合模式设置为“滤色”","en":"Change blending mode to Screen"},
+"toolcompositesoftlight": {"zh":"将混合模式设置为“柔光”","en":"Change blending mode to Soft light"},
+"toolcompositesubtract": {"zh":"将混合模式设置为“减去”","en":"Change blending mode to Subtract"},
+"toolcompositevividlight": {"zh":"将混合模式设置为“亮光”","en":"Change blending mode to Vivid light"},
+"tooldualflowminus": {"zh":"降低 2-笔刷浓度","en":"2 - Reduce brush density"},
+"tooldualflowplus": {"zh":"提高 2-笔刷浓度","en":"2 - Increase brush density"},
+"tooldualhardnessminus": {"zh":"降低 2-硬度","en":"2 - Reduce hardness"},
+"tooldualhardnessplus": {"zh":"增加 2-硬度","en":"2 - Increase hardness"},
+"tooldualsizeminus": {"zh":"减小 2-笔刷尺寸","en":"2 - Reduce brush size"},
+"tooldualsizeplus": {"zh":"加大 2-笔刷尺寸","en":"2 - Increase brush size"},
+"tooldualspraydensityminus": {"zh":"降低 2-粒子密度","en":"2 - Reduce particle density"},
+"tooldualspraydensityplus": {"zh":"增加 2-粒子密度","en":"2 - Increase particle density"},
+"tooldualspraysizeminus": {"zh":"减小 2-粒子大小","en":"2 - Reduce particle size"},
+"tooldualspraysizeplus": {"zh":"增加 2-粒子大小","en":"2 - Increase particle size"},
+"toolfillantialias": {"zh":"开/关 消除锯齿","en":"On/Off of anti-aliasing"},
+"toolfillclosegapminus": {"zh":"减小闭合间隙","en":"Reduce value of gaps to close"},
+"toolfillclosegapplus": {"zh":"增加闭合间隙","en":"Increase value of gaps to close"},
+"toolfillcolormarginminus": {"zh":"减小颜色容差","en":"Reduce color margin"},
+"toolfillcolormarginplus": {"zh":"增加颜色容差","en":"Increase color margin"},
+"toolfillcontinuouspixel": {"zh":"开/关 取样连续的像素","en":"Toggle connected pixels only"},
+"toolfillnotreferballoon": {"zh":"不参照对白框的开/关","en":"Toggle “exclude balloon layers from reference”"},
+"toolfillnotrefercurrent": {"zh":"不参照编辑图层的开/关","en":"Toggle “exclude editing layer”"},
+"toolfillnotreferdraft": {"zh":"不参照草稿的开/关","en":"Toggle “exclude draft layers from reference”"},
+"toolfillnotreferlocked": {"zh":"不参照锁定的图层的开/关","en":"Toggle “exclude locked layers from reference”"},
+"toolfillnotreferpaper": {"zh":"不参照纸张的开/关","en":"Toggle “exclude paper layer from reference”"},
+"toolfillnotrefertext": {"zh":"不参照文字的开/关","en":"Toggle “exclude text from reference”"},
+"toolfillrefervectorcenter": {"zh":"使填充止于矢量的中心线的开/关","en":"Toggle fill up to vector path"},
+"toolfillspuitnotreferballoon": {"zh":"不参照对白框的开/关","en":"Toggle “exclude balloon layers from reference”"},
+"toolfillspuitnotreferdraft": {"zh":"不参照草稿的开/关","en":"Toggle “exclude draft layers from reference”"},
+"toolfillspuitnotreferlocked": {"zh":"不参照锁定的图层的开/关","en":"Toggle “exclude locked layers from reference”"},
+"toolfillspuitnotreferpaper": {"zh":"不参照纸张的开/关","en":"Toggle “exclude paper layer from reference”"},
+"toolfillspuitnotrefertext": {"zh":"不参照文字的开/关","en":"Toggle “exclude text from reference”"},
+"toolfillspuitrefertypecurrent": {"zh":"将参照源设置为“编辑图层”","en":"Set reference to editing layer"},
+"toolfillspuitrefertyperendered": {"zh":"将参照源设置为“显示的图像”","en":"Set reference to image on canvas"},
+"toolfillspuitrefertypetop": {"zh":"将参照源设置为“顶部图层”","en":"Set reference to highest layer"},
+"toolfilluseclosegap": {"zh":"开/关 闭合间隙","en":"On/Off of closing gap"},
+"toolfilluseexpand": {"zh":"开/关 扩缩选区","en":"On/Off of scaling area"},
+"toolfixedshapeuseaspect": {"zh":"开/关 约束纵横","en":"On/Off of specifying aspect"},
+"toolflickerreductionbyspeed": {"zh":"根据速度调整手颤的开/关","en":"Toggle “Adjust by speed”"},
+"toolflickerreductionminus": {"zh":"减弱手颤修正","en":"Reduce stabilizer"},
+"toolflickerreductionplus": {"zh":"增强手颤修正","en":"Increase stabilizer"},
+"toolinouttoflow": {"zh":"开/关 对笔刷浓度应用入锋出锋","en":"On/Off of allocating starting and ending to brush density"},
+"toolinouttosize": {"zh":"开/关 对笔刷尺寸应用入锋出锋","en":"On/Off of allocating starting and ending to brush size"},
+"toollayermoveparent": {"zh":"选择图层","en":"Select layer"},
+"toolobject3dmanipulatorvisibleall": {"zh":"显示所有操纵器","en":"Show all manipulators"},
+"toolobject3dmanipulatorvisiblemoveonly": {"zh":"仅显示“移动”的操纵器","en":"Only show “Move” manipulator"},
+"toolobject3dmanipulatorvisiblerotateonly": {"zh":"仅显示“旋转”的操纵器","en":"Only show “Rotate” manipulator"},
+"toolobject3dmanipulatorvisiblescaleonly": {"zh":"仅显示“缩放”的操纵器","en":"Only show “Scale” manipulator"},
+"toolobjectoperationatblankselectbydrag": {"zh":"以拖动指定范围并选择的开/关","en":"Toggle select area by dragging"},
+"toolobjectoperationatblankselectlayer": {"zh":"切换选择其他图层的开/关","en":"Toggle “Switch to a different layer”"},
+"toolobjectparent": {"zh":"操作（对象）","en":"Operation (Object)","alt_zh":["操作（3D）"],"alt_en":["Operation (3D)"]},
+"toolobjectselectfolder": {"zh":"选择组的开/关","en":"Toggle selecting folders"},
+"toolopacity10": {"zh":"10% 不透明度","en":"Set opacity to 10%"},
+"toolopacity100": {"zh":"100% 不透明度","en":"Set opacity to 100%"},
+"toolopacity20": {"zh":"20% 不透明度","en":"Set opacity to 20%"},
+"toolopacity30": {"zh":"30% 不透明度","en":"Set opacity to 30%"},
+"toolopacity40": {"zh":"40% 不透明度","en":"Set opacity to 40%"},
+"toolopacity50": {"zh":"50% 不透明度","en":"Set opacity to 50%"},
+"toolopacity60": {"zh":"60% 不透明度","en":"Set opacity to 60%"},
+"toolopacity70": {"zh":"70% 不透明度","en":"Set opacity to 70%"},
+"toolopacity80": {"zh":"80% 不透明度","en":"Set opacity to 80%"},
+"toolopacity90": {"zh":"90% 不透明度","en":"Set opacity to 90%"},
+"toolopacityminus": {"zh":"降低不透明度","en":"Reduce opacity"},
+"toolopacityparent": {"zh":"不透明度","en":"Opacity"},
+"toolopacityplus": {"zh":"提高不透明度","en":"Increase opacity"},
+"tooloptionpaletteparent": {"zh":"工具属性面板","en":"Tool Settings palette"},
+"toolpressuretodualflow": {"zh":"开/关对 2-笔刷浓度应用笔压","en":"2 - Toggle linking pen pressure to brush density"},
+"toolpressuretodualsize": {"zh":"开/关 对 2-笔刷尺寸应用笔压","en":"2 - Toggle linking pen pressure to brush size"},
+"toolpressuretoflow": {"zh":"开/关 对笔刷浓度应用笔压","en":"Toggle linking pen pressure to brush density"},
+"toolpressuretoopacity": {"zh":"对不透明度应用笔压的开/关","en":"Toggle linking pen pressure to opacity"},
+"toolpressuretosize": {"zh":"开/关 对笔刷尺寸应用笔压","en":"Toggle linking pen pressure to brush size"},
+"toolreferlayertypealllayer": {"zh":"将“多图层参照”设置为“所有图层”","en":"Set Refer multiple to “all layers”"},
+"toolreferlayertypelayerinfolder": {"zh":"将“多图层参照”设置为“组内的图层”","en":"Set Refer multiple to “layers in folder”"},
+"toolreferlayertypereferlayer": {"zh":"将“多图层参照”设置为“参照图层”","en":"Set Refer multiple to “reference layers”"},
+"toolreferlayertypeselectedlayer": {"zh":"将“多图层参照”设置为“选定的图层”","en":"Set Refer multiple to “selected layers”"},
+"toolrefermultilayer": {"zh":"开/关 多图层参照","en":"Toggle refer multiple"},
+"toolrotateshape": {"zh":"开/关 在确定后旋转","en":"On/Off of rotating after fixed"},
+"toolselectcreateadd": {"zh":"创建方式为“添加到选区”","en":"Set mode to \"Add to selection\""},
+"toolselectcreatemultiply": {"zh":"创建方式为“与选区交叉”","en":"Set mode to \"Select from selection\""},
+"toolselectcreatenew": {"zh":"创建方式为“新选区”","en":"Set mode to \"New selection\""},
+"toolselectcreatesubtract": {"zh":"创建方式为“从选区减去”","en":"Set mode to \"Remove from selection\""},
+"toolselectlayernotselectballoon": {"zh":"不选择对白框的开/关","en":"Toggle “exclude balloon layers from selection”"},
+"toolselectlayernotselectdraft": {"zh":"不选择草稿的开/关","en":"Toggle “exclude draft layers from selection”"},
+"toolselectlayernotselectlocked": {"zh":"不选择锁定的图层的开/关","en":"Toggle “exclude locked layers from selection”"},
+"toolselectlayernotselectmonochromefill": {"zh":"不选择纯色填充的开/关","en":"Toggle “exclude fill layers”"},
+"toolselectlayernotselecttext": {"zh":"不选择文字的开/关","en":"Toggle “select text from reference”"},
+"toolshapestartcenter": {"zh":"开/关 从中心开始","en":"On/Off of starting from center"},
+"toolsizeminus": {"zh":"减小笔刷尺寸","en":"Reduce brush size"},
+"toolsizenext": {"zh":"选择比当前尺寸大一号的预设","en":"Select larger preset than current"},
+"toolsizeplus": {"zh":"加大笔刷尺寸","en":"Increase brush size"},
+"toolsizeprevious": {"zh":"选择比当前尺寸小一号的预设","en":"Select smaller preset than current"},
+"toolsizesyncviewscale": {"zh":"适应屏幕大小的开/关","en":"Toggle “specify by size on screen”"},
+"toolspuitparent": {"zh":"吸管","en":"Eyedropper"},
+"tooltilttosize": {"zh":"对笔刷尺寸应用倾斜的开/关","en":"Toggle linking tilt to brush size"},
+"toolusein": {"zh":"开/关 入锋","en":"On/Off of starting"},
+"tooluseout": {"zh":"开/关 出锋","en":"On/Off of ending"},
+"toolvectorpinchareaminus": {"zh":"缩小效果范围","en":"Reduce effect area"},
+"toolvectorpinchareaplus": {"zh":"扩大效果范围","en":"Increase effect area"},
+"toolvectorpinchlevelminus": {"zh":"降低拉伸强度","en":"Reduce pinch level"},
+"toolvectorpinchlevelplus": {"zh":"增加拉伸强度","en":"Increase pinch level"},
+"toolvectorpointaddoperation": {"zh":"选择添加锚点","en":"Select Add control point"},
+"toolvectorpointchangecorneroperation": {"zh":"选择切换角点","en":"Select corner type"},
+"toolvectorpointdeleteoperation": {"zh":"选择删除锚点","en":"Select Delete control point"},
+"toolvectorpointdensityoperation": {"zh":"选择修正浓度","en":"Select Correct density"},
+"toolvectorpointdivideoperation": {"zh":"选择切断线段","en":"Select “Split line”"},
+"toolvectorpointmoveoperation": {"zh":"选择移动锚点","en":"Select Move control points"},
+"toolvectorpointparent": {"zh":"锚点","en":"Control point"},
+"toolvectorpointwidthoperation": {"zh":"选择修正线宽","en":"Select line width correction"},
+"viewcolorpreviewparent": {"zh":"颜色配置文件","en":"Color profile"},
+"viewparent": {"zh":"视图","en":"View"},
+"viewrotateparent": {"zh":"旋转/翻转","en":"Rotate/Flip"},
+"viewsnapparent": {"zh":"吸附","en":"Snap"},
+"viewtoneareaparent": {"zh":"显示网点区域","en":"Show Tone Area"},
+"viewvectorcoreparent": {"zh":"显示矢量中心线","en":"Show vector paths"},
+"windowbubbleactionpalette": {"zh":"自动动作","en":"Auto Action"},
+"windowbubblealigndistributepalette": {"zh":"对齐·分布","en":"Align/Distribute"},
+"windowbubblebrushsizepalette": {"zh":"笔刷尺寸","en":"Brush Size"},
+"windowbubblecolorblendpalette": {"zh":"中间色","en":"Intermediate Color"},
+"windowbubblecolorcirclepalette": {"zh":"色轮","en":"Color Wheel"},
+"windowbubblecolorguidepalette": {"zh":"近似色","en":"Approximate Color"},
+"windowbubblecolorhistorypalette": {"zh":"颜色历史记录","en":"Color History"},
+"windowbubblecolorsetpalette": {"zh":"色板","en":"Color Set"},
+"windowbubblecolorsliderpalette": {"zh":"颜色滑块","en":"Color Slider"},
+"windowbubblehistorypalette": {"zh":"历史记录","en":"History"},
+"windowbubbleitembankpalette": {"zh":"道具库","en":"Item bank"},
+"windowbubblelayercomppalette": {"zh":"图层复合","en":"Layer Comps"},
+"windowbubblelayerfindpalette": {"zh":"图层搜索","en":"Search Layer"},
+"windowbubblelayerorderpalette": {"zh":"图层","en":"Layer"},
+"windowbubblelayerpropertypalette": {"zh":"图层属性","en":"Layer Properties"},
+"windowbubblelighttablepalette": {"zh":"动画胶片","en":"Animation cels"},
+"windowbubblematerialpaletteparent": {"zh":"素材","en":"Material"},
+"windowbubblememoryinfopalette": {"zh":"信息","en":"Information"},
+"windowbubblemixpalette": {"zh":"混色","en":"Color Mixing"},
+"windowbubblemultiviewpalette": {"zh":"四面图","en":"All sides view"},
+"windowbubblenavigatorpalette": {"zh":"导航器","en":"Navigator"},
+"windowbubblepaletteparent": {"zh":"显示/隐藏弹出式菜单","en":"Display/hide pop-up"},
+"windowbubblequickaccesspalette": {"zh":"快速访问","en":"Quick Access"},
+"windowbubbleshowactionpalette": {"zh":"自动动作","en":"Auto Action"},
+"windowbubbleshowaligndistributepalette": {"zh":"对齐·分布","en":"Align/Distribute"},
+"windowbubbleshowbrushsizepalette": {"zh":"笔刷尺寸","en":"Brush Size"},
+"windowbubbleshowcolorblendpalette": {"zh":"中间色","en":"Intermediate Color"},
+"windowbubbleshowcolorcirclepalette": {"zh":"色轮","en":"Color Wheel"},
+"windowbubbleshowcolorguidepalette": {"zh":"近似色","en":"Approximate Color"},
+"windowbubbleshowcolorhistorypalette": {"zh":"颜色历史记录","en":"Color History"},
+"windowbubbleshowcolorsetpalette": {"zh":"色板","en":"Color Set"},
+"windowbubbleshowcolorsliderpalette": {"zh":"颜色滑块","en":"Color Slider"},
+"windowbubbleshowhistorypalette": {"zh":"历史记录","en":"History"},
+"windowbubbleshowitembankpalette": {"zh":"道具库","en":"Item bank"},
+"windowbubbleshowlayercomppalette": {"zh":"图层复合","en":"Layer Comps"},
+"windowbubbleshowlayerfindpalette": {"zh":"图层搜索","en":"Search Layer"},
+"windowbubbleshowlayerorderpalette": {"zh":"图层","en":"Layer"},
+"windowbubbleshowlayerpropertypalette": {"zh":"图层属性","en":"Layer Properties"},
+"windowbubbleshowlighttablepalette": {"zh":"动画胶片","en":"Animation cels"},
+"windowbubbleshowmaterialpaletteparent": {"zh":"素材","en":"Material"},
+"windowbubbleshowmemoryinfopalette": {"zh":"信息","en":"Information"},
+"windowbubbleshowmixpalette": {"zh":"混色","en":"Color Mixing"},
+"windowbubbleshowmultiviewpalette": {"zh":"四面图","en":"All sides view"},
+"windowbubbleshownavigatorpalette": {"zh":"导航器","en":"Navigator"},
+"windowbubbleshowpaletteparent": {"zh":"长按按钮显示弹出式菜单","en":"Display pop-up while pressing button"},
+"windowbubbleshowquickaccesspalette": {"zh":"快速访问","en":"Quick Access"},
+"windowbubbleshowsubtoolpalette": {"zh":"工具组","en":"Tool Group"},
+"windowbubbleshowsubviewpalette": {"zh":"辅助视图","en":"Sub View"},
+"windowbubbleshowtimelinepalette": {"zh":"时间轴","en":"Timeline"},
+"windowbubbleshowtooldetailpalette": {"zh":"工具高级选项","en":"Advanced Tool Settings"},
+"windowbubbleshowtooloptionpalette": {"zh":"工具属性","en":"Tool Settings"},
+"windowbubbleshowtoolpalette": {"zh":"工具","en":"Tool"},
+"windowbubbleshowtoolsliderpalette": {"zh":"工具滑块","en":"Tool Sliders"},
+"windowbubblesubtoolpalette": {"zh":"工具组","en":"Tool Group"},
+"windowbubblesubviewpalette": {"zh":"辅助视图","en":"Sub View"},
+"windowbubbletimelinepalette": {"zh":"时间轴","en":"Timeline"},
+"windowbubbletooldetailpalette": {"zh":"工具高级选项","en":"Advanced Tool Settings"},
+"windowbubbletooloptionpalette": {"zh":"工具属性","en":"Tool Settings"},
+"windowbubbletoolpalette": {"zh":"工具","en":"Tool"},
+"windowbubbletoolsliderpalette": {"zh":"工具滑块","en":"Tool Sliders"},
+"windowcanvasparent": {"zh":"画布","en":"Canvas"},
+"windowpalettedockparent": {"zh":"面板停靠栏","en":"Palette dock"},
+"windowparent": {"zh":"窗口","en":"Window"},
+"windowshowmaterialpaletteparent": {"zh":"素材","en":"Material"},
+"windowworkspaceparent": {"zh":"工作区","en":"Workspace"}
+}
+}

@@ -21,6 +21,7 @@ import (
 	"github.com/wdcyxxycdw/padmate/daemon/internal/haptic"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/input"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/instance"
+	"github.com/wdcyxxycdw/padmate/daemon/internal/integration"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/ipc"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/latency"
 	"github.com/wdcyxxycdw/padmate/daemon/internal/logging"
@@ -202,6 +203,15 @@ type liveConfig struct {
 	// open opens SDL; nil means input.Open. The tests set the library, or
 	// return a fake.
 	open func(input.Options) (eventSource, error)
+	// integrations is the registry of the software integrations. nil means
+	// CSP's in production (the library is real and the input is the real
+	// source) and none otherwise, so a test never reads real software files.
+	integrations *integration.Registry
+	// integrationNotify receives the tray notices of integration differences;
+	// nil means the tray's queue when there is a tray. integrationEvery is
+	// the watcher's polling interval; zero means integrationPollEvery.
+	integrationNotify func(tray.Notification)
+	integrationEvery  time.Duration
 	// joyCon2 makes startLive pass Options.JoyCon2 to open, as it always does
 	// when open is nil (the production source). Only tests set it, with an
 	// open that is a fake: no test scans Bluetooth.
@@ -412,6 +422,8 @@ type liveRun struct {
 	// joy is the Joy-Con 2 part: the status watcher and the tray's pairing
 	// window (ipc_joycon2.go).
 	joy joyCon2Run
+	// integ is the software integrations (integration_watch.go).
+	integ integrationRun
 	// padsDirty says that a controller came or changed and state.json does not
 	// list it yet (rememberControllers).
 	padsDirty atomic.Bool
@@ -541,6 +553,8 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	r := &liveRun{cfg: cfg, log: log, src: src, sum: cfg.sum,
 		scriptDef: newProfileScriptDefinition(opts.profile, cfg.profile, opts.watch, log)}
 	r.joy.kick = make(chan struct{}, 1)
+	r.integ.kick = make(chan struct{}, 1)
+	r.integ.notify, r.integ.every = cfg.integrationNotify, cfg.integrationEvery
 	if opts.library != nil {
 		r.scriptDef.useLibrary(opts.library.Dir())
 	}
@@ -553,6 +567,15 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 		r.selection.Store(opts.settings)
 	}
 	runRef.Store(r)
+	switch {
+	case cfg.integrations != nil:
+		r.integ.reg = cfg.integrations
+	case opts.fakeInput == "ipc" && opts.dryRun && !opts.inject:
+		// The private fake-input daemon of the E2E: Demo Paint, in memory.
+		r.integ.reg = newDemoRegistry()
+	case cfg.open == nil && opts.fakeInput != "ipc" && opts.library != nil:
+		r.integ.reg = r.newDefaultIntegrations(opts.library.Dir())
+	}
 	if opts.library != nil {
 		r.configNotice.Store(configNotice(opts.library.Dir(), opts.configRepair))
 	}
@@ -779,6 +802,7 @@ func startLive(ctx context.Context, cfg liveConfig) (run *liveRun, err error) {
 	r.startDecisionFeed()
 	r.startRawFeed()
 	r.startJoyCon2()
+	r.startIntegrations()
 	if opts.watch && (opts.profile != "" || opts.librarySelection()) {
 		r.watchLibrary()
 	}
@@ -1289,6 +1313,7 @@ func (r *liveRun) shutdown(code int) int {
 	r.stopDiagnostics()
 	r.stopDecisionFeed()
 	r.stopRawFeed()
+	r.stopIntegrations()
 	r.stopJoyCon2()
 	if r.ipcDone != nil {
 		<-r.ipcDone

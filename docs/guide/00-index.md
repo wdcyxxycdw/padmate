@@ -24,3 +24,4 @@ Words in quotation marks are the exact text of the interface; the tray menu is i
 12. [Updates and privacy](13-updates-and-privacy.md): checking for updates, what goes over the network, and uninstalling.
 13. [FAQ](14-faq.md): SmartScreen, antivirus programs, a controller that does nothing.
 14. [Joy-Con 2](15-joycon-2.md): connect the Joy-Cons of the Switch 2 over Bluetooth.
+15. [CLIP STUDIO PAINT](16-clip-studio-paint.md): pick the commands and tools of CSP for a key.

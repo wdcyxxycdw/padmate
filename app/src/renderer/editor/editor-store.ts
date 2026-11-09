@@ -9,7 +9,7 @@ import type {
   ScriptRegistration,
 } from "../../shared/api";
 import type { Profile, ProfileTiming } from "../../shared/generated/schema";
-import { EditHistory } from "./editor-history";
+import { EditHistory, type StepEffects } from "./editor-history";
 import {
   defaultFunctionKey,
   editorError,
@@ -47,6 +47,18 @@ export interface EditOptions {
    * profile is not undone, so a step taken back keeps the name.
    */
   history?: false;
+}
+
+/** One edit made through `capture`, which can be taken back whole. */
+export interface EditedStep {
+  /** Whether `revert` would work now: nothing has been edited since. */
+  canRevert(): boolean;
+  /**
+   * Takes the edit back as if it was never made: the draft before it is
+   * shown (and saved) and its undo step is gone, with no redo. False, and
+   * nothing done, when the draft or the history moved on.
+   */
+  revert(): boolean;
 }
 
 /** Why the draft is not on disk: "failed" can be retried, "invalid" needs a fix or an undo. */
@@ -142,6 +154,12 @@ interface EditorState {
   activate(context: EditorContext | null): Promise<void>;
   /** Commits one edit: it is saved (and applied) at once, or with its merge group. */
   edit(profile: Profile, options?: EditOptions): void;
+  /**
+   * Runs `change`, which makes one edit, and returns that edit so it can be
+   * taken back whole; null when it changed nothing. `effects` run when the
+   * edit's undo step is undone or redone.
+   */
+  capture(change: () => void, effects?: StepEffects): EditedStep | null;
   /** Applies the draft before the last step and saves it; false when there is none. */
   undo(): boolean;
   redo(): boolean;
@@ -752,6 +770,16 @@ export function createEditorStore(api: PadmateAPI) {
       show(id, { ...draft, name: current.name });
       schedule();
     }
+    /** Runs the effects of the step an undo or redo just moved. */
+    function runEffects(history: EditHistory, way: "undo" | "redo") {
+      const effects = history.moved;
+      history.moved = undefined;
+      try {
+        effects?.[way]();
+      } catch {
+        // The effects report their own failures; the draft is already shown.
+      }
+    }
     return {
       id: "",
       context: null,
@@ -853,6 +881,52 @@ export function createEditorStore(api: PadmateAPI) {
           syncSaving();
         } else schedule();
       },
+      capture(change, effects) {
+        const state = get();
+        const before = state.draft;
+        const id = state.id;
+        if (!before || !editable()) {
+          change();
+          return null;
+        }
+        const history = tracked(id).history;
+        const topBefore = history.top;
+        change();
+        const after = get().draft;
+        if (!after || get().id !== id) return null;
+        // The name is not part of the history.
+        const body = (draft: Profile) =>
+          stableStringify({ ...draft, name: "" });
+        const wanted = body(after);
+        if (wanted === body(before)) return null;
+        // An edit on a draft the daemon refused is not a step of its own.
+        const step = history.top !== topBefore ? history.top : undefined;
+        if (step && effects) history.annotate(step, effects);
+        const kept = structuredClone(before);
+        const canRevert = () => {
+          const now = get();
+          return (
+            now.id === id &&
+            !!now.draft &&
+            !now.busy &&
+            !now.readOnly &&
+            body(now.draft) === wanted &&
+            (!step || history.top === step)
+          );
+        };
+        return {
+          canRevert,
+          revert() {
+            if (!canRevert()) return false;
+            const current = get().draft as Profile;
+            stopGroup();
+            if (step) history.remove(step);
+            else history.dropRedo();
+            apply(id, kept, current);
+            return true;
+          },
+        };
+      },
       undo() {
         if (!editable()) return false;
         const state = get();
@@ -865,6 +939,7 @@ export function createEditorStore(api: PadmateAPI) {
           return false;
         }
         apply(state.id, previous, current);
+        runEffects(tracked(state.id).history, "undo");
         return true;
       },
       redo() {
@@ -875,6 +950,7 @@ export function createEditorStore(api: PadmateAPI) {
         const next = tracked(state.id).history.redo(current);
         if (!next) return false;
         apply(state.id, next, current);
+        runEffects(tracked(state.id).history, "redo");
         return true;
       },
       retry() {

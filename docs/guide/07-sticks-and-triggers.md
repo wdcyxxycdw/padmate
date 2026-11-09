@@ -39,13 +39,17 @@ Under “Sensitivity” are two sliders, and the circle beside them shows the st
 ### Knob mode
 
 - “Step”: degrees to turn per key sent. The default is 30°.
-- “Clockwise step” and “Counter-clockwise step”: the keys sent for one step. Each row takes one shortcut: no hold, double tap, action sequence or script.
+- “Clockwise step” and “Counter-clockwise step”: the keys sent for one step. Each row takes one shortcut: no hold, double tap, action sequence or script. “Clear shortcut” beside the field clears the step; for a step the profile file sets to something else, click “Clear this step”. A cleared step leaves nothing behind. The step angle and “Tick haptic” belong to the stick and are not cleared with the keys; under “Advanced”, “Reset parameters…” restores them.
 
 ### Mouse mode
 
 - “Speed”: how many pixels per second the pointer moves at a full push. The default is 1200.
 - “Response curve”: how speed changes with push depth: “Linear”, “Quadratic” or “Cubic”.
 - “Smoothing”: the higher the number, the slower the pointer's speed changes. 0 means no smoothing.
+
+### Clearing a stick
+
+In the stick's “Move” drawer, the “Key actions” menu beside the title has “Clear this key…”; click “Clear” in the confirmation. The stick goes back to never having been set up: its direction mode, the keys of its directions and knob ticks, the step angle, the tick haptic, its name, and the ring and raw-axis keys the profile file sets are all removed, and one undo brings them back. The “Press” cell below it, the other stick and the triggers are not touched. The item is greyed out when there is nothing to clear. Viewed while holding the function key, the same item is “Clear in this set”: it removes only the keys of that set, asks nothing and leaves the stick's parameters (they apply to the whole profile).
 
 ## Triggers
 

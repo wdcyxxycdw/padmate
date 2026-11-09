@@ -75,6 +75,7 @@ func (r *liveRun) publishProfile(p *liveProfile) {
 	}
 	r.profileTarget.Store(p)
 	r.events.Publish("profile.changed", map[string]any{"kind": "active", "id": p.id, "revision": fmt.Sprintf("%x", p.sum), "generation": p.gen})
+	r.integKick()
 	select {
 	case r.profileWatchWake <- struct{}{}:
 	default:

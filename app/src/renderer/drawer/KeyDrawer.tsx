@@ -14,7 +14,9 @@ import {
   TriggerSettings,
 } from "../analog/AnalogPanels";
 import {
+  clearStick,
   setStickLabel,
+  stickHasSettings,
   stickLabel,
   withoutOrphanStickLabels,
 } from "../analog/analog-editor";
@@ -407,9 +409,31 @@ export function KeyDrawer({
               .join(" ")
           : "";
   // A stick has no key menu.
+  // A stick's movement has one action only: clear it, as a key does.
+  const stickControl = stickGroup === "ls" ? "leftstick" : "rightstick";
+  const stickClearable =
+    !!profile && stickHasSettings(profile, stickControl, view === "normal");
   const keyMenu: MenuEntry[] =
     kind === "stick"
-      ? []
+      ? [
+          view === "normal"
+            ? {
+                label: t("清空此按键…", "Clear this key…"),
+                icon: "trash",
+                danger: true,
+                disabled: locked || !stickClearable,
+                onSelect: () => request("clear"),
+              }
+            : {
+                label: t("清除这一套里的设置", "Clear in this set"),
+                icon: "trash",
+                danger: true,
+                disabled: locked || !stickClearable,
+                onSelect: () => {
+                  if (profile) edit(clearStick(profile, stickControl, false));
+                },
+              },
+        ]
       : [
           {
             label: t("复制此按键的设置", "Copy this key's settings"),
@@ -662,6 +686,7 @@ export function KeyDrawer({
                   language={language}
                   disabled={locked}
                   registrations={keyScripts.visible}
+                  integration={{ profile: state.id, capture: state.capture }}
                   suggestPress={
                     keyScripts.owners.length === 0 &&
                     !state.readOnly &&
@@ -718,6 +743,11 @@ export function KeyDrawer({
                       ? confirm.payload
                       : withoutMinRate(confirm.payload)
                     : undefined;
+                if (kind === "stick" && confirm.kind === "clear") {
+                  edit(clearStick(profile, stickControl));
+                  setConfirm(null);
+                  return;
+                }
                 if (confirm.kind === "clear") setCleared(keyId);
                 edit(setBaseBinding(profile, confirm.control, pasted));
                 setConfirm(null);
@@ -736,10 +766,15 @@ export function KeyDrawer({
                 `用复制的设置替换「${confirm.label}」的当前设置。`,
                 `Replace the settings of ${confirm.label} with the copied ones.`,
               )
-            : t(
-                `清空「${confirm?.label ?? ""}」的所有映射和显示文字。按键名称将保留。`,
-                `Remove every mapping and the label of ${confirm?.label ?? ""}. The key name stays.`,
-              )}
+            : kind === "stick"
+              ? t(
+                  `清空「${confirm?.label ?? ""}」的方向模式、所有按键、旋钮设置和名称，恢复成没设置过的样子。`,
+                  `Remove the direction mode, every key, the knob settings and the name of ${confirm?.label ?? ""}, as if it had never been set up.`,
+                )
+              : t(
+                  `清空「${confirm?.label ?? ""}」的所有映射和显示文字。按键名称将保留。`,
+                  `Remove every mapping and the label of ${confirm?.label ?? ""}. The key name stays.`,
+                )}
         </p>
         {confirm && !confirmationValid && (
           <Notice kind="warning" role="alert">

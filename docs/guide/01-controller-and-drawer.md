@@ -50,7 +50,7 @@ Shortcuts are captured, not typed. Click the box or “Capture shortcut” to st
 
 - Capturing ends at the first key. While you hold Ctrl, Shift, Alt or Win it goes on; the first other key you press is recorded together with the modifiers you hold, for example Ctrl+Shift+Z. Press only modifiers and let them all go, and those modifiers are recorded.
 - A shortcut has at most three keys.
-- Inside the padmate window, mouse buttons and one notch of the wheel (up, down, left or right) can be captured too. Each counts as a key and can go with modifiers. While you capture, a right click opens no menu and the wheel does not scroll the page.
+- Inside the padmate window, mouse buttons and one notch of the wheel (up, down, left or right) can be captured too. Each counts as a key and can go with modifiers. While you capture, a right click opens no menu and the wheel does not scroll the page. Clicking the left button twice quickly records two clicks (see [Sequences](04-sequences.md)).
 - A short press of Esc is recorded as Esc. Hold Esc for 1 second to cancel and change nothing. Switching to another window also ends the capture.
 - Under “Advanced”, when “Map scan code” is on, keys of the keyboard are recorded by their position, whatever the input method and keyboard layout. Mouse buttons and the wheel are not affected.
 

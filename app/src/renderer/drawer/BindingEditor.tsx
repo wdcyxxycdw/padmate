@@ -18,6 +18,7 @@ import type {
   ProfileSequenceAction,
   ProfileTiming,
 } from "../../shared/generated/schema";
+import type { StepEffects } from "../editor/editor-history";
 import {
   editorError,
   type FileOnlyAction,
@@ -38,6 +39,7 @@ import {
   tapGestureFor,
   usedGestures,
 } from "../editor/editor-model";
+import type { EditedStep } from "../editor/editor-store";
 import {
   actionSteps,
   hasTextStep,
@@ -50,6 +52,13 @@ import {
   stepsAction,
 } from "../editor/sequence-model";
 import type { MouseKey } from "../editor/shortcut-keys";
+import type { CaptureField } from "../integrations/FunctionPicker";
+import {
+  IntegrationLine,
+  type IntegrationLink,
+  IntegrationPickButtons,
+} from "../integrations/IntegrationPick";
+import { nameAfterPick } from "../state/integrations-model";
 import { sortMacrosByName } from "../state/library-model";
 import { MacroContext, missingMacros } from "../state/macro-context";
 import type { Language } from "../state/store";
@@ -220,6 +229,16 @@ function swallowRelease(): void {
 
 /** How long Esc is held to end a capture. */
 export const ESC_HOLD_MS = 1000;
+/** How far (px) the second press of a double click may be from the first. */
+const DOUBLE_CLICK_SLOP = 5;
+/** Keys that only hold a modifier down. */
+const MODIFIER_KEYS: ReadonlySet<string> = new Set([
+  "Control",
+  "Shift",
+  "Alt",
+  "AltGraph",
+  "Meta",
+]);
 
 /** How long one capture lasts: the helper stops itself then (keyboard_capture). */
 const CAPTURE_LIMIT_MS = 30_000;
@@ -367,12 +386,16 @@ function ShortcutField({
   moves,
   stepIndex,
   kindLabel,
+  extra,
+  onDoubleClick,
 }: {
   value: string;
   onChange: (value: string) => void;
   language?: Language;
   label: string;
   variant: "full" | "step";
+  /** More buttons beside the capture button (the full variant). */
+  extra?: ReactNode;
   /** Capture records physical key positions (set under 高级). */
   physical: boolean;
   onRemove?: () => void;
@@ -382,6 +405,12 @@ function ShortcutField({
   stepIndex?: number;
   /** What the row's left cell says; the step's name when absent. */
   kindLabel?: string;
+  /**
+   * The left button was clicked twice in a row to record it: the first click
+   * is the recorded shortcut, and this is told of the second, which the
+   * editor turns into a second click in the sequence.
+   */
+  onDoubleClick?: () => void;
 }) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const [active, setActive] = useState(false);
@@ -400,8 +429,13 @@ function ShortcutField({
     clearTimeout(hold.current);
     hold.current = undefined;
   }, []);
-  const latest = useRef({ value, onChange, physical, language });
-  latest.current = { value, onChange, physical, language };
+  const latest = useRef({ value, onChange, physical, language, onDoubleClick });
+  latest.current = { value, onChange, physical, language, onDoubleClick };
+  // The press of the left button that recorded the shortcut: the second press
+  // of the same double click, with a count of 2, comes after the capture has
+  // ended. Anything else that happens first (another press, a key, the wheel)
+  // forgets it, so a double click made later is not taken for it.
+  const clickedAt = useRef<MouseEvent | null>(null);
   // What the recorder says to do: show the chord so far, or end the capture
   // with what it recorded (null: nothing, as after a hold of Esc).
   const apply = useCallback(
@@ -502,12 +536,25 @@ function ShortcutField({
     const press = (event: MouseEvent) => {
       // The second press of the double click that started the capture.
       if (ended.current || event.detail > 1) return;
+      // A dialog that is not this field's, and the button that opens one, are
+      // never a mouse key (a click in the integration picker must not become
+      // the mapping).
+      const target = event.target instanceof Element ? event.target : null;
+      const dialog = target?.closest("dialog") ?? null;
+      if (
+        target?.closest("[data-no-capture]") ||
+        (dialog && dialog !== field.current?.closest("dialog"))
+      )
+        return;
       const key = mouseButtonKeys[event.button];
       if (!key) return;
       event.preventDefault();
       event.stopPropagation();
       swallowRelease();
-      apply(recorder.current.mouse(key, heldModifiers(event)));
+      const step = recorder.current.mouse(key, heldModifiers(event));
+      apply(step);
+      if (key === "MouseLeft" && step.done && step.chord !== null)
+        clickedAt.current = event;
     };
     const turn = (event: WheelEvent) => {
       event.preventDefault();
@@ -528,6 +575,54 @@ function ShortcutField({
       window.removeEventListener("contextmenu", menu, true);
     };
   }, [active, apply]);
+  // The second press of a double click of the left button, after it recorded
+  // the shortcut: the capture is over, so it is heard here. It is the click
+  // twice in the sequence, not a click on the page.
+  useEffect(() => {
+    const again = (event: MouseEvent) => {
+      const at = clickedAt.current;
+      // The press that recorded the shortcut is not its own second press.
+      if (at === null || event === at) return;
+      // Whatever this press is, it is the only one that can be the second.
+      clickedAt.current = null;
+      if (event.detail !== 2 || event.button !== 0) return;
+      // On the spot of the first press, as the system's own double click
+      // asks: a click that went on elsewhere is a click of its own. (The
+      // capture takes a click anywhere in the window, so the spot is not
+      // the field's.)
+      if (
+        Math.abs(event.clientX - at.clientX) > DOUBLE_CLICK_SLOP ||
+        Math.abs(event.clientY - at.clientY) > DOUBLE_CLICK_SLOP
+      )
+        return;
+      if (
+        event.timeStamp - at.timeStamp > 1000 ||
+        !latest.current.onDoubleClick
+      )
+        return;
+      event.preventDefault();
+      event.stopPropagation();
+      swallowRelease();
+      latest.current.onDoubleClick();
+    };
+    const forget = () => {
+      clickedAt.current = null;
+    };
+    // A held modifier is part of a Ctrl+double-click: its auto-repeat, or a
+    // modifier pressed on its own, is not another key.
+    const forgetKey = (event: globalThis.KeyboardEvent) => {
+      if (event.repeat || MODIFIER_KEYS.has(event.key)) return;
+      forget();
+    };
+    window.addEventListener("mousedown", again, true);
+    window.addEventListener("keydown", forgetKey, true);
+    window.addEventListener("wheel", forget, true);
+    return () => {
+      window.removeEventListener("mousedown", again, true);
+      window.removeEventListener("keydown", forgetKey, true);
+      window.removeEventListener("wheel", forget, true);
+    };
+  }, []);
   // A hold ends with the capture, however that ends, and with the field.
   useEffect(() => {
     if (!active) clearHold();
@@ -663,6 +758,7 @@ function ShortcutField({
               <span className="drawer-rec-dot" aria-hidden="true" />
               {captureLabel}
             </button>
+            {extra}
           </span>
         </div>
       ) : (
@@ -761,11 +857,14 @@ function KeysFields({
   onChange,
   language,
   physical,
+  integration,
 }: {
   value: ProfileKeysAction | ProfileSequenceAction;
   onChange: (value: ProfileKeysAction | ProfileSequenceAction) => void;
   language?: Language;
   physical: boolean;
+  /** The app integrations the profile is bound to (the full variant only). */
+  integration?: IntegrationLink;
 }) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const root = useRef<HTMLDivElement>(null);
@@ -816,6 +915,17 @@ function KeysFields({
       [...before, newStep(kind)],
       kind === "keys" ? undefined : { index: before.length },
     );
+  };
+  // A double click recorded in a field: the click again, as the next step.
+  const clickAgain = (index: number) => {
+    const before: Step[] = steps ?? [{ keys: (keys?.keys as string) ?? "" }];
+    const click = before[index]?.keys;
+    if (!click || before.length >= maxSteps) return;
+    setSteps([
+      ...before.slice(0, index + 1),
+      { keys: click },
+      ...before.slice(index + 1),
+    ]);
   };
   const kinds: NewStepKind[] = ["keys", "wait"];
   const preview = steps?.every((step) => stepKind(step) === "keys") ? (
@@ -881,6 +991,7 @@ function KeysFields({
                 value={step.keys ?? ""}
                 physical={physical}
                 onChange={(next) => replace({ keys: next })}
+                onDoubleClick={() => clickAgain(index)}
                 moves={moves}
                 onRemove={remove}
               />
@@ -889,14 +1000,33 @@ function KeysFields({
         </div>
       ) : (
         keys && (
-          <ShortcutField
-            variant="full"
-            label={t("快捷键", "Shortcut")}
-            language={language}
-            value={keys.keys as string}
-            physical={physical}
-            onChange={(next) => onChange({ ...keys, keys: next })}
-          />
+          <>
+            <ShortcutField
+              variant="full"
+              label={t("快捷键", "Shortcut")}
+              language={language}
+              value={keys.keys as string}
+              physical={physical}
+              onChange={(next) => onChange({ ...keys, keys: next })}
+              onDoubleClick={() => clickAgain(0)}
+              extra={
+                integration && (
+                  <IntegrationPickButtons
+                    link={integration}
+                    keys={keys.keys as string}
+                    language={language ?? "zh-CN"}
+                  />
+                )
+              }
+            />
+            {integration && (
+              <IntegrationLine
+                profile={integration.profile}
+                keys={keys.keys as string}
+                language={language ?? "zh-CN"}
+              />
+            )}
+          </>
         )
       )}
       <MenuButton
@@ -922,7 +1052,8 @@ function KeysFields({
  * which sends its key once per step, so it has no tap, hold or double tap,
  * no sequence and no script. It writes `{press: {type: "keys", keys}}`,
  * keeping the binding's label and haptic. A binding the file set otherwise
- * is named, and capturing a shortcut replaces it.
+ * is named, and capturing a shortcut replaces it, or "清除这一格" clears it.
+ * Clearing the shortcut clears the whole step.
  */
 export function SingleShortcutField({
   value,
@@ -949,14 +1080,10 @@ export function SingleShortcutField({
     ...(value.label === undefined ? {} : { label: value.label }),
     ...(value.haptic === undefined ? {} : { haptic: value.haptic }),
   };
+  // Clearing the shortcut clears the step: the label and the haptic belong to
+  // it, and the editor has no other way to take them away.
   const commit = (keys: string) =>
-    onChange(
-      keys
-        ? { ...kept, press: { type: "keys", keys } }
-        : Object.keys(kept).length
-          ? kept
-          : undefined,
-    );
+    onChange(keys ? { ...kept, press: { type: "keys", keys } } : undefined);
   return (
     <fieldset className="drawer-fieldset" disabled={disabled}>
       {other && (
@@ -964,7 +1091,15 @@ export function SingleShortcutField({
           {t(
             "配置文件里这一格是别的设置，录入快捷键会替换它。",
             "The profile file sets something else here. Capturing a shortcut replaces it.",
-          )}
+          )}{" "}
+          <button
+            type="button"
+            className="btn-ghost drawer-link"
+            data-testid="single-shortcut-clear"
+            onClick={() => onChange(undefined)}
+          >
+            {t("清除这一格", "Clear this step")}
+          </button>
         </p>
       )}
       <ShortcutField
@@ -1203,9 +1338,12 @@ export function ActionFields({
   language,
   gesture = "tap",
   physical = false,
+  integration,
 }: {
   value: ProfileAction;
   onChange: (value: ProfileAction) => void;
+  /** The app integrations the profile is bound to; see IntegrationLink. */
+  integration?: IntegrationLink;
   /** Library profiles, to name the target of a profile switch from the file. */
   profiles?: Profiles;
   language?: Language;
@@ -1273,6 +1411,7 @@ export function ActionFields({
           onChange={change}
           language={language}
           physical={physical}
+          integration={integration}
         />
       ) : shown === "macro" ? (
         <MacroFields
@@ -1320,6 +1459,27 @@ const hapticPresets = [
   string,
 ])[];
 
+/**
+ * The shortcut capture the integration picker records a key with: the
+ * drawer's own field, handed to the picker so the two files do not import
+ * each other.
+ */
+export const RecordKey: CaptureField = ({
+  value,
+  onChange,
+  label,
+  language,
+}) => (
+  <ShortcutField
+    variant="full"
+    label={label}
+    language={language}
+    value={value}
+    physical={false}
+    onChange={onChange}
+  />
+);
+
 export interface BindingFieldsProps {
   value: ProfileBinding;
   onChange: (value: ProfileBinding) => void;
@@ -1337,6 +1497,15 @@ export interface BindingFieldsProps {
   children?: ReactNode;
   /** Extra content at the end of the advanced section. */
   advanced?: ReactNode;
+  /**
+   * The profile being edited: when it is bound to app integrations, the
+   * shortcut field offers to pick from the app (ARCHITECTURE §16.5).
+   */
+  integration?: {
+    profile: string;
+    /** The editor's capture: the pick is one undo step it can take back. */
+    capture?: (change: () => void, effects: StepEffects) => EditedStep | null;
+  };
 }
 
 /**
@@ -1360,6 +1529,7 @@ export function BindingFields({
   suggestPress = true,
   children,
   advanced,
+  integration,
 }: BindingFieldsProps) {
   const t = (zh: string, en: string) => editorText(language, zh, en);
   const id = useId();
@@ -1493,6 +1663,19 @@ export function BindingFields({
             keys: "",
           };
           const isDraft = !value[gesture];
+          const commit = (next: ProfileAction, label?: string) => {
+            const written: ProfileBinding = {
+              ...value,
+              [gesture]: next,
+              ...(label === undefined ? {} : { label }),
+            };
+            // A new 长按 or 双击 turns a press into a tap.
+            onChange(
+              isDraft && mapping !== "tap" ? settleTap(written) : written,
+            );
+            if (isDraft) setPending(null);
+            setOpen(mapping);
+          };
           const delay = isDraft
             ? {}
             : delayNote(gesture, value, timing, language, registrations);
@@ -1520,17 +1703,34 @@ export function BindingFields({
                   profiles={profiles}
                   language={language}
                   physical={physical}
-                  onChange={(next) => {
-                    const written = { ...value, [gesture]: next };
-                    // A new 长按 or 双击 turns a press into a tap.
-                    onChange(
-                      isDraft && mapping !== "tap"
-                        ? settleTap(written)
-                        : written,
-                    );
-                    if (isDraft) setPending(null);
-                    setOpen(mapping);
-                  }}
+                  integration={
+                    integration && {
+                      profile: integration.profile,
+                      Capture: RecordKey,
+                      disabled,
+                      // The keys and the name go in as one edit: one undo.
+                      onPick: (picked, _info, effects) => {
+                        const pick = () =>
+                          commit(
+                            holdShortcut({
+                              ...(action.type === "keys" ? action : {}),
+                              type: "keys",
+                              keys: picked.keys,
+                            }),
+                            nameAfterPick(
+                              value.label,
+                              picked.previousName,
+                              picked.fn.name,
+                            ),
+                          );
+                        if (integration.capture)
+                          return integration.capture(pick, effects);
+                        pick();
+                        return null;
+                      },
+                    }
+                  }
+                  onChange={(next) => commit(next)}
                 />
                 {delay.text && (
                   <p className="drawer-hint" data-testid="gesture-delay">

@@ -249,6 +249,53 @@ export function stickParameters(stick: ProfileStick = {}): ProfileStick {
   return parameters;
 }
 
+/**
+ * Whether a stick's movement has anything the editor can clear: a setting of
+ * its own (the mode, the knob's step, its name, …) or a key it reports in any
+ * mode, whichever mode it is in now. withAnalog says whether the settings
+ * count (not when a set other than the usual one is shown).
+ */
+export function stickHasSettings(
+  profile: Profile,
+  control: "leftstick" | "rightstick",
+  withAnalog = true,
+): boolean {
+  const group = control === "leftstick" ? "ls" : "rs";
+  return (
+    (withAnalog && Object.keys(profile.analog?.[group] ?? {}).length > 0) ||
+    relatedKeys(control).some(
+      (key) => Object.keys(baseBinding(profile, key)).length > 0,
+    )
+  );
+}
+
+/**
+ * The stick's movement as if it had never been set up: every key it reports
+ * in any mode (directions, rings, a knob's ticks, the raw half axes) is taken
+ * out of the edited set, and, with withAnalog, so are all its settings (mode,
+ * knob step, tick haptic, name, dead zone, …), the analog member itself
+ * when the other stick leaves it empty. The press of the stick (its own
+ * binding) is not part of it. The same object when there is nothing to clear.
+ */
+export function clearStick(
+  profile: Profile,
+  control: "leftstick" | "rightstick",
+  withAnalog = true,
+): Profile {
+  if (!stickHasSettings(profile, control, withAnalog)) return profile;
+  const group = control === "leftstick" ? "ls" : "rs";
+  let next = profile;
+  for (const key of relatedKeys(control))
+    if (Object.keys(baseBinding(next, key)).length > 0)
+      next = setControlBinding(next, key, undefined);
+  if (withAnalog && next.analog && group in next.analog) {
+    const { [group]: _gone, ...rest } = next.analog;
+    const { analog: _analog, ...others } = next;
+    next = Object.keys(rest).length ? { ...others, analog: rest } : others;
+  }
+  return next;
+}
+
 /** Sets the profile-wide raw half-axis threshold. */
 export function setAxisThreshold(profile: Profile, value: number): Profile {
   return { ...profile, analog: { ...profile.analog, axisThreshold: value } };

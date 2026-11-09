@@ -3,6 +3,7 @@ import type { Profile } from "../../shared/generated/schema";
 import {
   analogGroup,
   analogIssues,
+  clearStick,
   combinedDirection,
   directionControls,
   fromPercent,
@@ -12,6 +13,7 @@ import {
   setControlBinding,
   settleStickMode,
   shownStickMode,
+  stickHasSettings,
   stickMagnitude,
   stickReading,
   toPercent,
@@ -392,5 +394,50 @@ describe("a stick's name goes with its last mapping", () => {
       deadzone: 0.2,
       mode: "knob",
     });
+  });
+});
+
+describe("clearStick", () => {
+  const mixed = {
+    schemaVersion: 1,
+    name: "p",
+    analog: {
+      ls: { mode: "knob", knobStepDeg: 45, label: "x" },
+      rs: { mode: "mouse" },
+    },
+    layers: {
+      base: {
+        "ls.cw": { press: { type: "keys", keys: "]" } },
+        leftstick: { press: { type: "keys", keys: "F5" } },
+        south: { press: { type: "keys", keys: "A" } },
+      },
+    },
+  } as unknown as Profile;
+
+  it("takes the keys and the settings of one stick, nothing else", () => {
+    expect(clearStick(mixed, "leftstick")).toEqual({
+      ...mixed,
+      analog: { rs: { mode: "mouse" } },
+      layers: {
+        base: {
+          leftstick: { press: { type: "keys", keys: "F5" } },
+          south: { press: { type: "keys", keys: "A" } },
+        },
+      },
+    });
+  });
+
+  it("leaves the settings, shared by every set, when only the keys of a set go", () => {
+    const next = clearStick(mixed, "leftstick", false);
+    expect(next.analog).toEqual(mixed.analog);
+    expect(next.layers.base).not.toHaveProperty("ls.cw");
+  });
+
+  it("drops the analog member when it ends up empty, and is the same object when nothing is set", () => {
+    const only = { ...mixed, analog: { ls: { mode: "knob" } } } as Profile;
+    expect(clearStick(only, "leftstick")).not.toHaveProperty("analog");
+    const bare = clearStick(only, "leftstick");
+    expect(clearStick(bare, "leftstick")).toBe(bare);
+    expect(stickHasSettings(bare, "leftstick")).toBe(false);
   });
 });

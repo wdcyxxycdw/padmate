@@ -266,6 +266,7 @@ func (r *liveRun) fakeMethods(methods handler.Map) {
 	r.fakeEffectsMethod(methods)
 	r.fakeBatteryMethod(methods)
 	r.fakeJoyCon2Method(methods)
+	r.fakeIntegrationMethod(methods)
 	for _, method := range []string{"fake.press", "fake.release", "fake.axis"} {
 		methods[method] = func(ctx context.Context, req *jrpc2.Request) (any, error) {
 			src, err := r.fakeInput()

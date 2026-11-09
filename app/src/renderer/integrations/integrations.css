@@ -1,0 +1,164 @@
+/* App integrations (ARCHITECTURE §16.5): the function picker, the line under
+   the keys in the drawer, the difference and conflict lists. */
+.drawer-capture-actions-item {
+  display: inline-flex;
+}
+.integration-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.integration-line > .ui-icon {
+  margin-top: 2px;
+}
+.integration-line-warn {
+  color: #d9ae6a;
+}
+.integration-line-note {
+  color: var(--text-3);
+}
+
+.dialog.picker-dialog {
+  width: min(760px, calc(100vw - 48px));
+}
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.picker-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-2, var(--text));
+}
+.picker-area select {
+  min-width: 200px;
+}
+.picker-search {
+  width: 100%;
+}
+.isolated {
+  display: contents;
+}
+.picker-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  height: min(420px, calc(100vh - 260px));
+  min-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+.picker-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  flex: none;
+  min-height: 34px;
+}
+.picker-row:hover {
+  background: var(--surface-2);
+}
+.picker-row[data-on="true"] {
+  background: var(--accent-bg);
+}
+.picker-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.picker-row-chevron {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+}
+.picker-row-chevron[data-open="true"] > .ui-icon {
+  transform: rotate(90deg);
+}
+.picker-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.picker-row-name {
+  color: var(--text);
+}
+.picker-row-path,
+.picker-row-note {
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.picker-row-note {
+  color: #d9ae6a;
+}
+.picker-row-keys {
+  flex: none;
+  width: 190px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+.picker-empty,
+.picker-message {
+  margin: 0;
+  padding: 12px 4px;
+  color: var(--text-3);
+}
+.picker-problem {
+  margin: 0;
+  color: var(--red);
+}
+.picker-record {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.integration-differences {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.integration-difference {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.integration-difference-name {
+  color: var(--text);
+}
+.integration-difference-text {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.integration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

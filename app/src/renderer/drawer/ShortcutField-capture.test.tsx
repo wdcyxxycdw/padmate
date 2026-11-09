@@ -376,6 +376,156 @@ describe("the mouse is a key inside the window", () => {
     expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
   });
 
+  it("a double click of the left button is two clicks in a row, one step each", async () => {
+    const c = await started();
+    fireEvent.mouseDown(elsewhere(), { detail: 1 });
+    fireEvent.mouseUp(elsewhere(), { detail: 1 });
+    expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+    // The second press comes after the capture has ended; the page is not
+    // clicked by either.
+    expect(fireEvent.mouseDown(elsewhere(), { detail: 2 })).toBe(false);
+    fireEvent.mouseUp(elsewhere(), { detail: 2 });
+    fireEvent.click(elsewhere(), { detail: 2 });
+    expect(press()).toEqual({
+      type: "keys",
+      keys: ["MouseLeft", "MouseLeft"],
+      mode: "tap",
+    });
+    expect(screen.getByText("按顺序发送")).toBeTruthy();
+    expect(c.onElsewhere).not.toHaveBeenCalled();
+    // A third press of the same run is nothing more.
+    fireEvent.mouseDown(elsewhere(), { detail: 3 });
+    expect(press()).toEqual({
+      type: "keys",
+      keys: ["MouseLeft", "MouseLeft"],
+      mode: "tap",
+    });
+  });
+
+  it("keeps the modifiers of a double click on both clicks", async () => {
+    await started();
+    fireEvent.mouseDown(elsewhere(), { detail: 1, shiftKey: true });
+    fireEvent.mouseDown(elsewhere(), { detail: 2, shiftKey: true });
+    expect(press()).toEqual({
+      type: "keys",
+      keys: ["Shift+MouseLeft", "Shift+MouseLeft"],
+      mode: "tap",
+    });
+  });
+
+  it("a double click of another button, or one that did not start from a recorded click, is no double click", async () => {
+    const c = await started();
+    fireEvent.mouseDown(elsewhere(), { detail: 1, button: 2 });
+    fireEvent.mouseDown(elsewhere(), { detail: 2, button: 2 });
+    expect(press()).toEqual({ type: "keys", keys: "MouseRight" });
+    // A double click on the page after a key is recorded is the page's.
+    fireEvent.click(screen.getByRole("button", { name: "录入快捷键" }));
+    await waitFor(() => expect(c.api.captureStart).toHaveBeenCalledTimes(2));
+    await c.capture.emit({ active: true, chord: "F5" });
+    expect(press()).toEqual({ type: "keys", keys: "F5" });
+    expect(fireEvent.mouseDown(elsewhere(), { detail: 2 })).toBe(true);
+    expect(press()).toEqual({ type: "keys", keys: "F5" });
+  });
+
+  describe("only the second press of the click that recorded is a double click", () => {
+    it("a double click made later elsewhere adds nothing: its first press comes in between", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      fireEvent.mouseUp(elsewhere(), { detail: 1 });
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+      // A new double click at another place, within the second.
+      fireEvent.mouseDown(screen.getByTestId("draft"), {
+        detail: 1,
+        clientX: 300,
+        clientY: 200,
+      });
+      expect(
+        fireEvent.mouseDown(screen.getByTestId("draft"), {
+          detail: 2,
+          clientX: 300,
+          clientY: 200,
+        }),
+      ).toBe(true);
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+    });
+
+    it("a second press far from the first is not its double click", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      expect(
+        fireEvent.mouseDown(elsewhere(), {
+          detail: 2,
+          clientX: 300,
+          clientY: 200,
+        }),
+      ).toBe(true);
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+    });
+
+    it("a second press a few pixels away still is", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      fireEvent.mouseDown(elsewhere(), { detail: 2, clientX: 22, clientY: 19 });
+      expect(press()).toEqual({
+        type: "keys",
+        keys: ["MouseLeft", "MouseLeft"],
+        mode: "tap",
+      });
+    });
+
+    it("a key or the wheel in between ends the chance", async () => {
+      for (const between of [
+        () => fireEvent.keyDown(window, { key: "a" }),
+        () => fireEvent.wheel(window, { deltaY: 100 }),
+      ]) {
+        await started();
+        fireEvent.mouseDown(elsewhere(), { detail: 1 });
+        between();
+        expect(fireEvent.mouseDown(elsewhere(), { detail: 2 })).toBe(true);
+        expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+        cleanup();
+      }
+    });
+
+    it("a held modifier does not end it: not its auto-repeat, nor a modifier pressed alone", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, ctrlKey: true });
+      fireEvent.keyDown(window, { key: "Control", ctrlKey: true });
+      fireEvent.keyDown(window, {
+        key: "Control",
+        ctrlKey: true,
+        repeat: true,
+      });
+      fireEvent.keyDown(window, { key: "Shift", shiftKey: true });
+      fireEvent.keyDown(window, { key: "a", repeat: true });
+      fireEvent.mouseDown(elsewhere(), { detail: 2, ctrlKey: true });
+      expect(press()).toEqual({
+        type: "keys",
+        keys: ["Ctrl+MouseLeft", "Ctrl+MouseLeft"],
+        mode: "tap",
+      });
+    });
+  });
+
+  it("a double click recorded in a step adds the click as the next step", async () => {
+    const api = editorAPIFixture();
+    fakeCapture(api);
+    render(
+      <Draft
+        initial={{ press: { type: "keys", keys: ["F13", "F14"], mode: "tap" } }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "录入第 1 步" }));
+    await waitFor(() => expect(api.captureStart).toHaveBeenCalledTimes(1));
+    fireEvent.mouseDown(elsewhere(), { detail: 1 });
+    fireEvent.mouseDown(elsewhere(), { detail: 2 });
+    expect(press()).toEqual({
+      type: "keys",
+      keys: ["MouseLeft", "MouseLeft", "F14"],
+      mode: "tap",
+    });
+  });
+
   it("a click on the field's own button is recorded too", async () => {
     const c = await started();
     const button = c.busy() as HTMLElement;

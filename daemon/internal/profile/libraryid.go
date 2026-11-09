@@ -37,3 +37,23 @@ const HistoryDir = ".history"
 // folder, names HistoryDir. Windows finds the folder whatever the case of
 // the name, so the name is compared case-insensitively on every platform.
 func IsHistoryDir(name string) bool { return strings.EqualFold(name, HistoryDir) }
+
+// ValidIntegrationID accepts the IDs of software integrations (ADR-0019):
+// a lower-case letter, then up to 31 lower-case letters and digits. The ID
+// names integrations/<id>.json in a profile folder, so it is also a file name.
+func ValidIntegrationID(id string) bool {
+	if len(id) == 0 || len(id) > 32 || id[0] < 'a' || id[0] > 'z' {
+		return false
+	}
+	for i := 1; i < len(id); i++ {
+		c := id[i]
+		if isLowerAlnum := c >= 'a' && c <= 'z' || c >= '0' && c <= '9'; !isLowerAlnum {
+			return false
+		}
+	}
+	return true
+}
+
+// IntegrationsDir is the folder in a library profile's folder that holds the
+// integrations/<id>.json sidecar files (ADR-0019).
+const IntegrationsDir = "integrations"

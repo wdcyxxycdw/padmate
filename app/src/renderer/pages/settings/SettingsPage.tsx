@@ -30,6 +30,7 @@ import { sticksOf } from "./calibration-model";
 import { MappingWizardDialog } from "./MappingWizardDialog";
 import { ModelLicenses } from "./ModelLicenses";
 import { ResetMappingDialog } from "./ResetMappingDialog";
+import { IntegrationSections } from "./SettingsIntegrations";
 import { JoyCon2Section } from "./SettingsJoyCon2";
 import { OverlaySection } from "./SettingsOverlay";
 import { TimingSection } from "./SettingsTiming";
@@ -543,6 +544,9 @@ export function SettingsPage({
               </div>
             </div>
           </section>
+
+          {/* One section per app integration a profile is bound to. */}
+          <IntegrationSections language={language} />
 
           {/* 自动检查更新 and 检查更新; the window's own setting. */}
           <UpdatesSection api={store.getState().api} language={language} />

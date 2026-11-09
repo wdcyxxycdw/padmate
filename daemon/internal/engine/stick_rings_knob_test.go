@@ -1190,3 +1190,44 @@ func TestNoAllocsRingsKnob(t *testing.T) {
 	}
 	_ = keys.Chord{}
 }
+
+// A knob that is cleared in the editor (no analog settings, no ticks) is
+// reloaded while ticks are queued: the ticks that did not go out are dropped,
+// nothing is held, no deadline is left, and turning the stick sends nothing.
+func TestKnobClearedByReload(t *testing.T) {
+	r := &recorder{}
+	e := engine.New(compileAnalog(t, `{"rs":{"mode":"knob","knobStepDeg":30,"knobTick":true}}`, knobBind), r, engine.Options{})
+	stickAt(e, r, true, 0, 0.5, 0)
+	advance(e, r, 9)
+	// 100 degrees in one go is three ticks: one at 14 ms, the others wait.
+	axisStep(e, r, control.RightX, int16(math.Round(0.55*math.Sin(100*math.Pi/180)*32767)), 10)
+	axisStep(e, r, control.RightY, int16(-math.Round(0.55*math.Cos(100*math.Pi/180)*32767)), 10)
+	advance(e, r, 14)
+	if got, want := r.String(), "@14 down decl/1 ], @14 up decl/1 ]"; got != want {
+		t.Fatalf("before the reload: got %s\nwant %s", got, want)
+	}
+	if _, ok := e.NextDeadline(); !ok {
+		t.Fatal("no tick is queued")
+	}
+	r.now = clock.Time(20 * ms)
+	e.Reload(r.now, compileAnalog(t, `{}`, ``))
+	advance(e, r, 200)
+	if got, want := r.String(), "@14 down decl/1 ], @14 up decl/1 ]"; got != want {
+		t.Fatalf("after the reload: got %s\nwant %s", got, want)
+	}
+	if d, ok := e.NextDeadline(); ok {
+		t.Errorf("a deadline is left at %v", d)
+	}
+	// The stick turns on, and nothing happens: there is no knob and no key.
+	stickAt(e, r, true, 0, 0.5, 300)
+	stickAt(e, r, true, 100, 0.5, 400)
+	stickAt(e, r, true, 200, 0.5, 500)
+	advance(e, r, 700)
+	if got, want := r.String(), "@14 down decl/1 ], @14 up decl/1 ]"; got != want {
+		t.Fatalf("the cleared stick sent keys: %s", got)
+	}
+	if _, ok := e.NextDeadline(); ok {
+		t.Error("a deadline is left after the stick turned")
+	}
+	balanced(t, r)
+}
