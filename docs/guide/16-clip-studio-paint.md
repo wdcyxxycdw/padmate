@@ -10,7 +10,7 @@ This chapter only matters for a profile that is bound to CSP. Bound means the pr
 
 1. On the “Mapping” page, click a key to open the key drawer. Next to the shortcut of a binding, beside the “Capture shortcut” button, there is one more button, “Pick from CLIP STUDIO PAINT…”.
 2. The window that opens follows the shortcut settings dialog of CSP. At the top, “Setting area” chooses the part of CSP to look at (for example the main menu or the tools); below it the menus of that area are a tree, in the order CSP has them, all closed at first. Click the arrow of a group to open or close it; the arrow keys, Enter and Space work too. A tool that has sub-tools can be selected and opened. Or search by name, menu path or shortcut: the search looks in all areas and shows the matching functions with the groups above them, open. Clearing the search brings back the area and the open groups you had. Select a function and click “Set”.
-3. The shortcut that the function has in CSP is filled into the binding. The drawer says which function of CSP it is, and the step can be undone like any other edit.
+3. The shortcut that the function has in CSP is filled into the binding. The drawer says which function of CSP it is, and the step can be undone like any other edit. Undoing it (Ctrl+Z) also takes back the function that the profile noted, and redoing brings it back. When the selected function is not among the rows the window shows now (a search filtered it out, another setting area is shown, or its group is closed), “Set” is greyed out, so it never writes a function you cannot see.
 
 The window keeps the groups you opened until it is closed. Each function in the window shows on its right the shortcut it has in CSP now; one without a shortcut has an empty place there. A function that has several shortcuts takes several rows, the name on the first; they are one function, and the row you select decides which shortcut goes into the binding (the name row gives the first).
 
@@ -20,7 +20,9 @@ When you select a function that has no shortcut, the window asks you to record a
 
 1. Record a key. padmate says at once who uses that key in CSP: nobody, or which command or tool. padmate does not choose a key for you and does not suggest a free one.
 2. When the key can be written, click “Write to CLIP STUDIO PAINT”.
-3. After the write, the window says what was written. To go back, click “Undo this write”; if you do not need that, click “Done”.
+3. After the write, the window says what was written. To go back, click “Undo this write”; if you do not need that, click “Done”. “Undo this write” takes back three things at once: the settings of CSP, the function the profile noted, and the shortcut in the binding (with its name), to how they were before the pick; there is no step left to undo or redo afterwards. CSP goes first: if it is running it has to be closed, and if it cannot be restored nothing else is touched. If a later part does not work, the window says which, and clicking again does only what is left. If you press Ctrl+Z in padmate instead, only the mapping of padmate and the profile's record go back; the key written into CSP stays there, as it is only an added key.
+
+If CSP is written but the profile could not save it, the window says “The shortcut is written in CLIP STUDIO PAINT, but it could not be saved into the profile. The binding is not changed yet.” and has only two buttons: “Retry saving” repeats only the saving and the binding, without writing CSP again; “Undo this write” restores CSP, after which nothing is changed anywhere. The window cannot be closed in this state until one of them is chosen.
 
 CSP has to be closed before its settings are written. While CSP is running, padmate shows “Close CLIP STUDIO PAINT first”. Close CSP and click “Retry”; if you no longer want to write, click “Cancel”.
 

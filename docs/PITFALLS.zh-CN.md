@@ -276,6 +276,7 @@
 
 ### 文件与位置
 - **数据文件夹**：1.10.13 起在 `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer1_5_0`，5.x 仍用这个名字；1.10.12 及以前在 `文档\CELSYS`。注册表 `HKLM\SOFTWARE\WOW6432Node\CELSYS\CLIP STUDIO PAINT\5.1.x` 是空键，安装目录要从卸载项读。
+- **选哪个文件夹**：卸载项的 `DisplayIcon` 优先；否则在 `<InstallLocation>\CLIP STUDIO*` 里，只看真有 `CLIP STUDIO PAINT\CLIPStudioPaint.exe` 的，取文件夹名里数字版本最高的（`1.10` 大于 `1.5`，没有数字的排最后）。数据文件夹 `CLIPStudioPaintVer*` 按 `Shortcut\default.khc` 最新的排，不按名字。目录项很多时先按名字过滤再限数。
 - **只有一套快捷键**：没有命名的多套。工作区文件（`.spws`）可以带一份快捷键，载入工作区时才导入 `default.khc`。
 - **写盘时机**（推断，按文件时间）：`EditImageTool.todb` 每次退出 CSP 整批重写；`default.khc` 只在快捷键设置对话框点确定时写。所以 CSP 运行时改 todb 一定丢，改文件只能在 CSP 关着时做。
 

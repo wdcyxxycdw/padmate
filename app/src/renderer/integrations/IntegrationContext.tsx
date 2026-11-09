@@ -79,7 +79,17 @@ export const noStore = {
 } as unknown as PadmateStore;
 
 /** What a failed call was doing, so the sentence can say what did not work. */
-export type FailureStep = "read" | "check" | "items" | "write" | "restore";
+export type FailureStep =
+  | "read"
+  | "check"
+  | "items"
+  | "write"
+  | "restore"
+  | "saved"
+  | "late"
+  | "bindingBack"
+  | "itemsBack"
+  | "itemsFollow";
 
 function stepFailure(
   step: FailureStep | undefined,
@@ -114,8 +124,38 @@ function stepFailure(
     case "restore":
       return tx(
         language,
-        `没能撤销这次写入，${appName} 的设置还是写入之后的样子。`,
-        `Could not undo the write. The settings of ${appName} are still as written.`,
+        `没能撤销这次写入，${appName} 的设置和这个快捷键都还是写入之后的样子。`,
+        `Could not undo the write. The settings of ${appName} and the shortcut are still as written.`,
+      );
+    case "saved":
+      return tx(
+        language,
+        `${appName} 里已经写好了，但没能记进这份配置，快捷键还没有改。`,
+        `The shortcut is written in ${appName}, but it could not be saved into the profile. The binding is not changed yet.`,
+      );
+    case "late":
+      return tx(
+        language,
+        "这个快捷键在这之后又被改过，不能一起撤销，什么都没有动。",
+        "The shortcut was changed after this pick, so it cannot be undone together. Nothing was changed.",
+      );
+    case "bindingBack":
+      return tx(
+        language,
+        `${appName} 的写入已经撤销，但快捷键在这之后又被改过，没有改回。`,
+        `The write to ${appName} is undone, but the shortcut was changed after the pick and was left as it is.`,
+      );
+    case "itemsBack":
+      return tx(
+        language,
+        `${appName} 的写入和快捷键都已撤销，但没能把这份配置里的记录改回去。请再点一次“撤销这次写入”。`,
+        `The write to ${appName} and the shortcut are undone, but the record in the profile could not be put back. Choose Undo this write again.`,
+      );
+    case "itemsFollow":
+      return tx(
+        language,
+        `快捷键已经改了，但没能让这份配置里 ${appName} 的记录一起改。`,
+        `The shortcut was changed, but the ${appName} record in the profile could not follow.`,
       );
     default:
       return tx(language, "没有完成。", "It did not finish.");

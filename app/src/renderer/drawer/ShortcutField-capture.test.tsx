@@ -427,6 +427,67 @@ describe("the mouse is a key inside the window", () => {
     expect(press()).toEqual({ type: "keys", keys: "F5" });
   });
 
+  describe("only the second press of the click that recorded is a double click", () => {
+    it("a double click made later elsewhere adds nothing: its first press comes in between", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      fireEvent.mouseUp(elsewhere(), { detail: 1 });
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+      // A new double click at another place, within the second.
+      fireEvent.mouseDown(screen.getByTestId("draft"), {
+        detail: 1,
+        clientX: 300,
+        clientY: 200,
+      });
+      expect(
+        fireEvent.mouseDown(screen.getByTestId("draft"), {
+          detail: 2,
+          clientX: 300,
+          clientY: 200,
+        }),
+      ).toBe(true);
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+    });
+
+    it("a second press far from the first is not its double click", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      expect(
+        fireEvent.mouseDown(elsewhere(), {
+          detail: 2,
+          clientX: 300,
+          clientY: 200,
+        }),
+      ).toBe(true);
+      expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+    });
+
+    it("a second press a few pixels away still is", async () => {
+      await started();
+      fireEvent.mouseDown(elsewhere(), { detail: 1, clientX: 20, clientY: 20 });
+      fireEvent.mouseDown(elsewhere(), { detail: 2, clientX: 22, clientY: 19 });
+      expect(press()).toEqual({
+        type: "keys",
+        keys: ["MouseLeft", "MouseLeft"],
+        mode: "tap",
+      });
+    });
+
+    it("a key or the wheel in between ends the chance", async () => {
+      for (const between of [
+        () => fireEvent.keyDown(window, { key: "a" }),
+        () => fireEvent.wheel(window, { deltaY: 100 }),
+      ]) {
+        await started();
+        fireEvent.mouseDown(elsewhere(), { detail: 1 });
+        between();
+        expect(fireEvent.mouseDown(elsewhere(), { detail: 2 })).toBe(true);
+        expect(press()).toEqual({ type: "keys", keys: "MouseLeft" });
+        cleanup();
+      }
+    });
+  });
+
   it("a double click recorded in a step adds the click as the next step", async () => {
     const api = editorAPIFixture();
     fakeCapture(api);

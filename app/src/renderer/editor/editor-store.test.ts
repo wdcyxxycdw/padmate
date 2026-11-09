@@ -1149,3 +1149,102 @@ describe("the shown key set (function key)", () => {
     expect(store.getState().diagnostics).toEqual([]);
   });
 });
+
+describe("capture: an edit that can be taken back whole", () => {
+  it("returns the edit, and revert shows the draft before it with no step and no redo left", async () => {
+    const { store, onDisk } = setup();
+    await store.getState().activate(context);
+    store.getState().edit(marked(store, "first"));
+    const step = store
+      .getState()
+      .capture(() => store.getState().edit(marked(store, "second")));
+    expect(mark(draft(store))).toBe("second");
+    expect(step?.canRevert()).toBe(true);
+    expect(step?.revert()).toBe(true);
+    expect(mark(draft(store))).toBe("first");
+    await store.getState().flush();
+    expect(mark(onDisk())).toBe("first");
+    // The step is gone: one undo goes to before "first", not to before "second".
+    expect(store.getState().canRedo).toBe(false);
+    store.getState().undo();
+    expect(mark(draft(store))).toBe("p");
+    expect(store.getState().canUndo).toBe(false);
+  });
+
+  it("is null when the edit changed nothing, and revert fails once the draft moved on", async () => {
+    const { store } = setup();
+    await store.getState().activate(context);
+    expect(store.getState().capture(() => {})).toBeNull();
+    expect(
+      store.getState().capture(() => store.getState().edit(named(store, "n"))),
+    ).toBeNull();
+    const step = store
+      .getState()
+      .capture(() => store.getState().edit(marked(store, "a")));
+    store.getState().edit(marked(store, "b"));
+    expect(step?.canRevert()).toBe(false);
+    expect(step?.revert()).toBe(false);
+    expect(mark(draft(store))).toBe("b");
+  });
+
+  it("keeps the profile's name when it reverts", async () => {
+    const { store } = setup();
+    await store.getState().activate(context);
+    const step = store
+      .getState()
+      .capture(() => store.getState().edit(marked(store, "a")));
+    store.getState().edit(named(store, "renamed"), { history: false });
+    expect(step?.canRevert()).toBe(true);
+    step?.revert();
+    expect(draft(store).name).toBe("renamed");
+    expect(mark(draft(store))).toBe("renamed");
+  });
+
+  it("runs the effects on undo and again on redo, in step with the draft", async () => {
+    const { store } = setup();
+    await store.getState().activate(context);
+    const seen: string[] = [];
+    store.getState().capture(() => store.getState().edit(marked(store, "a")), {
+      undo: () => seen.push(`undo ${mark(draft(store))}`),
+      redo: () => seen.push(`redo ${mark(draft(store))}`),
+    });
+    store.getState().undo();
+    store.getState().redo();
+    store.getState().undo();
+    expect(seen).toEqual(["undo p", "redo a", "undo p"]);
+  });
+
+  it("does not run the effects when the edit is reverted, and a later undo has none", async () => {
+    const { store } = setup();
+    await store.getState().activate(context);
+    const effects = { undo: vi.fn(), redo: vi.fn() };
+    const step = store
+      .getState()
+      .capture(() => store.getState().edit(marked(store, "a")), effects);
+    step?.revert();
+    expect(store.getState().undo()).toBe(false);
+    expect(store.getState().redo()).toBe(false);
+    expect(effects.undo).not.toHaveBeenCalled();
+    expect(effects.redo).not.toHaveBeenCalled();
+  });
+
+  it("reverts an edit that joined the step of a refused draft (it made no step of its own)", async () => {
+    const { api, store } = setup();
+    await store.getState().activate(context);
+    api.validateProfile.mockResolvedValueOnce({
+      valid: false,
+      diagnostics: [],
+    });
+    store.getState().edit(marked(store, "bad"));
+    await store.getState().flush();
+    expect(store.getState().saveProblem).toBe("invalid");
+    const stepsBefore = store.getState().canUndo;
+    const step = store
+      .getState()
+      .capture(() => store.getState().edit(marked(store, "fixed")));
+    expect(mark(draft(store))).toBe("fixed");
+    expect(step?.revert()).toBe(true);
+    expect(mark(draft(store))).toBe("bad");
+    expect(store.getState().canUndo).toBe(stepsBefore);
+  });
+});

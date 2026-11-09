@@ -363,3 +363,127 @@ test("cancel leaves the mapping as it was, and a click in the dialog is never re
     await finish(f, app, client);
   }
 });
+
+/** Picks the function that has no key, records chord for it and writes it. */
+async function writeKey(
+  app: ElectronApplication,
+  page: Page,
+  withoutKey: Pick,
+  chord: string,
+): Promise<Locator> {
+  const dialog = await openPicker(page);
+  const leaf = await reveal(dialog, withoutKey);
+  await leaf.click();
+  await dialog.getByRole("button", { name: "设置", exact: true }).click();
+  await expect(dialog.getByTestId("integration-record")).toBeVisible();
+  await recordShortcut(
+    app,
+    dialog.getByRole("group", { name: "快捷键", exact: true }),
+    chord,
+  );
+  const write = dialog.getByRole("button", { name: `写入 ${APP}` });
+  await expect(write).toBeEnabled();
+  await write.click();
+  await expect(dialog.getByTestId("integration-written")).toBeVisible();
+  return dialog;
+}
+
+test("撤销这次写入 puts the app, the item file and the mapping back, and leaves nothing for Ctrl+Z to undo", async () => {
+  test.setTimeout(120000);
+  const f = await integrationFixture();
+  let app: ElectronApplication | undefined;
+  let client: FixtureClient | undefined;
+  try {
+    const opened = await launch(f);
+    app = opened.app;
+    const page = opened.page;
+    client = await FixtureClient.connect(f);
+    const live = client;
+    const { withoutKey } = await pickable(live);
+    const chord = "Ctrl+Shift+F10";
+    const before = (await onDisk(live)).layers.base.north;
+
+    await openControl(page, "north");
+    const shortcut = drawerShortcut(page);
+    const dialog = await writeKey(app, page, withoutKey, chord);
+    await expect(shortcut).toHaveAttribute("data-keys", chord);
+    await expect
+      .poll(async () => (await integrationItems(live)).items)
+      .toContainEqual(expect.objectContaining({ keys: chord }));
+
+    await dialog.getByRole("button", { name: "撤销这次写入" }).click();
+    await expect(dialog).toHaveCount(0);
+
+    // The mapping is as it was, with its name.
+    await expect(shortcut).toHaveAttribute("data-keys", "F13");
+    await expect(drawerLabel(page)).toHaveValue("");
+    await expect
+      .poll(async () => (await onDisk(live)).layers.base.north)
+      .toEqual(before);
+    // The item file has no item for the key, and the app has not the key.
+    await expect
+      .poll(async () => (await integrationItems(live)).items)
+      .toEqual([]);
+    const listing = await live.call<IntegrationFunctions>(
+      "integrations.functions",
+      { integration: INTEGRATION, language: "zh-CN" },
+    );
+    expect(
+      listing.functions.find((fn) => fn.id === withoutKey.fn.id)?.keys,
+    ).not.toContain(chord);
+
+    // No step of the pick is left: Ctrl+Z does not bring the key back.
+    await page.keyboard.press("Control+Z");
+    await expect(shortcut).toHaveAttribute("data-keys", "F13");
+    await page.keyboard.press("Control+Shift+Z");
+    await expect(shortcut).toHaveAttribute("data-keys", "F13");
+    expect((await onDisk(live)).layers.base.north).toEqual(before);
+  } finally {
+    await finish(f, app, client);
+  }
+});
+
+test("Ctrl+Z after a pick takes the mapping and its item back together, and the app keeps the key that was added", async () => {
+  test.setTimeout(120000);
+  const f = await integrationFixture();
+  let app: ElectronApplication | undefined;
+  let client: FixtureClient | undefined;
+  try {
+    const opened = await launch(f);
+    app = opened.app;
+    const page = opened.page;
+    client = await FixtureClient.connect(f);
+    const live = client;
+    const { withoutKey } = await pickable(live);
+    const chord = "Ctrl+Shift+F9";
+
+    await openControl(page, "north");
+    const shortcut = drawerShortcut(page);
+    const dialog = await writeKey(app, page, withoutKey, chord);
+    await dialog.getByRole("button", { name: "完成", exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(shortcut).toHaveAttribute("data-keys", chord);
+
+    await page.keyboard.press("Control+Z");
+    await expect(shortcut).toHaveAttribute("data-keys", "F13");
+    await expect
+      .poll(async () => (await integrationItems(live)).items)
+      .toEqual([]);
+    // Added keys stay in the app: only padmate's mapping went back.
+    const listing = await live.call<IntegrationFunctions>(
+      "integrations.functions",
+      { integration: INTEGRATION, language: "zh-CN" },
+    );
+    expect(
+      listing.functions.find((fn) => fn.id === withoutKey.fn.id)?.keys,
+    ).toContain(chord);
+
+    await page.keyboard.press("Control+Shift+Z");
+    await expect(shortcut).toHaveAttribute("data-keys", chord);
+    await expect
+      .poll(async () => (await integrationItems(live)).items)
+      .toContainEqual(expect.objectContaining({ keys: chord }));
+  } finally {
+    await finish(f, app, client);
+  }
+});

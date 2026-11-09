@@ -276,6 +276,7 @@ Checked on copies of the user data of CSP 5.1.5 (Windows, InstallShield build); 
 
 ### Files and locations
 - **Data folder**: since 1.10.13 it is `%APPDATA%\CELSYSUserData\CELSYS\CLIPStudioPaintVer1_5_0`, and 5.x still uses that name; 1.10.12 and earlier used `Documents\CELSYS`. The registry keys `HKLM\SOFTWARE\WOW6432Node\CELSYS\CLIP STUDIO PAINT\5.1.x` are empty; the install folder comes from the uninstall entry.
+- **Which folder is chosen**: the uninstall entry's `DisplayIcon` wins; otherwise, among `<InstallLocation>\CLIP STUDIO*` folders that really hold `CLIP STUDIO PAINT\CLIPStudioPaint.exe`, the highest numeric version in the folder name (`1.10` over `1.5`, no number last). Data folders `CLIPStudioPaintVer*` are ordered by the newest `Shortcut\default.khc`, not by name. Large folders are filtered by name first and capped after.
 - **One set of shortcuts**: there are no named sets. A workspace file (`.spws`) can carry shortcuts, which go into `default.khc` only when the workspace is loaded.
 - **When files are written** (inferred from file times): `EditImageTool.todb` is rewritten whole every time CSP exits; `default.khc` only when OK is pressed in the shortcut settings dialog. So an edit to todb while CSP runs is always lost, and files may only be changed while CSP is closed.
 

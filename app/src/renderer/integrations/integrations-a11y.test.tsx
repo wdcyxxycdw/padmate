@@ -116,7 +116,7 @@ describe("the dialogs of the app integrations", () => {
               language={language}
               Capture={Capture}
               onClose={() => {}}
-              onPicked={() => {}}
+              onPicked={() => null}
             />,
           )}
         </IntegrationProvider>,

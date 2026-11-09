@@ -61,7 +61,7 @@ func FindDataDirs(roots Roots) []DataDir {
 	}
 	if roots.LocalAppData != "" {
 		pkgs := filepath.Join(roots.LocalAppData, "Packages")
-		for _, name := range readDirNames(pkgs, maxPackageDirs) {
+		for _, name := range packageDirs(pkgs) {
 			base := filepath.Join(pkgs, name, "LocalCache", "Roaming", "CELSYSUserData", "CELSYS")
 			cands = append(cands, versionDirs(base)...)
 		}
@@ -89,28 +89,68 @@ func FindDataDirs(roots Roots) []DataDir {
 	return out
 }
 
-// versionDirs lists dir's CLIPStudioPaintVer* subfolders.
+// versionDirs lists dir's CLIPStudioPaintVer* subfolders. FindDataDirs orders
+// the result by the newest default.khc, so the order found here does not matter.
 func versionDirs(dir string) []string {
 	var out []string
-	for _, name := range readDirNames(dir, 64) {
-		if strings.HasPrefix(strings.ToLower(name), dataDirPrefix) {
-			out = append(out, filepath.Join(dir, name))
-		}
+	for _, name := range matchDirNames(dir, maxVersionDirs, func(name string) bool {
+		return strings.HasPrefix(strings.ToLower(name), dataDirPrefix)
+	}) {
+		out = append(out, filepath.Join(dir, name))
 	}
 	return out
 }
 
-// readDirNames returns up to limit entry names of dir, sorted; nil when dir
+const (
+	// maxVersionDirs bounds the CLIPStudioPaintVer* folders taken from one folder.
+	maxVersionDirs = 64
+	// maxScanEntries bounds how many entries of one folder are looked at,
+	// whether or not they match.
+	maxScanEntries = 20000
+	// readChunk is how many entries are read from a folder at a time.
+	readChunk = 256
+)
+
+// matchDirNames returns the names in dir for which match is true, sorted, at
+// most maxMatches of them. Entries are read in chunks and only matches are
+// kept, so a huge folder costs bounded memory and at most maxScanEntries
+// entries of time; an unrelated entry never uses up a match slot. nil when dir
 // cannot be read.
-func readDirNames(dir string, limit int) []string {
+func matchDirNames(dir string, maxMatches int, match func(name string) bool) []string {
 	f, err := os.Open(dir)
 	if err != nil {
 		return nil
 	}
 	defer f.Close()
-	names, _ := f.Readdirnames(limit)
-	sort.Strings(names)
-	return names
+	var out []string
+	for scanned := 0; scanned < maxScanEntries && len(out) < maxMatches; {
+		entries, err := f.ReadDir(readChunk)
+		for _, e := range entries {
+			scanned++
+			if match(e.Name()) {
+				out = append(out, e.Name())
+				if len(out) >= maxMatches {
+					break
+				}
+			}
+		}
+		if err != nil { // io.EOF or a read error: stop either way
+			break
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// packageDirs lists the Microsoft Store package folders under packagesDir that
+// have the CELSYS user-data folder. The Store package's name is not known
+// (it is not verified against a real Store install), so candidates are chosen by
+// that layout rather than by name.
+func packageDirs(packagesDir string) []string {
+	return matchDirNames(packagesDir, maxPackageDirs, func(name string) bool {
+		fi, err := os.Stat(filepath.Join(packagesDir, name, "LocalCache", "Roaming", "CELSYSUserData", "CELSYS"))
+		return err == nil && fi.IsDir()
+	})
 }
 
 func probeDataDir(path string) (DataDir, bool) {
@@ -200,15 +240,87 @@ func InstallFromEntry(displayName, installLocation, displayIcon string) (Install
 	if in, ok := LocateInstall(installLocation); ok {
 		return in, true
 	}
-	for _, name := range readDirNames(installLocation, maxInstallProbe) {
-		if !strings.HasPrefix(strings.ToUpper(name), "CLIP STUDIO") {
-			continue
-		}
+	// Several "CLIP STUDIO <version>" folders can sit side by side (an old
+	// version left behind): take the highest version that really holds the
+	// executable.
+	type cand struct {
+		name string
+		ver  []int
+		in   InstallDir
+	}
+	var cands []cand
+	for _, name := range matchDirNames(installLocation, maxInstallProbe, func(name string) bool {
+		return strings.HasPrefix(strings.ToUpper(name), "CLIP STUDIO")
+	}) {
 		if in, ok := LocateInstall(filepath.Join(installLocation, name, "CLIP STUDIO PAINT")); ok {
-			return in, true
+			cands = append(cands, cand{name, folderVersion(name), in})
 		}
 	}
-	return InstallDir{}, false
+	if len(cands) == 0 {
+		return InstallDir{}, false
+	}
+	sort.SliceStable(cands, func(i, j int) bool {
+		if c := compareVersion(cands[i].ver, cands[j].ver); c != 0 {
+			return c > 0
+		}
+		return cands[i].name < cands[j].name
+	})
+	return cands[0].in, true
+}
+
+// folderVersion parses the dotted number in a folder name such as
+// "CLIP STUDIO 1.10"; nil when there is none.
+func folderVersion(name string) []int {
+	i := strings.IndexAny(name, "0123456789")
+	if i < 0 {
+		return nil
+	}
+	var ver []int
+	for _, part := range strings.Split(name[i:], ".") {
+		end := 0
+		for end < len(part) && part[end] >= '0' && part[end] <= '9' {
+			end++
+		}
+		if end == 0 {
+			break
+		}
+		n, err := strconv.Atoi(part[:end])
+		if err != nil {
+			break
+		}
+		ver = append(ver, n)
+		if end < len(part) {
+			break
+		}
+	}
+	return ver
+}
+
+// compareVersion compares dotted versions numerically; a missing version is
+// lower than any present one, and a missing trailing part counts as 0.
+func compareVersion(a, b []int) int {
+	if (a == nil) != (b == nil) {
+		if a == nil {
+			return -1
+		}
+		return 1
+	}
+	for i := 0; i < len(a) || i < len(b); i++ {
+		var x, y int
+		if i < len(a) {
+			x = a[i]
+		}
+		if i < len(b) {
+			y = b[i]
+		}
+		if x != y {
+			if x < y {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
 }
 
 // iconExe extracts the executable path from a DisplayIcon value: quotes and

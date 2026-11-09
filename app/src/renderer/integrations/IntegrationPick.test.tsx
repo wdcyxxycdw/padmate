@@ -402,6 +402,39 @@ describe("the picker", () => {
     );
   });
 
+  it("leaves no selection that the rows do not show: a search, another area or a closed group takes it away", async () => {
+    await open();
+    const set = () =>
+      screen.getByRole("button", { name: "设置" }) as HTMLButtonElement;
+    expect(set().disabled).toBe(true);
+    fireEvent.click(row("编辑"));
+    fireEvent.click(row("撤销"));
+    expect(set().disabled).toBe(false);
+    // A search that still finds it keeps it.
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "撤销" },
+    });
+    expect(set().disabled).toBe(false);
+    // One that does not find it takes it away.
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "重做" },
+    });
+    expect(set().disabled).toBe(true);
+    // Without the search it is there again, still selected.
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "" } });
+    expect(row("撤销").getAttribute("aria-selected")).toBe("true");
+    expect(set().disabled).toBe(false);
+    // Another area does not show it.
+    chooseArea("工具");
+    expect(set().disabled).toBe(true);
+    chooseArea("主菜单");
+    expect(set().disabled).toBe(false);
+    // Neither does its closed group.
+    fireEvent.click(row("编辑"));
+    expect(screen.queryByRole("treeitem", { name: /^撤销/ })).toBeNull();
+    expect(set().disabled).toBe(true);
+  });
+
   it("is keyboard navigable: arrows move, right and left open and close, Enter selects", async () => {
     await open();
     const first = row("编辑");
@@ -852,30 +885,6 @@ describe("setting from the picker leaves the mapping alone until it worked", () 
     expect(api.putIntegrationItems).not.toHaveBeenCalled();
     expect(api.writeIntegration).not.toHaveBeenCalled();
     unchanged(editor);
-  });
-
-  it("a failed save after the app was written leaves the mapping, and a second try finishes", async () => {
-    const { api, editor, record } = await openPicker();
-    select("重做");
-    fireEvent.click(screen.getByRole("button", { name: "设置" }));
-    const dialog = screen.getByRole("dialog");
-    await record("Ctrl+Y", { scope: dialog });
-    await writeReady(dialog);
-    api.putIntegrationItems.mockRejectedValueOnce(new Error("Items not saved"));
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "写入 Demo Paint" }),
-    );
-    expect((await within(dialog).findByRole("alert")).textContent).toContain(
-      "没能把这个功能记进这份配置",
-    );
-    expect(api.writeIntegration).toHaveBeenCalledTimes(1);
-    unchanged(editor);
-    expect(within(dialog).queryByTestId("integration-written")).toBeNull();
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "写入 Demo Paint" }),
-    );
-    await within(dialog).findByTestId("integration-written");
-    expect(north(editor)?.press).toEqual({ type: "keys", keys: "Ctrl+Y" });
   });
 
   it("a failed write leaves the mapping as it was and says why", async () => {

@@ -5,6 +5,8 @@ import { type ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "zustand";
 import type { IntegrationInfo } from "../../shared/integrations";
+import type { StepEffects } from "../editor/editor-history";
+import type { EditedStep } from "../editor/editor-store";
 import {
   cycleNote,
   differenceRows,
@@ -34,8 +36,16 @@ export interface IntegrationLink {
   /** The library ID of the profile the drawer edits. */
   profile: string;
   Capture: CaptureField;
-  /** Puts a picked function's keys into the binding (one edit, so one undo). */
-  onPick: (picked: Picked, info: IntegrationInfo) => void;
+  /**
+   * Puts a picked function's keys into the binding (one edit, so one undo,
+   * which runs `effects` as it goes). Returns the edit so the picker can
+   * take it back whole; null when the binding did not change.
+   */
+  onPick: (
+    picked: Picked,
+    info: IntegrationInfo,
+    effects: StepEffects,
+  ) => EditedStep | null;
   disabled?: boolean;
 }
 
@@ -112,7 +122,7 @@ export function IntegrationPickButtons({
               language={language}
               Capture={link.Capture}
               onClose={() => setOpen(null)}
-              onPicked={(picked) => link.onPick(picked, info)}
+              onPicked={(picked, effects) => link.onPick(picked, info, effects)}
             />
           </Isolated>
         </span>

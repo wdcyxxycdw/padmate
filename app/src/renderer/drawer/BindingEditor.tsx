@@ -18,6 +18,7 @@ import type {
   ProfileSequenceAction,
   ProfileTiming,
 } from "../../shared/generated/schema";
+import type { StepEffects } from "../editor/editor-history";
 import {
   editorError,
   type FileOnlyAction,
@@ -38,6 +39,7 @@ import {
   tapGestureFor,
   usedGestures,
 } from "../editor/editor-model";
+import type { EditedStep } from "../editor/editor-store";
 import {
   actionSteps,
   hasTextStep,
@@ -227,6 +229,8 @@ function swallowRelease(): void {
 
 /** How long Esc is held to end a capture. */
 export const ESC_HOLD_MS = 1000;
+/** How far (px) the second press of a double click may be from the first. */
+const DOUBLE_CLICK_SLOP = 5;
 
 /** How long one capture lasts: the helper stops itself then (keyboard_capture). */
 const CAPTURE_LIMIT_MS = 30_000;
@@ -419,9 +423,11 @@ function ShortcutField({
   }, []);
   const latest = useRef({ value, onChange, physical, language, onDoubleClick });
   latest.current = { value, onChange, physical, language, onDoubleClick };
-  // When the left button recorded the shortcut: the second press of the same
-  // double click, with a count of 2, comes after the capture has ended.
-  const clickedAt = useRef<number | null>(null);
+  // The press of the left button that recorded the shortcut: the second press
+  // of the same double click, with a count of 2, comes after the capture has
+  // ended. Anything else that happens first (another press, a key, the wheel)
+  // forgets it, so a double click made later is not taken for it.
+  const clickedAt = useRef<MouseEvent | null>(null);
   // What the recorder says to do: show the chord so far, or end the capture
   // with what it recorded (null: nothing, as after a hold of Esc).
   const apply = useCallback(
@@ -540,7 +546,7 @@ function ShortcutField({
       const step = recorder.current.mouse(key, heldModifiers(event));
       apply(step);
       if (key === "MouseLeft" && step.done && step.chord !== null)
-        clickedAt.current = event.timeStamp;
+        clickedAt.current = event;
     };
     const turn = (event: WheelEvent) => {
       event.preventDefault();
@@ -567,16 +573,41 @@ function ShortcutField({
   useEffect(() => {
     const again = (event: MouseEvent) => {
       const at = clickedAt.current;
-      if (at === null || event.detail !== 2 || event.button !== 0) return;
+      // The press that recorded the shortcut is not its own second press.
+      if (at === null || event === at) return;
+      // Whatever this press is, it is the only one that can be the second.
       clickedAt.current = null;
-      if (event.timeStamp - at > 1000 || !latest.current.onDoubleClick) return;
+      if (event.detail !== 2 || event.button !== 0) return;
+      // On the spot of the first press, as the system's own double click
+      // asks: a click that went on elsewhere is a click of its own. (The
+      // capture takes a click anywhere in the window, so the spot is not
+      // the field's.)
+      if (
+        Math.abs(event.clientX - at.clientX) > DOUBLE_CLICK_SLOP ||
+        Math.abs(event.clientY - at.clientY) > DOUBLE_CLICK_SLOP
+      )
+        return;
+      if (
+        event.timeStamp - at.timeStamp > 1000 ||
+        !latest.current.onDoubleClick
+      )
+        return;
       event.preventDefault();
       event.stopPropagation();
       swallowRelease();
       latest.current.onDoubleClick();
     };
+    const forget = () => {
+      clickedAt.current = null;
+    };
     window.addEventListener("mousedown", again, true);
-    return () => window.removeEventListener("mousedown", again, true);
+    window.addEventListener("keydown", forget, true);
+    window.addEventListener("wheel", forget, true);
+    return () => {
+      window.removeEventListener("mousedown", again, true);
+      window.removeEventListener("keydown", forget, true);
+      window.removeEventListener("wheel", forget, true);
+    };
   }, []);
   // A hold ends with the capture, however that ends, and with the field.
   useEffect(() => {
@@ -1456,7 +1487,11 @@ export interface BindingFieldsProps {
    * The profile being edited: when it is bound to app integrations, the
    * shortcut field offers to pick from the app (ARCHITECTURE §16.5).
    */
-  integration?: { profile: string };
+  integration?: {
+    profile: string;
+    /** The editor's capture: the pick is one undo step it can take back. */
+    capture?: (change: () => void, effects: StepEffects) => EditedStep | null;
+  };
 }
 
 /**
@@ -1660,19 +1695,25 @@ export function BindingFields({
                       Capture: RecordKey,
                       disabled,
                       // The keys and the name go in as one edit: one undo.
-                      onPick: (picked) =>
-                        commit(
-                          holdShortcut({
-                            ...(action.type === "keys" ? action : {}),
-                            type: "keys",
-                            keys: picked.keys,
-                          }),
-                          nameAfterPick(
-                            value.label,
-                            picked.previousName,
-                            picked.fn.name,
-                          ),
-                        ),
+                      onPick: (picked, _info, effects) => {
+                        const pick = () =>
+                          commit(
+                            holdShortcut({
+                              ...(action.type === "keys" ? action : {}),
+                              type: "keys",
+                              keys: picked.keys,
+                            }),
+                            nameAfterPick(
+                              value.label,
+                              picked.previousName,
+                              picked.fn.name,
+                            ),
+                          );
+                        if (integration.capture)
+                          return integration.capture(pick, effects);
+                        pick();
+                        return null;
+                      },
                     }
                   }
                   onChange={(next) => commit(next)}

@@ -268,6 +268,7 @@ export const names: Name[] = [
   ["设置区域", "Setting area"],
   ["重试", "Retry"],
   ["撤销这次写入", "Undo this write"],
+  ["重试保存", "Retry saving"],
   ["以 padmate 为准", "Keep padmate's keys"],
   ["暂不处理", "Not now"],
   ["逐项决定", "Decide one by one"],
@@ -418,6 +419,11 @@ export const external: External[] = [
   {
     zh: "写入 CLIP STUDIO PAINT",
     en: "Write to CLIP STUDIO PAINT",
+    reason: "built by the app with the name of the software it works with",
+  },
+  {
+    zh: "CLIP STUDIO PAINT 里已经写好了，但没能记进这份配置，快捷键还没有改。",
+    en: "The shortcut is written in CLIP STUDIO PAINT, but it could not be saved into the profile. The binding is not changed yet.",
     reason: "built by the app with the name of the software it works with",
   },
   {

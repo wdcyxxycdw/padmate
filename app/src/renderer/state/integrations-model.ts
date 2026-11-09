@@ -297,6 +297,56 @@ export function putItem(
   return [...kept, next];
 }
 
+/** What putItem did to a list, enough to take it back or do it again. */
+export interface ItemChange {
+  next: IntegrationItem;
+  /** The old keys of the binding whose item went (putItem's `replaced`). */
+  replaced?: string;
+  /** The items that were in the list and are gone after it. */
+  removed: IntegrationItem[];
+}
+
+/** The change putItem(items, next, replaced) makes. */
+export function itemChange(
+  items: readonly IntegrationItem[],
+  next: IntegrationItem,
+  replaced?: string,
+): ItemChange {
+  return {
+    next,
+    ...(replaced === undefined ? {} : { replaced }),
+    removed: items
+      .filter((item) => item.keys === next.keys || item.keys === replaced)
+      .map((item) => ({ ...item, path: [...item.path] })),
+  };
+}
+
+/** The items with the change made. */
+export function applyItemChange(
+  items: readonly IntegrationItem[],
+  change: ItemChange,
+): IntegrationItem[] {
+  return putItem(items, change.next, change.replaced);
+}
+
+/**
+ * The items with the change taken back: the new item goes, the ones it
+ * replaced are back (none if the key had no item before).
+ */
+export function revertItemChange(
+  items: readonly IntegrationItem[],
+  change: ItemChange,
+): IntegrationItem[] {
+  const gone = new Set([
+    change.next.keys,
+    ...change.removed.map((item) => item.keys),
+  ]);
+  return [
+    ...items.filter((item) => !gone.has(item.keys)),
+    ...change.removed.map((item) => ({ ...item, path: [...item.path] })),
+  ];
+}
+
 /** The binding's name after a function is picked: the user's own name stays. */
 export function nameAfterPick(
   label: string | undefined,

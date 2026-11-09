@@ -19,10 +19,14 @@ import type {
   IntegrationFunction,
   IntegrationFunctions,
   IntegrationInfo,
+  IntegrationItem,
   IntegrationWritten,
   TreeNode,
 } from "../../shared/integrations";
+import type { StepEffects } from "../editor/editor-history";
+import type { EditedStep } from "../editor/editor-store";
 import {
+  applyItemChange,
   areasOf,
   checkText,
   cycleNote,
@@ -30,20 +34,26 @@ import {
   firstKey,
   functionsById,
   groupIds,
+  type ItemChange,
+  itemChange,
   itemFor,
   itemOf,
   pathText,
   pruneTree,
-  putItem,
+  revertItemChange,
   type TreeRow,
   visibleRows,
   writable,
 } from "../state/integrations-model";
-import type { Language } from "../state/store";
+import type { Language, PadmateStore } from "../state/store";
 import { Dialog } from "../ui/controls";
 import { Icon } from "../ui/Icon";
 import { Keycaps } from "../ui/Keycaps";
-import { integrationFailure, useIntegrationHost } from "./IntegrationContext";
+import {
+  type FailureStep,
+  integrationFailure,
+  useIntegrationHost,
+} from "./IntegrationContext";
 import "./integrations.css";
 
 const tx = (language: Language, zh: string, en: string) =>
@@ -119,15 +129,62 @@ function entriesOf(
   return [first, ...more];
 }
 
+/** What a pick did, so it can be taken back whole. */
+interface PickRecord {
+  /** What it did to the profile's item file. */
+  change: ItemChange;
+  /** Its edit of the binding; null when the binding did not change. */
+  step: EditedStep | null;
+}
+
 type Step =
   | { kind: "list" }
   | { kind: "record"; fn: IntegrationFunction }
+  // The app is written, the profile's item file is not: the way out is to
+  // save again or to take the write back.
+  | {
+      kind: "unsaved";
+      fn: IntegrationFunction;
+      keys: string;
+      written: IntegrationWritten;
+    }
   | {
       kind: "done";
       fn: IntegrationFunction;
       keys: string;
       written: IntegrationWritten;
+      pick: PickRecord;
     };
+
+// The changes to one profile's item file wait for each other, so a quick
+// undo and redo of picks (Ctrl+Z, Ctrl+Y) land in the order they were made.
+const itemQueue = new Map<string, Promise<void>>();
+
+/** Reads the item file fresh, changes it and writes it, after the earlier ones. */
+function changeItems(
+  store: PadmateStore,
+  profile: string,
+  integration: string,
+  transform: (items: IntegrationItem[]) => IntegrationItem[],
+): Promise<void> {
+  const key = `${profile}|${integration}`;
+  const run = async () => {
+    const state = store.getState();
+    const items = await state.loadIntegrationItems(profile, integration);
+    await state.api.putIntegrationItems({
+      profile,
+      integration,
+      revision: items.revision,
+      items: transform(items.items),
+    });
+    void state.loadIntegrationItems(profile, integration).catch(() => {});
+  };
+  const next = (itemQueue.get(key) ?? Promise.resolve())
+    .catch(() => {})
+    .then(run);
+  itemQueue.set(key, next);
+  return next;
+}
 
 export function FunctionPicker({
   open,
@@ -147,8 +204,12 @@ export function FunctionPicker({
   language: Language;
   Capture: CaptureField;
   onClose: () => void;
-  /** Puts the keys into the binding, through the editor's normal edit. */
-  onPicked: (picked: Picked) => void;
+  /**
+   * Puts the keys into the binding, through the editor's normal edit; the
+   * effects follow that edit's undo and redo. Returns the edit, null when
+   * the binding did not change.
+   */
+  onPicked: (picked: Picked, effects: StepEffects) => EditedStep | null;
 }) {
   const t = (zh: string, en: string) => tx(language, zh, en);
   const host = useIntegrationHost();
@@ -182,6 +243,11 @@ export function FunctionPicker({
   // Counts the openings and closings: an answer that comes after the dialog
   // went is dropped, so it never touches the binding.
   const lifetime = useRef(0);
+  // What of the undo of a write worked, so a second try goes on from there.
+  const unwound = useRef({ app: false, binding: false });
+  // The language when the effects of an undo of the pick report a failure.
+  const languageNow = useRef(language);
+  languageNow.current = language;
 
   // A dialog that is opened again starts at the list.
   useEffect(() => {
@@ -199,6 +265,7 @@ export function FunctionPicker({
     setCheck(null);
     setProblem("");
     setBusy(false);
+    unwound.current = { app: false, binding: false };
     search.current?.focus();
   }, [open]);
 
@@ -261,7 +328,11 @@ export function FunctionPicker({
     () => (cut ? allEntries.slice(0, PICKER_ROWS) : allEntries),
     [cut, allEntries],
   );
-  const chosen = byId.get(selected);
+  // A selection that is not in the rows now (a search, another area or a
+  // closed group took it out) is none: 设置 would write what no one sees.
+  const chosen = entries.some((entry) => entry.fn?.id === selected)
+    ? byId.get(selected)
+    : undefined;
   const chosenKey = chosen
     ? chosen.keys.includes(selectedKey)
       ? selectedKey
@@ -373,18 +444,62 @@ export function FunctionPicker({
     const state = host.store.getState();
     const items = await state.loadIntegrationItems(profile, info.id);
     const previousName = itemFor(items.items, currentKeys)?.name;
+    const change = itemChange(
+      items.items,
+      itemOf(fn, picked),
+      currentKeys && currentKeys !== picked ? currentKeys : undefined,
+    );
     await state.api.putIntegrationItems({
       profile,
       integration: info.id,
       revision: items.revision,
-      items: putItem(
-        items.items,
-        itemOf(fn, picked),
-        currentKeys && currentKeys !== picked ? currentKeys : undefined,
-      ),
+      items: applyItemChange(items.items, change),
     });
     void state.loadIntegrationItems(profile, info.id).catch(() => {});
-    return previousName;
+    return { previousName, change };
+  };
+  type Saved = NonNullable<Awaited<ReturnType<typeof putPicked>>>;
+
+  /**
+   * Puts the pick into the binding, in one edit. A plain undo of that edit
+   * (Ctrl+Z) moves the profile's item file back with it, and redo forward
+   * again; the app's own settings stay as they are (a key that was added
+   * there is not taken away).
+   */
+  const bind = (
+    fn: IntegrationFunction,
+    picked: string,
+    saved: Saved,
+  ): PickRecord => {
+    const store = host?.store;
+    const follow =
+      (transform: (items: IntegrationItem[]) => IntegrationItem[]) => () => {
+        if (!store) return;
+        changeItems(store, profile, info.id, transform).catch(() => {
+          store.setState({
+            error: integrationFailure(
+              null,
+              info.name,
+              languageNow.current,
+              "itemsFollow",
+            ),
+          });
+        });
+      };
+    const step = onPicked(
+      {
+        keys: picked,
+        fn,
+        ...(saved.previousName === undefined
+          ? {}
+          : { previousName: saved.previousName }),
+      },
+      {
+        undo: follow((items) => revertItemChange(items, saved.change)),
+        redo: follow((items) => applyItemChange(items, saved.change)),
+      },
+    );
+    return { change: saved.change, step };
   };
 
   const pickChosen = async () => {
@@ -401,14 +516,10 @@ export function FunctionPicker({
     setProblem("");
     try {
       const picked = chosenKey;
-      const previousName = await putPicked(chosen, picked);
-      if (mine !== lifetime.current) return;
+      const saved = await putPicked(chosen, picked);
+      if (mine !== lifetime.current || !saved) return;
       // Everything worked: now the binding changes, in one edit.
-      onPicked({
-        keys: picked,
-        fn: chosen,
-        ...(previousName === undefined ? {} : { previousName }),
-      });
+      bind(chosen, picked, saved);
       onClose();
     } catch (error) {
       if (mine === lifetime.current)
@@ -416,6 +527,37 @@ export function FunctionPicker({
     } finally {
       if (mine === lifetime.current) setBusy(false);
     }
+  };
+
+  /**
+   * Saves the item and puts the pick into the binding, once the key is
+   * written in the app. When the app was changed and the save fails, the
+   * dialog stays on the two ways out (the "unsaved" step); when the write
+   * changed nothing in the app, a failed save leaves nothing behind and the
+   * record step simply stays.
+   */
+  const finish = async (
+    fn: IntegrationFunction,
+    written: IntegrationWritten,
+    mine: number,
+  ) => {
+    let saved: Saved | undefined;
+    try {
+      saved = await putPicked(fn, keys);
+    } catch (error) {
+      if (mine !== lifetime.current) return;
+      if (written.backup) {
+        setProblem(integrationFailure(error, info.name, language, "saved"));
+        setStep({ kind: "unsaved", fn, keys, written });
+      } else
+        setProblem(integrationFailure(error, info.name, language, "items"));
+      return;
+    }
+    if (mine !== lifetime.current || !saved) return;
+    const pick = bind(fn, keys, saved);
+    unwound.current = { app: false, binding: false };
+    setProblem("");
+    setStep({ kind: "done", fn, keys, written, pick });
   };
 
   const writeIn = async (fn: IntegrationFunction) => {
@@ -430,45 +572,83 @@ export function FunctionPicker({
         if (!outcome.cancelled) setProblem(outcome.message);
         return;
       }
-      let previousName: string | undefined;
-      try {
-        previousName = await putPicked(fn, keys);
-      } catch (error) {
-        // The binding stays as it was; trying again repeats both steps, and
-        // writing the same key again changes nothing in the app.
-        if (mine === lifetime.current)
-          setProblem(integrationFailure(error, info.name, language, "items"));
-        return;
-      }
-      if (mine !== lifetime.current) return;
-      onPicked({
-        keys,
-        fn,
-        ...(previousName === undefined ? {} : { previousName }),
-      });
-      setProblem("");
-      setStep({ kind: "done", fn, keys, written: outcome.written });
+      await finish(fn, outcome.written, mine);
     } finally {
       if (mine === lifetime.current) setBusy(false);
     }
   };
 
-  const undo = async (backup: IntegrationBackup) => {
-    if (!host || busy) return;
+  /** 重试保存: the app is written already, so only the save and the binding repeat. */
+  const retrySave = async (
+    fn: IntegrationFunction,
+    written: IntegrationWritten,
+  ) => {
+    if (busy) return;
     const mine = lifetime.current;
     setBusy(true);
     setProblem("");
     try {
-      if (!(await host.requireClosed(info))) return;
-      await host.store
-        .getState()
-        .api.restoreIntegrationBackup(info.id, backup.id);
+      await finish(fn, written, mine);
+    } finally {
+      if (mine === lifetime.current) setBusy(false);
+    }
+  };
+
+  /**
+   * 撤销这次写入. The app first (it can refuse: it may be running), then the
+   * binding, then the item file; the binding goes back as the step it was,
+   * so no undo of it is left. A part that worked is not done again when the
+   * person tries once more after a failure; a failure of the app leaves
+   * everything else as it was. Without a pick (the item file was never
+   * written) only the app goes back.
+   */
+  const undo = async (backup: IntegrationBackup, pick: PickRecord | null) => {
+    if (!host || busy) return;
+    const mine = lifetime.current;
+    const progress = unwound.current;
+    setBusy(true);
+    setProblem("");
+    const fail = (failed: FailureStep, error?: unknown) => {
+      if (mine === lifetime.current)
+        setProblem(integrationFailure(error, info.name, language, failed));
+    };
+    try {
+      if (!progress.binding && pick?.step && !pick.step.canRevert()) {
+        fail("late");
+        return;
+      }
+      if (!progress.app) {
+        try {
+          if (!(await host.requireClosed(info))) return;
+          await host.store
+            .getState()
+            .api.restoreIntegrationBackup(info.id, backup.id);
+        } catch (error) {
+          fail("restore", error);
+          return;
+        }
+        progress.app = true;
+      }
+      if (!progress.binding) {
+        if (pick?.step && !pick.step.revert()) {
+          fail("bindingBack");
+          return;
+        }
+        progress.binding = true;
+      }
+      if (pick) {
+        try {
+          await changeItems(host.store, profile, info.id, (items) =>
+            revertItemChange(items, pick.change),
+          );
+        } catch (error) {
+          fail("itemsBack", error);
+          return;
+        }
+      }
       if (mine !== lifetime.current) return;
       setStep({ kind: "list" });
       onClose();
-    } catch (error) {
-      if (mine === lifetime.current)
-        setProblem(integrationFailure(error, info.name, language, "restore"));
     } finally {
       if (mine === lifetime.current) setBusy(false);
     }
@@ -730,6 +910,56 @@ export function FunctionPicker({
         )}
       </div>
     );
+  } else if (step.kind === "unsaved") {
+    const unsaved = step;
+    const made = unsaved.written.backup;
+    // The app is changed and the profile is not: the dialog cannot be left
+    // except through one of these two, so the app never stays changed unseen.
+    footer = (
+      <>
+        {made && (
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={busy}
+            onClick={() => void undo(made, null)}
+          >
+            {t("撤销这次写入", "Undo this write")}
+          </button>
+        )}
+        <span className="spacer" />
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={busy}
+          aria-busy={busy}
+          onClick={() => void retrySave(unsaved.fn, unsaved.written)}
+        >
+          {busy ? t("正在保存…", "Saving…") : t("重试保存", "Retry saving")}
+        </button>
+      </>
+    );
+    body = (
+      <div data-testid="integration-unsaved">
+        <p className="dialog-text">
+          {t(
+            `已把 ${unsaved.keys} 写进 ${info.name}，设为“${unsaved.fn.name}”，但没能记进这份配置。`,
+            `Wrote ${unsaved.keys} into ${info.name} as "${unsaved.fn.name}", but it could not be saved into the profile.`,
+          )}
+        </p>
+        <p className="dialog-text">
+          {t(
+            "快捷键还没有改。可以重试保存，或撤销这次写入，撤销后哪里都没有改动。",
+            "The binding is not changed. Retry saving, or undo the write; after undoing, nothing is changed anywhere.",
+          )}
+        </p>
+        {problem && (
+          <p className="picker-problem" role="alert">
+            {problem}
+          </p>
+        )}
+      </div>
+    );
   } else {
     const done = step;
     const made = done.written.backup;
@@ -740,13 +970,18 @@ export function FunctionPicker({
             type="button"
             className="btn-ghost"
             disabled={busy}
-            onClick={() => void undo(made)}
+            onClick={() => void undo(made, done.pick)}
           >
             {t("撤销这次写入", "Undo this write")}
           </button>
         )}
         <span className="spacer" />
-        <button type="button" className="btn-primary" onClick={onClose}>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={busy}
+          onClick={onClose}
+        >
           {t("完成", "Done")}
         </button>
       </>
@@ -772,7 +1007,7 @@ export function FunctionPicker({
       open={open}
       title={title}
       closeLabel={t("关闭", "Close")}
-      closeDisabled={busy}
+      closeDisabled={busy || step.kind === "unsaved"}
       onClose={onClose}
       className="picker-dialog"
       footer={footer}
